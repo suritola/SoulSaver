@@ -33,7 +33,8 @@ public partial class CharacterKit : MonoBehaviour
     // 무기 진화 뒤에는 진화 무기 필살기를 꾹 눌러 조준하는 동안도 같게 셈 (회전 베기 · 대폭발이 없어져도 카드가 쓸모 있게)
     public bool Charging => charging;
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
-    public float MoveMul => 1f;
+    // 궁수: 시위를 당기는 동안 40% 느려짐 (1.0.8: 쏘면서 마음대로 도망칠 수 있어 위험이 없었음)
+    public float MoveMul => DrawsBow && drawing ? 0.6f : 1f;
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
     public bool UsesAmmo => def.mag > 0;
@@ -46,6 +47,11 @@ public partial class CharacterKit : MonoBehaviour
     float draw;
     LineRenderer bowLine;
     bool fullPlayed;
+    // 1.0.8 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
+    float fullAt;
+    const float PerfectWindow = 0.2f, TrembleAfter = 0.6f;
+    const float DrawPower = 1.9f, PerfectPower = 3f, MinHeldPower = 1.6f;
+    const float PierceFalloff = 0.85f;       // 꿰뚫을 때마다 피해 -15% (일렬 쓸어 버리기가 너무 셌음)
 
     // 캐릭터 전용 레벨업 카드 4장의 레벨 (LevelShop.Kits, 0 = 아직 없음). 기본 스펙이 아닌 특수 능력
     //   검사: 0 검기 · 1 흡혈 베기 · 2 쳐내기 · 3 칼바람
@@ -392,43 +398,64 @@ public partial class CharacterKit : MonoBehaviour
         else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
         // 정조준: 가만히 서서 당기면 더 빨리 가득 당김
         else if (card[5] > 0 && stillTime > 0.1f) fullTime /= 1f + 0.3f * card[5];
+        // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
+        bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning;
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
+        float heldFull = draw >= 1f && fullPlayed ? Time.time - fullAt : 0f;
         Vector3 start = player.MuzzlePosition;
         Vector3 target = Mouse;
         player.FaceTowards(target);
         Vector2 dir = ((Vector2)(target - start)).normalized;
+        // 너무 오래 쥐고 있으면 활이 떨림
+        if (!autoRelease && heldFull > TrembleAfter)
+            dir = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.time * 38f) * Mathf.Min(4f, (heldFull - TrembleAfter) * 4f)) * dir;
         PlayerLook.Draw(draw);
 
         // 겨누는 선: 시위를 당기는 동안만, 화면 끝까지 닿는 점선 (당길수록 밝고 굵게, 가득 당기면 금색으로 반짝)
-        Color c = draw >= 1f ? new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f)) : new Color(0.7f, 1f, 0.6f, 0.3f + 0.5f * draw);
+        bool inWindow = draw >= 1f && heldFull <= PerfectWindow;
+        Color c = draw < 1f ? new Color(0.7f, 1f, 0.6f, 0.3f + 0.5f * draw)
+                : inWindow ? new Color(1f, 0.95f, 0.55f, 1f)                                   // 지금 놓으면 완벽
+                : heldFull > TrembleAfter && !autoRelease ? new Color(1f, 0.5f, 0.35f, 0.55f)   // 떨림: 약해지는 중
+                : new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f));
         SpecialFeedback sfx = SpecialAbilities.SharedFx;
         if (sfx != null && Special != null)
         {
             if (bowLine == null) bowLine = sfx.NewLine("BowDraw", true, 17);
-            sfx.SetLine(bowLine, start, start + (Vector3)(dir * Special.ScreenEdgeDistance(start, dir)), c, 0.06f + 0.08f * draw);
+            sfx.SetLine(bowLine, start, start + (Vector3)(dir * Special.ScreenEdgeDistance(start, dir)), c, 0.06f + 0.08f * draw + (inWindow && !autoRelease ? 0.08f : 0f));
         }
         if (draw >= 1f && !fullPlayed)
         {
             fullPlayed = true;
-            Play("ding", 0.5f, 1.5f);
-            Fx.Spawn("fx_sparkle", start, 1f, new Color(1f, 0.9f, 0.5f), 20f);
+            fullAt = Time.time;
+            Play("ding", 0.7f, 1.6f);                                          // 지금 놓으라는 신호
+            Fx.Spawn("fx_sparkle", start, 1.6f, new Color(1f, 0.9f, 0.5f), 24f);
         }
 
-        // 가득 당기면 바로 발사 (계속 누르고 있으면 다시 당김)
-        if (GameInput.FireHeld && canDraw && draw < 1f) return;
+        // 1.0.8: 가득 차도 저절로 쏘지 않음 — 놓는 순간이 중요 (버프 · 자동 조작은 예전처럼)
+        if (GameInput.FireHeld && canDraw && (draw < 1f || !autoRelease)) return;
 
         // 발사: 피해 30% → 280%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
         drawing = false;
         SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        float power = 0.3f + 2.5f * draw;
+        bool perfect = !autoRelease && draw >= 1f && heldFull <= PerfectWindow;
+        float power = 0.3f + DrawPower * draw;                                  // 가득 당김 220%
+        if (perfect) power = PerfectPower;
+        else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
+            power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
+        if (perfect)
+        {
+            SpecialAbilities.SharedFx?.FloatText(start + Vector3.up * 1.4f, Loc.T("완벽!"), new Color(1f, 0.9f, 0.4f), 4.5f, 0f);
+            Fx.Spawn("fx_sparkle", start, 2.2f, Color.white, 26f);
+            Play("chime", 0.5f, 1.8f);
+        }
         float speed = 35f + 60f * draw;
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots) * power;
         foreach (Vector2 d in Spread(dir, shots, 6f))
         {
-            Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw, draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
+            Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw + (perfect ? 0.15f : 0f), perfect ? new Color(1f, 0.8f, 0.25f) : draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
             if (b == null) continue;
             ArrowForm(b, draw, start);
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
@@ -436,6 +463,7 @@ public partial class CharacterKit : MonoBehaviour
             if (card[6] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
             if (card[2] > 0 && draw >= 1f) GustArrow(b);
             SignatureSkills.Arrow(b, draw);
+            b.onHitEnemy += (arrow, col) => arrow.damage *= PierceFalloff;     // 꿰뚫을 때마다 -15% (맨 마지막에: 다른 효과는 맞힌 그 피해로)
         }
         SignatureSkills.BowRelease(start, dir, draw);
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;

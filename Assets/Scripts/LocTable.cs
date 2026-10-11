@@ -1240,7 +1240,8 @@ public static partial class LocTable
         { "공격 속도 · 재장전 · 탄창 대신 무기에 맞는 강화가 나옵니다.", L("Weapon-specific upgrades replace attack speed, reload and magazine.", "攻撃速度・リロード・弾倉の代わりに、武器に合った強化が並びます。", "以适合武器的强化取代攻击速度、装填与弹匣。") },
         { "대지 가르기", L("Earth Splitter", "大地裂き", "裂地斩") },
         // v3.3 궁수 활 시위 · 연금술사 시약
-        { "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살", L("Hold to draw the bowstring, release to fire. The longer you draw, the stronger and faster the arrow", "押し続けると弦を引き、離すと発射。長く引くほど強く速い矢", "按住拉弓，松开射出。拉得越久，箭越强越快") },
+        { "누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다", L("Hold to draw the bowstring, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. You move slower while drawing", "押し続けて弦を引き、離して発射。満タンの瞬間(チン!)に離すと「パーフェクト!」の矢、握りすぎると弱まる。引いている間は遅くなる", "按住拉弓，松开发射。拉满的瞬间(叮!)松开即为「完美!」之箭，握太久会变弱。拉弓时移动变慢") },
+        { "완벽!", L("Perfect!", "パーフェクト!", "完美!") },
         { "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발", L("Flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask blows up big", "火炎・氷結・酸の試薬を交互に詰めたフラスコ。時々、不安定なフラスコが大爆発", "轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸") },
         { "시위 당기는 속도", L("Draw Speed", "弦を引く速度", "拉弓速度") },
         // 거너 무기 진화 · 영혼 트리 · 영혼 조각 · 거너 전용 레벨업 카드

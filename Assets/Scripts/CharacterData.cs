@@ -47,7 +47,7 @@ public static class CharacterData
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
-            weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 오래 당길수록 강하고 빠른 화살",
+            weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살이 쏟아질 위치를 조정하고, 떼면 쏟아붓습니다",
             hp = 0.95f, damage = 1.25f, attackSpeed = 1f, gauge = 1.15f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
             color = new Color(0.45f, 0.8f, 0.4f) },
