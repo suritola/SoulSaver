@@ -135,7 +135,7 @@ public partial class SpecialAbilities
         if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
         // 기본 공격에 붙는 능력 + 바뀌는 필살기
         // 2.2.0~ 거너도 쌍권총만 필살기가 바뀌고, 나머지는 원래 조준 사격 뒤에 덧붙음
-        string ult = "\n<color=#9fd8ff>" + Loc.T(id == DualId ? "필살기" : "필살기에 덧붙음") + " · " + UltName(id) + "</color>  ";
+        string ult = "\n<color=#9fd8ff>" + Loc.T("필살기에 덧붙음") + " · " + UltName(id) + "</color>  ";
         // 2.1.8~ 거너가 아니면 우클릭은 원래 필살기 그대로, 진화 무기의 궁극기는 거기에 덧붙음 (세기 50%)
         if (!Gunner) return Loc.T(CharacterKit.FormDesc(id)) + "\n<color=#9fd8ff>" + Loc.T("필살기에 덧붙음") + " · " + UltName(id) + "</color>  " + Loc.T(KitUltDesc(id));
         bool maxed = tier >= 2 && id == gunEvo1;
@@ -297,18 +297,14 @@ public partial class SpecialAbilities
         t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 52, ult, () => UpgradeUlt(uw, UltTraitStat)));
         if (Gunner)
         {
-            if (UltReplaced)
+            // 1.0.8: 쌍권총도 일제 사격으로 조준하므로 「노려보는 눈빛」은 늘, 덧붙는 총알 폭풍이 있으면 사거리 칸도
+            if (UltActive && UltId == DualId)
             {
-                // 쌍권총(총알 폭풍)은 조준이 없으므로 「노려보는 눈빛」 대신 사거리 · 필살기 특성(지속 시간) 옆에 붙여 스킬 칸끼리 모음
                 t.Add(Node("u.storm1", "u.trait1", 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
                 t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +3칸", 34, ult, () => TreeStormRange += 3f));
             }
-            else
-            {
-                // 조준형 필살기(거너)만
-                t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
-                t.Add(Node("u.slow2", "u.slow1", 1, "노려보는 눈빛 II", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 34, LvIcon(3), () => p.Skill_setTime *= 0.8f));
-            }
+            t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
+            t.Add(Node("u.slow2", "u.slow1", 1, "노려보는 눈빛 II", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 34, LvIcon(3), () => p.Skill_setTime *= 0.8f));
         }
         t.Add(Node("u.refund1", "u.gauge2", 1, "잔불", "필살기를 쓴 뒤 게이지가 15% 남습니다", 30, LvIcon(2), () => TreeUltRefund += 0.15f));
         t.Add(Node("u.refund2", "u.refund1", 1, "잔불 II", "필살기를 쓴 뒤 게이지가 15% 더 남습니다", 54, LvIcon(2), () => TreeUltRefund += 0.15f));

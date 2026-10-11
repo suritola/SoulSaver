@@ -792,7 +792,8 @@ public partial class SpecialAbilities : MonoBehaviour
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
     // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)
     // 2.2.0: 거너는 쌍권총(총알 폭풍)만 필살기를 바꾸고, 나머지 진화 무기는 원래 조준 사격 뒤에 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
-    public bool UltReplaced => UltActive && UltId == DualId;
+    // 1.0.8: 쌍권총도 필살기를 바꾸지 않음 — 일제 사격을 그대로 쓰고 총알 폭풍이 절반 세기로 덧붙음 (모든 무기 진화가 같은 규칙)
+    public bool UltReplaced => false;
     public bool UltAdds => UltActive && !UltReplaced;
     public bool IsInstantUlt => UltReplaced;
 
