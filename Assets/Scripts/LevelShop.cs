@@ -586,12 +586,13 @@ public partial class LevelShop : MonoBehaviour
         if (bul == null) return "";
         int n = id < ability_level.Length ? ability_level[id] : 0;
         string S(string ko) => Loc.T(ko);
+        int Rem(int max) => Mathf.Max(0, max - n);        // 최대까지 남은 단계 (설명의 최대 수치)
         switch (id)
         {
             case 0:
                 return CardText(S("총알이 적을 뚫고 지나갑니다."), S("관통"), (bul.pene - 1) + S("마리"), bul.pene + S("마리"), n, 0);
             case 1:
-                return CardText(S("코인을 주울 때 더 많이 얻습니다."), S("코인 1개당 획득량"), (1 + bul.bonusCoin).ToString(), (2 + bul.bonusCoin).ToString(), n, CoinMaxLevel);
+                return CardText(S("코인을 주울 때 더 많이 얻습니다."), S("코인 1개당 획득량"), (1 + bul.bonusCoin).ToString(), (2 + bul.bonusCoin).ToString(), n, CoinMaxLevel, (1 + bul.bonusCoin + Rem(CoinMaxLevel)).ToString());
             case 2:
                 {
                     float pps = skill != null ? skill.pointsPerSecond : 1f;
@@ -602,35 +603,44 @@ public partial class LevelShop : MonoBehaviour
                 }
             case 3:
                 return CardText(S("스킬을 쓰는 동안 적이 더 느려집니다."), S("스킬 중 시간 속도"),
-                                (bul.Skill_setTime * 100f).ToString("0.#") + "%", (bul.Skill_setTime * 80f).ToString("0.#") + "%", n, GlareMaxLevel);
+                                (bul.Skill_setTime * 100f).ToString("0.#") + "%", (bul.Skill_setTime * 80f).ToString("0.#") + "%", n, GlareMaxLevel,
+                                (bul.Skill_setTime * Mathf.Pow(0.8f, Rem(GlareMaxLevel)) * 100f).ToString("0.#") + "%");
             case 4:
                 {
                     float bonus = lv != null ? lv.bonusEXP : 1f;
                     return CardText(S("적을 처치할 때 얻는 경험치가 늘어납니다."), S("경험치 배율"),
-                                    (bonus * 100f).ToString("0") + "%", ((bonus + 0.1f) * 100f).ToString("0") + "%", n, ExpMaxLevel);
+                                    (bonus * 100f).ToString("0") + "%", ((bonus + 0.1f) * 100f).ToString("0") + "%", n, ExpMaxLevel,
+                                    ((bonus + 0.1f * Rem(ExpMaxLevel)) * 100f).ToString("0") + "%");
                 }
             case 5:
                 return CardText(S("주변의 코인을 끌어옵니다."), S("끌어오는 범위"),
-                                bul.coinMagnetRange.ToString("0") + S("칸"), (bul.coinMagnetRange + MagnetStep).ToString("0") + S("칸"), n, MagnetMaxLevel);
+                                bul.coinMagnetRange.ToString("0") + S("칸"), (bul.coinMagnetRange + MagnetStep).ToString("0") + S("칸"), n, MagnetMaxLevel,
+                                (bul.coinMagnetRange + MagnetStep * Rem(MagnetMaxLevel)).ToString("0") + S("칸"));
             case 6:
                 return CardText(S("한 번에 여러 발을 부채꼴로 발사합니다. 발사 수가 늘수록 한 발당 피해는 줄어듭니다."), S("발사 수 · 한 발당 피해"),
                                 bul.multiShot + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot)),
-                                (bul.multiShot + 1) + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)), n, 4);
+                                (bul.multiShot + 1) + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot + 1)), n, 4,
+                                (bul.multiShot + Rem(4)) + S("발") + " " + Percent(bul.MultiShotDamageRate(bul.multiShot + Rem(4))));
             case 7:
                 return CardText(S("총알이 적을 더 멀리 밀어냅니다."), S("넉백"),
-                                (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "%", (bul.knockBack * KnockBackGrowth / BaseKnockBack * 100f).ToString("0") + "%", n, KnockBackMaxLevel);
+                                (bul.knockBack / BaseKnockBack * 100f).ToString("0") + "%", (bul.knockBack * KnockBackGrowth / BaseKnockBack * 100f).ToString("0") + "%", n, KnockBackMaxLevel,
+                                (bul.knockBack * Mathf.Pow(KnockBackGrowth, Rem(KnockBackMaxLevel)) / BaseKnockBack * 100f).ToString("0") + "%");
             case 8:
                 return CardText(S("최대 체력이 늘어나고, 선택하는 순간 체력을 모두 회복합니다."), S("최대 체력"),
-                                Mathf.RoundToInt(bul.PlayerMaxHealth).ToString(), Mathf.RoundToInt(bul.PlayerMaxHealth * 1.12f).ToString(), n, HeartMaxLevel);
+                                Mathf.RoundToInt(bul.PlayerMaxHealth).ToString(), Mathf.RoundToInt(bul.PlayerMaxHealth * 1.12f).ToString(), n, HeartMaxLevel,
+                                Mathf.RoundToInt(bul.PlayerMaxHealth * Mathf.Pow(1.12f, Rem(HeartMaxLevel))).ToString());
             case 9:
                 return CardText(S("적에게 받는 피해가 줄어듭니다."), S("받는 피해 감소"),
-                                (Mathf.Min(bul.def, PlayerController.MaxDef) * 100f).ToString("0") + "%", (Mathf.Min(bul.def + DefStep, PlayerController.MaxDef) * 100f).ToString("0") + "%", n, DefMaxLevel);
+                                (Mathf.Min(bul.def, PlayerController.MaxDef) * 100f).ToString("0") + "%", (Mathf.Min(bul.def + DefStep, PlayerController.MaxDef) * 100f).ToString("0") + "%", n, DefMaxLevel,
+                                (Mathf.Min(bul.def + DefStep * Rem(DefMaxLevel), PlayerController.MaxDef) * 100f).ToString("0") + "%");
             case 10:
                 return CardText(S("시간이 지나면 체력이 조금씩 회복됩니다."), S("초당 회복"),
-                                bul.regenPerSecond.ToString("0.#"), (bul.regenPerSecond + RegenStep).ToString("0.#"), n, RegenMaxLevel);
+                                bul.regenPerSecond.ToString("0.#"), (bul.regenPerSecond + RegenStep).ToString("0.#"), n, RegenMaxLevel,
+                                (bul.regenPerSecond + RegenStep * Rem(RegenMaxLevel)).ToString("0.#"));
             case 11:
                 return CardText(S("적을 처치할 때마다 체력을 회복합니다."), S("처치당 회복"),
-                                bul.healOnKill.ToString("0"), (bul.healOnKill + HealOnKillStep).ToString("0"), n, HealOnKillMaxLevel);
+                                bul.healOnKill.ToString("0"), (bul.healOnKill + HealOnKillStep).ToString("0"), n, HealOnKillMaxLevel,
+                                (bul.healOnKill + HealOnKillStep * Rem(HealOnKillMaxLevel)).ToString("0"));
             case SupplyId:
                 return S("고를 능력을 모두 배웠습니다.") + "\n<color=#F5D478>" + S("보급") + "  " + S("체력 +30% · 코인 +10") + "</color>";
         }

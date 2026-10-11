@@ -202,7 +202,9 @@ public class AbilityHUD : MonoBehaviour
     {
         if (Shop == null) return "";
         if (id >= 1000) { LevelShop.SkillEvo e = Shop.EvoById(id); return e != null ? LevelShop.EvoTooltip(e, CharacterData.Selected) : ""; }
-        return Shop.GetAbilityTooltip(id);
+        LevelShop.HudView = true;          // 지금 수치 + 최대 수치 (레벨업 카드의 「지금 → 다음」 대신)
+        try { return Shop.GetAbilityTooltip(id); }
+        finally { LevelShop.HudView = false; }
     }
 
     // 스킬 진화: 재료 칸들을 지우고 그 자리에 진화 칸 하나 (빛나는 테두리)

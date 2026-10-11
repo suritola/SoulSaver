@@ -34,9 +34,17 @@ public partial class LevelShop
     }
 
     // 모든 레벨업 카드 설명의 모양: 한 문장 + 금색 "수치  지금 → 다음" + Lv
-    public static string CardText(string sentence, string stat, string now, string next, int level, int max)
+    // HudView: 왼쪽 위 레벨업 스킬 칸 설명 (1.0.8) — 「지금 → 다음」 대신 지금 수치만, 그리고 최대 단계일 때의 수치(maxVal)
+    public static bool HudView;
+    public static string CardText(string sentence, string stat, string now, string next, int level, int max, string maxVal = null)
     {
         string lv = max > 0 ? "   <color=#A89C86>Lv " + level + " / " + max + "</color>" : "";
+        if (HudView)
+        {
+            string cap = max > 0 && level >= max ? "  <color=#A89C86>(" + Loc.T("최대") + ")</color>"
+                       : maxVal != null ? "\n<color=#A89C86>" + Loc.T("최대") + "  " + maxVal + "</color>" : "";
+            return sentence + "\n<color=#F5D478>" + stat + "  " + now + "</color>" + lv + cap;
+        }
         return sentence + "\n<color=#F5D478>" + stat + "  " + now + "  →  " + next + "</color>" + lv;
     }
 
@@ -44,7 +52,7 @@ public partial class LevelShop
     {
         string now = level > 0 ? Val(c.values[Mathf.Min(level, c.max) - 1]) : Loc.T("없음");
         string next = level < c.max ? Val(c.values[level]) : Loc.T("최대");
-        return CardText(Loc.T(c.desc), Loc.T(c.stat), now, next, level, c.max);
+        return CardText(Loc.T(c.desc), Loc.T(c.stat), now, next, level, c.max, c.max > 0 ? Val(c.values[c.max - 1]) : null);
     }
 
     static KitCard KitCardOf(int id) => KitCardOf(CharacterData.Selected, id);
