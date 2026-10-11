@@ -621,7 +621,9 @@ public class HazardZone : MonoBehaviour
     float tick;
     FxAnim visual;
 
-    public static HazardZone Spawn(Vector3 pos, float radius, float life, float tickDamage, Color color, string fx, float slow)
+    // caller · file: 만든 스킬 (컴파일러가 채움, 받은 피해 출처 이름 · 1.0.7 호출 스택을 뒤지지 않게)
+    public static HazardZone Spawn(Vector3 pos, float radius, float life, float tickDamage, Color color, string fx, float slow,
+        [System.Runtime.CompilerServices.CallerMemberName] string caller = "", [System.Runtime.CompilerServices.CallerFilePath] string file = "")
     {
         GameObject go = new GameObject("HazardZone");
         go.transform.position = pos;
@@ -630,7 +632,7 @@ public class HazardZone : MonoBehaviour
         z.life = life;
         z.tickDamage = tickDamage;
         z.slow = slow;
-        z.label = AttackLabel.FromStack();
+        z.label = AttackLabel.FromCaller(file, caller);
         z.visual = Fx.Play(fx, pos, radius * (fx == "fx_puddle" ? 1.1f : 2.2f), color, z.fps, 0f, fx == "fx_puddle" ? 1 : 16, true, life);
         if (z.visual != null && fx == "fx_puddle")
         {
@@ -760,7 +762,8 @@ public static class Hostile
         return Vector2.Distance(p, a + ab * k);
     }
 
-    public static HostileProjectile Shoot(Vector3 pos, Vector2 dir, float speed, float damage, float radius, Color color, float scale, float life = 4f)
+    public static HostileProjectile Shoot(Vector3 pos, Vector2 dir, float speed, float damage, float radius, Color color, float scale, float life = 4f,
+        [System.Runtime.CompilerServices.CallerMemberName] string caller = "", [System.Runtime.CompilerServices.CallerFilePath] string file = "")
     {
         GameObject go = SpecialAbilities.MakeSprite("HostileShot", Glow, pos, scale, color, "Effect", 9);
         HostileProjectile h = go.AddComponent<HostileProjectile>();
@@ -769,7 +772,7 @@ public static class Hostile
         h.damage = damage;
         h.radius = radius;
         h.life = life;
-        h.label = AttackLabel.FromStack() ?? "적 탄환";
+        h.label = AttackLabel.FromCaller(file, caller) ?? "적 탄환";
         return h;
     }
 

@@ -26,7 +26,17 @@ public static class AttackLabel
         { "ShardRings", "거울 조각 고리" }, { "MirrorUlt", "흉내 낸 필살기" }, { "ReflectedMemory", "되비친 기억" },
     };
 
-    // 지금 호출 스택에서 보스 · 적 스킬을 찾음 (없으면 null)
+    // 투사체 · 장판을 만든 함수 이름으로 (컴파일러가 채운 값, 1.0.7: 탄을 만들 때마다 호출 스택을 뒤지면 보스 탄막에서 렉이 생길 수 있었음)
+    public static string FromCaller(string file, string member)
+    {
+        string f = System.IO.Path.GetFileNameWithoutExtension(file ?? "");
+        if (f == "BossUltimate") return "보스 결계";
+        if (f.StartsWith("BossSkills") && member != null && BossSkill.TryGetValue(member, out string boss)) return boss;
+        if (f == "EnemySkill" && System.Enum.TryParse(member, out EnemySkillType type) && type != EnemySkillType.None) return EnemySkill.SkillName(type);
+        return null;
+    }
+
+    // 지금 호출 스택에서 보스 · 적 스킬을 찾음 (없으면 null) — 맞는 순간에만 (드묾)
     public static string FromStack()
     {
         try
