@@ -29,7 +29,7 @@ public partial class SpecialAbilities
         GrenadeId => "점착탄",
         ShotgunId => "산탄 총구",
         SeekerId => "영혼 사냥",
-        ChainId => "낙뢰탄",
+        ChainId => "번개 그물",
         ScytheId => "사신의 탄환",
         _ => "",
     };
@@ -43,7 +43,7 @@ public partial class SpecialAbilities
         GrenadeId => "총알에 맞은 적에게 폭탄이 붙어 1.5초 뒤 터집니다. (범위 2.5칸, 피해 110%)",
         ShotgunId => "쏠 때마다 짧게 날아가는 산탄 네 발이 함께 퍼집니다. (발당 피해 55%)",
         SeekerId => "적을 처치하면 영혼탄 세 발이 튀어나와 가까운 적을 쫓아갑니다. (피해 60%)",
-        ChainId => "총알이 여섯 번 맞힐 때마다 맞은 자리에 낙뢰가 떨어집니다. (범위 3칸, 피해 150%)",
+        ChainId => "총알이 맞힌 적과 바로 전에 맞힌 적 사이에 2초 동안 번개 줄이 이어져, 줄에 닿는 적이 계속 감전됩니다. (0.3초마다 공격력 30%, 줄 최대 4개)",
         ScytheId => "적을 처치하면 35% 확률로 영혼 낫이 휘돌아 주변을 벱니다. (공격력 180%)",
         _ => "",
     };
@@ -68,7 +68,12 @@ public partial class SpecialAbilities
 
     // ---------------- 총알에 붙는 능력 (ApplyGunCards 에서, 권총 총알마다). main = 쏠 때 나가는 첫 발 (쌍발 · 산탄 덤 총알이 아님)
     float lastMainShot = -99f;
-    int thunderHits;
+    // 번개 그물: 바로 전에 맞힌 적 (그 적과 지금 맞힌 적 사이에 번개 줄)
+    Transform netLast;
+    int netLines;
+    float netSoundAt;
+    const int NetMaxLines = 4;
+    const float NetRange = 9f, NetLife = 2f, NetTick = 0.3f, NetDamage = 0.3f;
     readonly HashSet<int> stuckBombs = new HashSet<int>();
 
     void ApplyEvoAugments(Bullet b, bool light, bool main)
@@ -99,16 +104,65 @@ public partial class SpecialAbilities
         {
             if (col == null) return;
             if (sticky && stuckBombs.Add(col.GetInstanceID())) StartCoroutine(StickyBomb(col.transform, col.GetInstanceID()));
-            if (thunder && ++thunderHits >= 6)
-            {
-                thunderHits = 0;
-                Vector3 at = col.transform.position;
-                Fx.Bolt(at + new Vector3(Random.Range(-1.5f, 1.5f), 14f), at, 1.4f, new Color(0.6f, 0.9f, 1f), 0.2f);
-                Fx.Spawn("fx_shock", at, 6f, new Color(0.6f, 0.9f, 1f), 22f);
-                CharacterKit.DamageCircle(at, 3f, Damage * 1.5f * AugPower(ChainId), 0.5f);
-                if (fx != null) fx.Play("thunder", 0.5f, Random.Range(0.95f, 1.15f));
-            }
+            if (thunder) NetHit(col.transform);
         };
+    }
+
+    // 번개 그물 (1.0.8, 예전 「낙뢰탄」: 여섯 번마다 낙뢰 — 잘 보이지 않고 전기탄과 겹쳤음)
+    // 맞힌 적과 바로 전에 맞힌 적 사이에 번개 줄 → 무리 양 끝을 번갈아 쏘면 그 사이가 그물로 덮임
+    void NetHit(Transform hit)
+    {
+        Transform prev = netLast;
+        netLast = hit;
+        if (prev == null || prev == hit || netLines >= NetMaxLines) return;
+        if ((prev.position - hit.position).sqrMagnitude > NetRange * NetRange) return;
+        StartCoroutine(NetLine(prev, hit));
+    }
+
+    System.Collections.IEnumerator NetLine(Transform a, Transform b)
+    {
+        netLines++;
+        Color c = new Color(0.55f, 0.9f, 1f);
+        LineRenderer core = Hostile.NewLine("NetBolt", Color.white, 0.09f, 31);
+        LineRenderer glow = Hostile.NewLine("NetGlow", new Color(c.r, c.g, c.b, 0.55f), 0.32f, 30);
+        core.positionCount = glow.positionCount = 9;
+        if (fx != null && Time.time >= netSoundAt) { netSoundAt = Time.time + 0.25f; fx.Play("thunder", 0.22f, Random.Range(1.4f, 1.7f)); }
+        Vector3 pa = a.position, pb = b.position;
+        float tick = 0f;
+        for (float t = 0f; t < NetLife; t += Time.deltaTime)
+        {
+            if (a != null) pa = a.position;            // 적이 쓰러지면 마지막 자리에 남음
+            if (b != null) pb = b.position;
+            Vector3 d = pb - pa;
+            Vector3 side = new Vector3(-d.y, d.x, 0f).normalized;
+            float fade = t > NetLife - 0.3f ? (NetLife - t) / 0.3f : 1f;
+            for (int i = 0; i < 9; i++)
+            {
+                float k = i / 8f;
+                float jag = i == 0 || i == 8 ? 0f : Random.Range(-0.35f, 0.35f);
+                Vector3 p = pa + d * k + side * jag;
+                core.SetPosition(i, p);
+                glow.SetPosition(i, p);
+            }
+            core.startColor = core.endColor = new Color(1f, 1f, 1f, fade);
+            glow.startColor = glow.endColor = new Color(c.r, c.g, c.b, 0.55f * fade);
+            if ((tick -= Time.deltaTime) <= 0f)
+            {
+                tick = NetTick;
+                Vector3 mid = (pa + pb) * 0.5f;
+                foreach (Collider2D col in Physics2D.OverlapCircleAll(mid, d.magnitude * 0.5f + 1f))
+                {
+                    if (col == null || (!col.CompareTag("enermy") && !col.CompareTag("boss"))) continue;
+                    if (Hostile.DistanceToSegment(col.transform.position, pa, pb) > 0.7f) continue;
+                    Specials.Damage(col.gameObject, Damage * NetDamage * AugPower(ChainId), side, 0f);
+                    Fx.Spawn("fx_spark", col.transform.position, 1f, c, 24f);
+                }
+            }
+            yield return null;
+        }
+        Destroy(core.gameObject);
+        Destroy(glow.gameObject);
+        netLines--;
     }
 
     // 점착탄: 맞은 적에 붙은 폭탄이 1.5초 뒤 터짐 (적마다 하나씩)
