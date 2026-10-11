@@ -287,6 +287,29 @@ public partial class SpecialAbilities
         return 0f;
     }
 
+    Image evoGlow;
+    void EvoGlow(HudTile t, float k)
+    {
+        if (evoGlow == null && SpecialAbilities.GlowSprite != null)
+        {
+            RectTransform tile = (RectTransform)t.border.transform;
+            GameObject g = new GameObject("EvoGlow", typeof(RectTransform), typeof(Image));
+            RectTransform r = g.GetComponent<RectTransform>();
+            r.SetParent(tile.parent, false);
+            r.SetSiblingIndex(tile.GetSiblingIndex());          // 칸 뒤에
+            r.anchorMin = tile.anchorMin; r.anchorMax = tile.anchorMax; r.pivot = tile.pivot;
+            r.sizeDelta = tile.sizeDelta * 2f;
+            evoGlow = g.GetComponent<Image>();
+            evoGlow.sprite = SpecialAbilities.GlowSprite;
+            evoGlow.raycastTarget = false;
+        }
+        if (evoGlow == null) return;
+        RectTransform tr = (RectTransform)t.border.transform, gr = (RectTransform)evoGlow.transform;
+        if (gr.parent != tr.parent) { Destroy(evoGlow.gameObject); evoGlow = null; return; }     // 칸을 다시 만들었으면 다음 프레임에 새로
+        gr.anchoredPosition = tr.anchoredPosition - tr.sizeDelta * 0.5f;      // 칸 기준점이 왼쪽 아래라 한가운데에 맞춤
+        evoGlow.color = new Color(1f, 0.82f, 0.35f, 0.3f + 0.35f * k);
+    }
+
     void UpdateTile(HudTile t)
     {
         bool active = false;
@@ -297,7 +320,10 @@ public partial class SpecialAbilities
         if (id == EvoRow)
         {
             // 진화 단계 표시 (I · II), 금빛 테두리
-            t.border.color = TileActive;
+            // 1.0.8: 다른 무기 칸과 똑같아 눈에 안 띄었음 → 뒤에 숨 쉬는 금빛 빛무리 + 금색 ↔ 흰색 반짝임
+            float k = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 3f);
+            t.border.color = Color.Lerp(TileActive, Color.white, 0.55f * k);
+            EvoGlow(t, k);
             t.cooldown.fillAmount = 0f;
             string tierText = EvolutionTier >= 2 ? "II" : "I";
             if (t.label.text != tierText) t.label.text = tierText;
