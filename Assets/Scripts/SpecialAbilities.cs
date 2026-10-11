@@ -806,13 +806,15 @@ public partial class SpecialAbilities : MonoBehaviour
     public Color AimTint => UltReplaced ? WeaponColor(UltId) : new Color(1f, 0.9f, 0.6f);
 
     WeaponAim aim;
+    // 1.0.7: 쌍권총이 아닌 진화도 덧붙는 필살기(지옥불 포격 부채꼴 · 레일건 직선 …)의 범위를 조준 중에 보여 줌 (표식은 그대로 일제 사격 것)
+    bool AimShown => Gunner && UltActive;
     public void BeginAim()
     {
-        if (!UltReplaced) return;
+        if (!AimShown) return;
         if (aim == null) aim = new WeaponAim(this);
         aim.Begin(UltId);
     }
-    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && UltReplaced) aim.Update(targets, charge); }
+    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && AimShown) aim.Update(targets, charge); }
     public void EndAim() { if (aim != null) aim.End(); }
     public GameObject MarkTarget(Transform target) => aim != null && UltReplaced ? aim.MarkTarget(target) : null;
 
