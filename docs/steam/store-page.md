@@ -5,6 +5,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 > 게임 이름은 v3.2부터 **Soul Saver** 입니다. (예전 이름 Gun Saver)
 > 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
+> 1.0.7 기준으로 고쳤습니다: 거너 우클릭 이름 「일제 사격」, 장 중반 습격 · 보물 상자 · 보스 보상 · 저주 제단 · 최후의 보루 · 영웅 숙련 소개 추가.
 > 2.0.6 기준으로 고쳤습니다: 영웅별 고유 스킬 50종 · 스킬 진화 37종 · 보스 필살기 「결계 침식」 · 최대 레벨 50 · 레벨업 건너뛰기 · 모든 우클릭 스킬 조준. 스크린샷 12장 · 트레일러는 `tools/trailer/record.ps1` 로 다시 찍음.
 > 1.8.6 기준으로 다시 썼습니다: 무기 진화 · 영혼 트리(운명 가지) · 스킨 상점 · 도전 과제 32개. 예전 글의 "특수 능력 52종 · 상점 무기 강화"는 1.7.8에 없어진 방식이라 뺐습니다.
 
@@ -39,7 +40,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 망자들까지 깨어났다. 초원에서 지하 묘역, 불타는 지옥을 지나 영혼의 심연까지 내려갈 영웅을 고르세요.
 [b]10칸의 캐릭터 도감[/b]에는 저마다 다른 무기와 우클릭 기술을 가진 영웅들이 기다립니다. 처음에는 셋만 함께하고, 나머지는 적을 처치해 모은 포인트로 한 명씩 불러옵니다. 아직 모습을 드러내지 않은 [b]비밀 영웅[/b]도 있습니다.
 [list]
-[*][b]거너[/b] — 리볼버와 시간을 늦추는 타겟팅 필살기
+[*][b]거너[/b] — 리볼버와 시간을 늦추고 여러 적을 한꺼번에 노리는 일제 사격
 [*][b]검사[/b] — 장검을 크게 휘둘러 적 무리를 직접 베고, 누를수록 강해지는 회전 베기
 [*][b]도적[/b] — 쉴 새 없는 표창 세례와 무적 출혈 돌진
 [*][b]궁수[/b] — 당길수록 강해지는 화살과 하늘을 덮는 화살비
@@ -52,7 +53,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 스테이지 보스를 쓰러뜨릴 때마다 지금 무기가 부서지며 [b]진화 카드 3장[/b]이 펼쳐집니다. 한 판에 두 번, 되돌릴 수 없는 선택입니다.
 [list]
 [*][b]거너[/b] — 권총이 화염 방사기 · 영혼 저격총 · 저주받은 쌍권총으로, 다시 레일건 · 번개 사슬총 · 부메랑 낫 등으로
-[*][b]다른 영웅[/b] — 평타에 새 능력이 붙고(대지의 일격 · 독 표창 · 투창 화살 · 자석 플라스크 …), 진화 무기의 궁극기가 우클릭 필살기에 덧붙습니다
+[*][b]다른 영웅[/b] — 평타에 새 능력이 붙고(대지의 일격 · 독 표창 · 투창 화살 · 자석 플라스크 …), 진화 무기의 필살기가 우클릭 필살기에 덧붙습니다
 [/list]
 지금까지 고른 레벨업 카드와 영혼 트리 강화는 진화한 무기로 그대로 이어집니다.
 
@@ -81,6 +82,15 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [*]지옥의 군주 「연옥 낙화」 — 쏟아지는 운석, 화염 파동, 결계를 가로지르는 용암
 [*]킹 슬라임 「산성 범람」 — 결계 벽에 튕기는 산성 덩어리와 번갈아 솟는 간헐천
 [*]거울의 군주 「거울의 방」 — 둘레의 거울들이 차례로 광선을 되쏘고 깨진 거울 조각이 쏟아집니다
+[/list]
+
+[h2]판마다 달라지는 갈림길[/h2]
+[list]
+[*][b]장 중반 습격[/b] — 둘레에서 한꺼번에 몰려오는 적 무리를 모두 쓰러뜨리면 [b]보물 상자[/b]가 나타나고, 코인 · 영혼 조각 · 생명 중 하나를 고릅니다
+[*][b]보스 보상[/b] — 장 보스를 쓰러뜨리면 전설의 힘 · 영혼 조각 다발 · 생명의 정수 중 하나를 고릅니다
+[*][b]저주 제단[/b] — 2장부터 저주를 받으면 적이 단단해지는 대신 경험치 · 코인을 더 얻습니다
+[*][b]최후의 보루[/b] — 체력이 크게 떨어지면 장마다 한 번 무적이 되며 둘레의 적과 탄을 밀어냅니다
+[*][b]영웅 숙련[/b] — 마지막 보스를 쓰러뜨릴 때마다 그 영웅이 판을 시작할 때 레벨업 카드를 한 장 더 고릅니다
 [/list]
 
 [h2]네 개의 세계, 네 명의 왕[/h2]
@@ -117,7 +127,7 @@ From the Meadow to the Abyss of Souls, save the world's souls from the risen dea
 When the King Slime swallowed the Meadow, even the dead sleeping beneath the earth began to stir. Choose the hero who will descend from the Meadow through the Catacombs and the Burning Hell, all the way to the Abyss of Souls.
 A [b]10-slot character codex[/b] holds heroes with their own weapons and right-click skills. Three join you from the start; the rest are unlocked one by one with points earned from defeating enemies. Some [b]secret heroes[/b] have yet to reveal themselves.
 [list]
-[*][b]Gunner[/b] — a revolver and a time-slowing targeting ultimate
+[*][b]Gunner[/b] — a revolver and Volley, a time-slowing shot at every enemy you mark
 [*][b]Swordsman[/b] — swing a longsword wide to cut through crowds, plus a spin slash that grows as you hold
 [*][b]Rogue[/b] — a nonstop hail of throwing stars and an invincible Bleeding Dash
 [*][b]Archer[/b] — arrows that grow stronger the longer you draw, and a sky-darkening arrow rain
@@ -161,6 +171,15 @@ Every hit you land fills the boss's ultimate gauge. When it's full, the boss cal
 [*]Mirror Sovereign "Hall of Mirrors" — the mirrors around you take turns firing beams back while broken shards rain down
 [/list]
 
+[h2]A run that branches[/h2]
+[list]
+[*][b]Mid-chapter ambush[/b] — defeat the horde that surrounds you all at once and a [b]treasure chest[/b] appears: pick coins, soul shards or life
+[*][b]Boss rewards[/b] — after each chapter boss, choose Legendary Might, a Soul Shard Bundle or the Essence of Life
+[*][b]Cursed Altar[/b] — from chapter 2, accept a curse for tougher enemies and more EXP and coins
+[*][b]Last Stand[/b] — once per chapter at low health, become invincible and blast away nearby enemies and bullets
+[*][b]Hero Mastery[/b] — every final boss you defeat lets that hero pick one more level-up card at the start of a run
+[/list]
+
 [h2]Four worlds, four kings[/h2]
 The King Slime of the Meadow, the Lich King of the Catacombs, the Demon Lord of the Burning Hell — and in the final [b]Abyss of Souls[/b], the [b]Mirror Sovereign[/b], who copies your basic attack, ultimate, level-up skills and special abilities and turns them back on you. Every boss has a cinematic entrance, lines of their own, special patterns once their health runs low and an ultimate barrier.
 
@@ -195,7 +214,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 キングスライムが草原を飲み込むと、地の底に眠る亡者までもが目覚め始めた。草原から地下墓所、燃える地獄を抜けて魂の深淵まで降りていく英雄を選ぼう。
 [b]10枠のキャラクター図鑑[/b]には、それぞれ異なる武器と右クリック技を持つ英雄たちが待っている。最初に仲間になるのは三人、残りは敵を倒して集めたポイントで一人ずつ解放。まだ姿を見せていない[b]秘密の英雄[/b]もいる。
 [list]
-[*][b]ガンナー[/b] — リボルバーと時間を遅くするターゲティング必殺技
+[*][b]ガンナー[/b] — リボルバーと、時間を遅くして狙った敵へ一斉に撃つ一斉射撃
 [*][b]剣士[/b] — 長剣を大きく振るって敵の群れを直接斬り、押すほど強くなる回転斬り
 [*][b]盗賊[/b] — 絶え間ない手裏剣の雨と無敵の出血突進
 [*][b]弓使い[/b] — 引くほど強くなる矢と空を覆う矢の雨
@@ -239,6 +258,15 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]鏡の君主「鏡の間」 — 周りの鏡が次々と光線を撃ち返し、割れた鏡の破片が降り注ぐ
 [/list]
 
+[h2]毎回変わる分かれ道[/h2]
+[list]
+[*][b]章の中盤の襲撃[/b] — 周りから一斉に押し寄せる敵の群れをすべて倒すと[b]宝箱[/b]が現れ、コイン・魂のかけら・生命から一つを選ぶ
+[*][b]ボス報酬[/b] — 章のボスを倒すと、伝説の力・魂のかけらの束・生命の精髄から一つを選ぶ
+[*][b]呪いの祭壇[/b] — 第2章から、呪いを受けると敵が硬くなる代わりに経験値とコインが増える
+[*][b]最後の砦[/b] — 体力が大きく減ると章ごとに一度、無敵になって周りの敵と弾を吹き飛ばす
+[*][b]英雄の熟練[/b] — 最後のボスを倒すたびに、その英雄はラン開始時にレベルアップカードをもう一枚選べる
+[/list]
+
 [h2]四つの世界、四人の王[/h2]
 草原のキングスライム、地下墓所のリッチ王、燃える地獄の君主、そして最後の[b]魂の深淵[/b]で待つ[b]鏡の君主[/b]。鏡の君主はお前の通常攻撃・必殺技・レベルアップスキル・特殊能力をそのまま真似て返してくる。ボスごとの登場演出と台詞、体力が減ると始まる特殊パターン、必殺技の結界が待ち受ける。
 
@@ -273,7 +301,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 史莱姆王吞没了草原，连沉睡在地底的亡者也开始苏醒。选择一位英雄，从草原经地下墓穴、燃烧地狱，一路深入灵魂深渊。
 [b]10格角色图鉴[/b]中，拥有各自武器与右键技能的英雄们正在等待。开局有三位同伴，其余英雄需用击败敌人累积的点数逐一解锁。还有尚未现身的[b]秘密英雄[/b]。
 [list]
-[*][b]枪手[/b] — 左轮手枪与让时间变慢的瞄准必杀技
+[*][b]枪手[/b] — 左轮手枪与让时间变慢、一次射向所有锁定敌人的齐射
 [*][b]剑士[/b] — 大幅挥舞长剑直接斩开敌群，按得越久越强的回旋斩
 [*][b]盗贼[/b] — 连绵不断的飞镖与无敌的出血突进
 [*][b]弓箭手[/b] — 拉得越久越强的箭矢与遮天箭雨
@@ -315,6 +343,15 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]地狱领主「炼狱落火」 — 倾泻的陨石、火焰波与横贯结界的熔岩
 [*]史莱姆王「酸性泛滥」 — 在结界壁上反弹的酸液团与交替喷发的间歇泉
 [*]镜之君主「镜之间」 — 周围的镜子轮流反射光束，破碎的镜片倾泻而下
+[/list]
+
+[h2]每局不同的岔路[/h2]
+[list]
+[*][b]章节中段袭击[/b] — 击败从四周一齐涌来的敌群后会出现[b]宝箱[/b]，可从金币、灵魂碎片、生命中选择一项
+[*][b]首领奖励[/b] — 击败章节首领后，从传说之力、一束灵魂碎片、生命精华中选择一项
+[*][b]诅咒祭坛[/b] — 从第2章开始，接受诅咒会让敌人更强，但获得更多经验与金币
+[*][b]最后的堡垒[/b] — 生命大幅下降时，每章一次进入无敌并震开周围的敌人与子弹
+[*][b]英雄熟练[/b] — 每击败一次最终首领，该英雄开局时可多选一张升级卡牌
 [/list]
 
 [h2]四个世界，四位王者[/h2]
