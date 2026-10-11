@@ -70,9 +70,14 @@ public class ShopStall : MonoBehaviour
         if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("chime", 0.8f, 1.2f);
     }
 
+    // 1.0.8: 지속되는 필살기(일제 사격 · 총알 폭풍 · 화염 회오리 …) 중엔 상호작용 키가 무시돼 상점이 안 열렸음
+    // → 날아가는 중에도 열림 (상점이 시간을 멈추고, 닫으면 이어서). 시간을 늦춘 조준 중에 누르면 기억했다가 끝나는 순간 엶
+    bool pendingOpen;
+
     void Update()
     {
         age += Time.deltaTime;
+        if (pendingOpen) age = Mathf.Min(age, lifetime - 1f);      // 기다리는 동안 사라지지 않게
         float left = lifetime - age;
 
         // 남은 시간 고리 (줄어듦) + 둥실거림
@@ -91,10 +96,13 @@ public class ShopStall : MonoBehaviour
         bool near = p != null && Vector2.Distance(p.transform.position, transform.position) < openDistance;
         PlayerNear = near;
         UpdatePrompt(near);
-        if (near && Time.timeScale == 1f && !p.IsSkillUsing && KeyBindings.Down(GameAction.Interact))
+        if (near && KeyBindings.Down(GameAction.Interact)) pendingOpen = true;
+        if (pendingOpen && (p == null || Vector2.Distance(p.transform.position, transform.position) > openDistance * 1.6f)) pendingOpen = false;
+        if (pendingOpen && Time.timeScale == 1f && !p.IsAiming)
         {
             if (shop.OpenFromStall())
             {
+                pendingOpen = false;
                 PlayerNear = false;
                 Destroy(gameObject);
                 return;
