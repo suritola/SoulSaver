@@ -214,7 +214,7 @@ public static partial class LocTable
         { "영혼 구체 3개가 주위를 돌며\n닿은 적에게 공격력 80% 피해를 줍니다.", L("3 soul orbs circle you,\ndealing 80% damage to enemies they touch.", "魂の球3つが周囲を回り\n触れた敵に攻撃力80%のダメージを与えます。", "3颗灵魂球环绕你，\n对接触的敌人造成80%伤害。") },
         { "피격될 때마다 주변 적에게\n공격력 300% 피해를 주고 밀어냅니다.", L("Each time you are hit, nearby enemies\ntake 300% damage and are pushed away.", "被弾するたびに周囲の敵に\n攻撃力300%のダメージを与え押し返します。", "每次受击时对周围敌人\n造成300%伤害并击退。") },
         { "탄창의 마지막 한 발이 피해 3배가 되고\n맞은 곳에서 폭발합니다.", L("The last bullet in each magazine deals triple damage\nand explodes on impact.", "弾倉の最後の1発がダメージ3倍になり\n命中地点で爆発します。", "弹匣最后一发造成3倍伤害\n并在命中处爆炸。") },
-        { "한 판에 한 번, 죽을 피해를 받으면\n체력 1로 버티고 3초 동안 무적이 됩니다.", L("Once per run, survive a lethal hit\nwith 1 HP and become invincible for 3s.", "1プレイに1回、致命ダメージを受けても\n体力1で耐え、3秒間無敵になります。", "每局一次，受到致命伤害时\n以1点生命存活并无敌3秒。") },
+        { "판마다 한 번, 죽을 피해를 받으면\n체력 1로 버티고 3초 동안 무적이 됩니다.", L("Once per run, survive a lethal hit\nwith 1 HP and become invincible for 3s.", "1プレイに1回、致命ダメージを受けても\n体力1で耐え、3秒間無敵になります。", "每局一次，受到致命伤害时\n以1点生命存活并无敌3秒。") },
 
         // ================================================================= 보스 · 스테이지
         { "킹 슬라임이 둘로 갈라졌다!", L("The King Slime split in two!", "キングスライムが二つに分裂した！", "史莱姆王分裂成了两只！") },
@@ -258,7 +258,7 @@ public static partial class LocTable
         { "저주를 받았다!\n적 체력 +30% · 보상 +50%", L("You are cursed!\nEnemy HP +30% · Rewards +50%", "呪いを受けた！\n敵の体力+30%・報酬+50%", "你受到了诅咒！\n敌人生命+30% · 奖励+50%") },
         // 보스 보상 3택 (1.0.5)
         { "전설의 힘", L("Legendary Might", "伝説の力", "传说之力") },
-        { "공격력 +10% (이번 판 내내)", L("Attack +10% (for the rest of the run)", "攻撃力+10%（このラン中ずっと）", "攻击力+10%（本局持续）") },
+        { "공격력 +10% (영구 지속)", L("Attack +10% (permanent)", "攻撃力+10%（永続）", "攻击力+10%（永久持续）") },
         { "영혼 조각 다발", L("Soul Shard Bundle", "魂のかけらの束", "一束灵魂碎片") },
         { "생명의 정수", L("Essence of Life", "生命の精髄", "生命精华") },
         { "최대 체력 +20, 체력 모두 회복", L("Max HP +20 and fully restore HP", "最大体力+20、体力全回復", "最大生命+20，完全恢复生命") },

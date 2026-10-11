@@ -406,7 +406,7 @@ public class StageManager : MonoBehaviour
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("전설의 힘", "공격력 +10% (이번 판 내내)", new Color(1f, 0.6f, 0.3f), "might"),
+            new ChoiceUI.Option("전설의 힘", "공격력 +10% (영구 지속)", new Color(1f, 0.6f, 0.3f), "might"),
             new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "shards"),
             new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"),
         };

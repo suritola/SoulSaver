@@ -66,7 +66,7 @@ public partial class SpecialAbilities
     public int TreeRevives;
     bool revivedByTree;
 
-    // 불사의 맹세: 한 판에 한 번
+    // 불사의 맹세: 판마다 한 번
     public bool TryUndying()
     {
         revivedByTree = false;
