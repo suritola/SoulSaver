@@ -79,7 +79,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 보스를 때릴수록 보스의 필살기 게이지가 찹니다. 가득 차면 보스가 결계의 이름을 외치고, [b]맵 전체가 어둠에 잠긴 채 거대한 결계[/b]가 펼쳐집니다. 그 안에 쏟아지는 공격을 버텨 내세요.
 [list]
 [*]리치 왕 「망자의 묘역」 — 회전하는 영혼 광선과 틈이 있는 저주의 고리
-[*]지옥의 군주 「연옥 낙화」 — 쏟아지는 운석, 화염 파동, 결계를 가로지르는 용암
+[*]지옥의 군주 「연옥 낙화」 — 곳곳의 운석 비, 내 자리를 노리는 거대 운석, 틈이 있는 운석 행진
 [*]킹 슬라임 「산성 범람」 — 결계 벽에 튕기는 산성 덩어리와 번갈아 솟는 간헐천
 [*]거울의 군주 「거울의 방」 — 둘레의 거울들이 차례로 광선을 되쏘고 깨진 거울 조각이 쏟아집니다
 [/list]
@@ -166,7 +166,7 @@ Each level-up offers three cards. Every hero has [b]10 unique skills[/b] of thei
 Every hit you land fills the boss's ultimate gauge. When it's full, the boss calls out its barrier's name and [b]the whole map sinks into darkness inside a huge barrier[/b]. Survive the storm of attacks within.
 [list]
 [*]Lich King "Graveyard of the Dead" — sweeping soul beams and cursed rings with a single gap
-[*]Demon Lord "Purgatory's Fall" — raining meteors, fire waves and lava rifts across the barrier
+[*]Demon Lord "Purgatory's Fall" — meteor showers, a giant meteor aimed at you and a marching meteor line with a gap
 [*]King Slime "Acid Deluge" — acid blobs bouncing off the barrier walls and alternating geysers
 [*]Mirror Sovereign "Hall of Mirrors" — the mirrors around you take turns firing beams back while broken shards rain down
 [/list]
@@ -253,7 +253,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 ボスを攻撃するほどボスの必殺技ゲージがたまる。満タンになるとボスが結界の名を叫び、[b]マップ全体が闇に沈み巨大な結界[/b]が広がる。その中に降り注ぐ攻撃を耐え抜け。
 [list]
 [*]リッチ王「亡者の墓域」 — 回転する魂の光線と隙間のある呪いの輪
-[*]地獄の君主「煉獄落火」 — 降り注ぐ隕石、炎の波、結界を横切る溶岩
+[*]地獄の君主「煉獄落火」 — 隕石の雨、足元を狙う巨大隕石、隙間のある隕石の行進
 [*]キングスライム「酸の氾濫」 — 結界の壁で跳ね返る酸の塊と交互に噴き出す間欠泉
 [*]鏡の君主「鏡の間」 — 周りの鏡が次々と光線を撃ち返し、割れた鏡の破片が降り注ぐ
 [/list]
@@ -340,7 +340,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 每次攻击首领都会积累首领的必杀槽。槽满时，首领会喊出结界之名，[b]整张地图沉入黑暗，巨大的结界随之展开[/b]。在其中撑过倾泻而下的攻击吧。
 [list]
 [*]巫妖王「亡者墓域」 — 旋转的灵魂光束与带缺口的诅咒之环
-[*]地狱领主「炼狱落火」 — 倾泻的陨石、火焰波与横贯结界的熔岩
+[*]地狱领主「炼狱落火」 — 陨石雨、瞄准脚下的巨型陨石与留有缺口的陨石行进
 [*]史莱姆王「酸性泛滥」 — 在结界壁上反弹的酸液团与交替喷发的间歇泉
 [*]镜之君主「镜之间」 — 周围的镜子轮流反射光束，破碎的镜片倾泻而下
 [/list]

@@ -57,7 +57,7 @@ public static partial class LocTable
         A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀槽满时展开结界");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화", "Pick one of three cards or skip on each level-up · Max level 50 · Max all ingredients to evolve a skill", "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・素材をすべて上げるとスキル進化", "每次升级从三张中选一张或跳过 · 等级上限50 · 素材全部升满即可技能进化");
         A("필살기 「망자의 묘역」 — 15초 동안 회전하는 영혼 광선 넷 · 틈이 있는 저주 고리 · 발밑에서 솟는 뼈 가시", "Ultimate 「Graveyard of the Dead」 — for 15s: four sweeping soul beams · cursed rings with a gap · bone spikes from below", "必殺技「亡者の墓域」 — 15秒間、回転する魂の光線4本・隙間のある呪いの輪・足元から突き出す骨の棘", "必杀技「亡者墓域」 — 15秒内：四道旋转灵魂光束 · 带缺口的诅咒之环 · 脚下升起的骨刺");
-        A("필살기 「연옥 낙화」 — 15초 동안 쏟아지는 운석 · 틈이 있는 화염 고리 · 결계를 가로지르는 용암 줄기", "Ultimate 「Purgatory's Fall」 — for 15s: raining meteors · fire rings with gaps · lava rifts across the barrier", "必殺技「煉獄落火」 — 15秒間、降り注ぐ隕石・隙間のある炎の輪・結界を横切る溶岩", "必杀技「炼狱落火」 — 15秒内：倾泻的陨石 · 带缺口的火焰之环 · 横贯结界的熔岩");
+        A("필살기 「연옥 낙화」 — 15초 동안 곳곳의 운석 비 · 내 자리의 거대 운석 · 틈이 있는 운석 행진을 번갈아", "Ultimate 「Purgatory's Fall」 — for 15s, alternating: a meteor shower · a giant meteor at your feet · a marching meteor line with a gap", "必殺技「煉獄落火」 — 15秒間、隕石の雨・足元の巨大隕石・隙間のある隕石の行進を交互に", "必杀技「炼狱落火」 — 15秒内交替发动：陨石雨 · 脚下的巨型陨石 · 留有缺口的陨石行进");
         A("필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 쏟아지는 산성 비", "Ultimate \"Acid Flood\" — for 9s, acid blobs bounce off the barrier walls and acid rain pours down", "必殺技「酸の氾濫」— 9秒間、結界の壁で跳ね返る酸の塊・降り注ぐ酸の雨", "必杀技「酸液泛滥」— 9秒内，酸液团在结界壁上反弹，酸雨倾泻而下");
         A("모든 보스의 필살기", "Every boss's ultimate", "すべてのボスの必殺技", "所有首领的必杀技");
         A("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.",
@@ -79,7 +79,7 @@ public static partial class LocTable
         A("망자의 묘역", "Graveyard of the Dead", "亡者の墓域", "亡者墓域");
         A("이 안에서는, 죽은 자만이 걷는다.", "In here, only the dead may walk.", "この中を歩けるのは、死者だけだ。", "在这里，只有死者能行走。");
         A("연옥 낙화", "Purgatory's Fall", "煉獄落火", "炼狱落火");
-        A("이곳의 불은 꺼지지 않는다.", "The fires here never die.", "ここの炎は、消えることがない。", "此处之火，永不熄灭。");
+        A("하늘이 무너져 내린다.", "The sky itself falls.", "天が、崩れ落ちる。", "天穹，崩落吧。");
         A("산성 범람", "Acid Deluge", "酸の氾濫", "酸性泛滥");
         A("전부, 녹아내려라.", "Melt. All of it.", "すべて、溶け落ちろ。", "全部，融化吧。");
         A("정말로 메인 메뉴로 가시겠습니까?", "Really return to the main menu?", "本当にメインメニューに戻りますか？", "确定要返回主菜单吗？");

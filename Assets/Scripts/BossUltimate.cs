@@ -32,7 +32,7 @@ public class BossUltimate : MonoBehaviour
     static readonly (string title, string line, Color color)[] Info =
     {
         ("망자의 묘역", "이 안에서는, 죽은 자만이 걷는다.", new Color(0.55f, 0.95f, 1f)),
-        ("연옥 낙화", "이곳의 불은 꺼지지 않는다.", new Color(1f, 0.45f, 0.12f)),
+        ("연옥 낙화", "하늘이 무너져 내린다.", new Color(1f, 0.45f, 0.12f)),
         ("산성 범람", "전부, 녹아내려라.", new Color(0.55f, 1f, 0.35f)),
         ("거울의 방", "네가 쌓아 온 모든 것을, 그대로 돌려주마.", new Color(0.78f, 0.9f, 1f)),
     };
@@ -133,6 +133,7 @@ public class BossUltimate : MonoBehaviour
         center = Hostile.ClampArena(boss.transform.position);
         // 멈췄던 화면이 풀리는 순간 옆의 잡몹 · 날아오던 탄 · 보스 몸통에 한꺼번에 맞지 않게 (결계가 다 펼쳐지고 1.2초까지 무적)
         if (player != null) player.GrantInvincibility(2f);
+        HideWalls(true);
         yield return Expand(info.color);
         float until = Time.time + (kind == 2 ? SlimeDuration : Duration);
         int hurtBefore = PlayerController.HurtCount;
@@ -162,6 +163,7 @@ public class BossUltimate : MonoBehaviour
 
     void EndNow()
     {
+        HideWalls(false);
         restUntil = Time.time + 15f;
         if (domainRoot != null) Destroy(domainRoot);
         if (aura != null) Destroy(aura);
@@ -382,6 +384,62 @@ public class BossUltimate : MonoBehaviour
         if (d.magnitude > max) p.transform.position = center + d.normalized * max;
     }
 
+    // 1.0.8: 결계 안은 다른 공간 — 맵 테두리 · 구조물(벽)을 끄고 감춤 (구석에서 펼치면 벽 때문에 피할 자리가 없었음)
+    // 끝나면 되살리고, 맵 밖이나 벽 속에 있으면 가장 가까운 맵 안 빈자리로 옮김
+    static readonly List<Collider2D> hiddenWalls = new List<Collider2D>();
+    static readonly List<Renderer> hiddenWallArt = new List<Renderer>();
+
+    static void HideWalls(bool hide)
+    {
+        if (hide)
+        {
+            if (hiddenWalls.Count > 0) return;
+            foreach (Collider2D c in FindObjectsOfType<Collider2D>())
+            {
+                if (c == null || c.isTrigger || !c.enabled || !c.CompareTag("Wall")) continue;
+                c.enabled = false;
+                hiddenWalls.Add(c);
+                Renderer r = c.GetComponent<Renderer>();
+                if (r != null && r.enabled) { r.enabled = false; hiddenWallArt.Add(r); }
+            }
+            return;
+        }
+        if (hiddenWalls.Count == 0) return;
+        foreach (Collider2D c in hiddenWalls) if (c != null) c.enabled = true;
+        foreach (Renderer r in hiddenWallArt) if (r != null) r.enabled = true;
+        hiddenWalls.Clear();
+        hiddenWallArt.Clear();
+        PlayerController p = Hostile.Player;
+        if (p != null && p.isActiveAndEnabled) p.StartCoroutine(ReturnInside(p));
+    }
+
+    static IEnumerator ReturnInside(PlayerController p)
+    {
+        yield return new WaitForFixedUpdate();          // 되살린 벽이 물리에 들어간 뒤 검사
+        if (p == null) yield break;
+        Vector3 pos = p.transform.position;
+        if (Hostile.InArena(pos) && !Hostile.IsWall(pos)) yield break;
+        Vector3 to = FreeSpot(Hostile.ClampArena(pos));
+        Fx.Spawn("fx_soulburst", pos, 3f, Color.white, 16f);
+        p.transform.position = new Vector3(to.x, to.y, pos.z);
+        Fx.Spawn("fx_soulburst", to, 3f, Color.white, 16f);
+        p.GrantInvincibility(1f);
+    }
+
+    // 맵 안이면서 벽이 아닌 가장 가까운 자리 (가까운 고리부터 돌아가며 찾음)
+    static Vector3 FreeSpot(Vector3 from)
+    {
+        if (!Hostile.IsWall(from) && !Hostile.WallNear(from, 0.45f)) return from;
+        for (float r = 0.75f; r <= 14f; r += 0.75f)
+            for (int i = 0; i < 16; i++)
+            {
+                float a = i * Mathf.PI / 8f;
+                Vector3 at = from + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                if (Hostile.InArena(at) && !Hostile.IsWall(at) && !Hostile.WallNear(at, 0.45f)) return at;
+            }
+        return from;
+    }
+
     // ---------------- 3. 결계 파열
     IEnumerator Shatter(Color color)
     {
@@ -470,86 +528,53 @@ public class BossUltimate : MonoBehaviour
         foreach (FxAnim b in beams) if (b != null) Destroy(b.gameObject);
     }
 
-    // 연옥 낙화 (지옥의 군주): 쏟아지는 운석 + 틈이 있는 화염 고리 + 결계를 가로지르는 용암 줄기
+    // 연옥 낙화 (지옥의 군주) — 1.0.8 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
+    // 불을 빼고 운석만 세 박자로 번갈아: ① 곳곳에 한꺼번에 떨어지는 운석 비 → ② 내 자리의 거대 운석 → ③ 틈이 있는 운석 행진
     IEnumerator HellBarrage(float until)
     {
         Color fire = Info[1].color;
-        float nextMeteor = Time.time, nextWave = Time.time + 0.8f, nextLine = Time.time + 2f;
+        int beat = 0;
         while (Time.time < until)
         {
             PlayerController p = Hostile.Player;
-            if (Time.time >= nextMeteor && p != null)
+            Vector3 me = p != null ? p.transform.position : center;
+            switch (beat++ % 3)
             {
-                nextMeteor = Time.time + 0.28f;
-                Vector3 at = Random.value < 0.5f ? p.transform.position + (Vector3)(Random.insideUnitCircle * 2.5f) : center + (Vector3)(Random.insideUnitCircle * (Radius - 1f));
-                StartCoroutine(Spike(at, 2.2f, 0.9f, fire, 22f * Power, "fx_meteor"));
+                case 0:     // 운석 비: 결계 곳곳 10개 (내 발밑을 노리지 않음)
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Vector3 at = center + (Vector3)(Random.insideUnitCircle * (Radius - 2f));
+                        StartCoroutine(Spike(at, 2.4f, 1.2f, fire, 22f * Power, "fx_meteor"));
+                    }
+                    Hostile.Play("whoosh", 0.6f, 0.7f);
+                    yield return new WaitForSeconds(2.2f);
+                    break;
+                case 1:     // 거대 운석: 지금 내 자리 (반지름 5, 예고 1.6초)
+                    StartCoroutine(Spike(me, 5f, 1.6f, fire, 30f * Power, "fx_meteor"));
+                    Hostile.Play("whoosh", 0.8f, 0.5f);
+                    yield return new WaitForSeconds(2.4f);
+                    break;
+                default:    // 운석 행진: 한쪽에서 반대쪽으로 줄지어 떨어짐, 줄 가운데 한 칸은 비움
+                {
+                    float ang = Random.Range(0f, Mathf.PI * 2f);
+                    Vector3 dir = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang));
+                    Vector3 side = new Vector3(-dir.y, dir.x);
+                    int gap = Random.Range(-2, 3);
+                    for (int row = -5; row <= 5; row++)
+                    {
+                        Vector3 rowAt = me + dir * (row * 4f);
+                        for (int k = -3; k <= 3; k++)
+                        {
+                            if (k == gap) continue;                 // 피할 틈
+                            StartCoroutine(Spike(rowAt + side * (k * 4f), 2f, 1.1f, fire, 22f * Power, "fx_meteor"));
+                        }
+                        yield return new WaitForSeconds(0.22f);
+                    }
+                    yield return new WaitForSeconds(1.2f);
+                    break;
+                }
             }
-            if (Time.time >= nextWave)
-            {
-                nextWave = Time.time + 2.2f;
-                StartCoroutine(FireRing(boss != null ? boss.transform.position : center, fire));
-            }
-            if (Time.time >= nextLine)
-            {
-                nextLine = Time.time + 2.6f;
-                float a = Random.Range(0f, Mathf.PI);
-                Vector3 d = new Vector3(Mathf.Cos(a), Mathf.Sin(a));
-                Vector3 mid = p != null ? p.transform.position : center;
-                StartCoroutine(LavaLine(mid - d * Radius * 1.6f, mid + d * Radius * 1.6f, fire));
-            }
-            yield return null;
         }
-    }
-
-    IEnumerator FireRing(Vector3 c, Color fire)
-    {
-        const int gaps = 3;
-        float start = Random.Range(0f, 360f), gapSize = 50f;
-        LineRenderer[] arcs = new LineRenderer[gaps];
-        for (int i = 0; i < gaps; i++) { arcs[i] = Hostile.NewLine("DomainFireArc", fire, 1.1f, 25); arcs[i].transform.SetParent(domainRoot.transform, true); }
-        bool hit = false;
-        Hostile.Play("flame", 0.6f, 0.7f);
-        for (float r = 1f; r < Radius * 1.1f; r += 7f * Time.deltaTime)
-        {
-            for (int i = 0; i < gaps; i++)
-            {
-                float g = start + i * 360f / gaps;
-                Hostile.SetArc(arcs[i], c, r, g + gapSize * 0.5f, g + 360f / gaps - gapSize * 0.5f);
-            }
-            PlayerController p = Hostile.Player;
-            if (!hit && p != null)
-            {
-                Vector2 to = p.transform.position - c;
-                float ang = Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg;
-                bool inGap = false;
-                for (int i = 0; i < gaps; i++) if (Mathf.Abs(Mathf.DeltaAngle(ang, start + i * 360f / gaps)) < gapSize * 0.5f) inGap = true;
-                if (Mathf.Abs(to.magnitude - r) < 0.7f && !inGap) hit = p.TryHit(20f * Power);
-            }
-            yield return null;
-        }
-        foreach (LineRenderer l in arcs) if (l != null) Destroy(l.gameObject);
-    }
-
-    IEnumerator LavaLine(Vector3 a, Vector3 b, Color fire)
-    {
-        Hostile.Line(a, b, 2.2f, 1.1f, Bright(fire));
-        for (float k = 0.2f; k <= 0.81f; k += 0.2f)
-        {
-            Vector3 at = Vector3.Lerp(a, b, k);
-            if ((at - center).magnitude < Radius) Warn(at, 1.1f, 1.4f);
-        }
-        yield return new WaitForSeconds(1.1f);
-        Vector3 d = (b - a);
-        for (float k = 0f; k <= 1f; k += 0.06f)
-        {
-            Vector3 at = a + d * k;
-            if ((at - center).magnitude > Radius) continue;
-            Fx.Spawn("fx_firepillar", at + Vector3.up * 1.2f, 2.8f, Color.white, 20f, 0f, 14);
-        }
-        PlayerController p = Hostile.Player;
-        if (p != null && Hostile.DistanceToSegment(p.transform.position, a, b) < 1.1f) p.TryHit(24f * Power);
-        Hostile.Play("boom", 0.6f, 0.8f);
-        Hostile.Shake(0.15f);
     }
 
     // 거울의 방 (거울의 군주 · 2.1.1): 결계 둘레의 거울 여덟 개가 차례로 플레이어를 노려 광선을 되쏘고,
