@@ -15,47 +15,11 @@ public partial class Shop
         ("질풍 물약", "45초 동안 이동 속도 +25%", 12),
     };
     const float PotionPriceGrowth = 1.25f;
-    const float PotionColumnShift = 170f;   // 상점 창을 왼쪽으로 밀어 물약 칸 자리를 만듦
 
     readonly int[] potionPrice = new int[Potions.Length];
-    TextMeshProUGUI[] potionLabels;
 
-    void BuildPotions()
-    {
-        if (shopPanel == null) return;
-        for (int i = 0; i < Potions.Length; i++) potionPrice[i] = Potions[i].price;
-        UIKit.EnsureStyle();
-
-        // 원래 상점(창 · 줄 · 안내)을 왼쪽으로 (화면 전체를 덮는 판은 그대로)
-        float windowRight = 590f;
-        foreach (Transform c in shopPanel.transform)
-        {
-            RectTransform r = c as RectTransform;
-            if (r == null || r.anchorMin != r.anchorMax) continue;
-            r.anchoredPosition -= new Vector2(PotionColumnShift, 0f);
-            if (c.name == "Window") windowRight = r.anchoredPosition.x + r.sizeDelta.x * 0.5f;
-        }
-
-        const float W = 320f, H = 560f, Gap = 16f;
-        RectTransform panel = UIKit.Rect("PotionPanel", shopPanel.transform, new Vector2(windowRight + Gap + W * 0.5f, -10f), new Vector2(W, H));
-        Image frame = panel.gameObject.AddComponent<Image>();
-        frame.sprite = UIKit.ButtonSprite;
-        frame.type = Image.Type.Sliced;
-        frame.color = new Color(0.55f, 0.5f, 0.6f, 1f);
-        RectTransform inner = UIKit.Rect("Inner", panel, Vector2.zero, new Vector2(W - 20f, H - 20f));
-        inner.gameObject.AddComponent<Image>().color = new Color(0.09f, 0.07f, 0.12f, 0.97f);
-        UIKit.Text(inner, "물약", 36f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, H * 0.5f - 50f), new Vector2(W - 40f, 50f));
-
-        potionLabels = new TextMeshProUGUI[Potions.Length];
-        for (int i = 0; i < Potions.Length; i++)
-        {
-            int id = i;
-            Button b = UIKit.MakeButton(inner, "", new Vector2(0f, 130f - i * 112f), new Vector2(W - 44f, 100f), () => BuyPotion(id), 22f);
-            potionLabels[i] = b.GetComponentInChildren<TextMeshProUGUI>();
-            potionLabels[i].richText = true;
-        }
-        PotionText();
-    }
+    // 1.0.8: 상점 창은 Shop.Window 가 새로 그림 (물약은 그림 카드)
+    void BuildPotions() => BuildWindow();
 
     void BuyPotion(int id)
     {
@@ -86,19 +50,21 @@ public partial class Shop
 
     void PotionText()
     {
-        if (potionLabels == null) return;
+        if (potionName == null) return;
         for (int i = 0; i < Potions.Length; i++)
         {
-            if (potionLabels[i] == null) continue;
+            if (potionName[i] == null) continue;
             string price = Discounted(potionPrice[i]) + Loc.T(" 코인");
-            if (PotionBlocked(i))
+            bool blocked = PotionBlocked(i);
+            if (blocked)
             {
                 PotionBuffs b = i > 0 && playerControllerd != null ? playerControllerd.GetComponent<PotionBuffs>() : null;
                 price = b != null ? Loc.T("효과 중") + " " + Mathf.CeilToInt(b.Remaining((PotionBuffs.Kind)(i - 1))) + Loc.T("초") : Loc.T("체력 가득");
             }
-            Button btn = potionLabels[i].GetComponentInParent<Button>();
-            if (btn != null) btn.interactable = !PotionBlocked(i);
-            potionLabels[i].text = "<color=#F5D478>" + Loc.T(Potions[i].name) + "</color>  " + price + "\n<size=80%>" + Loc.T(Potions[i].desc) + "</size>";
+            potionButtons[i].interactable = !blocked;
+            potionName[i].text = Loc.T(Potions[i].name);
+            potionDesc[i].text = Loc.T(Potions[i].desc);
+            potionCost[i].text = price;
         }
     }
 }

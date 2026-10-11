@@ -422,6 +422,6 @@ public partial class Shop : MonoBehaviour
         }
 
         KitShopText();
-        PotionText();
+        WindowText();
     }
 }
