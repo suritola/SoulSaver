@@ -12,22 +12,19 @@ public static partial class LocTable
         A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
         A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
         A("벤 적 하나당 최대 체력의 0.6 ~ 1.5%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음 · 몸이 붉게 빛남)", "Each enemy you cut builds a shield worth 0.6–1.5% of max health that absorbs damage first. (Up to 3 enemies per swing; stops building for 1.5s after the shield is hit · your body glows red)", "斬った敵1体ごとに最大体力の0.6〜1.5%のシールドがたまり、受けるダメージを先に防ぎます。（1回の振りで最大3体、シールドが攻撃を受けた後1.5秒はたまらない・体が赤く光る）", "每斩中一名敌人，积累相当于最大生命0.6~1.5%的护盾，优先吸收伤害。（每次挥砍最多3名，护盾受击后1.5秒内不再积累 · 身体发出红光）");
-        A("회전 베기를 쓴 뒤 1.5 ~ 4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "After a Spin Slash you swing faster for 1.5–4s; the longer you charged, the longer it lasts.", "回転斬りの後1.5〜4秒間、振りが速くなります。長くためるほど長く続きます。", "回旋斩后1.5~4秒内挥砍加快，蓄力越久持续越长。");
-        A("회전 베기를 모으는 동안 범위 안의 적을 초당 2.5칸씩 끌어당깁니다. (보스 제외)", "While charging Spin Slash, pull enemies in range toward you at 2.5 tiles/s. (Not bosses)", "回転斬りをためている間、範囲内の敵を毎秒2.5マス引き寄せます。（ボス除く）", "蓄力回旋斩时，以每秒2.5格的速度拉近范围内的敌人。（首领除外）");
+        A("필살기를 쓴 뒤 1.5 ~ 4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "After a Ultimate you swing faster for 1.5–4s; the longer you charged, the longer it lasts.", "必殺技の後1.5〜4秒間、振りが速くなります。長くためるほど長く続きます。", "必杀技后1.5~4秒内挥砍加快，蓄力越久持续越长。");
+        A("필살기를 모으는 동안 범위 안의 적을 초당 2.5칸씩 끌어당깁니다. (보스 제외)", "While charging Ultimate, pull enemies in range toward you at 2.5 tiles/s. (Not bosses)", "必殺技をためている間、範囲内の敵を毎秒2.5マス引き寄せます。（ボス除く）", "蓄力必杀技时，以每秒2.5格的速度拉近范围内的敌人。（首领除外）");
         A("적을 벤 휘두르기마다 1.5초 동안 이동 속도가 오릅니다. (최대 5중첩, 계속 베면 유지)", "Each swing that cuts an enemy raises move speed for 1.5s. (Up to 5 stacks, kept while you keep cutting)", "敵を斬った振りごとに1.5秒間移動速度が上がります。（最大5重、斬り続ければ維持）", "每次斩中敌人的挥砍提升1.5秒移动速度。（最多5层，持续斩击即可保持）");
         A("평타로 같은 적을 세 번 벨 때마다 균열이 터져 그 적에게 추가 피해를 줍니다.", "Every third basic-attack cut on the same enemy shatters it for bonus damage.", "通常攻撃で同じ敵を3回斬るたびに亀裂が弾け、その敵に追加ダメージを与えます。", "普通攻击每斩同一敌人三次，裂痕爆开对其造成额外伤害。");
-        A("회전 베기 0.45초 뒤 범위 85%의 잔향 회전 베기가 한 번 더 일어납니다.", "0.45s after Spin Slash, an echo spin with 85% radius strikes again.", "回転斬りの0.45秒後、範囲85%の残響回転斬りがもう一度起こります。", "回旋斩0.45秒后，再发生一次范围85%的余响回旋斩。");
-        A("화살비가 쏟아지는 동안 그 안의 적이 받는 피해가 늘어납니다.", "Enemies inside Arrow Rain take more damage while it falls.", "矢の雨が降る間、その中の敵が受けるダメージが増えます。", "箭雨落下期间，其中的敌人受到的伤害提升。");
-        A("화살비가 끝나면 가운데에 거대한 유성 화살이 떨어집니다.", "When Arrow Rain ends, a giant meteor arrow strikes its center.", "矢の雨が終わると中央に巨大な流星の矢が落ちます。", "箭雨结束时，一支巨大的流星箭落在中央。");
-        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크의 피해가 증가합니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
-        A("대폭발 플라스크를 모으는 동안 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Grand Flask, small flasks rain on nearby enemies. (50% attack)", "大爆発フラスコをためている間、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力大爆炸烧瓶时，小烧瓶落向周围敌人并爆炸。（攻击力50%）");
+        A("필살기 0.45초 뒤 범위 85%의 잔향 베기가 한 번 더 일어납니다.", "0.45s after Ultimate, an echo spin with 85% radius strikes again.", "必殺技の0.45秒後、範囲85%の残響必殺技がもう一度起こります。", "必杀技0.45秒后，再发生一次范围85%的余响必杀技。");
+        A("필살기가 쏟아지는 동안 그 안의 적이 받는 피해가 늘어납니다.", "Enemies inside Ultimate take more damage while it falls.", "必殺技が降る間、その中の敵が受けるダメージが増えます。", "必杀技落下期间，其中的敌人受到的伤害提升。");
+        A("필살기가 끝나면 가운데에 거대한 유성 화살이 떨어집니다.", "When Ultimate ends, a giant meteor arrow strikes its center.", "必殺技が終わると中央に巨大な流星の矢が落ちます。", "必杀技结束时，一支巨大的流星箭落在中央。");
+        A("플라스크로 쓰러뜨린 적 수만큼 다음 필살기의 피해가 증가합니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の必殺技が強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次必杀技就更强。（最多20）");
+        A("필살기를 모으는 동안 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Grand Flask, small flasks rain on nearby enemies. (50% attack)", "必殺技をためている間、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力必杀技时，小烧瓶落向周围敌人并爆炸。（攻击力50%）");
         A("평타로 벤 적 하나당 체력을 회복합니다. (한 번 휘두를 때 최대 3마리까지)", "Heal for each enemy your basic attack cuts. (Up to 3 per swing)", "通常攻撃で斬った敵1体ごとに体力を回復します。（1回の振りで最大3体まで）", "普通攻击每斩中一名敌人恢复生命。（每次挥砍最多3名）");
         A("평타를 휘두르면 베기 범위 안으로 날아오는 적 투사체를 모두 베어 없앱니다.", "Your basic swing cuts down every enemy projectile within its arc.", "通常攻撃を振ると、斬撃範囲に飛んでくる敵の投射物をすべて斬り消します。", "普通攻击挥砍时，斩灭挥砍范围内飞来的所有敌方投射物。");
-        A("우클릭 회전 베기를 모으는 동안 받는 피해가 줄어듭니다.", "Take less damage while charging Spin Slash.", "右クリックの回転斬りをためている間、受けるダメージが減ります。", "蓄力右键回旋斩时，受到的伤害降低。");
         A("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 1.6배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "Every few swings, one becomes a heavy strike with 1.4x reach and 1.6x damage. (Rank 3: the heavy strike also sends out a shockwave)", "何回か振るごとに1回は射程1.4倍・ダメージ1.6倍の強打になります。（3段階：強打に周囲の衝撃波）", "每挥砍几次，就有一次变为射程1.4倍、伤害1.6倍的强力一击。（3级：强力一击附带周围冲击波）");
-        A("회전 베기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다. (0.3초마다 공격력 35%)", "After Spin Slash, a blade gale whirls around you cutting nearby foes. (35% attack every 0.3s)", "回転斬りの後、刃の風が体を包んで回り周りを斬ります。（0.3秒ごとに攻撃力35%）", "回旋斩后，刀风环绕身体旋转斩击周围。（每0.3秒攻击力35%）");
-        A("화살비가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.", "Arrow Rain leaves thornbushes that slow and prick enemies.", "矢の雨が落ちた場所に茨が残り、敵を遅くして刺します。", "箭雨落下处留下荆棘丛，减速并刺伤敌人。");
-        A("대폭발 플라스크가 터지며 작은 플라스크들이 흩어져 다시 터집니다.", "The Grand Flask bursts into small flasks that scatter and explode again.", "大爆発フラスコが爆発すると小さなフラスコが散らばって再び爆発します。", "大爆炸烧瓶爆炸时小烧瓶四散并再次爆炸。");
+        A("필살기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다. (0.3초마다 공격력 35%)", "After Ultimate, a blade gale whirls around you cutting nearby foes. (35% attack every 0.3s)", "必殺技の後、刃の風が体を包んで回り周りを斬ります。（0.3秒ごとに攻撃力35%）", "必杀技后，刀风环绕身体旋转斩击周围。（每0.3秒攻击力35%）");
 
         // ---------------- 플레이 튜토리얼 (2.1.9~, TutorialRun · 이미 있는 키는 그대로)
         A("이동", "Move", "移動", "移动");
@@ -96,7 +93,7 @@ public static partial class LocTable
           "Learn nothing this level-up. Use it to keep your build on the skills and evolutions you want.",
           "このレベルアップでは何も覚えません。狙いのスキル・進化に絞るときに使います。",
           "本次升级不学习任何能力。想专注于目标技能与进化时使用。");
-        A("회전 베기의 ", "Spin Slash ", "回転斬りの", "回旋斩的");
+        A("필살기의 ", "Ultimate ", "必殺技の", "必杀技的");
         A("남은 출혈의 ", "remaining bleed ", "残り出血の", "剩余流血的");
         A("필살기 충전", "Ult charge", "必殺技チャージ", "必杀充能");
         A("호문쿨루스 필요", "Requires Homunculus", "ホムンクルスが必要", "需要侏儒助手");
@@ -153,9 +150,9 @@ public static partial class LocTable
         A("벤 적 하나당 보호막이 조금씩 쌓여 받는 피해를 대신 막습니다.", "Each enemy you cut builds a small shield that absorbs damage.", "斬った敵1体ごとにシールドが少しずつたまり、受けるダメージを代わりに防ぎます。", "每斩中一名敌人就积累少量护盾，替你吸收伤害。");
         A("보호막 최대", "Max shield", "シールド最大", "护盾上限");
         A("회전 가속", "Whirl Momentum", "回転加速", "回旋加速");
-        A("회전 베기를 쓴 뒤 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "After a Spin Slash you swing faster. The longer you charged, the longer it lasts.", "回転斬りの後、振りが速くなります。長くためるほど長く続きます。", "回旋斩后挥砍加快，蓄力越久持续越长。");
+        A("필살기를 쓴 뒤 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "After a Ultimate you swing faster. The longer you charged, the longer it lasts.", "必殺技の後、振りが速くなります。長くためるほど長く続きます。", "必杀技后挥砍加快，蓄力越久持续越长。");
         A("강철 의지", "Iron Will", "鋼の意志", "钢铁意志");
-        A("회전 베기를 모으는 동안 주변 적을 천천히 끌어당깁니다.", "While charging Spin Slash, slowly pull nearby enemies in.", "回転斬りをためている間、周りの敵をゆっくり引き寄せます。", "蓄力回旋斩时缓缓拉近周围敌人。");
+        A("필살기를 모으는 동안 주변 적을 천천히 끌어당깁니다.", "While charging Ultimate, slowly pull nearby enemies in.", "必殺技をためている間、周りの敵をゆっくり引き寄せます。", "蓄力必杀技时缓缓拉近周围敌人。");
         A("끌어당기는 범위", "Pull range", "引き寄せ範囲", "牵引范围");
         A("검무", "Sword Dance", "剣舞", "剑舞");
         A("적을 벨 때마다 잠깐 이동 속도가 오릅니다. (최대 5중첩)", "Each swing that cuts an enemy briefly raises move speed. (Up to 5 stacks)", "敵を斬るたびに少しの間移動速度が上がります。（最大5重）", "每次斩中敌人短暂提升移动速度。（最多5层）");
@@ -167,7 +164,7 @@ public static partial class LocTable
         A("보스 · 중간 보스에게 주는 피해가 늘어납니다.", "Deal more damage to bosses and mini-bosses.", "ボス・中ボスへのダメージが増えます。", "对首领和精英首领造成的伤害提升。");
         A("보스에게 주는 피해", "Damage to bosses", "ボスへのダメージ", "对首领伤害");
         A("잔향 베기", "Echo Slash", "残響斬り", "余响斩");
-        A("회전 베기가 끝나고 잠시 뒤 한 번 더 작은 회전 베기가 일어납니다.", "A moment after Spin Slash, a smaller echo spin follows.", "回転斬りの少し後、もう一度小さな回転斬りが起こります。", "回旋斩结束片刻后再发生一次较小的回旋斩。");
+        A("필살기가 끝나고 잠시 뒤 더 작은 회전 베기가 한 번 더 일어납니다.", "A moment after Ultimate, a smaller echo spin follows.", "必殺技の少し後、もう一度小さな必殺技が起こります。", "必杀技结束片刻后再发生一次较小的必杀技。");
         A("잔향 피해", "Echo damage", "残響ダメージ", "余响伤害");
         A("영혼 흡수", "Soul Drinker", "魂吸収", "灵魂吸收");
         A("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기의 피해가 증가합니다. (최대 8, 벨 때 모두 씀)", "Each kill stores a soul in your blade, empowering your next swing. (Up to 8, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大8、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多8个，挥砍时全部消耗）");
@@ -175,7 +172,7 @@ public static partial class LocTable
 
         // ================================================================= 도적
         A("연막", "Smoke Screen", "煙幕", "烟幕");
-        A("출혈 돌진을 시작한 자리에 연막이 퍼져 안의 적이 크게 느려집니다.", "Bleed Dash leaves a smoke cloud where it began, greatly slowing enemies inside.", "出血突進を始めた場所に煙幕が広がり、中の敵が大きく遅くなります。", "流血突进的起点散开烟幕，其中的敌人大幅减速。");
+        A("필살기를 시작한 자리에 연막이 퍼져 안의 적이 크게 느려집니다.", "Bleed Dash leaves a smoke cloud where it began, greatly slowing enemies inside.", "必殺技を始めた場所に煙幕が広がり、中の敵が大きく遅くなります。", "流血突进的起点散开烟幕，其中的敌人大幅减速。");
         A("연막 지속", "Smoke duration", "煙幕の持続", "烟幕持续");
         A("피의 향연", "Blood Feast", "血の饗宴", "血之盛宴");
         A("출혈 중인 적을 쓰러뜨리면 체력을 회복합니다.", "Killing a bleeding enemy restores health.", "出血中の敵を倒すと体力を回復します。", "击杀流血中的敌人时恢复生命。");
@@ -184,22 +181,22 @@ public static partial class LocTable
         A("출혈이 3초 넘게 이어진 적은 남은 출혈이 한꺼번에 터집니다.", "Enemies bleeding for over 3s take all remaining bleed at once.", "出血が3秒以上続いた敵は、残りの出血が一度に弾けます。", "流血超过3秒的敌人，剩余流血伤害一次性爆发。");
         A("폭발 피해", "Burst damage", "爆発ダメージ", "爆发伤害");
         A("급습 표창", "Ambush Stars", "急襲手裏剣", "突袭飞镖");
-        A("출혈 돌진이 끝난 뒤 2초 동안 표창의 피해가 증가합니다.", "Your shuriken hit harder for 2s after Bleed Dash.", "出血突進の後2秒間、手裏剣が痛くなります。", "流血突进后2秒内飞镖伤害提升。");
+        A("필살기가 끝난 뒤 2초 동안 표창의 피해가 증가합니다.", "Your shuriken hit harder for 2s after Bleed Dash.", "必殺技の後2秒間、手裏剣が痛くなります。", "流血突进后2秒内飞镖伤害提升。");
         A("급습 피해", "Ambush damage", "急襲ダメージ", "突袭伤害");
         A("회전 표창", "Boomerang Star", "回転手裏剣", "回旋飞镖");
         A("던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다.", "Thrown shuriken come back a moment later, cutting again.", "投げた手裏剣が少し後に戻ってきて、もう一度斬ります。", "掷出的飞镖片刻后折返，再斩一次。");
         A("되돌아오는 표창 피해", "Returning star damage", "戻る手裏剣のダメージ", "折返飞镖伤害");
         A("궤적 칼날", "Blade Path", "軌跡の刃", "轨迹刀刃");
-        A("출혈 돌진이 지나간 길에 칼날 자국이 남아 닿는 적을 벱니다.", "Bleed Dash leaves a trail of blades that cuts enemies touching it.", "出血突進の通り道に刃の跡が残り、触れた敵を斬ります。", "流血突进的路径上留下刀痕，斩击触碰的敌人。");
+        A("필살기가 지나간 길에 칼날 자국이 남아 닿는 적을 벱니다.", "Bleed Dash leaves a trail of blades that cuts enemies touching it.", "必殺技の通り道に刃の跡が残り、触れた敵を斬ります。", "流血突进的路径上留下刀痕，斩击触碰的敌人。");
         A("자국 지속", "Trail duration", "跡の持続", "刀痕持续");
         A("던지기 연습", "Practiced Throw", "投てき練習", "投掷练习");
         A("같은 적을 연달아 맞힐수록 피해가 오릅니다. (최대 5중첩)", "Hitting the same enemy in a row deals more and more damage. (Up to 5 stacks)", "同じ敵に続けて当てるほどダメージが上がります。（最大5重）", "连续命中同一敌人时伤害递增。（最多5层）");
         A("중첩당 피해", "Damage per stack", "1重ごとのダメージ", "每层伤害");
         A("넘치는 기세", "Overflowing Momentum", "あふれる勢い", "满溢气势");
-        A("스킬 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "The moment your skill gauge fills, shuriken burst out in every direction. (100% attack each)", "スキルゲージが満タンになった瞬間、体の周りに手裏剣が四方へ広がります。（攻撃力100%ずつ）", "技能槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
+        A("필살기 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "The moment your ultimate gauge fills, shuriken burst out in every direction. (100% attack each)", "必殺技ゲージが満タンになった瞬間、体の周りに手裏剣が四方へ広がります。（攻撃力100%ずつ）", "技能槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
         A("표창 수", "Stars", "手裏剣の数", "飞镖数量");
         A("그림자 매듭", "Shadow Knot", "影の結び目", "暗影之结");
-        A("출혈 돌진으로 벤 적들이 4초 동안 그림자 줄로 묶여, 하나가 받은 피해의 일부를 나머지도 받습니다.", "Enemies cut by Bleed Dash are tied by shadow for 4s; damage to one is partly shared by the rest.", "出血突進で斬った敵が4秒間影の糸で結ばれ、1体が受けたダメージの一部を他も受けます。", "被流血突进斩中的敌人被暗影之线绑定4秒，其中一个受到的伤害会部分传给其余敌人。");
+        A("필살기로 벤 적들이 4초 동안 그림자 줄로 묶여, 하나가 받은 피해의 일부를 나머지도 받습니다.", "Enemies cut by Bleed Dash are tied by shadow for 4s; damage to one is partly shared by the rest.", "必殺技で斬った敵が4秒間影の糸で結ばれ、1体が受けたダメージの一部を他も受けます。", "被流血突进斩中的敌人被暗影之线绑定4秒，其中一个受到的伤害会部分传给其余敌人。");
         A("나눠 받는 피해", "Shared damage", "分け合うダメージ", "分摊伤害");
         A("빈 주머니의 비", "Empty-Pouch Rain", "空の袋の雨", "空囊之雨");
         A("표창을 다 던져 주머니가 비는 순간, 하늘에서 표창이 주변 적들에게 쏟아집니다. (공격력 100%씩)", "When your pouch runs empty, shuriken rain down on nearby enemies. (100% attack each)", "手裏剣を投げ切って袋が空になった瞬間、空から手裏剣が周りの敵に降り注ぎます。（攻撃力100%ずつ）", "飞镖投尽、囊中空空的瞬间，飞镖从天而降砸向周围敌人。（每枚攻击力100%）");
@@ -230,9 +227,7 @@ public static partial class LocTable
         A("2초 동안 움직이지 않으면 발밑에 덫이 깔려 다가오는 적을 묶습니다.", "Stand still for 2s to lay a snare that roots approaching enemies.", "2秒間動かないと足元に罠が敷かれ、近づく敵を縛ります。", "静止2秒后脚下布下陷阱，定住靠近的敌人。");
         A("묶는 시간", "Root time", "縛る時間", "定身时间");
         A("높은 자리", "High Ground", "高所", "居高临下");
-        A("화살비가 쏟아지는 동안 그 안의 적이 받는 피해가 늘어납니다.", "Enemies inside Arrow Rain take more damage while it falls.", "矢の雨が降る間、その中の敵が受けるダメージが増えます。", "箭雨落下期间，其中的敌人受到的伤害提升。");
         A("유성 화살", "Meteor Arrow", "流星の矢", "流星箭");
-        A("화살비가 끝나면 가운데에 거대한 유성 화살이 떨어집니다.", "When Arrow Rain ends, a giant meteor arrow strikes its center.", "矢の雨が終わると中央に巨大な流星の矢が落ちます。", "箭雨结束时，一支巨大的流星箭落在中央。");
         A("유성 피해", "Meteor damage", "流星ダメージ", "流星伤害");
 
         // ================================================================= 연금술사
@@ -245,13 +240,11 @@ public static partial class LocTable
         A("한 적이 화염 · 빙결 · 산성 시약에 모두 맞으면 원소 붕괴가 일어나 큰 피해를 줍니다.", "An enemy hit by fire, frost, and acid reagents undergoes elemental collapse for heavy damage.", "1体の敵が火炎・氷結・酸の試薬すべてを受けると元素崩壊が起き、大ダメージを与えます。", "同一敌人被火焰、冰冻、酸性试剂全部命中时引发元素崩坏，造成巨大伤害。");
         A("붕괴 피해", "Collapse damage", "崩壊ダメージ", "崩坏伤害");
         A("증폭 용액", "Amplifying Solution", "増幅溶液", "增幅溶液");
-        A("플라스크로 쓰러뜨린 적 수만큼 다음 대폭발 플라스크의 피해가 증가합니다. (최대 20)", "Each flask kill strengthens your next Grand Flask. (Up to 20)", "フラスコで倒した敵の数だけ次の大爆発フラスコが強くなります。（最大20）", "烧瓶每击杀一名敌人，下一次大爆炸烧瓶就更强。（最多20）");
         A("적 하나당", "Per enemy", "敵1体ごと", "每名敌人");
         A("조수 개조", "Assistant Upgrade", "助手改造", "助手改造");
         A("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "Your Homunculus loads fire, frost, and acid in turn and its flasks hit harder. (Requires Homunculus)", "ホムンクルスが投げるフラスコに火炎・氷結・酸の試薬を交互に詰め、より強く爆発させます。（ホムンクルスが必要）", "侏儒助手投掷的烧瓶轮流装入火焰、冰冻、酸性试剂，爆炸更强。（需要侏儒助手）");
         A("조수 플라스크 피해", "Assistant flask damage", "助手フラスコのダメージ", "助手烧瓶伤害");
         A("유리 비", "Glass Rain", "ガラスの雨", "玻璃雨");
-        A("대폭발 플라스크를 모으는 동안 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Grand Flask, small flasks rain on nearby enemies. (50% attack)", "大爆発フラスコをためている間、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力大爆炸烧瓶时，小烧瓶落向周围敌人并爆炸。（攻击力50%）");
         A("떨어지는 간격", "Drop interval", "落ちる間隔", "落下间隔");
         A("응급 연고", "First-Aid Salve", "応急軟膏", "急救药膏");
         A("산성 웅덩이 위에 서 있으면 체력이 회복됩니다.", "Standing on an acid puddle heals you.", "酸の水たまりの上に立つと体力が回復します。", "站在酸池上时恢复生命。");
@@ -287,7 +280,7 @@ public static partial class LocTable
         A("피의 성채", "Blood Bastion", "血の城砦", "血之堡垒");
         A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (200% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力200%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力200%）");
         A("폭풍의 눈", "Eye of the Storm", "嵐の目", "风暴之眼");
-        A("회전 베기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", "After Spin Slash, a vortex pulls in and keeps cutting nearby enemies for 3s.", "回転斬りの後3秒間、渦が周りの敵を吸い込みながら斬り続けます。", "回旋斩后3秒内，漩涡吸入周围敌人并持续斩击。");
+        A("필살기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", "After Ultimate, a vortex pulls in and keeps cutting nearby enemies for 3s.", "必殺技の後3秒間、渦が周りの敵を吸い込みながら斬り続けます。", "必杀技后3秒内，漩涡吸入周围敌人并持续斩击。");
         A("광검무", "Frenzied Blade Dance", "狂剣舞", "狂剑舞");
         A("검무가 최대 중첩일 때 모든 베기가 강한 일격(두 배 피해 · 더 멀리)이 됩니다.", "At max Sword Dance stacks, every swing becomes a heavy strike (double damage, longer reach).", "剣舞が最大重のとき、すべての斬撃が強打（2倍ダメージ・遠くまで）になります。", "剑舞叠满时，每次挥砍都成为强力一击（双倍伤害·更远）。");
         A("거인 처단", "Giant Slayer", "巨人斬り", "斩巨");
@@ -307,7 +300,7 @@ public static partial class LocTable
         A("칼날 곡예", "Blade Acrobatics", "刃の曲芸", "刀刃杂技");
         A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (150% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力150%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力150%）");
         A("사냥의 절정", "Peak of the Hunt", "狩りの絶頂", "狩猎巅峰");
-        A("스킬 게이지가 가득 찬 동안이나 출혈 돌진 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your skill gauge is full or during a Bleeding Dash, kills bring a rain of shuriken down on the spot.", "スキルゲージが満タンの間か出血突進中に敵を倒すと、その場に手裏剣の雨が降ります。", "技能槽满时或出血突进中击杀敌人，原地降下飞镖雨。");
+        A("필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your ultimate gauge is full or during a Ultimate, kills bring a rain of shuriken down on the spot.", "必殺技ゲージが満タンの間か必殺技中に敵を倒すと、その場に手裏剣の雨が降ります。", "技能槽满时或必杀技中击杀敌人，原地降下飞镖雨。");
         A("폭풍의 길", "Storm Road", "嵐の道", "风暴之路");
         A("바람길 위에서는 시위를 순식간에 가득 당기고, 물러난 자리에 돌풍이 터져 적을 밀어냅니다.", "On a wind lane you draw instantly to full, and a gust erupts where you hop back from, pushing enemies away.", "風の道の上では一瞬で弦を引き絞り、下がった場所で突風が弾けて敵を押し出します。", "在风道上瞬间拉满弓弦，后撤的原位爆发狂风击退敌人。");
         A("명궁의 호흡", "Master Archer's Breath", "名弓の呼吸", "名弓之息");
@@ -333,7 +326,7 @@ public static partial class LocTable
         A("쌍둥이 조수", "Twin Assistants", "双子の助手", "双子助手");
         A("조수가 하나 더 생겨 함께 플라스크를 던집니다.", "A second assistant joins in, throwing flasks alongside the first.", "助手がもう1体増え、一緒にフラスコを投げます。", "再多一名助手，一同投掷烧瓶。");
         A("유리 폭풍", "Glass Storm", "ガラスの嵐", "玻璃风暴");
-        A("대폭발 플라스크가 터진 뒤 3초 동안 주변에 유리 비가 계속 쏟아집니다.", "After the Grand Flask bursts, glass keeps raining around it for 3s.", "大爆発フラスコが爆発した後3秒間、周りにガラスの雨が降り続きます。", "大爆炸烧瓶爆炸后3秒内，周围持续落下玻璃雨。");
+        A("필살기가 터진 뒤 3초 동안 주변에 유리 비가 계속 쏟아집니다.", "After the Grand Flask bursts, glass keeps raining around it for 3s.", "必殺技が爆発した後3秒間、周りにガラスの雨が降り続きます。", "必杀技爆炸后3秒内，周围持续落下玻璃雨。");
         A("불꽃 행진", "Flame March", "炎の行進", "火焰行军");
         A("농축 플라스크가 터진 자리에 불길 고리가 퍼지고, 연소 흔적이 두 배로 커집니다.", "Concentrated flasks leave a ring of fire, and Burning Steps grow twice as large.", "濃縮フラスコが爆発した場所に炎の輪が広がり、燃焼の跡が2倍大きくなります。", "浓缩烧瓶爆炸处扩散火焰之环，燃烧足迹扩大一倍。");
         A("황금 시대", "Golden Age", "黄金時代", "黄金时代");

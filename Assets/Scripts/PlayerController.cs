@@ -153,7 +153,7 @@ public class PlayerController : MonoBehaviour
     // 스킬 게이지
     // =====================================
 
-    [Header("스킬 게이지")]
+    [Header("필살기 게이지")]
 
     public SkillGauge skillGauge;
 

@@ -145,7 +145,7 @@ public partial class Shop
                     next = Pct(k.blastMul + 0.08f);
                     break;
                 default:
-                    label = Char == CharacterId.Swordsman ? "회전 베기 위력" : Char == CharacterId.Archer ? "화살비 위력" : "대폭발 플라스크 위력";
+                    label = "필살기 위력";
                     now = Pct(k.ultMul);
                     next = Pct(k.ultMul + 0.1f);
                     break;

@@ -109,7 +109,7 @@ public class SkillGauge : MonoBehaviour
         if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;
         // 캐릭터 스킬 게이지 %가 높을수록 게이지가 길어서 늦게 참
         AddSkillPoint(pointsPerSecond * GameMode.GaugeMul / Mathf.Max(0.1f, CharacterData.Current.gauge) * (Boosted ? killBoost : 1f) * TreeMul * Time.deltaTime);
-        if (IsFull()) Hints.Show("ult", "스킬 게이지가 가득 찼습니다! 우클릭으로 필살기를 씁니다.");
+        if (IsFull()) Hints.Show("ult", "필살기 게이지가 가득 찼습니다! 우클릭으로 필살기를 씁니다.");
     }
 
     void Start()

@@ -597,7 +597,7 @@ public partial class LevelShop : MonoBehaviour
                     float pps = skill != null ? skill.pointsPerSecond : 1f;
                     int max = skill != null ? skill.MaxSkillPoint : 10;
                     int nextMax = Mathf.Max(MinSkillPoint, Mathf.RoundToInt(max * 0.8f));
-                    return CardText(S("스킬 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)"), S("게이지가 가득 차는 시간"),
+                    return CardText(S("필살기 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)"), S("게이지가 가득 차는 시간"),
                                     (max / pps).ToString("0") + S("초"), (nextMax / pps).ToString("0") + S("초"), n, 0);
                 }
             case 3:

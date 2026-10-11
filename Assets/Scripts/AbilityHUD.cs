@@ -50,6 +50,8 @@ public class AbilityHUD : MonoBehaviour
     const float ToggleWidth = 36f;
     bool open = true;
     TextMeshProUGUI toggleText;
+    RectTransform toggleRect;
+    const float ClosedWidth = 230f;     // 1.0.8: 접혀 있으면 숫자만 보여 뭔지 몰랐음 → 「▶ 레벨업 스킬 12」
 
     void Start()
     {
@@ -64,6 +66,7 @@ public class AbilityHUD : MonoBehaviour
         r.SetParent(transform, false);
         r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 1f);
         r.sizeDelta = new Vector2(ToggleWidth, slotSize.y);
+        toggleRect = r;
         r.anchoredPosition = Vector2.zero;
         Image bg = go.GetComponent<Image>();
         bg.sprite = slotSprite;
@@ -72,8 +75,8 @@ public class AbilityHUD : MonoBehaviour
         Button b = go.GetComponent<Button>();
         b.onClick.AddListener(Toggle);
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
-        tip.title = Loc.T("레벨업 능력");
-        tip.body = Loc.T("눌러서 능력 아이콘을 접고 펼칩니다.");
+        tip.title = Loc.T("레벨업 스킬");
+        tip.body = Loc.T("눌러서 레벨업 스킬 아이콘을 접고 펼칩니다.");
 
         GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform tr = tg.GetComponent<RectTransform>();
@@ -87,6 +90,10 @@ public class AbilityHUD : MonoBehaviour
         toggleText.fontSize = 28f;
         toggleText.color = new Color(0.96f, 0.83f, 0.47f);
         toggleText.alignment = TextAlignmentOptions.Center;
+        toggleText.enableAutoSizing = true;
+        toggleText.fontSizeMin = 14f;
+        toggleText.fontSizeMax = 28f;
+        toggleText.enableWordWrapping = false;
         toggleText.raycastTarget = false;
         ApplyOpen();
     }
@@ -102,8 +109,11 @@ public class AbilityHUD : MonoBehaviour
     void ApplyOpen()
     {
         foreach (Slot s in slots.Values) s.rect.gameObject.SetActive(open);
-        // 접혀 있으면 가진 능력 수를 보여 줌
-        if (toggleText != null) toggleText.text = open ? "<" : (slots.Count > 0 ? slots.Count.ToString() : ">");
+        // 접혀 있으면 단추를 넓혀 이름과 가진 스킬 수를 함께 보여 줌
+        if (toggleRect != null) toggleRect.sizeDelta = new Vector2(open ? ToggleWidth : ClosedWidth, slotSize.y);
+        if (toggleText == null) return;
+        toggleText.fontSizeMax = open ? 28f : 22f;
+        toggleText.text = open ? "<" : "▶ " + Loc.T("레벨업 스킬") + (slots.Count > 0 ? "  " + slots.Count : "");
     }
 
     public void SetAbility(int id, int level)
@@ -206,6 +216,7 @@ public class AbilityHUD : MonoBehaviour
         }
         Slot slot = CreateSlot(evoId, slots.Count);
         slots.Add(evoId, slot);
+        ApplyOpen();       // 접혀 있으면 새 진화 칸도 숨기고 수 갱신
         slot.level = 0;
         slot.label.text = Loc.T("진화");
         slot.label.color = new Color(0.79f, 0.63f, 1f);

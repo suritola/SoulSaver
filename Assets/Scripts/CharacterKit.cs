@@ -821,7 +821,7 @@ public partial class CharacterKit : MonoBehaviour
         "돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 느리게",
         "돌진 거리 +30% · 돌진 뒤 무적 시간 두 배",
         "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이)",
-        "돌진으로 벤 적 하나당 스킬 게이지 4% 되돌려 받음 (최대 40%)",
+        "돌진으로 벤 적 하나당 필살기 게이지 4% 되돌려 받음 (최대 40%)",
     };
     float recastUntil;
     [HideInInspector] public int shadowLevel;        // 배운 그림자 숙련 단계 (0 = 없음)
