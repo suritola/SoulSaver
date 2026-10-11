@@ -13,6 +13,7 @@ public class TooltipUI : MonoBehaviour
     public Material fontMaterial;
     public float width = 440f;
     public float padding = 36f;
+    public Color tint = Color.white;     // 코드로 만든 설명창(메인 메뉴)은 흰 버튼 그림을 어둡게 칠함
 
     RectTransform panel;
     RectTransform canvasRect;
@@ -48,6 +49,7 @@ public class TooltipUI : MonoBehaviour
 
         Image bg = go.GetComponent<Image>();
         bg.sprite = panelSprite;
+        bg.color = tint;
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = false;
 
@@ -72,6 +74,24 @@ public class TooltipUI : MonoBehaviour
         text.enableWordWrapping = true;
         text.raycastTarget = false;
         return text;
+    }
+
+    // 1.0.7: 메인 메뉴 씬에는 설명창이 없어 도감(스킬 진화 등)에 마우스를 올려도 아무것도 안 떴음 → 없으면 그 캔버스에 만듦
+    public static void Ensure(Transform from)
+    {
+        if (Instance != null || from == null) return;
+        Canvas c = from.GetComponentInParent<Canvas>();
+        if (c == null) return;
+        UIKit.EnsureStyle();
+        GameObject go = new GameObject("TooltipUI", typeof(RectTransform));
+        go.SetActive(false);
+        go.transform.SetParent(c.rootCanvas.transform, false);
+        TooltipUI t = go.AddComponent<TooltipUI>();
+        t.panelSprite = UIKit.ButtonSprite;
+        t.font = UIKit.Font;
+        t.fontMaterial = UIKit.FontMaterial;
+        t.tint = new Color(0.12f, 0.1f, 0.17f, 0.97f);
+        go.SetActive(true);
     }
 
     public static void Show(string title, string body)

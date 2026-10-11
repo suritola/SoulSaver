@@ -18,6 +18,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void OnPointerEnter(PointerEventData eventData)
     {
         hovering = true;
+        TooltipUI.Ensure(transform);
         TooltipUI.Show(titleProvider != null ? titleProvider() : title,
                        bodyProvider != null ? bodyProvider() : body);
     }
