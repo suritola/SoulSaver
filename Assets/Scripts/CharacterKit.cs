@@ -49,7 +49,7 @@ public partial class CharacterKit : MonoBehaviour
     bool fullPlayed;
     // 1.0.8 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
     float fullAt;
-    const float PerfectWindow = 0.2f, TrembleAfter = 0.6f;
+    const float PerfectWindow = 0.5f, TrembleAfter = 0.9f;      // 1.0.8: 0.2초는 너무 빡빡했음
     const float DrawPower = 1.9f, PerfectPower = 3f, MinHeldPower = 1.6f;
     const float PierceFalloff = 0.85f;       // 꿰뚫을 때마다 피해 -15% (일렬 쓸어 버리기가 너무 셌음)
 
