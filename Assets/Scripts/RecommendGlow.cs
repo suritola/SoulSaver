@@ -197,7 +197,6 @@ public class HintBadge : MonoBehaviour
 {
     Image rim;
     Color rimColor;
-    Vector3 baseScale = Vector3.one;
     float phase;
 
     public static TMP_Text Make(Transform parent, string name, Vector2 pos, Vector2 size, Color fill, Color rimColor, float fontSize)
@@ -232,12 +231,11 @@ public class HintBadge : MonoBehaviour
         return t;
     }
 
-    void OnEnable() => baseScale = transform.localScale == Vector3.zero ? Vector3.one : transform.localScale;
-
+    // 기본 크기는 1 로 고정 (예전엔 켜질 때의 크기를 기억해서, 두근거리던 중에 창이 닫혔다 열릴 때마다 계속 커졌음)
     void Update()
     {
         float b = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f + phase);
-        transform.localScale = baseScale * (1f + 0.06f * b);
+        transform.localScale = Vector3.one * (1f + 0.06f * b);
         if (rim != null) rim.color = Color.Lerp(rimColor, Color.white, 0.55f * b);
     }
 }
