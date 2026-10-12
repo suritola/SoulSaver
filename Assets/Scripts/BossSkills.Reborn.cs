@@ -14,7 +14,7 @@ public partial class BossSkills
     bool specialDone;       // 킹 슬라임 뱉기 · 리치 왕 의식 (보스전마다 한 번)
 
     float HpFrac => boss.setEnemyHP > 0 ? Mathf.Clamp01(boss.EnemyHealth / boss.setEnemyHP) : 1f;
-    static float Cool(float seconds) => seconds * GameMode.SkillCooldownMul * Chapters.SkillCooldownMul;
+    static float Cool(float seconds) => seconds * GameMode.SkillCooldownMul * Chapters.BossSkillCooldownMul;
     float PartHp(float share) => Mathf.Max(5f, boss.setEnemyHP * share);
     static Sprite GlowSprite => Hostile.Glow;
     static Sprite SwirlSprite => SpecialAbilities.SwirlSprite != null ? SpecialAbilities.SwirlSprite : Hostile.Glow;

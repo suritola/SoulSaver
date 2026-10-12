@@ -13,8 +13,8 @@ public partial class BossSkills : MonoBehaviour
     [HideInInspector] public bool airborne;
     [HideInInspector] public Vector3 landing;
 
-    // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게)
-    const float Power = 1.25f;
+    // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게) · 1.0.9: 3장부터 장마다 더 세게 (Chapters.BossPowerMul)
+    static float Power => 1.25f * Chapters.BossPowerMul;
 
     static readonly Color Soul = new Color(0.55f, 0.95f, 1f, 0.95f);
     static readonly Color Curse = new Color(0.75f, 0.4f, 1f, 0.9f);
@@ -60,7 +60,7 @@ public partial class BossSkills : MonoBehaviour
         // 체력 절반 아래: 특수 스킬 (처음 한 번은 바로)
         if (boss.Enraged && Time.time >= nextSpecial)
         {
-            nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul * Chapters.SkillCooldownMul;
+            nextSpecial = Time.time + 12f * GameMode.SkillCooldownMul * Chapters.BossSkillCooldownMul;
             // 되비친 기억: 이번 판에 가장 많이 쓴 공격 (RunStats)
             string top = TopSource();
             if (StageManager.Instance != null)
@@ -70,7 +70,7 @@ public partial class BossSkills : MonoBehaviour
         }
 
         if (Time.time < next) return;
-        next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul * Chapters.SkillCooldownMul;     // 앞쪽 장 보스는 드물게 (2.1.5)
+        next = Time.time + (boss.Enraged ? 2.6f : 3.6f) * GameMode.SkillCooldownMul * Chapters.BossSkillCooldownMul;     // 앞쪽 장 보스는 드물게 (2.1.5)
         step = (step + 1) % 8;     // 배운 스킬 흉내 두 번 · 필살기 흉내 한 번이 섞임
         IEnumerator skill = step == 0 ? MirrorStrike(3) : step == 1 ? MirrorSkill(true, true, false, true) : step == 2 ? MirrorClones(p) : step == 3 ? BrandCross(p)
             : step == 4 ? MirrorSkill(true, true, boss.Enraged, true) : step == 5 ? ShardRings() : step == 6 ? MirrorStrike(boss.Enraged ? 5 : 4) : MirrorUlt(boss.Enraged, true);
@@ -308,7 +308,7 @@ public partial class BossSkills : MonoBehaviour
     // 한 대는 어떤 난이도 · 장에서도 최대 체력의 MaxHitShare 를 넘지 않음 (즉사 없음)
     const int UltMaxHits = 2;
     const float UltHitDamage = 16f;
-    const float MaxHitShare = 0.15f;
+    const float MaxHitShare = 0.2f;      // 1.0.9: 0.15 → 0.2 (4장 보스를 세게 올린 만큼)
     int ultHits;
 
     bool UltHit(bool inside)

@@ -56,12 +56,17 @@ public static class Chapters
     // 2.2.0: 곡선을 더 가파르게 — 1 · 2장은 더 쉽게, 3장은 원래보다 조금 · 4장은 확실히 세게
     static readonly float[] EaseHp = { 0.42f, 0.8f, 1.08f, 1.2f };
     static readonly float[] EaseHurt = { 0.42f, 0.8f, 1.08f, 1.2f };
-    static readonly float[] EaseBoss = { 0.55f, 0.88f, 0.8f, 1.2f };     // 2.2.1 보스 개편: 3장 지옥의 군주는 3단계 · 용암이 생겨 체력은 4장보다 조금 낮게 (1장 264 < 2장 2112 < 3장 4760 < 4장 5040)
+    // 1.0.9: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6188 < 4장 5040 → 6300)
+    static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.04f, 1.5f };
     static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
     static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
     static readonly float[] EaseAlive = { 0.5f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율
     static readonly float[] EaseSpeed = { 0.75f, 0.9f, 1f, 1.04f };
     static readonly float[] EaseSkill = { 1.8f, 1.2f, 0.95f, 0.88f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
+
+    // 보스만 (1.0.9): 공격 피해 배율 · 스킬 간격 배율 — 3장부터 급격하게 (잡몹 EaseSkill 과 따로)
+    static readonly float[] EaseBossPower = { 1f, 1f, 1.3f, 1.45f };
+    static readonly float[] EaseBossSkill = { 1.8f, 1.2f, 0.72f, 0.64f };
 
     static float Ease(float[] t, int stage) => IsClassic || stage < 0 || stage >= t.Length ? 1f : t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)];
 
@@ -75,6 +80,8 @@ public static class Chapters
     public static int MaxAlive(int stage, int count) => Mathf.Max(3, Mathf.RoundToInt(count * Ease(EaseAlive, stage)));
     public static float EnemySpeedMul(int stage) => Ease(EaseSpeed, stage);
     public static float SkillCooldownMul => Ease(EaseSkill, CurrentStage);
+    public static float BossSkillCooldownMul => Ease(EaseBossSkill, CurrentStage);
+    public static float BossPowerMul => Ease(EaseBossPower, CurrentStage);
     public static int BossKills(int stage, int original) => IsClassic || stage < 0 || stage >= Kills.Length ? original : Kills[Mathf.Clamp(SlotOf(stage), 0, Kills.Length - 1)];
     public static int CurrentStage => StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
 }

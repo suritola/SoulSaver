@@ -27,7 +27,7 @@ public class BossUltimate : MonoBehaviour
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
     const float Duration = 15f;
     const float SlimeDuration = 9f;     // 2.2.1: 1장 킹 슬라임 결계는 짧고 단순하게 (튕기는 덩어리 최대 3 · 산성 비만)
-    const float Power = 1.25f;            // BossSkills 와 같은 피해 배율
+    static float Power => 1.25f * Chapters.BossPowerMul;      // BossSkills 와 같은 피해 배율 (3장부터 더 셈)
 
     static readonly (string title, string line, Color color)[] Info =
     {
@@ -507,7 +507,7 @@ public class BossUltimate : MonoBehaviour
                 }
             if (Time.time >= nextRing)
             {
-                nextRing = Time.time + 1.5f;
+                nextRing = Time.time + 1.75f;       // 1.0.9: 2장 결계 살짝 완화 (1.5 → 1.75)
                 int n = 26, gap = Random.Range(0, n);
                 for (int i = 0; i < n; i++)
                 {
@@ -519,9 +519,9 @@ public class BossUltimate : MonoBehaviour
             }
             if (Time.time >= nextSpike && p != null)
             {
-                nextSpike = Time.time + 0.55f;
+                nextSpike = Time.time + 0.68f;      // 1.0.9: 0.55 → 0.68 · 예고 0.75 → 0.85
                 Vector3 at = p.transform.position + (Vector3)(Random.insideUnitCircle * 1.5f);
-                StartCoroutine(Spike(at, 1.7f, 0.75f, soul, 18f * Power, "fx_spike"));
+                StartCoroutine(Spike(at, 1.7f, 0.85f, soul, 18f * Power, "fx_spike"));
             }
             yield return null;
         }
@@ -530,9 +530,12 @@ public class BossUltimate : MonoBehaviour
 
     // 연옥 낙화 (지옥의 군주) — 1.0.8 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
     // 불을 빼고 운석만 세 박자로 번갈아: ① 곳곳에 한꺼번에 떨어지는 운석 비 → ② 내 자리의 거대 운석 → ③ 틈이 있는 운석 행진
+    // 1.0.9: 너무 쉬웠음 → 운석 비가 더 많고 일부는 나를 노림 · 거대 운석은 둘레를 막고 한 번 더 · 행진이 빨라짐,
+    //        그리고 내내 내 발밑으로 작은 불씨 운석이 떨어져 가만히 서 있을 수 없음 (예고는 모두 0.9초 이상)
     IEnumerator HellBarrage(float until)
     {
         Color fire = Info[1].color;
+        StartCoroutine(HellEmbers(until, fire));
         int beat = 0;
         while (Time.time < until)
         {
@@ -540,40 +543,69 @@ public class BossUltimate : MonoBehaviour
             Vector3 me = p != null ? p.transform.position : center;
             switch (beat++ % 3)
             {
-                case 0:     // 운석 비: 결계 곳곳 10개 (내 발밑을 노리지 않음)
-                    for (int i = 0; i < 10; i++)
+                case 0:     // 운석 비: 결계 곳곳 12개 + 내 둘레 5개 (내 발밑 바로는 아님)
+                    for (int i = 0; i < 12; i++)
                     {
                         Vector3 at = center + (Vector3)(Random.insideUnitCircle * (Radius - 2f));
-                        StartCoroutine(Spike(at, 2.4f, 1.2f, fire, 22f * Power, "fx_meteor"));
+                        StartCoroutine(Spike(at, 2.6f, 1.05f, fire, 22f * Power, "fx_meteor"));
+                    }
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float a = (i * 72f + Random.Range(0f, 72f)) * Mathf.Deg2Rad;
+                        StartCoroutine(Spike(me + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 6f), 2.4f, 1.05f, fire, 22f * Power, "fx_meteor"));
                     }
                     Hostile.Play("whoosh", 0.6f, 0.7f);
-                    yield return new WaitForSeconds(2.2f);
+                    yield return new WaitForSeconds(1.7f);
                     break;
-                case 1:     // 거대 운석: 지금 내 자리 (반지름 5, 예고 1.6초)
-                    StartCoroutine(Spike(me, 5f, 1.6f, fire, 30f * Power, "fx_meteor"));
+                case 1:     // 거대 운석: 지금 내 자리 (반지름 6, 예고 1.3초) + 둘레 여섯 곳 → 피한 자리로 한 번 더
+                {
+                    StartCoroutine(Spike(me, 6f, 1.3f, fire, 30f * Power, "fx_meteor"));
+                    float off = Random.Range(0f, 60f);
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float a = (off + i * 60f) * Mathf.Deg2Rad;
+                        StartCoroutine(Spike(me + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 9.5f, 2.2f, 1.3f, fire, 22f * Power, "fx_meteor"));
+                    }
                     Hostile.Play("whoosh", 0.8f, 0.5f);
-                    yield return new WaitForSeconds(2.4f);
+                    yield return new WaitForSeconds(1.4f);
+                    p = Hostile.Player;
+                    if (p != null) StartCoroutine(Spike(p.transform.position, 4.5f, 1.1f, fire, 26f * Power, "fx_meteor"));
+                    Hostile.Play("whoosh", 0.8f, 0.6f);
+                    yield return new WaitForSeconds(1.3f);
                     break;
+                }
                 default:    // 운석 행진: 한쪽에서 반대쪽으로 줄지어 떨어짐, 줄 가운데 한 칸은 비움
                 {
                     float ang = Random.Range(0f, Mathf.PI * 2f);
                     Vector3 dir = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang));
                     Vector3 side = new Vector3(-dir.y, dir.x);
                     int gap = Random.Range(-2, 3);
-                    for (int row = -5; row <= 5; row++)
+                    for (int row = -6; row <= 6; row++)
                     {
                         Vector3 rowAt = me + dir * (row * 4f);
-                        for (int k = -3; k <= 3; k++)
+                        for (int k = -4; k <= 4; k++)
                         {
                             if (k == gap) continue;                 // 피할 틈
-                            StartCoroutine(Spike(rowAt + side * (k * 4f), 2f, 1.1f, fire, 22f * Power, "fx_meteor"));
+                            StartCoroutine(Spike(rowAt + side * (k * 4f), 2f, 1f, fire, 22f * Power, "fx_meteor"));
                         }
-                        yield return new WaitForSeconds(0.22f);
+                        yield return new WaitForSeconds(0.16f);
                     }
-                    yield return new WaitForSeconds(1.2f);
+                    yield return new WaitForSeconds(0.8f);
                     break;
                 }
             }
+        }
+    }
+
+    // 연옥 낙화 내내: 0.9초마다 내 자리에 작은 불씨 운석 (멈춰 있으면 맞음)
+    IEnumerator HellEmbers(float until, Color fire)
+    {
+        yield return new WaitForSeconds(1.2f);
+        while (Time.time < until && running)        // 결계가 일찍 끝나면 (보스 처치 · 쓰러짐) 같이 멈춤
+        {
+            PlayerController p = Hostile.Player;
+            if (p != null) StartCoroutine(Spike(p.transform.position, 1.6f, 0.9f, fire, 16f * Power, "fx_meteor"));
+            yield return new WaitForSeconds(0.9f);
         }
     }
 
