@@ -342,8 +342,9 @@ public partial class SpecialAbilities
         t.Add(Node("s.guard2", "s.guard1", 3, "재정비 II", "맞은 뒤 무적 시간 +0.15초", 42, def, () => p.hurtInvincibleTime += 0.15f));
         t.Add(Node("s.barrier1", "s.def2", 3, "영혼 보호막", "20초마다 공격 한 번을 막아 주는 보호막이 생깁니다", 40, def, () => { barrierEvery = 20f; barrierReadyAt = Time.time; }));
         t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
-        t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +1 회복", 20, LvIcon(11), () => p.healOnKill += 1f));
-        t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +1 회복", 40, LvIcon(11), () => p.healOnKill += 1f));
+        // 1.1.0: 너무 셌음 — 칸마다 +1 → +0.5, 처치 회복은 모두 합쳐 초당 최대 6 (PlayerController.HealOnKill)
+        t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +0.5 회복 (처치 회복은 초당 최대 6)", 20, LvIcon(11), () => p.healOnKill += 0.5f));
+        t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +0.5 회복 (처치 회복은 초당 최대 6)", 40, LvIcon(11), () => p.healOnKill += 0.5f));
         // 1.0.5: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
         t.Add(Node("s.laststand", "s.guard2", 3, "꺾이지 않는 의지", "「최후의 보루」가 장마다 한 번 더 발동합니다", 44, def, () => LastStand.Extra += 1));
         t.Add(Node("s.revive", "s.barrier2", 3, "되살아난 영혼", "판마다 한 번, 쓰러질 피해를 받으면 체력 40%로 되살아납니다", 90, def, () => TreeRevives += 1));

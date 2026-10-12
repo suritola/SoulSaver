@@ -632,8 +632,8 @@ public partial class LevelShop : MonoBehaviour
                                 (bul.regenPerSecond + RegenStep * Rem(RegenMaxLevel)).ToString("0.#"));
             case 11:
                 return CardText(S("적을 처치할 때마다 체력을 회복합니다."), S("처치당 회복"),
-                                bul.healOnKill.ToString("0"), (bul.healOnKill + HealOnKillStep).ToString("0"), n, HealOnKillMaxLevel,
-                                (bul.healOnKill + HealOnKillStep * Rem(HealOnKillMaxLevel)).ToString("0"));
+                                bul.healOnKill.ToString("0.#"), (bul.healOnKill + HealOnKillStep).ToString("0.#"), n, HealOnKillMaxLevel,
+                                (bul.healOnKill + HealOnKillStep * Rem(HealOnKillMaxLevel)).ToString("0.#"));
             case SupplyId:
                 return S("고를 능력을 모두 배웠습니다.") + "\n<color=#F5D478>" + S("보급") + "  " + S("체력 +30% · 코인 +10") + "</color>";
         }

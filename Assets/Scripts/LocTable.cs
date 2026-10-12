@@ -1394,6 +1394,7 @@ public static partial class LocTable
         { "잔불 II", L("Embers II", "残り火 II", "余烬 II") },
         { "재정비 II", L("Regroup II", "立て直し II", "重整 II") },
         { "적을 처치할 때마다 체력 +1 회복", L("Heal 1 HP per kill", "敵を倒すたびにHP +1 回復", "每击杀一个敌人恢复1点生命") },
+        { "적을 처치할 때마다 체력 +0.5 회복 (처치 회복은 초당 최대 6)", L("Heal 0.5 HP per kill (kill healing up to 6 per second)", "敵を倒すたびにHP +0.5 回復（撃破回復は毎秒最大6）", "每击杀一个敌人恢复0.5点生命（击杀回复每秒最多6点）") },
         { "주변 코인을 끌어오는 범위 +3칸", L("Coin pull range +3 tiles", "周囲のコインを引き寄せる範囲 +3マス", "吸取周围金币的范围 +3格") },
         { "처참한 일격", L("Brutal Strike", "無残な一撃", "惨烈一击") },
         { "처형", L("Execute", "処刑", "处决") },

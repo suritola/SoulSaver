@@ -994,9 +994,19 @@ void Shoot()
     // 적 처치 시 체력 회복 (피의 굶주림)
     public float healOnKill = 0f;
 
+    // 1.1.0: 적이 한꺼번에 많이 쓰러지면 처치마다 회복이 쌓여 사실상 무적이었음 → 처치 회복은 모두 합쳐 1초에 최대 KillHealPerSecond
+    const float KillHealPerSecond = 6f;
+    float killHealSecond = -1f, killHealUsed;
+
     void HealOnKill(Vector3 pos)
     {
-        if (healOnKill > 0f && PlayerHealth > 0f) PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + healOnKill);
+        if (healOnKill <= 0f || PlayerHealth <= 0f) return;
+        float now = Mathf.Floor(Time.time);
+        if (now != killHealSecond) { killHealSecond = now; killHealUsed = 0f; }
+        float heal = Mathf.Min(healOnKill, KillHealPerSecond - killHealUsed);
+        if (heal <= 0f) return;
+        killHealUsed += heal;
+        PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + heal);
     }
 
     void OnDestroy()

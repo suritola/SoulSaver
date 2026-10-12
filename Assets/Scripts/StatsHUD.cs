@@ -227,6 +227,6 @@ public class StatsHUD : MonoBehaviour
         values[9].text = Mathf.Max(0, player.pene - 1) + Loc.T("마리");
 
         // 체력 재생: 초당 · 처치 시
-        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0") + Loc.T("/처치") : "");
+        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0.#") + Loc.T("/처치") : "");
     }
 }
