@@ -12,6 +12,8 @@ using UnityEngine.UI;
 public class BossUltimate : MonoBehaviour
 {
     public static bool Active { get; private set; }
+    // 결계 이름 · 대사 연출 중 (게임이 멈춰 있음) — 일시정지 메뉴를 닫을 때 다시 흐르게 하지 않도록 (ESCmenu)
+    public static bool CutscenePlaying { get; private set; }
 
     // 보스 종류마다 게이지 (0 ~ 1)
     static readonly float[] gauge = new float[4];
@@ -59,7 +61,7 @@ public class BossUltimate : MonoBehaviour
 
     void OnDestroy()
     {
-        if (running) EndNow();
+        if (running) { CutscenePlaying = false; EndNow(); }
     }
 
     // 보스가 맞을 때 (bosss.TakeDamage): 피해 비율의 1.2제곱 → 약한 공격 여러 번보다 강한 한 방이 더 많이 채움
@@ -177,6 +179,7 @@ public class BossUltimate : MonoBehaviour
     {
         float before = Time.timeScale;
         Time.timeScale = 0f;
+        CutscenePlaying = true;
         SpecialFeedback fx = SpecialAbilities.SharedFx;
         fx?.HoldCamera(boss.transform.position);
 
@@ -201,7 +204,7 @@ public class BossUltimate : MonoBehaviour
         tag.alpha = name.alpha = say.alpha = 0f;
 
         // 카메라가 보스 쪽으로 움직이는 동안 화면이 어두워짐
-        for (float t = 0f; t < 0.7f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.7f; t += CutDt(canvas))
         {
             float k = t / 0.7f;
             shade.color = new Color(0f, 0f, 0f, 0.55f * k);
@@ -213,7 +216,7 @@ public class BossUltimate : MonoBehaviour
         PlaySfx("domain_shout", 1f);
         Hostile.Play("roar", 1f, kind == 3 ? 0.5f : kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
         fx?.Shake(0.9f, 0.6f);
-        for (float t = 0f; t < 2.3f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 2.3f; t += CutDt(canvas))
         {
             float k = Mathf.Clamp01(t / 0.25f);
             flash.color = new Color(color.r, color.g, color.b, 0.55f * (1f - Mathf.Clamp01(t / 0.35f)));
@@ -230,7 +233,7 @@ public class BossUltimate : MonoBehaviour
             if (boss != null) fx?.HoldCamera(boss.transform.position);
             yield return null;
         }
-        for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.3f; t += CutDt(canvas))
         {
             float k = 1f - t / 0.3f;
             tag.alpha = name.alpha = say.alpha = k;
@@ -240,7 +243,17 @@ public class BossUltimate : MonoBehaviour
         }
         Destroy(canvas.gameObject);
         fx?.ReleaseCamera();
+        CutscenePlaying = false;
         Time.timeScale = before > 0f ? before : 1f;
+    }
+
+    // 1.1.0: 대사 중 ESC 로 일시정지하면 연출이 멈춘 시간에도 계속 흘러, 끝나면서 게임 속도를 되돌려 일시정지가 풀렸음
+    // → 일시정지 메뉴가 열려 있는 동안은 연출 시계를 멈추고 화면도 감춤 (메뉴를 덮지 않게)
+    static float CutDt(Canvas canvas)
+    {
+        bool paused = ESCmenu.IsOpen;
+        if (canvas != null && canvas.enabled == paused) canvas.enabled = !paused;
+        return paused ? 0f : Time.unscaledDeltaTime;
     }
 
     // ---------------- 2. 결계 침식: 맵이 어두워지고 둥근 결계가 퍼짐

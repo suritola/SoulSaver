@@ -139,6 +139,6 @@ public class ESCmenu : MonoBehaviour
     {
         LevelShop ls = FindFirstObjectByType<LevelShop>();
         return (ls != null && ls.IsOpen) || (shop != null && (shop.isShopOpen || shop.isPause)) || ChoiceUI.Open || SoulTreeUI.IsOpen
-               || WeaponEvolutionUI.Open || SkillEvolutionUI.Open || StoryDirector.Playing;
+               || WeaponEvolutionUI.Open || SkillEvolutionUI.Open || StoryDirector.Playing || BossUltimate.CutscenePlaying;
     }
 }
