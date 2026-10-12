@@ -114,7 +114,7 @@ public partial class LevelShop : MonoBehaviour
     }
 
     // ================================================================= 운명의 실: [다시 뽑기 키] 다시 뽑기
-    TextMeshProUGUI rerollText;
+    TMP_Text rerollText;
     int shownRerolls = -1;
 
     // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
@@ -138,26 +138,16 @@ public partial class LevelShop : MonoBehaviour
         if (rerollText == null)
         {
             if (!open || LvshopPanel == null) return;
-            GameObject go = new GameObject("RerollHint", typeof(RectTransform), typeof(TextMeshProUGUI));
-            RectTransform r = go.GetComponent<RectTransform>();
-            r.SetParent(LvshopPanel.transform, false);
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-            r.sizeDelta = new Vector2(380f, 36f);
-            r.anchoredPosition = new Vector2(RerollHintX, RerollHintY);
-            rerollText = go.GetComponent<TextMeshProUGUI>();
-            UIKit.EnsureStyle();
-            if (UIKit.Font != null) rerollText.font = UIKit.Font;
-            if (UIKit.FontMaterial != null) rerollText.fontSharedMaterial = UIKit.FontMaterial;
-            rerollText.fontSize = 24f;
-            rerollText.alignment = TextAlignmentOptions.Center;
-            rerollText.color = new Color(0.8f, 0.7f, 1f);
-            rerollText.raycastTarget = false;
+            // 1.0.9: 작은 보라 글씨라 잘 안 보였음 → 테두리 있는 배지 + 노란 키 + 두근거림
+            rerollText = HintBadge.Make(LvshopPanel.transform, "RerollHint", new Vector2(RerollHintX, RerollHintY), new Vector2(400f, 58f),
+                new Color(0.2f, 0.1f, 0.34f, 0.96f), new Color(0.82f, 0.62f, 1f), 30f);
         }
-        if (rerollText.gameObject.activeSelf != open) rerollText.gameObject.SetActive(open);
+        GameObject badge = rerollText.transform.parent.gameObject;
+        if (badge.activeSelf != open) badge.SetActive(open);
         if (open && shownRerolls != n)
         {
             shownRerolls = n;
-            rerollText.text = "[" + KeyBindings.Name(GameAction.Reroll) + "] " + Loc.T("카드 다시 뽑기") + "  (" + n + ")";
+            rerollText.text = "<color=#FFE066>[" + KeyBindings.Name(GameAction.Reroll) + "]</color> " + Loc.T("카드 다시 뽑기") + "  <color=#FFE066>(" + n + ")</color>";
         }
     }
 
@@ -305,10 +295,13 @@ public partial class LevelShop : MonoBehaviour
                 selectHint.font = FirstTitle.font;
                 selectHint.fontSharedMaterial = FirstTitle.fontSharedMaterial;
             }
-            selectHint.fontSize = 28f;
+            selectHint.fontSize = 32f;
             selectHint.enableAutoSizing = true;         // 안내가 길어져도 한 줄 (2.1.8 더블클릭 · 숫자 키 안내)
-            selectHint.fontSizeMin = 18f;
-            selectHint.fontSizeMax = 28f;
+            selectHint.fontSizeMin = 20f;
+            selectHint.fontSizeMax = 32f;
+            selectHint.fontStyle = FontStyles.Bold;     // 1.0.9: 더 잘 보이게 (굵게 + 검은 테두리)
+            selectHint.outlineWidth = 0.22f;
+            selectHint.outlineColor = new Color32(0, 0, 0, 255);
             selectHint.enableWordWrapping = false;
             selectHint.alignment = TextAlignmentOptions.Center;
             selectHint.raycastTarget = false;
@@ -316,9 +309,9 @@ public partial class LevelShop : MonoBehaviour
         if (selectHint != null)
         {
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
-            selectHint.color = picked != null ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.92f, 0.88f, 0.8f);
+            selectHint.color = picked != null ? new Color(1f, 0.86f, 0.4f) : Color.white;
             selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked
-                                             : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#A89C86>" + Loc.T("더블클릭 · 숫자 1 2 3 으로 바로") + "</color>";
+                                             : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#C9BCA4>" + Loc.T("더블클릭 · 숫자 1 2 3 으로 바로") + "</color>";
         }
     }
 

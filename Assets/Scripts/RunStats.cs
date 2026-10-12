@@ -396,10 +396,13 @@ public static class Hints
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
             r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
-            r.sizeDelta = new Vector2(720f, 56f);
+            r.sizeDelta = new Vector2(920f, 70f);      // 1.0.9: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
             Image bg = box.GetComponent<Image>();
-            bg.color = new Color(0.08f, 0.07f, 0.12f, 0.8f);
+            bg.color = new Color(0.05f, 0.05f, 0.1f, 0.94f);
             bg.raycastTarget = false;
+            Outline edge = box.AddComponent<Outline>();
+            edge.effectColor = new Color(0.45f, 0.85f, 1f, 0.95f);
+            edge.effectDistance = new Vector2(3f, -3f);
             GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
             RectTransform tr = tg.GetComponent<RectTransform>();
             tr.SetParent(r, false);
@@ -412,14 +415,17 @@ public static class Hints
             if (UIKit.Font != null) text.font = UIKit.Font;
             if (UIKit.FontMaterial != null) text.fontSharedMaterial = UIKit.FontMaterial;
             text.enableAutoSizing = true;
-            text.fontSizeMin = 14f;
-            text.fontSizeMax = 22f;
-            text.color = new Color(0.8f, 0.95f, 1f);
+            text.fontSizeMin = 16f;
+            text.fontSizeMax = 30f;
+            text.fontStyle = FontStyles.Bold;
+            text.outlineWidth = 0.2f;
+            text.outlineColor = new Color32(0, 0, 0, 255);
+            text.color = Color.white;
             text.alignment = TextAlignmentOptions.Center;
             text.raycastTarget = false;
             runner = box.AddComponent<HintRunner>();
         }
-        text.text = "<color=#9fd8ff>" + Loc.T("도움말") + "</color>  " + Loc.T(ko);
+        text.text = "<color=#FFE066>" + Loc.T("도움말") + "</color>  " + Loc.T(ko);
         box.SetActive(true);
         until = Time.unscaledTime + 5f;
     }

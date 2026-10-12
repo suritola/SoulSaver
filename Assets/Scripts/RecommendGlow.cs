@@ -88,7 +88,7 @@ public class RecommendGlow : MonoBehaviour
             pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
             pr.pivot = new Vector2(0.5f, 0.5f);
             pr.anchoredPosition = Vector2.zero;
-            pr.sizeDelta = new Vector2(300f, 44f);
+            pr.sizeDelta = new Vector2(360f, 58f);       // 1.0.9: 300×44 → 360×58 (더 잘 보이게)
             badge = new GameObject("RecommendBadge", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             RectTransform br = badge.rectTransform;
             br.SetParent(pr, false);
@@ -97,14 +97,15 @@ public class RecommendGlow : MonoBehaviour
             br.offsetMin = new Vector2(8f, 2f);
             br.offsetMax = new Vector2(-8f, -2f);
             badge.enableAutoSizing = true;
-            badge.fontSizeMin = 16f;
-            badge.fontSizeMax = 26f;
+            badge.fontSizeMin = 18f;
+            badge.fontSizeMax = 34f;
+            badge.fontStyle = FontStyles.Bold;
             if (UIKit.Font != null) badge.font = UIKit.Font;
             if (UIKit.FontMaterial != null) badge.fontSharedMaterial = UIKit.FontMaterial;
             badge.alignment = TextAlignmentOptions.Center;
             badge.enableWordWrapping = false;
-            badge.outlineWidth = 0.3f;
-            badge.outlineColor = new Color32(40, 20, 0, 255);
+            badge.outlineWidth = 0.12f;
+            badge.outlineColor = new Color32(255, 240, 200, 255);
             badge.raycastTarget = false;
         }
     }
@@ -149,9 +150,10 @@ public class RecommendGlow : MonoBehaviour
         Color c = k < 1f ? Color.Lerp(Gold, Color.white, k) : k < 2f ? Color.Lerp(Color.white, Violet, k - 1f) : Color.Lerp(Violet, Gold, k - 2f);
         rimImg.color = new Color(c.r, c.g, c.b, 0.9f);
 
-        badge.color = Color.Lerp(Gold, Color.white, breathe * 0.6f);
-        pill.color = new Color(0.22f, 0.12f, 0.32f, 0.95f);
-        pill.rectTransform.localScale = Vector3.one * (1f + 0.06f * breathe);
+        // 1.0.9: 어두운 보라 알약 + 금빛 글씨 → 밝은 금빛 알약 + 진한 갈색 글씨 (대비가 훨씬 큼)
+        badge.color = new Color(0.22f, 0.08f, 0f);
+        pill.color = Color.Lerp(Gold, new Color(1f, 0.97f, 0.75f), breathe * 0.5f);
+        pill.rectTransform.localScale = Vector3.one * (1f + 0.1f * breathe);
 
         // 별빛: 테두리 위 아무 데서나 솟았다 사라짐
         Vector2 half = target.rect.size * 0.5f;
@@ -186,5 +188,56 @@ public class RecommendGlow : MonoBehaviour
         if (d < 2f * half.x) return new Vector2(half.x - d, -half.y);
         d -= 2f * half.x;
         return new Vector2(-half.x, -half.y + d);
+    }
+}
+
+// 플레이에 도움 되는 작은 안내 배지 (1.0.9): 다시 뽑기 · 시너지처럼 글씨만 있던 안내가 배경에 묻혀 잘 안 보였음
+//   진한 배경 알약 + 밝은 테두리 + 굵고 검은 외곽선 글씨, 숨 쉬듯 두근거리며 테두리가 반짝임 (멈춘 화면이라 unscaledTime)
+public class HintBadge : MonoBehaviour
+{
+    Image rim;
+    Color rimColor;
+    Vector3 baseScale = Vector3.one;
+    float phase;
+
+    public static TMP_Text Make(Transform parent, string name, Vector2 pos, Vector2 size, Color fill, Color rimColor, float fontSize)
+    {
+        UIKit.EnsureStyle();
+        RectTransform r = UIKit.Rect(name, parent, pos, size);
+        r.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        HintBadge hb = r.gameObject.AddComponent<HintBadge>();
+        hb.rimColor = rimColor;
+        hb.phase = Random.value * 6f;
+        // 테두리: 조금 큰 밝은 판 위에 진한 판
+        hb.rim = r.gameObject.AddComponent<Image>();
+        hb.rim.sprite = UIKit.ButtonSprite;
+        hb.rim.type = Image.Type.Sliced;
+        hb.rim.color = rimColor;
+        hb.rim.raycastTarget = false;
+        RectTransform inner = UIKit.Rect("Fill", r, Vector2.zero, Vector2.zero);
+        inner.anchorMin = Vector2.zero;
+        inner.anchorMax = Vector2.one;
+        inner.offsetMin = new Vector2(4f, 4f);
+        inner.offsetMax = new Vector2(-4f, -4f);
+        Image fi = inner.gameObject.AddComponent<Image>();
+        fi.sprite = UIKit.ButtonSprite;
+        fi.type = Image.Type.Sliced;
+        fi.color = fill;
+        fi.raycastTarget = false;
+        TMP_Text t = UIKit.Text(r, "", fontSize, Color.white, Vector2.zero, size - new Vector2(20f, 8f));
+        t.fontStyle = FontStyles.Bold;
+        t.outlineWidth = 0.25f;
+        t.outlineColor = new Color32(0, 0, 0, 255);
+        t.enableWordWrapping = false;
+        return t;
+    }
+
+    void OnEnable() => baseScale = transform.localScale == Vector3.zero ? Vector3.one : transform.localScale;
+
+    void Update()
+    {
+        float b = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f + phase);
+        transform.localScale = baseScale * (1f + 0.06f * b);
+        if (rim != null) rim.color = Color.Lerp(rimColor, Color.white, 0.55f * b);
     }
 }

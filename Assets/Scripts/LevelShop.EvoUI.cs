@@ -71,6 +71,7 @@ public partial class LevelShop
     // ================================================================= 추천 카드 (2.1.6~)
     // 세 장 중 진화에 가장 가까워지는 카드 (고르면 바로 진화하는 카드 먼저) 하나가 반짝반짝 빛남 (RecommendGlow)
     RecommendGlow recommend;
+    int recommendedSlot = -1;
 
     void ShowRecommend(int[] ids)
     {
@@ -82,6 +83,7 @@ public partial class LevelShop
             float s = EvoProgressAfter(ids[slot]);
             if (s > bestScore) { bestScore = s; best = slot; }
         }
+        recommendedSlot = best;
         if (recommend == null) recommend = gameObject.AddComponent<RecommendGlow>();
         recommend.Show(best >= 0 ? CardOf(best) as RectTransform : null, bestScore >= 1f);
     }

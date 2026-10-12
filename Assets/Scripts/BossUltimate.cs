@@ -705,6 +705,7 @@ public class BossUltimate : MonoBehaviour
     {
         if (Hostile.Glow == null) return null;
         GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
+        HostileProjectile.Dress(g, acid, 1.6f);       // 1.0.9: 다른 적 탄처럼 테두리 구슬로 또렷하게
         DomainBall b = g.AddComponent<DomainBall>();
         b.center = center;
         b.radius = Radius - 0.6f;
@@ -865,7 +866,7 @@ public class DomainBall : MonoBehaviour
             velocity = Vector2.Reflect(velocity, -n);
             transform.position = center + (Vector3)(n * radius);
         }
-        transform.localScale = Vector3.one * (0.22f + 0.02f * Mathf.Sin(age * 12f));
+        transform.localScale = Vector3.one * (0.46f + 0.04f * Mathf.Sin(age * 12f));     // HostileProjectile.Dress 의 빛 크기 (지름 1.6 × 2.3 ÷ 8)
         trail += Time.deltaTime;
         if (trail > 0.12f) { trail = 0f; Fx.Spawn("fx_puddle", transform.position, 1.2f, new Color(0.55f, 1f, 0.35f, 0.6f), 14f); }
         PlayerController p = Hostile.Player;

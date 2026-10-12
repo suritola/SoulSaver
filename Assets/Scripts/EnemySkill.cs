@@ -1039,21 +1039,76 @@ public class HostileProjectile : MonoBehaviour
     float puff;
     float trail;
     SpriteRenderer body;
-    GameObject core;
 
     // 날고 있는 탄 목록 (쳐내기가 씬 전체를 뒤지지 않게)
     public static readonly System.Collections.Generic.List<HostileProjectile> Live = new System.Collections.Generic.List<HostileProjectile>();
     void OnEnable() => Live.Add(this);
     void OnDisable() => Live.Remove(this);
 
+    // 1.0.9: 흐릿한 빛 덩어리라 배경 · 이펙트에 묻혔음 → 검은 테두리가 있는 또렷한 구슬 + 하얀 심 + 어두운 그림자로
+    //   어떤 바닥(밝은 초원 · 어두운 묘역 · 붉은 지옥)에서도 테두리 대비로 바로 보이고, 두근거려 눈에 띔
+    Transform orb;
+    float orbSize, age;
+
     void Start()
     {
         body = GetComponent<SpriteRenderer>();
-        // 하얀 중심으로 잘 보이게
-        if (Hostile.Glow != null)
+        orbSize = Mathf.Max(0.75f, radius * 2f + 0.35f);
+        orb = Dress(gameObject, body != null ? body.color : Color.red, orbSize);
+    }
+
+    // 탄 꾸미기 (산성 덩어리 같은 다른 적 탄도 같이 씀): 뿌연 빛은 작고 진하게 줄이고, 그 위에 테두리 구슬 · 하얀 심
+    public static Transform Dress(GameObject go, Color color, float diameter)
+    {
+        SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
+        Color v = Vivid(color);
+        go.transform.localScale = Vector3.one * (diameter * 2.3f / 8f);      // 빛 그림은 8칸 크기
+        if (sr != null) sr.color = new Color(v.r, v.g, v.b, 0.8f);
+        Vector3 at = go.transform.position;
+        GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.5f / 8f, new Color(0.02f, 0f, 0.04f, 0.7f), "Effect", 7);
+        shadow.transform.SetParent(go.transform, true);
+        GameObject ball = SpecialAbilities.MakeSprite("Orb", OrbSprite, at, diameter, v, "Effect", 10);
+        ball.transform.SetParent(go.transform, true);
+        GameObject core = SpecialAbilities.MakeSprite("Core", OrbSprite, at, diameter * 0.42f, Color.white, "Effect", 11);
+        core.transform.SetParent(ball.transform, true);
+        return ball.transform;
+    }
+
+    // 원래 색의 색상은 그대로, 채도 · 밝기를 끌어올림 (반투명 · 탁한 색이 섞여도 선명하게)
+    public static Color Vivid(Color c)
+    {
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        Color o = Color.HSVToRGB(h, Mathf.Max(s, 0.65f), 1f);
+        o.a = 1f;
+        return o;
+    }
+
+    // 테두리 구슬 그림 (흰 속 + 검은 테두리 · 색은 SpriteRenderer 가 입힘)
+    static Sprite orbSprite;
+    static Sprite OrbSprite
+    {
+        get
         {
-            core = SpecialAbilities.MakeSprite("Core", Hostile.Glow, transform.position, transform.localScale.x * 0.45f, new Color(1f, 1f, 1f, 0.95f), "Effect", 10);
-            core.transform.SetParent(transform, true);
+            if (orbSprite != null) return orbSprite;
+            const int S = 64;
+            Texture2D tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            Color32[] px = new Color32[S * S];
+            float half = S * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(half, half)) / half;
+                    float a = Mathf.Clamp01((1f - d) * half * 0.5f);            // 바깥 가장자리 부드럽게
+                    float ink = Mathf.Clamp01((d - 0.7f) * half * 0.5f);         // 0.7 바깥은 검은 테두리
+                    byte g = (byte)(255f * (1f - ink));
+                    px[y * S + x] = new Color32(g, g, g, (byte)(255f * a));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            orbSprite = Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), S);
+            return orbSprite;
         }
     }
 
@@ -1062,6 +1117,8 @@ public class HostileProjectile : MonoBehaviour
         // 시간 왜곡에 같이 느려짐
         transform.position += (Vector3)(dir * speed * EnermyController.GlobalSpeedMultiplier * Time.deltaTime);
         if (spin) transform.Rotate(0f, 0f, 720f * Time.deltaTime);
+        age += Time.deltaTime;
+        if (orb != null) orb.localScale = Vector3.one * (orbSize / transform.localScale.x) * (1f + 0.12f * Mathf.Sin(age * 16f));
 
         // 색깔 꼬리
         trail += Time.deltaTime;
@@ -1069,7 +1126,7 @@ public class HostileProjectile : MonoBehaviour
         {
             trail = 0f;
             Color c = body.color;
-            FadeSprite.Spawn("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.8f, new Color(c.r, c.g, c.b, 0.5f), "Effect", 8, 0.25f);
+            FadeSprite.Spawn("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.6f, new Color(c.r, c.g, c.b, 0.75f), "Effect", 8, 0.25f);
         }
 
         if (fiery && Hostile.Glow != null)

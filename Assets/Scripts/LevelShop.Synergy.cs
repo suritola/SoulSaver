@@ -56,17 +56,19 @@ public partial class LevelShop
             if (card == null) continue;
             if (synergyTags[slot] == null)
             {
-                UIKit.EnsureStyle();
-                RectTransform r = UIKit.Rect("SynergyTag", card, Vector2.zero, new Vector2(400f, 44f));
+                // 1.0.9: 연두 글씨만 있어서 잘 안 보였음 → 초록 배지 (HintBadge)
+                RectTransform r = HintBadge.Make(card, "SynergyTag", Vector2.zero, new Vector2(400f, 52f),
+                    new Color(0.04f, 0.26f, 0.1f, 0.96f), new Color(0.45f, 1f, 0.5f), 28f).transform.parent as RectTransform;
                 r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
-                r.pivot = new Vector2(0.5f, 1f);
-                r.anchoredPosition = new Vector2(0f, -6f);
-                TMP_Text t = UIKit.Text(r, "", 24f, new Color(0.55f, 1f, 0.6f), Vector2.zero, new Vector2(400f, 44f));
-                synergyTags[slot] = t;
+                synergyTags[slot] = r.GetComponentInChildren<TMP_Text>();
             }
+            // 카드 아래 테두리에 걸침 (그 아래는 확정 안내 줄) · 추천 카드면 「★ 추천」 알약이 그 자리라 바로 위 카드 안쪽으로
+            RectTransform tr = synergyTags[slot].transform.parent as RectTransform;
+            tr.pivot = new Vector2(0.5f, slot == recommendedSlot ? 0f : 0.5f);
+            tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 0f);
             string partner = SynergyPartner(ids[slot]);
-            synergyTags[slot].gameObject.SetActive(partner != null);
-            if (partner != null) synergyTags[slot].text = Loc.T("시너지") + " · " + partner;
+            synergyTags[slot].transform.parent.gameObject.SetActive(partner != null);
+            if (partner != null) synergyTags[slot].text = "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
         }
     }
 }
