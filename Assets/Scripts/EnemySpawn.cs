@@ -258,8 +258,75 @@ public class EnemySpawner : MonoBehaviour
         // 보스를 쓰러뜨리면 화면의 잡몹이 영혼이 되어 흩어지고, 이 스테이지에서는 더 나오지 않음
         // (무한 모드는 끝없이 이어지므로 화면만 정리하고 계속 나옴 · 다음 스테이지는 StartStage 에서 다시 켬)
         if (!GameMode.IsEndless) spawningEnabled = false;
-        StartCoroutine(PurgeAll());
+        StartCoroutine(BossFinale());       // 1.1.0: 그 자리에서 사라지던 것을 소용돌이 연출로
         onBossDefeated?.Invoke(stageIndex);
+    }
+
+    // 보스 처치 연출 (1.1.0): 화면의 모든 적 · 코인 · 회복약이 소용돌이치며 나에게 빨려 들고, 캐릭터는 빙글빙글 돌다 영혼 폭발로 마무리
+    // 적은 나에게 닿으면 영혼이 되어 사라지고, 코인 · 회복약은 몸에 닿아 저절로 주워짐 · 그동안 무적
+    class Pulled { public Transform t; public EnermyController e; public float angle, dist; }
+    const float FinaleTime = 2.2f;
+
+    IEnumerator BossFinale()
+    {
+        if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
+        if (playerC == null || playerC.IsDying) { yield return PurgeAll(); yield break; }
+        Transform me = playerC.transform;
+        var list = new System.Collections.Generic.List<Pulled>();
+        void Add(Transform t, EnermyController e)
+        {
+            if (t == null) return;
+            Vector2 d = t.position - me.position;
+            list.Add(new Pulled { t = t, e = e, angle = Mathf.Atan2(d.y, d.x), dist = d.magnitude });
+        }
+        foreach (GameObject g in GameObject.FindGameObjectsWithTag("enermy"))
+            if (g != null && g.TryGetComponent(out EnermyController e) && !e.IsDead) Add(g.transform, e);
+        foreach (Transform c in new System.Collections.Generic.List<Transform>(CoinTag.All)) Add(c, null);
+        foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null);
+
+        playerC.GrantInvincibility(FinaleTime + 1f);
+        PlayerMotion.Of(playerC).Spin(FinaleTime, 7f);
+        Hostile.Play("shimmer", 0.9f, 0.6f);
+        Hostile.Play("whoosh", 0.9f, 0.5f);
+        Hostile.Shake(0.3f);
+        Color soul = new Color(0.7f, 0.95f, 1f);
+        FxAnim rune = Fx.Play("fx_rune", me.position, 7f, new Color(soul.r, soul.g, soul.b, 0.8f), 1f, 0f, 30, true, FinaleTime);
+        if (rune != null) { rune.spin = 240f; rune.follow = me; }
+
+        float spark = 0f;
+        for (float t = 0f; t < FinaleTime; t += Time.deltaTime)
+        {
+            float k = t / FinaleTime, ease = k * k;
+            Vector3 c = me != null ? me.position : Vector3.zero;
+            foreach (Pulled p in list)
+            {
+                if (p.t == null) continue;
+                if (p.e != null && p.e.IsDead) { p.t = null; continue; }
+                float d = Mathf.Lerp(p.dist, 0f, ease);
+                float a = p.angle + ease * Mathf.PI * 3f;          // 한 바퀴 반 감기며 빨려 듦
+                p.t.position = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * d;
+                if (p.e != null && d < 1.3f) { p.e.Purge(); p.t = null; }
+            }
+            if ((spark -= Time.deltaTime) <= 0f)
+            {
+                spark = 0.12f;
+                Fx.Spawn("fx_spark", c + (Vector3)(Random.insideUnitCircle * 3f), 1.6f, soul, 24f);
+            }
+            yield return null;
+        }
+        // 마무리: 남은 것은 모두 내 자리로 (적은 영혼으로) + 영혼 폭발
+        Vector3 at = me != null ? me.position : Vector3.zero;
+        foreach (Pulled p in list)
+        {
+            if (p.t == null) continue;
+            if (p.e != null) { if (!p.e.IsDead) p.e.Purge(); }
+            else p.t.position = at;
+        }
+        Fx.Spawn("fx_soulburst", at, 9f, Color.white, 16f);
+        Fx.Spawn("fx_shock", at, 16f, soul, 18f);
+        Hostile.Play("boom", 0.7f, 0.7f);
+        Hostile.Play("chime", 0.6f, 1.1f);
+        Hostile.Shake(0.6f);
     }
 
     IEnumerator PurgeAll()
