@@ -56,8 +56,8 @@ public static class Chapters
     // 2.2.0: 곡선을 더 가파르게 — 1 · 2장은 더 쉽게, 3장은 원래보다 조금 · 4장은 확실히 세게
     static readonly float[] EaseHp = { 0.42f, 0.8f, 1.08f, 1.2f };
     static readonly float[] EaseHurt = { 0.42f, 0.8f, 1.08f, 1.2f };
-    // 1.0.9: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6188 < 4장 5040 → 6300)
-    static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.04f, 1.5f };
+    // 1.0.9: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6843 < 4장 5040 → 6930)
+    static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.15f, 1.65f };
     static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
     static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
     static readonly float[] EaseAlive = { 0.5f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율
