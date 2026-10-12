@@ -686,6 +686,27 @@ public partial class CharacterKit : MonoBehaviour
                 ultAimRing.enabled = true;
                 Hostile.SetArc(ultAimRing, origin, size, 0f, 360f);
                 break;
+            case SpecialAbilities.UltAimShape.Burst:
+            {
+                // 사방으로 뻗는 화살 열두 개 (천천히 돎): 범위가 아니라 날아가는 방향
+                const int spokes = 12;
+                ultAimLine.enabled = true;
+                ultAimLine.positionCount = spokes * 4;
+                float spin = Time.time * 30f;
+                for (int i = 0; i < spokes; i++)
+                {
+                    Vector2 d = Quaternion.Euler(0f, 0f, spin + i * 360f / spokes) * Vector2.right;
+                    Vector2 side = new Vector2(-d.y, d.x);
+                    Vector3 tip = origin + (Vector3)(d * size);
+                    ultAimLine.SetPosition(i * 4, origin + (Vector3)(d * 1.2f));
+                    ultAimLine.SetPosition(i * 4 + 1, tip);
+                    ultAimLine.SetPosition(i * 4 + 2, tip - (Vector3)(d * 0.8f) + (Vector3)(side * 0.5f));     // 화살촉
+                    ultAimLine.SetPosition(i * 4 + 3, origin + (Vector3)(d * 1.2f));
+                }
+                ultAimLine.startColor = ultAimLine.endColor = c;
+                ultAimLine.startWidth = ultAimLine.endWidth = 0.18f;
+                break;
+            }
             case SpecialAbilities.UltAimShape.Line:
                 if (dash) { ultAimRing.enabled = true; Hostile.SetArc(ultAimRing, origin, 1.5f, 0f, 360f); }
                 else

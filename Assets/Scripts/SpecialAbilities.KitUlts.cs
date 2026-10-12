@@ -44,7 +44,7 @@ public partial class SpecialAbilities
     public bool KitWeaponUltActive => UltActive && IsKitWeapon(UltId);
 
     // 우클릭을 누르고 있는 동안 보여 줄 궁극기 범위 (떼면 발동). CharacterKit 이 그림
-    public enum UltAimShape { Point, Line, Around }
+    public enum UltAimShape { Point, Line, Around, Burst }      // Burst: 사방으로 날아가는 투사체 (원 대신 방사형 화살, 1.1.0)
 
     // Point: at 에 반지름 size 원 · Line: 플레이어에서 마우스 쪽으로 길이 size · Around: 플레이어 둘레 반지름 size
     public UltAimShape KitUltAim(out float size, out Vector3 at)
@@ -64,7 +64,8 @@ public partial class SpecialAbilities
             case KitWire: size = evo ? 11f : 9f; return UltAimShape.Around;
             case KitBurstBow: size = 16f; return UltAimShape.Around;
             case KitFirework: size = 12f; return UltAimShape.Around;
-            default: size = 8f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로
+            case KitCards: case KitQuicksilver: size = 8f; return UltAimShape.Burst;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
+            default: size = 8f; return UltAimShape.Around;
         }
     }
 
