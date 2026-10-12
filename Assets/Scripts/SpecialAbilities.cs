@@ -408,9 +408,9 @@ public partial class SpecialAbilities : MonoBehaviour
         _ => Loc.T("일제 사격"),
     };
 
-    public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood)
+    public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood, int ultId = -99)
     {
-        int id = UltId;            // 진화한 무기의 필살기 (권총을 들고 있어도)
+        int id = ultId != -99 ? ultId : UltId;            // 진화한 무기의 필살기 (권총을 들고 있어도) · 거너 1차 · 2차를 따로 부를 때는 ultId
         float dmg = baseDamage * WeaponDamageMul(id) * UltPower(id);
         if (id != DualId) dmg *= SignatureSkills.SoulUltMul;      // 총알 폭풍은 총알마다 영혼탄이 붙음 (ApplyGunCards)
         Color c = WeaponColor(id);

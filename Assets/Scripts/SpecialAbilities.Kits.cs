@@ -805,13 +805,15 @@ public partial class SpecialAbilities
         Hostile.Shake(0.15f);
     }
 
+    static bool IsDeadEnemy(Transform t) => t.TryGetComponent(out EnermyController e) && e.IsDead;
+
     IEnumerator PickpocketRoutine(List<Transform> targets, int coins)
     {
         Vector3 home = player.transform.position;
         player.GrantInvincibility(targets.Count * 0.09f + 0.4f);
         foreach (Transform t in targets)
         {
-            if (t == null) continue;
+            if (t == null || IsDeadEnemy(t)) continue;      // 1.1.0: 앞선 공격에 이미 쓰러진 적은 건너뜀
             Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
             player.transform.position = KitClamp(t.position + (Vector3)(Random.insideUnitCircle.normalized * 1f));
             Specials.Damage(t.gameObject, KitD * 1.5f, Vector3.zero, 0.5f);
@@ -836,8 +838,11 @@ public partial class SpecialAbilities
         loop.fps = 10f;
         SpriteRenderer sr = bird.GetComponent<SpriteRenderer>();
         fx.Play("whoosh", 0.8f, 1.8f);
-        foreach (Transform t in targets)
+        foreach (Transform picked in targets)
         {
+            Transform t = picked;
+            // 1.1.0: 이미 쓰러진 적이면 그 근처의 살아 있는 적에게 (시체를 헛치지 않게)
+            if (t != null && IsDeadEnemy(t)) t = Specials.NearestEnemy(t.position, 6f);
             if (t == null) continue;
             Vector3 from = bird.transform.position;
             for (float k = 0f; k < 0.13f && t != null; k += Time.deltaTime)

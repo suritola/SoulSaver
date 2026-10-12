@@ -298,7 +298,7 @@ public partial class SpecialAbilities
         if (Gunner)
         {
             // 1.0.8: 쌍권총도 일제 사격으로 조준하므로 「노려보는 눈빛」은 늘, 덧붙는 총알 폭풍이 있으면 사거리 칸도
-            if (UltActive && UltId == DualId)
+            if (UltActive && HasAug(DualId))     // 1.1.0: 2차를 다른 무기로 해도 총알 폭풍이 남으므로
             {
                 t.Add(Node("u.storm1", "u.trait1", 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
                 t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +3칸", 34, ult, () => TreeStormRange += 3f));

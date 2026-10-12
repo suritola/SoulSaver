@@ -864,13 +864,15 @@ void Shoot()
         }
 
         // 1.1.0: 죽음의 춤은 조준한 적들 사이를 베는 필살기라, 총알 뒤에 덧붙으면 적이 먼저 죽어 거의 발동하지 않았음 → 춤을 먼저 추고 총알
-        bool danceFirst = special != null && special.UltAdds && special.UltId == SpecialAbilities.ScytheId;
-        if (danceFirst)
-            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP));
+        // 거너는 1차 · 2차 진화가 다르면 두 궁극기가 모두 덧붙음 (SpecialAbilities.AddedUltIds)
+        List<int> adds = special != null && special.UltAdds ? special.AddedUltIds() : new List<int>();
+        if (adds.Remove(SpecialAbilities.ScytheId))
+            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP, SpecialAbilities.ScytheId));
 
-        foreach (EnermyController target in targets)
+        foreach (EnermyController picked in targets)
         {
-            if (target == null) continue;
+            EnermyController target = picked;
+            if (target == null || target.IsDead) continue;     // 1.1.0: 덧붙은 춤 · 앞선 총알에 이미 쓰러진 적은 건너뜀
 
             // 2.2.0: 명중률 — 방향을 첫 발 전에 한 번만 정하던 것을 매 발 다시 조준 (발밑 대신 몸 중심, 움직이는 적은 날아가는 동안 갈 자리를 앞질러)
             Collider2D body = target.GetComponent<Collider2D>();
@@ -880,7 +882,17 @@ void Shoot()
 
             for (int i = 0; i < ShotsPerTarget;  i++)
             {
-                if (target == null) break;
+                // 1.1.0: 쏘던 적이 쓰러지면 남은 총알을 시체(총알이 그냥 지나감)에 버리지 않고 가까운 살아 있는 적에게
+                if (target == null || target.IsDead)
+                {
+                    Transform near = Specials.NearestEnemy(lastPos, 8f);
+                    target = near != null ? near.GetComponent<EnermyController>() : null;
+                    if (target == null) break;
+                    body = target.GetComponent<Collider2D>();
+                    lastPos = target.transform.position;
+                    lastTime = Time.time;
+                    velocity = Vector2.zero;
+                }
 
                 Vector3 now = target.transform.position;
                 float dt = Time.time - lastTime;
@@ -913,8 +925,8 @@ void Shoot()
         }
 
         // 2.2.0: 나머지 진화 무기는 원래 조준 사격 뒤에 그 무기의 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
-        if (special != null && special.UltAdds && !danceFirst)
-            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP));
+        foreach (int add in adds)
+            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP, add));
 
         targets.Clear();
         isVolleying = false;

@@ -15,6 +15,16 @@ public partial class SpecialAbilities
     public int UltId => WeaponActive ? CurrentWeapon : Gunner ? (gunEvo2 >= 0 ? gunEvo2 : gunEvo1) : (Kit != null ? Kit.form : -1);
     public bool UltActive => UltId >= 0;
 
+    // 필살기에 덧붙는 궁극기들 (1.1.0): 거너는 1차 · 2차 진화가 다르면 둘 다 (예전엔 2차 것만 남아 쌍권총 → 낫이면 총알 폭풍이 사라졌음)
+    public List<int> AddedUltIds()
+    {
+        List<int> ids = new List<int>();
+        if (WeaponActive || !Gunner) { if (UltActive) ids.Add(UltId); return ids; }
+        if (gunEvo1 >= 0) ids.Add(gunEvo1);
+        if (gunEvo2 >= 0 && gunEvo2 != gunEvo1) ids.Add(gunEvo2);
+        return ids;
+    }
+
     bool HasAug(int id) => gunEvo1 == id || gunEvo2 == id;
     bool AugMaxed(int id) => gunEvo1 == id && gunEvo2 == id;      // 2차에서 같은 계열 = 극대화
     // 영혼 트리 숙련 특성 (단계마다 +25%)
