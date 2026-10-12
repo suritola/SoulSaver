@@ -337,8 +337,15 @@ public partial class LevelShop
             }
             if (need > 0) best = Mathf.Max(best, have / (float)need);
         }
-        return best > 0f ? (1f + 0.8f * best) * EvoDrawBoost : 1f;
+        float w = best > 0f ? (1f + 0.8f * best) * EvoDrawBoost : 1f;
+        // 행운 (1.1.0): 지금 키우는 카드(이미 가진 카드 · 진화 재료)는 행운 1마다 +40%
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        int luck = sp != null ? sp.Luck : 0;
+        if (luck > 0 && (best > 0f || LevelOf(id) > 0)) w *= 1f + LuckDrawBoost * luck;
+        return w;
     }
+
+    const float LuckDrawBoost = 0.4f;
 
     const float EvoDrawBoost = 1.4f;
 

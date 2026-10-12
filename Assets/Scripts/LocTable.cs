@@ -237,6 +237,9 @@ public static partial class LocTable
         { "영혼 수확", L("Soul Harvest", "魂の収穫", "灵魂收割") },
         { "보스 · 중간 보스가 주는 영혼 조각 2배", L("Soul shards from bosses and mid-bosses x2", "ボス・中ボスの魂のかけら2倍", "首领与精英首领给予的灵魂碎片×2") },
         { "운명 바꾸기", L("Rewrite Fate", "運命を変える", "改写命运") },
+        { "행운", L("Luck", "幸運", "幸运") },
+        { "행운 +1", L("Luck +1", "幸運+1", "幸运+1") },
+        { "행운 +1 — 이미 가진 카드 · 진화 재료 카드가 레벨업에 더 자주 나옵니다", L("Luck +1 — cards you already own and evolution ingredients show up more often on level-up", "幸運+1 — 持っているカード・進化素材のカードがレベルアップでより頻繁に出ます", "幸运+1 — 已拥有的卡牌 · 进化材料卡牌在升级时更常出现") },
         { "레벨업 카드 다시 뽑기 +3", L("Level-up card rerolls +3", "レベルアップカードの引き直し+3", "升级卡牌重抽+3") },
         // 장 중반 이벤트 · 보물 상자 · 고르기 창 (1.0.5)
         { "보물 상자", L("Treasure Chest", "宝箱", "宝箱") },

@@ -31,6 +31,8 @@ public partial class SpecialAbilities
 
     // 다시 뽑기는 트리 없이도 한 판에 1회는 갖고 시작 (운명의 실을 배우면 레벨업마다 채워짐)
     int rerollMax, rerolls = 1;
+    // 행운 (1.1.0): 높을수록 지금 키우는 레벨업 카드(이미 가진 카드 · 진화 재료)가 더 자주 나옴 (LevelShop.DrawWeight) · 영혼 트리 재물 가지
+    public int Luck { get; private set; }
     public int Rerolls => rerolls;
     public void SetRerolls(int n) => rerolls = Mathf.Max(0, n);     // 판 중간 저장 (RunSave)
     float riftSeconds, riftEvery, riftReadyAt;

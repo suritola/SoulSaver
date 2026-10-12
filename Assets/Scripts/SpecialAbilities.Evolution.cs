@@ -362,6 +362,8 @@ public partial class SpecialAbilities
         t.Add(Node("g.magnet1", "g.coin1", 5, "흥정", "떠돌이 상점 가격 -10%", 12, LvIcon(1), () => TreeShopMul *= 0.9f));
         t.Add(Node("g.magnet2", "g.magnet1", 5, "흥정 II", "떠돌이 상점 가격 -10%", 28, LvIcon(1), () => TreeShopMul *= 0.9f));
         t.Add(Node("g.fate", "g.magnet2", 5, "운명 바꾸기", "레벨업 카드 다시 뽑기 +3", 34, LvIcon(4), () => rerolls += 3));
+        t.Add(Node("g.luck1", "g.coin1", 5, "행운", "행운 +1 — 이미 가진 카드 · 진화 재료 카드가 레벨업에 더 자주 나옵니다", 14, LvIcon(4), () => Luck += 1));
+        Chain(t, "g.luck", 2, 4, "g.luck1", 5, "행운", "행운 +1", new[] { 30, 48, 70 }, LvIcon(4), () => Luck += 1);
         t.Add(Node("g.exp1", "g.coin1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", 12, LvIcon(4), () => TreeInsight += 5));
         Chain(t, "g.exp", 2, 3, "g.exp1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", new[] { 28, 46 }, LvIcon(4), () => TreeInsight += 5);
         t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
