@@ -971,7 +971,7 @@ public partial class SpecialAbilities : MonoBehaviour
     void UpdateAbilities()
     {
         if (player != null) TreeTick();
-        if (player == null || equipped.Count == 0 || Time.timeScale == 0f)
+        if (player == null || equipped.Count == 0 || Time.timeScale == 0f || PlayerController.Cinematic)
         {
             // 멈춘 동안에는 소리와 표시를 숨기고 조준 중이던 스킬은 취소 (멈춘 사이 키를 떼도 조준이 남지 않게)
             aimingSkill = -1;

@@ -282,8 +282,13 @@ public class EnemySpawner : MonoBehaviour
         foreach (GameObject g in GameObject.FindGameObjectsWithTag("enermy"))
             if (g != null && g.TryGetComponent(out EnermyController e) && !e.IsDead) Add(g.transform, e);
         foreach (Transform c in new System.Collections.Generic.List<Transform>(CoinTag.All)) Add(c, null);
-        foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null);
+        // 회복약은 체력이 가득 차 있으면 끌어오지 않음 (닿으면 저절로 먹혀 낭비됨)
+        if (playerC.PlayerHealth < playerC.PlayerMaxHealth)
+            foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null);
 
+        // 연출 동안은 조작하지 않고 감상만 (이동 · 공격 · 스킬 · 영혼 트리 입력을 막음)
+        PlayerController.Cinematic = true;
+        playerC.CancelSkill();
         playerC.GrantInvincibility(FinaleTime + 1f);
         PlayerMotion.Of(playerC).Spin(FinaleTime, 7f);
         Hostile.Play("shimmer", 0.9f, 0.6f);
@@ -327,7 +332,12 @@ public class EnemySpawner : MonoBehaviour
         Hostile.Play("boom", 0.7f, 0.7f);
         Hostile.Play("chime", 0.6f, 1.1f);
         Hostile.Shake(0.6f);
+        yield return new WaitForSeconds(0.4f);      // 폭발을 보고 나서 조작
+        PlayerController.Cinematic = false;
     }
+
+    // 연출 중에 스포너가 꺼지거나 장면이 바뀌어도 조작이 막힌 채 남지 않게
+    void OnDisable() => PlayerController.Cinematic = false;
 
     IEnumerator PurgeAll()
     {

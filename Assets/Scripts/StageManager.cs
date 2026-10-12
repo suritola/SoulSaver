@@ -263,7 +263,7 @@ public class StageManager : MonoBehaviour
                 upgradeText.text = Loc.T("특수 강화 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   포인트 ") + specialPoints;
             }
         }
-        if (show && KeyBindings.Down(GameAction.Upgrade)) OpenUpgrade();
+        if (show && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Upgrade)) OpenUpgrade();
     }
 
     // ================================================================= 거너: 영혼 트리 버튼 · 무기 진화
@@ -296,7 +296,7 @@ public class StageManager : MonoBehaviour
             shownLang = Loc.Current;
             upgradeText.text = Loc.T("영혼 트리") + " [" + KeyBindings.KeyName(key) + "]  <color=#C9B8FF>" + shownShards + "</color>";
         }
-        if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame)
+        if (!PlayerController.Cinematic && KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame)
         {
             // [Shift]+[T]: 트리를 열지 않고 추천 칸(없으면 가장 싼 칸)을 바로 배움
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) QuickBuy();

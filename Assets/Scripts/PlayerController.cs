@@ -178,6 +178,8 @@ public class PlayerController : MonoBehaviour
     public const float GaugeRate = 0.35f;
     // 메뉴로 게임이 멈췄는지 (타겟팅 스킬의 느린 시간은 멈춘 것이 아님)
     public static bool IsPaused => Time.timeScale == 0f;
+    // 보스 처치 연출 중 (1.1.0): 이동 · 공격 · 스킬 · 영혼 트리 입력을 모두 받지 않고 연출만 봄 (EnemySpawner.BossFinale)
+    public static bool Cinematic;
     // 타겟팅 스킬 사용 중 + 끝난 뒤 자동 연사 중 (이때는 직접 쏠 수 없음)
     public bool IsSkillUsing => isSkillUsing || isVolleying;
     public bool IsAiming => isSkillUsing;       // 시간을 늦춘 조준 중 (일제 사격이 날아가는 중은 아님)
@@ -322,7 +324,7 @@ public class PlayerController : MonoBehaviour
         // 상점 · ESC · 레벨업 등으로 멈춘 동안에는 입력을 받지 않음
         // (멈춘 화면에서 클릭하면 총이 나가거나 스킬이 시간을 다시 흐르게 하던 문제)
         // 시작 · 엔딩 연출 중에도 조작하지 않음
-        if (IsPaused || StoryDirector.Playing || IsDying)
+        if (IsPaused || StoryDirector.Playing || IsDying || Cinematic)
         {
             move = Vector3.zero;
             return;

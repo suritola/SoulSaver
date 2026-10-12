@@ -96,7 +96,7 @@ public class ShopStall : MonoBehaviour
         bool near = p != null && Vector2.Distance(p.transform.position, transform.position) < openDistance;
         PlayerNear = near;
         UpdatePrompt(near);
-        if (near && KeyBindings.Down(GameAction.Interact)) pendingOpen = true;
+        if (near && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Interact)) pendingOpen = true;
         if (pendingOpen && (p == null || Vector2.Distance(p.transform.position, transform.position) > openDistance * 1.6f)) pendingOpen = false;
         if (pendingOpen && Time.timeScale == 1f && !p.IsAiming)
         {
