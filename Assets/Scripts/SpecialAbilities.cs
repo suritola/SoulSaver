@@ -809,14 +809,25 @@ public partial class SpecialAbilities : MonoBehaviour
     WeaponAim aim;
     // 1.0.7: 쌍권총이 아닌 진화도 덧붙는 필살기(지옥불 포격 부채꼴 · 레일건 직선 …)의 범위를 조준 중에 보여 줌 (표식은 그대로 일제 사격 것)
     bool AimShown => Gunner && UltActive;
+    // 1.1.0: 1차 · 2차 진화가 다르면 두 궁극기가 모두 덧붙으므로 1차 것의 범위도 따로 그림 (aim2)
+    WeaponAim aim2;
+    int FirstAddedUlt { get { List<int> ids = AddedUltIds(); return ids.Count > 1 ? ids[0] : -1; } }
     public void BeginAim()
     {
         if (!AimShown) return;
         if (aim == null) aim = new WeaponAim(this);
         aim.Begin(UltId);
+        int first = FirstAddedUlt;
+        if (first >= 0) { if (aim2 == null) aim2 = new WeaponAim(this); aim2.Begin(first); }
+        else if (aim2 != null) aim2.End();
     }
-    public void UpdateAim(List<EnermyController> targets, float charge) { if (aim != null && AimShown) aim.Update(targets, charge); }
-    public void EndAim() { if (aim != null) aim.End(); }
+    public void UpdateAim(List<EnermyController> targets, float charge)
+    {
+        if (!AimShown) return;
+        if (aim != null) aim.Update(targets, charge);
+        if (aim2 != null) aim2.Update(targets, charge);
+    }
+    public void EndAim() { if (aim != null) aim.End(); if (aim2 != null) aim2.End(); }
     public GameObject MarkTarget(Transform target) => aim != null && UltReplaced ? aim.MarkTarget(target) : null;
 
     // ================================================================= evolution

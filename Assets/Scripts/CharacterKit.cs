@@ -599,9 +599,10 @@ public partial class CharacterKit : MonoBehaviour
                     recast = Time.time < recastUntil;
                     // 그림자 숙련 4단계: 게이지로 돌진한 뒤 잠깐은 한 번 더 공짜로 (게이지는 아껴 둠)
                     recastUntil = 0f;
-                    StartCoroutine(BleedDash(((Vector2)(Mouse - transform.position)).normalized));
+                    Vector3 aimAt = Mouse;          // 조준 범위를 그린 자리 (돌진하면 카메라가 따라가 마우스의 월드 좌표가 바뀜)
+                    StartCoroutine(BleedDash(((Vector2)(aimAt - transform.position)).normalized));
                     if (recast) break;
-                    KitUltAdd(0.25f);           // 게이지로 돌진할 때만 (공짜 연속 돌진에는 안 붙음) · 돌진 끝 무렵에 터지게
+                    KitUltAdd(0.25f, aimAt);           // 게이지로 돌진할 때만 (공짜 연속 돌진에는 안 붙음) · 돌진 끝 무렵에 터지게
                     Spend(gauge);
                     if (RogueMastery >= 4) recastUntil = Time.time + 3f;
                 }
@@ -613,17 +614,17 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 진화 무기의 궁극기를 원래 필살기에 덧붙임 (2.1.8~ 모든 캐릭터) · delay: 필살기가 닿을 무렵 터지게 (도적은 돌진 끝 무렵)
-    void KitUltAdd(float delay)
+    void KitUltAdd(float delay, Vector3? aimAt = null)
     {
         if (Special == null || !Special.KitWeaponUltActive) return;
-        if (delay <= 0f) { Special.KitWeaponUlt(KitUltAddMul, false); return; }
-        StartCoroutine(KitUltLater(delay));
+        if (delay <= 0f) { Special.KitWeaponUlt(KitUltAddMul, false, aimAt); return; }
+        StartCoroutine(KitUltLater(delay, aimAt));
     }
 
-    IEnumerator KitUltLater(float delay)
+    IEnumerator KitUltLater(float delay, Vector3? aimAt)
     {
         yield return new WaitForSeconds(delay);
-        if (Special != null && Special.KitWeaponUltActive) Special.KitWeaponUlt(KitUltAddMul, false);
+        if (Special != null && Special.KitWeaponUltActive) Special.KitWeaponUlt(KitUltAddMul, false, aimAt);
     }
 
     // 우클릭 조준 (전용 무기 궁극기 · 도적 출혈 돌진): 누르고 있는 동안 범위 · 경로를 보여 주고 떼면 발동

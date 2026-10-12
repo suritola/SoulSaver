@@ -69,7 +69,8 @@ public partial class SpecialAbilities
     }
 
     // mul: 궁극기 세기 배율 (2.1.8~ 원래 필살기에 덧붙는 효과라 절반) · dash: 도적은 출혈 돌진으로 파고든 뒤 (덧붙일 때는 이미 돌진했으므로 끔)
-    public void KitWeaponUlt(float mul = 1f, bool dash = true)
+    // aimAt: 조준한 자리 (1.1.0 — 도적은 돌진 뒤 0.25초에 터지는데, 그때 마우스를 다시 읽으면 카메라가 돌진을 따라가 조준 범위와 다른 곳에 퍼졌음)
+    public void KitWeaponUlt(float mul = 1f, bool dash = true, Vector3? aimAt = null)
     {
         int id = UltId;
         fx.Play("levelup", 0.5f, 1.3f);
@@ -78,7 +79,7 @@ public partial class SpecialAbilities
         float D = KitD * UltPower(id) * WeaponDamageMul(id) * (1f + 0.1f * UltTrait(id)) * (Kit != null ? Kit.ultMul : 1f) * mul;
         // 도적: 출혈 돌진으로 파고든 뒤 궁극기 (그림자 숙련이 계속 쓸모 있게)
         if (dash && CharacterData.Selected == CharacterId.Rogue && Kit != null) StartCoroutine(RogueDashUlt(id, D));
-        else StartCoroutine(KitUltRoutine(id, D));
+        else StartCoroutine(KitUltRoutine(id, D, aimAt));
     }
 
     IEnumerator RogueDashUlt(int id, float D)
@@ -102,10 +103,10 @@ public partial class SpecialAbilities
         }
     }
 
-    IEnumerator KitUltRoutine(int id, float D)
+    IEnumerator KitUltRoutine(int id, float D, Vector3? aimAt = null)
     {
         Vector3 me = player.transform.position;
-        Vector3 mouse = MouseWorld();
+        Vector3 mouse = aimAt ?? MouseWorld();
         Vector2 dir = ((Vector2)(mouse - me)).normalized;
         if (dir.sqrMagnitude < 0.01f) dir = Vector2.right;
         bool evo = IsEvolved(id);
@@ -267,7 +268,8 @@ public partial class SpecialAbilities
                 PlayerMotion.Of(player).Cast(1.5f);
                 for (int i = 0; i < 20; i++)
                 {
-                    List<Transform> near = NearestEnemies(player.transform.position + (Vector3)(Random.insideUnitCircle * 6f), 18f, 4);
+                    // 1.1.0: 조준 원(반지름 12) 밖 최대 24칸까지 터지던 것을 원 안의 적으로
+                    List<Transform> near = NearestEnemies(player.transform.position, 12f, 6);
                     Vector3 at = near.Count > 0 ? near[Random.Range(0, near.Count)].position : KitClamp(player.transform.position + (Vector3)(Random.insideUnitCircle * 8f));
                     FireworkBurst(at, evo ? 8 : 6, D * 1.2f);
                     yield return new WaitForSeconds(0.15f);
