@@ -372,6 +372,7 @@ public static partial class LocTable
         { "시간이 지나면 체력이 조금씩 회복됩니다.", L("Slowly regenerate HP over time.", "時間とともに体力が少しずつ回復します。", "随时间缓慢恢复生命。") },
         { "초당 회복: ", L("Regen per second: ", "毎秒回復: ", "每秒恢复: ") },
         { "적을 처치할 때마다 체력을 회복합니다.", L("Heal each time you kill an enemy.", "敵を倒すたびに体力を回復します。", "每次击杀恢复生命。") },
+        { "적을 처치할 때마다 체력을 회복합니다. (처치 회복은 초당 최대 6)", L("Heal each time you kill an enemy. (kill healing up to 6 per second)", "敵を倒すたびに体力を回復します。（撃破回復は毎秒最大6）", "每次击杀恢复生命。（击杀回复每秒最多6点）") },
         { "처치당 회복: ", L("Heal per kill: ", "撃破ごとの回復: ", "每次击杀恢复: ") },
         { "\n\n<color=#F5D478>현재 ", L("\n\n<color=#F5D478>Now ", "\n\n<color=#F5D478>現在 ", "\n\n<color=#F5D478>当前 ") },
 

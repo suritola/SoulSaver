@@ -66,7 +66,7 @@ public partial class LevelShop
             RectTransform tr = synergyTags[slot].transform.parent as RectTransform;
             tr.pivot = new Vector2(0.5f, slot == recommendedSlot ? 0f : 0.5f);
             tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 0f);
-            string partner = SynergyPartner(ids[slot]);
+            string partner = ShowSynergyIntro ? SynergyPartner(ids[slot]) : null;
             synergyTags[slot].transform.parent.gameObject.SetActive(partner != null);
             if (partner != null) synergyTags[slot].text = "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
         }

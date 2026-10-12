@@ -125,7 +125,7 @@ public partial class LevelShop : MonoBehaviour
     {
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         int n = sp != null ? sp.Rerolls : 0;
-        bool open = IsOpen && n > 0;
+        bool open = IsOpen && n > 0 && ShowRerollIntro;
         if (open && KeyBindings.Down(GameAction.Reroll) && sp.TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
         {
             UpdateLvShopContent();
@@ -470,8 +470,16 @@ public partial class LevelShop : MonoBehaviour
         }
     }
 
+    // 처음 레벨업 창 몇 번은 안내를 하나씩 늘림 (1.1.0 — 첫 창에 도움말 · 추천 · 시너지 · 다시 뽑기가 한꺼번에 떠 복잡했음)
+    // 1번째 창: 추천만 · 2번째: + 시너지 · 3번째부터: + 다시 뽑기 (게임 전체에서 한 번만, 저장)
+    const string IntroKey = "intro.lvopens";
+    static int IntroOpens => Prefs.GetInt(IntroKey, 0);
+    static bool ShowSynergyIntro => IntroOpens >= 2;
+    static bool ShowRerollIntro => IntroOpens >= 3;
+
     public void openLevelShop()
     {
+        if (IntroOpens < 3 && !GameInput.Auto) Prefs.SetInt(IntroKey, IntroOpens + 1);
         setAbilitys();                      // 창을 열 때 최신 수치로
         
         LvshopPanel.SetActive(true);
@@ -631,7 +639,7 @@ public partial class LevelShop : MonoBehaviour
                                 bul.regenPerSecond.ToString("0.#"), (bul.regenPerSecond + RegenStep).ToString("0.#"), n, RegenMaxLevel,
                                 (bul.regenPerSecond + RegenStep * Rem(RegenMaxLevel)).ToString("0.#"));
             case 11:
-                return CardText(S("적을 처치할 때마다 체력을 회복합니다."), S("처치당 회복"),
+                return CardText(S("적을 처치할 때마다 체력을 회복합니다. (처치 회복은 초당 최대 6)"), S("처치당 회복"),
                                 bul.healOnKill.ToString("0.#"), (bul.healOnKill + HealOnKillStep).ToString("0.#"), n, HealOnKillMaxLevel,
                                 (bul.healOnKill + HealOnKillStep * Rem(HealOnKillMaxLevel)).ToString("0.#"));
             case SupplyId:
