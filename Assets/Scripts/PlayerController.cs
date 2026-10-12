@@ -863,6 +863,11 @@ void Shoot()
             yield break;
         }
 
+        // 1.1.0: 죽음의 춤은 조준한 적들 사이를 베는 필살기라, 총알 뒤에 덧붙으면 적이 먼저 죽어 거의 발동하지 않았음 → 춤을 먼저 추고 총알
+        bool danceFirst = special != null && special.UltAdds && special.UltId == SpecialAbilities.ScytheId;
+        if (danceFirst)
+            yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP));
+
         foreach (EnermyController target in targets)
         {
             if (target == null) continue;
@@ -908,7 +913,7 @@ void Shoot()
         }
 
         // 2.2.0: 나머지 진화 무기는 원래 조준 사격 뒤에 그 무기의 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
-        if (special != null && special.UltAdds)
+        if (special != null && special.UltAdds && !danceFirst)
             yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP));
 
         targets.Clear();
