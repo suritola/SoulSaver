@@ -264,27 +264,33 @@ public class EnemySpawner : MonoBehaviour
 
     // 보스 처치 연출 (1.1.0): 화면의 모든 적 · 코인 · 회복약이 소용돌이치며 나에게 빨려 들고, 캐릭터는 빙글빙글 돌다 영혼 폭발로 마무리
     // 적은 나에게 닿으면 영혼이 되어 사라지고, 코인 · 회복약은 몸에 닿아 저절로 주워짐 · 그동안 무적
-    class Pulled { public Transform t; public EnermyController e; public float angle, dist; }
+    class Pulled { public Transform t; public EnermyController e; public bool coin; public float angle, dist; }
     const float FinaleTime = 2.2f;
+    const int PurgePerFrame = 6;        // 한 프레임에 영혼이 되는 적 수 (한꺼번에 사라지면 이펙트가 몰려 끊겼음)
 
+    // 렉 줄이기 (1.1.0): 끌려오는 동안 적 · 코인의 충돌체와 물리를 꺼서 위치만 옮기고(물리 계산 없음),
+    // 코인은 닿을 때마다 하나씩 줍는 대신 도착하면 지우고 마지막에 한 번에 더함, 적은 프레임마다 나눠서 영혼으로
     IEnumerator BossFinale()
     {
         if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
         if (playerC == null || playerC.IsDying) { yield return PurgeAll(); yield break; }
         Transform me = playerC.transform;
         var list = new System.Collections.Generic.List<Pulled>();
-        void Add(Transform t, EnermyController e)
+        var purge = new System.Collections.Generic.Queue<EnermyController>();
+        void Add(Transform t, EnermyController e, bool coin)
         {
             if (t == null) return;
             Vector2 d = t.position - me.position;
-            list.Add(new Pulled { t = t, e = e, angle = Mathf.Atan2(d.y, d.x), dist = d.magnitude });
+            list.Add(new Pulled { t = t, e = e, coin = coin, angle = Mathf.Atan2(d.y, d.x), dist = d.magnitude });
+            if (e != null || coin) Quiet(t.gameObject);
+            if (e != null) e.enabled = false;           // 끌려오는 동안 쫓아오거나 스킬을 쓰지 않음 (영혼이 될 때 다시 켬)
         }
         foreach (GameObject g in GameObject.FindGameObjectsWithTag("enermy"))
-            if (g != null && g.TryGetComponent(out EnermyController e) && !e.IsDead) Add(g.transform, e);
-        foreach (Transform c in new System.Collections.Generic.List<Transform>(CoinTag.All)) Add(c, null);
-        // 회복약은 체력이 가득 차 있으면 끌어오지 않음 (닿으면 저절로 먹혀 낭비됨)
+            if (g != null && g.TryGetComponent(out EnermyController e) && !e.IsDead) Add(g.transform, e, false);
+        foreach (Transform c in new System.Collections.Generic.List<Transform>(CoinTag.All)) Add(c, null, true);
+        // 회복약은 체력이 가득 차 있으면 끌어오지 않음 (닿으면 저절로 먹혀 낭비됨) · 몇 개 안 되므로 그대로 닿아서 먹힘
         if (playerC.PlayerHealth < playerC.PlayerMaxHealth)
-            foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null);
+            foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null, false);
 
         // 연출 동안은 조작하지 않고 감상만 (이동 · 공격 · 스킬 · 영혼 트리 입력을 막음)
         PlayerController.Cinematic = true;
@@ -298,7 +304,8 @@ public class EnemySpawner : MonoBehaviour
         FxAnim rune = Fx.Play("fx_rune", me.position, 7f, new Color(soul.r, soul.g, soul.b, 0.8f), 1f, 0f, 30, true, FinaleTime);
         if (rune != null) { rune.spin = 240f; rune.follow = me; }
 
-        float spark = 0f;
+        int coins = 0;
+        float spark = 0f, coinSound = 0f;
         for (float t = 0f; t < FinaleTime; t += Time.deltaTime)
         {
             float k = t / FinaleTime, ease = k * k;
@@ -310,8 +317,12 @@ public class EnemySpawner : MonoBehaviour
                 float d = Mathf.Lerp(p.dist, 0f, ease);
                 float a = p.angle + ease * Mathf.PI * 3f;          // 한 바퀴 반 감기며 빨려 듦
                 p.t.position = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * d;
-                if (p.e != null && d < 1.3f) { p.e.Purge(); p.t = null; }
+                if (d > 1.3f) continue;
+                if (p.e != null) { purge.Enqueue(p.e); p.t = null; }
+                else if (p.coin) { coins++; Destroy(p.t.gameObject); p.t = null; }
             }
+            PurgeSome(purge);
+            if (coins > 0 && (coinSound -= Time.deltaTime) <= 0f) { coinSound = 0.12f; Hostile.Play("chime", 0.25f, Random.Range(1.5f, 1.8f)); }
             if ((spark -= Time.deltaTime) <= 0f)
             {
                 spark = 0.12f;
@@ -319,21 +330,56 @@ public class EnemySpawner : MonoBehaviour
             }
             yield return null;
         }
-        // 마무리: 남은 것은 모두 내 자리로 (적은 영혼으로) + 영혼 폭발
+        // 마무리: 남은 것은 모두 내 자리로 (적은 영혼으로, 코인은 줍기) + 영혼 폭발
         Vector3 at = me != null ? me.position : Vector3.zero;
         foreach (Pulled p in list)
         {
             if (p.t == null) continue;
-            if (p.e != null) { if (!p.e.IsDead) p.e.Purge(); }
+            if (p.e != null) { if (!p.e.IsDead) purge.Enqueue(p.e); }
+            else if (p.coin) { coins++; Destroy(p.t.gameObject); }
             else p.t.position = at;
         }
+        GiveCoins(coins);
         Fx.Spawn("fx_soulburst", at, 9f, Color.white, 16f);
         Fx.Spawn("fx_shock", at, 16f, soul, 18f);
         Hostile.Play("boom", 0.7f, 0.7f);
         Hostile.Play("chime", 0.6f, 1.1f);
         Hostile.Shake(0.6f);
-        yield return new WaitForSeconds(0.4f);      // 폭발을 보고 나서 조작
+        for (float t = 0f; t < 0.4f || purge.Count > 0; t += Time.deltaTime)      // 남은 영혼을 나눠서 정리하고, 폭발을 본 뒤 조작
+        {
+            PurgeSome(purge);
+            yield return null;
+        }
         PlayerController.Cinematic = false;
+    }
+
+    // 끌려오는 동안 충돌 · 물리 끄기 (매 프레임 옮겨도 물리 계산이 없게, 플레이어와 부딪히지 않게)
+    static void Quiet(GameObject g)
+    {
+        foreach (Collider2D col in g.GetComponents<Collider2D>()) col.enabled = false;
+        if (g.TryGetComponent(out Rigidbody2D rb)) rb.simulated = false;
+    }
+
+    static void PurgeSome(System.Collections.Generic.Queue<EnermyController> q)
+    {
+        for (int n = 0; n < PurgePerFrame && q.Count > 0; n++)
+        {
+            EnermyController e = q.Dequeue();
+            if (e == null || e.IsDead) { n--; continue; }
+            e.enabled = true;
+            e.Purge();
+        }
+    }
+
+    // 끌려온 코인을 한 번에 (줍는 효과 · 황금 시대도 그대로, 하나씩 주울 때와 같은 값)
+    void GiveCoins(int count)
+    {
+        Coin bank = Cache<Coin>.Get;
+        if (count <= 0 || bank == null || playerC == null) return;
+        int each = 1 + playerC.bonusCoin;
+        bank.AddCoin(count * each);
+        SignatureSkills.CoinPicked(count * each);
+        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.FloatText(playerC.transform.position + Vector3.up, "+" + (count * each), new Color(1f, 0.85f, 0.3f), 5f, 0f);
     }
 
     // 연출 중에 스포너가 꺼지거나 장면이 바뀌어도 조작이 막힌 채 남지 않게
