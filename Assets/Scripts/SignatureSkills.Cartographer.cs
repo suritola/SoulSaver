@@ -16,6 +16,7 @@ public partial class SignatureSkills
 
     // ---------------- 훅 (CharacterKit.Cartographer 가 부름)
     public static float StrokeMul(float len, float maxLen) => Instance != null && Instance.IsMap ? Instance.OnStrokeMul(len, maxLen) : 1f;
+    public static float StrokeRangeMul() => Instance != null && Instance.IsMap ? 1f + 0.15f * Instance.L("c.scale") : 1f;     // 1.0.4: 축척 단계마다 획 사거리 +15%
     public static float StrokeWidthMul() => Instance != null && Instance.IsMap ? Instance.WidthMul() : 1f;
     public static float InkSpreadMul() => Instance != null && Instance.IsMap && Instance.E("ke.blot") ? 2f : 1f;
     public static float CloseMul() => Instance != null && Instance.IsMap && Instance.E("ke.world") ? 1.5f : 1f;

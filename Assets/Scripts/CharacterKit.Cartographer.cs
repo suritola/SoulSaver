@@ -32,6 +32,8 @@ public partial class CharacterKit
     float ShapeRadius => 2.4f * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f) * (1f + 0.15f * card[6]);
     bool ShapeNext => strokeCount % ShapeEvery == ShapeEvery - 1;
 
+    float StrokeRange => def.range * SignatureSkills.StrokeRangeMul();
+
     float StrokeWidth => 0.75f * (1f + 0.3f * card[1]) * SignatureSkills.StrokeWidthMul();
 
     void MapAttack(Vector3 start, Vector2 dir, float dmg, int shots)
@@ -40,7 +42,7 @@ public partial class CharacterKit
         Vector3 to = StrokeEnd(from, dir);
 
         float width = StrokeWidth;
-        float lenMul = SignatureSkills.StrokeMul((to - from).magnitude, def.range);
+        float lenMul = SignatureSkills.StrokeMul((to - from).magnitude, StrokeRange);
         int hits = Stroke(from, to, width, dmg * lenMul);
         // 여러 발: 옆으로 나란한 획을 더 그음
         Vector2 sd = ((Vector2)(to - from)).normalized;
@@ -73,7 +75,7 @@ public partial class CharacterKit
     // 획 끝 (= 도형이 닫히는 자리): 마우스 자리 (사거리 안), 너무 가까우면 1칸 앞
     Vector3 StrokeEnd(Vector3 from, Vector2 dir)
     {
-        Vector3 to = ClampRange(transform.position, Mouse, def.range);
+        Vector3 to = ClampRange(transform.position, Mouse, StrokeRange);
         if ((to - from).magnitude < 1f) to = from + (Vector3)(((Vector2)(to - from)).sqrMagnitude > 0.01f ? ((Vector2)(to - from)).normalized : dir);
         return to;
     }

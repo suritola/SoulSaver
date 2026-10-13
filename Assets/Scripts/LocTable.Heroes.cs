@@ -55,7 +55,7 @@ public static partial class LocTable
         A("도형을 닫으면 둘레에서 고리 파동이 한 번 더 퍼집니다.", "Closing a shape sends a ring wave out from its edge.", "図形を閉じると周りから輪の波動がもう一度広がります。", "闭合图形时，从边缘再扩散一圈环形波动。");
         A("파동 피해", "Wave damage", "波動ダメージ", "波动伤害");
         A("축척", "Scale", "縮尺", "比例尺");
-        A("획이 길수록 피해가 늘어납니다. (사거리 끝까지 그으면 최대)", "Longer strokes deal more damage. (Max at full range)", "線が長いほどダメージが増えます。（射程いっぱいで最大）", "笔画越长伤害越高。（画满射程时最大）");
+        A("획이 길수록 피해가 늘어나고, 단계마다 획 사거리가 15% 늘어납니다. (사거리 끝까지 그으면 최대)", "Longer strokes deal more damage, and each level extends stroke range by 15%. (Max at full range)", "線が長いほどダメージが増え、段階ごとに線の射程が15%伸びます。（射程いっぱいで最大）", "笔画越长伤害越高，且每级笔画射程增加15%。（画满射程时最大）");
         A("북극성", "North Star", "北極星", "北极星");
         A("지도 접기를 쓰면 접힌 선 가운데에 별이 떠 4초 동안 가까운 적에게 별빛을 쏩니다. (공격력 50%)", "Fold the Map raises a star over the crease that shoots starlight at nearby enemies for 4s. (50% attack)", "地図折りを使うと折り目の中央に星が浮かび、4秒間近くの敵に星の光を撃ちます。（攻撃力50%）", "使用折叠地图时，折线中央升起一颗星，4秒内向附近敌人射出星光。（攻击力50%）");
         A("쏘는 간격", "Fire interval", "発射間隔", "发射间隔");
