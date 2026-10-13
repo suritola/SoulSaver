@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-// 캐릭터 고유 규칙 (1.1.2): 다른 캐릭터에게 없는 몸의 규칙 하나씩 (유령의 영혼처럼)
+// 캐릭터 고유 규칙 (1.0.2): 다른 캐릭터에게 없는 몸의 규칙 하나씩 (유령의 영혼처럼)
 //   궁수 · 숨 고르기: 시위를 당기는 동안 숨이 닳고 쉬면 참. 바닥나면 활이 떨려 약해지고 「완벽!」이 나오지 않음.
 //                    「완벽!」 사격은 숨을 크게 되돌려 줌
 //   연금술사 · 불안정도: 던질 때마다 오르고 높을수록 폭발이 크고 아픔. 가득 차면 발밑에서 자폭(내 체력 8% · 주변 대폭발).
@@ -14,7 +14,7 @@ public partial class CharacterKit
     public float Breath { get; private set; } = BreathMax;
     float breathRestAt;
     public bool Breathless { get; private set; }
-    const float BreathDrain = 20f, BreathRegen = 45f, PerfectBreath = 35f;     // 1.1.1 조정: 30 · 28 → 20 · 45 (쏘는 사이 0.45초에도 조금 참)
+    const float BreathDrain = 20f, BreathRegen = 45f, PerfectBreath = 35f;     // 1.0.2 조정: 30 · 28 → 20 · 45 (쏘는 사이 0.45초에도 조금 참)
 
     // 당기는 동안 (UpdateBow)
     void ConsumeBreath()
@@ -104,7 +104,7 @@ public partial class CharacterKit
             if (k > 0.8f) c = Color.Lerp(c, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.time * 18f));
             DrawRuleBar(k, c, Instability > 0.5f);
         }
-        // 1.1.2: 새 캐릭터 넷도 고유 수치를 머리 위 막대로 (예전엔 화면에 거의 안 보였음)
+        // 1.0.2: 새 캐릭터 넷도 고유 수치를 머리 위 막대로 (예전엔 화면에 거의 안 보였음)
         else if (Id == CharacterId.Clockmaker)
         {
             // 시계 눈금: 다 차면 금빛으로 깜빡 (다음 톱니가 정각)
@@ -147,7 +147,7 @@ public partial class CharacterKit
     {
         if (ruleBarBack == null)
         {
-            // 1.1.2: 스킬 이펙트(+40)에 덮이지 않게 그 위 순서로, 조금 더 굵고 진하게
+            // 1.0.2: 스킬 이펙트(+40)에 덮이지 않게 그 위 순서로, 조금 더 굵고 진하게
             ruleBarBack = Hostile.NewLine("RuleBarBack", new Color(0.04f, 0.02f, 0.08f, 0.85f), 0.26f, 62);
             ruleBarFill = Hostile.NewLine("RuleBarFill", c, 0.16f, 63);
             ruleBarBack.loop = ruleBarFill.loop = false;

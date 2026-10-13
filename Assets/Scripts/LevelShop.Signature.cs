@@ -31,7 +31,7 @@ public partial class LevelShop
     public static string SigKey(int id) => SigKey(CharacterData.Selected, id);
     public static string SigKey(CharacterId who, int id) => IsSig(id) && (int)who < SigKeys.Length ? SigKeys[Who(who)][id - SigFirstId] : null;
     public static int SigIcon(CharacterId who, int id) => who >= CharacterId.Cartographer
-        ? 800 + ((int)who - (int)CharacterId.Cartographer) * 10 + (id - SigFirstId)      // 1.1.2 새 캐릭터
+        ? 800 + ((int)who - (int)CharacterId.Cartographer) * 10 + (id - SigFirstId)      // 1.0.2 새 캐릭터
         : 120 + Who(who) * 10 + (id - SigFirstId);
 
     // 다른 스킬을 먼저 배워야 나오는 스킬 (없으면 -1)
@@ -125,7 +125,7 @@ public partial class LevelShop
                 }
                 break;
             default:
-                return NewHeroSigCard(who, k);          // 1.1.2 새 캐릭터 (LevelShop.NewHeroes)
+                return NewHeroSigCard(who, k);          // 1.0.2 새 캐릭터 (LevelShop.NewHeroes)
         }
         return null;
     }
@@ -194,7 +194,7 @@ public partial class LevelShop
             Evo("le.glass", "유리 폭풍", "필살기가 터진 뒤 3초 동안 주변에 유리 비가 계속 쏟아집니다.", 203, GlareId, S(5)),
             Evo("le.march", "불꽃 행진", "농축 플라스크가 터진 자리에 불길 고리가 퍼지고, 연소 흔적이 두 배로 커집니다.", 204, S(8), S(9)),
         },
-        new[]   // 지도 제작자 (1.1.2 · 아이콘 900번대)
+        new[]   // 지도 제작자 (1.0.2 · 아이콘 900번대)
         {
             Evo("ke.world", "세계 지도", "도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", 900, ExtraAId, S(0)),
             Evo("ke.relief", "입체 지도", "등고선 파동이 세 겹으로 퍼집니다.", 901, KnockId, S(1)),
@@ -204,7 +204,7 @@ public partial class LevelShop
             Evo("ke.bold", "대담한 필치", "모든 획이 여백 획(두 배 굵기 · 여백 피해)이 됩니다.", 905, MultiId, S(2), S(4)),
             Evo("ke.treasure", "황금 항로", "보물 표시가 두 배 넓어지고, 그 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", 906, S(7), S(8)),
         },
-        new[]   // 시계공 (1.1.2)
+        new[]   // 시계공 (1.0.2)
         {
             Evo("te.gearstorm", "톱니 폭풍", "톱니가 튕길 때마다 작은 톱니가 하나 더 갈라져 가까운 적에게 날아갑니다.", 910, PierceId, S(2)),
             Evo("te.chime", "대종", "정각 톱니가 터지면 둘레 14칸의 모든 적이 0.5초 동안 멈춥니다.", 911, ExtraAId, S(0)),
@@ -214,7 +214,7 @@ public partial class LevelShop
             Evo("te.echoes", "무한 반향", "잔상 톱니가 두 번 날아갑니다.", 915, KnockId, S(5)),
             Evo("te.debt", "시간 빚", "스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", 916, S(8), S(9)),
         },
-        new[]   // 우체부 (1.1.2)
+        new[]   // 우체부 (1.0.2)
         {
             Evo("pe.registered", "내용증명", "소인의 효과가 두 배가 됩니다.", 920, PierceId, S(1)),
             Evo("pe.parcel", "대형 소포", "소포 폭발이 두 배로 넓어지고, 행운의 편지 확률이 50%가 됩니다.", 921, MultiId, S(3)),
@@ -224,7 +224,7 @@ public partial class LevelShop
             Evo("pe.return", "반송 불가", "반송된 편지가 최대 세 번까지 계속 이어집니다.", 925, ExtraBId, S(4)),
             Evo("pe.flyers", "전단 폭탄", "광고 전단이 맞은 자리에서 터집니다. (공격력 60%)", 926, S(8), S(9)),
         },
-        new[]   // 유령 (1.1.2)
+        new[]   // 유령 (1.0.2)
         {
             Evo("he.blizzard", "눈보라", "손길이 지나간 자리에 1.5초 동안 냉기 안개가 남아 냉기를 쌓습니다.", 930, PierceId, S(2)),
             Evo("he.banshee", "밴시", "곡소리에 휘말린 적이 곧바로 얼어붙습니다.", 931, ExtraAId, S(1)),
@@ -387,7 +387,7 @@ public partial class LevelShop
             if (need > 0) best = Mathf.Max(best, have / (float)need);
         }
         float w = best > 0f ? (1f + 0.8f * best) * EvoDrawBoost : 1f;
-        // 행운 (1.1.0): 지금 키우는 카드(이미 가진 카드 · 진화 재료)는 행운 1마다 +40%
+        // 행운 (1.0.2): 지금 키우는 카드(이미 가진 카드 · 진화 재료)는 행운 1마다 +40%
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         int luck = sp != null ? sp.Luck : 0;
         if (luck > 0 && (best > 0f || LevelOf(id) > 0)) w *= 1f + LuckDrawBoost * luck;

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 우체부 고유 스킬 (1.1.2) · 패시브(튼튼한 다리 · 단골 손님 · 우편 요금 · 개 조심)
+// 우체부 고유 스킬 (1.0.2) · 패시브(튼튼한 다리 · 단골 손님 · 우편 요금 · 개 조심)
 //   p.express 특급 · p.postmark 소인 · p.bag 우편 가방 · p.chain 행운의 편지 · p.route 배달 경로
 //   p.receipt 영수증 · p.weather 궂은 날씨 · p.overnight 익일 배송 · p.address 정확한 주소 · p.junk 광고 전단
 // 진화: pe.registered 내용증명 · pe.parcel 대형 소포 · pe.collector 우표 수집가 · pe.reply 답장 폭주

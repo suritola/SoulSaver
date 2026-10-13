@@ -68,7 +68,7 @@ public class RunStats : MonoBehaviour
     {
         if (!runActive || amount <= 0f) return;
         string file = System.IO.Path.GetFileNameWithoutExtension(callerFile ?? "");
-        // 1.0.5: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
+        // 1.0.1: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
         string named = file == "EnemySkill" || file == "BossSkills" || file == "BossUltimate"
             ? (AttackLabel.Pending ?? AttackLabel.FromStack()) : null;
         string key = named ?? file switch
@@ -396,7 +396,7 @@ public static class Hints
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
             r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
-            r.sizeDelta = new Vector2(920f, 70f);      // 1.0.9: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
+            r.sizeDelta = new Vector2(920f, 70f);      // 1.0.1: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
             Image bg = box.GetComponent<Image>();
             bg.color = new Color(0.05f, 0.05f, 0.1f, 0.94f);
             bg.raycastTarget = false;

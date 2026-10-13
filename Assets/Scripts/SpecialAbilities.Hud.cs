@@ -27,7 +27,7 @@ public partial class SpecialAbilities
 
     HudGroup weaponGroup, skillGroup, passiveGroup;
     const int PistolRow = -1;
-    const int EvoRow = -2;      // 1.0.7: 진화한 무기 칸 (마우스를 올리면 진화 능력 · 덧붙은 궁극기 설명)
+    const int EvoRow = -2;      // 1.0.1: 진화한 무기 칸 (마우스를 올리면 진화 능력 · 덧붙은 궁극기 설명)
     const float TileSize = 58f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
     static readonly Color TileBorder = new Color(0.3f, 0.26f, 0.34f, 0.95f);
     static readonly Color TileActive = new Color(0.96f, 0.75f, 0.3f, 1f);
@@ -125,7 +125,7 @@ public partial class SpecialAbilities
         if (weaponGroup == null) return;
         List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
         if (weapons.Count > 0 && !UsesEvolution) w.Add(PistolRow);    // 진화 방식은 권총으로 돌아가지 않음
-        if (UsesEvolution && EvolutionTier > 0) w.Insert(0, EvoRow);  // 지금 진화한 무기가 어떤 능력인지 볼 수 있게 (1.0.7)
+        if (UsesEvolution && EvolutionTier > 0) w.Insert(0, EvoRow);  // 지금 진화한 무기가 어떤 능력인지 볼 수 있게 (1.0.1)
         foreach (int id in equipped)
         {
             if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
@@ -320,7 +320,7 @@ public partial class SpecialAbilities
         if (id == EvoRow)
         {
             // 진화 단계 표시 (I · II), 금빛 테두리
-            // 1.0.8: 다른 무기 칸과 똑같아 눈에 안 띄었음 → 뒤에 숨 쉬는 금빛 빛무리 + 금색 ↔ 흰색 반짝임
+            // 1.0.1: 다른 무기 칸과 똑같아 눈에 안 띄었음 → 뒤에 숨 쉬는 금빛 빛무리 + 금색 ↔ 흰색 반짝임
             float k = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 3f);
             t.border.color = Color.Lerp(TileActive, Color.white, 0.55f * k);
             EvoGlow(t, k);

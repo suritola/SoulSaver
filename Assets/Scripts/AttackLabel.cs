@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-// 받은 피해의 출처를 스킬 이름까지 (1.0.5 · 결과 화면 「받은 피해」 · 「쓰러진 곳」, balance_log 의 last_hit)
+// 받은 피해의 출처를 스킬 이름까지 (1.0.1 · 결과 화면 「받은 피해」 · 「쓰러진 곳」, balance_log 의 last_hit)
 // 예전엔 맞힌 코드가 있는 파일로만 갈라서, 보스 공격도 공용 판정(Hostile · HostileProjectile, EnemySkill.cs)을 거치면 모두 「적 스킬」이 됐음
 // → 맞는 순간 호출 스택에서 어느 보스 · 적 스킬(코루틴)에서 왔는지 찾아 그 이름으로. 투사체 · 장판은 만들 때 이름을 붙여 둠 (Pending)
 public static class AttackLabel
@@ -25,7 +25,7 @@ public static class AttackLabel
         { "ShardRings", "거울 조각 고리" }, { "MirrorUlt", "흉내 낸 필살기" }, { "ReflectedMemory", "되비친 기억" },
     };
 
-    // 투사체 · 장판을 만든 함수 이름으로 (컴파일러가 채운 값, 1.0.7: 탄을 만들 때마다 호출 스택을 뒤지면 보스 탄막에서 렉이 생길 수 있었음)
+    // 투사체 · 장판을 만든 함수 이름으로 (컴파일러가 채운 값, 1.0.1: 탄을 만들 때마다 호출 스택을 뒤지면 보스 탄막에서 렉이 생길 수 있었음)
     public static string FromCaller(string file, string member)
     {
         string f = System.IO.Path.GetFileNameWithoutExtension(file ?? "");

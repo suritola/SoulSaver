@@ -436,7 +436,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     Vector3 start = player.MuzzlePosition;
                     Vector2 dir = AimDir();
                     player.FaceTowards(MouseWorld());
-                    PlayerMotion.Of(player).Recoil(dir, 2f);            // 몸동작: 큰 반동 (1.0.5)
+                    PlayerMotion.Of(player).Recoil(dir, 2f);            // 몸동작: 큰 반동 (1.0.1)
                     const float range = 11f, half = 35f;
                     foreach (Collider2D col in Physics2D.OverlapCircleAll(start, range))
                     {
@@ -801,7 +801,7 @@ public partial class SpecialAbilities : MonoBehaviour
     // 조준이 필요 없는 필살기 (우클릭 즉시 발동)
     // 화염 방사기 · 저격총은 우클릭을 누른 채 자리를 조준 (회오리 위치 · 레일건 방향)
     // 2.2.0: 거너는 쌍권총(총알 폭풍)만 필살기를 바꾸고, 나머지 진화 무기는 원래 조준 사격 뒤에 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
-    // 1.0.8: 쌍권총도 필살기를 바꾸지 않음 — 일제 사격을 그대로 쓰고 총알 폭풍이 절반 세기로 덧붙음 (모든 무기 진화가 같은 규칙)
+    // 1.0.1: 쌍권총도 필살기를 바꾸지 않음 — 일제 사격을 그대로 쓰고 총알 폭풍이 절반 세기로 덧붙음 (모든 무기 진화가 같은 규칙)
     public bool UltReplaced => false;
     public bool UltAdds => UltActive && !UltReplaced;
     public bool IsInstantUlt => UltReplaced;
@@ -816,9 +816,9 @@ public partial class SpecialAbilities : MonoBehaviour
     public Color AimTint => UltReplaced ? WeaponColor(UltId) : new Color(1f, 0.9f, 0.6f);
 
     WeaponAim aim;
-    // 1.0.7: 쌍권총이 아닌 진화도 덧붙는 필살기(지옥불 포격 부채꼴 · 레일건 직선 …)의 범위를 조준 중에 보여 줌 (표식은 그대로 일제 사격 것)
+    // 1.0.1: 쌍권총이 아닌 진화도 덧붙는 필살기(지옥불 포격 부채꼴 · 레일건 직선 …)의 범위를 조준 중에 보여 줌 (표식은 그대로 일제 사격 것)
     bool AimShown => Gunner && UltActive;
-    // 1.1.0: 1차 · 2차 진화가 다르면 두 궁극기가 모두 덧붙으므로 1차 것의 범위도 따로 그림 (aim2)
+    // 1.0.2: 1차 · 2차 진화가 다르면 두 궁극기가 모두 덧붙으므로 1차 것의 범위도 따로 그림 (aim2)
     WeaponAim aim2;
     int FirstAddedUlt { get { List<int> ids = AddedUltIds(); return ids.Count > 1 ? ids[0] : -1; } }
     public void BeginAim()

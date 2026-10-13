@@ -62,7 +62,7 @@ public partial class SpecialAbilities
         Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
     }
 
-    // 영혼 트리 생존 끝 칸 「되살아난 영혼」: 판마다 한 번 체력 40%로 (1.0.5)
+    // 영혼 트리 생존 끝 칸 「되살아난 영혼」: 판마다 한 번 체력 40%로 (1.0.1)
     public int TreeRevives;
     bool revivedByTree;
 

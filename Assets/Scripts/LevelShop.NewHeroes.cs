@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 1.1.2 새 캐릭터의 전용 레벨업 카드 6장 · 고유 스킬 10종 (진화는 LevelShop.Signature 의 CharEvos)
+// 1.0.2 새 캐릭터의 전용 레벨업 카드 6장 · 고유 스킬 10종 (진화는 LevelShop.Signature 의 CharEvos)
 // 아이콘: 전용 카드 700번대 · 고유 스킬 800번대 · 스킬 진화 900번대 (캐릭터마다 10칸씩)
 public partial class LevelShop
 {

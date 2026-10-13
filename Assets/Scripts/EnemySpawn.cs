@@ -220,7 +220,7 @@ public class EnemySpawner : MonoBehaviour
 
     static float Weight(float[] weights, int i) => weights != null && i < weights.Length ? weights[i] : 0f;
 
-    // 장 중반 「습격」 (ChapterEvents, 1.0.5): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
+    // 장 중반 「습격」 (ChapterEvents, 1.0.1): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
     public System.Collections.Generic.List<GameObject> SpawnAmbush(Vector3 center, int count, float radius)
     {
         var list = new System.Collections.Generic.List<GameObject>();
@@ -258,17 +258,17 @@ public class EnemySpawner : MonoBehaviour
         // 보스를 쓰러뜨리면 화면의 잡몹이 영혼이 되어 흩어지고, 이 스테이지에서는 더 나오지 않음
         // (무한 모드는 끝없이 이어지므로 화면만 정리하고 계속 나옴 · 다음 스테이지는 StartStage 에서 다시 켬)
         if (!GameMode.IsEndless) spawningEnabled = false;
-        StartCoroutine(BossFinale());       // 1.1.0: 그 자리에서 사라지던 것을 소용돌이 연출로
+        StartCoroutine(BossFinale());       // 1.0.2: 그 자리에서 사라지던 것을 소용돌이 연출로
         onBossDefeated?.Invoke(stageIndex);
     }
 
-    // 보스 처치 연출 (1.1.0): 화면의 모든 적 · 코인 · 회복약이 소용돌이치며 나에게 빨려 들고, 캐릭터는 빙글빙글 돌다 영혼 폭발로 마무리
+    // 보스 처치 연출 (1.0.2): 화면의 모든 적 · 코인 · 회복약이 소용돌이치며 나에게 빨려 들고, 캐릭터는 빙글빙글 돌다 영혼 폭발로 마무리
     // 적은 나에게 닿으면 영혼이 되어 사라지고, 코인 · 회복약은 몸에 닿아 저절로 주워짐 · 그동안 무적
     class Pulled { public Transform t; public EnermyController e; public bool coin; public float angle, dist; }
     const float FinaleTime = 2.2f;
     const int PurgePerFrame = 6;        // 한 프레임에 영혼이 되는 적 수 (한꺼번에 사라지면 이펙트가 몰려 끊겼음)
 
-    // 렉 줄이기 (1.1.0): 끌려오는 동안 적 · 코인의 충돌체와 물리를 꺼서 위치만 옮기고(물리 계산 없음),
+    // 렉 줄이기 (1.0.2): 끌려오는 동안 적 · 코인의 충돌체와 물리를 꺼서 위치만 옮기고(물리 계산 없음),
     // 코인은 닿을 때마다 하나씩 줍는 대신 도착하면 지우고 마지막에 한 번에 더함, 적은 프레임마다 나눠서 영혼으로
     IEnumerator BossFinale()
     {

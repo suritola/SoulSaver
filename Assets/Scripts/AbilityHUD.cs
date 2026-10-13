@@ -51,7 +51,7 @@ public class AbilityHUD : MonoBehaviour
     bool open = true;
     TextMeshProUGUI toggleText;
     RectTransform toggleRect;
-    const float ClosedWidth = 230f;     // 1.0.8: 접혀 있으면 숫자만 보여 뭔지 몰랐음 → 「▶ 레벨업 스킬 12」
+    const float ClosedWidth = 230f;     // 1.0.1: 접혀 있으면 숫자만 보여 뭔지 몰랐음 → 「▶ 레벨업 스킬 12」
 
     void Start()
     {

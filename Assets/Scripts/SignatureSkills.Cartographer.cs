@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 지도 제작자 고유 스킬 (1.1.2) · 패시브(탐험가의 체력 · 현지 안내 · 미지의 영역)
+// 지도 제작자 고유 스킬 (1.0.2) · 패시브(탐험가의 체력 · 현지 안내 · 미지의 영역)
 //   c.legend 범례 · c.contour 등고선 · c.scale 축척 · c.northstar 북극성 · c.margin 여백
 //   c.route 지름길 · c.erase 지우개 · c.treasure 보물 지도 · c.rose 나침도 · c.inkstorm 잉크 폭풍
 // 진화: ke.world 세계 지도 · ke.relief 입체 지도 · ke.express 직행로 · ke.constellation 별자리
@@ -74,7 +74,7 @@ public partial class SignatureSkills
         {
             float r = Mathf.Max(2f, reach) * (E("ke.treasure") ? 2f : 1f);
             roses.Add((center, r, Time.time + 3f));
-            // 1.1.2: 보물 지도만 있어도 표시가 보이게 (예전엔 나침도가 있어야만 그려져, 코인 받는 자리를 알 수 없었음)
+            // 1.0.2: 보물 지도만 있어도 표시가 보이게 (예전엔 나침도가 있어야만 그려져, 코인 받는 자리를 알 수 없었음)
             //        나침도는 금빛 · 보물 표시만이면 코인색으로 조금 더 진하게
             Color rc = L("c.rose") > 0 ? new Color(MapGold.r, MapGold.g, MapGold.b, 0.6f) : new Color(1f, 0.9f, 0.25f, 0.7f);
             FxAnim a = Fx.Play("fx_target_rune", center, r * 2f, rc, 10f, 0f, 3, true, 3f, "Background");

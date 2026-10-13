@@ -178,7 +178,7 @@ public class PlayerController : MonoBehaviour
     public const float GaugeRate = 0.35f;
     // 메뉴로 게임이 멈췄는지 (타겟팅 스킬의 느린 시간은 멈춘 것이 아님)
     public static bool IsPaused => Time.timeScale == 0f;
-    // 보스 처치 연출 중 (1.1.0): 이동 · 공격 · 스킬 · 영혼 트리 입력을 모두 받지 않고 연출만 봄 (EnemySpawner.BossFinale)
+    // 보스 처치 연출 중 (1.0.2): 이동 · 공격 · 스킬 · 영혼 트리 입력을 모두 받지 않고 연출만 봄 (EnemySpawner.BossFinale)
     public static bool Cinematic;
     // 타겟팅 스킬 사용 중 + 끝난 뒤 자동 연사 중 (이때는 직접 쏠 수 없음)
     public bool IsSkillUsing => isSkillUsing || isVolleying;
@@ -215,7 +215,7 @@ public class PlayerController : MonoBehaviour
     // 시작
     // =====================================
 
-    // 이동 속도 상한 (1.0.5): 빨라지는 효과(그림자 숙련 · 연쇄 처치 · 도망자의 발걸음 · 상점 · 물약 …)가 곱으로 쌓여
+    // 이동 속도 상한 (1.0.1): 빨라지는 효과(그림자 숙련 · 연쇄 처치 · 도망자의 발걸음 · 상점 · 물약 …)가 곱으로 쌓여
     // 후반 도적이 주체할 수 없이 빨라졌음 → 기본 속도의 1.3배까지는 그대로, 넘는 몫은 40%만, 최대 1.7배 (둔화는 그대로 적용)
     const float SpeedSoftCap = 1.3f, SpeedOverRate = 0.4f, SpeedHardCap = 1.7f;
     float baseMoveSpeed = -1f;
@@ -274,7 +274,7 @@ public class PlayerController : MonoBehaviour
 
 
     // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
-    // 1.0.6: 최고점은 그대로 두고 성장 속도만 늦춤 — 레벨마다 +50 → +65 (초반 +15%, 레벨 20쯤 +30%)
+    // 1.0.1: 최고점은 그대로 두고 성장 속도만 늦춤 — 레벨마다 +50 → +65 (초반 +15%, 레벨 20쯤 +30%)
     public static float NeedExp(int level) => 50 + level * 65;
 
     public void addDamage(int a)
@@ -865,7 +865,7 @@ void Shoot()
             yield break;
         }
 
-        // 1.1.0: 죽음의 춤은 조준한 적들 사이를 베는 필살기라, 총알 뒤에 덧붙으면 적이 먼저 죽어 거의 발동하지 않았음 → 춤을 먼저 추고 총알
+        // 1.0.2: 죽음의 춤은 조준한 적들 사이를 베는 필살기라, 총알 뒤에 덧붙으면 적이 먼저 죽어 거의 발동하지 않았음 → 춤을 먼저 추고 총알
         // 거너는 1차 · 2차 진화가 다르면 두 궁극기가 모두 덧붙음 (SpecialAbilities.AddedUltIds)
         List<int> adds = special != null && special.UltAdds ? special.AddedUltIds() : new List<int>();
         if (adds.Remove(SpecialAbilities.ScytheId))
@@ -874,7 +874,7 @@ void Shoot()
         foreach (EnermyController picked in targets)
         {
             EnermyController target = picked;
-            if (target == null || target.IsDead) continue;     // 1.1.0: 덧붙은 춤 · 앞선 총알에 이미 쓰러진 적은 건너뜀
+            if (target == null || target.IsDead) continue;     // 1.0.2: 덧붙은 춤 · 앞선 총알에 이미 쓰러진 적은 건너뜀
 
             // 2.2.0: 명중률 — 방향을 첫 발 전에 한 번만 정하던 것을 매 발 다시 조준 (발밑 대신 몸 중심, 움직이는 적은 날아가는 동안 갈 자리를 앞질러)
             Collider2D body = target.GetComponent<Collider2D>();
@@ -884,7 +884,7 @@ void Shoot()
 
             for (int i = 0; i < ShotsPerTarget;  i++)
             {
-                // 1.1.0: 쏘던 적이 쓰러지면 남은 총알을 시체(총알이 그냥 지나감)에 버리지 않고 가까운 살아 있는 적에게
+                // 1.0.2: 쏘던 적이 쓰러지면 남은 총알을 시체(총알이 그냥 지나감)에 버리지 않고 가까운 살아 있는 적에게
                 if (target == null || target.IsDead)
                 {
                     Transform near = Specials.NearestEnemy(lastPos, 8f);
@@ -905,7 +905,7 @@ void Shoot()
                 Vector3 aim = body != null && body.enabled ? body.bounds.center : now;
 
                 FaceTowards(aim);
-                PlayerMotion.Of(this).Recoil(aim - startPosition, 0.6f);      // 몸동작 (1.0.5)
+                PlayerMotion.Of(this).Recoil(aim - startPosition, 0.6f);      // 몸동작 (1.0.1)
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
@@ -938,7 +938,7 @@ void Shoot()
     // 화면 페이드
     // =====================================
 
-    // 1.0.7: 조준을 빨리 끝내면 아직 진하게 바뀌던 코루틴이 흐려지는 코루틴보다 늦게 끝나 파란 화면이 남았음
+    // 1.0.1: 조준을 빨리 끝내면 아직 진하게 바뀌던 코루틴이 흐려지는 코루틴보다 늦게 끝나 파란 화면이 남았음
     // → 하나만 돌게 (새로 시작하면 앞의 것을 멈춤), 매 프레임 지금 색에서 움직임
     Coroutine screenFade;
     float screenFadeTarget;
@@ -996,7 +996,7 @@ void Shoot()
     // 적 처치 시 체력 회복 (피의 굶주림)
     public float healOnKill = 0f;
 
-    // 1.1.0: 적이 한꺼번에 많이 쓰러지면 처치마다 회복이 쌓여 사실상 무적이었음 → 처치 회복은 모두 합쳐 1초에 최대 KillHealPerSecond
+    // 1.0.2: 적이 한꺼번에 많이 쓰러지면 처치마다 회복이 쌓여 사실상 무적이었음 → 처치 회복은 모두 합쳐 1초에 최대 KillHealPerSecond
     const float KillHealPerSecond = 6f;
     float killHealSecond = -1f, killHealUsed;
 
@@ -1125,7 +1125,7 @@ void Shoot()
         ShowHurt(taken);
         special?.OnPlayerHurt();
         SignatureSkills.Hurt(taken);
-        LastStand.Check(this);      // 체력 30% 아래: 장마다 한 번 2초 무적 + 밀쳐 내기 (1.0.5)
+        LastStand.Check(this);      // 체력 30% 아래: 장마다 한 번 2초 무적 + 밀쳐 내기 (1.0.1)
 
         if (PlayerHealth <= 0) StartCoroutine(DeathSequence());
 

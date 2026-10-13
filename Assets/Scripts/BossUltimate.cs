@@ -247,7 +247,7 @@ public class BossUltimate : MonoBehaviour
         Time.timeScale = before > 0f ? before : 1f;
     }
 
-    // 1.1.0: 대사 중 ESC 로 일시정지하면 연출이 멈춘 시간에도 계속 흘러, 끝나면서 게임 속도를 되돌려 일시정지가 풀렸음
+    // 1.0.2: 대사 중 ESC 로 일시정지하면 연출이 멈춘 시간에도 계속 흘러, 끝나면서 게임 속도를 되돌려 일시정지가 풀렸음
     // → 일시정지 메뉴가 열려 있는 동안은 연출 시계를 멈추고 화면도 감춤 (메뉴를 덮지 않게)
     static float CutDt(Canvas canvas)
     {
@@ -397,7 +397,7 @@ public class BossUltimate : MonoBehaviour
         if (d.magnitude > max) p.transform.position = center + d.normalized * max;
     }
 
-    // 1.0.8: 결계 안은 다른 공간 — 맵 테두리 · 구조물(벽)을 끄고 감춤 (구석에서 펼치면 벽 때문에 피할 자리가 없었음)
+    // 1.0.1: 결계 안은 다른 공간 — 맵 테두리 · 구조물(벽)을 끄고 감춤 (구석에서 펼치면 벽 때문에 피할 자리가 없었음)
     // 끝나면 되살리고, 맵 밖이나 벽 속에 있으면 가장 가까운 맵 안 빈자리로 옮김
     static readonly List<Collider2D> hiddenWalls = new List<Collider2D>();
     static readonly List<Renderer> hiddenWallArt = new List<Renderer>();
@@ -520,7 +520,7 @@ public class BossUltimate : MonoBehaviour
                 }
             if (Time.time >= nextRing)
             {
-                nextRing = Time.time + 1.75f;       // 1.0.9: 2장 결계 살짝 완화 (1.5 → 1.75)
+                nextRing = Time.time + 1.75f;       // 1.0.1: 2장 결계 살짝 완화 (1.5 → 1.75)
                 int n = 26, gap = Random.Range(0, n);
                 for (int i = 0; i < n; i++)
                 {
@@ -532,7 +532,7 @@ public class BossUltimate : MonoBehaviour
             }
             if (Time.time >= nextSpike && p != null)
             {
-                nextSpike = Time.time + 0.68f;      // 1.0.9: 0.55 → 0.68 · 예고 0.75 → 0.85
+                nextSpike = Time.time + 0.68f;      // 1.0.1: 0.55 → 0.68 · 예고 0.75 → 0.85
                 Vector3 at = p.transform.position + (Vector3)(Random.insideUnitCircle * 1.5f);
                 StartCoroutine(Spike(at, 1.7f, 0.85f, soul, 18f * Power, "fx_spike"));
             }
@@ -541,9 +541,9 @@ public class BossUltimate : MonoBehaviour
         foreach (FxAnim b in beams) if (b != null) Destroy(b.gameObject);
     }
 
-    // 연옥 낙화 (지옥의 군주) — 1.0.8 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
+    // 연옥 낙화 (지옥의 군주) — 1.0.1 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
     // 불을 빼고 운석만 세 박자로 번갈아: ① 곳곳에 한꺼번에 떨어지는 운석 비 → ② 내 자리의 거대 운석 → ③ 틈이 있는 운석 행진
-    // 1.0.9: 너무 쉬웠음 → 운석 비가 더 많고 일부는 나를 노림 · 거대 운석은 둘레를 막고 한 번 더 · 행진이 빨라짐,
+    // 1.0.1: 너무 쉬웠음 → 운석 비가 더 많고 일부는 나를 노림 · 거대 운석은 둘레를 막고 한 번 더 · 행진이 빨라짐,
     //        그리고 내내 내 발밑으로 작은 불씨 운석이 떨어져 가만히 서 있을 수 없음 (예고는 모두 0.9초 이상)
     IEnumerator HellBarrage(float until)
     {
@@ -718,7 +718,7 @@ public class BossUltimate : MonoBehaviour
     {
         if (Hostile.Glow == null) return null;
         GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
-        HostileProjectile.Dress(g, acid, 1.6f);       // 1.0.9: 다른 적 탄처럼 테두리 구슬로 또렷하게
+        HostileProjectile.Dress(g, acid, 1.6f);       // 1.0.1: 다른 적 탄처럼 테두리 구슬로 또렷하게
         DomainBall b = g.AddComponent<DomainBall>();
         b.center = center;
         b.radius = Radius - 0.6f;

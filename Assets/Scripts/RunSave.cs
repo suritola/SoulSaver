@@ -194,9 +194,9 @@ public static class RunSave
                     case 't': if (specials != null) specials.ReplayNode(arg); break;
                     case 's': sm.ReplayPicks(ParseIds(arg)); break;
                     case 'b': if (int.TryParse(arg, out int b) && coinShop != null) coinShop.ReplayBuy(b); break;
-                    case 'h': if (float.TryParse(arg, out float h)) p.PlayerMaxHealth += h; break;     // 보물 상자 「생명」 (1.0.5)
-                    case 'a': if (float.TryParse(arg, out float a)) p.damage *= 1f + a / 100f; break;     // 보스 보상 「전설의 힘」 (1.0.5)
-                    case 'k': if (int.TryParse(arg, out int ks)) Curse.Active = ks == d.stage; break;   // 저주 제단: 저장한 장에서 받았으면 다시 (1.0.5)
+                    case 'h': if (float.TryParse(arg, out float h)) p.PlayerMaxHealth += h; break;     // 보물 상자 「생명」 (1.0.1)
+                    case 'a': if (float.TryParse(arg, out float a)) p.damage *= 1f + a / 100f; break;     // 보스 보상 「전설의 힘」 (1.0.1)
+                    case 'k': if (int.TryParse(arg, out int ks)) Curse.Active = ks == d.stage; break;   // 저주 제단: 저장한 장에서 받았으면 다시 (1.0.1)
                 }
             }
         }

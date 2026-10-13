@@ -333,6 +333,6 @@ public static partial class LocTable
         A("코인을 주울 때마다 경험치를 조금 얻고, 코인 40개를 모을 때마다 황금 파동이 터져 주변 적에게 피해를 줍니다. (공격력 300%)", "Picking up coins grants a little XP, and every 40 coins releases a golden wave that damages nearby enemies. (300% attack)", "コインを拾うたびに経験値を少し得て、コイン40枚ごとに黄金の波動が弾けて周りの敵にダメージを与えます。（攻撃力300%）", "每拾取金币获得少量经验，每收集40枚金币爆发黄金波动伤害周围敌人。（攻击力300%）");
         A("불멸의 육체", "Undying Flesh", "不滅の肉体", "不灭之躯");
         A("체력이 가득 차 있으면 3초마다 심장 박동 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", "At full health, a heartbeat pulse spreads every 3s, knocking back nearby enemies and dealing damage based on max health.", "体力が満タンのとき、3秒ごとに鼓動の波動が広がり、周りの敵を押し返して最大体力に比例したダメージを与えます。", "生命全满时每3秒扩散心跳波动，击退周围敌人并造成与最大生命成比例的伤害。");
-        AddHeroes();        // 1.1.2 새 캐릭터 (LocTable.Heroes)
+        AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
     }
 }

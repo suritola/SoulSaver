@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 지도 제작자 (1.1.2): 깃펜으로 잉크 획을 그어 벰
+// 지도 제작자 (1.0.2): 깃펜으로 잉크 획을 그어 벰
 //   평타 · 잉크 획: 나에게서 마우스 쪽으로 획을 그음 (사거리 안)
-//                   1.1.2: 세 번째 획마다 마우스 자리를 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다침
+//                   1.0.2: 세 번째 획마다 마우스 자리를 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다침
 //                   (예전: 앞 획 끝에서 이어 그려 직접 도형을 닫아야 했음 — 너무 어렵다는 의견)
 //   우클릭 · 지도 접기: 누르고 있는 동안 접히는 선(마우스 자리, 나와 마우스를 잇는 선에 수직)이 보이고,
 //                   떼면 선 양쪽 띠 안의 적을 선 위로 끌어당겨 짓이김 (오래 누를수록 넓고 길게)
@@ -90,7 +90,7 @@ public partial class CharacterKit
         foreach (Collider2D c in found)
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            // 1.1.2: 큰 적(보스)은 몸 가장자리에 닿아도 맞게 (예전엔 몸 가운데만 봐서 보이는 획이 지나가도 안 맞았음)
+            // 1.0.2: 큰 적(보스)은 몸 가장자리에 닿아도 맞게 (예전엔 몸 가운데만 봐서 보이는 획이 지나가도 안 맞았음)
             if (Hostile.DistanceToSegment(c.bounds.center, a, b) > width + MapBody(c)) continue;
             float m = formPower;
             // 정밀 제도 (패시브): 획 끝 가까이의 적은 더 아프게
@@ -253,7 +253,7 @@ public partial class CharacterKit
     }
 
     // 다음 획에 도형이 닫힐 때: 마우스 자리에 실제로 닫힐 삼각형을 금색으로 미리 보여 줌 (매 프레임)
-    //   1.1.2: 예전엔 삼각형을 감싸는 원을 그려 실제 범위(삼각형)보다 훨씬 커 보였고, 스킬 이펙트에 묻혔음
+    //   1.0.2: 예전엔 삼각형을 감싸는 원을 그려 실제 범위(삼각형)보다 훨씬 커 보였고, 스킬 이펙트에 묻혔음
     void DrawMapChain()
     {
         if (mapCloseRing == null)
@@ -309,7 +309,7 @@ public partial class CharacterKit
         FoldGeometry(out Vector3 center, out Vector3 a, out Vector3 b, out Vector2 n, out float half, out float len);
         if (foldLine == null)
         {
-            // 1.1.2: 스킬 이펙트(+40)에 묻히지 않게 그 위 순서로
+            // 1.0.2: 스킬 이펙트(+40)에 묻히지 않게 그 위 순서로
             foldLine = Hostile.NewLine("FoldLine", Ink, 0.16f, 57);
             foldSideA = Hostile.NewLine("FoldSideA", Ink, 0.1f, 56);
             foldSideB = Hostile.NewLine("FoldSideB", Ink, 0.1f, 56);

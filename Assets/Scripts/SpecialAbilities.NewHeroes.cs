@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 1.1.2 새 캐릭터의 진화 무기 궁극기 (필살기에 덧붙음 · SpecialAbilities.KitUlts 의 나머지)
+// 1.0.2 새 캐릭터의 진화 무기 궁극기 (필살기에 덧붙음 · SpecialAbilities.KitUlts 의 나머지)
 public partial class SpecialAbilities
 {
     IEnumerator HeroKitUlt(int id, float D, Vector3 me, Vector3 mouse, Vector2 dir, bool evo)

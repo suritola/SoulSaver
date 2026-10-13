@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 떠돌이 상점 창 (1.0.8 개편): 씬에 놓인 옛 판은 숨기고 코드로 새로 그림 — 사고파는 로직 · 가격은 그대로
+// 떠돌이 상점 창 (1.0.1 개편): 씬에 놓인 옛 판은 숨기고 코드로 새로 그림 — 사고파는 로직 · 가격은 그대로
 //   위: 제목 · 보유 코인 · 닫기 / 가운데: 강화 카드 2장 (공격력 · 이동 속도) / 아래: 물약 카드 4장 (그림 · 이름 · 효과 · 가격)
 // 강화 글자는 원래 쓰던 priceTextInput · statTextInput(1 · 5)에 새 글자를 연결해 UpdateShopText 가 그대로 채움
 public partial class Shop

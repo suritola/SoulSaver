@@ -19,7 +19,7 @@ public partial class SpecialAbilities
     public const int KitQuicksilver = 44, KitMagnet = 45, KitFirework = 46, KitStone = 47, KitRewind = 48, KitGiant = 49, KitCycle = 50, KitVolatile = 51;
     // 캐릭터마다 패시브 두 개씩 더 (52 ~ 59)
     public const int KitOath = 52, KitPlate = 53, KitVeil = 54, KitFugitive = 55, KitWeakspot = 56, KitInstinct = 57, KitEmergency = 58, KitGoldConvert = 59;
-    // 1.1.2 새 캐릭터: 캐릭터마다 무기(진화 형태) 3 · 패시브 4 (스킬은 진화 캐릭터에서 쓰지 않아 없음)
+    // 1.0.2 새 캐릭터: 캐릭터마다 무기(진화 형태) 3 · 패시브 4 (스킬은 진화 캐릭터에서 쓰지 않아 없음)
     // 지도 제작자
     public const int KitSurveyChain = 60, KitInkpot = 61, KitGlobe = 62, KitExplorer = 63, KitLocal = 64, KitUncharted = 65, KitDraft = 66;
     // 시계공
@@ -864,7 +864,7 @@ public partial class SpecialAbilities
         player.GrantInvincibility(targets.Count * 0.09f + 0.4f);
         foreach (Transform t in targets)
         {
-            if (t == null || IsDeadEnemy(t)) continue;      // 1.1.0: 앞선 공격에 이미 쓰러진 적은 건너뜀
+            if (t == null || IsDeadEnemy(t)) continue;      // 1.0.2: 앞선 공격에 이미 쓰러진 적은 건너뜀
             Fx.Spawn("fx_stealth", player.transform.position, 2f, new Color(0.85f, 0.7f, 1f), 20f);
             player.transform.position = KitClamp(t.position + (Vector3)(Random.insideUnitCircle.normalized * 1f));
             Specials.Damage(t.gameObject, KitD * 1.5f, Vector3.zero, 0.5f);
@@ -892,7 +892,7 @@ public partial class SpecialAbilities
         foreach (Transform picked in targets)
         {
             Transform t = picked;
-            // 1.1.0: 이미 쓰러진 적이면 그 근처의 살아 있는 적에게 (시체를 헛치지 않게)
+            // 1.0.2: 이미 쓰러진 적이면 그 근처의 살아 있는 적에게 (시체를 헛치지 않게)
             if (t != null && IsDeadEnemy(t)) t = Specials.NearestEnemy(t.position, 6f);
             if (t == null) continue;
             Vector3 from = bird.transform.position;
@@ -922,7 +922,7 @@ public partial class SpecialAbilities
     float appliedDmg = 1f, appliedRate = 1f, appliedSpeed = 1f;
     float giantTick;
 
-    // 1.0.6: 영웅 특수 능력 전체 하향 — 피해를 주는 무기 · 스킬 · 궁극기는 0.8배 (설명의 공격력 %도 0.8배)
+    // 1.0.1: 영웅 특수 능력 전체 하향 — 피해를 주는 무기 · 스킬 · 궁극기는 0.8배 (설명의 공격력 %도 0.8배)
     const float KitPower = 0.8f;
     float KitD => Damage * KitPower;
     float KitWD => WDamage * KitPower;

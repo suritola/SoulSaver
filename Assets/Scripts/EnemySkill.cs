@@ -621,7 +621,7 @@ public class HazardZone : MonoBehaviour
     float tick;
     FxAnim visual;
 
-    // caller · file: 만든 스킬 (컴파일러가 채움, 받은 피해 출처 이름 · 1.0.7 호출 스택을 뒤지지 않게)
+    // caller · file: 만든 스킬 (컴파일러가 채움, 받은 피해 출처 이름 · 1.0.1 호출 스택을 뒤지지 않게)
     public static HazardZone Spawn(Vector3 pos, float radius, float life, float tickDamage, Color color, string fx, float slow,
         [System.Runtime.CompilerServices.CallerMemberName] string caller = "", [System.Runtime.CompilerServices.CallerFilePath] string file = "")
     {
@@ -1045,7 +1045,7 @@ public class HostileProjectile : MonoBehaviour
     void OnEnable() => Live.Add(this);
     void OnDisable() => Live.Remove(this);
 
-    // 1.0.9: 흐릿한 빛 덩어리라 배경 · 이펙트에 묻혔음 → 검은 테두리가 있는 또렷한 구슬 + 하얀 심 + 어두운 그림자로
+    // 1.0.1: 흐릿한 빛 덩어리라 배경 · 이펙트에 묻혔음 → 검은 테두리가 있는 또렷한 구슬 + 하얀 심 + 어두운 그림자로
     //   어떤 바닥(밝은 초원 · 어두운 묘역 · 붉은 지옥)에서도 테두리 대비로 바로 보이고, 두근거려 눈에 띔
     Transform orb;
     float orbSize, age;

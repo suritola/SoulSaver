@@ -76,7 +76,7 @@ public class TooltipUI : MonoBehaviour
         return text;
     }
 
-    // 1.0.7: 메인 메뉴 씬에는 설명창이 없어 도감(스킬 진화 등)에 마우스를 올려도 아무것도 안 떴음 → 없으면 그 캔버스에 만듦
+    // 1.0.1: 메인 메뉴 씬에는 설명창이 없어 도감(스킬 진화 등)에 마우스를 올려도 아무것도 안 떴음 → 없으면 그 캔버스에 만듦
     public static void Ensure(Transform from)
     {
         if (Instance != null || from == null) return;

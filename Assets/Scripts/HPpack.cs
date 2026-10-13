@@ -11,7 +11,7 @@ public class HPpack : MonoBehaviour
     void Start()
     {
         playerC = FindFirstObjectByType<PlayerController>();
-        PickupGlow.Add(pack != null ? pack : gameObject, new Color(1f, 0.35f, 0.4f), 1.4f);      // 1.1.2: 스킬 이펙트에 묻히지 않게
+        PickupGlow.Add(pack != null ? pack : gameObject, new Color(1f, 0.35f, 0.4f), 1.4f);      // 1.0.2: 스킬 이펙트에 묻히지 않게
     }
 
     // Update is called once per frame

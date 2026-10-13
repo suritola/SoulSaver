@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 유령 고유 스킬 (1.1.2) · 패시브(서늘한 기운 · 떠도는 혼 · 영혼 수확 · 명계의 문)
+// 유령 고유 스킬 (1.0.2) · 패시브(서늘한 기운 · 떠도는 혼 · 영혼 수확 · 명계의 문)
 //   h.grudge 원한 · h.wail 곡소리 · h.chill 한기 · h.drain 생기 흡수 · h.phase 실체 없음
 //   h.wisp 도깨비불 · h.curse 저주 · h.polter 폴터가이스트 · h.frostbite 동상 · h.procession 망령의 행렬
 // 진화: he.blizzard 눈보라 · he.banshee 밴시 · he.vampire 흡혈귀 · he.specter 망령 · he.doom 파멸
@@ -147,7 +147,7 @@ public partial class SignatureSkills
         if (t == null) yield break;
         if (lift) t.position = start;
         Deal(t.gameObject, Atk * V(L("h.polter"), 1f, 0.4f), Vector3.zero, 0f);
-        // 1.1.2: 내리꽂는 피해는 그 적 하나뿐이라, 충격파(범위 이펙트)를 그 적의 몸 크기로 (예전엔 지름 3 · 진화 5칸으로 둘레까지 맞는 것처럼 보였음)
+        // 1.0.2: 내리꽂는 피해는 그 적 하나뿐이라, 충격파(범위 이펙트)를 그 적의 몸 크기로 (예전엔 지름 3 · 진화 5칸으로 둘레까지 맞는 것처럼 보였음)
         float body = t.TryGetComponent(out Collider2D col) ? Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 2f + 0.6f : 1.6f;
         Fx.Spawn("fx_shock", start, body, Tint("h.polter", GhostC), 20f);
         Fx.Spawn("fx_soulburst", start, body * 0.8f * Fs("h.polter"), Tint("h.polter", GhostC), 20f);

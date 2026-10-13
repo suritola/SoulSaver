@@ -213,7 +213,7 @@ public partial class SpecialAbilities
     public float TreeGaugeMul { get; private set; } = 1f;   // 필살기 게이지 차는 속도
     public float TreeShardMul { get; private set; } = 1f;   // 영혼 조각 획득량
     public float TreeUltRefund { get; private set; }        // 필살기를 쓴 뒤 게이지가 이만큼 남음
-    public float TreeBigShardMul { get; private set; } = 1f;    // 보스 · 중간 보스 영혼 조각 (영혼 끝 칸 「영혼 수확」, 1.0.5)
+    public float TreeBigShardMul { get; private set; } = 1f;    // 보스 · 중간 보스 영혼 조각 (영혼 끝 칸 「영혼 수확」, 1.0.1)
     public float TreeStormRange { get; private set; }       // 총알 폭풍 사거리 + (칸, 2.2.0)
     public float TreeRateMul { get; private set; } = 1f;    // 모든 무기 발사 간격 배율
     public float TreeMagMul { get; private set; } = 1f;     // 모든 무기 탄창 배율
@@ -298,8 +298,8 @@ public partial class SpecialAbilities
         t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 52, ult, () => UpgradeUlt(uw, UltTraitStat)));
         if (Gunner)
         {
-            // 1.0.8: 쌍권총도 일제 사격으로 조준하므로 「노려보는 눈빛」은 늘, 덧붙는 총알 폭풍이 있으면 사거리 칸도
-            if (UltActive && HasAug(DualId))     // 1.1.0: 2차를 다른 무기로 해도 총알 폭풍이 남으므로
+            // 1.0.1: 쌍권총도 일제 사격으로 조준하므로 「노려보는 눈빛」은 늘, 덧붙는 총알 폭풍이 있으면 사거리 칸도
+            if (UltActive && HasAug(DualId))     // 1.0.2: 2차를 다른 무기로 해도 총알 폭풍이 남으므로
             {
                 t.Add(Node("u.storm1", "u.trait1", 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
                 t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +3칸", 34, ult, () => TreeStormRange += 3f));
@@ -343,10 +343,10 @@ public partial class SpecialAbilities
         t.Add(Node("s.guard2", "s.guard1", 3, "재정비 II", "맞은 뒤 무적 시간 +0.15초", 42, def, () => p.hurtInvincibleTime += 0.15f));
         t.Add(Node("s.barrier1", "s.def2", 3, "영혼 보호막", "20초마다 공격 한 번을 막아 주는 보호막이 생깁니다", 40, def, () => { barrierEvery = 20f; barrierReadyAt = Time.time; }));
         t.Add(Node("s.barrier2", "s.barrier1", 3, "영혼 보호막 II", "보호막이 12초마다 다시 생깁니다", 66, def, () => barrierEvery = 12f));
-        // 1.1.0: 너무 셌음 — 칸마다 +1 → +0.5, 처치 회복은 모두 합쳐 초당 최대 6 (PlayerController.HealOnKill)
+        // 1.0.2: 너무 셌음 — 칸마다 +1 → +0.5, 처치 회복은 모두 합쳐 초당 최대 6 (PlayerController.HealOnKill)
         t.Add(Node("s.leech1", "s.regen1", 3, "피의 굶주림", "적을 처치할 때마다 체력 +0.5 회복 (처치 회복은 초당 최대 6)", 20, LvIcon(11), () => p.healOnKill += 0.5f));
         t.Add(Node("s.leech2", "s.leech1", 3, "피의 굶주림 II", "적을 처치할 때마다 체력 +0.5 회복 (처치 회복은 초당 최대 6)", 40, LvIcon(11), () => p.healOnKill += 0.5f));
-        // 1.0.5: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
+        // 1.0.1: 가지 끝에 판을 바꾸는 큰 보상 (판 기록에서 생존 · 영혼 · 재물 가지가 거의 안 찍혔음)
         t.Add(Node("s.laststand", "s.guard2", 3, "꺾이지 않는 의지", "「최후의 보루」가 장마다 한 번 더 발동합니다", 44, def, () => LastStand.Extra += 1));
         t.Add(Node("s.revive", "s.barrier2", 3, "되살아난 영혼", "판마다 한 번, 쓰러질 피해를 받으면 체력 40%로 되살아납니다", 90, def, () => TreeRevives += 1));
 

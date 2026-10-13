@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 우체부 (1.1.2): 저승 배달부
+// 우체부 (1.0.2): 저승 배달부
 //   평타 · 편지 배달: 마우스 쪽(앞 70°) 사거리 안에서 가장 먼 적을 「받는 이」로 정해 편지를 날림.
 //                     편지는 다른 적을 지나쳐 받는 이를 쫓아가고 (쓰러지면 가까운 적으로 다시), 닿으면 배달 완료
 //                     배달 10번마다 우편 보너스 (코인 2 · 필살기 게이지 5%)
@@ -34,7 +34,7 @@ public partial class CharacterKit
             Transform to = Addressee(start, dir, taken);
             if (to != null) { taken.Add(to); MarkAddressee(to); }
             float d = dmg * (i >= Mathf.Max(1, shots) ? 0.5f : 1f);
-            // 1.1.2: 받는 이 쪽으로 출발 (앞 70° 밖 · 바로 옆의 적이면 마우스 쪽으로 출발한 편지가 받는 이 둘레를 맴돌기만 하던 것)
+            // 1.0.2: 받는 이 쪽으로 출발 (앞 70° 밖 · 바로 옆의 적이면 마우스 쪽으로 출발한 편지가 받는 이 둘레를 맴돌기만 하던 것)
             Vector2 aim = to != null ? (Vector2)(to.position - start) : dir;
             if (aim.sqrMagnitude < 0.01f) aim = dir;
             Vector2 launch = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 14f) * aim.normalized;
@@ -225,7 +225,7 @@ public partial class CharacterKit
     LineRenderer expressRing;
     const float ExpressRange = 15f;
 
-    int ExpressMaxAt(float charge) => Mathf.RoundToInt((6 + 14 * charge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.1.1 조정: 8 ~ 30 → 6 ~ 20
+    int ExpressMaxAt(float charge) => Mathf.RoundToInt((6 + 14 * charge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.0.2 조정: 8 ~ 30 → 6 ~ 20
     int ExpressMax => ExpressMaxAt(expressCharge);
     // 머리 위 막대: 속달을 누르는 동안 붙은 표식 수 / 끝까지 눌렀을 때 최대
     public bool Expressing => expressing;
@@ -253,14 +253,14 @@ public partial class CharacterKit
         if (!expressing) return;
         expressCharge = Mathf.Min(1f, expressCharge + Time.deltaTime / 1.2f);
         Vector3 me = transform.position;
-        // 1.1.2: 둘레 고리를 스킬 이펙트(+40) 위 순서로 · 더 굵고 진하게, 다 차면 금빛으로
+        // 1.0.2: 둘레 고리를 스킬 이펙트(+40) 위 순서로 · 더 굵고 진하게, 다 차면 금빛으로
         if (expressRing == null) { expressRing = Hostile.NewLine("ExpressRing", PostRed, 0.16f, 55); expressRing.loop = true; }
         expressRing.enabled = true;
         Hostile.SetArc(expressRing, me, ExpressRange, 0f, 360f);
         Color rc = expressCharge >= 1f ? Color.Lerp(PostRed, new Color(1f, 0.85f, 0.4f), 0.6f) : PostRed;
         expressRing.startColor = expressRing.endColor = new Color(rc.r, rc.g, rc.b, 0.5f + 0.3f * Mathf.Sin(Time.time * 12f));
         expressRing.startWidth = expressRing.endWidth = 0.16f + 0.08f * expressCharge;
-        // 1.1.2: 쓰러지거나 사라진 적의 표식은 떼고 아이콘도 지움 (예전엔 쓰러진 적이 표식 자리를 차지해 새 적에게 안 붙었음)
+        // 1.0.2: 쓰러지거나 사라진 적의 표식은 떼고 아이콘도 지움 (예전엔 쓰러진 적이 표식 자리를 차지해 새 적에게 안 붙었음)
         for (int i = expressMarks.Count - 1; i >= 0; i--)
         {
             if (Alive(expressMarks[i])) continue;
@@ -282,7 +282,7 @@ public partial class CharacterKit
             if (best != null)
             {
                 expressMarks.Add(best);
-                // 1.1.2: 수명 5초 → 직접 지울 때까지 (5초 넘게 누르면 표식 아이콘이 사라졌음), 스킬 이펙트 위 순서
+                // 1.0.2: 수명 5초 → 직접 지울 때까지 (5초 넘게 누르면 표식 아이콘이 사라졌음), 스킬 이펙트 위 순서
                 FxAnim icon = Fx.Play("fx_card", best.position + Vector3.up * 1.2f, 0.9f, PostRed, 12f, 0f, 24, true, -1f);
                 expressIcons.Add(icon);
                 Fx.Spawn("fx_spark", best.position, 0.9f, PostRed, 26f);
@@ -339,7 +339,7 @@ public partial class CharacterKit
         List<Vector3> spots = new List<Vector3>();
         foreach (Transform t in marks)
         {
-            if (!Alive(t)) continue;        // 1.1.2: 그사이 쓰러진 적의 시체에서 터지지 않게
+            if (!Alive(t)) continue;        // 1.0.2: 그사이 쓰러진 적의 시체에서 터지지 않게
             Vector3 p = t.position;
             spots.Add(p);
             Specials.Damage(t.gameObject, dmg, Vector3.zero, 1f);

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 시계공 고유 스킬 (1.1.2) · 패시브(기계 심장 · 예측 · 부품 수집 · 시간 여유)
+// 시계공 고유 스킬 (1.0.2) · 패시브(기계 심장 · 예측 · 부품 수집 · 시간 여유)
 //   t.overclock 과회전 · t.alarm 자명종 · t.cog 맞물린 톱니 · t.pocket 회중시계 · t.minute 분침
 //   t.echo 시간의 메아리 · t.spring 태엽 감기 · t.loop 시간 고리 · t.borrowed 빌린 시간 · t.stopwatch 스톱워치
 // 진화: te.gearstorm 톱니 폭풍 · te.chime 대종 · te.paradox 역설 · te.timeless 영원 · te.clockwork 태엽 장치

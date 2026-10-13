@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-// 레벨업 · 영혼 트리 알림 (1.0.7): 「레벨업 [Space]」 · 「영혼 트리 [T]」가 화면 아래 · 구석에만 있어 싸우다 까먹는다는 의견
+// 레벨업 · 영혼 트리 알림 (1.0.1): 「레벨업 [Space]」 · 「영혼 트리 [T]」가 화면 아래 · 구석에만 있어 싸우다 까먹는다는 의견
 // → 싸우는 동안 보는 곳(캐릭터 머리 위)에 통통 튀며 반짝이는 글자, 오래 놓아두면 소리와 함께 한 번 더 알림
 // StageManager 가 붙임
 public class GrowthPrompts : MonoBehaviour

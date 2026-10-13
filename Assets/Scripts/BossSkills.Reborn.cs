@@ -364,7 +364,7 @@ public partial class BossSkills
         if (want > phase)
         {
             phase = want;
-            // 1.1.1: 마지막 단계의 「지옥이 무너진다」(용암 가장자리)는 피할 수 없다는 의견으로 뺌 — 단계만 오르고 스킬 간격이 짧아짐
+            // 1.0.2: 마지막 단계의 「지옥이 무너진다」(용암 가장자리)는 피할 수 없다는 의견으로 뺌 — 단계만 오르고 스킬 간격이 짧아짐
             if (phase == 1) { StartCoroutine(Run(HellWings())); return; }
         }
         if (Time.time < next) return;

@@ -131,14 +131,14 @@ public partial class LevelShop : MonoBehaviour
             UpdateLvShopContent();
             pendingSlot = -1;
             RefreshCards();
-            PlayRerollFx();             // 1.0.7: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
+            PlayRerollFx();             // 1.0.1: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
             n = sp.Rerolls;
             open = n > 0;
         }
         if (rerollText == null)
         {
             if (!open || LvshopPanel == null) return;
-            // 1.0.9: 작은 보라 글씨라 잘 안 보였음 → 테두리 있는 배지 + 노란 키 + 두근거림
+            // 1.0.1: 작은 보라 글씨라 잘 안 보였음 → 테두리 있는 배지 + 노란 키 + 두근거림
             rerollText = HintBadge.Make(LvshopPanel.transform, "RerollHint", new Vector2(RerollHintX, RerollHintY), new Vector2(400f, 58f),
                 new Color(0.2f, 0.1f, 0.34f, 0.96f), new Color(0.82f, 0.62f, 1f), 30f);
         }
@@ -154,7 +154,7 @@ public partial class LevelShop : MonoBehaviour
     // ================================================================= 쌓인 레벨업
     public int PendingLevels { get; private set; }
 
-    // 영웅 숙련도 (Mastery, 1.0.5): 경험치 요구량을 올리지 않고 고를 카드만 더 줌
+    // 영웅 숙련도 (Mastery, 1.0.1): 경험치 요구량을 올리지 않고 고를 카드만 더 줌
     public void GrantFreePicks(int n) { if (n > 0) AddPending(n); }
 
     public void AddPending(int n = 1)
@@ -188,7 +188,7 @@ public partial class LevelShop : MonoBehaviour
             r.SetParent(canvas.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
             r.pivot = new Vector2(0.5f, 0f);
-            r.sizeDelta = new Vector2(900f, 62f);       // 1.0.7: 780 × 48 → 900 × 62 (눈에 잘 띄게)
+            r.sizeDelta = new Vector2(900f, 62f);       // 1.0.1: 780 × 48 → 900 × 62 (눈에 잘 띄게)
             Image bg = pendingBadge.GetComponent<Image>();
             bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
             bg.raycastTarget = false;
@@ -299,7 +299,7 @@ public partial class LevelShop : MonoBehaviour
             selectHint.enableAutoSizing = true;         // 안내가 길어져도 한 줄 (2.1.8 더블클릭 · 숫자 키 안내)
             selectHint.fontSizeMin = 20f;
             selectHint.fontSizeMax = 32f;
-            selectHint.fontStyle = FontStyles.Bold;     // 1.0.9: 더 잘 보이게 (굵게 + 검은 테두리)
+            selectHint.fontStyle = FontStyles.Bold;     // 1.0.1: 더 잘 보이게 (굵게 + 검은 테두리)
             selectHint.outlineWidth = 0.22f;
             selectHint.outlineColor = new Color32(0, 0, 0, 255);
             selectHint.enableWordWrapping = false;
@@ -470,7 +470,7 @@ public partial class LevelShop : MonoBehaviour
         }
     }
 
-    // 처음 레벨업 창 몇 번은 안내를 하나씩 늘림 (1.1.0 — 첫 창에 도움말 · 추천 · 시너지 · 다시 뽑기가 한꺼번에 떠 복잡했음)
+    // 처음 레벨업 창 몇 번은 안내를 하나씩 늘림 (1.0.2 — 첫 창에 도움말 · 추천 · 시너지 · 다시 뽑기가 한꺼번에 떠 복잡했음)
     // 1번째 창: 추천만 · 2번째: + 시너지 · 3번째부터: + 다시 뽑기 (게임 전체에서 한 번만, 저장)
     const string IntroKey = "intro.lvopens";
     static int IntroOpens => Prefs.GetInt(IntroKey, 0);

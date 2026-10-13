@@ -34,7 +34,7 @@ public static class GameMode
     // 보상 기준 (1.8.8까지의 처치 수 배율). 보스 · 중간 보스처럼 한 판에 나오는 수가 정해진 보상은 이 기준으로
     static readonly float[] RewardBasis =        { 0.7f, 0.8f,  0.9f,   1f };
     // 일반 적 영혼 조각을 이만큼만 (판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게)
-    const float KillShardRate = 0.6f;      // 1.0.6: 0.75 → 0.6 (영혼 트리가 천천히 차게, 보스 · 상자 보상은 그대로)
+    const float KillShardRate = 0.6f;      // 1.0.1: 0.75 → 0.6 (영혼 트리가 천천히 차게, 보스 · 상자 보상은 그대로)
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
 
     // 무한 모드 (1.8.7 조정): 초반이 너무 어렵고 후반이 지루하던 곡선을 바꿈
@@ -121,14 +121,14 @@ public static class GameMode
             return Mathf.Min(EndlessRampMax, warm * (1f + EndlessLinear * m + EndlessQuad * m * m));
         }
     }
-    // 잡몹용 강도 (1.1.0): 예전 곡선은 처음 3분 동안 0.7 → 1 로 확 오른 뒤 직선 + 제곱이라 「극초반 쉬움 → 초반 너무 어려움 → 갑자기 확 강해짐」
+    // 잡몹용 강도 (1.0.2): 예전 곡선은 처음 3분 동안 0.7 → 1 로 확 오른 뒤 직선 + 제곱이라 「극초반 쉬움 → 초반 너무 어려움 → 갑자기 확 강해짐」
     // → 꺾이는 데 없는 지수 곡선 하나: 처음엔 쉽고, 1분마다 약 11%씩 곱으로 불어나 갈수록 걷잡을 수 없이 어려워짐
     //   0분 0.6 · 3분 0.8 · 5분 1.0 · 10분 1.7 · 15분 2.8 · 20분 4.6 · 25분 7.7 · 약 27분에 최대 10
     // 체력 · 주는 피해 · 스킬 간격 · 나오는 간격 · 한 화면 수에 씀, 보스 체력과 보스 · 중간 보스 주기는 그대로 Ramp
     const float MobStart = 0.6f, MobGrowth = 0.102f;      // 1분마다 e^0.102 ≈ 1.107배
     static float MobRamp => IsEndless ? Mathf.Min(EndlessRampMax, MobStart * Mathf.Exp(MobGrowth * EndlessSeconds / 60f)) : 1f;
 
-    // 최종 국면 (1.1.1): 30분이 지나면 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
+    // 최종 국면 (1.0.2): 30분이 지나면 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
     const float SurgeGrowth = 0.693f, SurgeMax = 16f;
     static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt ? Mathf.Min(SurgeMax, Mathf.Exp(SurgeGrowth * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
 
@@ -142,7 +142,7 @@ public static class GameMode
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
     static float D(DailyStat s) => DailyChallenge.Mul(s);
-    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul;     // 저주 제단 (1.0.5)
+    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul;     // 저주 제단 (1.0.1)
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];

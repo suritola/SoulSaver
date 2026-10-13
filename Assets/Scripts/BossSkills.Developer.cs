@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
-// 무한 모드 최종 보스 「개발자」 (1.1.1): 다섯 캐릭터의 최종 진화 필살기를 차례로 돌려 씀
+// 무한 모드 최종 보스 「개발자」 (1.0.2): 다섯 캐릭터의 최종 진화 필살기를 차례로 돌려 씀
 // 거너 총알 폭풍 · 검사 회전 베기 · 도적 출혈 돌진 · 궁수 화살비 · 연금술사 대폭발 — 거울의 군주 흉내(UltSpin …)를 더 세게 + 최종 진화 덧붙임
 // 모든 판정은 그대로 경고가 먼저 보이고, 한 번 쓸 때 최대 DevMaxHits 번 · 한 대는 최대 체력의 MaxHitShare 까지 (즉사 없음)
 public partial class BossSkills

@@ -67,7 +67,7 @@ public class SkinShopUI : MonoBehaviour
         for (int i = 0; i < CharacterData.All.Length; i++)
         {
             CharacterId c = (CharacterId)i;
-            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c) || CharacterData.IsNewHero(c)) continue;     // 1.1.2 새 캐릭터는 아직 스킨이 없음
+            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c) || CharacterData.IsNewHero(c)) continue;     // 1.0.2 새 캐릭터는 아직 스킨이 없음
             int id = i;
             Button b = UIKit.MakeButton(win, CharacterData.Def(c).name, new Vector2(-560f + 190f * whoButtons.Count, 270f), new Vector2(175f, 50f), () => { who = id; selected = null; Rebuild(); }, 20f);
             b.name = "Who_" + id;
@@ -168,7 +168,7 @@ public class SkinShopUI : MonoBehaviour
                     l.Sort((a, b) => Num(a.name).CompareTo(Num(b.name)));
                     // 달리기 프레임 (다른 캐릭터 2~5)
                     if (d.body != null && l.Count >= 6) return new[] { l[2], l[3], l[4], l[5] };
-                    // 거너 (1.0.7): 시트가 줄마다 동작이고 줄 끝에 「idle」 · 「Run」 같은 빨간 글씨가 그려져 있어,
+                    // 거너 (1.0.1): 시트가 줄마다 동작이고 줄 끝에 「idle」 · 「Run」 같은 빨간 글씨가 그려져 있어,
                     // 이름 순서로 앞 네 장을 쓰면 서 있기 · 글씨 · 말하기가 섞여 이상한 프레임이 끼었음 → 위에서 네 번째 줄(달리기)의 네 장만
                     List<Sprite> run = l.FindAll(sp => sp.texture != null && Mathf.RoundToInt(sp.rect.y) == sp.texture.height - 32 * 4 && sp.rect.x < 32 * 4);
                     run.Sort((a2, b2) => a2.rect.x.CompareTo(b2.rect.x));

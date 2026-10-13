@@ -18,7 +18,7 @@ public class bossbar : MonoBehaviour
     public float BarY = 119.2869f;
 
     public bool bossSpawn = false;
-    public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.1.1)
+    public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.0.2)
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
 
     TMP_Text nameText;
@@ -72,7 +72,7 @@ public class bossbar : MonoBehaviour
                 return;
             }
         }
-        // 무한 모드 후반 여러 보스가 함께 있을 때 (1.1.1): 보스마다 한 줄씩
+        // 무한 모드 후반 여러 보스가 함께 있을 때 (1.0.2): 보스마다 한 줄씩
         if (bosss.LiveCount >= 2)
         {
             liveBosses.Clear();

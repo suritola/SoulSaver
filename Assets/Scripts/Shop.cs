@@ -155,7 +155,7 @@ public partial class Shop : MonoBehaviour
     int moveSpeedBuys = 0;
 
     // 영혼 트리 '흥정' 할인을 뺀 실제 가격
-    // 1.0.6: 모든 상점 강화 가격 1.3배 (최고점은 그대로, 상점 성장을 늦춤) · 영혼 트리 「흥정」 할인은 그 위에
+    // 1.0.1: 모든 상점 강화 가격 1.3배 (최고점은 그대로, 상점 성장을 늦춤) · 영혼 트리 「흥정」 할인은 그 위에
     const float GrowthPriceMul = 1.3f;
     static int Discounted(int price) => Mathf.CeilToInt(price * GrowthPriceMul * (SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.TreeShopMul : 1f));
 
@@ -340,7 +340,7 @@ public partial class Shop : MonoBehaviour
         }
         isPause = false;
 
-        // 1.0.7: 일시정지 메뉴가 열려 있으면 지금 풀지 않고, 메뉴를 닫을 때 흐르게
+        // 1.0.1: 일시정지 메뉴가 열려 있으면 지금 풀지 않고, 메뉴를 닫을 때 흐르게
         if (ESCmenu.IsOpen) ESCmenu.ResumeAt(1f);
         else Time.timeScale = 1f;
     }

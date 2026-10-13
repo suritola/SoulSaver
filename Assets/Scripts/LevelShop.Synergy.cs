@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-// 빌드 시너지 표시 (1.0.5): 레벨업 카드 중, 이미 가진 카드와 잘 어울리는 카드 아래에 「시너지 · 그 카드」
+// 빌드 시너지 표시 (1.0.1): 레벨업 카드 중, 이미 가진 카드와 잘 어울리는 카드 아래에 「시너지 · 그 카드」
 // 어떤 빌드를 노릴지 감이 오게 (예: 멀티 샷을 가졌으면 소각탄 · 전기탄 · 폭발 탄두 카드에 표시)
 public partial class LevelShop
 {
@@ -56,7 +56,7 @@ public partial class LevelShop
             if (card == null) continue;
             if (synergyTags[slot] == null)
             {
-                // 1.0.9: 연두 글씨만 있어서 잘 안 보였음 → 초록 배지 (HintBadge)
+                // 1.0.1: 연두 글씨만 있어서 잘 안 보였음 → 초록 배지 (HintBadge)
                 RectTransform r = HintBadge.Make(card, "SynergyTag", Vector2.zero, new Vector2(400f, 52f),
                     new Color(0.04f, 0.26f, 0.1f, 0.96f), new Color(0.45f, 1f, 0.5f), 28f).transform.parent as RectTransform;
                 r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);

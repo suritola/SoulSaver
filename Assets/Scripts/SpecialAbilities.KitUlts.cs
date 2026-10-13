@@ -56,7 +56,7 @@ public partial class SpecialAbilities
     public bool KitWeaponUltActive => UltActive && IsKitWeapon(UltId);
 
     // 우클릭을 누르고 있는 동안 보여 줄 궁극기 범위 (떼면 발동). CharacterKit 이 그림
-    public enum UltAimShape { Point, Line, Around, Burst }      // Burst: 사방으로 날아가는 투사체 (원 대신 방사형 화살, 1.1.0)
+    public enum UltAimShape { Point, Line, Around, Burst }      // Burst: 사방으로 날아가는 투사체 (원 대신 방사형 화살, 1.0.2)
 
     // Point: at 에 반지름 size 원 · Line: 플레이어에서 마우스 쪽으로 길이 size · Around: 플레이어 둘레 반지름 size
     public UltAimShape KitUltAim(out float size, out Vector3 at)
@@ -94,7 +94,7 @@ public partial class SpecialAbilities
     }
 
     // mul: 궁극기 세기 배율 (2.1.8~ 원래 필살기에 덧붙는 효과라 절반) · dash: 도적은 출혈 돌진으로 파고든 뒤 (덧붙일 때는 이미 돌진했으므로 끔)
-    // aimAt: 조준한 자리 (1.1.0 — 도적은 돌진 뒤 0.25초에 터지는데, 그때 마우스를 다시 읽으면 카메라가 돌진을 따라가 조준 범위와 다른 곳에 퍼졌음)
+    // aimAt: 조준한 자리 (1.0.2 — 도적은 돌진 뒤 0.25초에 터지는데, 그때 마우스를 다시 읽으면 카메라가 돌진을 따라가 조준 범위와 다른 곳에 퍼졌음)
     public void KitWeaponUlt(float mul = 1f, bool dash = true, Vector3? aimAt = null)
     {
         int id = UltId;
@@ -140,7 +140,7 @@ public partial class SpecialAbilities
         {
             // ---------------- 검사
             case KitHammer:
-                // 몸동작 (1.0.5): 크게 뛰어올라 첫 내려찍기, 이어서 작게 들썩이며 땅을 두드림
+                // 몸동작 (1.0.1): 크게 뛰어올라 첫 내려찍기, 이어서 작게 들썩이며 땅을 두드림
                 PlayerMotion.Of(player).Leap(0.45f, 2.6f, dir);
                 yield return new WaitForSeconds(0.45f);
                 for (int i = 1; i <= 6; i++)
@@ -293,7 +293,7 @@ public partial class SpecialAbilities
                 PlayerMotion.Of(player).Cast(1.5f);
                 for (int i = 0; i < 20; i++)
                 {
-                    // 1.1.0: 조준 원(반지름 12) 밖 최대 24칸까지 터지던 것을 원 안의 적으로
+                    // 1.0.2: 조준 원(반지름 12) 밖 최대 24칸까지 터지던 것을 원 안의 적으로
                     List<Transform> near = NearestEnemies(player.transform.position, 12f, 6);
                     Vector3 at = near.Count > 0 ? near[Random.Range(0, near.Count)].position : KitClamp(player.transform.position + (Vector3)(Random.insideUnitCircle * 8f));
                     FireworkBurst(at, evo ? 8 : 6, D * 1.2f);
@@ -301,7 +301,7 @@ public partial class SpecialAbilities
                 }
                 break;
             default:
-                yield return StartCoroutine(HeroKitUlt(id, D, me, mouse, dir, evo));      // 1.1.2 새 캐릭터 (SpecialAbilities.NewHeroes)
+                yield return StartCoroutine(HeroKitUlt(id, D, me, mouse, dir, evo));      // 1.0.2 새 캐릭터 (SpecialAbilities.NewHeroes)
                 break;
         }
     }

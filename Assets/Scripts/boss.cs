@@ -64,7 +64,7 @@ public class bosss : MonoBehaviour
     static bool slimeBossCleared;    // 보스 처치는 한 번만
     // 난이도 배율을 이미 적용했는지
     [HideInInspector] public bool difficultyApplied;
-    // 무한 모드 최종 보스 「개발자」 (1.1.1 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)만 다르고 결계는 쓰지 않음
+    // 무한 모드 최종 보스 「개발자」 (1.0.2 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)만 다르고 결계는 쓰지 않음
     [HideInInspector] public bool developer;
     bool IsSlime => bossKind == 2;
 
@@ -87,7 +87,7 @@ public class bosss : MonoBehaviour
 
     public bool IsDead => isDead;
 
-    // 살아 있는 보스 (1.1.1: 무한 모드 후반엔 여러 보스가 함께 나옴) · 맨 앞 보스가 위쪽 보스 체력바 첫 줄을 씀
+    // 살아 있는 보스 (1.0.2: 무한 모드 후반엔 여러 보스가 함께 나옴) · 맨 앞 보스가 위쪽 보스 체력바 첫 줄을 씀
     public static readonly List<bosss> Live = new List<bosss>();
     public static int LiveCount { get { Live.RemoveAll(b => b == null || b.isDead); return Live.Count; } }
     public static bool KindAlive(int kind) { foreach (bosss b in Live) if (b != null && !b.isDead && b.bossKind == kind) return true; return false; }

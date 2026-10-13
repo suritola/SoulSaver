@@ -13,7 +13,7 @@ public partial class BossSkills : MonoBehaviour
     [HideInInspector] public bool airborne;
     [HideInInspector] public Vector3 landing;
 
-    // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게) · 1.0.9: 3장부터 장마다 더 세게 (Chapters.BossPowerMul)
+    // 보스 공격 피해 배율 (체력을 줄인 대신 공격을 세게) · 1.0.1: 3장부터 장마다 더 세게 (Chapters.BossPowerMul)
     static float Power => 1.25f * Chapters.BossPowerMul;
 
     static readonly Color Soul = new Color(0.55f, 0.95f, 1f, 0.95f);
@@ -344,7 +344,7 @@ public partial class BossSkills : MonoBehaviour
     // 한 대는 어떤 난이도 · 장에서도 최대 체력의 MaxHitShare 를 넘지 않음 (즉사 없음)
     const int UltMaxHits = 2;
     const float UltHitDamage = 16f;
-    const float MaxHitShare = 0.2f;      // 1.0.9: 0.15 → 0.2 (4장 보스를 세게 올린 만큼)
+    const float MaxHitShare = 0.2f;      // 1.0.1: 0.15 → 0.2 (4장 보스를 세게 올린 만큼)
     int ultHits;
 
     bool UltHit(bool inside)

@@ -101,7 +101,7 @@ public static class CharacterUI
         TMP_Text nameText = UIKit.Text(t, name, 30f, unlocked ? Gold : Dim, new Vector2(0f, -100f), new Vector2(230f, 40f));
         string sub = selected ? "선택됨" : unlocked ? d.title : developed ? "잠김" : "준비 중";
         TMP_Text subText = UIKit.Text(t, sub, 20f, selected ? new Color(0.5f, 1f, 0.6f) : Dim, new Vector2(0f, -134f), new Vector2(230f, 30f));
-        // 영웅 숙련도 (1.0.5): 마지막 보스를 쓰러뜨릴 때마다 +1 (단계마다 시작 레벨업 카드 +1) · 칸 위쪽 안
+        // 영웅 숙련도 (1.0.1): 마지막 보스를 쓰러뜨릴 때마다 +1 (단계마다 시작 레벨업 카드 +1) · 칸 위쪽 안
         if (unlocked && Mastery.Level(id) > 0)
         {
             TMP_Text star = UIKit.Text(t, "", 20f, new Color(1f, 0.85f, 0.35f), new Vector2(0f, 142f), new Vector2(230f, 26f));
@@ -112,7 +112,7 @@ public static class CharacterUI
             subText.text = Loc.T("잠김") + " · " + d.price.ToString("N0") + " P";
             subText.color = CharacterData.Points >= d.price && CharacterData.ConditionMet(id) ? new Color(1f, 0.85f, 0.4f) : Dim;
         }
-        // 해제 조건 (1.1.2): 칸 아래쪽에 조건 · 달성하면 초록 체크
+        // 해제 조건 (1.0.2): 칸 아래쪽에 조건 · 달성하면 초록 체크
         if (!unlocked && d.condition != CharUnlock.None)
         {
             bool met = CharacterData.ConditionMet(id);
@@ -157,7 +157,7 @@ public static class CharacterUI
         UIKit.Text(dr, unlocked ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
         UIKit.Text(dr, unlocked ? d.title : developed ? "잠긴 캐릭터" : "준비 중", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
 
-        // 해제 조건 (1.1.2)
+        // 해제 조건 (1.0.2)
         if (!unlocked && d.condition != CharUnlock.None)
         {
             bool met = CharacterData.ConditionMet(id);

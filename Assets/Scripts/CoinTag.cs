@@ -9,7 +9,7 @@ public class CoinTag : MonoBehaviour
     public static void Register(GameObject coin)
     {
         if (coin != null && coin.GetComponent<CoinTag>() == null) coin.AddComponent<CoinTag>();
-        PickupGlow.Add(coin, new Color(1f, 0.82f, 0.3f), 1.1f);       // 1.1.2: 스킬 이펙트에 묻히지 않게
+        PickupGlow.Add(coin, new Color(1f, 0.82f, 0.3f), 1.1f);       // 1.0.2: 스킬 이펙트에 묻히지 않게
     }
 
     void OnEnable() => All.Add(transform);

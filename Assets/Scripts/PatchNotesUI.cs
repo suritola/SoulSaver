@@ -166,7 +166,7 @@ public static class PatchNotesUI
     }
 
     // 마크다운 몇 가지만 TMP 서식으로: # 제목 · ## 소제목 · ### 작은 제목 · - 목록 · **굵게** (글꼴에 없는 이모지는 뺌)
-    // 1.1.2: 언어별 노트 — 짧은 노트 파일 안에 "=== en" · "=== ja" · "=== zh" 줄로 나눈 블록 (맨 앞 블록은 한국어)
+    // 1.0.2: 언어별 노트 — 짧은 노트 파일 안에 "=== en" · "=== ja" · "=== zh" 줄로 나눈 블록 (맨 앞 블록은 한국어)
     // 지금 언어의 블록을 고르고, 없으면 한국어 (예전 노트도 그대로 보임)
     static readonly string[] LangTags = { "ko", "en", "ja", "zh" };
     static string Localize(string text)

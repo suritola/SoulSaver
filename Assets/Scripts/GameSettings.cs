@@ -137,7 +137,7 @@ public static class GameSettings
         set { Load(); damageNumbers = Mathf.Clamp(value, 0, 2); Prefs.SetInt(DamageNumKey, damageNumbers); }
     }
 
-    // 1.1.2: 내 이펙트 투명도 (평타 · 스킬 · 필살기 · 진화 이펙트, 적 공격은 그대로) — 화면이 가득 찰 때 내 캐릭터가 묻히지 않게
+    // 1.0.2: 내 이펙트 투명도 (평타 · 스킬 · 필살기 · 진화 이펙트, 적 공격은 그대로) — 화면이 가득 찰 때 내 캐릭터가 묻히지 않게
     public static readonly float[] MyFxAlphas = { 1f, 0.75f, 0.5f };
     public static readonly string[] MyFxAlphaNames = { "100%", "75%", "50%" };
     public static float MyFxAlpha => MyFxAlphas[MyFxAlphaIndex];

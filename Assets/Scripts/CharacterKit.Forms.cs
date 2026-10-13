@@ -16,12 +16,12 @@ public partial class CharacterKit
     public const int AugEcho = 103, AugVenom = 104, AugVolley = 105;           // 도적
     public const int AugBlast = 106, AugSeek = 107, AugGale = 108;             // 궁수
     public const int AugDouble = 109, AugGiant = 110, AugOverload = 111;       // 연금술사
-    public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.1.2)
+    public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.0.2)
     public const int AugPrecise = 115, AugTwinGear = 116, AugRift = 117;       // 시계공
     public const int AugThickEnvelope = 118, AugBundle = 119, AugRegistered = 120;       // 우체부
     public const int AugDeepChill = 121, AugTwoHands = 122, AugSoulBurst = 123;       // 유령
     public const int AugFirst = 100, AugLast = 123;
-    // 강화 아이콘: 1.1.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
+    // 강화 아이콘: 1.0.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
     public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
     [HideInInspector] public int form = -1;         // 1차 진화 형태 (캐릭터 전용 무기 번호), -1 = 기본

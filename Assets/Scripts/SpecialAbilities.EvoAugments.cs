@@ -15,7 +15,7 @@ public partial class SpecialAbilities
     public int UltId => WeaponActive ? CurrentWeapon : Gunner ? (gunEvo2 >= 0 ? gunEvo2 : gunEvo1) : (Kit != null ? Kit.form : -1);
     public bool UltActive => UltId >= 0;
 
-    // 필살기에 덧붙는 궁극기들 (1.1.0): 거너는 1차 · 2차 진화가 다르면 둘 다 (예전엔 2차 것만 남아 쌍권총 → 낫이면 총알 폭풍이 사라졌음)
+    // 필살기에 덧붙는 궁극기들 (1.0.2): 거너는 1차 · 2차 진화가 다르면 둘 다 (예전엔 2차 것만 남아 쌍권총 → 낫이면 총알 폭풍이 사라졌음)
     public List<int> AddedUltIds()
     {
         List<int> ids = new List<int>();
@@ -118,7 +118,7 @@ public partial class SpecialAbilities
         };
     }
 
-    // 번개 그물 (1.0.8, 예전 「낙뢰탄」: 여섯 번마다 낙뢰 — 잘 보이지 않고 전기탄과 겹쳤음)
+    // 번개 그물 (1.0.1, 예전 「낙뢰탄」: 여섯 번마다 낙뢰 — 잘 보이지 않고 전기탄과 겹쳤음)
     // 맞힌 적과 바로 전에 맞힌 적 사이에 번개 줄 → 무리 양 끝을 번갈아 쏘면 그 사이가 그물로 덮임
     void NetHit(Transform hit)
     {
@@ -206,7 +206,7 @@ public partial class SpecialAbilities
         if (HasAug(FlameId))
         {
             bool hell = AugMaxed(FlameId);
-            float range = hell ? 6.5f : 5f, half = hell ? 30f : 24f;     // 1.0.5: 쌍발 총구만 고르던 것 → 다른 진화 강화
+            float range = hell ? 6.5f : 5f, half = hell ? 30f : 24f;     // 1.0.1: 쌍발 총구만 고르던 것 → 다른 진화 강화
             float hit = Damage * (hell ? 0.65f : 0.45f) * AugPower(FlameId);
             foreach (Collider2D c in Specials.Overlap(start, range, gunHits))
             {

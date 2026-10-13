@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 카드 다시 뽑기 연출 (1.0.7): 카드가 반짝이며 부풀고 → 불꽃이 사방으로 터지며 → 새 카드가 좌우로 뒤집히듯 나타남
+// 카드 다시 뽑기 연출 (1.0.1): 카드가 반짝이며 부풀고 → 불꽃이 사방으로 터지며 → 새 카드가 좌우로 뒤집히듯 나타남
 // 세 장이 조금씩 엇갈려 차례로 바뀜. 연출 동안(약 0.45초)은 카드를 고르지 못하게 (바뀌는 도중 잘못 고르지 않게)
 // 레벨업 창은 멈춘 시간(timeScale 0)이라 실제 시간으로 움직임
 public partial class LevelShop

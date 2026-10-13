@@ -10,7 +10,7 @@ public class ESCmenu : MonoBehaviour
     private bool isEscOpen = false;
     private bool isShopOpen = false;
     // 열기 전 시간 배율 (레벨업 창 위에서 열었다 닫아도 그대로 멈춰 있도록)
-    // 1.0.7: 상점 카운트다운이 일시정지 메뉴가 열린 동안 끝나면 여기를 1로 (닫을 때 멈춘 채 남지 않게)
+    // 1.0.1: 상점 카운트다운이 일시정지 메뉴가 열린 동안 끝나면 여기를 1로 (닫을 때 멈춘 채 남지 않게)
     static float timeScaleBeforeOpen = 1f;
     public static void ResumeAt(float scale) => timeScaleBeforeOpen = scale;
     // Start is called before the first frame update
@@ -32,7 +32,7 @@ public class ESCmenu : MonoBehaviour
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
         if (confirm != null) { CloseConfirm(); return; }
-        // 1.0.7: 상점을 닫은 뒤 1초 카운트다운 동안은 ESC 를 받지 않음
+        // 1.0.1: 상점을 닫은 뒤 1초 카운트다운 동안은 ESC 를 받지 않음
         // (이때 일시정지 메뉴를 열면 「멈춘 상태」를 기억했다가 닫을 때 그대로 되돌려 게임이 영영 멈췄음)
         if (shop != null && shop.isPause) return;
         if (isShopOpen)
@@ -128,7 +128,7 @@ public class ESCmenu : MonoBehaviour
         }
         else
         {
-            // 1.0.7: 되돌릴 값이 「멈춤」인데 실제로 멈춰 둘 창(상점 · 레벨업 · 고르기 · 영혼 트리 · 진화 · 연출)이 없으면 다시 흐르게 (어떤 길로든 영영 멈추지 않게)
+            // 1.0.1: 되돌릴 값이 「멈춤」인데 실제로 멈춰 둘 창(상점 · 레벨업 · 고르기 · 영혼 트리 · 진화 · 연출)이 없으면 다시 흐르게 (어떤 길로든 영영 멈추지 않게)
             float back = timeScaleBeforeOpen;
             if (back <= 0f && !SomethingHoldsPause()) back = 1f;
             Time.timeScale = back;

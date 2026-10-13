@@ -65,7 +65,7 @@ public partial class LevelShop
             row.name.text = "<size=70%>" + Loc.T("진화") + " · " + tag + "</size>\n" + Loc.T(e.name);
         }
         ShowRecommend(ids);
-        ShowSynergyTags(ids);         // 1.0.5: 가진 카드와 어울리는 카드에 「시너지」
+        ShowSynergyTags(ids);         // 1.0.1: 가진 카드와 어울리는 카드에 「시너지」
     }
 
     // ================================================================= 추천 카드 (2.1.6~)

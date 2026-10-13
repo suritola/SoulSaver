@@ -1,9 +1,9 @@
 using UnityEngine;
 
 // 캐릭터: 거너(기본) · 검사 · 도적은 처음부터, 궁수 · 연금술사는 포인트로 구매
-// 1.1.2~ 지도 제작자 · 시계공 · 우체부 · 유령: 해제 조건을 달성한 뒤 포인트로 구매 (CharacterKit.<캐릭터>.cs), 마지막 한 칸은 준비 중
+// 1.0.2~ 지도 제작자 · 시계공 · 우체부 · 유령: 해제 조건을 달성한 뒤 포인트로 구매 (CharacterKit.<캐릭터>.cs), 마지막 한 칸은 준비 중
 // 스탯은 모두 거너를 1(100%)로 한 배율. 고른 캐릭터 · 잠금 해제 · 보유 포인트는 PlayerPrefs에 저장
-// 캐릭터 해제 조건 (1.1.2): 조건을 달성해야 포인트로 살 수 있음 (달성 기록은 저장)
+// 캐릭터 해제 조건 (1.0.2): 조건을 달성해야 포인트로 살 수 있음 (달성 기록은 저장)
 public enum CharUnlock { None = 0, Endless10 = 1, EndlessBosses5 = 2, EasyFast = 3, EndlessClear = 4 }
 
 public enum CharacterId { Gunner = 0, Swordsman = 1, Rogue = 2, Archer = 3, Alchemist = 4, Cartographer = 5, Clockmaker = 6, Postman = 7, Ghost = 8, Slot10 = 9 }
@@ -39,7 +39,7 @@ public static class CharacterData
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
             weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
-            hp = 1.3f, damage = 3.4f, attackSpeed = 0.55f,     // 1.0.5: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
+            hp = 1.3f, damage = 3.4f, attackSpeed = 0.55f,     // 1.0.1: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
             gauge = 0.85f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
@@ -63,7 +63,7 @@ public static class CharacterData
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
             hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
-        // ---------------- 1.1.2 새 캐릭터: 해제 조건 달성 뒤 포인트로
+        // ---------------- 1.0.2 새 캐릭터: 해제 조건 달성 뒤 포인트로
         new CharacterDef {
             name = "지도 제작자", title = "길 잃은 측량사", body = "cartographer", held = "quill",
             description = "깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 세 획마다 저절로 그려지는 도형으로 안쪽을 통째로 짓이깁니다.",
@@ -153,7 +153,7 @@ public static class CharacterData
 
     public static CharacterDef Current => Def(Selected);
     public static bool IsGunner => Selected == CharacterId.Gunner;
-    // 1.1.2 새 캐릭터 (지도 제작자 · 시계공 · 우체부 · 유령)
+    // 1.0.2 새 캐릭터 (지도 제작자 · 시계공 · 우체부 · 유령)
     public static bool IsNewHero(CharacterId id) => id >= CharacterId.Cartographer && id <= CharacterId.Ghost;
 
     // ================================================================= 포인트 (적 처치 등으로 쌓이고 캐릭터 구매에 씀)
@@ -201,7 +201,7 @@ public static class CharacterData
 
     public static void Save() => Prefs.Save();
 
-    // ================================================================= 해제 조건 (1.1.2)
+    // ================================================================= 해제 조건 (1.0.2)
     const string ConditionKey = "char.cond.";
     public static bool ConditionMet(CharUnlock c) => c == CharUnlock.None || Prefs.GetInt(ConditionKey + (int)c, 0) == 1;
     public static bool ConditionMet(CharacterId id) => ConditionMet(Def(id).condition);

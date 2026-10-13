@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 여러 장 중 하나를 고르는 창 (1.0.5): 보물 상자 · 보스 보상 3택 · 저주 제단
+// 여러 장 중 하나를 고르는 창 (1.0.1): 보물 상자 · 보스 보상 3택 · 저주 제단
 // 카드마다 그림(Icons/choice_<이름>, tools/pixelart/make_choice_icons.py) · 이름 · 설명
 // 누르거나 숫자 키로 고르고(금빛 테두리), 더블클릭 · [Space] · [Enter]로 확정 (레벨업 카드와 같은 방식)
 // 열린 동안 게임이 멈추고 ESC 메뉴 · 보스 결계는 열리지 않음

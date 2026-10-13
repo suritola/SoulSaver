@@ -19,7 +19,7 @@ public static class SkillEvoCodexUI
     static readonly Color Purple = new Color(0.79f, 0.63f, 1f);
 
     // 탭: 거너 · 검사 · 도적 · 궁수 · 연금술사 · 공통
-    // 탭: 만들어진 캐릭터마다 하나 + 마지막에 「모든 캐릭터」 (1.1.2: 새 캐릭터가 늘어 5명 고정에서 바꿈)
+    // 탭: 만들어진 캐릭터마다 하나 + 마지막에 「모든 캐릭터」 (1.0.2: 새 캐릭터가 늘어 5명 고정에서 바꿈)
     static readonly List<CharacterId> heroes = new List<CharacterId>();
     static int CommonTab => heroes.Count;
 

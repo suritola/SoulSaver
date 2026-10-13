@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 시계공 (1.1.2): 톱니바퀴를 던져 싸우는 장인
+// 시계공 (1.0.2): 톱니바퀴를 던져 싸우는 장인
 //   평타 · 톱니 투척: 회전하는 톱니. 맞힐 때마다 시계 눈금이 하나씩 차고 (발밑 고리), 다 차면 다음 톱니가 「정각」 —
 //                     크고 금빛인 톱니가 모든 적을 꿰뚫고 처음 맞힌 자리에서 터짐
 //   우클릭 · 되감기: 누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아감.
@@ -150,7 +150,7 @@ public partial class CharacterKit
     // 발밑 시계 눈금 고리
     void DrawClockRing()
     {
-        // 1.1.2: 이펙트 · 적에 묻혀 안 보이던 것 — 어두운 문자판 테두리 위에 굵고 밝은 눈금, 스킬 이펙트(+40)보다 위 순서로
+        // 1.0.2: 이펙트 · 적에 묻혀 안 보이던 것 — 어두운 문자판 테두리 위에 굵고 밝은 눈금, 스킬 이펙트(+40)보다 위 순서로
         if (clockRing == null)
         {
             clockDial = Hostile.NewLine("ClockDial", new Color(0.08f, 0.05f, 0.12f, 0.75f), 0.3f, 58);
@@ -214,7 +214,7 @@ public partial class CharacterKit
             CancelRewind();
     }
 
-    // 1.1.2: 멈춤 · 연출 · 사망으로 우클릭 처리가 끊기면 잔상 · 경로가 화면에 남고, 다시 움직일 때 저절로 되감기던 것 — 취소
+    // 1.0.2: 멈춤 · 연출 · 사망으로 우클릭 처리가 끊기면 잔상 · 경로가 화면에 남고, 다시 움직일 때 저절로 되감기던 것 — 취소
     void CancelRewind()
     {
         rewinding = false;
@@ -254,7 +254,7 @@ public partial class CharacterKit
     }
 
     // 되감기 미리 보기: 3초 전의 내 모습 · 지나온 길(판정 폭 그대로) · 도착 둘레(멈춤 · 되갚기 범위)
-    // 1.1.2: 예전엔 경로가 판정(폭 3.2)보다 가늘게(1.2) 그려졌고, 무기 진화 뒤 덧붙는 궁극기 범위를 그리면 경로가 꺼졌으며, 잔상이 스킬 이펙트에 묻혔음
+    // 1.0.2: 예전엔 경로가 판정(폭 3.2)보다 가늘게(1.2) 그려졌고, 무기 진화 뒤 덧붙는 궁극기 범위를 그리면 경로가 꺼졌으며, 잔상이 스킬 이펙트에 묻혔음
     void DrawRewindPreview(Vector3 to, float pastHp)
     {
         if (rewindGhost == null)

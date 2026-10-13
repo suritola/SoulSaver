@@ -242,10 +242,10 @@ public static partial class LocTable
         { "의식이 깨졌다! 리치 왕이 휘청인다!", L("The rite is broken! The Lich King staggers!", "儀式が破れた！リッチキングがよろめく！", "仪式被打破！巫妖王踉跄了！") },
         { "지옥의 군주가 날개를 편다!", L("The Hell Lord spreads its wings!", "地獄の君主が翼を広げた！", "地狱领主展开了双翼！") },
         { "지옥이 무너진다! 가장자리가 용암으로 차오른다!", L("Hell is collapsing! Lava rises from the edges!", "地獄が崩れる！外周から溶岩が迫る！", "地狱正在崩塌！熔岩从边缘涌来！") },
-        // 최후의 보루 (LastStand, 1.0.5)
+        // 최후의 보루 (LastStand, 1.0.1)
         { "최후의 보루!", L("Last Stand!", "最後の砦！", "最后的堡垒！") },
         { "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.", L("When your HP drops below 30%, Last Stand triggers once per chapter: 2 seconds of invincibility and a blast that pushes nearby enemies away.", "体力が30%を下回ると、章ごとに一度「最後の砦」が発動し、2秒間無敵になって周囲の敵を押し返します。", "生命低于30%时，每章触发一次「最后的堡垒」：无敌2秒并击退周围敌人。") },
-        // 영혼 트리 가지 끝 칸 (1.0.5)
+        // 영혼 트리 가지 끝 칸 (1.0.1)
         { "꺾이지 않는 의지", L("Unbroken Will", "折れない意志", "不屈意志") },
         { "「최후의 보루」가 장마다 한 번 더 발동합니다", L("Last Stand triggers one more time per chapter", "「最後の砦」が章ごとにもう一度発動します", "「最后的堡垒」每章多触发一次") },
         { "되살아난 영혼", L("Risen Soul", "蘇る魂", "复苏之魂") },
@@ -258,7 +258,7 @@ public static partial class LocTable
         { "행운 +1", L("Luck +1", "幸運+1", "幸运+1") },
         { "행운 +1 — 이미 가진 카드 · 진화 재료 카드가 레벨업에 더 자주 나옵니다", L("Luck +1 — cards you already own and evolution ingredients show up more often on level-up", "幸運+1 — 持っているカード・進化素材のカードがレベルアップでより頻繁に出ます", "幸运+1 — 已拥有的卡牌 · 进化材料卡牌在升级时更常出现") },
         { "레벨업 카드 다시 뽑기 +3", L("Level-up card rerolls +3", "レベルアップカードの引き直し+3", "升级卡牌重抽+3") },
-        // 장 중반 이벤트 · 보물 상자 · 고르기 창 (1.0.5)
+        // 장 중반 이벤트 · 보물 상자 · 고르기 창 (1.0.1)
         { "보물 상자", L("Treasure Chest", "宝箱", "宝箱") },
         { "보물 상자가 나타났다!", L("A treasure chest appeared!", "宝箱が現れた！", "宝箱出现了！") },
         { "코인 +{0}", L("Coins +{0}", "コイン +{0}", "金币 +{0}") },
@@ -268,7 +268,7 @@ public static partial class LocTable
         { "체력을 모두 회복하고 최대 체력 +10", L("Fully restore HP and +10 max HP", "体力を全回復し、最大体力+10", "完全恢复生命并提升最大生命+10") },
         { "하나를 고르세요", L("Choose one", "ひとつ選んでください", "请选择一项") },
         { "습격!\n모두 쓰러뜨리면 보물 상자가 나타납니다", L("Ambush!\nDefeat them all to reveal a treasure chest", "襲撃！\nすべて倒すと宝箱が現れます", "伏击！\n全部击败后会出现宝箱") },
-        // 저주 제단 (Curse, 1.0.5)
+        // 저주 제단 (Curse, 1.0.1)
         { "저주를 받는다", L("Accept the curse", "呪いを受ける", "接受诅咒") },
         { "이번 장 적 · 보스 체력 +30%\n경험치 · 코인 보상 +50%", L("Enemy and boss HP +30% this chapter\nEXP and coin rewards +50%", "この章の敵・ボスの体力+30%\n経験値・コイン報酬+50%", "本章敌人与首领生命+30%\n经验与金币奖励+50%") },
         { "거절한다", L("Refuse", "断る", "拒绝") },
@@ -276,25 +276,25 @@ public static partial class LocTable
         { "저주 제단", L("Cursed Altar", "呪いの祭壇", "诅咒祭坛") },
         { "위험을 감수하면 더 큰 보상을 얻습니다", L("Take the risk for a bigger reward", "危険を冒せば、より大きな報酬を得られます", "甘冒风险，获得更大回报") },
         { "저주를 받았다!\n적 체력 +30% · 보상 +50%", L("You are cursed!\nEnemy HP +30% · Rewards +50%", "呪いを受けた！\n敵の体力+30%・報酬+50%", "你受到了诅咒！\n敌人生命+30% · 奖励+50%") },
-        // 보스 보상 3택 (1.0.5)
+        // 보스 보상 3택 (1.0.1)
         { "전설의 힘", L("Legendary Might", "伝説の力", "传说之力") },
         { "공격력 +10% (영구 지속)", L("Attack +10% (permanent)", "攻撃力+10%（永続）", "攻击力+10%（永久持续）") },
         { "영혼 조각 다발", L("Soul Shard Bundle", "魂のかけらの束", "一束灵魂碎片") },
         { "생명의 정수", L("Essence of Life", "生命の精髄", "生命精华") },
         { "최대 체력 +20, 체력 모두 회복", L("Max HP +20 and fully restore HP", "最大体力+20、体力全回復", "最大生命+20，完全恢复生命") },
         { "보스 보상", L("Boss Reward", "ボス報酬", "首领奖励") },
-        // 빌드 시너지 (1.0.5)
+        // 빌드 시너지 (1.0.1)
         { "시너지", L("Synergy", "シナジー", "协同") },
-        // 영웅 숙련도 (Mastery, 1.0.5)
+        // 영웅 숙련도 (Mastery, 1.0.1)
         { "숙련 {0}/{1}", L("Mastery {0}/{1}", "熟練 {0}/{1}", "熟练 {0}/{1}") },
         { "숙련 보너스: 레벨업 카드 +{0}", L("Mastery bonus: level-up cards +{0}", "熟練ボーナス：レベルアップカード+{0}", "熟练奖励：升级卡牌+{0}") },
         { "영웅 숙련도가 올랐다!", L("Hero mastery increased!", "英雄の熟練度が上がった！", "英雄熟练度提升了！") },
-        // 고르기 창 확정 안내 (1.0.5)
+        // 고르기 창 확정 안내 (1.0.1)
         { "더블클릭 또는 [Space]로 확정", L("Double-click or press [Space] to confirm", "ダブルクリックまたは[Space]で決定", "双击或按[Space]确认") },
-        // 레벨업 · 영혼 트리 알림 (1.0.7)
+        // 레벨업 · 영혼 트리 알림 (1.0.1)
         { "레벨업 카드를 아직 고르지 않았습니다!", L("You still have level-up cards to pick!", "まだレベルアップカードを選んでいません！", "还有升级卡牌未选择！") },
         { "영혼 트리에서 배울 칸이 있습니다!", L("You can learn new soul tree nodes!", "魂のツリーで覚えられるマスがあります！", "灵魂树中有可学习的节点！") },
-        // 받은 피해 출처 (AttackLabel, 1.0.5)
+        // 받은 피해 출처 (AttackLabel, 1.0.1)
         { "대점프", L("Big Leap", "大ジャンプ", "大跳跃") },
         { "점액 방울", L("Slime Blobs", "粘液の玉", "粘液球") },
         { "구르기 돌진", L("Rolling Charge", "転がり突進", "翻滚冲撞") },

@@ -16,7 +16,7 @@ public static class Fx
         return frames;
     }
 
-    // 1.1.2: 강해질수록 화려하게 — 플레이어가 낸 이펙트는 무기 진화 단계(기본 → 1차 강화 → 2차 진화)를 따라
+    // 1.0.2: 강해질수록 화려하게 — 플레이어가 낸 이펙트는 무기 진화 단계(기본 → 1차 강화 → 2차 진화)를 따라
     // 같은 크기의 _t2 · _t3 시트(광채 · 고리 · 파편 · 2차 폭발이 더해진 그림)로 바꿔 그림. 진화한 특수 능력은 바로 _t3. 시트가 없으면 기본 그대로
     public static int TierOf(string source)
     {
@@ -46,7 +46,7 @@ public static class Fx
 
     // 1.8.7: 이펙트를 더 잘 보이게 — 장식 이펙트는 1.3배로 키우고, 크기가 곧 판정 범위인 이펙트는 그대로 (범위를 속이지 않게)
     // 모든 이펙트에 짙은 윤곽선 · 채도 · 밝기 (SpriteOutline.EffectMaterial)
-    const float DecorScale = 1.45f;        // 1.1.1: 1.3 → 1.45 (장식만, 판정 범위인 이펙트는 그대로)
+    const float DecorScale = 1.45f;        // 1.0.2: 1.3 → 1.45 (장식만, 판정 범위인 이펙트는 그대로)
     static readonly HashSet<string> AreaFx = new HashSet<string>
     {
         "fx_shock", "fx_explosion", "fx_rune", "fx_reticle", "fx_warn", "fx_target_rune", "fx_puddle", "fx_vortex",
@@ -58,7 +58,7 @@ public static class Fx
     // 2.1.3: 플레이어 스킬(필살기 · 특수 능력 · 고유 스킬 · 영혼 트리 · 진화) 이펙트를 확 눈에 띄게
     // 지금 스킬이 쓰는 중인지는 DamageSource 로 앎 (평타 · 적 · 맞은 불꽃 · 처치 연출은 그대로)
     //   더 크게(장식만, 범위가 곧 판정인 이펙트는 그대로) · 더 밝고 진하게 · 적 이펙트 위에 · 밑에 빛 번짐
-    const float SkillDecor = 1.4f;         // 1.1.1: 1.25 → 1.4
+    const float SkillDecor = 1.4f;         // 1.0.2: 1.25 → 1.4
     const int SkillOrder = 40;
     static readonly HashSet<string> NoBoost = new HashSet<string>
     {
@@ -70,18 +70,18 @@ public static class Fx
         return s != null && s != DamageSource.Basic && s != DamageSource.Other && !NoBoost.Contains(name);
     }
 
-    // 1.1.2: 플레이어가 낸 이펙트(평타 포함)는 설정의 「내 이펙트 투명도」를 따름 — 적 공격 · 처치 연출은 그대로
+    // 1.0.2: 플레이어가 낸 이펙트(평타 포함)는 설정의 「내 이펙트 투명도」를 따름 — 적 공격 · 처치 연출은 그대로
     static bool Mine => DamageSource.Current != null && DamageSource.Current != DamageSource.Other;
     static readonly HashSet<string> Markers = new HashSet<string> { "fx_warn", "fx_reticle", "fx_target_rune" };     // 조준 · 경고 표시는 흐리게 하지 않음
     static Color MyAlpha(Color c, string name = null) { if (Mine && (name == null || !Markers.Contains(name))) c.a *= GameSettings.MyFxAlpha; return c; }
 
-    static Color Brighten(Color c) => new Color(Mathf.Lerp(c.r, 1f, 0.35f), Mathf.Lerp(c.g, 1f, 0.35f), Mathf.Lerp(c.b, 1f, 0.35f), Mathf.Max(c.a, 0.97f));     // 1.1.1: 0.25 → 0.35
+    static Color Brighten(Color c) => new Color(Mathf.Lerp(c.r, 1f, 0.35f), Mathf.Lerp(c.g, 1f, 0.35f), Mathf.Lerp(c.b, 1f, 0.35f), Mathf.Max(c.a, 0.97f));     // 1.0.2: 0.25 → 0.35
 
     // 이펙트 밑에 잠깐 번지는 빛 (Glow 스프라이트는 지름 약 8칸 = 크기 1)
     static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
     {
         if (Hostile.Glow == null || size < 1.2f) return;
-        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.7f / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.7f)), layer, order - 1, 0.38f);     // 1.1.1: 더 크고 진하게
+        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.7f / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.7f)), layer, order - 1, 0.38f);     // 1.0.2: 더 크고 진하게
     }
 
     static void Style(SpriteRenderer sr)

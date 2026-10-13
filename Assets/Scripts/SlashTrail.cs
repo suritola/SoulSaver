@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 날아가는 검기의 잔상 (1.0.5): 총알처럼 둥근 빛 · 꼬리가 붙어 총알 같던 것을, 초승달 칼날 모양 그대로 옅어지는 잔상으로
+// 날아가는 검기의 잔상 (1.0.1): 총알처럼 둥근 빛 · 꼬리가 붙어 총알 같던 것을, 초승달 칼날 모양 그대로 옅어지는 잔상으로
 // CharacterKit.Projectile · SignatureSkills.Shot 에서 fx_swordwave 일 때 붙임
 public class SlashTrail : MonoBehaviour
 {

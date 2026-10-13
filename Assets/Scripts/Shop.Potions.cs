@@ -18,7 +18,7 @@ public partial class Shop
 
     readonly int[] potionPrice = new int[Potions.Length];
 
-    // 1.0.8: 상점 창은 Shop.Window 가 새로 그림 (물약은 그림 카드)
+    // 1.0.1: 상점 창은 Shop.Window 가 새로 그림 (물약은 그림 카드)
     void BuildPotions() => BuildWindow();
 
     void BuyPotion(int id)

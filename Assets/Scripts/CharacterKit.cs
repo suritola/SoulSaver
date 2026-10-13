@@ -33,7 +33,7 @@ public partial class CharacterKit : MonoBehaviour
     // 무기 진화 뒤에는 진화 무기 필살기를 꾹 눌러 조준하는 동안도 같게 셈 (회전 베기 · 대폭발이 없어져도 카드가 쓸모 있게)
     public bool Charging => charging;
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
-    // 궁수: 시위를 당기는 동안 40% 느려짐 (1.0.8: 쏘면서 마음대로 도망칠 수 있어 위험이 없었음)
+    // 궁수: 시위를 당기는 동안 40% 느려짐 (1.0.1: 쏘면서 마음대로 도망칠 수 있어 위험이 없었음)
     public float MoveMul => DrawsBow && drawing ? 0.6f : 1f;
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
@@ -47,9 +47,9 @@ public partial class CharacterKit : MonoBehaviour
     float draw;
     LineRenderer bowLine;
     bool fullPlayed;
-    // 1.0.8 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
+    // 1.0.1 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
     float fullAt;
-    const float PerfectWindow = 0.5f, TrembleAfter = 0.9f;      // 1.0.8: 0.2초는 너무 빡빡했음
+    const float PerfectWindow = 0.5f, TrembleAfter = 0.9f;      // 1.0.1: 0.2초는 너무 빡빡했음
     const float DrawPower = 1.9f, PerfectPower = 3f, MinHeldPower = 1.6f;
     const float PierceFalloff = 0.85f;       // 꿰뚫을 때마다 피해 -15% (일렬 쓸어 버리기가 너무 셌음)
 
@@ -261,7 +261,7 @@ public partial class CharacterKit : MonoBehaviour
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
             loop.frames = f;
             loop.spin = spin ? -900f : 0f;
-            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.5)
+            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.1)
         }
         return b;
     }
@@ -354,7 +354,7 @@ public partial class CharacterKit : MonoBehaviour
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
-            Specials.Damage(c.gameObject, Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.5: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
+            Specials.Damage(c.gameObject, Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.1: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
             OnSwingHit(c, hits == 0);
             SignatureSkills.SwingHit(c);
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
@@ -452,7 +452,7 @@ public partial class CharacterKit : MonoBehaviour
             Fx.Spawn("fx_sparkle", start, 1.6f, new Color(1f, 0.9f, 0.5f), 24f);
         }
 
-        // 1.0.8: 가득 차도 저절로 쏘지 않음 — 놓는 순간이 중요 (버프 · 자동 조작은 예전처럼)
+        // 1.0.1: 가득 차도 저절로 쏘지 않음 — 놓는 순간이 중요 (버프 · 자동 조작은 예전처럼)
         if (GameInput.FireHeld && canDraw && (draw < 1f || !autoRelease)) return;
 
         // 발사: 피해 30% → 280%, 화살 속도 35 → 95 (연타보다 끝까지 당기는 쪽이 초당 피해가 높게)
@@ -510,7 +510,7 @@ public partial class CharacterKit : MonoBehaviour
         // 현자의 돌이면 모두 불안정, 불안정 연구면 확률이 오름
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
         if (depth == 0 && ForceUnstable()) unstable = true;
-        // 불안정도 (1.1.2): 던질 때마다 오르고, 높을수록 크고 아프게 터짐
+        // 불안정도 (1.0.2): 던질 때마다 오르고, 높을수록 크고 아프게 터짐
         float instR = InstRadiusMul, instD = InstDamageMul;
         if (depth == 0) AddInstability(unstable ? 12f : 5f);
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
@@ -617,7 +617,7 @@ public partial class CharacterKit : MonoBehaviour
                 bool recast = Time.time < recastUntil;
                 if (GameInput.UltDown && !Dashing && (full || recast)) ultAiming = true;
                 if (!ultAiming) break;
-                DrawUltAim(true, AddedUltShown && !recast);      // 1.0.7: 게이지 돌진이면 덧붙은 궁극기 범위도
+                DrawUltAim(true, AddedUltShown && !recast);      // 1.0.1: 게이지 돌진이면 덧붙은 궁극기 범위도
                 if (GameInput.UltHeld && !GameInput.UltUp) break;
                 CancelUltAim();
                 if (Dashing || !(full || Time.time < recastUntil)) break;
@@ -676,7 +676,7 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAimRing != null) ultAimRing.enabled = false;
     }
 
-    // 무기 진화 뒤 덧붙는 궁극기가 있으면 그 범위도 조준 중에 보여 줌 (1.0.7)
+    // 무기 진화 뒤 덧붙는 궁극기가 있으면 그 범위도 조준 중에 보여 줌 (1.0.1)
     bool AddedUltShown => Special != null && Special.KitWeaponUltActive;
 
     // dash: 도적은 먼저 돌진하므로 돌진 경로와 도착 지점 기준 범위를 보여 줌 · shape: 전용 무기 궁극기 범위까지
@@ -796,7 +796,7 @@ public partial class CharacterKit : MonoBehaviour
         ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
         ring.startWidth = ring.endWidth = 0.1f + 0.15f * charge;
         if (sword && Random.value < 0.4f) Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
-        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.7: 덧붙는 궁극기(예: 망치 대지 진동의 충격파 길)도 차징하는 동안 보여 줌
+        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기(예: 망치 대지 진동의 충격파 길)도 차징하는 동안 보여 줌
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         charging = false;
@@ -807,7 +807,7 @@ public partial class CharacterKit : MonoBehaviour
             // 회전 베기: 누른 만큼 강해짐
             float dmg = Damage * (3f + 5f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
-            PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.5)
+            PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.1)
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Spawn("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -938,7 +938,7 @@ public partial class CharacterKit : MonoBehaviour
         }
     }
 
-    // 1.0.5: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
+    // 1.0.1: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
     float hasteUntil;
     bool hasted;
     IEnumerator DashHaste(float seconds, float mul)
@@ -973,7 +973,7 @@ public partial class CharacterKit : MonoBehaviour
     IEnumerator ArrowRain(Vector3 center)
     {
         Play("bowtwang", 0.8f, 0.85f);
-        PlayerMotion.Of(this).Recoil(Vector2.up + (Vector2)(center - transform.position).normalized * 0.3f, 1.5f);     // 몸동작: 하늘로 쏘며 뒤로 젖혀짐 (1.0.5)
+        PlayerMotion.Of(this).Recoil(Vector2.up + (Vector2)(center - transform.position).normalized * 0.3f, 1.5f);     // 몸동작: 하늘로 쏘며 뒤로 젖혀짐 (1.0.1)
         float radius = 4f * UltMul;
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         SignatureSkills.Rain(center, radius);
@@ -1023,7 +1023,7 @@ public partial class CharacterKit : MonoBehaviour
         aimRing.enabled = true;
         Hostile.SetArc(aimRing, at, 4f * UltMul, 0f, 360f);
         aimRing.startColor = aimRing.endColor = new Color(0.6f, 1f, 0.5f, 0.5f + 0.3f * Mathf.Sin(Time.time * 14f));
-        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.7: 덧붙는 궁극기 범위도
+        if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기 범위도
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         aiming = false;

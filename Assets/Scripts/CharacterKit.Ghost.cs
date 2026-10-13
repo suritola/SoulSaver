@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 유령 (1.1.2): 죽지 못한 영혼
+// 유령 (1.0.2): 죽지 못한 영혼
 //   평타 · 차가운 손길: 앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓음 (다섯 번 쌓이면 1초 얼어붙음)
 //   영혼(도깨비불): 적을 쓰러뜨리면 확률로(20%) 영혼이 생겨 몸 둘레를 돎 (최대 4). 맞을 때 영혼이 대신 사라지며 피해를 막음
 //   우클릭 · 빙의: 누르고 있으면 마우스 가까운 적에 표시, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨림
@@ -25,7 +25,7 @@ public partial class CharacterKit
 
     // 영혼 (도깨비불)
     public int Wisps { get; private set; }
-    public int WispMax => 4 + card[5];         // 1.1.1 조정: 6 + 2 → 4 + 1 (카드 5 · 6 · 7)
+    public int WispMax => 4 + card[5];         // 1.0.2 조정: 6 + 2 → 4 + 1 (카드 5 · 6 · 7)
     readonly List<FxAnim> wispFx = new List<FxAnim>();
     static readonly List<Collider2D> ghostHits = new List<Collider2D>(64);
 
@@ -43,7 +43,7 @@ public partial class CharacterKit
         Play("freeze", 0.2f, 1.4f);
     }
 
-    // 1.1.2: 판정을 보이는 그림에 맞춤 — 적의 중심이 아니라 몸(콜라이더) 크기까지, 손끝의 뼈 손 그림 둘레까지,
+    // 1.0.2: 판정을 보이는 그림에 맞춤 — 적의 중심이 아니라 몸(콜라이더) 크기까지, 손끝의 뼈 손 그림 둘레까지,
     // 손이 길어지면(HandReachMul) 찾는 범위도 같이 (예전엔 기본 길이로만 찾아 먼 쪽 적이 빠졌음)
     const float HandHalfWidth = 0.9f, HandTipRadius = 1.3f;
     static float BodyRadius(Collider2D c) => Mathf.Max(c.bounds.extents.x, c.bounds.extents.y) * 0.8f;
@@ -102,7 +102,7 @@ public partial class CharacterKit
     }
 
     // 눈보라 (진화): 손이 지난 자리에 1.5초 냉기 안개
-    // 1.1.2: 예전엔 손 길이만 한 동그란 구름(지름 ≈ 길이 × 1.45)이 한 번 재생되고 사라져, 보이는 범위 · 시간과 판정(폭 1칸 · 1.5초)이 달랐음
+    // 1.0.2: 예전엔 손 길이만 한 동그란 구름(지름 ≈ 길이 × 1.45)이 한 번 재생되고 사라져, 보이는 범위 · 시간과 판정(폭 1칸 · 1.5초)이 달랐음
     //        → 손이 지난 띠 모양으로 늘인 안개가 1.5초 동안 그대로 남고, 그 띠(반폭 1.2칸 + 적 몸 크기)에 닿는 적에게 냉기
     const float TrailHalfWidth = 1.2f;
     IEnumerator FrostTrail(Vector3 a, Vector3 b)
@@ -151,7 +151,7 @@ public partial class CharacterKit
     void GhostKill(Vector3 pos)
     {
         if (Id != CharacterId.Ghost) return;
-        float chance = 0.2f + SignatureSkills.WispChanceBonus();       // 1.1.1 조정: 35% → 20%
+        float chance = 0.2f + SignatureSkills.WispChanceBonus();       // 1.0.2 조정: 35% → 20%
         if (Random.value < chance) AddWisps(1);
         if (card[2] > 0)
         {
@@ -176,7 +176,7 @@ public partial class CharacterKit
         PruneChill();
     }
 
-    // 1.1.2: 쓰러진 그 적만 (예전엔 쓰러진 자리 1칸 안의 살아 있는 얼어붙은 적으로도 터졌고, 같은 적이 여러 번 터뜨릴 수 있었음)
+    // 1.0.2: 쓰러진 그 적만 (예전엔 쓰러진 자리 1칸 안의 살아 있는 얼어붙은 적으로도 터졌고, 같은 적이 여러 번 터뜨릴 수 있었음)
     bool RecentlyFrozenNear(Vector3 pos)
     {
         GameObject hit = null;
@@ -230,7 +230,7 @@ public partial class CharacterKit
         PruneChill();
         while (wispFx.Count < Wisps)
         {
-            FxAnim a = Fx.Play("fx_orb", transform.position, 0.8f, Wraith, 10f, 0f, 21, true, -1f);     // 1.1.2: 0.6 → 0.8 (잘 보이게)
+            FxAnim a = Fx.Play("fx_orb", transform.position, 0.8f, Wraith, 10f, 0f, 21, true, -1f);     // 1.0.2: 0.6 → 0.8 (잘 보이게)
             if (a == null) break;
             wispFx.Add(a);
         }
@@ -249,7 +249,7 @@ public partial class CharacterKit
         }
     }
 
-    // 냉기 표시 (1.1.2): 냉기가 쌓인 적 몸 둘레에 고리 — 쌓인 만큼(얼어붙기까지 필요한 수 중) 차오르고, 얼어붙으면 꽉 찬 고리가 깜빡
+    // 냉기 표시 (1.0.2): 냉기가 쌓인 적 몸 둘레에 고리 — 쌓인 만큼(얼어붙기까지 필요한 수 중) 차오르고, 얼어붙으면 꽉 찬 고리가 깜빡
     readonly Dictionary<GameObject, LineRenderer> chillMarks = new Dictionary<GameObject, LineRenderer>();
     static readonly HashSet<GameObject> chillShown = new HashSet<GameObject>();
     static readonly List<GameObject> chillStale = new List<GameObject>();
@@ -304,7 +304,7 @@ public partial class CharacterKit
     LineRenderer possessRange;          // 빙의 미리 보기: 터질 범위 (반지름 PossessRadius)
     const float PossessRadius = 5f;
 
-    // 1.1.2: 적의 중심이 아니라 몸 가장자리까지의 거리로 고름 (큰 적 · 보스는 몸 위에 마우스를 올려도 안 잡히던 것)
+    // 1.0.2: 적의 중심이 아니라 몸 가장자리까지의 거리로 고름 (큰 적 · 보스는 몸 위에 마우스를 올려도 안 잡히던 것)
     Transform PossessCandidate()
     {
         Vector3 m = ClampRange(transform.position, Mouse, 14f);
@@ -333,7 +333,7 @@ public partial class CharacterKit
     {
         DrawWisps();
         if (possessing) { if (possessAiming) HidePossessAim(); return; }
-        if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.1.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
+        if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.0.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
         if (!possessAiming && GameInput.UltDown && full && Time.timeScale > 0f) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
         if (!possessAiming) return;
         possessTarget = PossessCandidate();
@@ -388,7 +388,7 @@ public partial class CharacterKit
         bool hostDiedEarly = false;
         for (float t = 0f; t < 1f; t += Time.deltaTime)
         {
-            // 1.1.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
+            // 1.0.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
             if (target == null || (host != null && host.IsDead)) { hostDiedEarly = true; break; }
             transform.position = target.position;
             yield return null;
@@ -411,7 +411,7 @@ public partial class CharacterKit
             Specials.Damage(c.gameObject, dmg * 0.5f, (c.transform.position - at).normalized, 3f);
             AddChill(c.gameObject, 3);
         }
-        // 1.1.2: 영혼 폭발 그림이 장식 배율(1.45 × 스킬 1.4)로 지름 20칸쯤 보여 실제 범위(반지름 5칸)의 두 배였음 → 범위에 맞춤
+        // 1.0.2: 영혼 폭발 그림이 장식 배율(1.45 × 스킬 1.4)로 지름 20칸쯤 보여 실제 범위(반지름 5칸)의 두 배였음 → 범위에 맞춤
         Fx.Spawn("fx_soulburst", at, DecorSize(PossessRadius * 2f), Wraith, 16f);
         Fx.Spawn("fx_shock", at, PossessRadius * 2f, Chill, 18f);
         ShockRing.Spawn(at, 0.5f, PossessRadius, 0.4f, Chill, 0.25f);
@@ -425,7 +425,7 @@ public partial class CharacterKit
     }
 
     // 빙의 여운 (카드): 냉기 안개
-    // 1.1.2: 안개 그림(크기 8 → 장식 배율로 지름 16칸쯤)이 판정(반지름 3.5칸)의 두 배 넘게 보였음 → 판정 크기로 + 테두리 고리
+    // 1.0.2: 안개 그림(크기 8 → 장식 배율로 지름 16칸쯤)이 판정(반지름 3.5칸)의 두 배 넘게 보였음 → 판정 크기로 + 테두리 고리
     const float MistRadius = 3.5f;
     IEnumerator PossessMist(Vector3 at, float seconds)
     {

@@ -88,7 +88,7 @@ public class RecommendGlow : MonoBehaviour
             pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
             pr.pivot = new Vector2(0.5f, 0.5f);
             pr.anchoredPosition = Vector2.zero;
-            pr.sizeDelta = new Vector2(360f, 58f);       // 1.0.9: 300×44 → 360×58 (더 잘 보이게)
+            pr.sizeDelta = new Vector2(360f, 58f);       // 1.0.1: 300×44 → 360×58 (더 잘 보이게)
             badge = new GameObject("RecommendBadge", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             RectTransform br = badge.rectTransform;
             br.SetParent(pr, false);
@@ -150,7 +150,7 @@ public class RecommendGlow : MonoBehaviour
         Color c = k < 1f ? Color.Lerp(Gold, Color.white, k) : k < 2f ? Color.Lerp(Color.white, Violet, k - 1f) : Color.Lerp(Violet, Gold, k - 2f);
         rimImg.color = new Color(c.r, c.g, c.b, 0.9f);
 
-        // 1.0.9: 어두운 보라 알약 + 금빛 글씨 → 밝은 금빛 알약 + 진한 갈색 글씨 (대비가 훨씬 큼)
+        // 1.0.1: 어두운 보라 알약 + 금빛 글씨 → 밝은 금빛 알약 + 진한 갈색 글씨 (대비가 훨씬 큼)
         badge.color = new Color(0.22f, 0.08f, 0f);
         pill.color = Color.Lerp(Gold, new Color(1f, 0.97f, 0.75f), breathe * 0.5f);
         pill.rectTransform.localScale = Vector3.one * (1f + 0.1f * breathe);
@@ -191,7 +191,7 @@ public class RecommendGlow : MonoBehaviour
     }
 }
 
-// 플레이에 도움 되는 작은 안내 배지 (1.0.9): 다시 뽑기 · 시너지처럼 글씨만 있던 안내가 배경에 묻혀 잘 안 보였음
+// 플레이에 도움 되는 작은 안내 배지 (1.0.1): 다시 뽑기 · 시너지처럼 글씨만 있던 안내가 배경에 묻혀 잘 안 보였음
 //   진한 배경 알약 + 밝은 테두리 + 굵고 검은 외곽선 글씨, 숨 쉬듯 두근거리며 테두리가 반짝임 (멈춘 화면이라 unscaledTime)
 public class HintBadge : MonoBehaviour
 {

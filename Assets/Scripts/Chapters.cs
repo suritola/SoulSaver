@@ -54,10 +54,10 @@ public static class Chapters
     // 2.1.6: 그래도 1장이 어려워서 한 단계 더 낮춤
     // → 1장은 확 낮추고 2장은 조금, 3장부터 원래 세기 (자리 순서: 1장 · 2장 · 3장 · 4장)
     // 2.2.0: 곡선을 더 가파르게 — 1 · 2장은 더 쉽게, 3장은 원래보다 조금 · 4장은 확실히 세게
-    // 1.1.0: 2장부터 잡몹(중간 보스 포함)이 너무 빨리 녹아서 두 배로 (0.8 · 1.08 · 1.2 → 1.6 · 2.16 · 2.4)
+    // 1.0.2: 2장부터 잡몹(중간 보스 포함)이 너무 빨리 녹아서 두 배로 (0.8 · 1.08 · 1.2 → 1.6 · 2.16 · 2.4)
     static readonly float[] EaseHp = { 0.42f, 1.6f, 2.16f, 2.4f };
     static readonly float[] EaseHurt = { 0.42f, 0.8f, 1.08f, 1.2f };
-    // 1.0.9: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6843 < 4장 5040 → 6930)
+    // 1.0.1: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6843 < 4장 5040 → 6930)
     static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.15f, 1.65f };
     static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
     static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
@@ -65,7 +65,7 @@ public static class Chapters
     static readonly float[] EaseSpeed = { 0.75f, 0.9f, 1f, 1.04f };
     static readonly float[] EaseSkill = { 1.8f, 1.2f, 0.95f, 0.88f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
 
-    // 보스만 (1.0.9): 공격 피해 배율 · 스킬 간격 배율 — 3장부터 급격하게 (잡몹 EaseSkill 과 따로)
+    // 보스만 (1.0.1): 공격 피해 배율 · 스킬 간격 배율 — 3장부터 급격하게 (잡몹 EaseSkill 과 따로)
     static readonly float[] EaseBossPower = { 1f, 1f, 1.3f, 1.45f };
     static readonly float[] EaseBossSkill = { 1.8f, 1.2f, 0.72f, 0.64f };
 

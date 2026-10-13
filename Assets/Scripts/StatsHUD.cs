@@ -227,7 +227,7 @@ public class StatsHUD : MonoBehaviour
         values[9].text = Mathf.Max(0, player.pene - 1) + Loc.T("마리");
 
         // 체력 재생: 초당 · 처치 시
-        // 행운 (1.1.0): 지금 키우는 카드가 나올 확률 (행운 1마다 +40%, LevelShop.DrawWeight)
+        // 행운 (1.0.2): 지금 키우는 카드가 나올 확률 (행운 1마다 +40%, LevelShop.DrawWeight)
         int luck = sp != null ? sp.Luck : 0;
         values[11].text = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
         values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0.#") + Loc.T("/처치") : "");

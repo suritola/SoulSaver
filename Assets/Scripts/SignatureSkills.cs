@@ -104,7 +104,7 @@ public partial class SignatureSkills : MonoBehaviour
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
-        if (Time.time >= flairSoundAt) { flairSoundAt = Time.time + 0.15f; Hostile.Play("evoflair", 0.5f, Random.Range(0.9f, 1.2f)); }      // 1.1.1
+        if (Time.time >= flairSoundAt) { flairSoundAt = Time.time + 0.15f; Hostile.Play("evoflair", 0.5f, Random.Range(0.9f, 1.2f)); }      // 1.0.2
         Color v = Vivid(c, 0.95f), comp = Complement(v, 0.9f);
         Color gold = new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.95f);
         Fx.Spawn("fx_shock", p, size * 2.6f, v, 20f);
@@ -389,7 +389,7 @@ public partial class SignatureSkills : MonoBehaviour
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
             loop.frames = f;
             loop.spin = spin ? -900f : 0f;
-            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.5)
+            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.1)
         }
         return b;
     }

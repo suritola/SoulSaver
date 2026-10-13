@@ -643,7 +643,7 @@ public static class SettingsUI
     // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘 · 게임 커서
     static void BuildGameplay()
     {
-        // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.1.2: 「내 이펙트 투명도」 넣으려고 90 → 75
+        // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.0.2: 「내 이펙트 투명도」 넣으려고 90 → 75
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
         CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
         CycleRow("내 이펙트 투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v);

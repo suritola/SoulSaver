@@ -348,7 +348,7 @@ public class StoryDirector : MonoBehaviour
     }
 
     // ================================================================= 엔딩
-    // lines: 캐릭터 엔딩 대사 (무한 모드 클리어는 대사 없이 바로 마무리 · 1.1.1)
+    // lines: 캐릭터 엔딩 대사 (무한 모드 클리어는 대사 없이 바로 마무리 · 1.0.2)
     public static IEnumerator Ending(Difficulty cleared, string opened, bool lines = true)
     {
         StoryDirector d = Create();

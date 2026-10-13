@@ -34,7 +34,7 @@ public partial class LevelShop
     }
 
     // 모든 레벨업 카드 설명의 모양: 한 문장 + 금색 "수치  지금 → 다음" + Lv
-    // HudView: 왼쪽 위 레벨업 스킬 칸 설명 (1.0.8) — 「지금 → 다음」 대신 지금 수치만, 그리고 최대 단계일 때의 수치(maxVal)
+    // HudView: 왼쪽 위 레벨업 스킬 칸 설명 (1.0.1) — 「지금 → 다음」 대신 지금 수치만, 그리고 최대 단계일 때의 수치(maxVal)
     public static bool HudView;
     public static string CardText(string sentence, string stat, string now, string next, int level, int max, string maxVal = null)
     {
@@ -136,7 +136,7 @@ public partial class LevelShop
                     _ => null,
                 };
             default:
-                return NewHeroKitCard(who, id);         // 1.1.2 새 캐릭터 (LevelShop.NewHeroes)
+                return NewHeroKitCard(who, id);         // 1.0.2 새 캐릭터 (LevelShop.NewHeroes)
         }
     }
 

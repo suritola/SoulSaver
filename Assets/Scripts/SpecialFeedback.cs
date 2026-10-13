@@ -48,7 +48,7 @@ public class SpecialFeedback : MonoBehaviour
     public void Play(string name, float vol = 1f, float pitch = 1f)
     {
         SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
-        pitch *= 1f + Random.Range(-0.05f, 0.05f);                  // 1.1.1: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
+        pitch *= 1f + Random.Range(-0.05f, 0.05f);                  // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
         PlayRaw(name, vol, pitch);
     }
 
@@ -461,7 +461,7 @@ public class SpecialFeedback : MonoBehaviour
         });
     }
 
-    // ================================================================= 1.1.1 새 효과음 (새 캐릭터 · 필살기 시작 · 진화)
+    // ================================================================= 1.0.2 새 효과음 (새 캐릭터 · 필살기 시작 · 진화)
     void BuildHeroClips()
     {
         // 잉크: 젖은 붓이 쓸고 가는 소리

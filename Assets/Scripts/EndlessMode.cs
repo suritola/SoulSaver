@@ -22,7 +22,7 @@ public class EndlessMode : MonoBehaviour
     const float MidBossEvery = 70f;         // 강도가 오를수록 짧아짐 (최소 30초)
     float nextMidBoss;
 
-    // 최종 국면 (1.1.1): 30분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
+    // 최종 국면 (1.0.2): 30분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
     // → 그 보스들을 모두 쓰러뜨리면 최종 보스 「개발자」(체력 20만) → 개발자를 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 1800f;
     public const int DeveloperHp = 200000;
@@ -84,7 +84,7 @@ public class EndlessMode : MonoBehaviour
                      + (finalStage > 0 ? "   <color=#FF5A4A>" + Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간") + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
 
-        if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.1.2)
+        if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
         if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
         if (finalStage == 0 && !spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
@@ -182,7 +182,7 @@ public class EndlessMode : MonoBehaviour
         finalStage = 3;
         spawner.spawningEnabled = false;
         Prefs.SetInt(ClearKey, 1);
-        CharacterData.Achieve(CharUnlock.EndlessClear);      // 새 캐릭터 해제 조건 (1.1.2)
+        CharacterData.Achieve(CharUnlock.EndlessClear);      // 새 캐릭터 해제 조건 (1.0.2)
         Prefs.Save();
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);

@@ -36,7 +36,7 @@ public partial class SignatureSkills
         int s = L("s.soul");
         if (s > 0 && souls > 0)
         {
-            mul += souls * V(s, 0.03f, 0.01f);     // 1.0.5 하향: 영혼 하나당 4 ~ 10% → 3 ~ 6%, 최대 10 → 8 (한 번에 +100% → +48%)
+            mul += souls * V(s, 0.03f, 0.01f);     // 1.0.1 하향: 영혼 하나당 4 ~ 10% → 3 ~ 6%, 최대 10 → 8 (한 번에 +100% → +48%)
             souls = 0;
         }
         if (counterReady)
@@ -56,7 +56,7 @@ public partial class SignatureSkills
     {
         GameObject g = c.gameObject;
         // 혈갑: 벤 적마다 보호막
-        // 1.0.5 너프: 벤 적마다 0.6 ~ 1.5% (예전 1.2 ~ 3%), 한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음
+        // 1.0.1 너프: 벤 적마다 0.6 ~ 1.5% (예전 1.2 ~ 3%), 한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음
         // (몰린 적을 베는 동안 맞는 족족 다시 가득 차서 검사가 절대 죽지 않았음)
         int bg = L("s.bloodguard");
         if (bg > 0 && bloodHits < 3 && Time.time >= shieldPauseUntil)
@@ -98,7 +98,7 @@ public partial class SignatureSkills
     bool danceCounted;
     int bloodHits;              // 이번 휘두르기에 혈갑을 쌓은 적 수
     float shieldPauseUntil;     // 보호막이 맞은 뒤 다시 쌓이기 시작하는 때
-    // 1.0.5: 최대 6 ~ 15% (예전 10 ~ 25%), 피의 성채 1.5배 (예전 2배)
+    // 1.0.1: 최대 6 ~ 15% (예전 10 ~ 25%), 피의 성채 1.5배 (예전 2배)
     float ShieldCap => player.PlayerMaxHealth * V(L("s.bloodguard"), 0.06f, 0.03f) * (E("se.blood") ? 1.5f : 1f);
 
     void OnAfterSwing(Vector3 origin, Vector2 dir, float reach, int hits)
@@ -180,9 +180,9 @@ public partial class SignatureSkills
     {
         float mul = 1f;
         int r = L("s.riposte");
-        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.2f, 0.1f);       // 1.0.5 하향: 30 ~ 75% → 20 ~ 50% (근접이라 거의 늘 켜져 있었음)
+        if (r > 0 && Time.time - lastHurt < 1.5f) mul *= 1f + V(r, 0.2f, 0.1f);       // 1.0.1 하향: 30 ~ 75% → 20 ~ 50% (근접이라 거의 늘 켜져 있었음)
         int g = L("s.giant");
-        if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.08f, 0.05f);     // 1.0.5 하향: 12 ~ 36% → 8 ~ 23%
+        if (g > 0 && IsBoss(target)) mul *= 1f + V(g, 0.08f, 0.05f);     // 1.0.1 하향: 12 ~ 36% → 8 ~ 23%
         return mul;
     }
 
