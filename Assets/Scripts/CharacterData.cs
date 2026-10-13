@@ -52,14 +52,14 @@ public static class CharacterData
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
-            weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다",
+            weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살이 쏟아질 위치를 조정하고, 떼면 쏟아붓습니다",
             hp = 0.95f, damage = 1.25f, attackSpeed = 1f, gauge = 1.15f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),
             color = new Color(0.45f, 0.8f, 0.4f) },
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
-            weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발",
+            weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
             hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },

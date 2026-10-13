@@ -98,6 +98,7 @@ public partial class CharacterKit : MonoBehaviour
         OnDestroyClockmaker();
         OnDestroyPostman();
         OnDestroyGhost();
+        OnDestroyRules();
     }
 
     void Start()
@@ -146,6 +147,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         lastPos = transform.position;
         UpdateReagentTag();
+        UpdateKitRules();       // 궁수 숨 · 연금술사 불안정도 (CharacterKit.Rules)
     }
 
     // ================================================================= 연금술사: 다음 플라스크 시약 표시
@@ -417,6 +419,7 @@ public partial class CharacterKit : MonoBehaviour
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
         bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning;
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
+        if (!GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();       // 숨 고르기: 당기는 동안 숨이 닳음
         float heldFull = draw >= 1f && fullPlayed ? Time.time - fullAt : 0f;
         Vector3 start = player.MuzzlePosition;
         Vector3 target = Mouse;
@@ -425,10 +428,12 @@ public partial class CharacterKit : MonoBehaviour
         // 너무 오래 쥐고 있으면 활이 떨림
         if (!autoRelease && heldFull > TrembleAfter)
             dir = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.time * 38f) * Mathf.Min(4f, (heldFull - TrembleAfter) * 4f)) * dir;
+        else if (Breathless)
+            dir = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.time * 30f) * 3f) * dir;          // 숨이 차서 떨림
         PlayerLook.Draw(draw);
 
         // 겨누는 선: 시위를 당기는 동안만, 화면 끝까지 닿는 점선 (당길수록 밝고 굵게, 가득 당기면 금색으로 반짝)
-        bool inWindow = draw >= 1f && heldFull <= PerfectWindow;
+        bool inWindow = draw >= 1f && heldFull <= PerfectWindow && !Breathless;
         Color c = draw < 1f ? new Color(0.7f, 1f, 0.6f, 0.3f + 0.5f * draw)
                 : inWindow ? new Color(1f, 0.95f, 0.55f, 1f)                                   // 지금 놓으면 완벽
                 : heldFull > TrembleAfter && !autoRelease ? new Color(1f, 0.5f, 0.35f, 0.55f)   // 떨림: 약해지는 중
@@ -455,13 +460,15 @@ public partial class CharacterKit : MonoBehaviour
         SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        bool perfect = !autoRelease && draw >= 1f && heldFull <= PerfectWindow;
+        bool perfect = !autoRelease && draw >= 1f && heldFull <= PerfectWindow && !Breathless;
         float power = 0.3f + DrawPower * draw;                                  // 가득 당김 220%
         if (perfect) power = PerfectPower;
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
             power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
+        if (Breathless && !autoRelease) power *= 0.5f;                          // 숨이 차면 절반
         if (perfect)
         {
+            RestoreBreath(PerfectBreath);                                       // 완벽한 사격은 숨을 되돌려 줌
             SpecialAbilities.SharedFx?.FloatText(start + Vector3.up * 1.4f, Loc.T("완벽!"), new Color(1f, 0.9f, 0.4f), 4.5f, 0f);
             Fx.Spawn("fx_sparkle", start, 2.2f, Color.white, 26f);
             Play("chime", 0.5f, 1.8f);
@@ -503,14 +510,17 @@ public partial class CharacterKit : MonoBehaviour
         // 현자의 돌이면 모두 불안정, 불안정 연구면 확률이 오름
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
         if (depth == 0 && ForceUnstable()) unstable = true;
+        // 불안정도 (1.1.2): 던질 때마다 오르고, 높을수록 크고 아프게 터짐
+        float instR = InstRadiusMul, instD = InstDamageMul;
+        if (depth == 0) AddInstability(unstable ? 15f : 8f);
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
         // 시약 농축: 한 바퀴 던질 때마다 다음 플라스크가 더 크고 아프게 (고유 스킬)
         float conc = depth == 0 ? SignatureSkills.FlaskThrow() : 1f;
         FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
         {
             // 2.1.3: 너무 셌음 — 반지름 1.8 → 1.65, 피해 1.45 → 1.2배, 불안정 1.8 → 1.6배
-            float r = 1.65f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc;
-            float hit = dmg * 1.2f * (unstable ? 1.6f : 1f) * FlaskDamageMul * conc;
+            float r = 1.65f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc * instR;
+            float hit = dmg * 1.2f * (unstable ? 1.6f : 1f) * FlaskDamageMul * conc * instD;
             FlaskExtras(p, r, hit, depth);
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
@@ -808,7 +818,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         else
         {
-            float dmg = Damage * (4f + 8f * charge) * UltMul * SignatureSkills.BigFlaskMul();     // 증폭 용액
+            float dmg = Damage * (4f + 8f * charge) * UltMul * SignatureSkills.BigFlaskMul() * ConsumeInstability();     // 증폭 용액 · 불안정도를 모두 쏟음
             PlayerMotion.Of(this).Throw(0.35f, (Vector2)(at - transform.position));     // 몸동작: 플라스크 던지기
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {

@@ -516,5 +516,17 @@ public static partial class LocTable
         A("지켜야 할 것을 끝까지 지켰다. 이제 떠나도 된다.", "It had protected what it had to, to the very end. Now it could leave.", "守るべきものを最後まで守った。もう旅立ってもいい。", "要守护的东西已守护到最后。现在可以离开了。");
         A("“…고마웠어.”", "\"...Thank you.\"", "「…ありがとう。」", "“……谢谢你。”");
         A("하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다...", "But before the last light faded, a familiar chill blew in from the red desert...", "しかし最後の光が消える前、赤い砂漠の方から見覚えのある冷気が吹いてきた…", "然而在最后的光芒消失之前，一股熟悉的寒气从红色沙漠吹来……");
+
+        // ================================================================= 고유 규칙 (궁수 숨 고르기 · 연금술사 불안정도)
+        A("누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
+          "Hold to draw the bowstring, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. You move slower while drawing. Breath: drawing uses up breath; run out and your bow shakes at half power · Perfect shots restore breath",
+          "押し続けて弦を引き、離して発射。満タンの瞬間(チン!)に離すと「パーフェクト!」の矢、握りすぎると弱まる。引いている間は遅くなる。息継ぎ：引いている間は息が減り、尽きると弓が震えて威力半分・「パーフェクト!」で息が戻る",
+          "按住拉弓，松开发射。拉满的瞬间(叮!)松开即为「完美!」之箭，握太久会变弱。拉弓时移动变慢。调息：拉弓时消耗气息，耗尽后弓会颤抖、威力减半 · 「完美!」会恢复气息");
+        A("화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
+          "Flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask blows up big. Instability: each throw raises it and makes blasts bigger, but at full it explodes at your feet (the Grand Flask pours it all out)",
+          "火炎・氷結・酸の試薬を交互に詰めたフラスコ。時々、不安定なフラスコが大爆発。不安定度：投げるほど上がり爆発が大きくなるが、満タンになると足元で自爆（大爆発フラスコがすべて吐き出す）",
+          "轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸。不稳定度：投掷越多越高、爆炸越大，但满了会在脚下自爆（大爆炸烧瓶会将其全部倾泻）");
+        A("숨이 차다!", "Out of breath!", "息切れ！", "喘不过气！");
+        A("폭주!", "Overload!", "暴走！", "失控！");
     }
 }
