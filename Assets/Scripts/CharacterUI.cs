@@ -110,7 +110,18 @@ public static class CharacterUI
         if (!unlocked && developed)
         {
             subText.text = Loc.T("잠김") + " · " + d.price.ToString("N0") + " P";
-            subText.color = CharacterData.Points >= d.price ? new Color(1f, 0.85f, 0.4f) : Dim;
+            subText.color = CharacterData.Points >= d.price && CharacterData.ConditionMet(id) ? new Color(1f, 0.85f, 0.4f) : Dim;
+        }
+        // 해제 조건 (1.1.2): 칸 아래쪽에 조건 · 달성하면 초록 체크
+        if (!unlocked && d.condition != CharUnlock.None)
+        {
+            bool met = CharacterData.ConditionMet(id);
+            TMP_Text cond = UIKit.Text(t, "", 15f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, 144f), new Vector2(236f, 30f));
+            cond.text = (met ? "✔ " : "") + CharacterData.ConditionText(d.condition);
+            cond.enableWordWrapping = true;
+            cond.enableAutoSizing = true;
+            cond.fontSizeMin = 10f;
+            cond.fontSizeMax = 15f;
         }
         return b.gameObject;
     }
@@ -145,6 +156,14 @@ public static class CharacterUI
 
         UIKit.Text(dr, unlocked ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
         UIKit.Text(dr, unlocked ? d.title : developed ? "잠긴 캐릭터" : "준비 중", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
+
+        // 해제 조건 (1.1.2)
+        if (!unlocked && d.condition != CharUnlock.None)
+        {
+            bool met = CharacterData.ConditionMet(id);
+            TMP_Text cond = UIKit.Text(dr, "", 24f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, -220f), new Vector2(1100f, 34f));
+            cond.text = Loc.T("해제 조건") + " : " + CharacterData.ConditionText(d.condition) + "  " + (met ? Loc.T("(달성)") : Loc.T("(미달성)"));
+        }
 
         if (!developed)
         {
@@ -192,7 +211,7 @@ public static class CharacterUI
         }
         else
         {
-            bool can = CharacterData.Points >= d.price;
+            bool can = CharacterData.Points >= d.price && CharacterData.ConditionMet(id);
             Button buy = UIKit.MakeButton(dr, "", new Vector2(-140f, -330f), new Vector2(300f, 70f), () =>
             {
                 if (!CharacterData.Buy(id)) return;
@@ -203,7 +222,7 @@ public static class CharacterUI
             TMP_Text bt = buy.GetComponentInChildren<TMP_Text>();
             bt.text = Loc.T("구매") + "  " + d.price.ToString("N0") + " P";
             buy.interactable = can;
-            if (!can) UIKit.Text(dr, "포인트가 부족합니다. 게임에서 적을 처치하면 포인트가 쌓입니다.", 20f, Dim, new Vector2(0f, -270f), new Vector2(900f, 30f));
+            if (!can && CharacterData.ConditionMet(id)) UIKit.Text(dr, "포인트가 부족합니다. 게임에서 적을 처치하면 포인트가 쌓입니다.", 20f, Dim, new Vector2(0f, -270f), new Vector2(900f, 30f));
             UIKit.MakeButton(dr, "취소", new Vector2(190f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
         }
     }

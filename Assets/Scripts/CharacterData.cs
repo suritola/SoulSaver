@@ -2,6 +2,9 @@ using UnityEngine;
 
 // 캐릭터: 거너(기본) · 검사 · 도적은 처음부터, 궁수 · 연금술사는 포인트로 구매, 나머지 5칸은 준비 중
 // 스탯은 모두 거너를 1(100%)로 한 배율. 고른 캐릭터 · 잠금 해제 · 보유 포인트는 PlayerPrefs에 저장
+// 캐릭터 해제 조건 (1.1.2): 조건을 달성해야 포인트로 살 수 있음 (달성 기록은 저장)
+public enum CharUnlock { None = 0, Endless10 = 1, EndlessBosses5 = 2, EasyFast = 3 }
+
 public enum CharacterId { Gunner = 0, Swordsman = 1, Rogue = 2, Archer = 3, Alchemist = 4, Slot6 = 5, Slot7 = 6, Slot8 = 7, Slot9 = 8, Slot10 = 9 }
 
 public class CharacterDef
@@ -15,6 +18,7 @@ public class CharacterDef
     public float range;             // 평타 사거리 (칸), 0 = 무한
     public int mag;                 // 기본 탄창 수, 0 = 무한 (거너는 인스펙터 값)
     public int price;               // 0 = 처음부터, -1 = 준비 중
+    public CharUnlock condition;     // 살 수 있게 되는 조건 (None = 바로 살 수 있음)
     public int[] pool;              // 지옥의 문에서 고를 수 있는 특수 능력 (무기 · 스킬 · 패시브)
     public Color color = Color.white;
 }
@@ -58,10 +62,11 @@ public static class CharacterData
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
             hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
             color = new Color(0.65f, 0.4f, 0.95f) },
-        Coming(), Coming(), Coming(), Coming(), Coming(),
+        // 6 · 7 · 8번 칸: 조건 달성 뒤 포인트로 (만들면 가격 5000 · 8000 · 12000)
+        Coming(CharUnlock.Endless10), Coming(CharUnlock.EndlessBosses5), Coming(CharUnlock.EasyFast), Coming(), Coming(),
     };
 
-    static CharacterDef Coming() => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0],
+    static CharacterDef Coming(CharUnlock condition = CharUnlock.None) => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0], condition = condition,
                                                         description = "아직 준비 중인 캐릭터입니다." };
 
     // 캐릭터 능력 8개 (from ~ from+7) + 나중에 더한 패시브
@@ -156,7 +161,7 @@ public static class CharacterData
     public static bool Buy(CharacterId id)
     {
         CharacterDef d = Def(id);
-        if (d.price <= 0 || IsUnlocked(id) || Points < d.price || Demo.On) return false;
+        if (d.price <= 0 || IsUnlocked(id) || Points < d.price || Demo.On || !ConditionMet(id)) return false;
         Prefs.SetInt(PointsKey, Points - d.price);
         Prefs.SetInt(UnlockKey + (int)id, 1);
         Prefs.Save();
@@ -164,6 +169,30 @@ public static class CharacterData
     }
 
     public static void Save() => Prefs.Save();
+
+    // ================================================================= 해제 조건 (1.1.2)
+    const string ConditionKey = "char.cond.";
+    public static bool ConditionMet(CharUnlock c) => c == CharUnlock.None || Prefs.GetInt(ConditionKey + (int)c, 0) == 1;
+    public static bool ConditionMet(CharacterId id) => ConditionMet(Def(id).condition);
+
+    public static string ConditionText(CharUnlock c) => c switch
+    {
+        CharUnlock.Endless10 => Loc.T("무한 모드에서 10분 버티기"),
+        CharUnlock.EndlessBosses5 => Loc.T("무한 모드 한 판에서 보스 5마리 처치"),
+        CharUnlock.EasyFast => Loc.T("「쉬움」 난이도를 15분 안에 클리어"),
+        _ => "",
+    };
+
+    // 게임 중 조건을 처음 달성했을 때 (한 번만 알림)
+    public static void Achieve(CharUnlock c)
+    {
+        if (c == CharUnlock.None || ConditionMet(c) || GameInput.Auto || TutorialRun.Active || Demo.On || Application.isBatchMode) return;
+        Prefs.SetInt(ConditionKey + (int)c, 1);
+        Prefs.Save();
+        if (StageManager.Instance != null)
+            StageManager.Instance.ShowBanner(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), 4f);
+        Hostile.Play("chime", 0.9f, 1.1f);
+    }
 
     // 이 캐릭터가 지옥의 문에서 고를 수 있는 특수 능력인지
     public static bool InPool(int abilityId)

@@ -84,6 +84,7 @@ public class EndlessMode : MonoBehaviour
                      + (finalStage > 0 ? "   <color=#FF5A4A>" + Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간") + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
 
+        if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.1.2)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
         if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
         if (finalStage == 0 && !spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
@@ -201,6 +202,7 @@ public class EndlessMode : MonoBehaviour
     {
         if (finalStage == 3) return;
         BossesDefeated++;
+        if (BossesDefeated >= 5) CharacterData.Achieve(CharUnlock.EndlessBosses5);
         if (finalStage == 2 && developer != null && developer.IsDead) { StartCoroutine(ClearEndless()); return; }
         if (finalStage == 1 && bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
