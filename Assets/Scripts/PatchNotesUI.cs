@@ -50,7 +50,7 @@ public static class PatchNotesUI
         RectTransform br = body.rectTransform;
         br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 1f);
         br.anchoredPosition = Vector2.zero;
-        body.text = Format(src.text);
+        body.text = Format(Localize(src.text));
         content.gameObject.AddComponent<VerticalLayoutGroup>().childControlHeight = true;
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -139,7 +139,7 @@ public static class PatchNotesUI
         List<Image> tabs = new List<Image>();
         void Show(int i)
         {
-            body.text = Format(notes[i].text);
+            body.text = Format(Localize(notes[i].text));
             for (int k = 0; k < tabs.Count; k++) tabs[k].color = k == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
             scroll.verticalNormalizedPosition = 1f;
             content.anchoredPosition = new Vector2(0f, -16f);
@@ -166,6 +166,31 @@ public static class PatchNotesUI
     }
 
     // 마크다운 몇 가지만 TMP 서식으로: # 제목 · ## 소제목 · ### 작은 제목 · - 목록 · **굵게** (글꼴에 없는 이모지는 뺌)
+    // 1.1.2: 언어별 노트 — 짧은 노트 파일 안에 "=== en" · "=== ja" · "=== zh" 줄로 나눈 블록 (맨 앞 블록은 한국어)
+    // 지금 언어의 블록을 고르고, 없으면 한국어 (예전 노트도 그대로 보임)
+    static readonly string[] LangTags = { "ko", "en", "ja", "zh" };
+    static string Localize(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        string want = LangTags[Mathf.Clamp((int)Loc.Current, 0, LangTags.Length - 1)];
+        string current = "ko", ko = null, found = null;
+        StringBuilder b = new StringBuilder();
+        foreach (string raw in (text.Replace("\r", "") + "\n=== end").Split('\n'))
+        {
+            if (raw.StartsWith("=== "))
+            {
+                string block = b.ToString().Trim('\n');
+                if (current == "ko") ko = block;
+                if (current == want) found = block;
+                current = raw.Substring(4).Trim();
+                b.Clear();
+                continue;
+            }
+            b.Append(raw).Append('\n');
+        }
+        return found ?? ko ?? text;
+    }
+
     static string Format(string md)
     {
         StringBuilder sb = new StringBuilder();
