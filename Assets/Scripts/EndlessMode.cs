@@ -156,7 +156,19 @@ public class EndlessMode : MonoBehaviour
             developer.expReward *= 5;
             developer.coinDrop *= 5;
         }
-        go.transform.localScale *= 1.6f;
+        // 개발자 전용 도트 (Resources/Abyss/developer_0~3: 금빛 후광 · 후드 · 빛나는 안경 · 코드가 흐르는 노트북)
+        Sprite[] art = AbyssStage.Frames("developer");
+        if (art[0] != null)
+        {
+            Animator anim = go.GetComponent<Animator>();
+            if (anim != null) Destroy(anim);
+            if (go.TryGetComponent(out SpriteRenderer sr)) sr.sprite = art[0];
+            AbyssBody body = go.GetComponent<AbyssBody>();
+            if (body == null) body = go.AddComponent<AbyssBody>();
+            body.frames = art;
+            body.fps = 6f;
+        }
+        go.transform.localScale *= 1.35f;
         Fx.Spawn("fx_soulburst", go.transform.position, 14f, new Color(1f, 0.85f, 0.35f), 16f);
         spawner.bossSpawned = true;
         spawner.bossCleared = false;
