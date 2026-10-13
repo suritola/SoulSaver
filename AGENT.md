@@ -20,6 +20,7 @@
 7. 사용자가 **"빌드해"** 라고 하면 아래를 **무조건 한 번에 끝까지** 한다 (중간에 따로 묻지 않음)
    1. 남은 변경을 모두 커밋 (규칙 1 · 2 확인)
    2. 버전 +1 (규칙 4): `ProjectSettings` 의 `bundleVersion` · 메인 메뉴 표시 · `docs/patch-notes/v<버전>.md` 패치노트 작성(지난 버전 이후 변경 정리) → 버전 커밋
+      - 게임 안 패치노트는 `docs/patch-notes/game/v<버전>.md` 에 **플레이어용 짧은 공지**로 따로 씀 (예: 「신규 캐릭터 4종 추가!」 · 「밸런스 조정」처럼 몇 줄. 개발 과정 · 수치 · 내부 사정은 넣지 않음). 빌드 스크립트 · `tools/patchnotes-all.ps1` 이 이 파일을 게임에 넣고, 자세한 노트(`docs/patch-notes/v<버전>.md`)는 GitHub 릴리스에만 씀
    3. `git push origin main`
    4. 스팀 빌드 업로드: `pwsh tools/steam-upload.ps1 -Version v<버전>`
    5. 끝나면 빌드 ID 보고. Steamworks 의 default 브랜치 공개는 자동 모드에서 막히므로 사용자에게 공개를 부탁한다
