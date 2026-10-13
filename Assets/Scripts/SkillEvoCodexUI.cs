@@ -22,13 +22,24 @@ public static class SkillEvoCodexUI
     // 탭: 만들어진 캐릭터마다 하나 + 마지막에 「모든 캐릭터」 (1.0.2: 새 캐릭터가 늘어 5명 고정에서 바꿈)
     static readonly List<CharacterId> heroes = new List<CharacterId>();
     static int CommonTab => heroes.Count;
+    static TMP_Text title;
+
+    // 1.0.3: 한 번도 만든 적 없는 진화는 「???」 (재료만 힌트로 보임) — 이 PC 에서 만든 진화는 LevelShop 이 stats.skillEvos 에 "캐릭터:키" 로 적어 둠
+    static HashSet<string> seen = new HashSet<string>();
+    static bool Seen(CharacterId who, string key)
+    {
+        if (!key.StartsWith("ce.")) return seen.Contains(who + ":" + key);
+        foreach (string s in seen) if (s.EndsWith(":" + key)) return true;      // 모든 캐릭터 진화는 누가 만들었든
+        return false;
+    }
 
     public static void Open(Transform root)
     {
         if (open != null) return;
         UIKit.EnsureStyle();
         RectTransform win = UIKit.Modal(root, "SkillEvoCodex", new Vector2(1640f, 960f), out open);
-        TMP_Text title = UIKit.Text(win, "", 50f, Purple, new Vector2(0f, 425f), new Vector2(700f, 70f));
+        seen = new HashSet<string>(Prefs.GetString("stats.skillEvos", "").Split(new[] { '|' }, System.StringSplitOptions.RemoveEmptyEntries));
+        title = UIKit.Text(win, "", 50f, Purple, new Vector2(0f, 425f), new Vector2(700f, 70f));
         title.text = Loc.T("스킬 진화 도감");
         UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
 
@@ -93,10 +104,12 @@ public static class SkillEvoCodexUI
             tabs[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
 
+        int found = 0, total = 0;
         if (tab == CommonTab)
         {
             List<LevelShop.SkillEvo> all = LevelShop.EvosFor(CharacterId.Gunner);
-            foreach (LevelShop.SkillEvo e in all) if (e.key.StartsWith("ce.")) Card(e, CharacterId.Gunner);
+            foreach (LevelShop.SkillEvo e in all)
+                if (e.key.StartsWith("ce.")) { bool k = Seen(CharacterId.Gunner, e.key); total++; if (k) found++; Card(e, CharacterId.Gunner, k); }
         }
         else
         {
@@ -105,12 +118,13 @@ public static class SkillEvoCodexUI
                 LockedCard(who);
             else
                 foreach (LevelShop.SkillEvo e in LevelShop.EvosFor(who))
-                    if (!e.key.StartsWith("ce.")) Card(e, who);
+                    if (!e.key.StartsWith("ce.")) { bool k = Seen(who, e.key); total++; if (k) found++; Card(e, who, k); }
         }
+        title.text = Loc.T("스킬 진화 도감") + (total > 0 ? "  <size=60%><color=#A89C86>" + Loc.T("발견") + " " + found + " / " + total + "</color></size>" : "");
         scroll.verticalNormalizedPosition = 1f;
     }
 
-    static void Card(LevelShop.SkillEvo e, CharacterId who)
+    static void Card(LevelShop.SkillEvo e, CharacterId who, bool known)
     {
         RectTransform inner = Frame(out _);
 
@@ -132,11 +146,11 @@ public static class SkillEvoCodexUI
         float arrowX = x0 + n * 74f - 30f;
         TMP_Text arrow = UIKit.Text(inner, "", 30f, Purple, new Vector2(arrowX, 54f), new Vector2(30f, 40f));
         arrow.text = "▶";
-        Image evo = Icon(inner, new Vector2(arrowX + 50f, 54f), 76f, Resources.Load<Sprite>("Icons/ability_" + e.icon), new Color(0.45f, 0.32f, 0.62f));
-        Tip(evo, Loc.T(e.name) + "  ◆ " + Loc.T("진화"), LevelShop.EvoTooltip(e, who));
+        Image evo = Icon(inner, new Vector2(arrowX + 50f, 54f), 76f, Resources.Load<Sprite>("Icons/ability_" + e.icon), known ? new Color(0.45f, 0.32f, 0.62f) : Color.black);
+        if (known) Tip(evo, Loc.T(e.name) + "  ◆ " + Loc.T("진화"), LevelShop.EvoTooltip(e, who));
 
         TMP_Text name = UIKit.Text(inner, "", 32f, Gold, new Vector2(arrowX + 100f + 160f, 70f), new Vector2(330f, 44f), TextAlignmentOptions.Left);
-        name.text = Loc.T(e.name);
+        name.text = known ? Loc.T(e.name) : "???";
         name.enableAutoSizing = true;
         name.fontSizeMin = 18f;
         name.fontSizeMax = 32f;
@@ -149,7 +163,7 @@ public static class SkillEvoCodexUI
         recipe.fontSizeMax = 19f;
 
         TMP_Text body = UIKit.Text(inner, "", 22f, Parch, new Vector2(0f, -58f), new Vector2(700f, 118f), TextAlignmentOptions.TopLeft);
-        body.text = Loc.T(e.desc);
+        body.text = known ? Loc.T(e.desc) : "<color=#A89C86>" + Loc.T("아직 발견하지 못한 진화입니다. 위의 재료 카드를 한 판에서 모두 최대 단계로 올리면 무엇이 되는지 알 수 있습니다.") + "</color>";
         body.enableWordWrapping = true;
         body.enableAutoSizing = true;
         body.fontSizeMin = 14f;

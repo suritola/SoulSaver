@@ -29,7 +29,8 @@ public static class MenuExtras
             res.enableAutoSizing = true;
             res.fontSizeMin = 14f;
             res.fontSizeMax = 24f;
-            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunStats.Summary(false);
+            string next = NextUnlocks();
+            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + (next.Length > 0 ? next + "\n\n" : "") + RunStats.Summary(false);
             RectTransform rr = res.rectTransform;
             rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
             rr.anchoredPosition = new Vector2(60f, 0f);
@@ -70,6 +71,44 @@ public static class MenuExtras
             line.daily = daily;
         }
         EndlessMode.LastSeconds = -1f;
+    }
+
+    // 1.0.3: 결과 화면의 「다음 해금까지」 — 가장 가까운 캐릭터 해금 하나 · 스킨 하나 (한 판 더 하게)
+    static string NextUnlocks()
+    {
+        if (Demo.On || TutorialRun.Active) return "";
+        List<string> lines = new List<string>();
+        int pts = CharacterData.Points;
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId id = (CharacterId)i;
+            CharacterDef d = CharacterData.Def(id);
+            if (d.price <= 0 || CharacterData.IsUnlocked(id)) continue;
+            string who = "<color=#F5D478>" + Loc.T(d.name) + "</color>  ";
+            if (!CharacterData.ConditionMet(id))
+            {
+                string prog = d.condition == CharUnlock.Endless10 && EndlessMode.BestSeconds > 0f
+                    ? "  <color=#A89C86>(" + Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds) + " / 10:00)</color>" : "";
+                lines.Add(who + CharacterData.ConditionText(d.condition) + prog);
+            }
+            else if (pts < d.price) lines.Add(who + Loc.T("해금까지") + " " + (d.price - pts).ToString("N0") + " P");
+            else lines.Add(who + "<color=#7CFF9A>" + Loc.T("지금 해금할 수 있습니다! (메인 메뉴 → 캐릭터)") + "</color>");
+            break;
+        }
+        SkinDef cheap = null;
+        foreach (SkinDef sk in SkinData.All)
+        {
+            if (SkinData.Owns(sk.id) || (sk.who >= 0 && sk.who != (int)CharacterData.Selected)) continue;
+            if (cheap == null || sk.Price < cheap.Price) cheap = sk;
+        }
+        if (cheap != null)
+        {
+            int left = cheap.Price - pts;
+            lines.Add("<color=#F5D478>" + Loc.T("스킨") + " · " + Loc.T(cheap.name) + "</color>  "
+                      + (left > 0 ? Loc.T("해금까지") + " " + left.ToString("N0") + " P" : "<color=#7CFF9A>" + Loc.T("지금 살 수 있습니다! (메인 메뉴 → 스킨 상점)") + "</color>"));
+        }
+        if (lines.Count == 0) return "";
+        return "<color=#C9A0FF>" + Loc.T("다음 해금까지") + "</color>\n" + string.Join("\n", lines);
     }
 
     static void InstallMainMenu()
