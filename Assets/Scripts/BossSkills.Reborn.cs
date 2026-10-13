@@ -24,11 +24,10 @@ public partial class BossSkills
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T(ko), 2.2f);
     }
 
-    // 스킬을 쓰지 않는 동안에도 매 프레임 (슬라임 몸 크기 · 용암 가장자리)
+    // 스킬을 쓰지 않는 동안에도 매 프레임 (슬라임 몸 크기)
     void RebornTick()
     {
         if (kind == 2) SlimeBody();
-        else if (kind == 1) LavaTick();
     }
 
     void RebornTurn(PlayerController p)
@@ -365,8 +364,8 @@ public partial class BossSkills
         if (want > phase)
         {
             phase = want;
-            StartCoroutine(Run(phase == 1 ? HellWings() : HellCollapse()));
-            return;
+            // 1.1.1: 마지막 단계의 「지옥이 무너진다」(용암 가장자리)는 피할 수 없다는 의견으로 뺌 — 단계만 오르고 스킬 간격이 짧아짐
+            if (phase == 1) { StartCoroutine(Run(HellWings())); return; }
         }
         if (Time.time < next) return;
         next = Time.time + Cool(phase == 2 ? 2.2f : phase == 1 ? 2.8f : 3.4f);
@@ -474,56 +473,5 @@ public partial class BossSkills
         HazardZone.Spawn(target, r * 0.7f, 3f, 10f, Fire, "fx_puddle", 0.8f);
         Hostile.Play("boom", 0.9f, 0.7f);
         Hostile.Shake(0.2f);
-    }
-
-    // 33%: 싸우는 자리 둘레로 용암이 차올라 6초 동안 반지름 28 → 11칸으로 좁아짐 (밖에 있으면 계속 피해)
-    LineRenderer lavaLine;
-    Vector3 lavaCenter;
-    float lavaFrom, lavaTo, lavaStart = -1f, lavaHitCd, lavaFx;
-    const float LavaShrink = 6f;
-
-    IEnumerator HellCollapse()
-    {
-        Banner("지옥이 무너진다! 가장자리가 용암으로 차오른다!");
-        Hostile.Play("roar", 1f, 0.5f);
-        Hostile.Shake(0.25f);
-        // 맵이 넓어서(105 × 65) 맵 가운데가 아니라 지금 싸우는 자리(보스와 플레이어 사이)를 가운데로 좁혀 옴
-        PlayerController p = Hostile.Player;
-        lavaCenter = Hostile.ClampArena(p != null ? (transform.position + p.transform.position) * 0.5f : transform.position);
-        lavaFrom = 28f;
-        lavaTo = 11f;
-        lavaStart = Time.time;
-        lavaLine = Own(Hostile.NewLine("LavaEdge", Fire, 0.7f, 16));
-        for (float t = 0f; t < 1.2f && Alive; t += Time.deltaTime)
-        {
-            sr.color = Color.Lerp(Color.white, Fire, Mathf.PingPong(Time.time * 8f, 1f));
-            yield return null;
-        }
-        sr.color = Color.white;
-    }
-
-    void LavaTick()
-    {
-        if (lavaStart < 0f || lavaLine == null) return;
-        if (!Alive) { Destroy(lavaLine.gameObject); lavaStart = -1f; return; }
-        float r = Mathf.Lerp(lavaFrom, lavaTo, Mathf.SmoothStep(0f, 1f, (Time.time - lavaStart) / LavaShrink));
-        Hostile.SetArc(lavaLine, lavaCenter, r, 0f, 360f);
-        lavaLine.startColor = lavaLine.endColor = Color.Lerp(Fire, new Color(1f, 0.85f, 0.3f), Mathf.PingPong(Time.time * 2f, 1f));
-
-        // 가장자리를 따라 불꽃
-        lavaFx -= Time.deltaTime;
-        if (lavaFx <= 0f)
-        {
-            lavaFx = 0.12f;
-            float a = Random.Range(0f, Mathf.PI * 2f);
-            Vector3 at = lavaCenter + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (r + Random.Range(0f, 2f));
-            if (Hostile.InArena(at)) Fx.Spawn("fx_explosion", at, 1.6f, new Color(1f, 0.6f, 0.25f), 18f);
-        }
-
-        // 결계 동안은 결계 안에 갇혀 있으므로 용암 피해 없음
-        lavaHitCd -= Time.deltaTime;
-        PlayerController p = Hostile.Player;
-        if (p == null || BossUltimate.Active || lavaHitCd > 0f) return;
-        if (Vector2.Distance(p.transform.position, lavaCenter) > r && p.TryHit(8f * Power)) lavaHitCd = 0.6f;
     }
 }

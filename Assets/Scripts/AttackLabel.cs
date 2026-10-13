@@ -20,7 +20,6 @@ public static class AttackLabel
         // 3장 지옥의 군주
         { "DashCombo", "화염 돌진" }, { "FlameCharge", "화염 돌진" }, { "MeteorRain", "운석 낙하" }, { "Meteor", "운석 낙하" },
         { "FireWave", "화염 파동" }, { "HellWings", "날개 충격파" }, { "AirBarrage", "공중 탄막" }, { "DiveSlam", "내려찍기" },
-        { "HellCollapse", "용암" }, { "LavaTick", "용암" },
         // 4장 거울의 군주
         { "MirrorStrike", "거울 공격" }, { "MirrorSkill", "흉내 낸 스킬" }, { "MirrorClones", "분신술" }, { "BrandCross", "십자 낙인" },
         { "ShardRings", "거울 조각 고리" }, { "MirrorUlt", "흉내 낸 필살기" }, { "ReflectedMemory", "되비친 기억" },
