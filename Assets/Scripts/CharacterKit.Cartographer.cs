@@ -72,8 +72,8 @@ public partial class CharacterKit
             mapChainUntil = Time.time + MapChainTime;
         }
         PlayerMotion.Of(this).Recoil(-sd, 0.4f);
-        Play("whoosh", 0.35f, 1.6f + Random.Range(-0.1f, 0.1f));
-        Play("crackle", 0.25f, 2.2f);
+        Play("ink", 0.6f, 1f + Random.Range(-0.1f, 0.1f));
+        Play("whoosh", 0.25f, 1.6f);
         DrawMapChain();
     }
 
@@ -181,7 +181,8 @@ public partial class CharacterKit
         }
         if (card[6] > 0 && player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * (0.01f + 0.03f * card[6]));
         Play("chime", 0.6f, 1.25f);
-        Play("crack", 0.45f, 1.3f);
+        Play("paperfold", 0.6f, 1.2f);
+        Play("stamp", 0.5f, 0.9f);
         if (inside.Count >= 4) Hostile.Shake(0.1f);
         SpecialAbilities.SharedFx?.FloatText(center + Vector3.up, Loc.T("측량 완료!"), InkGold, 4f, 0.4f);
         SignatureSkills.Closed(poly, center, reach, inside);
@@ -348,7 +349,8 @@ public partial class CharacterKit
         for (int i = 0; i <= 4; i++) Fx.Spawn("fx_slash", Vector3.Lerp(a, b, i / 4f), 3f, new Color(0.8f, 0.9f, 1f), 26f, Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg);
         Hostile.Shake(0.22f);
         Play("boom", 0.7f, 1.2f);
-        Play("crack", 0.8f, 0.8f);
+        Play("paperfold", 1f, 0.8f);
+        Play("crack", 0.6f, 0.8f);
         SignatureSkills.Folded(center, a, b, caught, dmg);
         if (card[3] > 0) StartCoroutine(Crease(a, b, 1f + card[3]));
     }

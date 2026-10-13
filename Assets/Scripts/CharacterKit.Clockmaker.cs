@@ -15,6 +15,7 @@ public partial class CharacterKit
     static readonly Color TimeBlue = new Color(0.55f, 0.85f, 1f, 0.9f);
 
     int clockTicks;
+    float tickSoundAt;
     int gearThrows;
     LineRenderer clockRing;
     public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0));
@@ -37,7 +38,8 @@ public partial class CharacterKit
             Play("chime", 0.8f, 0.9f);
             SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.6f, Loc.T("정각!"), Brass, 4.5f, 0f);
         }
-        Play("clank", 0.35f, big ? 0.8f : 1.5f + Random.Range(-0.1f, 0.1f));
+        Play("ratchet", 0.5f, big ? 0.7f : 1.2f);
+        Play("clank", 0.25f, big ? 0.8f : 1.5f);
         Play("whoosh", 0.3f, 1.3f);
     }
 
@@ -54,7 +56,7 @@ public partial class CharacterKit
         b.onHitEnemy += (s, c) =>
         {
             if (c == null) return;
-            if (!big) AddClockTicks(1f);
+            if (!big) { AddClockTicks(1f); if (Time.time >= tickSoundAt) { tickSoundAt = Time.time + 0.08f; Play("tick", 0.35f, 0.9f + 0.05f * clockTicks); } }
             if (card[6] > 0 && c.TryGetComponent(out EnermyController e)) e.Slow(1f - (0.05f + 0.1f * card[6]), 2f);
             if (form == SpecialAbilities.KitHourglass && c.TryGetComponent(out EnermyController e2)) e2.Slow(0.5f, 1f);
             SignatureSkills.GearHit(c, s.damage, big);
@@ -71,7 +73,7 @@ public partial class CharacterKit
                 if (augment == AugRift) StartCoroutine(TimeRift(p));
                 if (form == SpecialAbilities.KitCuckoo) StartCoroutine(Cuckoos(p, 3));
                 SignatureSkills.BigGear(p);
-                Play("chime", 0.6f, 0.7f);
+                Play("bell", 0.7f, 1f);
             }
         };
         if (bounces > 0)
@@ -269,8 +271,8 @@ public partial class CharacterKit
         Fx.Spawn("fx_shock", to, 10f, new Color(0.55f, 0.85f, 1f, 0.8f), 18f);
         ShockRing.Spawn(to, 0.5f, 5f, 0.4f, Brass, 0.25f);
         Hostile.Shake(0.2f);
-        Play("shimmer", 0.9f, 0.6f);
-        Play("chime", 0.7f, 0.6f);
+        Play("rewind", 0.9f, 1f);
+        Play("bell", 0.6f, 0.8f);
         SignatureSkills.Rewound(from, to, lost, caught);
         if (card[3] > 0) StartCoroutine(LeftClock(from, 1f + card[3]));
     }

@@ -39,8 +39,8 @@ public partial class CharacterKit
             StartCoroutine(LetterFlight(start, launch, to, d, pigeon, 0));
         }
         SignatureSkills.LettersSent(start, dir, dmg);
-        Play("whoosh", 0.35f, 1.7f);
-        Play("pop", 0.2f, 2f);
+        Play("flick", 0.6f, 1f);
+        Play("whoosh", 0.25f, 1.7f);
     }
 
     // 받는 이: 마우스 쪽 앞 70° 안에서 가장 먼 적 (이미 받는 이가 된 적은 빼고), 없으면 그 방향 가장 가까운 적
@@ -129,7 +129,7 @@ public partial class CharacterKit
             Transform next = NearestOther(at, 9f, target, v, 360f);
             if (next != null) StartCoroutine(LetterFlight(at, ((Vector2)(next.position - at)).normalized, next, dmg * (0.3f + 0.2f * card[6]), false, depth + 1));
         }
-        Play("pop", 0.3f, 1.5f);
+        Play("stamp", 0.35f, 1.3f);
         SignatureSkills.Delivered(g, at, killed, depth);
     }
 
@@ -276,6 +276,7 @@ public partial class CharacterKit
         }
         if (spots.Count > 0) Hostile.Shake(Mathf.Min(0.35f, 0.1f + 0.01f * spots.Count));
         Play("boom", 0.8f, 1.1f);
+        Play("stamp", 0.9f, 0.7f);
         Play("crackle", 0.7f, 1.2f);
         SignatureSkills.Expressed(spots, dmg);
     }

@@ -166,6 +166,7 @@ public partial class SpecialAbilities
         {
             fx.Play("pulse", 0.9f, 0.9f);
             fx.Play("chime", 0.8f, 1.1f);
+            fx.Play("evolve", 0.8f, 1f);
             if (player != null) fx.FloatText(player.transform.position, EvolutionName(id, tier) + "!", new Color(1f, 0.85f, 0.4f), 6f, 0f);
         }
         RebuildHudRows();
@@ -184,7 +185,7 @@ public partial class SpecialAbilities
         }
         historyTier[id] = tier;
         EvolutionTier = tier;
-        if (fx != null) { fx.Play("pulse", 0.9f, 0.9f); fx.Play("chime", 0.8f, 1.1f); }
+        if (fx != null) { fx.Play("pulse", 0.9f, 0.9f); fx.Play("chime", 0.8f, 1.1f); fx.Play("evolve", 0.8f, 1f); }
         RebuildHudRows();
     }
 

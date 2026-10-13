@@ -812,7 +812,8 @@ public partial class CharacterKit : MonoBehaviour
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
             Fx.Spawn("fx_shock", transform.position, radius * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
             Play("slash", 1f, 0.8f);
-            Play("whoosh", 0.8f, 0.6f);
+            Play("spin", 0.9f, 1f);
+            Play("whoosh", 0.6f, 0.6f);
             if (card[3] > 0) StartCoroutine(BladeStorm(1f + card[3], radius * 0.7f));
             KitUltAdd(0f);
         }
@@ -997,6 +998,7 @@ public partial class CharacterKit : MonoBehaviour
                 Specials.Damage(c.gameObject, Damage * 2.5f * UltMul, (c.transform.position - at).normalized, 0.5f);
             }
             if (i % 4 == 0) Play("arrowfly", 0.35f, Random.Range(0.8f, 1.2f));
+            if (i % 3 == 0) Play("pluck", 0.3f, Random.Range(0.85f, 1.25f));
             yield return new WaitForSeconds(0.06f);
         }
         if (card[3] > 0) StartCoroutine(Thorns(center, radius, 2f + card[3]));

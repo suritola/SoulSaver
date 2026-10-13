@@ -48,6 +48,7 @@ public class SpecialFeedback : MonoBehaviour
     public void Play(string name, float vol = 1f, float pitch = 1f)
     {
         SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
+        pitch *= 1f + Random.Range(-0.05f, 0.05f);                  // 1.1.1: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
         PlayRaw(name, vol, pitch);
     }
 
@@ -137,6 +138,7 @@ public class SpecialFeedback : MonoBehaviour
     void BuildClips()
     {
         BuildReloadClips();
+        BuildHeroClips();
         // 충전 윙윙 (1초 반복, 180Hz 정수 주기라 끊김 없음)
         Make("hum", 1f, (t, d, r) => (Sin(180f, t) * 0.5f + Sin(360f, t) * 0.25f + Sin(540f, t) * 0.1f) * (0.8f + 0.2f * Sin(6f, t)));
         // 완충 띵
@@ -457,6 +459,54 @@ public class SpecialFeedback : MonoBehaviour
             float fuse = t < 0.42f ? Noise(r) * 0.22f * (0.5f + 0.5f * Mathf.Clamp01(t / 0.3f)) * (0.7f + 0.3f * Sin(55f, t)) : 0f;
             return fuse + Sin(Mathf.Lerp(900f, 400f, (t - 0.44f) / 0.08f), t) * 0.5f * Hit(t, 0.44f, 0.08f, 2f);
         });
+    }
+
+    // ================================================================= 1.1.1 새 효과음 (새 캐릭터 · 필살기 시작 · 진화)
+    void BuildHeroClips()
+    {
+        // 잉크: 젖은 붓이 쓸고 가는 소리
+        float ink = 0f;
+        Make("ink", 0.22f, (t, d, r) => { ink += (Noise(r) - ink) * 0.35f; return (ink * 0.9f + Sin(Mathf.Lerp(300f, 180f, t / d), t) * 0.15f) * Mathf.Sin(Mathf.PI * t / d) * 0.8f; });
+        // 종이 접기: 바스락 + 접히는 둔탁함
+        Make("paperfold", 0.4f, (t, d, r) => (r.NextDouble() < 0.08 ? Noise(r) : Noise(r) * 0.15f) * Decay(t, d, 1.2f) * 0.6f + Sin(Mathf.Lerp(140f, 60f, t / d), t) * 0.45f * Decay(t, 0.15f, 2f));
+        // 째깍
+        Make("tick", 0.06f, (t, d, r) => Sin(3200f, t) * Decay(t, 0.03f, 3f) * 0.5f + Sin(1600f, t) * Decay(t, 0.05f, 3f) * 0.3f);
+        // 깊은 종
+        Make("bell", 1.4f, (t, d, r) => (Sin(330f, t) + Sin(911f, t) * 0.5f + Sin(1782f, t) * 0.25f + Sin(165f, t) * 0.4f) * Decay(t, d, 2f) * 0.42f);
+        // 톱니 (짧은 딸깍 넷)
+        Make("ratchet", 0.18f, (t, d, r) => { float ph = (t * 25f) % 1f; return (ph < 0.15f ? Noise(r) * 0.5f + Sin(2400f, t) * 0.4f : 0f) * Decay(t, d, 1f); });
+        // 되감기: 거꾸로 빨려 드는 소리
+        float rw = 0f;
+        Make("rewind", 0.55f, (t, d, r) => { rw += (Noise(r) - rw) * 0.2f; float k = t / d; return (rw * 0.8f + Sin(Mathf.Lerp(200f, 1200f, k * k), t) * 0.3f) * k * k * (t > d - 0.03f ? 0f : 1f); });
+        // 편지 휙
+        float fp = 0f;
+        Make("flick", 0.1f, (t, d, r) => { float n = Noise(r); float hp = n - fp; fp = n; return hp * Decay(t, d, 3f) * 0.45f; });
+        // 도장 쿵
+        Make("stamp", 0.15f, (t, d, r) => Sin(Mathf.Lerp(120f, 50f, t / d), t) * Decay(t, d, 3f) * 0.8f + Noise(r) * Decay(t, 0.02f, 2f) * 0.4f);
+        // 곡소리: 내려앉는 유령 울음
+        Make("wail", 0.8f, (t, d, r) => { float f = Mathf.Lerp(700f, 350f, t / d) * (1f + 0.02f * Sin(6f, t)); return (Sin(f, t) + Sin(f * 1.5f, t) * 0.3f) * Mathf.Sin(Mathf.PI * t / d) * 0.32f; });
+        // 얼음: 쨍한 결정
+        Make("freeze", 0.4f, (t, d, r) => (Sin(2600f, t) + Sin(3900f, t) * 0.6f + Sin(5200f, t) * 0.4f) * Decay(t, d, 3f) * 0.28f + Noise(r) * 0.2f * Decay(t, 0.05f, 2f));
+        // 빙의: 낮게 부풀어 오름
+        Make("possess", 0.9f, (t, d, r) => (Sin(90f, t) + Sin(135f, t) * 0.5f + Noise(r) * 0.1f) * Mathf.Sin(Mathf.PI * t / d) * 0.6f);
+        // 필살기 시작: 힘 있게 솟는 화음
+        float uc = 0f;
+        Make("ultcast", 0.6f, (t, d, r) => { uc += (Noise(r) - uc) * 0.1f; return ((Sin(220f, t) + Sin(330f, t) * 0.7f + Sin(440f, t) * 0.5f) * 0.32f + uc * 0.5f) * Mathf.Min(1f, t / 0.04f) * Decay(t, d, 1.5f); });
+        // 진화: 올라가는 장조 화음
+        Make("evolve", 0.9f, (t, d, r) =>
+        {
+            float s = 0f;
+            float[] f = { 523f, 659f, 784f, 1047f };
+            for (int i = 0; i < f.Length; i++) { float st = i * 0.08f; if (t >= st) s += Sin(f[i], t) * Decay(t - st, 0.6f, 2f); }
+            return s * 0.22f;
+        });
+        // 진화 스킬이 터질 때 반짝임
+        Make("evoflair", 0.35f, (t, d, r) => (Sin(1568f, t) + Sin(2093f, t) * 0.7f) * Decay(t, d, 2f) * 0.22f + Sin(3136f, t) * Decay(t, 0.1f, 2f) * 0.15f);
+        // 회전 베기 휘몰아침
+        float sp = 0f;
+        Make("spin", 0.5f, (t, d, r) => { sp += (Noise(r) - sp) * 0.25f; return sp * (0.6f + 0.4f * Sin(14f, t)) * Mathf.Sin(Mathf.PI * t / d) * 1.2f; });
+        // 활시위 튕김 (화살비)
+        Make("pluck", 0.25f, (t, d, r) => (Sin(440f, t) + Sin(880f, t) * 0.5f + Sin(1320f, t) * 0.2f) * Decay(t, d, 4f) * 0.45f);
     }
 
     // ================================================================= lines

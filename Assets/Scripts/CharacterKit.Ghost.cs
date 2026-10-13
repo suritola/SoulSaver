@@ -40,7 +40,7 @@ public partial class CharacterKit
         if (form == SpecialAbilities.KitShadowGhost) StartCoroutine(ShadowHand(dir, dmg * 0.5f));
         PlayerMotion.Of(this).Lunge(0.12f, dir);
         Play("whoosh", 0.4f, 0.75f);
-        Play("shimmer", 0.25f, 1.6f);
+        Play("freeze", 0.2f, 1.4f);
     }
 
     // 손 하나: 한 줄 (굵기 0.9) 의 적을 모두
@@ -105,7 +105,7 @@ public partial class CharacterKit
             frozenUntil[g] = Time.time + FreezeTime;
             if (e != null) e.Slow(0f, FreezeTime);
             Fx.Spawn("fx_sparkle", g.transform.position, 1.6f, Chill, 20f);
-            Play("shatter", 0.25f, 1.8f);
+            Play("freeze", 0.5f, 1f);
             SignatureSkills.Frozen(g);
         }
         chill[g] = have;
@@ -172,7 +172,7 @@ public partial class CharacterKit
         Wisps--;
         Vector3 p = transform.position;
         Fx.Spawn("fx_soulburst", p, 3f, Wraith, 18f);
-        Play("shimmer", 0.6f, 0.7f);
+        Play("wail", 0.5f, 1.3f);
         if (augment == AugSoulBurst)
         {
             DamageCircle(p, 3f, Damage * 1.5f, 2f);
@@ -262,7 +262,8 @@ public partial class CharacterKit
         player.GrantInvincibility(1.8f);
         Color before = body.color;
         Vector3 from = transform.position;
-        Play("whoosh", 0.9f, 0.5f);
+        Play("possess", 0.9f, 1f);
+        Play("whoosh", 0.7f, 0.5f);
         for (float t = 0f; t < 0.15f && target != null; t += Time.deltaTime)
         {
             transform.position = Vector3.Lerp(from, target.position, t / 0.15f);
@@ -296,7 +297,8 @@ public partial class CharacterKit
         ShockRing.Spawn(at, 0.5f, 5f, 0.4f, Chill, 0.25f);
         Hostile.Shake(0.25f);
         Play("boom", 0.8f, 0.8f);
-        Play("shatter", 0.7f, 0.7f);
+        Play("wail", 0.8f, 0.8f);
+        Play("freeze", 0.7f, 0.8f);
         if (card[3] > 0) StartCoroutine(PossessMist(at, 1f + card[3]));
         SignatureSkills.Possessed(at, killed);
         possessing = false;

@@ -104,6 +104,7 @@ public partial class SignatureSkills : MonoBehaviour
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
+        if (Time.time >= flairSoundAt) { flairSoundAt = Time.time + 0.15f; Hostile.Play("evoflair", 0.5f, Random.Range(0.9f, 1.2f)); }      // 1.1.1
         Color v = Vivid(c, 0.95f), comp = Complement(v, 0.9f);
         Color gold = new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.95f);
         Fx.Spawn("fx_shock", p, size * 2.6f, v, 20f);
@@ -117,6 +118,7 @@ public partial class SignatureSkills : MonoBehaviour
         ShockRing.Spawn(p, 0.05f, size * 0.85f, 0.25f, gold, 0.16f);
         if (Hostile.Glow != null) FadeSprite.Spawn("EvoFlash", Hostile.Glow, p, size * 0.9f / 8f, new Color(1f, 1f, 1f, 0.9f), "Effect", 30, 0.14f);
     }
+    float flairSoundAt;
     bool E(string key) => shop != null && shop.IsEvolved(key);
     // 단계별 값: 1단계 a, 단계마다 + step (0단계면 0)
     static float V(int level, float a, float step) => level <= 0 ? 0f : a + step * (level - 1);

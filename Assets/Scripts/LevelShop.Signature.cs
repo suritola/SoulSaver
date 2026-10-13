@@ -364,6 +364,7 @@ public partial class LevelShop
             SignatureSkills.Ensure()?.Refresh(this);
             if (abilityHUD != null) abilityHUD.Merge(e.parts, e.Id);
             SkillEvolutionUI.Queue(e, CharacterData.Selected);
+            Hostile.Play("evolve", 0.8f, 1.15f);
         }
     }
 
