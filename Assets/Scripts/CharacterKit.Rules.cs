@@ -104,16 +104,46 @@ public partial class CharacterKit
             if (k > 0.8f) c = Color.Lerp(c, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.time * 18f));
             DrawRuleBar(k, c, Instability > 0.5f);
         }
+        // 1.1.2: 새 캐릭터 넷도 고유 수치를 머리 위 막대로 (예전엔 화면에 거의 안 보였음)
+        else if (Id == CharacterId.Clockmaker)
+        {
+            // 시계 눈금: 다 차면 금빛으로 깜빡 (다음 톱니가 정각)
+            float k = clockTicks / (float)ClockNeed;
+            Color c = ClockReady ? Color.Lerp(new Color(1f, 0.85f, 0.3f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.95f, 0.75f, 0.4f);
+            DrawRuleBar(k, c, true);
+        }
+        else if (Id == CharacterId.Cartographer)
+        {
+            // 도형까지: 세 번째 획에 닫힘 → 다음 획에 닫히면 금빛
+            int step = strokeCount % ShapeEvery;
+            bool next = step == ShapeEvery - 1;
+            Color c = next ? Color.Lerp(new Color(1f, 0.82f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.45f, 0.6f, 1f);
+            DrawRuleBar((step + 1f) / ShapeEvery, c, true);
+        }
+        else if (Id == CharacterId.Postman)
+        {
+            // 우편 보너스까지 (배달 10번마다)
+            int d = Deliveries % 10;
+            Color c = d == 9 ? Color.Lerp(new Color(1f, 0.4f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(1f, 0.45f, 0.4f);
+            DrawRuleBar(d / 10f, c, true);
+        }
+        else if (Id == CharacterId.Ghost)
+        {
+            // 영혼: 몸 둘레를 도는 영혼 수 / 최대
+            DrawRuleBar(Wisps / (float)Mathf.Max(1, WispMax), new Color(0.65f, 0.9f, 1f), true);
+        }
     }
 
     void DrawRuleBar(float k, Color c, bool show)
     {
         if (ruleBarBack == null)
         {
-            ruleBarBack = Hostile.NewLine("RuleBarBack", new Color(0f, 0f, 0f, 0.6f), 0.22f, 40);
-            ruleBarFill = Hostile.NewLine("RuleBarFill", c, 0.14f, 41);
+            // 1.1.2: 스킬 이펙트(+40)에 덮이지 않게 그 위 순서로, 조금 더 굵고 진하게
+            ruleBarBack = Hostile.NewLine("RuleBarBack", new Color(0.04f, 0.02f, 0.08f, 0.85f), 0.26f, 62);
+            ruleBarFill = Hostile.NewLine("RuleBarFill", c, 0.16f, 63);
             ruleBarBack.loop = ruleBarFill.loop = false;
         }
+        show &= !PlayerController.Cinematic;
         ruleBarBack.enabled = ruleBarFill.enabled = show;
         if (!show) return;
         // 연금술사는 다음 시약 표시 위에, 궁수는 머리 위에
