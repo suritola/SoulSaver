@@ -152,6 +152,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Rogue: mul *= RogueOutgoing(target); break;
             case CharacterId.Archer: mul *= ArcherOutgoing(target); break;
             case CharacterId.Alchemist: mul *= AlchemistOutgoing(target); break;
+            case CharacterId.Cartographer: mul *= MapOutgoing(target); break;
         }
         return dmg * mul;
     }
@@ -175,6 +176,7 @@ public partial class SignatureSkills : MonoBehaviour
         {
             case CharacterId.Swordsman: dmg = SwordTaken(dmg); break;
             case CharacterId.Rogue: dmg = RogueTaken(dmg); break;
+            case CharacterId.Cartographer: dmg = MapTaken(dmg); break;
         }
         return dmg;
     }
@@ -196,6 +198,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (!Alive) return;
         if (who == CharacterId.Gunner) GunnerKilled(pos);
         else if (who == CharacterId.Swordsman) SwordKilled(pos);
+        else if (who == CharacterId.Cartographer) MapKilled(pos);
     }
 
     void OnUlt()
@@ -210,6 +213,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (who == CharacterId.Gunner) m *= GunnerMove();
         else if (who == CharacterId.Swordsman) m *= SwordMove();
         else if (who == CharacterId.Archer) m *= ArcherMove();
+        else if (who == CharacterId.Cartographer) m *= MapMove();
         return m;
     }
 
@@ -235,6 +239,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Rogue: RogueTick(); break;
             case CharacterId.Archer: ArcherTick(); break;
             case CharacterId.Alchemist: AlchemistTick(); break;
+            case CharacterId.Cartographer: MapTick(); break;
         }
         CommonTick();
     }
@@ -260,6 +265,7 @@ public partial class SignatureSkills : MonoBehaviour
             case "l.amplify": return amplify > 0 ? "+" + Mathf.RoundToInt(amplify * V(L(key), 0.03f, 0.01f) * 100f) + "%" : null;
             case "l.concentrate": return (throws % 4) + "/3";
         }
+        if (who == CharacterId.Cartographer) return MapStack(key);
         return null;
     }
 

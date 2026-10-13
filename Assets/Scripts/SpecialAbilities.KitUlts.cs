@@ -20,6 +20,9 @@ public partial class SpecialAbilities
         (KitQuicksilver, "수은 폭풍", "수은 구슬 열여섯 개를 사방으로 튕겨 보냅니다."),
         (KitMagnet, "블랙홀 플라스크", "마우스 위치에 3초 동안 모든 것을 빨아들이는 소용돌이를 만든 뒤 크게 폭발합니다. (공격력 640%)"),
         (KitFirework, "불꽃 축제", "3초 동안 적들 머리 위로 폭죽 스무 발을 터뜨립니다."),
+        (KitSurveyChain, "삼각 측량", "내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)"),
+        (KitInkpot, "먹물 해일", "마우스 쪽으로 거대한 먹물 파도를 일으켜 휩쓸린 적을 밀어내고 느리게 합니다. (공격력 300%)"),
+        (KitGlobe, "자전", "지구본 네 개가 3초 동안 내 둘레를 돌며 닿는 적을 벱니다. (0.25초마다 공격력 60%)"),
     };
 
     public static bool IsKitWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
@@ -64,7 +67,10 @@ public partial class SpecialAbilities
             case KitWire: size = evo ? 11f : 9f; return UltAimShape.Around;
             case KitBurstBow: size = 16f; return UltAimShape.Around;
             case KitFirework: size = 12f; return UltAimShape.Around;
-            case KitCards: case KitQuicksilver: size = 8f; return UltAimShape.Burst;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
+            case KitCards: case KitQuicksilver: size = 8f; return UltAimShape.Burst;
+            case KitSurveyChain: size = evo ? 9f : 8f; return UltAimShape.Around;
+            case KitInkpot: size = evo ? 20f : 16f; return UltAimShape.Line;
+            case KitGlobe: size = evo ? 5f : 4f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
             default: size = 8f; return UltAimShape.Around;
         }
     }
@@ -275,6 +281,9 @@ public partial class SpecialAbilities
                     FireworkBurst(at, evo ? 8 : 6, D * 1.2f);
                     yield return new WaitForSeconds(0.15f);
                 }
+                break;
+            default:
+                yield return StartCoroutine(HeroKitUlt(id, D, me, mouse, dir, evo));      // 1.1.2 새 캐릭터 (SpecialAbilities.NewHeroes)
                 break;
         }
     }

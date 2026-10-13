@@ -174,6 +174,16 @@ public partial class BossSkills : MonoBehaviour
                         Hostile.Play("boom", 0.5f, 1.2f);
                         break;
                     }
+                case CharacterId.Cartographer:
+                    {
+                        // 지도 제작자: 잉크 획 (경고 선 뒤 굵은 잉크 탄)
+                        Hostile.Line(c, c + (Vector3)(d * 14f), 1.4f, 0.55f, Mirror);
+                        yield return new WaitForSeconds(0.55f);
+                        if (!Alive) yield break;
+                        Hostile.Shoot(transform.position, d, 30f, Capped(20f * Power), 0.8f, Mirror, 2f, 0.6f);
+                        Hostile.Play("whoosh", 0.5f, 1.6f);
+                        break;
+                    }
                 default:    // 거너: 세 발 연사
                     for (int i = 0; i < 3 && Alive; i++)
                     {
@@ -343,6 +353,7 @@ public partial class BossSkills : MonoBehaviour
             case CharacterId.Rogue: yield return UltDash(strong ? 4 : 3); break;
             case CharacterId.Archer: yield return UltRain(strong ? 3 : 2); break;
             case CharacterId.Alchemist: yield return UltBlast(strong ? 2 : 1); break;
+            case CharacterId.Cartographer: yield return UltFold(strong ? 3 : 2); break;
             default: yield return UltLockOn(strong ? 6 : 4); break;
         }
     }
@@ -501,6 +512,8 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Lines, Pat.Volley, Pat.Mines, Pat.Echo, Pat.Echo, Pat.Lines, Pat.Trail, Pat.Mines, Pat.Rain, Pat.Rain },
         // 연금술사: 인화성 기체 · 서리 결정 · 촉매 반응 · 증폭 용액 · 조수 개조 · 유리 비 · 응급 연고 · 폭발 정제 · 연소 흔적 · 시약 농축
         new[] { Pat.Mines, Pat.Ring, Pat.Echo, Pat.Blast, Pat.Volley, Pat.Rain, Pat.Mines, Pat.Blast, Pat.Trail, Pat.Blast },
+        // 지도 제작자: 범례 · 등고선 · 축척 · 북극성 · 여백 · 지름길 · 지우개 · 보물 지도 · 나침도 · 잉크 폭풍
+        new[] { Pat.Blast, Pat.Ring, Pat.Lines, Pat.Volley, Pat.Lines, Pat.Trail, Pat.Pull, Pat.Mines, Pat.Ring, Pat.Rain },
     };
 
     // 캐릭터 전용 레벨업 카드 7장 (LevelShop.KitIds 순서: 관통 · 멀티 샷 · 밀어내기 · 노려보는 눈빛 · 사냥의 기세 · 추가 A · 추가 B 자리)
@@ -511,6 +524,7 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Lines, Pat.Volley, Pat.Clones, Pat.Ring, Pat.Volley, Pat.Echo, Pat.Volley },   // 도탄 표창 · 갈고리 표창 · 그림자 분신 · 표창 폭풍 · 사냥의 기세 · 급소 노리기 · 표창 회수
         new[] { Pat.Lines, Pat.Lines, Pat.Blast, Pat.Mines, Pat.None, Pat.Volley, Pat.Echo },      // 분열 화살 · 메아리 화살 · 강풍 화살 · 가시 덤불 · - · 정조준 · 사냥감 표식
         new[] { Pat.Echo, Pat.Ring, Pat.Volley, Pat.Rain, Pat.None, Pat.Blast, Pat.Mines },        // 연쇄 반응 · 급속 냉동 · 호문쿨루스 · 파편 플라스크 · - · 원소 융합 · 끈적한 산성
+        new[] { Pat.Mines, Pat.Lines, Pat.Volley, Pat.Trail, Pat.None, Pat.Echo, Pat.Ring },       // 번지는 잉크 · 굵은 펜촉 · 나침반 바늘 · 접힌 자국 · - · 측량 표식 · 끊기지 않는 선
     };
 
     // 특수 능력 (SpecialAbilities 번호): 무기 0 ~ 7 · 스킬 8 ~ 15 · 패시브 16 ~ 19, 캐릭터 전용 특수 능력(20 ~)은 종류로

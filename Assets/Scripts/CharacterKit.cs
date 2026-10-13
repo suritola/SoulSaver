@@ -94,6 +94,7 @@ public partial class CharacterKit : MonoBehaviour
         if (reagentTag != null) Destroy(reagentTag);
         if (ultAimLine != null) Destroy(ultAimLine.gameObject);
         if (ultAimRing != null) Destroy(ultAimRing.gameObject);
+        OnDestroyCartographer();
     }
 
     void Start()
@@ -302,6 +303,9 @@ public partial class CharacterKit : MonoBehaviour
                 }
                 Play("glassclink", 0.6f, Random.Range(0.9f, 1.15f));
                 Play("whoosh", 0.25f, 1.5f);
+                break;
+            case CharacterId.Cartographer:
+                MapAttack(start, dir, dmg, shots);          // 잉크 획 (CharacterKit.Cartographer)
                 break;
         }
     }
@@ -609,6 +613,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Archer:
                 UpdateRainAim(gauge, full);
+                break;
+            case CharacterId.Cartographer:
+                UpdateFold(gauge, full);                    // 지도 접기
                 break;
         }
     }

@@ -26,6 +26,7 @@ public partial class Shop
         CharacterId.Rogue => "표창 공격력",
         CharacterId.Archer => "화살 공격력",
         CharacterId.Alchemist => "플라스크 공격력",
+        CharacterId.Cartographer => "깃펜 공격력",
         _ => "총알 공격력",
     };
 

@@ -111,7 +111,7 @@ public partial class SpecialAbilities
     public Sprite EvolutionIcon(int id)
     {
         if (IsAwaken(id)) return id == AwakenFirst ? StatIcon(0) : id == AwakenFirst + 1 ? StatIcon(2) : LvIcon(3);
-        if (id >= CharacterKit.AugFirst) return Resources.Load<Sprite>("Icons/ability_" + (id - CharacterKit.AugFirst + 92));
+        if (id >= CharacterKit.AugFirst) return Resources.Load<Sprite>(CharacterKit.AugIcon(id));
         if (id < 0) return Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
         Sprite s = Resources.Load<Sprite>("Weapons/weapon_" + id);
         return s != null ? s : abilities[id].icon;

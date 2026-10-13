@@ -309,7 +309,7 @@ public static class CodexUI
                      Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기에 덧붙음") + " \u00B7 " + Loc.T(SpecialAbilities.KitUltName(id))));
             }
             foreach (int a in CharacterKit.AugmentsFor(c))
-                Card(Resources.Load<Sprite>("Icons/ability_" + (a - CharacterKit.AugFirst + 92)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
+                Card(Resources.Load<Sprite>(CharacterKit.AugIcon(a)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
         }
     }
 
@@ -417,6 +417,7 @@ public static class CodexUI
                 CharacterId.Rogue => "표창 공격력 · 투척 속도 · 표창 회수 속도 · 표창 주머니 · 이동 속도",
                 CharacterId.Archer => "화살 공격력 · 시위 당기는 속도 · 관통력 · 필살기 위력 · 이동 속도",
                 CharacterId.Alchemist => "플라스크 공격력 · 투척 속도 · 폭발 범위 · 필살기 위력 · 이동 속도",
+                CharacterId.Cartographer => "깃펜 공격력 · 이동 속도",
                 _ => "",
             };
             if (ups == "") continue;

@@ -19,6 +19,11 @@ public partial class SpecialAbilities
     public const int KitQuicksilver = 44, KitMagnet = 45, KitFirework = 46, KitStone = 47, KitRewind = 48, KitGiant = 49, KitCycle = 50, KitVolatile = 51;
     // 캐릭터마다 패시브 두 개씩 더 (52 ~ 59)
     public const int KitOath = 52, KitPlate = 53, KitVeil = 54, KitFugitive = 55, KitWeakspot = 56, KitInstinct = 57, KitEmergency = 58, KitGoldConvert = 59;
+    // 1.1.2 새 캐릭터: 캐릭터마다 무기(진화 형태) 3 · 패시브 4 (스킬은 진화 캐릭터에서 쓰지 않아 없음)
+    // 지도 제작자
+    public const int KitSurveyChain = 60, KitInkpot = 61, KitGlobe = 62, KitExplorer = 63, KitLocal = 64, KitUncharted = 65, KitDraft = 66;
+    // 아이콘: 60번부터는 Icons/ability_<400 + 번호> (60 ~ 91 은 레벨업 카드 아이콘이 쓰고 있음)
+    public static string KitIconPath(int id) => "Icons/ability_" + (id >= 60 ? 400 + id : id);
 
     static readonly (string name, SpecialKind kind, string desc)[] KitDefs =
     {
@@ -66,6 +71,15 @@ public partial class SpecialAbilities
         ("사냥 본능", SpecialKind.Passive, "적을 20마리 처치할 때마다 다음 화살 3발이 저절로 가득 당겨집니다.\n진화: 12마리마다"),
         ("비상 물약", SpecialKind.Passive, "체력이 25% 아래로 떨어지면 체력 25%를 곧바로 회복합니다. (쿨타임 45초)\n진화: 쿨타임 30초"),
         ("금속 변환", SpecialKind.Passive, "적을 처치하면 8% 확률로 적이 금으로 변해 코인 3개를 줍니다.\n진화: 15%"),
+
+        // ---------------- 지도 제작자 (60 ~ 66)
+        ("측량 사슬", SpecialKind.Weapon, "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량"),
+        ("잉크병", SpecialKind.Weapon, "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일"),
+        ("지구본", SpecialKind.Weapon, "도형을 닫기 쉬워지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전"),
+        ("탐험가의 체력", SpecialKind.Passive, "도형을 닫을 때마다 체력을 2 회복합니다.\n진화: 4"),
+        ("현지 안내", SpecialKind.Passive, "움직이는 동안 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
+        ("미지의 영역", SpecialKind.Passive, "6칸보다 멀리 있는 적에게 주는 피해가 20% 늘어납니다.\n진화: +35%"),
+        ("정밀 제도", SpecialKind.Passive, "획 끝 가까이의 적에게 주는 피해가 30% 늘어납니다.\n진화: +50%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -85,7 +99,7 @@ public partial class SpecialAbilities
                 name = KitDefs[i].name,
                 kind = KitDefs[i].kind,
                 description = KitDefs[i].desc,
-                icon = Resources.Load<Sprite>("Icons/ability_" + id),
+                icon = Resources.Load<Sprite>(KitIconPath(id)),
             };
         }
         abilities = all;
@@ -111,6 +125,7 @@ public partial class SpecialAbilities
         >= 28 and < 36 => new Color(0.8f, 0.55f, 1f),
         >= 36 and < 44 => new Color(0.6f, 1f, 0.5f),
         >= 44 and < 52 => new Color(0.7f, 1f, 0.5f),
+        >= 60 and < 67 => new Color(0.45f, 0.6f, 1f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
 

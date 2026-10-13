@@ -21,12 +21,15 @@ public partial class LevelShop
         new[] { "r.smoke", "r.feast", "r.burst", "r.ambush", "r.boomerang", "r.path", "r.practice", "r.overflow", "r.knot", "r.rain" },
         new[] { "a.wind", "a.breath", "a.seed", "a.ring", "a.spread", "a.pierce", "a.retreat", "a.ambush", "a.high", "a.meteor" },
         new[] { "l.ignite", "l.frost", "l.catalyst", "l.amplify", "l.tinker", "l.glassrain", "l.salve", "l.refine", "l.embers", "l.concentrate" },
+        new[] { "c.legend", "c.contour", "c.scale", "c.northstar", "c.margin", "c.route", "c.erase", "c.treasure", "c.rose", "c.inkstorm" },
     };
 
     static int Who(CharacterId who) => Mathf.Clamp((int)who, 0, SigKeys.Length - 1);
     public static string SigKey(int id) => SigKey(CharacterData.Selected, id);
     public static string SigKey(CharacterId who, int id) => IsSig(id) && (int)who < SigKeys.Length ? SigKeys[Who(who)][id - SigFirstId] : null;
-    public static int SigIcon(CharacterId who, int id) => 120 + Who(who) * 10 + (id - SigFirstId);
+    public static int SigIcon(CharacterId who, int id) => who >= CharacterId.Cartographer
+        ? 800 + ((int)who - (int)CharacterId.Cartographer) * 10 + (id - SigFirstId)      // 1.1.2 새 캐릭터
+        : 120 + Who(who) * 10 + (id - SigFirstId);
 
     // 다른 스킬을 먼저 배워야 나오는 스킬 (없으면 -1)
     public static int SigRequires(CharacterId who, int id) => who == CharacterId.Alchemist && id == SigFirstId + 4 ? KnockId : -1;
@@ -118,6 +121,8 @@ public partial class LevelShop
                     case 9: return Card("시약 농축", "시약 세 가지를 한 바퀴 던질 때마다 다음 플라스크가 농축되어 더 크게 터집니다.", 0, "농축 플라스크 피해 · 범위", "|+40%|", "|+60%|", "|+80%|", "|+100%|");
                 }
                 break;
+            default:
+                return NewHeroSigCard(who, k);          // 1.1.2 새 캐릭터 (LevelShop.NewHeroes)
         }
         return null;
     }
@@ -185,6 +190,16 @@ public partial class LevelShop
             Evo("le.twins", "쌍둥이 조수", "조수가 하나 더 생겨 함께 플라스크를 던집니다.", 202, KnockId, S(4)),
             Evo("le.glass", "유리 폭풍", "필살기가 터진 뒤 3초 동안 주변에 유리 비가 계속 쏟아집니다.", 203, GlareId, S(5)),
             Evo("le.march", "불꽃 행진", "농축 플라스크가 터진 자리에 불길 고리가 퍼지고, 연소 흔적이 두 배로 커집니다.", 204, S(8), S(9)),
+        },
+        new[]   // 지도 제작자 (1.1.2 · 아이콘 900번대)
+        {
+            Evo("ke.world", "세계 지도", "도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", 900, ExtraAId, S(0)),
+            Evo("ke.relief", "입체 지도", "등고선 파동이 세 겹으로 퍼집니다.", 901, KnockId, S(1)),
+            Evo("ke.express", "직행로", "획을 이어 그리는 동안 받는 피해가 30% 줄어듭니다.", 902, ExtraBId, S(5)),
+            Evo("ke.constellation", "별자리", "북극성이 셋으로 늘고, 별끼리 이어진 선이 닿는 적을 벱니다.", 903, GlareId, S(3)),
+            Evo("ke.blot", "먹물 홍수", "번지는 잉크가 두 배로 번지고, 잉크 폭풍이 지나간 자리에 잉크 웅덩이가 남습니다.", 904, PierceId, S(9)),
+            Evo("ke.bold", "대담한 필치", "모든 획이 여백 획(두 배 굵기 · 여백 피해)이 됩니다.", 905, MultiId, S(2), S(4)),
+            Evo("ke.treasure", "황금 항로", "보물 표시가 두 배 넓어지고, 그 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", 906, S(7), S(8)),
         },
     };
 

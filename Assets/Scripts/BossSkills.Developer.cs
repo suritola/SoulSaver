@@ -8,7 +8,7 @@ public partial class BossSkills
 {
     const int DevMaxHits = 4;
     static readonly Color Dev = new Color(1f, 0.85f, 0.35f, 0.95f);
-    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사" };
+    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자" };     // CharacterId 순서
     int devTurn;
 
     void DeveloperTurn(PlayerController p)
@@ -56,11 +56,39 @@ public partial class BossSkills
                 yield return UltRain(strong ? 5 : 4);
                 if (Alive) DevRing(20, 6.5f, 0f, 12f);
                 break;
+            case CharacterId.Cartographer:
+                // 지도 접기: 접히는 띠 사이로 잉크 탄
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return UltFold(strong ? 4 : 3);
+                break;
             default:
                 // 대폭발: 큰 폭발 사이사이 불꽃놀이
                 StartCoroutine(DevFireworks(strong ? 8 : 6));
                 yield return UltBlast(strong ? 3 : 2);
                 break;
+        }
+    }
+
+    // 지도 제작자 · 지도 접기: 플레이어를 가로지르는 넓은 띠를 경고한 뒤 접듯이 짓이김 (띠 밖으로 나가면 피함)
+    IEnumerator UltFold(int folds)
+    {
+        for (int n = 0; n < folds && Alive; n++)
+        {
+            PlayerController pl = Hostile.Player;
+            if (pl == null) yield break;
+            Vector3 c = pl.transform.position;
+            Vector2 d = DirTo(pl);
+            Vector2 crease = new Vector2(-d.y, d.x);
+            Vector3 a = c - (Vector3)(crease * 9f), b = c + (Vector3)(crease * 9f);
+            Hostile.Line(a, b, 5f, 1f, boss != null && boss.developer ? Dev : Mirror);
+            yield return Windup(Mirror, 1f);
+            if (!Alive) yield break;
+            pl = Hostile.Player;
+            Fx.Beam(a, b, 1.6f, new Color(0.75f, 0.85f, 1f, 0.95f), 0.35f, 18);
+            UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, a, b) < 2.5f);
+            Hostile.Play("crack", 0.7f, 0.8f);
+            Hostile.Shake(0.15f);
+            yield return new WaitForSeconds(0.35f);
         }
     }
 

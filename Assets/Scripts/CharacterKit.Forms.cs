@@ -16,7 +16,10 @@ public partial class CharacterKit
     public const int AugEcho = 103, AugVenom = 104, AugVolley = 105;           // 도적
     public const int AugBlast = 106, AugSeek = 107, AugGale = 108;             // 궁수
     public const int AugDouble = 109, AugGiant = 110, AugOverload = 111;       // 연금술사
-    public const int AugFirst = 100, AugLast = 111;
+    public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.1.2)
+    public const int AugFirst = 100, AugLast = 114;
+    // 강화 아이콘: 1.1.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
+    public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
     [HideInInspector] public int form = -1;         // 1차 진화 형태 (캐릭터 전용 무기 번호), -1 = 기본
     [HideInInspector] public int augment = -1;      // 2차 진화 강화
@@ -28,6 +31,7 @@ public partial class CharacterKit
         CharacterId.Swordsman => new[] { AugStorm, AugExecute, AugThunder },
         CharacterId.Rogue => new[] { AugEcho, AugVenom, AugVolley },
         CharacterId.Archer => new[] { AugBlast, AugSeek, AugGale },
+        CharacterId.Cartographer => new[] { AugSurvey, AugReprint, AugEngrave },
         _ => new[] { AugDouble, AugGiant, AugOverload },
     };
 
@@ -36,7 +40,9 @@ public partial class CharacterKit
         AugStorm => "폭풍", AugExecute => "처단", AugThunder => "뇌광",
         AugEcho => "잔상", AugVenom => "맹독", AugVolley => "연발",
         AugBlast => "폭발 화살", AugSeek => "추적 화살", AugGale => "꿰뚫는 바람",
-        AugDouble => "이중 폭발", AugGiant => "거대 플라스크", _ => "연금 폭주",
+        AugDouble => "이중 폭발", AugGiant => "거대 플라스크",
+        AugSurvey => "정밀 측량", AugReprint => "이중 인쇄", AugEngrave => "판화",
+        _ => "연금 폭주",
     };
 
     public static string AugmentDesc(int id) => id switch
@@ -52,6 +58,9 @@ public partial class CharacterKit
         AugGale => "화살이 적 셋을 더 꿰뚫고 30% 더 빠르게 날아갑니다.",
         AugDouble => "플라스크가 터진 자리에서 한 번 더 터집니다. (피해 60%)",
         AugGiant => "폭발 범위 +40%, 피해 +20%",
+        AugSurvey => "획이 적 하나를 지날 때마다 그다음 적에게 주는 피해가 10%씩 오릅니다. (최대 +50%)",
+        AugReprint => "획을 그을 때마다 0.3초 뒤 같은 자리에 한 번 더 그어집니다. (피해 50%)",
+        AugEngrave => "도형을 닫으면 안쪽에 잉크 폭발이 일어납니다. (공격력 150%)",
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
@@ -70,6 +79,9 @@ public partial class CharacterKit
         SpecialAbilities.KitQuicksilver => "수은 플라스크",
         SpecialAbilities.KitMagnet => "자석 플라스크",
         SpecialAbilities.KitFirework => "폭죽 플라스크",
+        SpecialAbilities.KitSurveyChain => "측량 사슬",
+        SpecialAbilities.KitInkpot => "잉크병",
+        SpecialAbilities.KitGlobe => "지구본",
         _ => "",
     };
 
@@ -88,6 +100,9 @@ public partial class CharacterKit
         SpecialAbilities.KitQuicksilver => "플라스크가 터진 뒤 가까운 적에게 한 번 더 튕겨 터집니다. (피해 70%)",
         SpecialAbilities.KitMagnet => "플라스크가 터지기 전에 주변 적을 끌어모읍니다.",
         SpecialAbilities.KitFirework => "플라스크가 터지면 불꽃 세 갈래가 퍼져 한 번씩 더 터집니다. (피해 45%)",
+        SpecialAbilities.KitSurveyChain => "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)",
+        SpecialAbilities.KitInkpot => "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)",
+        SpecialAbilities.KitGlobe => "도형을 닫기 쉬워지고(닫는 거리 1.5배), 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.",
         _ => "",
     };
 

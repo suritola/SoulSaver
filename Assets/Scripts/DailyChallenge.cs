@@ -50,7 +50,7 @@ public static class DailyChallenge
     {
         List<CharacterId> ids = new List<CharacterId>();
         for (int i = 0; i < CharacterData.All.Length; i++)
-            if (CharacterData.IsDeveloped((CharacterId)i)) ids.Add((CharacterId)i);
+            if (CharacterData.IsDeveloped((CharacterId)i) && !CharacterData.IsNewHero((CharacterId)i)) ids.Add((CharacterId)i);     // 1.1.2 새 캐릭터는 해제 조건이 있어 빌려 주지 않음 (예전 날짜의 캐릭터도 그대로)
         return ids[new System.Random(Seed(day)).Next(ids.Count)];
     }
 

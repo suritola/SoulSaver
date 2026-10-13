@@ -135,8 +135,9 @@ public partial class LevelShop
                     GlareId => Card("파편 플라스크", "필살기가 터지며 작은 플라스크들이 흩어져 다시 터집니다.", 75, "파편 수", "|4|개", "|6|개", "|8|개"),
                     _ => null,
                 };
+            default:
+                return NewHeroKitCard(who, id);         // 1.1.2 새 캐릭터 (LevelShop.NewHeroes)
         }
-        return null;
     }
 
     public static Sprite KitIcon(int id)

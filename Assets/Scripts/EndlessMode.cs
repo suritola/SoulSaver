@@ -182,6 +182,7 @@ public class EndlessMode : MonoBehaviour
         finalStage = 3;
         spawner.spawningEnabled = false;
         Prefs.SetInt(ClearKey, 1);
+        CharacterData.Achieve(CharUnlock.EndlessClear);      // 새 캐릭터 해제 조건 (1.1.2)
         Prefs.Save();
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);

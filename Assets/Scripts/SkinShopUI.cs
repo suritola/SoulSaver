@@ -67,7 +67,7 @@ public class SkinShopUI : MonoBehaviour
         for (int i = 0; i < CharacterData.All.Length; i++)
         {
             CharacterId c = (CharacterId)i;
-            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c)) continue;
+            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c) || CharacterData.IsNewHero(c)) continue;     // 1.1.2 새 캐릭터는 아직 스킨이 없음
             int id = i;
             Button b = UIKit.MakeButton(win, CharacterData.Def(c).name, new Vector2(-560f + 190f * whoButtons.Count, 270f), new Vector2(175f, 50f), () => { who = id; selected = null; Rebuild(); }, 20f);
             b.name = "Who_" + id;

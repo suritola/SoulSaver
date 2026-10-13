@@ -19,7 +19,9 @@ public static class SkillEvoCodexUI
     static readonly Color Purple = new Color(0.79f, 0.63f, 1f);
 
     // 탭: 거너 · 검사 · 도적 · 궁수 · 연금술사 · 공통
-    const int CommonTab = 5;
+    // 탭: 만들어진 캐릭터마다 하나 + 마지막에 「모든 캐릭터」 (1.1.2: 새 캐릭터가 늘어 5명 고정에서 바꿈)
+    static readonly List<CharacterId> heroes = new List<CharacterId>();
+    static int CommonTab => heroes.Count;
 
     public static void Open(Transform root)
     {
@@ -31,15 +33,22 @@ public static class SkillEvoCodexUI
         UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
 
         tabs.Clear();
-        string[] names = new string[6];
-        for (int i = 0; i < 5; i++) names[i] = Loc.T(CharacterData.Def((CharacterId)i).name);
+        heroes.Clear();
+        for (int i = 0; i < CharacterData.All.Length; i++)
+            if (CharacterData.IsDeveloped((CharacterId)i)) heroes.Add((CharacterId)i);
+        string[] names = new string[heroes.Count + 1];
+        for (int i = 0; i < heroes.Count; i++) names[i] = Loc.T(CharacterData.Def(heroes[i]).name);
         names[CommonTab] = Loc.T("모든 캐릭터");
-        float w = 220f;
+        float w = Mathf.Min(220f, (1560f - 12f * (names.Length - 1)) / names.Length);
         for (int i = 0; i < names.Length; i++)
         {
             int t = i;
             Button b = UIKit.MakeButton(win, "", new Vector2((i - (names.Length - 1) * 0.5f) * (w + 12f), 345f), new Vector2(w, 64f), () => Show(t), 26f);
-            b.GetComponentInChildren<TMP_Text>().text = names[i];
+            TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
+            bt.text = names[i];
+            bt.enableAutoSizing = true;         // 캐릭터가 많으면 탭이 좁아짐
+            bt.fontSizeMin = 12f;
+            bt.fontSizeMax = 26f;
             tabs.Add(b);
         }
         TMP_Text hint = UIKit.Text(win, "", 21f, Dim, new Vector2(0f, 282f), new Vector2(1500f, 56f));
@@ -47,7 +56,7 @@ public static class SkillEvoCodexUI
         hint.enableWordWrapping = true;
 
         BuildScroll(win);
-        Show(Mathf.Clamp((int)CharacterData.Selected, 0, 4));
+        Show(Mathf.Max(0, heroes.IndexOf(CharacterData.Selected)));
     }
 
     static void BuildScroll(RectTransform win)
@@ -91,7 +100,7 @@ public static class SkillEvoCodexUI
         }
         else
         {
-            CharacterId who = (CharacterId)tab;
+            CharacterId who = heroes[Mathf.Clamp(tab, 0, heroes.Count - 1)];
             if (!CharacterData.IsUnlocked(who))
                 LockedCard(who);
             else
