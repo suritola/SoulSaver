@@ -5,7 +5,7 @@ using UnityEngine;
 public class BulletGlow : MonoBehaviour
 {
     const int Order = 60;
-    const float HaloSize = 0.22f;      // 1.1.3: 0.16 → 0.22
+    const float HaloSize = 0.22f;      // 1.1.2: 0.16 → 0.22
     SpriteRenderer body;
     GameObject halo, core;
     float trail;
@@ -19,7 +19,7 @@ public class BulletGlow : MonoBehaviour
         if (glow == null || body == null || !body.enabled) { enabled = false; return; }
         color = body.color;
 
-        // 1.1.3: 화려해진 스킬 이펙트(Fx 의 +40)에 덮이지 않게 그 위 순서로, 빛 무리 · 심도 조금 크게
+        // 1.1.2: 화려해진 스킬 이펙트(Fx 의 +40)에 덮이지 않게 그 위 순서로, 빛 무리 · 심도 조금 크게
         body.sortingLayerName = "Effect";
         body.sortingOrder = Order + 1;
         halo = SpecialAbilities.MakeSprite("BulletHalo", glow, transform.position, HaloSize, new Color(color.r, color.g, color.b, 0.7f), "Effect", Order);
