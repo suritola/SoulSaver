@@ -18,7 +18,8 @@ public partial class CharacterKit
     public const int AugDouble = 109, AugGiant = 110, AugOverload = 111;       // 연금술사
     public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.1.2)
     public const int AugPrecise = 115, AugTwinGear = 116, AugRift = 117;       // 시계공
-    public const int AugFirst = 100, AugLast = 117;
+    public const int AugThickEnvelope = 118, AugBundle = 119, AugRegistered = 120;       // 우체부
+    public const int AugFirst = 100, AugLast = 120;
     // 강화 아이콘: 1.1.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
     public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
@@ -34,6 +35,7 @@ public partial class CharacterKit
         CharacterId.Archer => new[] { AugBlast, AugSeek, AugGale },
         CharacterId.Cartographer => new[] { AugSurvey, AugReprint, AugEngrave },
         CharacterId.Clockmaker => new[] { AugPrecise, AugTwinGear, AugRift },
+        CharacterId.Postman => new[] { AugThickEnvelope, AugBundle, AugRegistered },
         _ => new[] { AugDouble, AugGiant, AugOverload },
     };
 
@@ -45,6 +47,7 @@ public partial class CharacterKit
         AugDouble => "이중 폭발", AugGiant => "거대 플라스크",
         AugSurvey => "정밀 측량", AugReprint => "이중 인쇄", AugEngrave => "판화",
         AugPrecise => "정밀 톱니", AugTwinGear => "이중 톱니", AugRift => "시간 균열",
+        AugThickEnvelope => "두꺼운 봉투", AugBundle => "다발 배송", AugRegistered => "등기 표식",
         _ => "연금 폭주",
     };
 
@@ -67,6 +70,9 @@ public partial class CharacterKit
         AugPrecise => "정각까지 필요한 눈금이 2 줄어듭니다.",
         AugTwinGear => "톱니를 하나 더 던집니다.",
         AugRift => "정각 톱니가 터진 자리에 2초 동안 시간 균열이 생겨 안의 적을 느리게 하고 벱니다.",
+        AugThickEnvelope => "편지 피해가 25% 늘어납니다.",
+        AugBundle => "편지를 두 통 더 보냅니다. (피해 50%)",
+        AugRegistered => "속달 표식이 50% 더 많이 붙습니다.",
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
@@ -91,6 +97,9 @@ public partial class CharacterKit
         SpecialAbilities.KitCuckoo => "뻐꾸기 시계",
         SpecialAbilities.KitHourglass => "모래시계",
         SpecialAbilities.KitGrandfather => "괘종시계",
+        SpecialAbilities.KitPigeon => "비둘기 우편",
+        SpecialAbilities.KitParcel => "소포 상자",
+        SpecialAbilities.KitPostbox => "우체통",
         _ => "",
     };
 
@@ -115,6 +124,9 @@ public partial class CharacterKit
         SpecialAbilities.KitCuckoo => "정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다. (공격력 100%씩)",
         SpecialAbilities.KitHourglass => "톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.",
         SpecialAbilities.KitGrandfather => "톱니가 크고 느려지지만 피해가 40% 늘어납니다.",
+        SpecialAbilities.KitPigeon => "첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다. (피해 50%씩)",
+        SpecialAbilities.KitParcel => "편지가 소포 상자가 되어 맞은 자리에서 터집니다. (피해 60%)",
+        SpecialAbilities.KitPostbox => "3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.",
         _ => "",
     };
 

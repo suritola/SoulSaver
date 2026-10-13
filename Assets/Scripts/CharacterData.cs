@@ -78,7 +78,14 @@ public static class CharacterData
             skill = "되감기", skillDesc = "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
             hp = 1f, damage = 1f, attackSpeed = 1.1f, gauge = 1f, range = 16f, price = 8000, condition = CharUnlock.EndlessBosses5,
             pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f) },
-        Coming(CharUnlock.EasyFast), Coming(CharUnlock.EndlessClear), Coming(),
+        new CharacterDef {
+            name = "우체부", title = "저승 배달부", body = "postman", held = "letter",
+            description = "살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 화면의 적 모두에게 편지가 터집니다.",
+            weapon = "편지", attack = "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
+            skill = "속달", skillDesc = "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
+            hp = 0.9f, damage = 1f, attackSpeed = 1.15f, gauge = 1.05f, move = 1.08f, range = 14f, price = 12000, condition = CharUnlock.EasyFast,
+            pool = new[] { 74, 75, 76, 77, 78, 79, 80 }, color = new Color(0.95f, 0.45f, 0.4f) },
+        Coming(CharUnlock.EndlessClear), Coming(),
     };
 
     static CharacterDef Coming(CharUnlock condition = CharUnlock.None) => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0], condition = condition,

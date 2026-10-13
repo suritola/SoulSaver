@@ -262,5 +262,131 @@ public static partial class LocTable
         A("멈췄던 시계탑의 바늘이 다시 째깍거리기 시작했다.", "The clock tower's frozen hands began to tick again.", "止まっていた時計塔の針が再びカチカチと動き始めた。", "停住的钟楼指针又开始嘀嗒作响。");
         A("시계공은 바늘을 1분 앞으로 돌려 두었다. 늘 조금 일찍 준비하는 편이 좋으니까.", "The clockmaker set the hands one minute fast. It's always better to be a little early.", "時計職人は針を1分進めておいた。いつも少し早めに備えるほうがいいから。", "钟表匠把指针拨快了一分钟。总是早一点准备比较好。");
         A("“다음은 언제 멈출지, 이제 나는 알지.”", "\"Now I know when it will stop next.\"", "「次にいつ止まるか、今の私には分かる。」", "“下次什么时候会停，现在我知道了。”");
+
+        // ================================================================= 우체부
+        A("우체부", "Postman", "郵便配達人", "邮差");
+        A("저승 배달부", "Courier of the Dead", "冥府の配達人", "冥府信使");
+        A("살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 화면의 적 모두에게 편지가 터집니다.",
+          "A courier who delivers to the living and the dead alike. Letters seek out the farthest foe first, and one Express Delivery bursts letters on every enemy around.",
+          "生者にも死者にも手紙を届ける配達人。手紙は最も遠い敵から探しに行き、速達ひとつで周りの敵すべてに手紙が弾けます。",
+          "无论生者死者都会送达信件的邮差。信件先寻找最远的敌人，一次特快便能让周围所有敌人身上的信件同时爆开。");
+        A("편지", "Letters", "手紙", "信件");
+        A("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
+          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries earns coins and Ultimate gauge",
+          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、10回配達するたびにコインと必殺技ゲージがもらえます",
+          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，每送达10次获得金币与必杀技充能");
+        A("속달", "Express Delivery", "速達", "特快专递");
+        A("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
+          "While held, letter marks attach to nearby enemies one by one (more the longer you hold); release and all marks burst together 1s later",
+          "押している間、周りの敵に手紙の印が順に付き（長く押すほど多く）、離すと1秒後に印がすべて一斉に弾けます",
+          "按住时依次在周围敌人身上贴上信件标记（按得越久越多），松开1秒后所有标记同时爆炸");
+        A("배달 완료!", "Delivered!", "配達完了！", "送达！");
+        A("편지 공격력", "Letter Damage", "手紙攻撃力", "信件攻击力");
+        A("편지 공격력 · 이동 속도", "Letter Damage · Move Speed", "手紙攻撃力 · 移動速度", "信件攻击力 · 移动速度");
+        A("통", "", "通", "封");
+
+        // ---------------- 전용 레벨업 카드
+        A("등기 우편", "Registered Mail", "書留", "挂号信");
+        A("편지가 받는 이에게 닿으면 가까운 다른 적에게 다시 배달됩니다. (피해 80%)", "After reaching its addressee, a letter is redelivered to another nearby enemy. (80% damage)", "手紙が宛先に届くと、近くの別の敵へもう一度配達されます。（ダメージ80%）", "信件送达收件人后，再投递给附近另一名敌人。（伤害80%）");
+        A("다시 배달", "Redeliveries", "再配達", "再次投递");
+        A("소포", "Parcel", "小包", "包裹");
+        A("편지가 닿은 자리에서 작게 터집니다. (피해 50%)", "Letters burst on arrival. (50% damage)", "手紙が届いた場所で小さく爆発します。（ダメージ50%）", "信件送达处小范围爆炸。（伤害50%）");
+        A("폭발 범위", "Blast radius", "爆発範囲", "爆炸范围");
+        A("우표 수집", "Stamp Collecting", "切手集め", "集邮");
+        A("배달할 때마다 다음 편지의 피해가 늘어납니다. (최대 10중첩)", "Each delivery strengthens your next letters. (Up to 10 stacks)", "配達するたびに次の手紙のダメージが増えます。（最大10重）", "每次送达都会强化之后的信件。（最多10层）");
+        A("답장", "Reply", "返信", "回信");
+        A("속달 표식이 터진 자리에서 작은 편지가 가까운 적에게 날아갑니다. (공격력 60%)", "Where Express marks burst, small letters fly to nearby enemies. (60% attack)", "速達の印が弾けた場所から小さな手紙が近くの敵へ飛びます。（攻撃力60%）", "特快标记爆炸处飞出小信件射向附近敌人。（攻击力60%）");
+        A("답장 수", "Replies", "返信の数", "回信数");
+        A("빠른 우편", "Quick Post", "速い郵便", "快邮");
+        A("편지가 더 빠르게 날아가고 더 날카롭게 꺾입니다.", "Letters fly faster and turn more sharply.", "手紙がより速く飛び、より鋭く曲がります。", "信件飞得更快，转向更灵敏。");
+        A("속도 · 꺾임", "Speed · Turning", "速度・旋回", "速度 · 转向");
+        A("반송", "Return to Sender", "返送", "退回");
+        A("받는 이가 쓰러지면 편지가 다른 적에게 한 번 더 날아갑니다.", "If the addressee falls, the letter flies on to another enemy.", "宛先が倒れると、手紙がもう一度別の敵へ飛びます。", "收件人倒下时，信件再飞向另一名敌人。");
+        A("반송 피해", "Return damage", "返送ダメージ", "退回伤害");
+
+        // ---------------- 고유 스킬
+        A("특급", "Priority Mail", "特急", "特急");
+        A("배달 열 번마다 필살기 게이지가 더 찹니다.", "Every 10 deliveries fill extra Ultimate gauge.", "配達10回ごとに必殺技ゲージがさらにたまります。", "每送达10次额外充能必杀技。");
+        A("소인", "Postmark", "消印", "邮戳");
+        A("편지를 받은 적에게 소인이 찍혀 4초 동안 받는 피해가 늘어납니다.", "Enemies who receive a letter are postmarked, taking more damage for 4s.", "手紙を受け取った敵に消印が押され、4秒間受けるダメージが増えます。", "收到信件的敌人被盖上邮戳，4秒内受到的伤害提升。");
+        A("우편 가방", "Mailbag", "郵便かばん", "邮包");
+        A("움직이는 동안 편지의 피해가 늘어납니다.", "Letters deal more damage while you move.", "動いている間、手紙のダメージが増えます。", "移动中信件伤害提升。");
+        A("편지 피해", "Letter damage", "手紙ダメージ", "信件伤害");
+        A("행운의 편지", "Chain Letter", "幸運の手紙", "幸运信");
+        A("편지로 적을 쓰러뜨리면 30% 확률로 새 편지가 가까운 적들에게 날아갑니다. (공격력 70%)", "Letter kills have a 30% chance to send new letters to nearby enemies. (70% attack)", "手紙で敵を倒すと30%の確率で新しい手紙が近くの敵たちへ飛びます。（攻撃力70%）", "信件击杀敌人时有30%几率向附近敌人寄出新信件。（攻击力70%）");
+        A("새 편지", "New letters", "新しい手紙", "新信件");
+        A("배달 경로", "Delivery Route", "配達ルート", "投递路线");
+        A("바로 앞 받는 이와 다른 적에게 배달하면 피해가 늘어납니다.", "Delivering to a different enemy than the last addressee deals more damage.", "直前の宛先と違う敵に配達するとダメージが増えます。", "投递给与上一位收件人不同的敌人时伤害提升。");
+        A("영수증", "Receipt", "領収書", "收据");
+        A("배달을 마칠 때마다 체력을 회복합니다.", "Heal each time you complete a delivery.", "配達を終えるたびに体力を回復します。", "每完成一次投递恢复生命。");
+        A("궂은 날씨", "Foul Weather", "悪天候", "恶劣天气");
+        A("체력이 절반 아래일 때 편지의 피해가 늘어납니다.", "Letters deal more damage while you're below half health.", "体力が半分を下回ると手紙のダメージが増えます。", "生命低于一半时信件伤害提升。");
+        A("익일 배송", "Next-Day Delivery", "翌日配送", "次日达");
+        A("속달 표식이 터지고 1초 뒤 같은 자리가 한 번 더 터집니다.", "1s after Express marks burst, the same spots burst again.", "速達の印が弾けた1秒後、同じ場所がもう一度弾けます。", "特快标记爆炸1秒后，同一位置再爆炸一次。");
+        A("두 번째 피해", "Second blast", "2回目のダメージ", "第二次伤害");
+        A("정확한 주소", "Exact Address", "正確な住所", "精确地址");
+        A("8칸보다 멀리 있는 적에게 배달하면 피해가 늘어납니다.", "Deliveries to enemies over 8 tiles away deal more damage.", "8マスより遠くの敵に配達するとダメージが増えます。", "投递给8格以外的敌人时伤害提升。");
+        A("광고 전단", "Junk Mail", "広告チラシ", "广告传单");
+        A("편지를 보낼 때 20% 확률로 전단 세 장이 부채꼴로 흩어집니다.", "Sending letters has a 20% chance to scatter three flyers in a fan.", "手紙を送るとき20%の確率でチラシ3枚が扇状に散らばります。", "寄信时有20%几率呈扇形撒出三张传单。");
+        A("전단 피해", "Flyer damage", "チラシダメージ", "传单伤害");
+
+        // ---------------- 스킬 진화
+        A("내용증명", "Certified Mail", "内容証明", "内容证明");
+        A("소인의 효과가 두 배가 됩니다.", "Postmark's effect is doubled.", "消印の効果が2倍になります。", "邮戳效果翻倍。");
+        A("대형 소포", "Bulk Parcel", "大型小包", "大型包裹");
+        A("소포 폭발이 두 배로 넓어지고, 행운의 편지 확률이 50%가 됩니다.", "Parcel blasts are twice as wide, and Chain Letter's chance rises to 50%.", "小包の爆発が2倍広くなり、幸運の手紙の確率が50%になります。", "包裹爆炸范围翻倍，幸运信几率提升至50%。");
+        A("우표 수집가", "Philatelist", "切手収集家", "集邮家");
+        A("우표가 20중첩까지 쌓이고, 특급 게이지가 두 배가 됩니다.", "Stamps stack up to 20, and Priority Mail's gauge is doubled.", "切手が20重まで重なり、特急のゲージが2倍になります。", "邮票可叠加至20层，特急充能翻倍。");
+        A("답장 폭주", "Reply Flood", "返信の嵐", "回信潮");
+        A("익일 배송이 터질 때도 답장 편지가 날아갑니다.", "Next-Day Delivery blasts also send reply letters.", "翌日配送が弾けるときも返信の手紙が飛びます。", "次日达爆炸时也会飞出回信。");
+        A("총알 배송", "Bullet Delivery", "弾丸配送", "子弹快递");
+        A("움직이는 동안 편지를 한 통 더 보냅니다.", "Send one more letter while moving.", "動いている間、手紙をもう1通送ります。", "移动中多寄出一封信。");
+        A("반송 불가", "No Returns", "返送不可", "拒绝退回");
+        A("반송된 편지가 최대 세 번까지 계속 이어집니다.", "Returned letters keep going up to three times.", "返送された手紙が最大3回まで続きます。", "退回的信件最多可连续三次。");
+        A("전단 폭탄", "Flyer Bomb", "チラシ爆弾", "传单炸弹");
+        A("광고 전단이 맞은 자리에서 터집니다. (공격력 60%)", "Junk Mail flyers explode on hit. (60% attack)", "広告チラシが当たった場所で爆発します。（攻撃力60%）", "广告传单命中处爆炸。（攻击力60%）");
+
+        // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
+        A("비둘기 우편", "Pigeon Post", "鳩便", "信鸽");
+        A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다. (피해 50%씩)", "A pigeon carries your first letter and pecks the addressee twice more. (50% damage each)", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。（ダメージ50%ずつ）", "第一封信由信鸽衔去，再啄收件人两次。（每次伤害50%）");
+        A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼", "A pigeon carries your first letter and pecks the addressee twice more.\nUltimate: Pigeon Flock", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。\n究極技：鳩の群れ", "第一封信由信鸽衔去，再啄收件人两次。\n究极技：鸽群");
+        A("소포 상자", "Parcel Box", "小包箱", "包裹箱");
+        A("편지가 소포 상자가 되어 맞은 자리에서 터집니다. (피해 60%)", "Letters become parcel boxes that burst on arrival. (60% damage)", "手紙が小包箱になり、届いた場所で爆発します。（ダメージ60%）", "信件变为包裹箱，送达处爆炸。（伤害60%）");
+        A("편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격", "Letters become parcel boxes that burst on arrival.\nUltimate: Parcel Barrage", "手紙が小包箱になり、届いた場所で爆発します。\n究極技：宅配爆撃", "信件变为包裹箱，送达处爆炸。\n究极技：快递轰炸");
+        A("우체통", "Postbox", "郵便ポスト", "邮筒");
+        A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。");
+        A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.\nUltimate: Postbox Parade", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。\n究極技：ポストの行列", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。\n究极技：邮筒行列");
+        A("비둘기 떼", "Pigeon Flock", "鳩の群れ", "鸽群");
+        A("비둘기 스무 마리가 마우스 쪽으로 날아가며 닿는 적을 쪼습니다. (공격력 90%씩)", "Twenty pigeons fly toward the cursor, pecking enemies they touch. (90% attack each)", "鳩20羽がマウスの方へ飛び、触れた敵をつつきます。（攻撃力90%ずつ）", "二十只鸽子飞向鼠标方向，啄击触碰的敌人。（每只攻击力90%）");
+        A("택배 폭격", "Parcel Barrage", "宅配爆撃", "快递轰炸");
+        A("마우스 둘레에 상자 열 개가 차례로 떨어져 터집니다. (공격력 180%씩)", "Ten boxes drop around the cursor in turn and explode. (180% attack each)", "マウスの周りに箱10個が次々と落ちて爆発します。（攻撃力180%ずつ）", "十个箱子依次落在鼠标周围并爆炸。（每个攻击力180%）");
+        A("우체통 행렬", "Postbox Parade", "ポストの行列", "邮筒行列");
+        A("내 둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Five postboxes rise around you and throw letters at nearby enemies for 4s.", "自分の周りに郵便ポスト5つが立ち、4秒間近くの敵へ手紙を投げます。", "身边立起五个邮筒，4秒内向附近敌人投掷信件。");
+        A("두꺼운 봉투", "Thick Envelope", "分厚い封筒", "厚信封");
+        A("편지 피해가 25% 늘어납니다.", "Letter damage +25%.", "手紙のダメージが25%増えます。", "信件伤害提升25%。");
+        A("다발 배송", "Bundle Delivery", "まとめ配送", "批量投递");
+        A("편지를 두 통 더 보냅니다. (피해 50%)", "Send two more letters. (50% damage)", "手紙をさらに2通送ります。（ダメージ50%）", "多寄出两封信。（伤害50%）");
+        A("등기 표식", "Registered Marks", "書留の印", "挂号标记");
+        A("속달 표식이 50% 더 많이 붙습니다.", "Express Delivery places 50% more marks.", "速達の印が50%多く付きます。", "特快标记数量增加50%。");
+        A("튼튼한 다리", "Sturdy Legs", "丈夫な脚", "强健双腿");
+        A("이동 속도가 8% 빨라집니다.\n진화: 14%", "Move speed +8%.\nEvolved: 14%", "移動速度が8%速くなります。\n進化：14%", "移动速度提升8%。\n进化：14%");
+        A("단골 손님", "Regular Customer", "常連さん", "老主顾");
+        A("보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%", "Deal 15% more damage to bosses and mini-bosses.\nEvolved: +25%", "ボス・中ボスへのダメージが15%増えます。\n進化：+25%", "对首领与精英造成的伤害提升15%。\n进化：+25%");
+        A("우편 요금", "Postage", "郵便料金", "邮资");
+        A("배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%", "Each delivery has a 5% chance to earn 1 coin.\nEvolved: 10%", "配達を終えるたびに5%の確率でコイン1枚をもらいます。\n進化：10%", "每次投递有5%几率获得1枚金币。\n进化：10%");
+        A("개 조심", "Beware of Dog", "猛犬注意", "当心恶犬");
+        A("둘레 3칸에 적이 넷 이상이면 받는 피해가 10% 줄어듭니다.\n진화: 18%", "Take 10% less damage while four or more enemies are within 3 tiles.\nEvolved: 18%", "周囲3マスに敵が4体以上いると受けるダメージが10%減ります。\n進化：18%", "周围3格内有四名以上敌人时受到的伤害减少10%。\n进化：18%");
+
+        // ---------------- 이야기
+        A("저승 배달부의 가방에 수취인이 「킹 슬라임」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"King Slime.\"", "冥府の配達人のかばんに、宛先が「キングスライム」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「史莱姆王」的信。");
+        A("보낸 이는 초원에서 녹아 사라진 사람들. 내용은 짧았다. 「돌려줘.」", "It came from everyone dissolved in the meadow. It was short: \"Give us back.\"", "差出人は草原で溶けて消えた人々。中身は短かった。「返して。」", "寄信人是在草原上被溶化消失的人们。内容很短：「还给我们。」");
+        A("배달부는 모자를 고쳐 쓰고 초원으로 걸어 나갔다. 편지는 반드시 전해진다.", "The courier straightened his cap and walked into the meadow. Every letter gets delivered.", "配達人は帽子をかぶり直して草原へ歩き出した。手紙は必ず届けられる。", "信使正了正帽子，走向草原。信件一定会送达。");
+        A("저승 배달부의 가방에 수취인이 「리치 왕」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"the Lich King.\"", "冥府の配達人のかばんに、宛先が「リッチキング」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「巫妖王」的信。");
+        A("보낸 이는 묘역에 잠들어 있던 모든 영혼. 내용은 짧았다. 「이제 그만 재워 줘.」", "It came from every soul that slept in the catacombs. It was short: \"Let us rest now.\"", "差出人は墓所で眠っていたすべての魂。中身は短かった。「もう眠らせて。」", "寄信人是长眠在墓地的所有灵魂。内容很短：「让我们安息吧。」");
+        A("배달부는 모자를 고쳐 쓰고 신전의 구멍으로 내려갔다. 편지는 반드시 전해진다.", "The courier straightened his cap and climbed down into the temple's hole. Every letter gets delivered.", "配達人は帽子をかぶり直して神殿の穴へ降りていった。手紙は必ず届けられる。", "信使正了正帽子，下到神殿的洞里。信件一定会送达。");
+        A("배달부의 가방이 텅 비었다. 모든 편지가 제 주인에게 닿았다.", "The courier's bag was empty. Every letter had reached its owner.", "配達人のかばんが空になった。すべての手紙が持ち主に届いた。", "信使的包空了。所有信件都已送到主人手中。");
+        A("떠오르는 영혼들이 하나씩 배달부에게 손을 흔들었다. 답장 대신이었다.", "One by one, the rising souls waved to the courier. That was their reply.", "昇っていく魂たちが一人ずつ配達人に手を振った。返事の代わりだった。", "升起的灵魂一个个向信使挥手。那就是它们的回信。");
+        A("“배달 완료.”", "\"Delivered.\"", "「配達完了。」", "“送达。”");
+        A("하지만 가방 바닥에서, 붉은 사막의 소인이 찍힌 편지 한 통이 바스락거렸다...", "But at the bottom of the bag, a letter postmarked from the red desert rustled...", "しかしかばんの底で、赤い砂漠の消印が押された手紙が1通かさかさと音を立てた…", "然而包底，一封盖着红色沙漠邮戳的信沙沙作响……");
     }
 }

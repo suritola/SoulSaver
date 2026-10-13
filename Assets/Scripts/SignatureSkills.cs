@@ -153,6 +153,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Archer: mul *= ArcherOutgoing(target); break;
             case CharacterId.Alchemist: mul *= AlchemistOutgoing(target); break;
             case CharacterId.Cartographer: mul *= MapOutgoing(target); break;
+            case CharacterId.Postman: mul *= PostOutgoing(target); break;
         }
         return dmg * mul;
     }
@@ -179,6 +180,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Rogue: dmg = RogueTaken(dmg); break;
             case CharacterId.Cartographer: dmg = MapTaken(dmg); break;
             case CharacterId.Clockmaker: dmg = ClockTaken(dmg); break;
+            case CharacterId.Postman: dmg = PostTaken(dmg); break;
         }
         return dmg;
     }
@@ -217,6 +219,7 @@ public partial class SignatureSkills : MonoBehaviour
         else if (who == CharacterId.Swordsman) m *= SwordMove();
         else if (who == CharacterId.Archer) m *= ArcherMove();
         else if (who == CharacterId.Cartographer) m *= MapMove();
+        else if (who == CharacterId.Postman) m *= PostMove();
         return m;
     }
 
@@ -271,6 +274,7 @@ public partial class SignatureSkills : MonoBehaviour
         }
         if (who == CharacterId.Cartographer) return MapStack(key);
         if (who == CharacterId.Clockmaker) return ClockStack(key);
+        if (who == CharacterId.Postman) return PostStack(key);
         return null;
     }
 

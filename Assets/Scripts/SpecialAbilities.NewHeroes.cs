@@ -89,6 +89,40 @@ public partial class SpecialAbilities
                     break;
                 }
 
+            // ---------------- 우체부
+            case KitPigeon:
+                {
+                    // 비둘기 떼: 스무 마리가 마우스 쪽으로 퍼지며 날아감
+                    PlayerMotion.Of(player).Cast(0.6f);
+                    for (int i = 0; i < 20; i++)
+                    {
+                        Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f)) * dir;
+                        Bullet b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_falcon", 1.1f, new Color(0.92f, 0.92f, 1f), false);
+                        if (b != null) b.lifetime = (evo ? 20f : 16f) / 26f;
+                        if (i % 4 == 0) fx.Play("pop", 0.3f, 1.8f);
+                        yield return new WaitForSeconds(0.05f);
+                    }
+                    break;
+                }
+            case KitParcel:
+                {
+                    // 택배 폭격: 상자 열 개
+                    Vector3 at = KitClamp(mouse);
+                    float r = evo ? 7f : 6f;
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Vector3 p = KitClamp(at + (Vector3)(Random.insideUnitCircle * r));
+                        Hostile.Circle(p, 1.8f, 0.35f, new Color(0.9f, 0.7f, 0.45f, 0.8f));
+                        StartCoroutine(ParcelDrop(p, D * 1.8f));
+                        yield return new WaitForSeconds(0.1f);
+                    }
+                    break;
+                }
+            case KitPostbox:
+                if (Kit != null) Kit.Postboxes(5, 4f);
+                fx.Play("chime", 0.6f, 1.3f);
+                break;
+
             // ---------------- 시계공
             case KitCuckoo:
                 {
@@ -143,6 +177,14 @@ public partial class SpecialAbilities
                     break;
                 }
         }
+    }
+
+    IEnumerator ParcelDrop(Vector3 p, float dmg)
+    {
+        yield return new WaitForSeconds(0.35f);
+        DamageCircle(p, 1.8f, dmg, 2f);
+        Fx.Spawn("fx_explosion", p, 4f, new Color(0.95f, 0.7f, 0.4f), 18f);
+        fx.Play("boom", 0.35f, 1.4f);
     }
 
     static bool InTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)

@@ -96,6 +96,7 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAimRing != null) Destroy(ultAimRing.gameObject);
         OnDestroyCartographer();
         OnDestroyClockmaker();
+        OnDestroyPostman();
     }
 
     void Start()
@@ -310,6 +311,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Clockmaker:
                 ClockAttack(start, dir, dmg, shots);        // 톱니 투척 (CharacterKit.Clockmaker)
+                break;
+            case CharacterId.Postman:
+                PostAttack(start, dir, dmg, shots);         // 편지 배달 (CharacterKit.Postman)
                 break;
         }
     }
@@ -623,6 +627,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Clockmaker:
                 UpdateRewind(gauge, full);                  // 되감기
+                break;
+            case CharacterId.Postman:
+                UpdateExpress(gauge, full);                 // 속달
                 break;
         }
     }

@@ -23,6 +23,7 @@ public partial class LevelShop
         new[] { "l.ignite", "l.frost", "l.catalyst", "l.amplify", "l.tinker", "l.glassrain", "l.salve", "l.refine", "l.embers", "l.concentrate" },
         new[] { "c.legend", "c.contour", "c.scale", "c.northstar", "c.margin", "c.route", "c.erase", "c.treasure", "c.rose", "c.inkstorm" },
         new[] { "t.overclock", "t.alarm", "t.cog", "t.pocket", "t.minute", "t.echo", "t.spring", "t.loop", "t.borrowed", "t.stopwatch" },
+        new[] { "p.express", "p.postmark", "p.bag", "p.chain", "p.route", "p.receipt", "p.weather", "p.overnight", "p.address", "p.junk" },
     };
 
     static int Who(CharacterId who) => Mathf.Clamp((int)who, 0, SigKeys.Length - 1);
@@ -211,6 +212,16 @@ public partial class LevelShop
             Evo("te.clockwork", "태엽 장치", "정각 톱니가 터진 자리에서 톱니 세 개가 사방으로 날아갑니다.", 914, MultiId, S(6)),
             Evo("te.echoes", "무한 반향", "잔상 톱니가 두 번 날아갑니다.", 915, KnockId, S(5)),
             Evo("te.debt", "시간 빚", "스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", 916, S(8), S(9)),
+        },
+        new[]   // 우체부 (1.1.2)
+        {
+            Evo("pe.registered", "내용증명", "소인의 효과가 두 배가 됩니다.", 920, PierceId, S(1)),
+            Evo("pe.parcel", "대형 소포", "소포 폭발이 두 배로 넓어지고, 행운의 편지 확률이 50%가 됩니다.", 921, MultiId, S(3)),
+            Evo("pe.collector", "우표 수집가", "우표가 20중첩까지 쌓이고, 특급 게이지가 두 배가 됩니다.", 922, KnockId, S(0)),
+            Evo("pe.reply", "답장 폭주", "익일 배송이 터질 때도 답장 편지가 날아갑니다.", 923, GlareId, S(7)),
+            Evo("pe.express", "총알 배송", "움직이는 동안 편지를 한 통 더 보냅니다.", 924, ExtraAId, S(2)),
+            Evo("pe.return", "반송 불가", "반송된 편지가 최대 세 번까지 계속 이어집니다.", 925, ExtraBId, S(4)),
+            Evo("pe.flyers", "전단 폭탄", "광고 전단이 맞은 자리에서 터집니다. (공격력 60%)", 926, S(8), S(9)),
         },
     };
 

@@ -24,6 +24,8 @@ public partial class SpecialAbilities
     public const int KitSurveyChain = 60, KitInkpot = 61, KitGlobe = 62, KitExplorer = 63, KitLocal = 64, KitUncharted = 65, KitDraft = 66;
     // 시계공
     public const int KitCuckoo = 67, KitHourglass = 68, KitGrandfather = 69, KitMechHeart = 70, KitForesight = 71, KitSpareParts = 72, KitSpareTime = 73;
+    // 우체부
+    public const int KitPigeon = 74, KitParcel = 75, KitPostbox = 76, KitSturdyLegs = 77, KitRegular = 78, KitPostage = 79, KitWatchDog = 80;
     // 아이콘: 60번부터는 Icons/ability_<400 + 번호> (60 ~ 91 은 레벨업 카드 아이콘이 쓰고 있음)
     public static string KitIconPath(int id) => "Icons/ability_" + (id >= 60 ? 400 + id : id);
 
@@ -91,6 +93,15 @@ public partial class SpecialAbilities
         ("예측", SpecialKind.Passive, "체력이 절반 이상일 때 받는 피해가 12% 줄어듭니다.\n진화: 20%"),
         ("부품 수집", SpecialKind.Passive, "적을 처치하면 8% 확률로 다음 톱니가 정각 톱니가 됩니다.\n진화: 15%"),
         ("시간 여유", SpecialKind.Passive, "필살기 게이지가 10% 더 빨리 찹니다.\n진화: 18%"),
+
+        // ---------------- 우체부 (74 ~ 80)
+        ("비둘기 우편", SpecialKind.Weapon, "첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼"),
+        ("소포 상자", SpecialKind.Weapon, "편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격"),
+        ("우체통", SpecialKind.Weapon, "3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬"),
+        ("튼튼한 다리", SpecialKind.Passive, "이동 속도가 8% 빨라집니다.\n진화: 14%"),
+        ("단골 손님", SpecialKind.Passive, "보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%"),
+        ("우편 요금", SpecialKind.Passive, "배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%"),
+        ("개 조심", SpecialKind.Passive, "둘레 3칸에 적이 넷 이상이면 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -138,6 +149,7 @@ public partial class SpecialAbilities
         >= 44 and < 52 => new Color(0.7f, 1f, 0.5f),
         >= 60 and < 67 => new Color(0.45f, 0.6f, 1f),
         >= 67 and < 74 => new Color(1f, 0.78f, 0.35f),
+        >= 74 and < 81 => new Color(0.95f, 0.45f, 0.4f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
 

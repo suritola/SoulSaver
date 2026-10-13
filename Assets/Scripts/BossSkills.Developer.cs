@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ public partial class BossSkills
 {
     const int DevMaxHits = 4;
     static readonly Color Dev = new Color(1f, 0.85f, 0.35f, 0.95f);
-    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공" };     // CharacterId 순서
+    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부" };     // CharacterId 순서
     int devTurn;
 
     void DeveloperTurn(PlayerController p)
@@ -56,6 +57,11 @@ public partial class BossSkills
                 yield return UltRain(strong ? 5 : 4);
                 if (Alive) DevRing(20, 6.5f, 0f, 12f);
                 break;
+            case CharacterId.Postman:
+                // 속달: 플레이어 둘레 곳곳에 표식이 붙고 한꺼번에 터짐 + 편지 탄
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return UltExpress(strong ? 14 : 10);
+                break;
             case CharacterId.Clockmaker:
                 // 되감기: 지난 자리마다 시계가 터짐 + 톱니 탄막
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
@@ -72,6 +78,30 @@ public partial class BossSkills
                 yield return UltBlast(strong ? 3 : 2);
                 break;
         }
+    }
+
+    // 우체부 · 속달: 플레이어 둘레 곳곳에 편지 표식, 1.3초 뒤 한꺼번에 터짐 (빈자리로 피함)
+    IEnumerator UltExpress(int marks)
+    {
+        PlayerController pl = Hostile.Player;
+        if (pl == null) yield break;
+        Color col = boss != null && boss.developer ? Dev : Mirror;
+        Vector3 c = pl.transform.position;
+        List<Vector3> spots = new List<Vector3> { c };
+        for (int i = 1; i < marks; i++) spots.Add(Hostile.ClampArena(c + (Vector3)(Random.insideUnitCircle * 6f)));
+        foreach (Vector3 p in spots) Hostile.Circle(p, 1.7f, 1.3f, col);
+        Hostile.Play("pop", 0.5f, 1.6f);
+        yield return Windup(col, 1.3f);
+        if (!Alive) yield break;
+        bool inside = false;
+        foreach (Vector3 p in spots)
+        {
+            Fx.Spawn("fx_explosion", p, 3.4f, col, 20f);
+            inside |= UltInCircle(p, 1.7f);
+        }
+        UltHit(inside);
+        Hostile.Play("boom", 0.6f, 1.2f);
+        yield return new WaitForSeconds(0.3f);
     }
 
     // 시계공 · 되감기: 플레이어가 지나간 자리마다 시계 표식, 1.2초 뒤 「과거」가 그 자리에서 터짐 (계속 움직이면 피함)
