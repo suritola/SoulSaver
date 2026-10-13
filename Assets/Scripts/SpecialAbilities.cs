@@ -48,6 +48,15 @@ public partial class SpecialAbilities : MonoBehaviour
     readonly HashSet<int> evolved = new HashSet<int>();
     public bool IsEvolved(int id) => evolved.Contains(id);
 
+    // 피해 출처 이름(SourceOf)이 진화한 능력인지 (Fx 단계 이펙트용)
+    public bool IsEvolvedSource(string source)
+    {
+        if (string.IsNullOrEmpty(source) || abilities == null) return false;
+        foreach (int id in evolved)
+            if (id >= 0 && id < abilities.Length && abilities[id] != null && abilities[id].name == source) return true;
+        return false;
+    }
+
     // 무기 강화 (2장 상점): 무기마다 [피해, 속도, 특성] 단계
     public const int StatDamage = 0, StatRate = 1, StatMag = 2, StatTrait = 3;
     public static readonly int[] WeaponStatMax = { 5, 5, 3, 3 };

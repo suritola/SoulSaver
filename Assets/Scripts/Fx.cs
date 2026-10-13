@@ -16,6 +16,26 @@ public static class Fx
         return frames;
     }
 
+    // 1.1.2: 강해질수록 화려하게 — 플레이어가 낸 이펙트는 무기 진화 단계(기본 → 1차 강화 → 2차 진화)를 따라
+    // 같은 크기의 _t2 · _t3 시트(광채 · 고리 · 파편 · 2차 폭발이 더해진 그림)로 바꿔 그림. 진화한 특수 능력은 바로 _t3. 시트가 없으면 기본 그대로
+    public static int TierOf(string source)
+    {
+        if (source == null || source == DamageSource.Other) return 1;      // 적 · 처치 연출은 기본
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        if (sp == null) return 1;
+        return sp.IsEvolvedSource(source) ? 3 : 1 + Mathf.Clamp(sp.EvolutionTier, 0, 2);
+    }
+
+    static Sprite[] TieredFrames(string name)
+    {
+        for (int t = TierOf(DamageSource.Current); t > 1; t--)
+        {
+            Sprite[] f = Frames(name + "_t" + t);
+            if (f != null && f.Length > 0) return f;
+        }
+        return Frames(name);
+    }
+
     // 정렬 층 이름 → 번호 (이펙트마다 이름으로 찾지 않게 한 번만)
     static readonly Dictionary<string, int> layerIds = new Dictionary<string, int>();
     static int LayerId(string layer)
@@ -80,7 +100,7 @@ public static class Fx
     public static FxAnim Play(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
                               float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
     {
-        Sprite[] frames = Frames(name);
+        Sprite[] frames = TieredFrames(name);
         if (frames == null || frames.Length == 0) return null;
 
         size = Visible(name, size);
@@ -120,7 +140,7 @@ public static class Fx
     public static void Spawn(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
     {
-        Sprite[] frames = Frames(name);
+        Sprite[] frames = TieredFrames(name);
         if (frames == null || frames.Length == 0) return;
 
         FxAnim a = null;
