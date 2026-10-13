@@ -1,6 +1,6 @@
 # 스팀 출시 준비
 
-Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해야 하는 것**을 정리했습니다.
+Soul Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해야 하는 것**을 정리했습니다.
 
 ## ✅ 해 둔 것
 
@@ -13,9 +13,9 @@ Gun Saver를 스팀에 올리기 위해 **이미 해 둔 것**과 **직접 해�
 | 게임 아이콘 (실행 파일 · 작업 표시줄) | `Assets/Art/Icon/GunSaverIcon.png` |
 | SteamPipe 업로드 스크립트 | `tools/steam-upload.ps1`, `tools/steam/steam-config.json` |
 | 상점 페이지 글 (한 · 영 · 일 · 중), 태그, 시스템 요구 사항 | [store-page.md](store-page.md) |
-| 상점 이미지 · 라이브러리 이미지 · 스크린샷 6장 | `art/capsules/`, `art/screenshots/` |
+| 상점 · 라이브러리 이미지 · 아이콘 (정식판 + 체험판, 2026-10-14 새 도트 그래픽으로 전면 교체) · 스크린샷 12장 × 4개 언어 + 체험판 7장 × 4개 언어 | `art/capsules/`, `art/demo/`, `art/screenshots/`, `art/demo/screenshots/` |
 
-> 이미지는 게임 그림을 합성해 만든 **초안**입니다. 상점 첫인상을 좌우하니, 여유가 되면 캡슐 이미지는 따로 그린 그림으로 바꾸는 것을 추천합니다.
+> 캡슐 · 라이브러리 이미지는 게임 안 실제 도트 그림(영웅 · 적 · 보스 · 이펙트 · 타일)을 정수 배율로 키워 합성하고, 로고는 손으로 찍은 도트 글자입니다 (`tools/steam_art/make_store_art.py`). 자세한 목록은 아래 「이미지 규격」.
 
 ## 📝 직접 해야 하는 것
 
@@ -64,19 +64,69 @@ pwsh tools/steam-upload.ps1 -Version v2.4            # 업로드 (처음엔 비�
 | **효과음 mp3 5개** (`Assets/Sounds/`) | ❓ 출처 확인 필요 — 모르면 바꾸는 게 안전 |
 | 지옥 · 초원 적, 타일, UI, 이펙트 스프라이트 | ❓ 직접 그린 것인지 받은 것인지 확인 |
 
-## 이미지 규격
+## 이미지 규격 · 올릴 곳
 
-| 파일 (`art/capsules/`) | 크기 | Steamworks 칸 |
+### 다시 만들기
+```powershell
+py -3 tools/steam_art/make_store_art.py                      # 캡슐 · 라이브러리 · 아이콘 (정식판 + 체험판), steam_assets/ 도 갱신
+pwsh tools/steam/store-art/shoot.ps1 -Publish                 # 스크린샷 4개 언어 촬영 → art/screenshots, art/demo/screenshots
+pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만 빨리 확인 (옮기지 않음)
+```
+- 캡슐: 로고(게임 이름) 말고는 글자 없음 (수상 · 리뷰 · 할인 문구 금지 규칙). 체험판은 로고 아래 붉은 「DEMO」 리본.
+- 라이브러리 히어로: 글자 없음. 가운데 띠에 주인공 · 괴물 떼 · 보스, 왼쪽은 로고가 얹힐 자리라 비워 둠.
+- 스크린샷 촬영 도구는 메인 프로젝트 · 빌드 복사본이 아닌 `%LOCALAPPDATA%\SoulSaverStoreShots` 복사본(제품 이름 `Soul Saver StoreShots`)에서 돌아서 실제 저장과 섞이지 않음.
+
+### 정식판 앱 (App ID 5328770) — `art/capsules/`
+
+| 파일 | 크기 | Steamworks 칸 | 그림 |
+|---|---|---|---|
+| `header_capsule.png` | 920×430 | 상점 페이지 관리 → 그래픽 에셋 → **헤더 캡슐** | 로고 왼쪽 위, 거너 · 검사 · 궁수 · 유령 vs 지하 묘역 괴물 떼 · 지옥의 군주 · 리치 왕 |
+| `small_capsule.png` | 462×174 | 그래픽 에셋 → **소형 캡슐** | 로고를 가장 크게, 아래에 사격하는 거너 vs 괴물 떼 |
+| `main_capsule.png` | 1232×706 | 그래픽 에셋 → **메인 캡슐** | 헤더와 같은 구도를 크게 |
+| `vertical_capsule.png` | 748×896 | 그래픽 에셋 → **세로 캡슐** | 두 줄 로고, 리치 왕 · 킹 슬라임 · 지옥의 군주, 영웅 다섯 |
+| `page_background.png` | 1438×810 | 그래픽 에셋 → **페이지 배경** (선택) | 영혼 화로가 놓인 어두운 묘역 바닥 (글자 · 인물 없음) |
+| `library_capsule.png` | 600×900 | 라이브러리 에셋 → **라이브러리 캡슐** | 세로 캡슐과 같은 구도 |
+| `library_header.png` | 920×430 | 라이브러리 에셋 → **라이브러리 헤더** | 헤더 캡슐과 같음 |
+| `library_hero.png` | 3840×1240 | 라이브러리 에셋 → **라이브러리 히어로** | 영웅 아홉 명 vs 괴물 떼 · 네 보스 (글자 없음) |
+| `library_logo.png` | 1280×720 (투명) | 라이브러리 에셋 → **라이브러리 로고** | 두 줄 도트 로고 (가로 1278) |
+| `community_icon.jpg` | 184×184 | 앱 관리 → 일반 → **커뮤니티 아이콘** | 거너 전신 |
+| `client_icon.ico` / `.png` | 16·32·48·256 / 32×32 | 앱 관리 → 일반 → **클라이언트 아이콘** (.ico) · 바탕 화면 바로 가기는 `shortcut_icon_512.png` | 거너 상반신 (투명) |
+| `shortcut_icon_512.png` | 512×512 | 앱 관리 → 일반 → **클라이언트 바로 가기 아이콘** (필요할 때) | 거너 전신 |
+| `art/screenshots/*.png` | 1920×1080 | 상점 페이지 관리 → **스크린샷** (영어 파일이 기본, `_koreana` · `_japanese` · `_schinese` 는 언어별 스크린샷 칸) | 아래 표 |
+
+### 체험판 앱 (App ID 5369030) — `art/demo/`
+같은 이름 · 같은 칸에 올립니다 (체험판 앱의 Steamworks 페이지). 그림체는 정식판과 같고, 체험판에서 실제로 보이는 것만: 거너 · 검사 · 1장 지하 묘역 적(해골 · 좀비 · 망령) · 리치 왕, 로고 아래 「DEMO」.
+
+| 파일 | 크기 | Steamworks 칸 |
 |---|---|---|
-| `header_capsule.png` | 920×430 | 헤더 캡슐 |
-| `small_capsule.png` | 462×174 | 작은 캡슐 |
-| `main_capsule.png` | 1232×706 | 메인 캡슐 |
-| `vertical_capsule.png` | 748×896 | 세로 캡슐 |
-| `library_capsule.png` | 600×900 | 라이브러리 캡슐 |
-| `library_hero.png` | 3840×1240 | 라이브러리 히어로 (글자 없음) |
-| `library_logo.png` | 1280×720 | 라이브러리 로고 (투명 배경) |
-| `community_icon.jpg` | 184×184 | 커뮤니티 아이콘 |
-| `art/screenshots/*.png` | 1920×1080 | 스크린샷 (최소 5장) · 1.8.6부터 실제 플레이 화면 (`tools/trailer/record.ps1`) |
-| `art/achievements/*.jpg` | 256×256 | 업적 아이콘 (달성 / 미달성) |
+| `header_capsule.png` · `small_capsule.png` · `main_capsule.png` · `vertical_capsule.png` · `page_background.png` | 정식판과 같음 | 그래픽 에셋 (같은 이름의 칸) |
+| `library_capsule.png` · `library_header.png` · `library_hero.png` · `library_logo.png` | 정식판과 같음 | 라이브러리 에셋 (로고에도 DEMO 리본) |
+| `community_icon.jpg` · `client_icon.ico` · `shortcut_icon_512.png` | 정식판과 같음 | 앱 관리 → 일반 (커뮤니티 아이콘 · 바로 가기에 DEMO 리본) |
+| `screenshots/*.png` | 1920×1080 | 스크린샷 (아래 표의 체험판 열) |
 
-이미지는 `tools/steam/store-art/`의 PlayMode 테스트로 게임 화면을 합성해 만들었습니다. 다시 만들려면 두 파일을 프로젝트 복사본의 `Assets/StoreArt/`에 넣고 `Unity -batchmode -runTests -testPlatform PlayMode`를 실행하세요 (환경 변수 `ART_OUT` = 저장 폴더). 스크린샷은 초안이라 직접 플레이하며 찍은 화면으로 바꾸는 것을 추천합니다.
+### 스크린샷 (1920×1080, 영어 기본 + `_koreana` · `_japanese` · `_schinese`)
+
+| 파일 | 장면 | 정식판 | 체험판 |
+|---|---|---|---|
+| `01_gunner_catacombs_horde` | 거너 · 지하 묘역, Lv 21 · 2차 진화 무기 · 카드 여럿, 몰려오는 괴물 떼에 필살기 | ✔ | |
+| `02_level_up_cards` | 레벨업 카드 3택 (진화 재료 표시) | ✔ | |
+| `03_weapon_evolution` | 무기 진화 3택 화면 | ✔ | ✔ (같은 파일) |
+| `04_skill_evolution` | 스킬 진화 「천둥 장전」 연출 | ✔ | ✔ (같은 파일) |
+| `05_soul_tree` | 영혼 트리 | ✔ | ✔ (같은 파일) |
+| `06_swordsman_lich_king` | 검사 vs 리치 왕 | ✔ | |
+| `07_archer_demon_lord_barrier` | 궁수 · 지옥의 군주 필살기 결계 | ✔ | |
+| `08_cartographer_king_slime` | 지도 제작자 vs 킹 슬라임 (초원) | ✔ | |
+| `09_ghost_mirror_sovereign` | 유령 vs 거울의 군주 (영혼의 심연) | ✔ | |
+| `10_endless_developer` | 무한 모드 25분 · 최종 보스 「개발자」 (우체부) | ✔ | |
+| `11_nine_heroes` | 캐릭터 선택: 영웅 아홉 명 | ✔ | |
+| `12_skin_shop` | 스킨 상점 | ✔ | |
+| `demo/screenshots/01_gunner_catacombs` | 체험판: 진화 전 거너 · 지하 묘역 | | ✔ |
+| `demo/screenshots/02_level_up_cards` | 체험판: 레벨업 카드 | | ✔ |
+| `demo/screenshots/06_swordsman_lich_king` | 체험판: 검사 vs 리치 왕 | | ✔ |
+| `demo/screenshots/07_gunner_lich_barrier` | 체험판: 거너 · 리치 왕 결계 | | ✔ |
+
+### 그 밖
+| 파일 | 크기 | 칸 |
+|---|---|---|
+| `art/achievements/*.jpg` | 256×256 | 업적 아이콘 (달성 / 미달성) |
+| `steam_assets/*` | 예전 파일 이름 | 보도 자료(`docs/marketing/press-kit.md`)가 가리키는 사본 — `make_store_art.py` 가 새 그림으로 덮어씀 |
