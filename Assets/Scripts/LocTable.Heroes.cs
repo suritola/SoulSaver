@@ -388,5 +388,133 @@ public static partial class LocTable
         A("떠오르는 영혼들이 하나씩 배달부에게 손을 흔들었다. 답장 대신이었다.", "One by one, the rising souls waved to the courier. That was their reply.", "昇っていく魂たちが一人ずつ配達人に手を振った。返事の代わりだった。", "升起的灵魂一个个向信使挥手。那就是它们的回信。");
         A("“배달 완료.”", "\"Delivered.\"", "「配達完了。」", "“送达。”");
         A("하지만 가방 바닥에서, 붉은 사막의 소인이 찍힌 편지 한 통이 바스락거렸다...", "But at the bottom of the bag, a letter postmarked from the red desert rustled...", "しかしかばんの底で、赤い砂漠の消印が押された手紙が1通かさかさと音を立てた…", "然而包底，一封盖着红色沙漠邮戳的信沙沙作响……");
+
+        // ================================================================= 유령
+        A("유령", "Ghost", "幽霊", "幽灵");
+        A("죽지 못한 영혼", "The Soul That Lingers", "死にきれない魂", "无法安息之魂");
+        A("세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
+          "A soul that could not leave this world. Its cold touch freezes foes, the souls of the fallen orbit it and take hits in its place, and it possesses enemies to burst them from within.",
+          "この世を去れない魂。冷たい手で敵を凍らせ、倒した敵の魂を周りにまとってダメージを肩代わりさせ、敵の体に憑依して内側から破裂させます。",
+          "无法离开人世的灵魂。以冰冷之手冻结敌人，让被击败敌人的灵魂环绕身边代为承受伤害，并附身于敌人体内将其从内部引爆。");
+        A("차가운 손길", "Cold Touch", "冷たい手", "冰冷之手");
+        A("앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
+          "A short reaching hand pierces a line of enemies and builds chill (five stacks freeze them). Kills may spawn souls that orbit you; when hit, a soul vanishes instead of your health",
+          "前へ短く伸びる手が一列の敵をすべて貫き冷気をためます（5回たまると凍結）。敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が消えてダメージを防ぎます",
+          "向前短伸的手贯穿一整列敌人并累积寒气（叠满五层即冻结）。击败敌人时有几率生成环绕身边的灵魂，受击时由灵魂代替生命消散以抵挡伤害");
+        A("빙의", "Possession", "憑依", "附身");
+        A("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
+          "Hold to mark the enemy nearest the cursor; release to slip into its body and burst it from within 1s later. You're invulnerable inside, and nearby enemies take damage and chill too",
+          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り1秒後に内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます",
+          "按住标记鼠标附近的敌人，松开后潜入其体内，1秒后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气");
+        A("명계의 문!", "Gate of the Dead!", "冥界の門！", "冥界之门！");
+        A("손길 공격력", "Touch Damage", "手の攻撃力", "冰手攻击力");
+        A("손길 공격력 · 이동 속도", "Touch Damage · Move Speed", "手の攻撃力 · 移動速度", "冰手攻击力 · 移动速度");
+
+        // ---------------- 전용 레벨업 카드
+        A("꿰뚫는 냉기", "Piercing Chill", "貫く冷気", "穿透寒气");
+        A("손길이 더 멀리 뻗습니다.", "Your touch reaches farther.", "手がより遠くまで伸びます。", "冰手伸得更远。");
+        A("손길 길이", "Reach", "手の長さ", "伸展距离");
+        A("얼어붙는 손길", "Freezing Touch", "凍てつく手", "冻结之手");
+        A("얼어붙기까지 필요한 냉기가 줄어듭니다.", "Fewer chill stacks are needed to freeze.", "凍結までに必要な冷気が減ります。", "冻结所需的寒气层数减少。");
+        A("필요한 냉기", "Chill needed", "必要な冷気", "所需寒气");
+        A("원혼", "Vengeful Spirit", "怨霊", "冤魂");
+        A("적이 쓰러지면 그 영혼이 가까운 적에게 날아가 부딪힙니다.", "When an enemy falls, its soul flies into a nearby enemy.", "敵が倒れるとその魂が近くの敵へ飛んでぶつかります。", "敌人倒下时，其灵魂飞向附近敌人撞击。");
+        A("원혼 피해", "Spirit damage", "怨霊ダメージ", "冤魂伤害");
+        A("빙의 여운", "Lingering Possession", "憑依の余韻", "附身余韵");
+        A("빙의로 터진 자리에 냉기 안개가 남아 안의 적에게 냉기를 쌓습니다.", "Possession leaves a chill mist that builds chill on enemies inside.", "憑依で破裂した場所に冷気の霧が残り、中の敵に冷気をためます。", "附身爆炸处留下寒雾，为其中的敌人累积寒气。");
+        A("안개 지속", "Mist duration", "霧の持続", "寒雾持续");
+        A("영혼 수호", "Soul Guard", "魂の守り", "灵魂守护");
+        A("몸 둘레에 거느릴 수 있는 영혼이 늘어납니다.", "You can keep more souls around you.", "周りにまとえる魂が増えます。", "可环绕身边的灵魂数量增加。");
+        A("최대 영혼", "Max souls", "最大の魂", "最大灵魂");
+        A("얼음 파편", "Ice Shards", "氷の破片", "冰之碎片");
+        A("얼어붙은 적이 쓰러지면 얼음 파편이 사방으로 튑니다. (공격력 50%)", "Frozen enemies shatter into shards in all directions when they fall. (50% attack)", "凍った敵が倒れると氷の破片が四方へ飛び散ります。（攻撃力50%）", "被冻结的敌人倒下时，冰之碎片向四方飞溅。（攻击力50%）");
+
+        // ---------------- 고유 스킬
+        A("원한", "Grudge", "怨み", "怨恨");
+        A("냉기가 쌓인 적에게 주는 피해가 쌓인 냉기만큼 늘어납니다. (얼어붙은 적은 5중첩으로)", "Deal more damage to enemies the more chill they carry. (Frozen counts as 5 stacks)", "冷気がたまった敵へのダメージが、たまった冷気の分だけ増えます。（凍った敵は5重扱い）", "对累积寒气的敌人造成的伤害随寒气层数提升。（冻结视为5层）");
+        A("냉기 하나당", "Per chill", "冷気1つごと", "每层寒气");
+        A("곡소리", "Wail", "嘆きの声", "哀嚎");
+        A("영혼이 피해를 막을 때 곡소리가 퍼져 둘레 적을 밀치고 다치게 합니다.", "When a soul blocks a hit, a wail knocks back and damages nearby enemies.", "魂がダメージを防ぐとき、嘆きの声が広がり周りの敵を押しのけて傷つけます。", "灵魂抵挡伤害时，哀嚎扩散，击退并伤害周围敌人。");
+        A("곡소리 피해", "Wail damage", "嘆きの声ダメージ", "哀嚎伤害");
+        A("한기", "Creeping Cold", "寒気", "寒意");
+        A("손길에 맞은 적 둘레의 적에게도 냉기가 번집니다.", "Chill spreads to enemies around those you touch.", "手に当たった敵の周りの敵にも冷気が広がります。", "寒气蔓延至被冰手击中敌人周围的敌人。");
+        A("번지는 적", "Spreads to", "広がる敵", "蔓延敌人");
+        A("생기 흡수", "Life Drain", "生気吸収", "生机吸取");
+        A("얼어붙은 적을 손길로 맞히면 체력을 회복합니다.", "Touching a frozen enemy heals you.", "凍った敵を手で当てると体力を回復します。", "用冰手击中被冻结的敌人时恢复生命。");
+        A("실체 없음", "Incorporeal", "実体なし", "无形");
+        A("움직이는 동안 확률로 공격이 몸을 그대로 통과합니다.", "While moving, attacks may pass right through you.", "動いている間、確率で攻撃が体をそのまま通り抜けます。", "移动中有几率让攻击直接穿过身体。");
+        A("통과 확률", "Pass-through chance", "通過確率", "穿过几率");
+        A("도깨비불", "Will-o'-Wisp", "鬼火", "鬼火");
+        A("거느린 영혼 하나마다 주는 피해가 늘어납니다.", "Each soul you keep increases your damage.", "まとった魂1つごとに与えるダメージが増えます。", "每个环绕的灵魂都会提升造成的伤害。");
+        A("영혼 하나당", "Per soul", "魂1つごと", "每个灵魂");
+        A("저주", "Curse", "呪い", "诅咒");
+        A("빙의한 적이 쓰러지면 둘레의 적 셋에게 저주가 걸려 5초 동안 받는 피해가 늘어납니다.", "When a possessed enemy dies, three nearby enemies are cursed to take more damage for 5s.", "憑依した敵が倒れると周りの敵3体に呪いがかかり、5秒間受けるダメージが増えます。", "被附身的敌人倒下时，周围三名敌人受到诅咒，5秒内受到的伤害提升。");
+        A("폴터가이스트", "Poltergeist", "ポルターガイスト", "骚灵");
+        A("3초마다 가까운 적을 들어 올렸다 내리꽂습니다.", "Every 3s, lift a nearby enemy and slam it down.", "3秒ごとに近くの敵を持ち上げて叩きつけます。", "每3秒将附近敌人举起再砸下。");
+        A("내리꽂는 피해", "Slam damage", "叩きつけダメージ", "砸落伤害");
+        A("동상", "Frostbite", "凍傷", "冻伤");
+        A("얼어붙은 적이 받는 피해가 늘어납니다.", "Frozen enemies take more damage.", "凍った敵が受けるダメージが増えます。", "被冻结的敌人受到的伤害提升。");
+        A("망령의 행렬", "Procession of Shades", "亡霊の行列", "亡灵行列");
+        A("빙의하면 영혼이 바로 생겨납니다.", "Possession immediately spawns souls.", "憑依すると魂がすぐに生まれます。", "附身时立即生成灵魂。");
+        A("생기는 영혼", "Souls spawned", "生まれる魂", "生成灵魂");
+
+        // ---------------- 스킬 진화
+        A("눈보라", "Blizzard", "吹雪", "暴风雪");
+        A("손길이 지나간 자리에 1.5초 동안 냉기 안개가 남아 냉기를 쌓습니다.", "Your touch leaves a 1.5s chill mist that builds chill.", "手が通った場所に1.5秒間冷気の霧が残り、冷気をためます。", "冰手经过处留下持续1.5秒的寒雾，累积寒气。");
+        A("밴시", "Banshee", "バンシー", "女妖");
+        A("곡소리에 휘말린 적이 곧바로 얼어붙습니다.", "Enemies caught in your Wail freeze instantly.", "嘆きの声に巻き込まれた敵がすぐに凍ります。", "被哀嚎波及的敌人立即冻结。");
+        A("흡혈귀", "Vampire", "吸血鬼", "吸血鬼");
+        A("생기 흡수가 두 배가 되고, 적이 얼어붙을 때마다 체력을 회복합니다.", "Life Drain is doubled, and you heal whenever an enemy freezes.", "生気吸収が2倍になり、敵が凍るたびに体力を回復します。", "生机吸取翻倍，每当敌人被冻结时恢复生命。");
+        A("망령", "Specter", "亡霊", "幽魂");
+        A("실체 없음 확률이 두 배가 되고, 거느린 영혼 하나마다 이동 속도가 2% 오릅니다.", "Incorporeal's chance is doubled, and each soul you keep adds 2% move speed.", "実体なしの確率が2倍になり、まとった魂1つごとに移動速度が2%上がります。", "无形几率翻倍，每个环绕的灵魂提升2%移动速度。");
+        A("파멸", "Doom", "破滅", "毁灭");
+        A("저주가 둘레 20칸의 모든 적에게 걸립니다.", "Curse spreads to every enemy within 20 tiles.", "呪いが周囲20マスのすべての敵にかかります。", "诅咒作用于周围20格内所有敌人。");
+        A("소란한 집", "Haunted House", "騒がしい家", "闹鬼之屋");
+        A("폴터가이스트가 적 셋을 한꺼번에 들어 올립니다.", "Poltergeist lifts three enemies at once.", "ポルターガイストが敵3体を一度に持ち上げます。", "骚灵一次举起三名敌人。");
+        A("빙하", "Glacier", "氷河", "冰川");
+        A("얼음 파편에 맞은 적이 곧바로 얼어붙습니다.", "Enemies hit by Ice Shards freeze instantly.", "氷の破片に当たった敵がすぐに凍ります。", "被冰之碎片击中的敌人立即冻结。");
+
+        // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
+        A("사슬 망령", "Chained Wraith", "鎖の亡霊", "锁链亡灵");
+        A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다. (피해 40%)", "A soul chain leaps from the first enemy you touch to the nearest other. (40% damage)", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。（ダメージ40%）", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。（伤害40%）");
+        A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬", "A soul chain leaps from the first enemy you touch to the nearest other.\nUltimate: Soul Chains", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。\n究極技：魂の鎖", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。\n究极技：灵魂锁链");
+        A("얼음 유령", "Frost Wraith", "氷の幽霊", "冰霜幽灵");
+        A("냉기가 두 배로 쌓입니다.", "Chill builds twice as fast.", "冷気が2倍たまります。", "寒气累积速度翻倍。");
+        A("냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도", "Chill builds twice as fast.\nUltimate: Absolute Zero", "冷気が2倍たまります。\n究極技：絶対零度", "寒气累积速度翻倍。\n究极技：绝对零度");
+        A("그림자 유령", "Shadow Wraith", "影の幽霊", "暗影幽灵");
+        A("손길이 0.15초 뒤 한 번 더 뻗습니다. (피해 50%)", "Your touch reaches again 0.15s later. (50% damage)", "手が0.15秒後にもう一度伸びます。（ダメージ50%）", "冰手在0.15秒后再伸出一次。（伤害50%）");
+        A("손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단", "Your touch reaches again 0.15s later.\nUltimate: Shadow Legion", "手が0.15秒後にもう一度伸びます。\n究極技：影の軍団", "冰手在0.15秒后再伸出一次。\n究极技：暗影军团");
+        A("영혼 사슬", "Soul Chains", "魂の鎖", "灵魂锁链");
+        A("둘레의 적을 모두 영혼 사슬로 묶어 3초 동안 0.5초마다 벱니다. (공격력 70%)", "Bind all nearby enemies with soul chains, cutting them every 0.5s for 3s. (70% attack)", "周りの敵をすべて魂の鎖で縛り、3秒間0.5秒ごとに斬ります。（攻撃力70%）", "以灵魂锁链束缚周围所有敌人，3秒内每0.5秒斩击。（攻击力70%）");
+        A("절대 영도", "Absolute Zero", "絶対零度", "绝对零度");
+        A("둘레의 모든 적을 2초 동안 얼리고 피해를 줍니다. (공격력 300%)", "Freeze every nearby enemy for 2s and damage them. (300% attack)", "周りのすべての敵を2秒間凍らせてダメージを与えます。（攻撃力300%）", "冻结周围所有敌人2秒并造成伤害。（攻击力300%）");
+        A("그림자 군단", "Shadow Legion", "影の軍団", "暗影军团");
+        A("그림자 넷이 3초 동안 둘레의 적에게 손길을 뻗습니다. (공격력 80%씩)", "Four shadows reach for nearby enemies for 3s. (80% attack each)", "影4体が3秒間周りの敵へ手を伸ばします。（攻撃力80%ずつ）", "四道暗影在3秒内向周围敌人伸出冰手。（每次攻击力80%）");
+        A("깊은 냉기", "Deep Chill", "深い冷気", "深寒");
+        A("얼어붙는 시간이 50% 늘어납니다.", "Freeze duration +50%.", "凍結時間が50%延びます。", "冻结时间延长50%。");
+        A("두 손", "Two Hands", "両手", "双手");
+        A("손길이 양옆으로 두 갈래 더 뻗습니다. (피해 70%)", "Your touch splits into two more reaches to either side. (70% damage)", "手が左右にさらに2本伸びます。（ダメージ70%）", "冰手向两侧再伸出两道。（伤害70%）");
+        A("영혼 폭발", "Soul Burst", "魂の爆発", "灵魂爆发");
+        A("영혼이 피해를 막을 때 터져 둘레 적에게 피해를 줍니다. (공격력 150%)", "When a soul blocks a hit, it bursts and damages nearby enemies. (150% attack)", "魂がダメージを防ぐとき爆発し、周りの敵にダメージを与えます。（攻撃力150%）", "灵魂抵挡伤害时爆炸，伤害周围敌人。（攻击力150%）");
+        A("서늘한 기운", "Chill Aura", "冷ややかな気配", "寒气萦绕");
+        A("둘레 2.5칸의 적이 15% 느려집니다.\n진화: 25%", "Enemies within 2.5 tiles are slowed 15%.\nEvolved: 25%", "周囲2.5マスの敵が15%遅くなります。\n進化：25%", "周围2.5格内的敌人减速15%。\n进化：25%");
+        A("떠도는 혼", "Wandering Soul", "さまよう魂", "游荡之魂");
+        A("이동 속도가 6% 빨라집니다.\n진화: 12%", "Move speed +6%.\nEvolved: 12%", "移動速度が6%速くなります。\n進化：12%", "移动速度提升6%。\n进化：12%");
+        A("영혼 수확", "Soul Harvest", "魂の収穫", "灵魂收割");
+        A("적을 쓰러뜨릴 때 영혼이 생길 확률이 20% 오릅니다.\n진화: 35%", "Kills are 20% more likely to spawn a soul.\nEvolved: 35%", "敵を倒したときに魂が生まれる確率が20%上がります。\n進化：35%", "击败敌人时生成灵魂的几率提升20%。\n进化：35%");
+        A("체력이 20% 아래로 떨어질 피해를 받으면 3초 동안 무적이 됩니다. (60초에 한 번)\n진화: 40초", "A hit that would drop you below 20% health grants 3s of invulnerability instead. (Once per 60s)\nEvolved: 40s", "体力が20%を下回るダメージを受けると3秒間無敵になります。（60秒に1回）\n進化：40秒", "受到会使生命低于20%的伤害时改为无敌3秒。（每60秒一次）\n进化：40秒");
+        A("명계의 문", "Gate of the Dead", "冥界の門", "冥界之门");
+
+        // ---------------- 이야기
+        A("오래전 이 초원에서 죽은 유령은 아직 떠나지 못하고 있었다.", "A ghost who died in this meadow long ago had still not departed.", "ずっと昔この草原で死んだ幽霊は、まだ旅立てずにいた。", "很久以前死在这片草原上的幽灵，至今仍未离去。");
+        A("떠나지 못한 이유를 이제야 알았다. 지켜야 할 것이 남아 있었다.", "Now it finally knew why. There was still something to protect.", "旅立てなかった理由が今ようやく分かった。守るべきものが残っていたのだ。", "如今终于明白无法离去的理由。还有要守护的东西。");
+        A("유령은 차가운 손을 쥐었다 폈다. 이번에는 끝까지 지켜 낼 것이다.", "The ghost clenched and opened its cold hand. This time, it would protect to the end.", "幽霊は冷たい手を握っては開いた。今度こそ最後まで守り抜く。", "幽灵握紧又张开冰冷的手。这一次，要守护到最后。");
+        A("그중 하나는 리치 왕의 부름을 거역했다. 묘역에서 가장 오래된 유령이었다.", "One of them defied the Lich King's call. It was the oldest ghost in the catacombs.", "その中の一体はリッチキングの呼び声に逆らった。墓所で最も古い幽霊だった。", "其中一个违抗了巫妖王的召唤。那是墓地中最古老的幽灵。");
+        A("죽은 자를 깨우는 왕이라면, 죽은 자가 재워야 한다.", "If a king wakes the dead, the dead must put him to sleep.", "死者を起こす王ならば、死者が眠らせねばならない。", "唤醒死者的王，就该由死者让他安眠。");
+        A("유령은 소리 없이 신전의 구멍으로 스며들었다.", "The ghost seeped silently into the temple's hole.", "幽霊は音もなく神殿の穴へ染み込んでいった。", "幽灵悄无声息地渗入神殿的洞里。");
+        A("떠오르는 영혼들 사이에서, 유령의 몸도 조금씩 빛으로 풀려 갔다.", "Among the rising souls, the ghost's body too began to unravel into light.", "昇っていく魂たちの間で、幽霊の体も少しずつ光へとほどけていった。", "在升起的灵魂之间，幽灵的身体也一点点化作光芒。");
+        A("지켜야 할 것을 끝까지 지켰다. 이제 떠나도 된다.", "It had protected what it had to, to the very end. Now it could leave.", "守るべきものを最後まで守った。もう旅立ってもいい。", "要守护的东西已守护到最后。现在可以离开了。");
+        A("“…고마웠어.”", "\"...Thank you.\"", "「…ありがとう。」", "“……谢谢你。”");
+        A("하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다...", "But before the last light faded, a familiar chill blew in from the red desert...", "しかし最後の光が消える前、赤い砂漠の方から見覚えのある冷気が吹いてきた…", "然而在最后的光芒消失之前，一股熟悉的寒气从红色沙漠吹来……");
     }
 }

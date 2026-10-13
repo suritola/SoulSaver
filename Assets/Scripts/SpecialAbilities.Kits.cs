@@ -26,6 +26,8 @@ public partial class SpecialAbilities
     public const int KitCuckoo = 67, KitHourglass = 68, KitGrandfather = 69, KitMechHeart = 70, KitForesight = 71, KitSpareParts = 72, KitSpareTime = 73;
     // 우체부
     public const int KitPigeon = 74, KitParcel = 75, KitPostbox = 76, KitSturdyLegs = 77, KitRegular = 78, KitPostage = 79, KitWatchDog = 80;
+    // 유령
+    public const int KitSoulChain = 81, KitIceGhost = 82, KitShadowGhost = 83, KitChillAura = 84, KitWander = 85, KitHarvest = 86, KitUnderworld = 87;
     // 아이콘: 60번부터는 Icons/ability_<400 + 번호> (60 ~ 91 은 레벨업 카드 아이콘이 쓰고 있음)
     public static string KitIconPath(int id) => "Icons/ability_" + (id >= 60 ? 400 + id : id);
 
@@ -102,6 +104,15 @@ public partial class SpecialAbilities
         ("단골 손님", SpecialKind.Passive, "보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%"),
         ("우편 요금", SpecialKind.Passive, "배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%"),
         ("개 조심", SpecialKind.Passive, "둘레 3칸에 적이 넷 이상이면 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
+
+        // ---------------- 유령 (81 ~ 87)
+        ("사슬 망령", SpecialKind.Weapon, "손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬"),
+        ("얼음 유령", SpecialKind.Weapon, "냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도"),
+        ("그림자 유령", SpecialKind.Weapon, "손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단"),
+        ("서늘한 기운", SpecialKind.Passive, "둘레 2.5칸의 적이 15% 느려집니다.\n진화: 25%"),
+        ("떠도는 혼", SpecialKind.Passive, "이동 속도가 6% 빨라집니다.\n진화: 12%"),
+        ("영혼 수확", SpecialKind.Passive, "적을 쓰러뜨릴 때 영혼이 생길 확률이 20% 오릅니다.\n진화: 35%"),
+        ("명계의 문", SpecialKind.Passive, "체력이 20% 아래로 떨어질 피해를 받으면 3초 동안 무적이 됩니다. (60초에 한 번)\n진화: 40초"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -150,6 +161,7 @@ public partial class SpecialAbilities
         >= 60 and < 67 => new Color(0.45f, 0.6f, 1f),
         >= 67 and < 74 => new Color(1f, 0.78f, 0.35f),
         >= 74 and < 81 => new Color(0.95f, 0.45f, 0.4f),
+        >= 81 and < 88 => new Color(0.65f, 0.92f, 1f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
 

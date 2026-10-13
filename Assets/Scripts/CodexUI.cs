@@ -420,6 +420,7 @@ public static class CodexUI
                 CharacterId.Cartographer => "깃펜 공격력 · 이동 속도",
                 CharacterId.Clockmaker => "톱니 공격력 · 이동 속도",
                 CharacterId.Postman => "편지 공격력 · 이동 속도",
+                CharacterId.Ghost => "손길 공격력 · 이동 속도",
                 _ => "",
             };
             if (ups == "") continue;

@@ -9,7 +9,7 @@ public partial class BossSkills
 {
     const int DevMaxHits = 4;
     static readonly Color Dev = new Color(1f, 0.85f, 0.35f, 0.95f);
-    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부" };     // CharacterId 순서
+    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령" };     // CharacterId 순서
     int devTurn;
 
     void DeveloperTurn(PlayerController p)
@@ -57,6 +57,11 @@ public partial class BossSkills
                 yield return UltRain(strong ? 5 : 4);
                 if (Alive) DevRing(20, 6.5f, 0f, 12f);
                 break;
+            case CharacterId.Ghost:
+                // 빙의: 플레이어 곁으로 스며들었다가 안에서 터지듯 + 냉기 탄
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return UltPossess(strong ? 4 : 3);
+                break;
             case CharacterId.Postman:
                 // 속달: 플레이어 둘레 곳곳에 표식이 붙고 한꺼번에 터짐 + 편지 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
@@ -77,6 +82,29 @@ public partial class BossSkills
                 StartCoroutine(DevFireworks(strong ? 8 : 6));
                 yield return UltBlast(strong ? 3 : 2);
                 break;
+        }
+    }
+
+    // 유령 · 빙의: 보스가 흐려지며 플레이어 곁으로 스며든 뒤, 그 자리에서 영혼 폭발 (경고 원 밖으로 피함)
+    IEnumerator UltPossess(int times)
+    {
+        Color col = boss != null && boss.developer ? Dev : Mirror;
+        for (int n = 0; n < times && Alive; n++)
+        {
+            PlayerController pl = Hostile.Player;
+            if (pl == null) yield break;
+            Vector3 at = Hostile.ClampArena(pl.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 1.5f));
+            if (Hostile.IsWall(at)) at = transform.position;
+            Fx.Spawn("fx_stealth", transform.position, 4f, col, 16f);
+            transform.position = at;
+            Hostile.Circle(at, 3.4f, 1f, col);
+            yield return Windup(col, 1f);
+            if (!Alive) yield break;
+            Fx.Spawn("fx_soulburst", at, 8f, col, 16f);
+            UltHit(UltInCircle(at, 3.4f));
+            Hostile.Play("boom", 0.6f, 0.8f);
+            Hostile.Shake(0.15f);
+            yield return new WaitForSeconds(0.35f);
         }
     }
 

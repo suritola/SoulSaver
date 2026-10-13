@@ -97,6 +97,7 @@ public partial class CharacterKit : MonoBehaviour
         OnDestroyCartographer();
         OnDestroyClockmaker();
         OnDestroyPostman();
+        OnDestroyGhost();
     }
 
     void Start()
@@ -314,6 +315,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Postman:
                 PostAttack(start, dir, dmg, shots);         // 편지 배달 (CharacterKit.Postman)
+                break;
+            case CharacterId.Ghost:
+                GhostAttack(start, dir, dmg, shots);        // 차가운 손길 (CharacterKit.Ghost)
                 break;
         }
     }
@@ -630,6 +634,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Postman:
                 UpdateExpress(gauge, full);                 // 속달
+                break;
+            case CharacterId.Ghost:
+                UpdatePossess(gauge, full);                 // 빙의
                 break;
         }
     }
@@ -1071,6 +1078,7 @@ public partial class CharacterKit : MonoBehaviour
 
     void OnKill(Vector3 pos)
     {
+        GhostKill(pos);         // 유령: 영혼 · 원혼 · 얼음 파편 (CharacterKit.Ghost)
         if (card[4] <= 0 || player == null || Time.time - lastUlt < 1f) return;     // 필살기 직후 1초는 쉼
         if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
         if (gaugeRef == null || gaugeRef.IsFull()) return;

@@ -123,6 +123,69 @@ public partial class SpecialAbilities
                 fx.Play("chime", 0.6f, 1.3f);
                 break;
 
+            // ---------------- 유령
+            case KitSoulChain:
+                {
+                    // 영혼 사슬: 둘레 적을 묶고 0.5초마다
+                    float r = evo ? 10f : 8f;
+                    List<Transform> bound = NearestEnemies(player.transform.position, r, 30);
+                    for (int k = 0; k < 6; k++)
+                    {
+                        Vector3 c = player.transform.position;
+                        foreach (Transform t in bound)
+                        {
+                            if (t == null) continue;
+                            if (k == 0) Fx.Bolt(c, t.position, 0.5f, new Color(0.75f, 0.95f, 1f), 0.3f);
+                            Specials.Damage(t.gameObject, D * 0.7f, Vector3.zero, 0f);
+                            if (t != null && t.TryGetComponent(out EnermyController e)) e.Slow(0.5f, 0.6f);
+                        }
+                        fx.Play("zap", 0.3f, 0.8f);
+                        yield return new WaitForSeconds(0.5f);
+                    }
+                    break;
+                }
+            case KitIceGhost:
+                {
+                    // 절대 영도: 둘레 모두 얼림
+                    float r = evo ? 11f : 9f;
+                    Vector3 c = player.transform.position;
+                    foreach (Collider2D col in Physics2D.OverlapCircleAll(c, r))
+                    {
+                        if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
+                        Specials.Damage(col.gameObject, D * 3f, (col.transform.position - c).normalized, 0f);
+                        if (col != null && col.TryGetComponent(out EnermyController e)) e.Slow(0f, 2f);
+                    }
+                    Fx.Spawn("fx_shock", c, r * 2.2f, new Color(0.7f, 0.95f, 1f, 0.85f), 16f);
+                    Fx.Spawn("fx_cloud", c, r * 2f, new Color(0.85f, 0.97f, 1f, 0.6f), 10f);
+                    fx.Play("shatter", 0.9f, 0.6f);
+                    Hostile.Shake(0.25f);
+                    break;
+                }
+            case KitShadowGhost:
+                {
+                    // 그림자 군단: 그림자 넷이 둘레에서 손길
+                    List<FxAnim> shades = new List<FxAnim>();
+                    for (int i = 0; i < 4; i++) shades.Add(Fx.Play("fx_stealth", player.transform.position, 2.4f, new Color(0.4f, 0.5f, 0.8f, 0.8f), 10f, 0f, 18, true, 3f));
+                    for (float t = 0f; t < 3f; t += 0.4f)
+                    {
+                        Vector3 c = player.transform.position;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            float a = (t * 90f + 90f * i) * Mathf.Deg2Rad;
+                            Vector3 sp = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 3f;
+                            if (shades[i] != null) shades[i].transform.position = sp;
+                            Transform target = Specials.NearestEnemy(sp, 6f);
+                            if (target == null) continue;
+                            Fx.Beam(sp, target.position, 0.6f, new Color(0.5f, 0.6f, 0.95f, 0.8f), 0.15f);
+                            Specials.Damage(target.gameObject, D * 0.8f, (target.position - sp).normalized, 0.5f);
+                        }
+                        fx.Play("whoosh", 0.3f, 0.8f);
+                        yield return new WaitForSeconds(0.4f);
+                    }
+                    foreach (FxAnim s in shades) if (s != null) Destroy(s.gameObject);
+                    break;
+                }
+
             // ---------------- 시계공
             case KitCuckoo:
                 {

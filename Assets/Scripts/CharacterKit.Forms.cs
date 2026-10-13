@@ -19,7 +19,8 @@ public partial class CharacterKit
     public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.1.2)
     public const int AugPrecise = 115, AugTwinGear = 116, AugRift = 117;       // 시계공
     public const int AugThickEnvelope = 118, AugBundle = 119, AugRegistered = 120;       // 우체부
-    public const int AugFirst = 100, AugLast = 120;
+    public const int AugDeepChill = 121, AugTwoHands = 122, AugSoulBurst = 123;       // 유령
+    public const int AugFirst = 100, AugLast = 123;
     // 강화 아이콘: 1.1.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
     public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
@@ -36,6 +37,7 @@ public partial class CharacterKit
         CharacterId.Cartographer => new[] { AugSurvey, AugReprint, AugEngrave },
         CharacterId.Clockmaker => new[] { AugPrecise, AugTwinGear, AugRift },
         CharacterId.Postman => new[] { AugThickEnvelope, AugBundle, AugRegistered },
+        CharacterId.Ghost => new[] { AugDeepChill, AugTwoHands, AugSoulBurst },
         _ => new[] { AugDouble, AugGiant, AugOverload },
     };
 
@@ -48,6 +50,7 @@ public partial class CharacterKit
         AugSurvey => "정밀 측량", AugReprint => "이중 인쇄", AugEngrave => "판화",
         AugPrecise => "정밀 톱니", AugTwinGear => "이중 톱니", AugRift => "시간 균열",
         AugThickEnvelope => "두꺼운 봉투", AugBundle => "다발 배송", AugRegistered => "등기 표식",
+        AugDeepChill => "깊은 냉기", AugTwoHands => "두 손", AugSoulBurst => "영혼 폭발",
         _ => "연금 폭주",
     };
 
@@ -73,6 +76,9 @@ public partial class CharacterKit
         AugThickEnvelope => "편지 피해가 25% 늘어납니다.",
         AugBundle => "편지를 두 통 더 보냅니다. (피해 50%)",
         AugRegistered => "속달 표식이 50% 더 많이 붙습니다.",
+        AugDeepChill => "얼어붙는 시간이 50% 늘어납니다.",
+        AugTwoHands => "손길이 양옆으로 두 갈래 더 뻗습니다. (피해 70%)",
+        AugSoulBurst => "영혼이 피해를 막을 때 터져 둘레 적에게 피해를 줍니다. (공격력 150%)",
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
@@ -100,6 +106,9 @@ public partial class CharacterKit
         SpecialAbilities.KitPigeon => "비둘기 우편",
         SpecialAbilities.KitParcel => "소포 상자",
         SpecialAbilities.KitPostbox => "우체통",
+        SpecialAbilities.KitSoulChain => "사슬 망령",
+        SpecialAbilities.KitIceGhost => "얼음 유령",
+        SpecialAbilities.KitShadowGhost => "그림자 유령",
         _ => "",
     };
 
@@ -127,6 +136,9 @@ public partial class CharacterKit
         SpecialAbilities.KitPigeon => "첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다. (피해 50%씩)",
         SpecialAbilities.KitParcel => "편지가 소포 상자가 되어 맞은 자리에서 터집니다. (피해 60%)",
         SpecialAbilities.KitPostbox => "3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.",
+        SpecialAbilities.KitSoulChain => "손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다. (피해 40%)",
+        SpecialAbilities.KitIceGhost => "냉기가 두 배로 쌓입니다.",
+        SpecialAbilities.KitShadowGhost => "손길이 0.15초 뒤 한 번 더 뻗습니다. (피해 50%)",
         _ => "",
     };
 

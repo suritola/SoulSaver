@@ -29,6 +29,9 @@ public partial class SpecialAbilities
         (KitPigeon, "비둘기 떼", "비둘기 스무 마리가 마우스 쪽으로 날아가며 닿는 적을 쪼습니다. (공격력 90%씩)"),
         (KitParcel, "택배 폭격", "마우스 둘레에 상자 열 개가 차례로 떨어져 터집니다. (공격력 180%씩)"),
         (KitPostbox, "우체통 행렬", "내 둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다."),
+        (KitSoulChain, "영혼 사슬", "둘레의 적을 모두 영혼 사슬로 묶어 3초 동안 0.5초마다 벱니다. (공격력 70%)"),
+        (KitIceGhost, "절대 영도", "둘레의 모든 적을 2초 동안 얼리고 피해를 줍니다. (공격력 300%)"),
+        (KitShadowGhost, "그림자 군단", "그림자 넷이 3초 동안 둘레의 적에게 손길을 뻗습니다. (공격력 80%씩)"),
     };
 
     public static bool IsKitWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
@@ -82,7 +85,10 @@ public partial class SpecialAbilities
             case KitGrandfather: size = evo ? 8f : 7f; return UltAimShape.Around;
             case KitPigeon: size = evo ? 20f : 16f; return UltAimShape.Line;
             case KitParcel: size = evo ? 7f : 6f; return UltAimShape.Point;
-            case KitPostbox: size = 10f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
+            case KitPostbox: size = 10f; return UltAimShape.Around;
+            case KitSoulChain: size = evo ? 10f : 8f; return UltAimShape.Around;
+            case KitIceGhost: size = evo ? 11f : 9f; return UltAimShape.Around;
+            case KitShadowGhost: size = 9f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
             default: size = 8f; return UltAimShape.Around;
         }
     }

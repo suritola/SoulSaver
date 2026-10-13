@@ -29,6 +29,7 @@ public partial class Shop
         CharacterId.Cartographer => "깃펜 공격력",
         CharacterId.Clockmaker => "톱니 공격력",
         CharacterId.Postman => "편지 공격력",
+        CharacterId.Ghost => "손길 공격력",
         _ => "총알 공격력",
     };
 

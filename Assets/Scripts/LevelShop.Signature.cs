@@ -24,6 +24,7 @@ public partial class LevelShop
         new[] { "c.legend", "c.contour", "c.scale", "c.northstar", "c.margin", "c.route", "c.erase", "c.treasure", "c.rose", "c.inkstorm" },
         new[] { "t.overclock", "t.alarm", "t.cog", "t.pocket", "t.minute", "t.echo", "t.spring", "t.loop", "t.borrowed", "t.stopwatch" },
         new[] { "p.express", "p.postmark", "p.bag", "p.chain", "p.route", "p.receipt", "p.weather", "p.overnight", "p.address", "p.junk" },
+        new[] { "h.grudge", "h.wail", "h.chill", "h.drain", "h.phase", "h.wisp", "h.curse", "h.polter", "h.frostbite", "h.procession" },
     };
 
     static int Who(CharacterId who) => Mathf.Clamp((int)who, 0, SigKeys.Length - 1);
@@ -222,6 +223,16 @@ public partial class LevelShop
             Evo("pe.express", "총알 배송", "움직이는 동안 편지를 한 통 더 보냅니다.", 924, ExtraAId, S(2)),
             Evo("pe.return", "반송 불가", "반송된 편지가 최대 세 번까지 계속 이어집니다.", 925, ExtraBId, S(4)),
             Evo("pe.flyers", "전단 폭탄", "광고 전단이 맞은 자리에서 터집니다. (공격력 60%)", 926, S(8), S(9)),
+        },
+        new[]   // 유령 (1.1.2)
+        {
+            Evo("he.blizzard", "눈보라", "손길이 지나간 자리에 1.5초 동안 냉기 안개가 남아 냉기를 쌓습니다.", 930, PierceId, S(2)),
+            Evo("he.banshee", "밴시", "곡소리에 휘말린 적이 곧바로 얼어붙습니다.", 931, ExtraAId, S(1)),
+            Evo("he.vampire", "흡혈귀", "생기 흡수가 두 배가 되고, 적이 얼어붙을 때마다 체력을 회복합니다.", 932, MultiId, S(3)),
+            Evo("he.specter", "망령", "실체 없음 확률이 두 배가 되고, 거느린 영혼 하나마다 이동 속도가 2% 오릅니다.", 933, S(4), S(5)),
+            Evo("he.doom", "파멸", "저주가 둘레 20칸의 모든 적에게 걸립니다.", 934, GlareId, S(6)),
+            Evo("he.house", "소란한 집", "폴터가이스트가 적 셋을 한꺼번에 들어 올립니다.", 935, KnockId, S(7)),
+            Evo("he.glacier", "빙하", "얼음 파편에 맞은 적이 곧바로 얼어붙습니다.", 936, ExtraBId, S(8)),
         },
     };
 

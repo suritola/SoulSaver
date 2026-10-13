@@ -184,6 +184,19 @@ public partial class BossSkills : MonoBehaviour
                         Hostile.Play("whoosh", 0.5f, 1.6f);
                         break;
                     }
+                case CharacterId.Ghost:
+                    {
+                        // 유령: 차가운 손길 (짧은 경고 뒤 앞으로 뻗음)
+                        Vector3 end = c + (Vector3)(d * 7f);
+                        Hostile.Line(c, end, 1.6f, 0.5f, Mirror);
+                        yield return new WaitForSeconds(0.5f);
+                        if (!Alive) yield break;
+                        Fx.Beam(transform.position, end, 1.2f, new Color(0.7f, 0.95f, 1f, 0.8f), 0.2f);
+                        PlayerController pp = Hostile.Player;
+                        if (pp != null && Hostile.DistanceToSegment(pp.transform.position, transform.position, end) < 0.9f) pp.TryHit(Capped(18f * Power));
+                        Hostile.Play("whoosh", 0.5f, 0.7f);
+                        break;
+                    }
                 case CharacterId.Postman:
                     // 우체부: 플레이어를 쫓는 편지 넷 (느리게 꺾임)
                     for (int i = 0; i < 4; i++) Hostile.Shoot(c, Rotate(d, (i - 1.5f) * 22f), 10f, Capped(13f * Power), 0.5f, Mirror, 1.3f, 3f);
@@ -368,6 +381,7 @@ public partial class BossSkills : MonoBehaviour
             case CharacterId.Cartographer: yield return UltFold(strong ? 3 : 2); break;
             case CharacterId.Clockmaker: yield return UltClock(strong ? 5 : 4); break;
             case CharacterId.Postman: yield return UltExpress(strong ? 10 : 7); break;
+            case CharacterId.Ghost: yield return UltPossess(strong ? 3 : 2); break;
             default: yield return UltLockOn(strong ? 6 : 4); break;
         }
     }
@@ -532,6 +546,8 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Volley, Pat.Ring, Pat.Lines, Pat.Pull, Pat.Blast, Pat.Echo, Pat.Mines, Pat.Ring, Pat.Volley, Pat.Echo },
         // 우체부: 특급 · 소인 · 우편 가방 · 행운의 편지 · 배달 경로 · 영수증 · 궂은 날씨 · 익일 배송 · 정확한 주소 · 광고 전단
         new[] { Pat.Volley, Pat.Echo, Pat.Trail, Pat.Volley, Pat.Lines, Pat.Ring, Pat.Blast, Pat.Mines, Pat.Lines, Pat.Volley },
+        // 유령: 원한 · 곡소리 · 한기 · 생기 흡수 · 실체 없음 · 도깨비불 · 저주 · 폴터가이스트 · 동상 · 망령의 행렬
+        new[] { Pat.Lines, Pat.Ring, Pat.Mines, Pat.Pull, Pat.Trail, Pat.Volley, Pat.Blast, Pat.Rain, Pat.Mines, Pat.Clones },
     };
 
     // 캐릭터 전용 레벨업 카드 7장 (LevelShop.KitIds 순서: 관통 · 멀티 샷 · 밀어내기 · 노려보는 눈빛 · 사냥의 기세 · 추가 A · 추가 B 자리)
@@ -545,6 +561,7 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Mines, Pat.Lines, Pat.Volley, Pat.Trail, Pat.None, Pat.Echo, Pat.Ring },       // 번지는 잉크 · 굵은 펜촉 · 나침반 바늘 · 접힌 자국 · - · 측량 표식 · 끊기지 않는 선
         new[] { Pat.Lines, Pat.Echo, Pat.Blast, Pat.Mines, Pat.None, Pat.Ring, Pat.Volley },       // 튕기는 톱니 · 빠른 태엽 · 시계추 · 남은 시각 · - · 정각의 종 · 녹슨 톱니
         new[] { Pat.Lines, Pat.Blast, Pat.Volley, Pat.Rain, Pat.None, Pat.Lines, Pat.Echo },       // 등기 우편 · 소포 · 우표 수집 · 답장 · - · 빠른 우편 · 반송
+        new[] { Pat.Lines, Pat.Mines, Pat.Echo, Pat.Ring, Pat.None, Pat.Volley, Pat.Blast },       // 꿰뚫는 냉기 · 얼어붙는 손길 · 원혼 · 빙의 여운 · - · 영혼 수호 · 얼음 파편
     };
 
     // 특수 능력 (SpecialAbilities 번호): 무기 0 ~ 7 · 스킬 8 ~ 15 · 패시브 16 ~ 19, 캐릭터 전용 특수 능력(20 ~)은 종류로
