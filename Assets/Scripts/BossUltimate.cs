@@ -68,7 +68,7 @@ public class BossUltimate : MonoBehaviour
     // (예전 5 · 1.3제곱은 너무 늦게 차서, 한 판에 약한 공격만으로도 두세 번 · 센 공격 위주면 네댓 번 차게)
     public static void OnBossHit(bosss b, float damage)
     {
-        if (b == null || Active || b.IsDead || damage <= 0f) return;
+        if (b == null || Active || b.IsDead || b.developer || damage <= 0f) return;     // 개발자는 결계 대신 필살기만
         int k = Mathf.Clamp(b.bossKind, 0, 3);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         // 약한 공격도 피해 비율의 3.5배는 채움 (1.2제곱만이면 평타가 거의 안 차서 · 보스 체력 3% 이상의 센 한 방은 그대로)
@@ -91,7 +91,7 @@ public class BossUltimate : MonoBehaviour
             if (!usedThisFight[kind] && boss.setEnemyHP > 0 && boss.EnemyHealth < boss.setEnemyHP * 0.4f)
                 gauge[kind] = 1f;
         }
-        if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
+        if (Active || boss == null || boss.IsDead || boss.developer || gauge[kind] < 1f) return;
         if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
         if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ChoiceUI.Open || ESCmenu.IsOpen) return;
         // 킹 슬라임: 살아 있는 덩어리 중 체력이 가장 많은 하나만 씀

@@ -65,6 +65,7 @@ public class StageManager : MonoBehaviour
     // 거너: 무기 진화 + 영혼 트리 (특수 능력 포인트 대신)
     static bool Evo => SpecialAbilities.UsesEvolution;
     bool evolving;
+    public bool IsEvolving => evolving;
     bool started;                       // 인트로가 끝나 버튼을 보여도 되는지
     public bool Started => started;     // 판 중간 저장 (RunSave): 시작 이야기 · 첫 카드 전에는 저장하지 않음
     int treeClosedFrame = -1;

@@ -55,6 +55,7 @@ public partial class BossSkills : MonoBehaviour
         if (busy || !Alive || BossUltimate.Active) return;      // 필살기 결계 동안은 결계 공격만
         PlayerController p = Hostile.Player;
         if (p == null) return;
+        if (boss.developer) { DeveloperTurn(p); return; }      // 무한 모드 최종 보스 (BossSkills.Developer.cs)
         if (kind != AbyssStage.MirrorKind) { RebornTurn(p); return; }      // 1 · 2 · 3장 보스 (BossSkills.Reborn.cs)
 
         // 체력 절반 아래: 특수 스킬 (처음 한 번은 바로)
@@ -314,7 +315,7 @@ public partial class BossSkills : MonoBehaviour
     bool UltHit(bool inside)
     {
         PlayerController pl = Hostile.Player;
-        if (!inside || pl == null || pl.IsDying || ultHits >= UltMaxHits) return false;
+        if (!inside || pl == null || pl.IsDying || ultHits >= (boss != null && boss.developer ? DevMaxHits : UltMaxHits)) return false;
         float scale = Mathf.Max(0.01f, GameMode.DamageMul * Chapters.HurtMul);     // TryHit 이 곱하는 배율
         if (!pl.TryHit(Mathf.Min(UltHitDamage * Power, pl.PlayerMaxHealth * MaxHitShare / scale))) return false;
         ultHits++;

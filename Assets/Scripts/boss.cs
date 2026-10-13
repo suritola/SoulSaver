@@ -64,6 +64,8 @@ public class bosss : MonoBehaviour
     static bool slimeBossCleared;    // 보스 처치는 한 번만
     // 난이도 배율을 이미 적용했는지
     [HideInInspector] public bool difficultyApplied;
+    // 무한 모드 최종 보스 「개발자」 (1.1.1 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)만 다르고 결계는 쓰지 않음
+    [HideInInspector] public bool developer;
     bool IsSlime => bossKind == 2;
 
     // 남은 체력 합계
@@ -84,6 +86,14 @@ public class bosss : MonoBehaviour
     }
 
     public bool IsDead => isDead;
+
+    // 살아 있는 보스 (1.1.1: 무한 모드 후반엔 여러 보스가 함께 나옴) · 맨 앞 보스가 위쪽 보스 체력바 첫 줄을 씀
+    public static readonly List<bosss> Live = new List<bosss>();
+    public static int LiveCount { get { Live.RemoveAll(b => b == null || b.isDead); return Live.Count; } }
+    public static bool KindAlive(int kind) { foreach (bosss b in Live) if (b != null && !b.isDead && b.bossKind == kind) return true; return false; }
+    bool IsPrimary { get { foreach (bosss b in Live) if (b != null && !b.isDead) return b == this; return true; } }
+    void OnEnable() { if (!Live.Contains(this)) Live.Add(this); }
+    void OnDestroy() => Live.Remove(this);
 
     void Summon(int count)
     {
@@ -121,7 +131,7 @@ public class bosss : MonoBehaviour
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
         // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)
-        StoryDirector.PlayBossIntro(transform, bossKind);
+        if (!developer) StoryDirector.PlayBossIntro(transform, bossKind);
         BossSkills skills = GetComponent<BossSkills>();
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();
         skills.kind = bossKind;
@@ -140,10 +150,14 @@ public class bosss : MonoBehaviour
         // 죽었으면 아무것도 하지 않음
         if (isDead) return;
 
-        bossbar.bossKind = bossKind;
-        // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
-        bossbar.MaxHealth = setEnemyHP;
-        bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
+        if (IsPrimary)
+        {
+            bossbar.bossSpawn = true;
+            bossbar.bossKind = developer ? bossbar.DeveloperKind : bossKind;
+            // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
+            bossbar.MaxHealth = setEnemyHP;
+            bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
+        }
 
         if (player == null) return;
 
@@ -247,7 +261,7 @@ public class bosss : MonoBehaviour
         isDead = true;
 
         bool lastOne = !IsSlime || SlimeRemaining() <= 0;
-        if (lastOne) bossbar.bossSpawn = false;
+        if (lastOne && LiveCount == 0) bossbar.bossSpawn = false;      // 다른 보스가 남아 있으면 체력바는 그 보스로
         spriteRenderer.color = Color.white;
         if (a == 1)
         {
@@ -306,7 +320,10 @@ public class bosss : MonoBehaviour
             slimes.Remove(this);
             if (allDown) { if (slimeBossCleared) allDown = false; else slimeBossCleared = true; }
         }
-        if (enemySpawner != null && allDown) enemySpawner.OnBossDefeated();
+        // 무한 모드에서 함께 나온 다른 보스가 아직 살아 있으면: 처치 수만 세고 처치 연출 · 진화는 마지막 보스 때
+        if (allDown && GameMode.IsEndless && EndlessMode.Instance != null && (LiveCount > 0 || (enemySpawner != null && !enemySpawner.bossSpawned)))     // 거의 같이 쓰러져 연출이 이미 시작됐을 때도
+            EndlessMode.Instance.OnExtraBossDown();
+        else if (enemySpawner != null && allDown) enemySpawner.OnBossDefeated();
 
         Destroy(gameObject);
     }

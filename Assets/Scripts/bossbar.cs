@@ -18,6 +18,7 @@ public class bossbar : MonoBehaviour
     public float BarY = 119.2869f;
 
     public bool bossSpawn = false;
+    public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.1.1)
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
 
     TMP_Text nameText;
@@ -31,6 +32,7 @@ public class bossbar : MonoBehaviour
         1 => Loc.T("지옥의 군주"),
         2 => Loc.T("킹 슬라임"),
         3 => Loc.T("거울의 군주"),
+        DeveloperKind => Loc.T("개발자"),
         _ => Loc.T("리치 왕"),
     };
     void Start()
@@ -70,6 +72,17 @@ public class bossbar : MonoBehaviour
                 return;
             }
         }
+        // 무한 모드 후반 여러 보스가 함께 있을 때 (1.1.1): 보스마다 한 줄씩
+        if (bosss.LiveCount >= 2)
+        {
+            liveBosses.Clear();
+            liveBosses.AddRange(bosss.Live);
+            SetBar(barRect, nameText, liveBosses[0]);
+            ShowExtraBars(liveBosses.Count - 1);
+            for (int i = 1; i < liveBosses.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveBosses[i]);
+            wasMulti = true;
+            return;
+        }
         // 슬라임마다 그리던 것에서 돌아오면 첫 줄 이름을 다시 씀
         if (wasMulti) { wasMulti = false; shownKind = -1; }
         ShowExtraBars(0);
@@ -83,6 +96,7 @@ public class bossbar : MonoBehaviour
     const float ExtraScale = 0.8f;      // 아래로 쌓는 체력바는 조금 작게 (화면을 덜 가리게)
     bool wasMulti;
     readonly List<bosss> liveSlimes = new List<bosss>();
+    readonly List<bosss> liveBosses = new List<bosss>();
     readonly List<GameObject> extraBars = new List<GameObject>();
     readonly List<RectTransform> extraFills = new List<RectTransform>();
     readonly List<TMP_Text> extraNames = new List<TMP_Text>();
@@ -91,7 +105,7 @@ public class bossbar : MonoBehaviour
     {
         float ratio = s.setEnemyHP > 0 ? Mathf.Clamp01(s.EnemyHealth / s.setEnemyHP) : 0f;
         if (fill != null) fill.sizeDelta = new Vector2(ratio * MaxBarX, BarY);
-        string n = BossName(2) + " " + (s.barSlot + 1) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
+        string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
         if (label != null && label.text != n) label.text = n;
     }
 

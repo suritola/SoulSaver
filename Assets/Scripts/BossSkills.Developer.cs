@@ -1,0 +1,124 @@
+using System.Collections;
+using UnityEngine;
+
+// 무한 모드 최종 보스 「개발자」 (1.1.1): 다섯 캐릭터의 최종 진화 필살기를 차례로 돌려 씀
+// 거너 총알 폭풍 · 검사 회전 베기 · 도적 출혈 돌진 · 궁수 화살비 · 연금술사 대폭발 — 거울의 군주 흉내(UltSpin …)를 더 세게 + 최종 진화 덧붙임
+// 모든 판정은 그대로 경고가 먼저 보이고, 한 번 쓸 때 최대 DevMaxHits 번 · 한 대는 최대 체력의 MaxHitShare 까지 (즉사 없음)
+public partial class BossSkills
+{
+    const int DevMaxHits = 4;
+    static readonly Color Dev = new Color(1f, 0.85f, 0.35f, 0.95f);
+    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사" };
+    int devTurn;
+
+    void DeveloperTurn(PlayerController p)
+    {
+        if (Time.time < next) return;
+        next = Time.time + (boss.Enraged ? 1.4f : 2.2f);
+        int who = devTurn++ % DevHeroes.Length;
+        if (StageManager.Instance != null)
+            StageManager.Instance.ShowBanner(Loc.T("개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), 1.8f);
+        StartCoroutine(Run(DeveloperUlt((CharacterId)who, boss.Enraged)));
+    }
+
+    IEnumerator DeveloperUlt(CharacterId who, bool strong)
+    {
+        ultHits = 0;
+        Fx.Spawn("fx_soulburst", transform.position, 11f, Dev, 16f);
+        Hostile.Play("shimmer", 0.7f, 0.55f);
+        yield return Windup(Dev, 0.6f);
+        if (!Alive) yield break;
+        switch (who)
+        {
+            case CharacterId.Gunner:
+                // 총알 폭풍: 도는 탄막과 함께 조준 사격
+                StartCoroutine(DevBulletStorm(strong ? 5 : 4));
+                yield return UltLockOn(strong ? 8 : 6);
+                break;
+            case CharacterId.Swordsman:
+                // 회전 베기: 벨 때마다 사방으로 검기
+                for (int i = 0; i < (strong ? 4 : 3) && Alive; i++)
+                {
+                    yield return UltSpin(1);
+                    DevRing(12, 8f, i * 15f, 12f);
+                }
+                break;
+            case CharacterId.Rogue:
+                // 출혈 돌진: 여러 번 꿰뚫고, 멈춘 자리에서 표창 부채
+                for (int i = 0; i < (strong ? 5 : 4) && Alive; i++)
+                {
+                    yield return UltDash(1);
+                    DevFan(7, 50f, 10f);
+                }
+                break;
+            case CharacterId.Archer:
+                // 화살비: 더 많은 파도 + 끝에 하늘에서 쏟아지는 고리
+                yield return UltRain(strong ? 5 : 4);
+                if (Alive) DevRing(20, 6.5f, 0f, 12f);
+                break;
+            default:
+                // 대폭발: 큰 폭발 사이사이 불꽃놀이
+                StartCoroutine(DevFireworks(strong ? 8 : 6));
+                yield return UltBlast(strong ? 3 : 2);
+                break;
+        }
+    }
+
+    // 사방으로 한 바퀴
+    void DevRing(int n, float speed, float offsetDeg, float damage)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            float a = (offsetDeg + i * 360f / n) * Mathf.Deg2Rad;
+            Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), speed, Capped(damage * Power), 0.5f, Dev, 1.5f, 4f);
+        }
+        Hostile.Play("shimmer", 0.4f, 1.3f);
+    }
+
+    // 플레이어 쪽 부채꼴
+    void DevFan(int n, float spreadDeg, float damage)
+    {
+        PlayerController pl = Hostile.Player;
+        if (pl == null) return;
+        Vector2 d = DirTo(pl);
+        for (int i = 0; i < n; i++)
+        {
+            float off = n == 1 ? 0f : -spreadDeg * 0.5f + spreadDeg * i / (n - 1);
+            Hostile.Shoot(transform.position, Rotate(d, off), 9f, Capped(damage * Power), 0.45f, Dev, 1.3f, 3f);
+        }
+        Hostile.Play("whoosh", 0.5f, 1.4f);
+    }
+
+    // 나선으로 도는 탄막
+    IEnumerator DevBulletStorm(int waves)
+    {
+        for (int w = 0; w < waves && Alive; w++)
+        {
+            DevRing(10, 7f, w * 13f, 10f);
+            yield return new WaitForSeconds(0.45f);
+        }
+    }
+
+    // 플레이어 둘레에 작은 폭발이 차례로 (경고 0.9초)
+    IEnumerator DevFireworks(int count)
+    {
+        for (int i = 0; i < count && Alive; i++)
+        {
+            PlayerController pl = Hostile.Player;
+            if (pl == null) yield break;
+            Vector3 at = Hostile.ClampArena(pl.transform.position + (Vector3)(Random.insideUnitCircle * 4f));
+            StartCoroutine(DevPop(at, 1.6f));
+            yield return new WaitForSeconds(0.3f);
+        }
+    }
+
+    IEnumerator DevPop(Vector3 at, float r)
+    {
+        Hostile.Circle(at, r, 0.9f, Dev);
+        yield return new WaitForSeconds(0.9f);
+        if (!Alive) yield break;
+        Fx.Spawn("fx_explosion", at, r * 2.2f, Dev, 20f);
+        UltHit(UltInCircle(at, r));
+        Hostile.Play("boom", 0.4f, 1.3f);
+    }
+}

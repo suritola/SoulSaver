@@ -256,13 +256,14 @@ public class StoryDirector : MonoBehaviour
     }
 
     // ================================================================= 엔딩
-    public static IEnumerator Ending(Difficulty cleared, string opened)
+    // lines: 캐릭터 엔딩 대사 (무한 모드 클리어는 대사 없이 바로 마무리 · 1.1.1)
+    public static IEnumerator Ending(Difficulty cleared, string opened, bool lines = true)
     {
         StoryDirector d = Create();
-        yield return d.RunEnding(cleared, opened);
+        yield return d.RunEnding(cleared, opened, lines);
     }
 
-    IEnumerator RunEnding(Difficulty cleared, string opened)
+    IEnumerator RunEnding(Difficulty cleared, string opened, bool lines)
     {
         Playing = true;
         EndingPlaying = true;
@@ -270,7 +271,7 @@ public class StoryDirector : MonoBehaviour
         SetAlpha(black, 0f);
         SetAlpha(shade, 0f);
         yield return Fade(black, 0f, 1f, 1.5f);
-        if (!skip) yield return Lines(EndingFor(CharacterData.Selected));
+        if (!skip && lines) yield return Lines(EndingFor(CharacterData.Selected));
 
         // 마무리: 클리어 · 새로 열린 난이도 · 인사
         skip = false;

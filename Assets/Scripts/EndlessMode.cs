@@ -22,6 +22,16 @@ public class EndlessMode : MonoBehaviour
     const float MidBossEvery = 70f;         // 강도가 오를수록 짧아짐 (최소 30초)
     float nextMidBoss;
 
+    // 최종 국면 (1.1.1): 30분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
+    // → 그 보스들을 모두 쓰러뜨리면 최종 보스 「개발자」(체력 20만) → 개발자를 쓰러뜨리면 무한 모드 클리어
+    public const float FinalAt = 1800f;
+    public const int DeveloperHp = 200000;
+    const string ClearKey = "endless.cleared";
+    public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
+    int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 · 3 클리어
+    bosss developer;
+    public bool FinalPhase => finalStage > 0;
+
     public int BossesDefeated { get; private set; }
 
     StageManager stages;
@@ -71,10 +81,12 @@ public class EndlessMode : MonoBehaviour
             shownBosses = BossesDefeated;
             float best = daily ? DailyChallenge.RunBest : BestSeconds;
             hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
-                     + (best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
+                     + (finalStage > 0 ? "   <color=#FF5A4A>" + Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간") + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
 
-        if (!spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
+        bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
+        if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
+        if (finalStage == 0 && !spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
         if (Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
         {
             spawner.SpawnMidBoss();
@@ -96,12 +108,89 @@ public class EndlessMode : MonoBehaviour
         stages.ShowBanner(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), 2.5f);
     }
 
+    // 30분: 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
+    void StartFinal()
+    {
+        finalStage = 1;
+        nextBoss = float.MaxValue;
+        int made = 0;
+        if (bossPrefabs != null)
+            foreach (GameObject prefab in bossPrefabs)
+            {
+                if (prefab == null || (prefab.TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind))) continue;
+                Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * made) * Vector3.right * 4.5f);
+                Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
+                made++;
+            }
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+        Hostile.Play("roar", 1f, 0.6f);
+        Hostile.Shake(0.4f);
+        stages.ShowBanner(Loc.T("30분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), 4f);
+    }
+
+    // 모든 보스를 쓰러뜨리면 최종 보스 「개발자」 (거울의 군주 몸을 빌려 모든 캐릭터의 최종 진화 필살기를 돌려 씀 · BossSkills.Developer)
+    System.Collections.IEnumerator SummonDeveloper()
+    {
+        finalStage = 2;
+        while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        yield return new WaitForSeconds(1.5f);
+        stages.ShowBanner(Loc.T("모든 보스가 쓰러졌다…") + "\n" + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
+        Hostile.Play("roar", 1f, 0.45f);
+        Hostile.Shake(0.5f);
+        yield return new WaitForSeconds(2.5f);
+        GameObject prefab = null;
+        foreach (GameObject g in bossPrefabs)
+            if (g != null && (prefab == null || (g.TryGetComponent(out bosss b) && b.bossKind == AbyssStage.MirrorKind))) prefab = g;
+        if (prefab == null) yield break;
+        GameObject go = Instantiate(prefab, Hostile.ClampArena(spawner.bossSpawnPoint), Quaternion.identity);
+        developer = go.GetComponent<bosss>();
+        if (developer != null)
+        {
+            // Start 전에 정함: 체력은 난이도 배율 없이 정확히 20만
+            developer.developer = true;
+            developer.bossKind = AbyssStage.MirrorKind;
+            developer.difficultyApplied = true;
+            developer.setEnemyHP = DeveloperHp;
+            developer.expReward *= 5;
+            developer.coinDrop *= 5;
+        }
+        go.transform.localScale *= 1.6f;
+        Fx.Spawn("fx_soulburst", go.transform.position, 14f, new Color(1f, 0.85f, 0.35f), 16f);
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+    }
+
+    // 개발자를 쓰러뜨림: 무한 모드 클리어 (기록 저장 → 엔딩 → 메인 메뉴)
+    System.Collections.IEnumerator ClearEndless()
+    {
+        finalStage = 3;
+        spawner.spawningEnabled = false;
+        Prefs.SetInt(ClearKey, 1);
+        Prefs.Save();
+        PlayerController p = FindFirstObjectByType<PlayerController>();
+        if (p != null) p.GrantInvincibility(30f);
+        stages.ShowBanner(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f);
+        Hostile.Play("chime", 1f, 1f);
+        yield return new WaitForSecondsRealtime(5f);
+        if (StoryDirector.ShouldSkipAll) yield break;
+        yield return StoryDirector.Ending(Difficulty.Endless, null, false);
+    }
+
+    // 함께 나온 보스 중 마지막이 아닌 보스를 쓰러뜨렸을 때: 처치 연출만 빼고 보상(진화 · 전리품 · 포인트)은 똑같이
+    public void OnExtraBossDown() => OnBossDefeated();
+
     // StageManager가 보스 처치를 알려 줌
     int trophies;
 
     public void OnBossDefeated()
     {
+        if (finalStage == 3) return;
         BossesDefeated++;
+        if (finalStage == 2 && developer != null && developer.IsDead) { StartCoroutine(ClearEndless()); return; }
+        if (finalStage == 1 && bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
         if (SpecialAbilities.UsesEvolution)
@@ -109,7 +198,8 @@ public class EndlessMode : MonoBehaviour
             // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번)
             // 진화가 다 끝난 뒤에도 보스를 잡을 이유가 있게: 잡을 때마다 계속 쌓이는 전리품
             SpecialAbilities sp = SpecialAbilities.SharedInstance;
-            if (sp != null && sp.NextEvolutionOptions() == null)
+            // 진화 창이 이미 열려 있거나 기다리는 중이면 (함께 나온 보스가 거의 같이 쓰러짐) 이번 보스는 전리품으로
+            if (sp != null && (sp.NextEvolutionOptions() == null || stages.IsEvolving))
             {
                 string loot = sp.BossTrophy(++trophies);
                 stages.ShowBanner(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, 3f);
