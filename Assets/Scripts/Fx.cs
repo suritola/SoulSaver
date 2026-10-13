@@ -50,13 +50,18 @@ public static class Fx
         return s != null && s != DamageSource.Basic && s != DamageSource.Other && !NoBoost.Contains(name);
     }
 
+    // 1.1.2: 플레이어가 낸 이펙트(평타 포함)는 설정의 「내 이펙트 투명도」를 따름 — 적 공격 · 처치 연출은 그대로
+    static bool Mine => DamageSource.Current != null && DamageSource.Current != DamageSource.Other;
+    static readonly HashSet<string> Markers = new HashSet<string> { "fx_warn", "fx_reticle", "fx_target_rune" };     // 조준 · 경고 표시는 흐리게 하지 않음
+    static Color MyAlpha(Color c, string name = null) { if (Mine && (name == null || !Markers.Contains(name))) c.a *= GameSettings.MyFxAlpha; return c; }
+
     static Color Brighten(Color c) => new Color(Mathf.Lerp(c.r, 1f, 0.35f), Mathf.Lerp(c.g, 1f, 0.35f), Mathf.Lerp(c.b, 1f, 0.35f), Mathf.Max(c.a, 0.97f));     // 1.1.1: 0.25 → 0.35
 
     // 이펙트 밑에 잠깐 번지는 빛 (Glow 스프라이트는 지름 약 8칸 = 크기 1)
     static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
     {
         if (Hostile.Glow == null || size < 1.2f) return;
-        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.7f / 8f, new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.7f), layer, order - 1, 0.38f);     // 1.1.1: 더 크고 진하게
+        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.7f / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.7f)), layer, order - 1, 0.38f);     // 1.1.1: 더 크고 진하게
     }
 
     static void Style(SpriteRenderer sr)
@@ -92,7 +97,7 @@ public static class Fx
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         Style(sr);
         sr.sprite = frames[0];
-        sr.color = skill ? Brighten(color ?? Color.white) : color ?? Color.white;
+        sr.color = MyAlpha(skill ? Brighten(color ?? Color.white) : color ?? Color.white, name);
         sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
         float h = frames[0].bounds.size.y;
@@ -162,7 +167,7 @@ public static class Fx
         SpriteRenderer sr = a.sr;
         Style(sr);
         sr.sprite = frames[0];
-        sr.color = color ?? Color.white;
+        sr.color = MyAlpha(color ?? Color.white, name);
         sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
         float h = frames[0].bounds.size.y;

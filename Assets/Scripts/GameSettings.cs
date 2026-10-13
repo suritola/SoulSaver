@@ -15,6 +15,7 @@ public static class GameSettings
     const string VSyncKey = "settings.vsync";
     const string HintsKey = "settings.hints";
     const string DamageNumKey = "settings.damageNumbers";
+    const string FxAlphaKey = "settings.myFxAlpha";
     const string ColorBlindKey = "settings.colorBlind";
     const string KeyIconKey = "settings.keyIcons";
     const string CursorKey = "settings.gameCursor";
@@ -33,6 +34,7 @@ public static class GameSettings
     static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp, muteUnfocused = true;
     static int uiScale = 2;
     static int damageNumbers;
+    static int myFxAlpha;
 
     public static Loc.Lang Language
     {
@@ -76,6 +78,7 @@ public static class GameSettings
         vsync = Prefs.GetInt(VSyncKey, 1) == 1;
         hints = Prefs.GetInt(HintsKey, 1) == 1;
         damageNumbers = Mathf.Clamp(Prefs.GetInt(DamageNumKey, 0), 0, 2);
+        myFxAlpha = Mathf.Clamp(Prefs.GetInt(FxAlphaKey, 0), 0, MyFxAlphas.Length - 1);
         colorBlind = Prefs.GetInt(ColorBlindKey, 0) == 1;
         keyIcons = Prefs.GetInt(KeyIconKey, 1) == 1;
         gameCursor = Prefs.GetInt(CursorKey, 1) == 1;
@@ -132,6 +135,16 @@ public static class GameSettings
     {
         get { Load(); return damageNumbers; }
         set { Load(); damageNumbers = Mathf.Clamp(value, 0, 2); Prefs.SetInt(DamageNumKey, damageNumbers); }
+    }
+
+    // 1.1.2: 내 이펙트 투명도 (평타 · 스킬 · 필살기 · 진화 이펙트, 적 공격은 그대로) — 화면이 가득 찰 때 내 캐릭터가 묻히지 않게
+    public static readonly float[] MyFxAlphas = { 1f, 0.75f, 0.5f };
+    public static readonly string[] MyFxAlphaNames = { "100%", "75%", "50%" };
+    public static float MyFxAlpha => MyFxAlphas[MyFxAlphaIndex];
+    public static int MyFxAlphaIndex
+    {
+        get { Load(); return GameInput.Auto ? 0 : myFxAlpha; }
+        set { Load(); myFxAlpha = Mathf.Clamp(value, 0, MyFxAlphas.Length - 1); Prefs.SetInt(FxAlphaKey, myFxAlpha); }
     }
 
     // 색각 이상 모드: 경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로

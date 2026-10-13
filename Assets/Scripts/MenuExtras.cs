@@ -643,12 +643,13 @@ public static class SettingsUI
     // 게임: 도움말 · 피해 숫자 · 색각 이상 모드 · 키 아이콘 · 게임 커서
     static void BuildGameplay()
     {
-        // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90
+        // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.1.2: 「내 이펙트 투명도」 넣으려고 90 → 75
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
-        CycleRow("피해 숫자", 110f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
-        ToggleRow("색각 이상 모드", 20f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
-        ToggleRow("키 아이콘", -70f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
-        ToggleRow("게임 커서", -160f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
+        CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
+        CycleRow("내 이펙트 투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v);
+        ToggleRow("색각 이상 모드", -25f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
+        ToggleRow("키 아이콘", -100f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
+        ToggleRow("게임 커서", -175f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
         ToggleRow("레벨업 바로 열기", -250f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v);
     }
 

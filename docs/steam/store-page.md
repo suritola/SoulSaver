@@ -7,6 +7,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 > 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
 > 1.0.7 기준으로 고쳤습니다: 거너 우클릭 이름 「일제 사격」, 장 중반 습격 · 보물 상자 · 보스 보상 · 저주 제단 · 최후의 보루 · 영웅 숙련 소개 추가.
 > 2.0.6 기준으로 고쳤습니다: 영웅별 고유 스킬 50종 · 스킬 진화 37종 · 보스 필살기 「결계 침식」 · 최대 레벨 50 · 레벨업 건너뛰기 · 모든 우클릭 스킬 조준. 스크린샷 12장 · 트레일러는 `tools/trailer/record.ps1` 로 다시 찍음.
+> 1.1.2 기준으로 고쳤습니다(대중성 조사 `docs/marketing/reports/서바이버류 게임 대중화 전략.md` 의 「지금 바로」): 짧은 설명을 차별점(보스 결계 1:1 → 쓰러뜨리면 그 자리에서 무기 진화) 앞세워 다시 씀, 태그 맨 앞에 Valve 공식 장르 태그 **Bullet Heaven**(2026-05 신설), 가벼운 손님을 밀어내는 Difficult 는 뺌, 본문 「그 밖에」에 방송 · 수익 창출 자유 한 줄.
 > 1.8.6 기준으로 다시 썼습니다: 무기 진화 · 영혼 트리(운명 가지) · 스킨 상점 · 도전 과제 32개. 예전 글의 "특수 능력 52종 · 상점 무기 강화"는 1.7.8에 없어진 방식이라 뺐습니다.
 
 ## 기본 정보
@@ -16,7 +17,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 | 이름 | Soul Saver |
 | 개발사 · 배급사 | 박민근 |
 | 장르 | 액션, 인디, 로그라이트 |
-| 추천 태그 | Action Roguelike, Bullet Hell, Top-Down Shooter, Pixel Graphics, 2D, Singleplayer, Survival, Roguelite, Difficult, Dark Fantasy |
+| 추천 태그 (앞에서부터 중요한 순) | Bullet Heaven, Action Roguelike, Roguelite, Pixel Graphics, Top-Down Shooter, Survival, 2D, Singleplayer, Dark Fantasy, Bullet Hell |
 | 지원 언어 (인터페이스 · 자막) | 한국어, 영어, 일본어, 중국어 간체 — 음성 없음 |
 | 플랫폼 | Windows |
 | 컨트롤러 | 지원 안 함 (키보드 · 마우스) |
@@ -30,7 +31,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **짧은 설명**
 
 ```
-초원에서 영혼의 심연까지, 깨어난 망자들로부터 세상의 영혼을 지켜라! 영웅마다 다른 고유 스킬을 37가지 스킬 진화로 합치고, 보스를 쓰러뜨릴 때마다 무기를 진화시키며, 내 기술을 흉내 내는 거울의 군주에 맞서는 도트 그래픽 탑다운 액션 로그라이트.
+보스의 결계에 갇혀 1:1로 맞서라. 쓰러뜨리는 순간, 그 자리에서 무기가 진화한다! 화면을 메운 망자들을 쓸어버리고, 영웅마다 다른 고유 스킬을 37가지 스킬 진화로 합치며, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 서바이버 액션 로그라이트.
 ```
 
 **상세 설명**
@@ -108,6 +109,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 [*]적 · 보스 · 무기 · 운명 · 진화 · 스킬 진화 도감
 [*]머리 위로 튀는 피해 숫자, 화려한 도트 이펙트와 스테이지별 음악
 [*]스팀 도전 과제 38개
+[*]방송 · 수익 창출 영상 자유 (허락 필요 없음, 음악도 직접 만든 곡이라 저작권 걱정 없음)
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -117,7 +119,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **Short description**
 
 ```
-From the Meadow to the Abyss of Souls, save the world's souls from the risen dead! Fuse each hero's unique skills into 37 skill evolutions, evolve your weapon with every boss you defeat, and face the Mirror Sovereign who copies your every move in this pixel-art top-down action roguelite.
+Get sealed in a boss's barrier and fight one-on-one — the moment it falls, your weapon evolves on the spot! Mow down screen-filling hordes of the dead, fuse each hero's unique skills into 37 skill evolutions and shape your build across a 100+ node Soul Tree in this pixel-art survivor roguelite.
 ```
 
 **About this game**
@@ -195,6 +197,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]Codexes for enemies, bosses, weapons, Fate, evolutions and skill evolutions
 [*]Damage numbers, flashy pixel effects and music for every stage
 [*]38 Steam achievements
+[*]Streaming and monetized videos welcome — no permission needed, all music is original
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```
@@ -204,7 +207,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **短い説明**
 
 ```
-草原から魂の深淵まで、目覚めた亡者から世界の魂を守れ！英雄ごとの固有スキルを集めて37のスキル進化に融合し、ボスを倒すたびに武器を進化させ、ボスの結界を耐え抜くドット絵トップダウンアクション・ローグライト。
+ボスの結界に閉じ込められ、一対一で挑め。倒したその瞬間、武器がその場で進化する！画面を埋め尽くす亡者をなぎ払い、英雄ごとの固有スキルを37のスキル進化に融合し、100以上のマスを持つ魂の樹で自分だけのビルドを完成させるドット絵サバイバー・アクションローグライト。
 ```
 
 **このゲームについて**
@@ -282,6 +285,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]敵・ボス・武器・運命・進化・スキル進化の図鑑
 [*]頭上に飛び出すダメージ数値、派手なドットエフェクトとステージごとのBGM
 [*]Steam実績38個
+[*]配信・収益化動画は自由です（許可不要・音楽はすべてオリジナル曲）
 [*]한국어・English・日本語・简体中文
 [/list]
 ```
@@ -291,7 +295,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **简短描述**
 
 ```
-从草原到灵魂深渊，从苏醒的亡者手中守护世界的灵魂！收集每位英雄的专属技能并融合为37种技能进化，每击败一位首领就进化武器，在首领的结界中幸存——像素风俯视角动作肉鸽游戏。
+被困在首领的结界中一对一决战——击败它的瞬间，武器当场进化！横扫铺满屏幕的亡者大军，将每位英雄的专属技能融合为37种技能进化，用超过100格的灵魂之树打造专属构筑——像素风割草动作肉鸽游戏。
 ```
 
 **关于这款游戏**
@@ -369,6 +373,7 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 [*]敌人·首领·武器·命运·进化·技能进化图鉴
 [*]头顶弹出的伤害数字、华丽的像素特效与各关卡专属音乐
 [*]38个Steam成就
+[*]欢迎直播与发布带收益的视频——无需许可，所有音乐均为原创
 [*]한국어 · English · 日本語 · 简体中文
 [/list]
 ```

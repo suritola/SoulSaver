@@ -855,6 +855,7 @@ public static partial class LocTable
         { "게임", L("Gameplay", "ゲーム", "游戏") },
         { "도움말 안내", L("Tips", "ヒント表示", "提示") },
         { "피해 숫자", L("Damage numbers", "ダメージ数値", "伤害数字") },
+        { "내 이펙트 투명도", L("My effects opacity", "自分のエフェクト不透明度", "我的特效不透明度") },
         { "크게", L("Large", "大きく", "放大") },
         { "끄기", L("Off", "オフ", "关闭") },
         { "색각 이상 모드", L("Color-blind mode", "色覚サポート", "色盲模式") },
