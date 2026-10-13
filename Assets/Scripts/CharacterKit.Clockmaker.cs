@@ -17,7 +17,7 @@ public partial class CharacterKit
     int clockTicks;
     float tickSoundAt;
     int gearThrows;
-    LineRenderer clockRing;
+    LineRenderer clockRing, clockDial;
     public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0));
     public bool ClockReady => clockTicks >= ClockNeed;
     public void AddClockTicks(float n) { clockTickFrac += n; while (clockTickFrac >= 1f) { clockTickFrac -= 1f; if (clockTicks < ClockNeed) clockTicks++; } }
@@ -146,15 +146,27 @@ public partial class CharacterKit
     // 발밑 시계 눈금 고리
     void DrawClockRing()
     {
-        if (clockRing == null) { clockRing = Hostile.NewLine("ClockRing", Brass, 0.08f, 6); clockRing.loop = false; }
+        // 1.1.2: 이펙트 · 적에 묻혀 안 보이던 것 — 어두운 문자판 테두리 위에 굵고 밝은 눈금, 스킬 이펙트(+40)보다 위 순서로
+        if (clockRing == null)
+        {
+            clockDial = Hostile.NewLine("ClockDial", new Color(0.08f, 0.05f, 0.12f, 0.75f), 0.3f, 58);
+            clockDial.loop = true;
+            clockRing = Hostile.NewLine("ClockRing", Brass, 0.18f, 59);
+            clockRing.loop = false;
+        }
         float k = Mathf.Clamp01(clockTicks / (float)ClockNeed);
-        clockRing.enabled = k > 0f;
-        if (k <= 0f) return;
+        bool show = !PlayerController.Cinematic;
+        clockDial.enabled = show;
+        clockRing.enabled = show && k > 0f;
+        if (!show) return;
         Vector3 at = transform.position + Vector3.down * 0.9f;
+        Hostile.SetArc(clockDial, at, 1.1f, 0f, 360f);
+        if (k <= 0f) return;
         Hostile.SetArc(clockRing, at, 1.1f, 90f, 90f - 360f * k);
-        float pulse = ClockReady ? 0.6f + 0.4f * Mathf.Sin(Time.time * 12f) : 0.55f;
-        clockRing.startColor = clockRing.endColor = ClockReady ? new Color(1f, 0.85f, 0.35f, pulse) : new Color(Brass.r, Brass.g, Brass.b, pulse);
-        clockRing.startWidth = clockRing.endWidth = ClockReady ? 0.14f : 0.08f;
+        float pulse = ClockReady ? 0.75f + 0.25f * Mathf.Sin(Time.time * 12f) : 0.95f;
+        Color c = ClockReady ? new Color(1f, 0.9f, 0.4f, pulse) : new Color(Mathf.Lerp(Brass.r, 1f, 0.35f), Mathf.Lerp(Brass.g, 1f, 0.35f), Mathf.Lerp(Brass.b, 1f, 0.35f), pulse);
+        clockRing.startColor = clockRing.endColor = c;
+        clockRing.startWidth = clockRing.endWidth = ClockReady ? 0.26f : 0.18f;
     }
 
     // ================================================================= 우클릭: 되감기
@@ -297,6 +309,7 @@ public partial class CharacterKit
     void OnDestroyClockmaker()
     {
         if (clockRing != null) Destroy(clockRing.gameObject);
+        if (clockDial != null) Destroy(clockDial.gameObject);
         if (rewindGhost != null) Destroy(rewindGhost);
     }
 }

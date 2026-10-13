@@ -66,8 +66,8 @@ public static class CharacterData
         // ---------------- 1.1.2 새 캐릭터: 해제 조건 달성 뒤 포인트로
         new CharacterDef {
             name = "지도 제작자", title = "길 잃은 측량사", body = "cartographer", held = "quill",
-            description = "깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 선을 이어 도형을 닫으면 안쪽을 통째로 짓이깁니다.",
-            weapon = "깃펜", attack = "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 획은 앞 획의 끝에서 이어지고, 이어진 획으로 도형을 닫으면 안쪽의 적이 크게 다칩니다",
+            description = "깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 세 획마다 저절로 그려지는 도형으로 안쪽을 통째로 짓이깁니다.",
+            weapon = "깃펜", attack = "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
             skill = "지도 접기", skillDesc = "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
             hp = 0.95f, damage = 1.1f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,
             pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f) },

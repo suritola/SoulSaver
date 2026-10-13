@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 지도 제작자 (1.1.2): 깃펜으로 잉크 획을 그어 벰
-//   평타 · 잉크 획: 마우스 쪽으로 획을 긋고 (사거리 안), 다음 획은 앞 획의 끝에서 이어짐
-//                   이어진 획이 처음 점 가까이 돌아오면 도형이 닫혀 안쪽의 적이 크게 다침
+//   평타 · 잉크 획: 나에게서 마우스 쪽으로 획을 그음 (사거리 안)
+//                   1.1.2: 세 번째 획마다 마우스 자리를 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다침
+//                   (예전: 앞 획 끝에서 이어 그려 직접 도형을 닫아야 했음 — 너무 어렵다는 의견)
 //   우클릭 · 지도 접기: 누르고 있는 동안 접히는 선(마우스 자리, 나와 마우스를 잇는 선에 수직)이 보이고,
 //                   떼면 선 양쪽 띠 안의 적을 선 위로 끌어당겨 짓이김 (오래 누를수록 넓고 길게)
 // 레벨업 카드 (card): 0 번지는 잉크 · 1 굵은 펜촉 · 2 나침반 바늘 · 3 접힌 자국 · 5 측량 표식 · 6 끊기지 않는 선
@@ -16,18 +17,19 @@ public partial class CharacterKit
     static readonly Color Ink = new Color(0.22f, 0.36f, 0.92f, 0.95f);
     static readonly Color InkGold = new Color(1f, 0.82f, 0.35f, 0.95f);
 
-    // 이어 그리는 중인 획의 점들 (첫 점 = 도형의 시작)
-    readonly List<Vector3> mapChain = new List<Vector3>();
     float mapChainUntil;
     int strokeCount;
     LineRenderer mapChainLine, mapCloseRing;
     // 측량 표식: 획에 맞은 적 (도형 안에서 피해 +)
     readonly Dictionary<GameObject, float> surveyMarks = new Dictionary<GameObject, float>();
 
-    public bool MapChainActive => IsCartographer && mapChain.Count > 0 && Time.time < mapChainUntil;
-    float MapChainTime => 1.4f + 0.5f * card[6];
-    const float MapCloseDist = 1.8f;
-    const int MapMaxPoints = 9;
+    // 그리는 중: 마지막 획 뒤 잠깐 (지름길 · 직행로)
+    public bool MapChainActive => IsCartographer && Time.time < mapChainUntil;
+    const float MapChainTime = 1.4f;
+    const int ShapeEvery = 3;          // 이 획마다 도형이 저절로 닫힘
+    // 도형(삼각형) 반지름: 지구본 1.5배, 끊기지 않는 선 단계마다 +15%
+    float ShapeRadius => 2.4f * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f) * (1f + 0.15f * card[6]);
+    bool ShapeNext => strokeCount % ShapeEvery == ShapeEvery - 1;
 
     float StrokeWidth => 0.75f * (1f + 0.3f * card[1]) * SignatureSkills.StrokeWidthMul();
 
@@ -35,10 +37,7 @@ public partial class CharacterKit
     {
         Vector3 me = transform.position;
         Vector3 to = ClampRange(me, Mouse, def.range);
-        bool chained = MapChainActive && (mapChain[mapChain.Count - 1] - me).magnitude <= def.range * 1.4f;
-        if (!chained) mapChain.Clear();
-        Vector3 from = chained ? mapChain[mapChain.Count - 1] : start;
-        if (mapChain.Count == 0) mapChain.Add(from);
+        Vector3 from = start;
         if ((to - from).magnitude < 1f) to = from + (Vector3)(((Vector2)(to - from)).sqrMagnitude > 0.01f ? ((Vector2)(to - from)).normalized : dir);
 
         float width = StrokeWidth;
@@ -59,18 +58,9 @@ public partial class CharacterKit
         if (card[2] > 0 && strokeCount % 4 == 0) CompassNeedles(to, card[2]);
         if (augment == AugReprint) StartCoroutine(Reprint(from, to, width, dmg * lenMul * 0.5f));
 
-        // 도형 닫기: 셋 이상의 점이 이어진 뒤 처음 점 가까이 돌아오면
-        if (mapChain.Count >= 3 && (to - mapChain[0]).magnitude <= MapCloseDist * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f))
-        {
-            CloseShape(new List<Vector3>(mapChain), dmg);
-            mapChain.Clear();
-        }
-        else
-        {
-            mapChain.Add(to);
-            if (mapChain.Count > MapMaxPoints) mapChain.RemoveAt(0);
-            mapChainUntil = Time.time + MapChainTime;
-        }
+        // 자동 도형: 세 번째 획마다 획 끝(마우스 자리)을 감싸는 삼각형이 저절로 닫힘
+        if (strokeCount % ShapeEvery == 0) CloseShape(Triangle(to, ShapeRadius), dmg);
+        mapChainUntil = Time.time + MapChainTime;
         PlayerMotion.Of(this).Recoil(-sd, 0.4f);
         Play("ink", 0.6f, 1f + Random.Range(-0.1f, 0.1f));
         Play("whoosh", 0.25f, 1.6f);
@@ -188,6 +178,18 @@ public partial class CharacterKit
         SignatureSkills.Closed(poly, center, reach, inside);
     }
 
+    static List<Vector3> Triangle(Vector3 c, float r)
+    {
+        float a0 = Random.Range(0f, 120f);
+        List<Vector3> poly = new List<Vector3>(3);
+        for (int i = 0; i < 3; i++)
+        {
+            float a = (a0 + 120f * i) * Mathf.Deg2Rad;
+            poly.Add(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * r);
+        }
+        return poly;
+    }
+
     static bool InPolygon(Vector3 p, List<Vector3> poly)
     {
         bool inside = false;
@@ -218,7 +220,7 @@ public partial class CharacterKit
         Stroke(a, b, width, dmg);
     }
 
-    // 이어 그리는 중인 선 · 닫을 자리 표시 (매 프레임)
+    // 다음 획에 도형이 닫힐 때: 마우스 자리에 닫힐 범위를 금색 고리로 (매 프레임)
     void DrawMapChain()
     {
         if (mapChainLine == null)
@@ -227,20 +229,12 @@ public partial class CharacterKit
             mapCloseRing = Hostile.NewLine("MapClose", InkGold, 0.08f, 17);
             mapCloseRing.loop = true;
         }
-        bool on = MapChainActive && mapChain.Count >= 2;
-        mapChainLine.enabled = on;
-        mapCloseRing.enabled = on && mapChain.Count >= 3;
-        if (!on) return;
-        float left = Mathf.Clamp01((mapChainUntil - Time.time) / MapChainTime);
-        mapChainLine.positionCount = mapChain.Count;
-        for (int i = 0; i < mapChain.Count; i++) mapChainLine.SetPosition(i, mapChain[i]);
-        mapChainLine.startColor = mapChainLine.endColor = new Color(Ink.r, Ink.g, Ink.b, 0.25f + 0.5f * left);
-        if (mapCloseRing.enabled)
-        {
-            float pulse = 0.5f + 0.4f * Mathf.Sin(Time.time * 10f);
-            Hostile.SetArc(mapCloseRing, mapChain[0], MapCloseDist * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f), 0f, 360f);
-            mapCloseRing.startColor = mapCloseRing.endColor = new Color(InkGold.r, InkGold.g, InkGold.b, pulse * (0.4f + 0.6f * left));
-        }
+        mapChainLine.enabled = false;
+        mapCloseRing.enabled = IsCartographer && ShapeNext && !PlayerController.Cinematic;
+        if (!mapCloseRing.enabled) return;
+        float pulse = 0.5f + 0.4f * Mathf.Sin(Time.time * 10f);
+        Hostile.SetArc(mapCloseRing, ClampRange(transform.position, Mouse, def.range), ShapeRadius, 0f, 360f);
+        mapCloseRing.startColor = mapCloseRing.endColor = new Color(InkGold.r, InkGold.g, InkGold.b, pulse * 0.8f);
     }
 
     // ================================================================= 우클릭: 지도 접기

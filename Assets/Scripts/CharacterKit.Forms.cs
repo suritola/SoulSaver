@@ -129,7 +129,7 @@ public partial class CharacterKit
         SpecialAbilities.KitFirework => "플라스크가 터지면 불꽃 세 갈래가 퍼져 한 번씩 더 터집니다. (피해 45%)",
         SpecialAbilities.KitSurveyChain => "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)",
         SpecialAbilities.KitInkpot => "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)",
-        SpecialAbilities.KitGlobe => "도형을 닫기 쉬워지고(닫는 거리 1.5배), 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.",
+        SpecialAbilities.KitGlobe => "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.",
         SpecialAbilities.KitCuckoo => "정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다. (공격력 100%씩)",
         SpecialAbilities.KitHourglass => "톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.",
         SpecialAbilities.KitGrandfather => "톱니가 크고 느려지지만 피해가 40% 늘어납니다.",

@@ -9,15 +9,15 @@ public static partial class LocTable
         // ================================================================= 지도 제작자
         A("지도 제작자", "Cartographer", "地図職人", "制图师");
         A("길 잃은 측량사", "The Lost Surveyor", "迷子の測量士", "迷途的测量师");
-        A("깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 선을 이어 도형을 닫으면 안쪽을 통째로 짓이깁니다.",
-          "A surveyor who draws the world with a quill. Strokes cut foes, and closing a shape crushes everything inside.",
-          "羽ペンで世界を描く測量士。引いた線で敵を斬り、線をつないで図形を閉じると内側をまとめて押し潰します。",
-          "用羽毛笔描绘世界的测量师。画出的线斩击敌人，连线闭合图形则将内部一并碾碎。");
+        A("깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 세 획마다 저절로 그려지는 도형으로 안쪽을 통째로 짓이깁니다.",
+          "A surveyor who draws the world with a quill. Strokes cut foes, and every third stroke draws a shape that crushes everything inside.",
+          "羽ペンで世界を描く測量士。引いた線で敵を斬り、3本ごとに自動で描かれる図形で内側をまとめて押し潰します。",
+          "用羽毛笔描绘世界的测量师。画出的线斩击敌人，每三笔自动画出的图形将内部一并碾碎。");
         A("깃펜", "Quill", "羽ペン", "羽毛笔");
-        A("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 획은 앞 획의 끝에서 이어지고, 이어진 획으로 도형을 닫으면 안쪽의 적이 크게 다칩니다",
-          "Draw an ink stroke toward the cursor, cutting enemies it touches. Each stroke continues from the last; close a shape and enemies inside take heavy damage",
-          "マウスの方へインクの線を引き、触れた敵を斬ります。線は前の線の端から続き、つないだ線で図形を閉じると内側の敵に大ダメージ",
-          "向鼠标方向画出墨线斩击触碰的敌人。每一笔从上一笔末端延续，连线闭合图形时内部敌人受到重创");
+        A("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
+          "Draw an ink stroke toward the cursor, cutting enemies it touches. Every third stroke closes a triangle around its end, dealing heavy damage to enemies inside",
+          "マウスの方へインクの線を引き、触れた敵を斬ります。3本目の線ごとに線の端を囲む三角形が自動で閉じ、内側の敵に大ダメージ",
+          "向鼠标方向画出墨线斩击触碰的敌人。每第三笔会自动在笔画末端闭合一个三角形，内部敌人受到重创");
         A("지도 접기", "Fold the Map", "地図折り", "折叠地图");
         A("누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
           "Hold to show the fold line; release to drag enemies on both sides onto the line and crush them. Hold longer for a wider fold",
@@ -45,7 +45,7 @@ public static partial class LocTable
         A("획에 맞은 적에게 5초 동안 표식을 남깁니다. 표식이 붙은 적은 닫힌 도형 안에서 피해를 더 받습니다.", "Strokes mark enemies for 5s. Marked enemies take more damage inside closed shapes.", "線に当たった敵に5秒間標識を残します。標識の付いた敵は閉じた図形の中で多くダメージを受けます。", "被笔画击中的敌人留下5秒标记。被标记的敌人在闭合图形内受到更多伤害。");
         A("도형 피해", "Shape damage", "図形ダメージ", "图形伤害");
         A("끊기지 않는 선", "Unbroken Line", "途切れない線", "不断之线");
-        A("획이 이어지는 시간이 늘어나고, 도형을 닫을 때마다 필살기 게이지가 찹니다.", "Strokes stay connected longer, and closing a shape fills your Ultimate gauge.", "線がつながる時間が延び、図形を閉じるたびに必殺技ゲージがたまります。", "笔画保持连接的时间更长，每次闭合图形都会充能必杀技。");
+        A("도형이 커지고(단계마다 +15%), 도형을 닫을 때마다 필살기 게이지가 찹니다.", "Shapes grow larger (+15% per rank), and closing a shape fills your Ultimate gauge.", "図形が大きくなり（段階ごとに+15%）、図形を閉じるたびに必殺技ゲージがたまります。", "图形变大（每级+15%），每次闭合图形都会充能必杀技。");
         A("게이지", "Gauge", "ゲージ", "充能");
 
         // ---------------- 고유 스킬
@@ -63,7 +63,7 @@ public static partial class LocTable
         A("3초 동안 획을 긋지 않으면 다음 획이 두 배 굵고 더 아픕니다.", "If you don't draw for 3s, your next stroke is twice as thick and hits harder.", "3秒間線を引かないと、次の線が2倍太く強くなります。", "3秒内不画线，下一笔会变为两倍粗且更痛。");
         A("여백 획 피해", "Margin stroke damage", "余白の線のダメージ", "留白笔画伤害");
         A("지름길", "Shortcut", "近道", "捷径");
-        A("획을 이어 그리는 동안 이동 속도가 오릅니다.", "Move faster while your strokes are connected.", "線をつないでいる間、移動速度が上がります。", "连续画线期间移动速度提升。");
+        A("획을 그은 뒤 잠시(1.4초) 이동 속도가 오릅니다.", "Move faster for a moment (1.4s) after each stroke.", "線を引いた後しばらく（1.4秒）移動速度が上がります。", "每次画线后短时间（1.4秒）移动速度提升。");
         A("지우개", "Eraser", "消しゴム", "橡皮擦");
         A("적을 쓰러뜨리면 그 자리 둘레의 적 투사체를 지웁니다.", "Defeating an enemy erases enemy projectiles around it.", "敵を倒すとその周りの敵の投射物を消します。", "击败敌人时擦除其周围的敌方投射物。");
         A("지우는 범위", "Erase radius", "消す範囲", "擦除范围");
@@ -83,7 +83,7 @@ public static partial class LocTable
         A("입체 지도", "Relief Map", "立体地図", "立体地图");
         A("등고선 파동이 세 겹으로 퍼집니다.", "Contour waves ripple out three times.", "等高線の波動が三重に広がります。", "等高线波动扩散三层。");
         A("직행로", "Express Route", "直行路", "直达路线");
-        A("획을 이어 그리는 동안 받는 피해가 30% 줄어듭니다.", "Take 30% less damage while your strokes are connected.", "線をつないでいる間、受けるダメージが30%減ります。", "连续画线期间受到的伤害减少30%。");
+        A("획을 그은 뒤 잠시(1.4초) 받는 피해가 30% 줄어듭니다.", "Take 30% less damage for a moment (1.4s) after each stroke.", "線を引いた後しばらく（1.4秒）受けるダメージが30%減ります。", "每次画线后短时间（1.4秒）受到的伤害减少30%。");
         A("별자리", "Constellation", "星座", "星座");
         A("북극성이 셋으로 늘고, 별끼리 이어진 선이 닿는 적을 벱니다.", "North Star becomes three stars, and the lines between them cut enemies.", "北極星が3つに増え、星同士をつなぐ線が触れた敵を斬ります。", "北极星增至三颗，星与星之间的连线斩击触碰的敌人。");
         A("먹물 홍수", "Ink Flood", "墨の洪水", "墨水洪流");
@@ -101,7 +101,7 @@ public static partial class LocTable
         A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)", "An inkpot shatters at each stroke's end in a small burst. (60% damage)", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）");
         A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nUltimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n究極技：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n究极技：墨潮");
         A("지구본", "Globe", "地球儀", "地球仪");
-        A("도형을 닫기 쉬워지고(닫는 거리 1.5배), 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "Shapes are easier to close (1.5x closing distance); closing pulls enemies to the center and shape damage +30%.", "図形を閉じやすくなり（閉じる距離1.5倍）、閉じると内側の敵が中央に集まり図形ダメージ+30%。", "更容易闭合图形（闭合距离1.5倍），闭合时内部敌人聚向中央，图形伤害+30%。");
+        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。");
         A("도형을 닫기 쉬워지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are easier to close; closing pulls enemies to the center and shape damage +30%.\nUltimate: Rotation", "図形を閉じやすくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "更容易闭合图形，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
         A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");

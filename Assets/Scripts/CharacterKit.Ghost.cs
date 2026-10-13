@@ -43,16 +43,27 @@ public partial class CharacterKit
         Play("freeze", 0.2f, 1.4f);
     }
 
-    // 손 하나: 한 줄 (굵기 0.9) 의 적을 모두
+    // 1.1.2: 판정을 보이는 그림에 맞춤 — 적의 중심이 아니라 몸(콜라이더) 크기까지, 손끝의 뼈 손 그림 둘레까지,
+    // 손이 길어지면(HandReachMul) 찾는 범위도 같이 (예전엔 기본 길이로만 찾아 먼 쪽 적이 빠졌음)
+    const float HandHalfWidth = 0.9f, HandTipRadius = 1.3f;
+    static float BodyRadius(Collider2D c) => Mathf.Max(c.bounds.extents.x, c.bounds.extents.y) * 0.8f;
+    static bool HandTouches(Collider2D c, Vector3 start, Vector3 end)
+    {
+        float r = BodyRadius(c);
+        Vector3 p = c.bounds.center;
+        return Hostile.DistanceToSegment(p, start, end) <= HandHalfWidth + r || (p - end).magnitude <= HandTipRadius + r;
+    }
+
+    // 손 하나: 한 줄의 적을 모두
     void Hand(Vector3 start, Vector2 dir, float dmg, bool main)
     {
         Vector3 end = start + (Vector3)(dir * HandReach * SignatureSkills.HandReachMul());
         Vector3 mid = (start + end) * 0.5f;
         bool first = true;
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, HandReach * 0.5f + 1f, ghostHits)))
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (end - start).magnitude * 0.5f + HandTipRadius + 1.5f, ghostHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            if (Hostile.DistanceToSegment(c.transform.position, start, end) > 0.9f) continue;
+            if (!HandTouches(c, start, end)) continue;
             GameObject g = c.gameObject;
             Specials.Damage(g, dmg * formPower, dir, 0.6f);
             AddChill(g, form == SpecialAbilities.KitIceGhost ? 2 : 1);
@@ -87,7 +98,7 @@ public partial class CharacterKit
         {
             yield return new WaitForSeconds(0.5f);
             foreach (Collider2D c in new List<Collider2D>(Specials.Overlap((a + b) * 0.5f, (b - a).magnitude * 0.5f + 1f, ghostHits)))
-                if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss")) && Hostile.DistanceToSegment(c.transform.position, a, b) <= 1f)
+                if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss")) && Hostile.DistanceToSegment(c.bounds.center, a, b) <= 1f + BodyRadius(c))
                     AddChill(c.gameObject, 1);
         }
     }
