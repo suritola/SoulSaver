@@ -199,7 +199,7 @@ public partial class CharacterKit
     LineRenderer expressRing;
     const float ExpressRange = 15f;
 
-    int ExpressMax => Mathf.RoundToInt((8 + 22 * expressCharge) * (augment == AugRegistered ? 1.5f : 1f));
+    int ExpressMax => Mathf.RoundToInt((6 + 14 * expressCharge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.1.1 조정: 8 ~ 30 → 6 ~ 20
 
     void UpdateExpress(SkillGauge gauge, bool full)
     {
@@ -245,7 +245,7 @@ public partial class CharacterKit
         expressing = false;
         expressRing.enabled = false;
         CancelUltAim();
-        float dmg = Damage * (2.5f + 2.5f * expressCharge) * UltMul;
+        float dmg = Damage * (2f + 2f * expressCharge) * UltMul;
         StartCoroutine(ExpressRoutine(new List<Transform>(expressMarks), new List<FxAnim>(expressIcons), dmg));
         expressMarks.Clear();
         expressIcons.Clear();

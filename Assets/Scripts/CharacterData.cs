@@ -33,7 +33,7 @@ public static class CharacterData
             description = "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "일제 사격", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
-            damage = 1.05f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
+            damage = 1.15f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
@@ -76,21 +76,21 @@ public static class CharacterData
             description = "톱니바퀴와 태엽으로 시간을 다루는 장인. 맞힐수록 시계 눈금이 차 정각의 큰 톱니를 던지고, 위기에는 3초 전으로 되돌아갑니다.",
             weapon = "톱니바퀴", attack = "회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
             skill = "되감기", skillDesc = "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
-            hp = 1f, damage = 1f, attackSpeed = 1.1f, gauge = 1f, range = 16f, price = 8000, condition = CharUnlock.EndlessBosses5,
+            hp = 1f, damage = 1f, attackSpeed = 0.85f, gauge = 1f, range = 16f, price = 8000, condition = CharUnlock.EndlessBosses5,
             pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f) },
         new CharacterDef {
             name = "우체부", title = "저승 배달부", body = "postman", held = "letter",
             description = "살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 화면의 적 모두에게 편지가 터집니다.",
             weapon = "편지", attack = "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
             skill = "속달", skillDesc = "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
-            hp = 0.9f, damage = 1f, attackSpeed = 1.15f, gauge = 1.05f, move = 1.08f, range = 14f, price = 12000, condition = CharUnlock.EasyFast,
+            hp = 0.9f, damage = 0.9f, attackSpeed = 1f, gauge = 1.05f, move = 1.08f, range = 14f, price = 12000, condition = CharUnlock.EasyFast,
             pool = new[] { 74, 75, 76, 77, 78, 79, 80 }, color = new Color(0.95f, 0.45f, 0.4f) },
         new CharacterDef {
             name = "유령", title = "죽지 못한 영혼", body = "ghost", held = "lantern",
             description = "세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
             weapon = "차가운 손길", attack = "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
             skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
-            hp = 0.8f, damage = 1.15f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,
+            hp = 0.8f, damage = 1f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,
             pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f) },
         Coming(),
     };

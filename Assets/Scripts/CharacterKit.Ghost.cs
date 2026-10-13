@@ -4,7 +4,7 @@ using UnityEngine;
 
 // 유령 (1.1.2): 죽지 못한 영혼
 //   평타 · 차가운 손길: 앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓음 (다섯 번 쌓이면 1초 얼어붙음)
-//   영혼(도깨비불): 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돎 (최대 6). 맞을 때 영혼이 대신 사라지며 피해를 막음
+//   영혼(도깨비불): 적을 쓰러뜨리면 확률로(20%) 영혼이 생겨 몸 둘레를 돎 (최대 4). 맞을 때 영혼이 대신 사라지며 피해를 막음
 //   우클릭 · 빙의: 누르고 있으면 마우스 가까운 적에 표시, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨림
 //                 (들어간 동안 무적 · 둘레 적에게도 피해와 냉기)
 // 레벨업 카드 (card): 0 꿰뚫는 냉기 · 1 얼어붙는 손길 · 2 원혼 · 3 빙의 여운 · 5 영혼 수호 · 6 얼음 파편
@@ -25,7 +25,7 @@ public partial class CharacterKit
 
     // 영혼 (도깨비불)
     public int Wisps { get; private set; }
-    public int WispMax => 6 + 2 * card[5];
+    public int WispMax => 4 + card[5];         // 1.1.1 조정: 6 + 2 → 4 + 1 (카드 5 · 6 · 7)
     readonly List<FxAnim> wispFx = new List<FxAnim>();
     static readonly List<Collider2D> ghostHits = new List<Collider2D>(64);
 
@@ -115,7 +115,7 @@ public partial class CharacterKit
     void GhostKill(Vector3 pos)
     {
         if (Id != CharacterId.Ghost) return;
-        float chance = 0.35f + SignatureSkills.WispChanceBonus();
+        float chance = 0.2f + SignatureSkills.WispChanceBonus();       // 1.1.1 조정: 35% → 20%
         if (Random.value < chance) AddWisps(1);
         if (card[2] > 0)
         {

@@ -4,7 +4,7 @@ using UnityEngine;
 // 캐릭터 고유 규칙 (1.1.2): 다른 캐릭터에게 없는 몸의 규칙 하나씩 (유령의 영혼처럼)
 //   궁수 · 숨 고르기: 시위를 당기는 동안 숨이 닳고 쉬면 참. 바닥나면 활이 떨려 약해지고 「완벽!」이 나오지 않음.
 //                    「완벽!」 사격은 숨을 크게 되돌려 줌
-//   연금술사 · 불안정도: 던질 때마다 오르고 높을수록 폭발이 크고 아픔. 가득 차면 발밑에서 자폭(내 체력 12% · 주변 대폭발).
+//   연금술사 · 불안정도: 던질 때마다 오르고 높을수록 폭발이 크고 아픔. 가득 차면 발밑에서 자폭(내 체력 8% · 주변 대폭발).
 //                       던지지 않으면 내려가고, 대폭발 플라스크(우클릭)는 불안정도를 모두 쏟아 그만큼 강해짐
 // 두 게이지 모두 머리 위 작은 막대로 보임
 public partial class CharacterKit
@@ -14,13 +14,13 @@ public partial class CharacterKit
     public float Breath { get; private set; } = BreathMax;
     float breathRestAt;
     public bool Breathless { get; private set; }
-    const float BreathDrain = 30f, BreathRegen = 28f, PerfectBreath = 35f;
+    const float BreathDrain = 20f, BreathRegen = 45f, PerfectBreath = 35f;     // 1.1.1 조정: 30 · 28 → 20 · 45 (쏘는 사이 0.45초에도 조금 참)
 
     // 당기는 동안 (UpdateBow)
     void ConsumeBreath()
     {
         Breath = Mathf.Max(0f, Breath - BreathDrain * Time.deltaTime);
-        breathRestAt = Time.time + 0.4f;
+        breathRestAt = Time.time + 0.2f;
         if (Breath <= 0f && !Breathless)
         {
             Breathless = true;
@@ -47,7 +47,7 @@ public partial class CharacterKit
     void AddInstability(float n)
     {
         Instability = Mathf.Min(InstabilityMax, Instability + n);
-        instabilityRestAt = Time.time + 1.2f;
+        instabilityRestAt = Time.time + 0.8f;
         if (Instability >= InstabilityMax && !selfBlastQueued) StartCoroutine(SelfBlast());
     }
 
@@ -59,7 +59,7 @@ public partial class CharacterKit
         return mul;
     }
 
-    // 가득 차면 발밑에서 자폭: 주변 대폭발 + 내 체력 12% (죽지는 않음)
+    // 가득 차면 발밑에서 자폭: 주변 대폭발 + 내 체력 8% (죽지는 않음)
     IEnumerator SelfBlast()
     {
         selfBlastQueued = true;
@@ -79,7 +79,7 @@ public partial class CharacterKit
         Play("bigboom", 0.9f, 1f);
         if (!player.IsInvincible)
         {
-            player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.12f);
+            player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.08f);
             DamageFlash.Show(0.5f);
         }
         Instability = 0f;
@@ -98,7 +98,7 @@ public partial class CharacterKit
         }
         else if (Id == CharacterId.Alchemist)
         {
-            if (Time.time >= instabilityRestAt && Instability > 0f) Instability = Mathf.Max(0f, Instability - 14f * Time.deltaTime);
+            if (Time.time >= instabilityRestAt && Instability > 0f) Instability = Mathf.Max(0f, Instability - 20f * Time.deltaTime);
             float k = Instability / InstabilityMax;
             Color c = Color.Lerp(new Color(0.55f, 1f, 0.45f), new Color(0.9f, 0.4f, 1f), k);
             if (k > 0.8f) c = Color.Lerp(c, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.time * 18f));

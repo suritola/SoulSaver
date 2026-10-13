@@ -512,7 +512,7 @@ public partial class CharacterKit : MonoBehaviour
         if (depth == 0 && ForceUnstable()) unstable = true;
         // 불안정도 (1.1.2): 던질 때마다 오르고, 높을수록 크고 아프게 터짐
         float instR = InstRadiusMul, instD = InstDamageMul;
-        if (depth == 0) AddInstability(unstable ? 15f : 8f);
+        if (depth == 0) AddInstability(unstable ? 12f : 5f);
         Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
         // 시약 농축: 한 바퀴 던질 때마다 다음 플라스크가 더 크고 아프게 (고유 스킬)
         float conc = depth == 0 ? SignatureSkills.FlaskThrow() : 1f;
