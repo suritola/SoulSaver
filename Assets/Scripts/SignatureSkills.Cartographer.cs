@@ -74,11 +74,11 @@ public partial class SignatureSkills
         {
             float r = Mathf.Max(2f, reach) * (E("ke.treasure") ? 2f : 1f);
             roses.Add((center, r, Time.time + 3f));
-            if (L("c.rose") > 0)
-            {
-                FxAnim a = Fx.Play("fx_target_rune", center, r * 2f, new Color(MapGold.r, MapGold.g, MapGold.b, 0.6f), 10f, 0f, 3, true, 3f, "Background");
-                if (a != null) a.spin = 40f;
-            }
+            // 1.1.2: 보물 지도만 있어도 표시가 보이게 (예전엔 나침도가 있어야만 그려져, 코인 받는 자리를 알 수 없었음)
+            //        나침도는 금빛 · 보물 표시만이면 코인색으로 조금 더 진하게
+            Color rc = L("c.rose") > 0 ? new Color(MapGold.r, MapGold.g, MapGold.b, 0.6f) : new Color(1f, 0.9f, 0.25f, 0.7f);
+            FxAnim a = Fx.Play("fx_target_rune", center, r * 2f, rc, 10f, 0f, 3, true, 3f, "Background");
+            if (a != null) a.spin = L("c.rose") > 0 ? 40f : 20f;
         }
         // 세계 지도: 안쪽 적이 두 번 더 다치고 표식이 주변으로 번짐
         if (E("ke.world"))

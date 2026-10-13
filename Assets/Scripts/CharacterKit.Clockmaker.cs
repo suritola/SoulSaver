@@ -68,8 +68,12 @@ public partial class CharacterKit
                 Fx.Spawn("fx_explosion", p, 5f, Brass, 18f);
                 ShockRing.Spawn(p, 0.4f, 3.2f, 0.3f, Brass, 0.2f);
                 if (card[5] > 0)
+                {
+                    // 정각의 종: 멈추는 범위(4칸)를 종소리 고리로 보여 줌 (예전엔 범위가 안 보였음)
+                    ShockRing.Spawn(p, 0.5f, 4f, 0.45f, new Color(1f, 0.95f, 0.75f, 0.9f), 0.22f);
                     foreach (Collider2D col in new List<Collider2D>(Specials.Overlap(p, 4f, clockHits)))
                         if (col != null && col.TryGetComponent(out EnermyController ce)) ce.Slow(0f, 0.2f + 0.3f * card[5]);
+                }
                 if (augment == AugRift) StartCoroutine(TimeRift(p));
                 if (form == SpecialAbilities.KitCuckoo) StartCoroutine(Cuckoos(p, 3));
                 SignatureSkills.BigGear(p);
@@ -175,66 +179,119 @@ public partial class CharacterKit
     float nextLog;
     bool rewinding;
     GameObject rewindGhost;
+    LineRenderer rewindPath, rewindPathCore, rewindRing;
+    Vector3 lastLogPos;
     const float RewindSeconds = 3f;
+    const float RewindPathHalf = 1.6f, RewindArriveRadius = 5f;      // 지나온 길 판정 폭(반) · 도착 둘레 반경 (미리 보기도 같은 값)
 
     void LogTime()
     {
         if (Time.time < nextLog) return;
         nextLog = Time.time + 0.1f;
+        // 순간이동(스테이지 넘어감 · 보스 기술로 끌려감)은 기록을 새로 시작 — 예전엔 지난 자리로 되감길 수 있었음
+        if (timeLog.Count > 0 && (transform.position - lastLogPos).sqrMagnitude > 6f * 6f) timeLog.Clear();
+        lastLogPos = transform.position;
         timeLog.Enqueue((Time.time, transform.position, player.PlayerHealth));
         while (timeLog.Count > 0 && Time.time - timeLog.Peek().t > RewindSeconds + 1f) timeLog.Dequeue();
     }
 
-    // 3초 전 (기록이 그보다 짧으면 가장 오래된 것)
+    // 3초 전 (기록이 그보다 짧으면 가장 오래된 것) · 지금 벽인 자리(결계가 끝나 되살아난 벽 등)는 건너뜀
     (Vector3 p, float hp) PastSelf()
     {
-        (float t, Vector3 p, float hp) best = (Time.time, transform.position, player.PlayerHealth);
-        foreach (var e in timeLog) { best = e; if (Time.time - e.t <= RewindSeconds) break; }
-        return (best.p, best.hp);
+        foreach (var e in timeLog)
+        {
+            if (Time.time - e.t > RewindSeconds || Hostile.IsWall(e.p)) continue;
+            return (e.p, e.hp);
+        }
+        return (transform.position, player.PlayerHealth);
+    }
+
+    // LateUpdate (CharacterKit.Rules) 에서: 멈춤 · 연출 · 사망 중에도 불림 — 발밑 시계 · 되감기 미리 보기 정리
+    void ClockLate()
+    {
+        DrawClockRing();
+        if (rewinding && (PlayerController.IsPaused || PlayerController.Cinematic || StoryDirector.Playing || player == null || player.IsDying || player.PlayerHealth <= 0f))
+            CancelRewind();
+    }
+
+    // 1.1.2: 멈춤 · 연출 · 사망으로 우클릭 처리가 끊기면 잔상 · 경로가 화면에 남고, 다시 움직일 때 저절로 되감기던 것 — 취소
+    void CancelRewind()
+    {
+        rewinding = false;
+        ShowRewindPreview(false);
+        CancelUltAim();
+    }
+
+    void ShowRewindPreview(bool on)
+    {
+        if (rewindGhost != null) rewindGhost.SetActive(on);
+        if (rewindPath != null) rewindPath.enabled = on;
+        if (rewindPathCore != null) rewindPathCore.enabled = on;
+        if (rewindRing != null) rewindRing.enabled = on;
     }
 
     void UpdateRewind(SkillGauge gauge, bool full)
     {
         LogTime();
-        DrawClockRing();
         if (!rewinding && GameInput.UltDown && full)
         {
             rewinding = true;
             Play("clank", 0.5f, 2.2f);
         }
-        if (!rewinding) { if (rewindGhost != null) rewindGhost.SetActive(false); return; }
+        if (!rewinding) { ShowRewindPreview(false); return; }
 
         var past = PastSelf();
-        if (rewindGhost == null)
-        {
-            rewindGhost = new GameObject("RewindGhost");
-            SpriteRenderer g = rewindGhost.AddComponent<SpriteRenderer>();
-            g.sortingLayerID = body.sortingLayerID;
-            g.sortingOrder = body.sortingOrder - 1;
-        }
-        rewindGhost.SetActive(true);
-        SpriteRenderer gs = rewindGhost.GetComponent<SpriteRenderer>();
-        gs.sprite = body.sprite;
-        gs.flipX = body.flipX;
-        gs.color = new Color(0.55f, 0.9f, 1f, 0.35f + 0.2f * Mathf.Sin(Time.time * 10f));
-        rewindGhost.transform.position = past.p;
-        rewindGhost.transform.localScale = transform.lossyScale;
-        if (ultAimLine == null) ultAimLine = Hostile.NewLine("UltAimLine", Color.white, 0.12f, 25);
-        ultAimLine.enabled = true;
-        ultAimLine.positionCount = 2;
-        ultAimLine.SetPosition(0, transform.position);
-        ultAimLine.SetPosition(1, past.p);
-        ultAimLine.startColor = ultAimLine.endColor = new Color(0.55f, 0.9f, 1f, 0.6f);
-        ultAimLine.startWidth = ultAimLine.endWidth = 1.2f;
+        DrawRewindPreview(past.p, past.hp);
         if (AddedUltShown) DrawUltAim(false, true);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         rewinding = false;
-        rewindGhost.SetActive(false);
+        ShowRewindPreview(false);
         CancelUltAim();
         StartCoroutine(RewindRoutine(past.p, past.hp));
         KitUltAdd(0.15f, past.p);
         Spend(gauge);
+    }
+
+    // 되감기 미리 보기: 3초 전의 내 모습 · 지나온 길(판정 폭 그대로) · 도착 둘레(멈춤 · 되갚기 범위)
+    // 1.1.2: 예전엔 경로가 판정(폭 3.2)보다 가늘게(1.2) 그려졌고, 무기 진화 뒤 덧붙는 궁극기 범위를 그리면 경로가 꺼졌으며, 잔상이 스킬 이펙트에 묻혔음
+    void DrawRewindPreview(Vector3 to, float pastHp)
+    {
+        if (rewindGhost == null)
+        {
+            rewindGhost = new GameObject("RewindGhost");
+            SpriteRenderer g = rewindGhost.AddComponent<SpriteRenderer>();
+            g.sortingLayerName = "Effect";
+            g.sortingOrder = 57;
+        }
+        if (rewindPath == null)
+        {
+            rewindPath = Hostile.NewLine("RewindPath", TimeBlue, RewindPathHalf * 2f, 55);
+            rewindPathCore = Hostile.NewLine("RewindPathCore", Color.white, 0.14f, 56);
+            rewindRing = Hostile.NewLine("RewindRing", TimeBlue, 0.16f, 56);
+            rewindPath.loop = rewindPathCore.loop = false;
+            rewindRing.loop = true;
+        }
+        ShowRewindPreview(true);
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 10f);
+        SpriteRenderer gs = rewindGhost.GetComponent<SpriteRenderer>();
+        gs.sprite = body.sprite;
+        gs.flipX = body.flipX;
+        gs.color = new Color(0.6f, 0.92f, 1f, 0.55f + 0.25f * pulse);
+        rewindGhost.transform.position = to;
+        rewindGhost.transform.localScale = transform.lossyScale;
+
+        Vector3 me = transform.position;
+        rewindPath.positionCount = rewindPathCore.positionCount = 2;
+        rewindPath.SetPosition(0, me); rewindPath.SetPosition(1, to);
+        rewindPathCore.SetPosition(0, me); rewindPathCore.SetPosition(1, to);
+        rewindPath.startColor = rewindPath.endColor = new Color(0.55f, 0.85f, 1f, 0.16f + 0.08f * pulse);
+        rewindPathCore.startColor = rewindPathCore.endColor = new Color(0.8f, 0.95f, 1f, 0.6f + 0.3f * pulse);
+        // 되찾을 체력이 있으면 도착 고리가 초록빛 (잃은 체력의 절반을 되찾음)
+        bool heals = pastHp - player.PlayerHealth > 1f;
+        Color ring = heals ? new Color(0.5f, 1f, 0.65f, 0.6f + 0.35f * pulse) : new Color(0.55f, 0.88f, 1f, 0.55f + 0.35f * pulse);
+        Hostile.SetArc(rewindRing, to, RewindArriveRadius, 0f, 360f);
+        rewindRing.startColor = rewindRing.endColor = ring;
     }
 
     IEnumerator RewindRoutine(Vector3 to, float pastHp)
@@ -251,21 +308,23 @@ public partial class CharacterKit
             yield return null;
         }
         transform.position = to;
+        timeLog.Clear();            // 되감은 뒤엔 기록을 새로 (다음 되감기가 되감기 전 자리로 튀지 않게)
+        lastLogPos = to;
         float dmg = Damage * 4f * UltMul;
         // 지나온 길의 적
         Vector3 mid = (from + to) * 0.5f;
         List<Collider2D> caught = new List<Collider2D>();
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (to - from).magnitude * 0.5f + 1.6f, clockHits)))
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (to - from).magnitude * 0.5f + RewindPathHalf, clockHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            if (Hostile.DistanceToSegment(c.transform.position, from, to) > 1.6f) continue;
+            if (Hostile.DistanceToSegment(c.transform.position, from, to) > RewindPathHalf) continue;
             Specials.Damage(c.gameObject, dmg, ((Vector2)(to - from)).normalized, 1f);
             caught.Add(c);
         }
         // 도착: 둘레 적이 잠깐 멈추고, 잃은 체력의 세 배를 되갚음
         float payback = lost * 3f * UltMul;
         List<Collider2D> near = new List<Collider2D>();
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(to, 5f, clockHits)))
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(to, RewindArriveRadius, clockHits)))
             if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss"))) near.Add(c);
         foreach (Collider2D c in near)
         {
@@ -274,14 +333,14 @@ public partial class CharacterKit
             if (c != null && c.TryGetComponent(out EnermyController e)) e.Slow(0f, 1f);
         }
         float heal = lost * 0.5f * SignatureSkills.RewindHealMul();
-        if (heal > 0.5f)
+        if (heal > 0.5f && player.PlayerHealth > 0f && !player.IsDying)
         {
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
             SpecialAbilities.SharedFx?.FloatText(to, "+" + Mathf.RoundToInt(heal), new Color(0.5f, 1f, 0.6f), 4f, 0f);
         }
         Fx.Spawn("fx_vortex", to, 6f, TimeBlue, 18f);
         Fx.Spawn("fx_shock", to, 10f, new Color(0.55f, 0.85f, 1f, 0.8f), 18f);
-        ShockRing.Spawn(to, 0.5f, 5f, 0.4f, Brass, 0.25f);
+        ShockRing.Spawn(to, 0.5f, RewindArriveRadius, 0.4f, Brass, 0.25f);
         Hostile.Shake(0.2f);
         Play("rewind", 0.9f, 1f);
         Play("bell", 0.6f, 0.8f);
@@ -311,5 +370,8 @@ public partial class CharacterKit
         if (clockRing != null) Destroy(clockRing.gameObject);
         if (clockDial != null) Destroy(clockDial.gameObject);
         if (rewindGhost != null) Destroy(rewindGhost);
+        if (rewindPath != null) Destroy(rewindPath.gameObject);
+        if (rewindPathCore != null) Destroy(rewindPathCore.gameObject);
+        if (rewindRing != null) Destroy(rewindRing.gameObject);
     }
 }

@@ -81,7 +81,7 @@ public partial class SpecialAbilities
         // ---------------- 지도 제작자 (60 ~ 66)
         ("측량 사슬", SpecialKind.Weapon, "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량"),
         ("잉크병", SpecialKind.Weapon, "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일"),
-        ("지구본", SpecialKind.Weapon, "도형을 닫기 쉬워지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전"),
+        ("지구본", SpecialKind.Weapon, "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전"),
         ("탐험가의 체력", SpecialKind.Passive, "도형을 닫을 때마다 체력을 2 회복합니다.\n진화: 4"),
         ("현지 안내", SpecialKind.Passive, "움직이는 동안 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
         ("미지의 영역", SpecialKind.Passive, "6칸보다 멀리 있는 적에게 주는 피해가 20% 늘어납니다.\n진화: +35%"),

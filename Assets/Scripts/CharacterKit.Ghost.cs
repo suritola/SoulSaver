@@ -60,11 +60,13 @@ public partial class CharacterKit
         Vector3 end = start + (Vector3)(dir * HandReach * SignatureSkills.HandReachMul());
         Vector3 mid = (start + end) * 0.5f;
         bool first = true;
+        ghostOnce.Clear();
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (end - start).magnitude * 0.5f + HandTipRadius + 1.5f, ghostHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
             if (!HandTouches(c, start, end)) continue;
             GameObject g = c.gameObject;
+            if (!ghostOnce.Add(g)) continue;        // 콜라이더가 여럿인 적도 손 하나에 한 번만
             Specials.Damage(g, dmg * formPower, dir, 0.6f);
             AddChill(g, form == SpecialAbilities.KitIceGhost ? 2 : 1);
             SignatureSkills.Touched(c);
@@ -90,18 +92,41 @@ public partial class CharacterKit
         Hand(player.MuzzlePosition, dir, dmg, false);
     }
 
+    // 장식 이펙트(fx_cloud · fx_soulburst 등)를 화면에서 visible 크기로 보이게 하는 Fx 크기
+    // (Fx.cs: 장식은 DecorScale 1.45배, 스킬 출처면 SkillDecor 1.4배 더 — 판정 범위와 보이는 크기를 맞추려고)
+    static float DecorSize(float visible)
+    {
+        string s = DamageSource.Current;
+        bool skill = s != null && s != DamageSource.Basic && s != DamageSource.Other;
+        return visible / (1.45f * (skill ? 1.4f : 1f));
+    }
+
     // 눈보라 (진화): 손이 지난 자리에 1.5초 냉기 안개
+    // 1.1.2: 예전엔 손 길이만 한 동그란 구름(지름 ≈ 길이 × 1.45)이 한 번 재생되고 사라져, 보이는 범위 · 시간과 판정(폭 1칸 · 1.5초)이 달랐음
+    //        → 손이 지난 띠 모양으로 늘인 안개가 1.5초 동안 그대로 남고, 그 띠(반폭 1.2칸 + 적 몸 크기)에 닿는 적에게 냉기
+    const float TrailHalfWidth = 1.2f;
     IEnumerator FrostTrail(Vector3 a, Vector3 b)
     {
-        Fx.Spawn("fx_cloud", (a + b) * 0.5f, (b - a).magnitude, new Color(0.8f, 0.95f, 1f, 0.5f), 10f);
+        Vector3 d = b - a;
+        FxAnim cloud = Fx.Play("fx_cloud", (a + b) * 0.5f, DecorSize(TrailHalfWidth * 2f), new Color(0.8f, 0.95f, 1f, 0.55f), 10f,
+                               Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 10, true, 1.5f);
+        if (cloud != null && cloud.sr != null && cloud.sr.sprite != null)
+        {
+            float unit = cloud.sr.sprite.bounds.size.x;
+            Vector3 s = cloud.transform.localScale;
+            if (unit > 0f) cloud.transform.localScale = new Vector3((d.magnitude + TrailHalfWidth * 2f) / unit, s.y, 1f);
+        }
         for (float t = 0f; t < 1.5f; t += 0.5f)
         {
             yield return new WaitForSeconds(0.5f);
-            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap((a + b) * 0.5f, (b - a).magnitude * 0.5f + 1f, ghostHits)))
-                if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss")) && Hostile.DistanceToSegment(c.bounds.center, a, b) <= 1f + BodyRadius(c))
+            ghostOnce.Clear();
+            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap((a + b) * 0.5f, d.magnitude * 0.5f + TrailHalfWidth + 1f, ghostHits)))
+                if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss")) && Hostile.DistanceToSegment(c.bounds.center, a, b) <= TrailHalfWidth + BodyRadius(c)
+                    && ghostOnce.Add(c.gameObject))
                     AddChill(c.gameObject, 1);
         }
     }
+    static readonly HashSet<GameObject> ghostOnce = new HashSet<GameObject>();
 
     // 냉기 쌓기 → 다 차면 얼어붙음
     public void AddChill(GameObject g, int n)
@@ -151,11 +176,16 @@ public partial class CharacterKit
         PruneChill();
     }
 
+    // 1.1.2: 쓰러진 그 적만 (예전엔 쓰러진 자리 1칸 안의 살아 있는 얼어붙은 적으로도 터졌고, 같은 적이 여러 번 터뜨릴 수 있었음)
     bool RecentlyFrozenNear(Vector3 pos)
     {
+        GameObject hit = null;
         foreach (var kv in frozenUntil)
-            if (kv.Key != null && kv.Value > Time.time - 0.2f && (kv.Key.transform.position - pos).sqrMagnitude < 1f) return true;
-        return false;
+            if (kv.Key != null && kv.Value > Time.time - 0.2f && (kv.Key.transform.position - pos).sqrMagnitude < 1f
+                && kv.Key.TryGetComponent(out EnermyController e) && e.IsDead) { hit = kv.Key; break; }
+        if (hit == null) return false;
+        frozenUntil.Remove(hit);
+        return true;
     }
 
     float pruneChillAt;
@@ -164,7 +194,7 @@ public partial class CharacterKit
         if (Time.time < pruneChillAt) return;
         pruneChillAt = Time.time + 3f;
         List<GameObject> dead = new List<GameObject>();
-        foreach (var kv in chill) if (kv.Key == null) dead.Add(kv.Key);
+        foreach (var kv in chill) if (kv.Key == null || (kv.Key.TryGetComponent(out EnermyController e) && e.IsDead)) dead.Add(kv.Key);
         foreach (GameObject g in dead) chill.Remove(g);
         dead.Clear();
         foreach (var kv in frozenUntil) if (kv.Key == null || kv.Value < Time.time - 5f) dead.Add(kv.Key);
@@ -196,9 +226,11 @@ public partial class CharacterKit
     // 영혼 그림: 몸 둘레를 돎
     void DrawWisps()
     {
+        DrawChillMarks();
+        PruneChill();
         while (wispFx.Count < Wisps)
         {
-            FxAnim a = Fx.Play("fx_orb", transform.position, 0.6f, Wraith, 10f, 0f, 21, true, -1f);
+            FxAnim a = Fx.Play("fx_orb", transform.position, 0.8f, Wraith, 10f, 0f, 21, true, -1f);     // 1.1.2: 0.6 → 0.8 (잘 보이게)
             if (a == null) break;
             wispFx.Add(a);
         }
@@ -217,50 +249,119 @@ public partial class CharacterKit
         }
     }
 
+    // 냉기 표시 (1.1.2): 냉기가 쌓인 적 몸 둘레에 고리 — 쌓인 만큼(얼어붙기까지 필요한 수 중) 차오르고, 얼어붙으면 꽉 찬 고리가 깜빡
+    readonly Dictionary<GameObject, LineRenderer> chillMarks = new Dictionary<GameObject, LineRenderer>();
+    static readonly HashSet<GameObject> chillShown = new HashSet<GameObject>();
+    static readonly List<GameObject> chillStale = new List<GameObject>();
+
+    void DrawChillMarks()
+    {
+        chillShown.Clear();
+        foreach (var kv in frozenUntil) if (kv.Value > Time.time) ShowChill(kv.Key, 1f, true);
+        foreach (var kv in chill) if (kv.Value > 0) ShowChill(kv.Key, Mathf.Clamp01(kv.Value / (float)FreezeNeed), false);
+        chillStale.Clear();
+        foreach (var kv in chillMarks) if (kv.Key == null || !chillShown.Contains(kv.Key)) chillStale.Add(kv.Key);
+        foreach (GameObject g in chillStale)
+        {
+            if (chillMarks.TryGetValue(g, out LineRenderer lr) && lr != null) Destroy(lr.gameObject);
+            chillMarks.Remove(g);
+        }
+    }
+
+    void ShowChill(GameObject g, float k, bool frozen)
+    {
+        if (g == null || !g.activeInHierarchy || chillShown.Contains(g)) return;
+        if (g.TryGetComponent(out EnermyController e) && e.IsDead) return;
+        Vector3 center = g.transform.position;
+        float r = 0.8f;
+        if (g.TryGetComponent(out Collider2D col) && col.enabled) { center = col.bounds.center; r = Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) + 0.25f; }
+        if (!chillMarks.TryGetValue(g, out LineRenderer lr) || lr == null)
+        {
+            lr = Hostile.NewLine("ChillMark", Chill, 0.12f, 30);
+            chillMarks[g] = lr;
+        }
+        chillShown.Add(g);
+        if (frozen)
+        {
+            float pulse = 0.6f + 0.35f * Mathf.Sin(Time.time * 12f);
+            lr.loop = true;
+            Hostile.SetArc(lr, center, r, 0f, 360f);
+            lr.startColor = lr.endColor = new Color(0.85f, 0.97f, 1f, pulse);
+            lr.startWidth = lr.endWidth = 0.18f;
+        }
+        else
+        {
+            lr.loop = false;
+            Hostile.SetArc(lr, center, r, 90f, 90f - 360f * k);
+            lr.startColor = lr.endColor = new Color(Chill.r, Chill.g, Chill.b, 0.9f);
+            lr.startWidth = lr.endWidth = 0.12f;
+        }
+    }
+
     // ================================================================= 우클릭: 빙의
     bool possessAiming, possessing;
     Transform possessTarget;
+    LineRenderer possessRange;          // 빙의 미리 보기: 터질 범위 (반지름 PossessRadius)
+    const float PossessRadius = 5f;
 
+    // 1.1.2: 적의 중심이 아니라 몸 가장자리까지의 거리로 고름 (큰 적 · 보스는 몸 위에 마우스를 올려도 안 잡히던 것)
     Transform PossessCandidate()
     {
         Vector3 m = ClampRange(transform.position, Mouse, 14f);
         Transform best = null;
-        float bd = 9f;
+        float bd = 3f;
         foreach (Collider2D c in Specials.Overlap(m, 3f, ghostHits))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
             if (c.TryGetComponent(out EnermyController e) && e.IsDead) continue;
-            float d = (c.transform.position - m).sqrMagnitude;
+            float d = Mathf.Max(0f, (c.bounds.center - m).magnitude - BodyRadius(c));
             if (d < bd) { bd = d; best = c.transform; }
         }
         return best;
     }
 
+    static float TargetRing(Transform t) => t != null && t.TryGetComponent(out Collider2D c) ? Mathf.Max(c.bounds.extents.x, c.bounds.extents.y) + 0.45f : 1.4f;
+
+    void HidePossessAim()
+    {
+        possessAiming = false;
+        if (ultAimRing != null) ultAimRing.enabled = false;
+        if (possessRange != null) possessRange.enabled = false;
+    }
+
     void UpdatePossess(SkillGauge gauge, bool full)
     {
         DrawWisps();
-        if (possessing) return;
-        if (!possessAiming && GameInput.UltDown && full) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
+        if (possessing) { if (possessAiming) HidePossessAim(); return; }
+        if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.1.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
+        if (!possessAiming && GameInput.UltDown && full && Time.timeScale > 0f) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
         if (!possessAiming) return;
         possessTarget = PossessCandidate();
         if (ultAimRing == null) { ultAimRing = Hostile.NewLine("UltAimRing", Color.white, 0.12f, 25); ultAimRing.loop = true; }
+        if (possessRange == null) { possessRange = Hostile.NewLine("PossessRange", Color.white, 0.08f, 24); possessRange.loop = true; }
         ultAimRing.enabled = true;
+        ultAimRing.loop = true;
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 14f);
         if (possessTarget != null)
         {
-            Hostile.SetArc(ultAimRing, possessTarget.position, 1.4f, 0f, 360f);
+            // 들어갈 적 (몸 크기에 맞춘 고리) + 터질 범위 (반지름 5칸 · 이 안에 몸이 닿는 적이 피해와 냉기)
+            Hostile.SetArc(ultAimRing, possessTarget.position, TargetRing(possessTarget), 0f, 360f);
             ultAimRing.startColor = ultAimRing.endColor = new Color(Chill.r, Chill.g, Chill.b, pulse);
+            possessRange.enabled = true;
+            Hostile.SetArc(possessRange, possessTarget.position, PossessRadius, 0f, 360f);
+            possessRange.startColor = possessRange.endColor = new Color(Chill.r, Chill.g, Chill.b, 0.35f);
+            possessRange.startWidth = possessRange.endWidth = 0.08f;
         }
         else
         {
             Hostile.SetArc(ultAimRing, ClampRange(transform.position, Mouse, 14f), 3f, 0f, 360f);
             ultAimRing.startColor = ultAimRing.endColor = new Color(0.6f, 0.6f, 0.7f, 0.35f);       // 빙의할 적이 없음
+            possessRange.enabled = false;
         }
         ultAimRing.startWidth = ultAimRing.endWidth = 0.14f;
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
-        possessAiming = false;
-        ultAimRing.enabled = false;
+        HidePossessAim();
         if (possessTarget == null) { Play("buzz", 0.4f); return; }          // 적이 없으면 게이지를 쓰지 않음
         StartCoroutine(PossessRoutine(possessTarget, Damage * 6f * UltMul));
         KitUltAdd(1.2f, possessTarget.position);
@@ -283,29 +384,37 @@ public partial class CharacterKit
         body.color = new Color(before.r, before.g, before.b, 0.12f);
         FxAnim glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, 1f) : null;
         if (glow != null) glow.follow = target;
+        EnermyController host = target != null ? target.GetComponent<EnermyController>() : null;
+        bool hostDiedEarly = false;
         for (float t = 0f; t < 1f; t += Time.deltaTime)
         {
-            if (target != null) transform.position = target.position;
+            // 1.1.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
+            if (target == null || (host != null && host.IsDead)) { hostDiedEarly = true; break; }
+            transform.position = target.position;
             yield return null;
         }
+        if (glow != null) Destroy(glow.gameObject);
         Vector3 at = transform.position;
         body.color = before;
         bool boss = target != null && target.CompareTag("boss");
         bool killed = false;
-        if (target != null)
+        if (target != null && !hostDiedEarly)
         {
             Specials.Damage(target.gameObject, dmg * (boss ? 1.5f : 1f), Vector3.zero, 0f);
-            killed = target.TryGetComponent(out EnermyController e) && e.IsDead;
+            killed = host != null && host.IsDead;
         }
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, 5f, ghostHits)))
+        ghostOnce.Clear();
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, PossessRadius, ghostHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss")) || (target != null && c.transform == target)) continue;
+            if (!ghostOnce.Add(c.gameObject)) continue;
             Specials.Damage(c.gameObject, dmg * 0.5f, (c.transform.position - at).normalized, 3f);
             AddChill(c.gameObject, 3);
         }
-        Fx.Spawn("fx_soulburst", at, 10f, Wraith, 16f);
-        Fx.Spawn("fx_shock", at, 10f, Chill, 18f);
-        ShockRing.Spawn(at, 0.5f, 5f, 0.4f, Chill, 0.25f);
+        // 1.1.2: 영혼 폭발 그림이 장식 배율(1.45 × 스킬 1.4)로 지름 20칸쯤 보여 실제 범위(반지름 5칸)의 두 배였음 → 범위에 맞춤
+        Fx.Spawn("fx_soulburst", at, DecorSize(PossessRadius * 2f), Wraith, 16f);
+        Fx.Spawn("fx_shock", at, PossessRadius * 2f, Chill, 18f);
+        ShockRing.Spawn(at, 0.5f, PossessRadius, 0.4f, Chill, 0.25f);
         Hostile.Shake(0.25f);
         Play("boom", 0.8f, 0.8f);
         Play("wail", 0.8f, 0.8f);
@@ -316,20 +425,37 @@ public partial class CharacterKit
     }
 
     // 빙의 여운 (카드): 냉기 안개
+    // 1.1.2: 안개 그림(크기 8 → 장식 배율로 지름 16칸쯤)이 판정(반지름 3.5칸)의 두 배 넘게 보였음 → 판정 크기로 + 테두리 고리
+    const float MistRadius = 3.5f;
     IEnumerator PossessMist(Vector3 at, float seconds)
     {
-        FxAnim a = Fx.Play("fx_cloud", at, 8f, new Color(0.8f, 0.95f, 1f, 0.5f), 8f, 0f, 4, true, seconds);
-        for (float t = 0f; t < seconds; t += 0.5f)
+        FxAnim a = Fx.Play("fx_cloud", at, DecorSize(MistRadius * 2f), new Color(0.8f, 0.95f, 1f, 0.55f), 8f, 0f, 4, true, seconds);
+        LineRenderer edge = Hostile.NewLine("PossessMistEdge", new Color(Chill.r, Chill.g, Chill.b, 0.4f), 0.08f, 6);
+        edge.loop = true;
+        Hostile.SetArc(edge, at, MistRadius, 0f, 360f);
+        try
         {
-            yield return new WaitForSeconds(0.5f);
-            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, 3.5f, ghostHits)))
-                if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss"))) AddChill(c.gameObject, 1);
+            for (float t = 0f; t < seconds; t += 0.5f)
+            {
+                yield return new WaitForSeconds(0.5f);
+                ghostOnce.Clear();
+                foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, MistRadius, ghostHits)))
+                    if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss")) && ghostOnce.Add(c.gameObject)) AddChill(c.gameObject, 1);
+            }
         }
-        if (a != null) Destroy(a.gameObject);
+        finally
+        {
+            if (a != null) Destroy(a.gameObject);
+            if (edge != null) Destroy(edge.gameObject);
+        }
     }
 
     void OnDestroyGhost()
     {
         foreach (FxAnim a in wispFx) if (a != null) Destroy(a.gameObject);
+        wispFx.Clear();
+        foreach (var kv in chillMarks) if (kv.Value != null) Destroy(kv.Value.gameObject);
+        chillMarks.Clear();
+        if (possessRange != null) Destroy(possessRange.gameObject);
     }
 }

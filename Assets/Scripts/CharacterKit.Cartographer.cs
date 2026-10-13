@@ -19,7 +19,8 @@ public partial class CharacterKit
 
     float mapChainUntil;
     int strokeCount;
-    LineRenderer mapChainLine, mapCloseRing;
+    float shapeAngle;                  // 다음 도형(삼각형)의 방향 — 미리 보기와 실제가 같게 미리 정해 둠
+    LineRenderer mapCloseRing;
     // 측량 표식: 획에 맞은 적 (도형 안에서 피해 +)
     readonly Dictionary<GameObject, float> surveyMarks = new Dictionary<GameObject, float>();
 
@@ -35,10 +36,8 @@ public partial class CharacterKit
 
     void MapAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
-        Vector3 me = transform.position;
-        Vector3 to = ClampRange(me, Mouse, def.range);
         Vector3 from = start;
-        if ((to - from).magnitude < 1f) to = from + (Vector3)(((Vector2)(to - from)).sqrMagnitude > 0.01f ? ((Vector2)(to - from)).normalized : dir);
+        Vector3 to = StrokeEnd(from, dir);
 
         float width = StrokeWidth;
         float lenMul = SignatureSkills.StrokeMul((to - from).magnitude, def.range);
@@ -59,12 +58,24 @@ public partial class CharacterKit
         if (augment == AugReprint) StartCoroutine(Reprint(from, to, width, dmg * lenMul * 0.5f));
 
         // 자동 도형: 세 번째 획마다 획 끝(마우스 자리)을 감싸는 삼각형이 저절로 닫힘
-        if (strokeCount % ShapeEvery == 0) CloseShape(Triangle(to, ShapeRadius), dmg);
+        if (strokeCount % ShapeEvery == 0)
+        {
+            CloseShape(Triangle(to, ShapeRadius, shapeAngle), dmg);
+            shapeAngle = Random.Range(0f, 120f);
+        }
         mapChainUntil = Time.time + MapChainTime;
         PlayerMotion.Of(this).Recoil(-sd, 0.4f);
         Play("ink", 0.6f, 1f + Random.Range(-0.1f, 0.1f));
         Play("whoosh", 0.25f, 1.6f);
         DrawMapChain();
+    }
+
+    // 획 끝 (= 도형이 닫히는 자리): 마우스 자리 (사거리 안), 너무 가까우면 1칸 앞
+    Vector3 StrokeEnd(Vector3 from, Vector2 dir)
+    {
+        Vector3 to = ClampRange(transform.position, Mouse, def.range);
+        if ((to - from).magnitude < 1f) to = from + (Vector3)(((Vector2)(to - from)).sqrMagnitude > 0.01f ? ((Vector2)(to - from)).normalized : dir);
+        return to;
     }
 
     // 한 획: 선분 굵기 안의 적을 벰
@@ -79,7 +90,8 @@ public partial class CharacterKit
         foreach (Collider2D c in found)
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
+            // 1.1.2: 큰 적(보스)은 몸 가장자리에 닿아도 맞게 (예전엔 몸 가운데만 봐서 보이는 획이 지나가도 안 맞았음)
+            if (Hostile.DistanceToSegment(c.bounds.center, a, b) > width + MapBody(c)) continue;
             float m = formPower;
             // 정밀 제도 (패시브): 획 끝 가까이의 적은 더 아프게
             if (Special != null && Special.Has(SpecialAbilities.KitDraft) && (c.transform.position - b).magnitude <= 1.4f)
@@ -144,7 +156,7 @@ public partial class CharacterKit
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(center, reach + 0.5f, mapHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            if (!InPolygon(c.transform.position, poly)) continue;
+            if (!InShape(c, poly)) continue;
             inside.Add(c);
         }
         foreach (Collider2D c in inside)
@@ -169,6 +181,13 @@ public partial class CharacterKit
             DamageCircle(center, Mathf.Max(1.5f, reach * 0.8f), Damage * 1.5f * formPower, 2f);
             Fx.Spawn("fx_explosion", center, Mathf.Max(3f, reach * 1.8f), new Color(0.3f, 0.4f, 1f), 18f);
         }
+        // 측량 표식: 쓰러진 적 · 지난 표식은 지움 (계속 쌓이지 않게)
+        if (surveyMarks.Count > 64)
+        {
+            List<GameObject> old = new List<GameObject>();
+            foreach (var kv in surveyMarks) if (kv.Key == null || kv.Value < Time.time) old.Add(kv.Key);
+            foreach (GameObject g in old) surveyMarks.Remove(g);
+        }
         if (card[6] > 0 && player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * (0.01f + 0.03f * card[6]));
         Play("chime", 0.6f, 1.25f);
         Play("paperfold", 0.6f, 1.2f);
@@ -178,9 +197,8 @@ public partial class CharacterKit
         SignatureSkills.Closed(poly, center, reach, inside);
     }
 
-    static List<Vector3> Triangle(Vector3 c, float r)
+    static List<Vector3> Triangle(Vector3 c, float r, float a0)
     {
-        float a0 = Random.Range(0f, 120f);
         List<Vector3> poly = new List<Vector3>(3);
         for (int i = 0; i < 3; i++)
         {
@@ -188,6 +206,20 @@ public partial class CharacterKit
             poly.Add(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * r);
         }
         return poly;
+    }
+
+    // 적 몸 반지름 (작은 쪽 기준, 판정이 너무 후하지 않게)
+    static float MapBody(Collider2D c) => Mathf.Min(c.bounds.extents.x, c.bounds.extents.y) * 0.7f;
+
+    // 도형 안: 몸 가운데가 안쪽이거나 몸이 테두리에 걸침
+    static bool InShape(Collider2D c, List<Vector3> poly)
+    {
+        Vector3 p = c.bounds.center;
+        if (InPolygon(p, poly)) return true;
+        float r = MapBody(c);
+        for (int i = 0; i < poly.Count; i++)
+            if (Hostile.DistanceToSegment(p, poly[i], poly[(i + 1) % poly.Count]) <= r) return true;
+        return false;
     }
 
     static bool InPolygon(Vector3 p, List<Vector3> poly)
@@ -220,21 +252,23 @@ public partial class CharacterKit
         Stroke(a, b, width, dmg);
     }
 
-    // 다음 획에 도형이 닫힐 때: 마우스 자리에 닫힐 범위를 금색 고리로 (매 프레임)
+    // 다음 획에 도형이 닫힐 때: 마우스 자리에 실제로 닫힐 삼각형을 금색으로 미리 보여 줌 (매 프레임)
+    //   1.1.2: 예전엔 삼각형을 감싸는 원을 그려 실제 범위(삼각형)보다 훨씬 커 보였고, 스킬 이펙트에 묻혔음
     void DrawMapChain()
     {
-        if (mapChainLine == null)
+        if (mapCloseRing == null)
         {
-            mapChainLine = Hostile.NewLine("MapChain", Ink, 0.09f, 17);
-            mapCloseRing = Hostile.NewLine("MapClose", InkGold, 0.08f, 17);
+            mapCloseRing = Hostile.NewLine("MapClose", InkGold, 0.14f, 57);
             mapCloseRing.loop = true;
         }
-        mapChainLine.enabled = false;
-        mapCloseRing.enabled = IsCartographer && ShapeNext && !PlayerController.Cinematic;
+        mapCloseRing.enabled = IsCartographer && ShapeNext && !PlayerController.Cinematic && Time.timeScale > 0f;
         if (!mapCloseRing.enabled) return;
-        float pulse = 0.5f + 0.4f * Mathf.Sin(Time.time * 10f);
-        Hostile.SetArc(mapCloseRing, ClampRange(transform.position, Mouse, def.range), ShapeRadius, 0f, 360f);
-        mapCloseRing.startColor = mapCloseRing.endColor = new Color(InkGold.r, InkGold.g, InkGold.b, pulse * 0.8f);
+        float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 10f);
+        List<Vector3> tri = Triangle(StrokeEnd(player.MuzzlePosition, body.flipX ? Vector2.left : Vector2.right), ShapeRadius, shapeAngle);
+        mapCloseRing.positionCount = tri.Count;
+        for (int i = 0; i < tri.Count; i++) mapCloseRing.SetPosition(i, tri[i]);
+        mapCloseRing.startColor = mapCloseRing.endColor = new Color(InkGold.r, InkGold.g, InkGold.b, pulse);
+        mapCloseRing.startWidth = mapCloseRing.endWidth = 0.1f + 0.05f * pulse;
     }
 
     // ================================================================= 우클릭: 지도 접기
@@ -257,7 +291,13 @@ public partial class CharacterKit
 
     void UpdateFold(SkillGauge gauge, bool full)
     {
-        if (MapChainActive || mapChainLine != null) DrawMapChain();
+        DrawMapChain();
+        // 멈춤 · 연출 중: 접던 것은 게이지를 쓰지 않고 취소 (예전엔 멈춘 채로 떼면 게이지를 쓰고 접혔음)
+        if (Time.timeScale == 0f || PlayerController.Cinematic)
+        {
+            if (folding) CancelFold();
+            return;
+        }
         if (!folding && GameInput.UltDown && full)
         {
             folding = true;
@@ -269,26 +309,34 @@ public partial class CharacterKit
         FoldGeometry(out Vector3 center, out Vector3 a, out Vector3 b, out Vector2 n, out float half, out float len);
         if (foldLine == null)
         {
-            foldLine = Hostile.NewLine("FoldLine", Ink, 0.16f, 25);
-            foldSideA = Hostile.NewLine("FoldSideA", Ink, 0.07f, 24);
-            foldSideB = Hostile.NewLine("FoldSideB", Ink, 0.07f, 24);
+            // 1.1.2: 스킬 이펙트(+40)에 묻히지 않게 그 위 순서로
+            foldLine = Hostile.NewLine("FoldLine", Ink, 0.16f, 57);
+            foldSideA = Hostile.NewLine("FoldSideA", Ink, 0.1f, 56);
+            foldSideB = Hostile.NewLine("FoldSideB", Ink, 0.1f, 56);
         }
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 14f);
         SetSeg(foldLine, a, b, new Color(0.6f, 0.75f, 1f, pulse), 0.12f + 0.12f * foldCharge);
         Vector3 off = (Vector3)(n * half);
-        SetSeg(foldSideA, a + off, b + off, new Color(Ink.r, Ink.g, Ink.b, 0.35f + 0.3f * foldCharge), 0.07f);
-        SetSeg(foldSideB, a - off, b - off, new Color(Ink.r, Ink.g, Ink.b, 0.35f + 0.3f * foldCharge), 0.07f);
+        Color side = Color.Lerp(new Color(0.45f, 0.6f, 1f), InkGold, foldCharge >= 1f ? 0.5f + 0.5f * Mathf.Sin(Time.time * 14f) : 0f);
+        side.a = 0.5f + 0.35f * foldCharge;
+        SetSeg(foldSideA, a + off, b + off, side, 0.1f);        // 다 모이면(최대 넓이) 금빛으로 깜빡
+        SetSeg(foldSideB, a - off, b - off, side, 0.1f);
         if (AddedUltShown) DrawUltAim(false, true);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
-        folding = false;
-        foldLine.enabled = foldSideA.enabled = foldSideB.enabled = false;
-        CancelUltAim();
+        CancelFold();
         float dmg = Damage * (3f + 4f * foldCharge) * UltMul;
         StartCoroutine(FoldRoutine(center, a, b, n, half, len, dmg));
         PlayerMotion.Of(this).Cast(0.35f);
         KitUltAdd(0.3f, center);
         Spend(gauge);
+    }
+
+    void CancelFold()
+    {
+        folding = false;
+        if (foldLine != null) foldLine.enabled = foldSideA.enabled = foldSideB.enabled = false;
+        CancelUltAim();
     }
 
     static void SetSeg(LineRenderer lr, Vector3 a, Vector3 b, Color c, float w)
@@ -306,11 +354,12 @@ public partial class CharacterKit
     {
         Vector2 crease = ((Vector2)(b - a)).normalized;
         List<Collider2D> caught = new List<Collider2D>();
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(center, Mathf.Sqrt(half * half + len * len * 0.25f), mapHits)))
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(center, Mathf.Sqrt(half * half + len * len * 0.25f) + 1f, mapHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            Vector2 d = c.transform.position - center;
-            if (Mathf.Abs(Vector2.Dot(d, n)) > half || Mathf.Abs(Vector2.Dot(d, crease)) > len * 0.5f) continue;
+            Vector2 d = c.bounds.center - center;
+            float br = MapBody(c);
+            if (Mathf.Abs(Vector2.Dot(d, n)) > half + br || Mathf.Abs(Vector2.Dot(d, crease)) > len * 0.5f + br) continue;
             caught.Add(c);
         }
         // 접히는 종이: 양쪽 띠가 선 쪽으로 닫힘
@@ -360,7 +409,7 @@ public partial class CharacterKit
             foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (b - a).magnitude * 0.5f + 0.8f, mapHits)))
             {
                 if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-                if (Hostile.DistanceToSegment(c.transform.position, a, b) > 0.8f) continue;
+                if (Hostile.DistanceToSegment(c.bounds.center, a, b) > 0.8f + MapBody(c)) continue;
                 Specials.Damage(c.gameObject, Damage * 0.4f, Vector3.zero, 0f);
             }
         }
@@ -369,7 +418,6 @@ public partial class CharacterKit
 
     void OnDestroyCartographer()
     {
-        if (mapChainLine != null) Destroy(mapChainLine.gameObject);
         if (mapCloseRing != null) Destroy(mapCloseRing.gameObject);
         if (foldLine != null) Destroy(foldLine.gameObject);
         if (foldSideA != null) Destroy(foldSideA.gameObject);

@@ -147,7 +147,10 @@ public partial class SignatureSkills
         if (t == null) yield break;
         if (lift) t.position = start;
         Deal(t.gameObject, Atk * V(L("h.polter"), 1f, 0.4f), Vector3.zero, 0f);
-        Fx.Spawn("fx_shock", start, 3f * Fs("h.polter"), Tint("h.polter", GhostC), 20f);
+        // 1.1.2: 내리꽂는 피해는 그 적 하나뿐이라, 충격파(범위 이펙트)를 그 적의 몸 크기로 (예전엔 지름 3 · 진화 5칸으로 둘레까지 맞는 것처럼 보였음)
+        float body = t.TryGetComponent(out Collider2D col) ? Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 2f + 0.6f : 1.6f;
+        Fx.Spawn("fx_shock", start, body, Tint("h.polter", GhostC), 20f);
+        Fx.Spawn("fx_soulburst", start, body * 0.8f * Fs("h.polter"), Tint("h.polter", GhostC), 20f);
         Flair("h.polter", start, 2f, GhostC);
         Hostile.Play("thump", 0.5f, 0.9f);
     }
@@ -155,6 +158,7 @@ public partial class SignatureSkills
     string GhostStack(string key) => key switch
     {
         "h.wisp" => Kit != null && Kit.Wisps > 0 ? "x" + Kit.Wisps : null,
+        "h.procession" => Kit != null && Kit.Wisps > 0 ? Kit.Wisps + "/" + Kit.WispMax : null,
         "h.polter" => Time.time < polterAt ? (polterAt - Time.time).ToString("0.0") + "s" : null,
         _ => null,
     };

@@ -32,9 +32,12 @@ public partial class CharacterKit
         for (int i = 0; i < n; i++)
         {
             Transform to = Addressee(start, dir, taken);
-            if (to != null) taken.Add(to);
+            if (to != null) { taken.Add(to); MarkAddressee(to); }
             float d = dmg * (i >= Mathf.Max(1, shots) ? 0.5f : 1f);
-            Vector2 launch = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 14f) * dir;
+            // 1.1.2: 받는 이 쪽으로 출발 (앞 70° 밖 · 바로 옆의 적이면 마우스 쪽으로 출발한 편지가 받는 이 둘레를 맴돌기만 하던 것)
+            Vector2 aim = to != null ? (Vector2)(to.position - start) : dir;
+            if (aim.sqrMagnitude < 0.01f) aim = dir;
+            Vector2 launch = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 14f) * aim.normalized;
             bool pigeon = form == SpecialAbilities.KitPigeon && i == 0;
             StartCoroutine(LetterFlight(start, launch, to, d, pigeon, 0));
         }
@@ -70,13 +73,17 @@ public partial class CharacterKit
         float life = 1.6f;
         for (float t = 0f; t < life; t += Time.deltaTime)
         {
-            if (target == null || (target.TryGetComponent(out EnermyController te) && te.IsDead))
-                target = t > 0.05f ? Specials.NearestEnemy(p, 8f) : target;
+            // 받는 이가 쓰러지거나 사라지면 바로 가까운 적으로 다시 (예전엔 처음 0.05초 동안 쓰러진 적을 쫓아 시체에 배달하기도 했음)
+            if (!Alive(target) && (target != null || t > 0.05f))
+                target = Specials.NearestEnemy(p, 8f);
             if (target != null)
             {
-                Vector2 want = ((Vector2)(target.position - p)).normalized;
+                Vector2 to = target.position - p;
+                Vector2 want = to.normalized;
                 float ang = Vector2.SignedAngle(v, want);
-                v = Quaternion.Euler(0f, 0f, Mathf.Clamp(ang, -LetterTurn * Time.deltaTime, LetterTurn * Time.deltaTime)) * v;
+                // 가까워질수록 더 세게 꺾음 (꺾는 반지름보다 가까운 받는 이 둘레를 맴돌기만 하던 것)
+                float turn = LetterTurn * (1f + 4f * Mathf.Clamp01(1f - to.magnitude / 4f) + t) * Time.deltaTime;
+                v = Quaternion.Euler(0f, 0f, Mathf.Clamp(ang, -turn, turn)) * v;
             }
             p += (Vector3)(v * LetterSpeed * Time.deltaTime);
             if (a != null)
@@ -85,7 +92,8 @@ public partial class CharacterKit
                 a.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - 90f + Mathf.Sin(t * 30f) * 12f);
             }
             if (Hostile.IsWall(p)) break;
-            if (target != null && (target.position - p).sqrMagnitude < 0.55f)
+            // 받는 이 몸에 닿으면 배달 (예전엔 몸 크기와 상관없이 중심 0.74칸 안이어야 해서 큰 적 · 보스는 몸에 닿고도 지나쳤음)
+            if (target != null && Touches(target, p) && Alive(target))
             {
                 Deliver(target, p, v, dmg, pigeon, depth);
                 break;
@@ -93,6 +101,23 @@ public partial class CharacterKit
             yield return null;
         }
         if (a != null) Destroy(a.gameObject);
+    }
+
+    static bool Alive(Transform t) => t != null && !(t.TryGetComponent(out EnermyController e) && e.IsDead);
+
+    // 편지가 받는 이 몸(충돌 범위)에 닿았나: 중심 0.74칸 안이거나, 몸 가장자리에서 0.45칸 안
+    static bool Touches(Transform t, Vector3 p)
+    {
+        if (((Vector2)(t.position - p)).sqrMagnitude < 0.55f) return true;
+        if (!t.TryGetComponent(out Collider2D col) || !col.enabled) return false;
+        return ((Vector2)p - col.ClosestPoint(p)).sqrMagnitude < 0.2f;
+    }
+
+    // 받는 이 표시: 편지를 보낼 때 받는 이에게 붉은 조준 표식이 잠깐 (누구에게 가는지 보이게)
+    void MarkAddressee(Transform to)
+    {
+        FxAnim r = Fx.Play("fx_reticle", to.position, 1.3f, new Color(1f, 0.45f, 0.4f, 0.95f), 12f, 0f, 50, true, 0.45f);
+        if (r != null) { r.follow = to; r.spin = 220f; }
     }
 
     // 배달 완료
@@ -165,7 +190,7 @@ public partial class CharacterKit
         for (int i = 0; i < 2; i++)
         {
             yield return new WaitForSeconds(0.2f);
-            if (t == null) yield break;
+            if (!Alive(t)) yield break;
             Specials.Damage(t.gameObject, dmg, Vector3.zero, 0.2f);
             Fx.Spawn("fx_spark", t.position, 0.8f, Color.white, 26f);
         }
@@ -185,7 +210,7 @@ public partial class CharacterKit
         for (float t = 0f; t < life; t += 0.6f)
         {
             Transform target = Specials.NearestEnemy(at, 10f);
-            if (target != null) StartCoroutine(LetterFlight(at + Vector3.up * 0.6f, ((Vector2)(target.position - at)).normalized, target, Damage * 0.6f * formPower, false, 9));
+            if (target != null) StartCoroutine(LetterFlight(at + Vector3.up * 0.6f, ((Vector2)(target.position - at)).normalized, target, Damage * 0.6f, false, 9));      // 형태 숙련(formPower)은 배달할 때 곱함 (예전엔 두 번 곱했음)
             yield return new WaitForSeconds(0.6f);
         }
         if (box != null) Destroy(box.gameObject);
@@ -195,11 +220,24 @@ public partial class CharacterKit
     bool expressing;
     float expressCharge;
     readonly List<Transform> expressMarks = new List<Transform>();
-    readonly List<FxAnim> expressIcons = new List<FxAnim>();
+    readonly List<FxAnim> expressIcons = new List<FxAnim>();        // expressMarks 와 같은 순서 (표식 아이콘, 없으면 null)
+    readonly List<FxAnim> expressPending = new List<FxAnim>();      // 떼고 터지기 전 1초 동안의 아이콘 (캐릭터가 사라져도 지우게)
     LineRenderer expressRing;
     const float ExpressRange = 15f;
 
-    int ExpressMax => Mathf.RoundToInt((6 + 14 * expressCharge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.1.1 조정: 8 ~ 30 → 6 ~ 20
+    int ExpressMaxAt(float charge) => Mathf.RoundToInt((6 + 14 * charge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.1.1 조정: 8 ~ 30 → 6 ~ 20
+    int ExpressMax => ExpressMaxAt(expressCharge);
+    // 머리 위 막대: 속달을 누르는 동안 붙은 표식 수 / 끝까지 눌렀을 때 최대
+    public bool Expressing => expressing;
+    public float ExpressFill => expressMarks.Count / (float)Mathf.Max(1, ExpressMaxAt(1f));
+
+    // 표식 아이콘: 적 머리 위에서 두근거리고, 오래 누를수록 커짐 (FxAnim.follow 는 높이를 못 줘서 직접 옮김)
+    static void PlaceExpressIcon(FxAnim icon, Transform t, float k, float scale)
+    {
+        if (icon == null || t == null) return;
+        icon.transform.position = t.position + Vector3.up * 1.2f;
+        icon.transform.localScale = Vector3.one * scale * (1f + 0.45f * k + 0.12f * Mathf.Sin(Time.time * 14f));
+    }
 
     void UpdateExpress(SkillGauge gauge, bool full)
     {
@@ -208,18 +246,28 @@ public partial class CharacterKit
         {
             expressing = true;
             expressCharge = 0f;
+            ClearExpressIcons(expressIcons);
             expressMarks.Clear();
             Play("hum", 0.5f, 1.4f);
         }
         if (!expressing) return;
         expressCharge = Mathf.Min(1f, expressCharge + Time.deltaTime / 1.2f);
         Vector3 me = transform.position;
-        if (expressRing == null) { expressRing = Hostile.NewLine("ExpressRing", PostRed, 0.12f, 25); expressRing.loop = true; }
+        // 1.1.2: 둘레 고리를 스킬 이펙트(+40) 위 순서로 · 더 굵고 진하게, 다 차면 금빛으로
+        if (expressRing == null) { expressRing = Hostile.NewLine("ExpressRing", PostRed, 0.16f, 55); expressRing.loop = true; }
         expressRing.enabled = true;
         Hostile.SetArc(expressRing, me, ExpressRange, 0f, 360f);
-        expressRing.startColor = expressRing.endColor = new Color(PostRed.r, PostRed.g, PostRed.b, 0.35f + 0.3f * Mathf.Sin(Time.time * 12f));
+        Color rc = expressCharge >= 1f ? Color.Lerp(PostRed, new Color(1f, 0.85f, 0.4f), 0.6f) : PostRed;
+        expressRing.startColor = expressRing.endColor = new Color(rc.r, rc.g, rc.b, 0.5f + 0.3f * Mathf.Sin(Time.time * 12f));
+        expressRing.startWidth = expressRing.endWidth = 0.16f + 0.08f * expressCharge;
+        // 1.1.2: 쓰러지거나 사라진 적의 표식은 떼고 아이콘도 지움 (예전엔 쓰러진 적이 표식 자리를 차지해 새 적에게 안 붙었음)
+        for (int i = expressMarks.Count - 1; i >= 0; i--)
+        {
+            if (Alive(expressMarks[i])) continue;
+            if (i < expressIcons.Count) { if (expressIcons[i] != null) Destroy(expressIcons[i].gameObject); expressIcons.RemoveAt(i); }
+            expressMarks.RemoveAt(i);
+        }
         // 표식: 가까운 적부터 하나씩
-        expressMarks.RemoveAll(t => t == null);
         if (expressMarks.Count < ExpressMax)
         {
             Transform best = null;
@@ -234,11 +282,15 @@ public partial class CharacterKit
             if (best != null)
             {
                 expressMarks.Add(best);
-                FxAnim icon = Fx.Play("fx_card", best.position + Vector3.up * 1.2f, 0.8f, PostRed, 12f, 0f, 24, true, 5f);
-                if (icon != null) { icon.follow = best; expressIcons.Add(icon); }
-                Play("pop", 0.15f, 2.2f);
+                // 1.1.2: 수명 5초 → 직접 지울 때까지 (5초 넘게 누르면 표식 아이콘이 사라졌음), 스킬 이펙트 위 순서
+                FxAnim icon = Fx.Play("fx_card", best.position + Vector3.up * 1.2f, 0.9f, PostRed, 12f, 0f, 24, true, -1f);
+                expressIcons.Add(icon);
+                Fx.Spawn("fx_spark", best.position, 0.9f, PostRed, 26f);
+                Play("pop", 0.15f, 2.2f + 0.02f * expressMarks.Count);
             }
         }
+        for (int i = 0; i < expressIcons.Count && i < expressMarks.Count; i++)
+            if (expressIcons[i] != null) PlaceExpressIcon(expressIcons[i], expressMarks[i], expressCharge, IconScale(expressIcons[i]));
         if (AddedUltShown) DrawUltAim(false, true);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
@@ -246,7 +298,11 @@ public partial class CharacterKit
         expressRing.enabled = false;
         CancelUltAim();
         float dmg = Damage * (2f + 2f * expressCharge) * UltMul;
-        StartCoroutine(ExpressRoutine(new List<Transform>(expressMarks), new List<FxAnim>(expressIcons), dmg));
+        if (expressMarks.Count > 0)
+            SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.8f, Loc.T("속달") + " ×" + expressMarks.Count, PostRed, 4.5f, 0f);
+        List<FxAnim> icons = new List<FxAnim>(expressIcons);
+        expressPending.AddRange(icons);
+        StartCoroutine(ExpressRoutine(new List<Transform>(expressMarks), icons, dmg, expressCharge));
         expressMarks.Clear();
         expressIcons.Clear();
         PlayerMotion.Of(this).Throw(0.3f, Vector2.up);
@@ -254,19 +310,42 @@ public partial class CharacterKit
         Spend(gauge);
     }
 
-    IEnumerator ExpressRoutine(List<Transform> marks, List<FxAnim> icons, float dmg)
+    // 아이콘의 원래 크기 (처음 만들 때의 크기를 기억)
+    readonly Dictionary<FxAnim, float> iconBase = new Dictionary<FxAnim, float>();
+    float IconScale(FxAnim icon)
+    {
+        if (!iconBase.TryGetValue(icon, out float b)) iconBase[icon] = b = icon.transform.localScale.x;
+        return b;
+    }
+
+    void ClearExpressIcons(List<FxAnim> icons)
+    {
+        foreach (FxAnim i in icons) if (i != null) { iconBase.Remove(i); Destroy(i.gameObject); }
+        icons.Clear();
+    }
+
+    IEnumerator ExpressRoutine(List<Transform> marks, List<FxAnim> icons, float dmg, float charge)
     {
         Play("whoosh", 0.8f, 1.2f);
-        yield return new WaitForSeconds(1f);
-        foreach (FxAnim i in icons) if (i != null) Destroy(i.gameObject);
+        // 터지기 전 1초: 표식이 적을 따라다니며 점점 빠르게 두근거림
+        for (float t = 0f; t < 1f; t += Time.deltaTime)
+        {
+            for (int i = 0; i < icons.Count && i < marks.Count; i++)
+                if (icons[i] != null) PlaceExpressIcon(icons[i], marks[i], charge + t, IconScale(icons[i]));
+            yield return null;
+        }
+        foreach (FxAnim i in icons) expressPending.Remove(i);
+        ClearExpressIcons(icons);
         List<Vector3> spots = new List<Vector3>();
         foreach (Transform t in marks)
         {
-            if (t == null) continue;
+            if (!Alive(t)) continue;        // 1.1.2: 그사이 쓰러진 적의 시체에서 터지지 않게
             Vector3 p = t.position;
             spots.Add(p);
             Specials.Damage(t.gameObject, dmg, Vector3.zero, 1f);
-            Fx.Spawn("fx_explosion", p, 3.2f, new Color(1f, 0.55f, 0.4f), 20f);
+            // 표식 하나만 맞음 → 판정 범위처럼 보이는 폭발은 적 몸 크기로, 화려함은 장식 불꽃으로 (오래 눌러 셀수록 더 크게)
+            Fx.Spawn("fx_explosion", p, 2f, new Color(1f, 0.55f, 0.4f), 20f);
+            Fx.Spawn("fx_sparkle", p, 1.6f + 1.2f * charge, new Color(1f, 0.85f, 0.6f), 22f);
             // 답장 (카드): 터진 자리에서 작은 편지가 가까운 적에게
             for (int k = 0; k < card[3]; k++)
             {
@@ -284,6 +363,7 @@ public partial class CharacterKit
     void OnDestroyPostman()
     {
         if (expressRing != null) Destroy(expressRing.gameObject);
-        foreach (FxAnim i in expressIcons) if (i != null) Destroy(i.gameObject);
+        ClearExpressIcons(expressIcons);
+        ClearExpressIcons(expressPending);
     }
 }

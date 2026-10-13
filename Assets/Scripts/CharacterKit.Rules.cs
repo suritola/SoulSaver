@@ -111,6 +111,7 @@ public partial class CharacterKit
             float k = clockTicks / (float)ClockNeed;
             Color c = ClockReady ? Color.Lerp(new Color(1f, 0.85f, 0.3f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.95f, 0.75f, 0.4f);
             DrawRuleBar(k, c, true);
+            ClockLate();        // 발밑 시계 · 멈춤 · 연출 · 사망 중 되감기 미리 보기 정리 (CharacterKit.Clockmaker)
         }
         else if (Id == CharacterId.Cartographer)
         {
@@ -122,6 +123,14 @@ public partial class CharacterKit
         }
         else if (Id == CharacterId.Postman)
         {
+            // 속달을 누르는 동안: 붙은 표식 수 / 최대 (붉게 두근거림, 다 차면 금빛)
+            if (Expressing)
+            {
+                float f = ExpressFill;
+                Color ec = f >= 0.999f ? Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : Color.Lerp(new Color(1f, 0.3f, 0.25f), new Color(1f, 0.6f, 0.5f), 0.5f + 0.5f * Mathf.Sin(Time.time * 12f));
+                DrawRuleBar(f, ec, true);
+                return;
+            }
             // 우편 보너스까지 (배달 10번마다)
             int d = Deliveries % 10;
             Color c = d == 9 ? Color.Lerp(new Color(1f, 0.4f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(1f, 0.45f, 0.4f);

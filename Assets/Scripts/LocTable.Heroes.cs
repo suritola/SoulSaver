@@ -102,7 +102,7 @@ public static partial class LocTable
         A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nUltimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n究極技：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n究极技：墨潮");
         A("지구본", "Globe", "地球儀", "地球仪");
         A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。");
-        A("도형을 닫기 쉬워지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are easier to close; closing pulls enemies to the center and shape damage +30%.\nUltimate: Rotation", "図形を閉じやすくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "更容易闭合图形，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
+        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.\nUltimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
         A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");
         A("먹물 해일", "Ink Tide", "墨の津波", "墨潮");
