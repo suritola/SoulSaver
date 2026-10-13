@@ -17,7 +17,8 @@ public partial class CharacterKit
     public const int AugBlast = 106, AugSeek = 107, AugGale = 108;             // 궁수
     public const int AugDouble = 109, AugGiant = 110, AugOverload = 111;       // 연금술사
     public const int AugSurvey = 112, AugReprint = 113, AugEngrave = 114;      // 지도 제작자 (1.1.2)
-    public const int AugFirst = 100, AugLast = 114;
+    public const int AugPrecise = 115, AugTwinGear = 116, AugRift = 117;       // 시계공
+    public const int AugFirst = 100, AugLast = 117;
     // 강화 아이콘: 1.1.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
     public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
@@ -32,6 +33,7 @@ public partial class CharacterKit
         CharacterId.Rogue => new[] { AugEcho, AugVenom, AugVolley },
         CharacterId.Archer => new[] { AugBlast, AugSeek, AugGale },
         CharacterId.Cartographer => new[] { AugSurvey, AugReprint, AugEngrave },
+        CharacterId.Clockmaker => new[] { AugPrecise, AugTwinGear, AugRift },
         _ => new[] { AugDouble, AugGiant, AugOverload },
     };
 
@@ -42,6 +44,7 @@ public partial class CharacterKit
         AugBlast => "폭발 화살", AugSeek => "추적 화살", AugGale => "꿰뚫는 바람",
         AugDouble => "이중 폭발", AugGiant => "거대 플라스크",
         AugSurvey => "정밀 측량", AugReprint => "이중 인쇄", AugEngrave => "판화",
+        AugPrecise => "정밀 톱니", AugTwinGear => "이중 톱니", AugRift => "시간 균열",
         _ => "연금 폭주",
     };
 
@@ -61,6 +64,9 @@ public partial class CharacterKit
         AugSurvey => "획이 적 하나를 지날 때마다 그다음 적에게 주는 피해가 10%씩 오릅니다. (최대 +50%)",
         AugReprint => "획을 그을 때마다 0.3초 뒤 같은 자리에 한 번 더 그어집니다. (피해 50%)",
         AugEngrave => "도형을 닫으면 안쪽에 잉크 폭발이 일어납니다. (공격력 150%)",
+        AugPrecise => "정각까지 필요한 눈금이 2 줄어듭니다.",
+        AugTwinGear => "톱니를 하나 더 던집니다.",
+        AugRift => "정각 톱니가 터진 자리에 2초 동안 시간 균열이 생겨 안의 적을 느리게 하고 벱니다.",
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
@@ -82,6 +88,9 @@ public partial class CharacterKit
         SpecialAbilities.KitSurveyChain => "측량 사슬",
         SpecialAbilities.KitInkpot => "잉크병",
         SpecialAbilities.KitGlobe => "지구본",
+        SpecialAbilities.KitCuckoo => "뻐꾸기 시계",
+        SpecialAbilities.KitHourglass => "모래시계",
+        SpecialAbilities.KitGrandfather => "괘종시계",
         _ => "",
     };
 
@@ -103,6 +112,9 @@ public partial class CharacterKit
         SpecialAbilities.KitSurveyChain => "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)",
         SpecialAbilities.KitInkpot => "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)",
         SpecialAbilities.KitGlobe => "도형을 닫기 쉬워지고(닫는 거리 1.5배), 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.",
+        SpecialAbilities.KitCuckoo => "정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다. (공격력 100%씩)",
+        SpecialAbilities.KitHourglass => "톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.",
+        SpecialAbilities.KitGrandfather => "톱니가 크고 느려지지만 피해가 40% 늘어납니다.",
         _ => "",
     };
 

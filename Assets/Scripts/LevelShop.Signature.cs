@@ -22,6 +22,7 @@ public partial class LevelShop
         new[] { "a.wind", "a.breath", "a.seed", "a.ring", "a.spread", "a.pierce", "a.retreat", "a.ambush", "a.high", "a.meteor" },
         new[] { "l.ignite", "l.frost", "l.catalyst", "l.amplify", "l.tinker", "l.glassrain", "l.salve", "l.refine", "l.embers", "l.concentrate" },
         new[] { "c.legend", "c.contour", "c.scale", "c.northstar", "c.margin", "c.route", "c.erase", "c.treasure", "c.rose", "c.inkstorm" },
+        new[] { "t.overclock", "t.alarm", "t.cog", "t.pocket", "t.minute", "t.echo", "t.spring", "t.loop", "t.borrowed", "t.stopwatch" },
     };
 
     static int Who(CharacterId who) => Mathf.Clamp((int)who, 0, SigKeys.Length - 1);
@@ -200,6 +201,16 @@ public partial class LevelShop
             Evo("ke.blot", "먹물 홍수", "번지는 잉크가 두 배로 번지고, 잉크 폭풍이 지나간 자리에 잉크 웅덩이가 남습니다.", 904, PierceId, S(9)),
             Evo("ke.bold", "대담한 필치", "모든 획이 여백 획(두 배 굵기 · 여백 피해)이 됩니다.", 905, MultiId, S(2), S(4)),
             Evo("ke.treasure", "황금 항로", "보물 표시가 두 배 넓어지고, 그 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", 906, S(7), S(8)),
+        },
+        new[]   // 시계공 (1.1.2)
+        {
+            Evo("te.gearstorm", "톱니 폭풍", "톱니가 튕길 때마다 작은 톱니가 하나 더 갈라져 가까운 적에게 날아갑니다.", 910, PierceId, S(2)),
+            Evo("te.chime", "대종", "정각 톱니가 터지면 둘레 14칸의 모든 적이 0.5초 동안 멈춥니다.", 911, ExtraAId, S(0)),
+            Evo("te.paradox", "역설", "남은 시각의 시계가 두 배로 벱니다.", 912, GlareId, S(7)),
+            Evo("te.timeless", "영원", "자명종이 15초마다 울리고, 시간이 멈춘 동안 체력이 빠르게 회복됩니다.", 913, S(1), S(3)),
+            Evo("te.clockwork", "태엽 장치", "정각 톱니가 터진 자리에서 톱니 세 개가 사방으로 날아갑니다.", 914, MultiId, S(6)),
+            Evo("te.echoes", "무한 반향", "잔상 톱니가 두 번 날아갑니다.", 915, KnockId, S(5)),
+            Evo("te.debt", "시간 빚", "스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", 916, S(8), S(9)),
         },
     };
 

@@ -418,6 +418,7 @@ public static class CodexUI
                 CharacterId.Archer => "화살 공격력 · 시위 당기는 속도 · 관통력 · 필살기 위력 · 이동 속도",
                 CharacterId.Alchemist => "플라스크 공격력 · 투척 속도 · 폭발 범위 · 필살기 위력 · 이동 속도",
                 CharacterId.Cartographer => "깃펜 공격력 · 이동 속도",
+                CharacterId.Clockmaker => "톱니 공격력 · 이동 속도",
                 _ => "",
             };
             if (ups == "") continue;

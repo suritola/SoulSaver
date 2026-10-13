@@ -71,7 +71,14 @@ public static class CharacterData
             skill = "지도 접기", skillDesc = "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
             hp = 0.95f, damage = 1.1f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,
             pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f) },
-        Coming(CharUnlock.EndlessBosses5), Coming(CharUnlock.EasyFast), Coming(CharUnlock.EndlessClear), Coming(),
+        new CharacterDef {
+            name = "시계공", title = "멈춘 시간의 장인", body = "clockmaker", held = "gear",
+            description = "톱니바퀴와 태엽으로 시간을 다루는 장인. 맞힐수록 시계 눈금이 차 정각의 큰 톱니를 던지고, 위기에는 3초 전으로 되돌아갑니다.",
+            weapon = "톱니바퀴", attack = "회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
+            skill = "되감기", skillDesc = "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
+            hp = 1f, damage = 1f, attackSpeed = 1.1f, gauge = 1f, range = 16f, price = 8000, condition = CharUnlock.EndlessBosses5,
+            pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f) },
+        Coming(CharUnlock.EasyFast), Coming(CharUnlock.EndlessClear), Coming(),
     };
 
     static CharacterDef Coming(CharUnlock condition = CharUnlock.None) => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0], condition = condition,

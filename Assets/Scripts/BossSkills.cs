@@ -184,6 +184,12 @@ public partial class BossSkills : MonoBehaviour
                         Hostile.Play("whoosh", 0.5f, 1.6f);
                         break;
                     }
+                case CharacterId.Clockmaker:
+                    // 시계공: 튕기는 톱니 셋
+                    for (int i = -1; i <= 1; i++) Hostile.Shoot(c, Rotate(d, i * 18f), 14f, Capped(15f * Power), 0.6f, Mirror, 1.6f, 3f);
+                    Hostile.Play("clank", 0.5f, 1.3f);
+                    yield return new WaitForSeconds(0.45f);
+                    break;
                 default:    // 거너: 세 발 연사
                     for (int i = 0; i < 3 && Alive; i++)
                     {
@@ -354,6 +360,7 @@ public partial class BossSkills : MonoBehaviour
             case CharacterId.Archer: yield return UltRain(strong ? 3 : 2); break;
             case CharacterId.Alchemist: yield return UltBlast(strong ? 2 : 1); break;
             case CharacterId.Cartographer: yield return UltFold(strong ? 3 : 2); break;
+            case CharacterId.Clockmaker: yield return UltClock(strong ? 5 : 4); break;
             default: yield return UltLockOn(strong ? 6 : 4); break;
         }
     }
@@ -514,6 +521,8 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Mines, Pat.Ring, Pat.Echo, Pat.Blast, Pat.Volley, Pat.Rain, Pat.Mines, Pat.Blast, Pat.Trail, Pat.Blast },
         // 지도 제작자: 범례 · 등고선 · 축척 · 북극성 · 여백 · 지름길 · 지우개 · 보물 지도 · 나침도 · 잉크 폭풍
         new[] { Pat.Blast, Pat.Ring, Pat.Lines, Pat.Volley, Pat.Lines, Pat.Trail, Pat.Pull, Pat.Mines, Pat.Ring, Pat.Rain },
+        // 시계공: 과회전 · 자명종 · 맞물린 톱니 · 회중시계 · 분침 · 시간의 메아리 · 태엽 감기 · 시간 고리 · 빌린 시간 · 스톱워치
+        new[] { Pat.Volley, Pat.Ring, Pat.Lines, Pat.Pull, Pat.Blast, Pat.Echo, Pat.Mines, Pat.Ring, Pat.Volley, Pat.Echo },
     };
 
     // 캐릭터 전용 레벨업 카드 7장 (LevelShop.KitIds 순서: 관통 · 멀티 샷 · 밀어내기 · 노려보는 눈빛 · 사냥의 기세 · 추가 A · 추가 B 자리)
@@ -525,6 +534,7 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Lines, Pat.Lines, Pat.Blast, Pat.Mines, Pat.None, Pat.Volley, Pat.Echo },      // 분열 화살 · 메아리 화살 · 강풍 화살 · 가시 덤불 · - · 정조준 · 사냥감 표식
         new[] { Pat.Echo, Pat.Ring, Pat.Volley, Pat.Rain, Pat.None, Pat.Blast, Pat.Mines },        // 연쇄 반응 · 급속 냉동 · 호문쿨루스 · 파편 플라스크 · - · 원소 융합 · 끈적한 산성
         new[] { Pat.Mines, Pat.Lines, Pat.Volley, Pat.Trail, Pat.None, Pat.Echo, Pat.Ring },       // 번지는 잉크 · 굵은 펜촉 · 나침반 바늘 · 접힌 자국 · - · 측량 표식 · 끊기지 않는 선
+        new[] { Pat.Lines, Pat.Echo, Pat.Blast, Pat.Mines, Pat.None, Pat.Ring, Pat.Volley },       // 튕기는 톱니 · 빠른 태엽 · 시계추 · 남은 시각 · - · 정각의 종 · 녹슨 톱니
     };
 
     // 특수 능력 (SpecialAbilities 번호): 무기 0 ~ 7 · 스킬 8 ~ 15 · 패시브 16 ~ 19, 캐릭터 전용 특수 능력(20 ~)은 종류로

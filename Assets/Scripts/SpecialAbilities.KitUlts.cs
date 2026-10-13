@@ -23,6 +23,9 @@ public partial class SpecialAbilities
         (KitSurveyChain, "삼각 측량", "내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)"),
         (KitInkpot, "먹물 해일", "마우스 쪽으로 거대한 먹물 파도를 일으켜 휩쓸린 적을 밀어내고 느리게 합니다. (공격력 300%)"),
         (KitGlobe, "자전", "지구본 네 개가 3초 동안 내 둘레를 돌며 닿는 적을 벱니다. (0.25초마다 공격력 60%)"),
+        (KitCuckoo, "뻐꾸기 떼", "뻐꾸기 열두 마리가 가까운 적들을 차례로 덮칩니다. (공격력 150%씩)"),
+        (KitHourglass, "모래 폭풍", "마우스 자리에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)"),
+        (KitGrandfather, "열두 번의 종", "내 둘레로 종소리 고리가 열두 번 퍼집니다. (공격력 80%씩)"),
     };
 
     public static bool IsKitWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
@@ -70,7 +73,10 @@ public partial class SpecialAbilities
             case KitCards: case KitQuicksilver: size = 8f; return UltAimShape.Burst;
             case KitSurveyChain: size = evo ? 9f : 8f; return UltAimShape.Around;
             case KitInkpot: size = evo ? 20f : 16f; return UltAimShape.Line;
-            case KitGlobe: size = evo ? 5f : 4f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
+            case KitGlobe: size = evo ? 5f : 4f; return UltAimShape.Around;
+            case KitCuckoo: size = 12f; return UltAimShape.Around;
+            case KitHourglass: size = evo ? 7f : 6f; return UltAimShape.Point;
+            case KitGrandfather: size = evo ? 8f : 7f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
             default: size = 8f; return UltAimShape.Around;
         }
     }

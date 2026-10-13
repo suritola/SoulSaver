@@ -22,6 +22,8 @@ public partial class SpecialAbilities
     // 1.1.2 새 캐릭터: 캐릭터마다 무기(진화 형태) 3 · 패시브 4 (스킬은 진화 캐릭터에서 쓰지 않아 없음)
     // 지도 제작자
     public const int KitSurveyChain = 60, KitInkpot = 61, KitGlobe = 62, KitExplorer = 63, KitLocal = 64, KitUncharted = 65, KitDraft = 66;
+    // 시계공
+    public const int KitCuckoo = 67, KitHourglass = 68, KitGrandfather = 69, KitMechHeart = 70, KitForesight = 71, KitSpareParts = 72, KitSpareTime = 73;
     // 아이콘: 60번부터는 Icons/ability_<400 + 번호> (60 ~ 91 은 레벨업 카드 아이콘이 쓰고 있음)
     public static string KitIconPath(int id) => "Icons/ability_" + (id >= 60 ? 400 + id : id);
 
@@ -80,6 +82,15 @@ public partial class SpecialAbilities
         ("현지 안내", SpecialKind.Passive, "움직이는 동안 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
         ("미지의 영역", SpecialKind.Passive, "6칸보다 멀리 있는 적에게 주는 피해가 20% 늘어납니다.\n진화: +35%"),
         ("정밀 제도", SpecialKind.Passive, "획 끝 가까이의 적에게 주는 피해가 30% 늘어납니다.\n진화: +50%"),
+
+        // ---------------- 시계공 (67 ~ 73)
+        ("뻐꾸기 시계", SpecialKind.Weapon, "정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n궁극기: 뻐꾸기 떼"),
+        ("모래시계", SpecialKind.Weapon, "톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n궁극기: 모래 폭풍"),
+        ("괘종시계", SpecialKind.Weapon, "톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n궁극기: 열두 번의 종"),
+        ("기계 심장", SpecialKind.Passive, "체력이 초당 0.5씩 회복됩니다.\n진화: 초당 1"),
+        ("예측", SpecialKind.Passive, "체력이 절반 이상일 때 받는 피해가 12% 줄어듭니다.\n진화: 20%"),
+        ("부품 수집", SpecialKind.Passive, "적을 처치하면 8% 확률로 다음 톱니가 정각 톱니가 됩니다.\n진화: 15%"),
+        ("시간 여유", SpecialKind.Passive, "필살기 게이지가 10% 더 빨리 찹니다.\n진화: 18%"),
     };
 
     public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
@@ -126,6 +137,7 @@ public partial class SpecialAbilities
         >= 36 and < 44 => new Color(0.6f, 1f, 0.5f),
         >= 44 and < 52 => new Color(0.7f, 1f, 0.5f),
         >= 60 and < 67 => new Color(0.45f, 0.6f, 1f),
+        >= 67 and < 74 => new Color(1f, 0.78f, 0.35f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
 

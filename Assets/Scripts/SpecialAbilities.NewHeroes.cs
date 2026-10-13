@@ -88,6 +88,60 @@ public partial class SpecialAbilities
                     foreach (FxAnim g in globes) if (g != null) Destroy(g.gameObject);
                     break;
                 }
+
+            // ---------------- 시계공
+            case KitCuckoo:
+                {
+                    // 뻐꾸기 떼: 열두 마리가 차례로 덮침
+                    PlayerMotion.Of(player).Cast(1f);
+                    List<Transform> targets = NearestEnemies(player.transform.position, 12f, 12);
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Transform t = targets.Count > 0 ? targets[i % targets.Count] : null;
+                        if (t == null) break;
+                        Fx.Spawn("fx_falcon", t.position, 2.2f, new Color(0.9f, 0.7f, 0.45f), 20f);
+                        Specials.Damage(t.gameObject, D * 1.5f, (t.position - player.transform.position).normalized, 1f);
+                        fx.Play("pop", 0.4f, 1.6f + 0.05f * i);
+                        yield return new WaitForSeconds(0.08f);
+                    }
+                    break;
+                }
+            case KitHourglass:
+                {
+                    // 모래 폭풍: 마우스 자리에 4초 회오리 (끌어당기며 벰)
+                    Vector3 at = KitClamp(mouse);
+                    float r = evo ? 7f : 6f;
+                    FxAnim storm = Fx.Play("fx_tornado", at, r * 1.8f, new Color(1f, 0.85f, 0.55f, 0.85f), 14f, 0f, 14, true, 4f);
+                    for (float t = 0f; t < 4f; t += 0.3f)
+                    {
+                        foreach (Collider2D col in Physics2D.OverlapCircleAll(at, r))
+                        {
+                            if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
+                            if (col.CompareTag("enermy")) col.transform.position = Vector3.MoveTowards(col.transform.position, at, 0.8f);
+                            Specials.Damage(col.gameObject, D * 0.6f, Vector3.zero, 0f);
+                        }
+                        fx.Play("hiss", 0.25f, 0.8f);
+                        yield return new WaitForSeconds(0.3f);
+                    }
+                    if (storm != null) Destroy(storm.gameObject);
+                    break;
+                }
+            case KitGrandfather:
+                {
+                    // 열두 번의 종: 둘레로 고리 열두 번
+                    PlayerMotion.Of(player).Cast(1.6f);
+                    float r = evo ? 8f : 7f;
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Vector3 c = player.transform.position;
+                        DamageCircle(c, r, D * 0.8f, 1.5f);
+                        ShockRing.Spawn(c, 0.5f, r, 0.35f, new Color(1f, 0.8f, 0.4f, 0.85f), 0.22f);
+                        fx.Play("chime", 0.45f, 0.5f + 0.04f * i);
+                        yield return new WaitForSeconds(0.13f);
+                    }
+                    Hostile.Shake(0.2f);
+                    break;
+                }
         }
     }
 

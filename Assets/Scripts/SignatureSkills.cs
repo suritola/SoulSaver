@@ -167,6 +167,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Rogue: RogueHit(target, dmg, killed, proc); break;
             case CharacterId.Archer: ArcherHit(target, dmg, killed, proc); break;
             case CharacterId.Alchemist: AlchemistHit(target, dmg, killed, proc); break;
+            case CharacterId.Clockmaker: ClockHit(target, dmg); break;
         }
     }
 
@@ -177,6 +178,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Swordsman: dmg = SwordTaken(dmg); break;
             case CharacterId.Rogue: dmg = RogueTaken(dmg); break;
             case CharacterId.Cartographer: dmg = MapTaken(dmg); break;
+            case CharacterId.Clockmaker: dmg = ClockTaken(dmg); break;
         }
         return dmg;
     }
@@ -199,6 +201,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (who == CharacterId.Gunner) GunnerKilled(pos);
         else if (who == CharacterId.Swordsman) SwordKilled(pos);
         else if (who == CharacterId.Cartographer) MapKilled(pos);
+        else if (who == CharacterId.Clockmaker) ClockKilled(pos);
     }
 
     void OnUlt()
@@ -217,7 +220,7 @@ public partial class SignatureSkills : MonoBehaviour
         return m;
     }
 
-    float RateMultiplier() => who == CharacterId.Swordsman ? SwordRate() : 1f;
+    float RateMultiplier() => who == CharacterId.Swordsman ? SwordRate() : who == CharacterId.Clockmaker ? ClockRate() : 1f;
 
     // 2.1.3: 고유 스킬이 그리는 이펙트 · 코루틴도 출처를 이어 감 (Fx 가 스킬 이펙트를 눈에 띄게)
     public new Coroutine StartCoroutine(System.Collections.IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
@@ -240,6 +243,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Archer: ArcherTick(); break;
             case CharacterId.Alchemist: AlchemistTick(); break;
             case CharacterId.Cartographer: MapTick(); break;
+            case CharacterId.Clockmaker: ClockTick(); break;
         }
         CommonTick();
     }
@@ -266,6 +270,7 @@ public partial class SignatureSkills : MonoBehaviour
             case "l.concentrate": return (throws % 4) + "/3";
         }
         if (who == CharacterId.Cartographer) return MapStack(key);
+        if (who == CharacterId.Clockmaker) return ClockStack(key);
         return null;
     }
 

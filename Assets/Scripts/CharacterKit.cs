@@ -95,6 +95,7 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAimLine != null) Destroy(ultAimLine.gameObject);
         if (ultAimRing != null) Destroy(ultAimRing.gameObject);
         OnDestroyCartographer();
+        OnDestroyClockmaker();
     }
 
     void Start()
@@ -306,6 +307,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Cartographer:
                 MapAttack(start, dir, dmg, shots);          // 잉크 획 (CharacterKit.Cartographer)
+                break;
+            case CharacterId.Clockmaker:
+                ClockAttack(start, dir, dmg, shots);        // 톱니 투척 (CharacterKit.Clockmaker)
                 break;
         }
     }
@@ -616,6 +620,9 @@ public partial class CharacterKit : MonoBehaviour
                 break;
             case CharacterId.Cartographer:
                 UpdateFold(gauge, full);                    // 지도 접기
+                break;
+            case CharacterId.Clockmaker:
+                UpdateRewind(gauge, full);                  // 되감기
                 break;
         }
     }
