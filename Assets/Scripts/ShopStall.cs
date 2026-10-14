@@ -150,7 +150,7 @@ public class ShopStall : MonoBehaviour
         promptText.rectTransform.sizeDelta = new Vector2(4f, 1.2f);
 
         // 키 그림은 SPACE라서, 상호작용 키를 바꿨으면 그림 대신 글자로 키 이름을 보여 줌
-        if (KeyBindings.Get(GameAction.Interact) != KeyCode.Space)
+        if (KeyBindings.Get(GameAction.Interact) != KeyCode.Space || GamePad.Active)     // 1.0.5~ 패드면 [A]
         {
             if (keycap != null) keycap.gameObject.SetActive(false);
             t.transform.localPosition = new Vector3(0f, 0.25f, 0f);

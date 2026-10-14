@@ -356,6 +356,17 @@ public class PlayerController : MonoBehaviour
 
         move = move.normalized;
 
+        // 1.0.5~ 패드 왼쪽 스틱 · 십자키 (키보드와 합침, 살짝 기울이면 천천히)
+        if (!GameInput.Auto)
+        {
+            Vector2 pad = GamePad.Move;
+            if (pad != Vector2.zero)
+            {
+                move += (Vector3)pad;
+                if (move.sqrMagnitude > 1f) move.Normalize();
+            }
+        }
+
         // =========================
         // 플레이어 방향
         // =========================
@@ -629,7 +640,7 @@ void Shoot()
     static bool PointerOverUI()
     {
         UnityEngine.EventSystems.EventSystem es = UnityEngine.EventSystems.EventSystem.current;
-        if (GameInput.Auto || es == null || !es.IsPointerOverGameObject()) return false;
+        if (GameInput.Auto || GamePad.Aiming || es == null || !es.IsPointerOverGameObject()) return false;     // 1.0.5~ 패드 조준은 멈춰 둔 마우스 자리와 상관없음
         if (Time.timeScale <= 0f) return true;
         if (uiCheckFrame == Time.frameCount) return uiBlocked;      // 한 프레임에 여러 번 불려도 한 번만 검사
         uiCheckFrame = Time.frameCount;

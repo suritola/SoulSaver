@@ -21,11 +21,20 @@ public static class GameInput
     // 눌렀다 / 뗐다 신호는 "이 프레임에 일어남"으로 표시 (다른 스크립트의 Update 순서와 상관없게)
     public static int FireDownFrame = -1, FireUpFrame = -1, UltDownFrame = -1, UltUpFrame = -1;
 
+    // 1.0.5~ 패드로 싸울 때는 오른쪽 스틱이 정한 플레이어 둘레의 가상 조준점 (GamePad)
     public static Vector3 MousePosition
     {
         get
         {
-            if (!Auto) return Input.mousePosition;
+            if (!Auto)
+            {
+                if (GamePad.Aiming)
+                {
+                    Camera main = Camera.main;
+                    if (main != null) return main.WorldToScreenPoint(GamePad.AimWorld);
+                }
+                return Input.mousePosition;
+            }
             Camera cam = Camera.main;
             return cam != null ? cam.WorldToScreenPoint(AutoAim) : Vector3.zero;
         }
@@ -39,4 +48,10 @@ public static class GameInput
     public static bool UltDown => Auto ? Time.frameCount == UltDownFrame : KeyBindings.Down(GameAction.Ultimate);
     public static bool UltHeld => Auto ? AutoUlt : KeyBindings.Held(GameAction.Ultimate);
     public static bool UltUp => Auto ? Time.frameCount == UltUpFrame : KeyBindings.Up(GameAction.Ultimate);
+
+    // 1.0.5~ UI 를 가리키는 자리: 패드로 메뉴를 다루면 가상 커서, 아니면 마우스 (툴팁 · 영혼 트리 확대 기준)
+    public static Vector3 PointerPosition => GamePad.InMenu ? (Vector3)GamePad.CursorPosition : Input.mousePosition;
+
+    // 1.0.5~ ESC 와 같은 취소 · 뒤로: ESC 키 · 패드 Menu(어디서나) · 패드 B(전투가 아닐 때)
+    public static bool EscDown => Input.GetKeyDown(KeyCode.Escape) || GamePad.CancelDown;
 }

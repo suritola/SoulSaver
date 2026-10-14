@@ -354,10 +354,22 @@ public class TutorialRun : MonoBehaviour
             title.color = Color.Lerp(Gold, Color.white, pulse * 0.35f);
         }
         // 1.0.4~: 확인 창은 ESC 로도 닫힘 (일시정지 메뉴가 같이 열리지 않게)
-        if (confirm != null && Input.GetKeyDown(KeyCode.Escape)) { SettingsUI.EscHandledFrame = Time.frameCount; CloseConfirm(); }
+        if (confirm != null && GameInput.EscDown) { SettingsUI.EscHandledFrame = Time.frameCount; CloseConfirm(); }
         // 창이 열려 시간이 멈춘 동안은 단계를 건너뛸 수 없음 (진화 · 카드 창이 반쯤 남지 않게)
         if (skipButton != null) skipButton.SetActive(Time.timeScale > 0f && confirm == null);
+        // 1.0.5~ 패드: R3 로 이 단계 건너뛰기 (버튼 글자에도 [R3])
+        if (skipButton != null && skipButton.activeSelf && GamePad.R3Down) skipStep = true;
+        if (skipLabel != null && (skipLabelPad != GamePad.Active || skipLabelLang != Loc.Current))
+        {
+            skipLabelPad = GamePad.Active;
+            skipLabelLang = Loc.Current;
+            skipLabel.text = Loc.T("이 단계 건너뛰기") + (skipLabelPad ? " [R3]" : "");
+        }
     }
+
+    TMP_Text skipLabel;             // 1.0.5~ 「이 단계 건너뛰기」 글자 (패드면 [R3] 를 붙임, UIKit.Remember 대신 직접 갱신)
+    bool skipLabelPad;
+    Loc.Lang skipLabelLang = (Loc.Lang)(-1);
 
     // 1.0.4~: 단계마다 해당 HUD 를 금빛 테두리로 짚어 줌 (재장전 → 탄창, 필살기 → 게이지, 레벨업 → 배지, 영혼 트리 → 버튼)
     readonly Vector3[] corners = new Vector3[4];
@@ -512,6 +524,8 @@ public class TutorialRun : MonoBehaviour
         kr.anchorMin = kr.anchorMax = kr.pivot = new Vector2(1f, 1f);
         kr.anchoredPosition = new Vector2(-30f, -180f);
         skipButton = skip.gameObject;
+        skipLabel = skip.GetComponentInChildren<TMP_Text>();
+        if (skipLabel != null) UIKit.Forget(skipLabel);
         BuildPointer(canvas.transform);
     }
 

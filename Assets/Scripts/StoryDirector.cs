@@ -519,26 +519,31 @@ public class StoryDirector : MonoBehaviour
     //   대사 넘기기는 Space 와 함께 [상호작용] 키 · 좌클릭으로도 (확정 키를 바꿔도 따라감)
     const string SkipHintKo = "[{INTERACT}] · 클릭: 대사 넘기기   ESC 두 번: 건너뛰기";
     const string SkipArmKo = "ESC 를 한 번 더 누르면 이야기를 건너뜁니다";
+    // 1.0.5~ 패드: [A] 넘기기 · B(또는 Menu) 두 번 건너뛰기
+    const string SkipHintPadKo = "[A] 대사 넘기기   B 두 번: 건너뛰기";
+    const string SkipArmPadKo = "B 를 한 번 더 누르면 이야기를 건너뜁니다";
+    static string SkipHint => GamePad.Active ? SkipHintPadKo : SkipHintKo;
+    static string SkipArm => GamePad.Active ? SkipArmPadKo : SkipArmKo;
     TMP_Text skipHint;
     float escArmedUntil = -1f;
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (GameInput.EscDown)
         {
             if (Time.unscaledTime < escArmedUntil) skip = true;
             else
             {
                 escArmedUntil = Time.unscaledTime + 2f;
-                if (skipHint != null) { skipHint.text = Loc.T(SkipArmKo); skipHint.color = new Color(1f, 0.88f, 0.4f); }
+                if (skipHint != null) { skipHint.text = Loc.T(SkipArm); skipHint.color = new Color(1f, 0.88f, 0.4f); }
             }
         }
-        else if (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetMouseButtonDown(0)) advance = true;
+        else if (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetMouseButtonDown(0) || GamePad.ADown) advance = true;
         // 2초 안에 다시 누르지 않으면 안내를 되돌림
         if (skipHint != null && escArmedUntil > 0f && Time.unscaledTime >= escArmedUntil)
         {
             escArmedUntil = -1f;
-            skipHint.text = Loc.T(SkipHintKo);
+            skipHint.text = Loc.T(SkipHint);
             skipHint.color = new Color(0.78f, 0.74f, 0.68f);
         }
     }
@@ -579,7 +584,7 @@ public class StoryDirector : MonoBehaviour
         // 1.0.4~: 안내 글자 18 → 22, [상호작용] 키 · 클릭 · ESC 두 번 안내 (ESC 를 누르면 「한 번 더」 안내로 바뀜)
         d.skipHint = UIKit.Text(go.transform, SkipHintKo, 22f, new Color(0.78f, 0.74f, 0.68f), Vector2.zero, new Vector2(620f, 34f), TextAlignmentOptions.Right);
         UIKit.Forget(d.skipHint);
-        d.skipHint.text = Loc.T(SkipHintKo);
+        d.skipHint.text = Loc.T(SkipHint);
         d.skipHint.enableAutoSizing = true;
         d.skipHint.fontSizeMin = 14f;
         d.skipHint.fontSizeMax = 22f;

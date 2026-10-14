@@ -100,7 +100,7 @@ public class SoulTreeUI : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (GameInput.EscDown)
         {
             SettingsUI.EscHandledFrame = Time.frameCount;      // 일시정지 메뉴가 같이 열리지 않게
             Close();
@@ -111,17 +111,21 @@ public class SoulTreeUI : MonoBehaviour
         // 휠: 마우스 위치를 기준으로 확대 · 축소
         float wheel = Input.mouseScrollDelta.y;
         if (wheel != 0f) ZoomAt(Input.mousePosition, zoom * (wheel > 0f ? 1.12f : 1f / 1.12f));
+        // 1.0.5~ 패드: RT 확대 · LT 축소 (가상 커서 기준)
+        float padZoom = GamePad.ZoomAxis;
+        if (padZoom != 0f) ZoomAt(GameInput.PointerPosition, zoom * Mathf.Pow(2f, padZoom * 1.5f * Time.unscaledDeltaTime));
         // 키보드로 이동 (이동 키 · 방향키, 1.0.4~ 바꾼 이동 키를 따름), 가운데로 (Home · C)
         Vector2 k = Vector2.zero;
         if (KeyBindings.Held(GameAction.Left)) k.x += 1f;
         if (KeyBindings.Held(GameAction.Right)) k.x -= 1f;
         if (KeyBindings.Held(GameAction.Up)) k.y -= 1f;
         if (KeyBindings.Held(GameAction.Down)) k.y += 1f;
+        k -= GamePad.RightStick;            // 1.0.5~ 패드 오른쪽 스틱으로 이동 (기울인 만큼)
         if (k != Vector2.zero) Pan(k * 900f * Time.unscaledDeltaTime);
         if (Input.GetKeyDown(KeyCode.Home) || Input.GetKeyDown(KeyCode.C)) Recenter();
         if (Input.GetKeyDown(KeyCode.F)) Fit();
         // 끌어서 이동: 빈 곳에서 좌클릭 · 휠 클릭 · 우클릭을 누른 채 끌기 (칸 위에서 누르면 배우기라 끌지 않음)
-        Vector2 mouse = Input.mousePosition;
+        Vector2 mouse = GameInput.PointerPosition;      // 1.0.5~ 패드 가상 커서도 화면 끝에 대면 그쪽으로 이동
         if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(2) || Input.GetMouseButtonDown(1)) && hovered.Count == 0) dragging = true;
         if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1) && !Input.GetMouseButton(2)) dragging = false;
         if (dragging) Pan(mouse - lastMouse);
@@ -219,7 +223,7 @@ public class SoulTreeUI : MonoBehaviour
     void Build()
     {
         openFrame = Time.frameCount;
-        lastMouse = Input.mousePosition;
+        lastMouse = GameInput.PointerPosition;
         Image dim = Img("Dim", root, Vector2.zero, Vector2.zero, null, new Color(0.03f, 0.02f, 0.05f, 0.97f));
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
@@ -328,7 +332,8 @@ public class SoulTreeUI : MonoBehaviour
             views.Add(v);
         }
         footText.text = Loc.T(TutorialRun.Active ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "칸을 두 번 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
-                      + "  ·  " + Loc.T("끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
+                      + "  ·  " + Loc.T(GamePad.Active ? "오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기"      // 1.0.5~ 패드 안내
+                                                       : "끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
                       + "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기");      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
         bounds = new Rect(-120f, -120f, 240f, 240f);

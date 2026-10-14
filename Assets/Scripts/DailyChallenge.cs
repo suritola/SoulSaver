@@ -232,7 +232,7 @@ public static class DailyChallenge
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+            if (GameInput.EscDown) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + 1f;
             TimeSpan left = Today.AddDays(1) - DateTime.UtcNow;

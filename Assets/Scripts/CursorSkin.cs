@@ -48,6 +48,16 @@ public class CursorSkin : MonoBehaviour
         return t;
     }
 
+    // 1.0.5~ 패드 가상 커서 · 조준점 그림 (GamePad.OnGUI 가 직접 그림 — 게임 커서를 꺼 둬도 패드 커서는 이 모양)
+    public static Texture2D PadTexture(bool aim, out Vector2 hot)
+    {
+        string name = skinId + (aim ? "_aim" : "_arrow");
+        if (animated) name += "_" + (int)(Time.unscaledTime * AnimFps) % AnimFrames;
+        Texture2D tex = Load(name) ?? Load(Default + (aim ? "_aim" : "_arrow"));
+        hot = tex == null ? Vector2.zero : aim ? (tex.width == 48 ? AimHot : new Vector2(tex.width * 0.5f, tex.height * 0.5f)) : ArrowHot;
+        return tex;
+    }
+
     void Update()
     {
         if (!GameSettings.GameCursor)

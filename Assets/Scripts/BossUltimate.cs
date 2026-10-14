@@ -272,7 +272,7 @@ public class BossUltimate : MonoBehaviour
     static bool SkipPressed()
     {
         if (ESCmenu.IsOpen || GameInput.Auto) return false;
-        return Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
+        return Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || GamePad.ADown;     // 1.0.5~ 패드 A
     }
 
     // 1.0.2: 대사 중 ESC 로 일시정지하면 연출이 멈춘 시간에도 계속 흘러, 끝나면서 게임 속도를 되돌려 일시정지가 풀렸음

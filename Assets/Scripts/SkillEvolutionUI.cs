@@ -72,7 +72,7 @@ public class SkillEvolutionUI : MonoBehaviour
 
     // 1.0.4~: 연출 건너뛰기 — 모여드는 동안 클릭 · [상호작용 키]를 누르면 바로 결과로 (레벨업 카드를 확정한 더블클릭이 넘어오지 않게 열린 직후 0.3초는 받지 않음)
     //         같은 진화를 이 PC에서 두 번째 볼 때부터는 모여드는 연출이 두 배 빠름
-    static bool SkipPressed(float since) => Time.unscaledTime - since > 0.3f && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact));
+    static bool SkipPressed(float since) => Time.unscaledTime - since > 0.3f && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact) || GamePad.ADown);
 
     IEnumerator Play(LevelShop.SkillEvo e, CharacterId who)
     {

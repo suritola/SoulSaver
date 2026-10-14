@@ -888,6 +888,7 @@ public static class SettingsUI
     };
     // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음), 1.0.4~ 공격 · 필살기를 넣어 두 줄 × 5칸
     static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 12, 13, 9, 10, 11 };
+    const string PadLayoutKo = "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · RT 공격 · LT 필살기 · A 상호작용 · 확정 · B 취소 · X 재장전 · Y 무기 교체\nRB · LB · L3 스킬 1 · 2 · 3 · View 영혼 트리 · Menu 일시정지 · 메뉴에서는 왼쪽 스틱 · 십자키로 커서, A 클릭, 오른쪽 스틱 스크롤";
 
     static void BuildControls()
     {
@@ -907,6 +908,9 @@ public static class SettingsUI
             }, 26f);
             keyLabels.Add(b.GetComponentInChildren<TMP_Text>());
         }
+        // 1.0.5~ 게임패드 버튼 배치 (바꿀 수 없음, 엑스박스 배열 · 스팀 덱 · 플레이스테이션은 스팀 입력으로 같은 배열)
+        UIKit.Text(page, "게임패드", 24f, Gold, new Vector2(-470f, -165f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
+        UIKit.Text(page, PadLayoutKo, 19f, Parch, new Vector2(70f, -168f), new Vector2(920f, 76f), TextAlignmentOptions.Left);
         UIKit.Text(page, "버튼을 누른 뒤 바꿀 키나 마우스 버튼을 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
         UIKit.MakeButton(page, "기본값으로", new Vector2(390f, -255f), new Vector2(260f, 60f), () =>
         {
@@ -925,7 +929,7 @@ public static class SettingsUI
             if (keyLabels[j] == null) continue;
             int i = ShownActions[j];
             bool waiting = i == capturing;
-            keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.Name(KeyBindings.All[i]);
+            keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.KeyName(KeyBindings.Get(KeyBindings.All[i]));     // 1.0.5~ 패드를 써도 키보드 키 이름
             keyLabels[j].color = waiting ? Gold : new Color(0.96f, 0.9f, 0.8f);
         }
     }
@@ -944,7 +948,7 @@ public static class SettingsUI
     // 창이 열려 있는 동안 매 프레임 (SettingsInput): 키 입력 받기 · ESC
     internal static void Tick()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (GameInput.EscDown)
         {
             EscHandledFrame = Time.frameCount;
             if (capturing >= 0) { capturing = -1; RefreshKeys(); }
@@ -1020,7 +1024,7 @@ public class ModalEsc : MonoBehaviour
 
     void Update()
     {
-        if (!Input.GetKeyDown(KeyCode.Escape) || SettingsUI.EscHandledFrame == Time.frameCount) return;
+        if (!GameInput.EscDown || SettingsUI.EscHandledFrame == Time.frameCount) return;
         SettingsUI.EscHandledFrame = Time.frameCount;
         cancel?.Invoke();
     }

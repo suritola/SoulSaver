@@ -1883,5 +1883,17 @@ public static partial class LocTable
         { "[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기", L("[Shift]+[{UPGRADE}] quick-learn without opening the tree", "[Shift]+[{UPGRADE}] ツリーを開かずに素早く習得", "[Shift]+[{UPGRADE}] 不打开灵魂树快速学习") },
         { "레벨업 카드를 한 번 다시 뽑을 수 있습니다 ([{REROLL}]). 레벨이 오를 때마다 1회 채워짐, 최대 1회 보관", L("Reroll your level-up cards once ([{REROLL}]). Refills by 1 each level up, holds up to 1", "レベルアップカードを1回引き直せます ([{REROLL}])。レベルアップごとに1回補充、最大1回保管", "可重抽一次升级卡牌 ([{REROLL}])。每次升级补充1次，最多保存1次") },
         { "모든 무기 피해 +6%", L("All weapons damage +6%", "全武器のダメージ +6%", "所有武器伤害 +6%") },
+        // 1.0.4 요청 gamepad: 게임패드 지원 (1.0.5~ 버튼 이름 · 패드 안내 · 설정 조작 탭 배치표)
+        { "왼쪽 스틱", L("Left Stick", "左スティック", "左摇杆") },
+        { "게임패드", L("Gamepad", "ゲームパッド", "手柄") },
+        { "십자키 ← → 로 고르고 [A]로 확정", L("Choose with D-pad ← → and confirm with [A]", "十字キー ← → で選び [A] で決定", "用十字键 ← → 选择，按 [A] 确认") },
+        { "오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기", L("Right stick · screen edge to move, RT · LT to zoom in · out, D-pad to pick nodes", "右スティック・画面端で移動、RT・LT で拡大・縮小、十字キーでマスを選択", "右摇杆 · 屏幕边缘移动，RT · LT 放大 · 缩小，十字键选择节点") },
+        { "[A] 대사 넘기기   B 두 번: 건너뛰기", L("[A] Next line   B twice: Skip", "[A] セリフ送り   B を2回：スキップ", "[A] 下一句   按两次 B：跳过") },
+        { "B 를 한 번 더 누르면 이야기를 건너뜁니다", L("Press B again to skip the story", "もう一度 B を押すとストーリーをスキップします", "再按一次 B 跳过剧情") },
+        { "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · [RT] 공격", L("Left stick Move · Right stick Aim (tilt to auto-attack) · [RT] Attack", "左スティック 移動・右スティック 照準（倒すと自動攻撃）・[RT] 攻撃", "左摇杆 移动 · 右摇杆 瞄准（推动即自动攻击） · [RT] 攻击") },
+        { "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · RT 공격 · LT 필살기 · A 상호작용 · 확정 · B 취소 · X 재장전 · Y 무기 교체\nRB · LB · L3 스킬 1 · 2 · 3 · View 영혼 트리 · Menu 일시정지 · 메뉴에서는 왼쪽 스틱 · 십자키로 커서, A 클릭, 오른쪽 스틱 스크롤",
+            L("Left stick Move · Right stick Aim (tilt to auto-attack) · RT Attack · LT Ultimate · A Interact · Confirm · B Cancel · X Reload · Y Swap Weapon\nRB · LB · L3 Skill 1 · 2 · 3 · View Soul Tree · Menu Pause · In menus: left stick · D-pad move the cursor, A click, right stick scroll",
+              "左スティック 移動・右スティック 照準（倒すと自動攻撃）・RT 攻撃・LT 必殺技・A 調べる・決定・B キャンセル・X リロード・Y 武器切替\nRB・LB・L3 スキル 1・2・3・View 魂のツリー・Menu 一時停止・メニューでは左スティック・十字キーでカーソル、A クリック、右スティック スクロール",
+              "左摇杆 移动 · 右摇杆 瞄准（推动即自动攻击） · RT 攻击 · LT 必杀技 · A 互动 · 确认 · B 取消 · X 换弹 · Y 切换武器\nRB · LB · L3 技能 1 · 2 · 3 · View 灵魂树 · Menu 暂停 · 菜单中用左摇杆 · 十字键移动光标，A 点击，右摇杆滚动") },
     };
 }

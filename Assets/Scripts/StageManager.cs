@@ -218,7 +218,8 @@ public class StageManager : MonoBehaviour
         LevelShop cards = FindFirstObjectByType<LevelShop>();
         while ((cards != null && cards.IsOpen) || Time.timeScale == 0f) yield return null;
         ShowBanner(openBanner, openTime);
-        Hints.Show("move", "{MOVE} 이동 · 마우스 조준 · [{ATTACK}] 공격");      // 1.0.4~ 바꾼 공격 키를 따름
+        Hints.Show("move", GamePad.Active ? "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · [RT] 공격"      // 1.0.5~ 패드 안내
+                                          : "{MOVE} 이동 · 마우스 조준 · [{ATTACK}] 공격");      // 1.0.4~ 바꾼 공격 키를 따름
     }
 
     void PrepareEndless()
@@ -306,13 +307,13 @@ public class StageManager : MonoBehaviour
         upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
         upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
         // 키 코드 · 언어로 비교 (키 이름 글자를 매 프레임 만들지 않게)
-        KeyCode key = KeyBindings.Get(GameAction.Upgrade);
+        KeyCode key = GamePad.Active ? KeyCode.JoystickButton6 : KeyBindings.Get(GameAction.Upgrade);      // 1.0.5~ 패드면 View 버튼
         if (shownShards != SoulShards.Amount || shownKey != key || shownLang != Loc.Current)
         {
             shownShards = SoulShards.Amount;
             shownKey = key;
             shownLang = Loc.Current;
-            upgradeText.text = Loc.T("영혼 트리") + " [" + KeyBindings.KeyName(key) + "]  <color=#C9B8FF>" + shownShards + "</color>";
+            upgradeText.text = Loc.T("영혼 트리") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]  <color=#C9B8FF>" + shownShards + "</color>";
         }
         if (!PlayerController.Cinematic && KeyBindings.Down(GameAction.Upgrade) && Time.frameCount != treeClosedFrame)
         {

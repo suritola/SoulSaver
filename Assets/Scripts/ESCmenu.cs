@@ -24,7 +24,7 @@ public class ESCmenu : MonoBehaviour
     void Update()
     {
         isShopOpen = shop.isShopOpen;
-        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+        if (!GameInput.EscDown) return;
 
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;

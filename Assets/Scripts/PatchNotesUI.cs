@@ -226,7 +226,7 @@ public static class PatchNotesUI
         void Update()
         {
             // 1.0.4~: 바로 앞 창(언어 고르기 등)을 닫은 그 ESC 로 같이 닫히지 않게
-            if (!Input.GetKeyDown(KeyCode.Escape) || SettingsUI.EscHandledFrame == Time.frameCount) return;
+            if (!GameInput.EscDown || SettingsUI.EscHandledFrame == Time.frameCount) return;
             SettingsUI.EscHandledFrame = Time.frameCount;
             Close();
         }

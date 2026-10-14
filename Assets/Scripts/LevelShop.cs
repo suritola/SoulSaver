@@ -98,6 +98,18 @@ public partial class LevelShop : MonoBehaviour
         // 1.0.4~: 만렙이어도 남은 레벨업은 버리지 않음 (성장 카드로 고름, LevelShop.Growth)
         // 숫자 1 · 2 · 3: 그 카드를 고름, 이미 고른 카드의 숫자를 한 번 더 누르면 확정
         // 1.0.4~: 예전엔 한 번에 확정돼 살펴보려다 실수로 골랐음 → 보스 보상 · 무기 진화 창과 같은 방식으로 통일
+        // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)
+        if (selectReady && LvshopPanel != null && LvshopPanel.activeInHierarchy)
+        {
+            int pad = GamePad.TakeDpadX();
+            if (pad != 0)
+            {
+                pendingSlot = pendingSlot < 0 ? (pad > 0 ? 0 : 2) : Mathf.Clamp(pendingSlot + pad, 0, 2);
+                lastPickAt = -9f;
+                RefreshCards();
+                GamePad.WarpTo(CardOf(pendingSlot) as RectTransform);
+            }
+        }
         int quick = QuickPickKey();
         if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy)
         {
@@ -125,6 +137,7 @@ public partial class LevelShop : MonoBehaviour
     // ================================================================= 운명의 실: [다시 뽑기 키] 다시 뽑기
     TMP_Text rerollText;
     int shownRerolls = -1;
+    bool shownRerollPad, shownPendingPad;      // 1.0.5~ 안내를 만들 때 패드였는지 (바뀌면 [R] ↔ [X])
 
     // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
     // 그 아래 가운데는 건너뛰기 버튼 (LevelShop.EvoUI), 다시 뽑기 안내는 그 왼쪽
@@ -154,9 +167,10 @@ public partial class LevelShop : MonoBehaviour
         }
         GameObject badge = rerollText.transform.parent.gameObject;
         if (badge.activeSelf != open) badge.SetActive(open);
-        if (open && shownRerolls != n)
+        if (open && (shownRerolls != n || shownRerollPad != GamePad.Active))
         {
             shownRerolls = n;
+            shownRerollPad = GamePad.Active;
             rerollText.text = "<color=#FFE066>[" + KeyBindings.Name(GameAction.Reroll) + "]</color> " + Loc.T("카드 다시 뽑기") + "  <color=#FFE066>(" + n + ")</color>";
         }
     }
@@ -229,10 +243,11 @@ public partial class LevelShop : MonoBehaviour
         pendingBadge.GetComponent<Image>().color = Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
         pendingBadge.transform.localScale = Vector3.one * (1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
-        if (shownPending != PendingLevels || shownTree != tree)
+        if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)
         {
             shownPending = PendingLevels;
             shownTree = tree;
+            shownPendingPad = GamePad.Active;
             pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "")
                              + (tree ? "   \u00B7   [" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("배울 칸 있음") : "");
         }
@@ -254,7 +269,8 @@ public partial class LevelShop : MonoBehaviour
     {
         if (!selectReady) return;
         // 같은 카드를 0.4초 안에 두 번 누르면 바로 확정 (더블클릭, 2.1.8)
-        if (slot == pendingSlot && Time.unscaledTime - lastPickAt < 0.4f) { ConfirmSlot(slot); return; }
+        // 1.0.5~ 패드: 고른 카드를 A 로 한 번 더 누르면 확정
+        if (slot == pendingSlot && (Time.unscaledTime - lastPickAt < 0.4f || GamePad.PadClickNow)) { ConfirmSlot(slot); return; }
         lastPickAt = Time.unscaledTime;
         pendingSlot = slot;
         RefreshCards();

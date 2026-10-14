@@ -66,7 +66,7 @@ public class WeaponEvolutionUI : MonoBehaviour
     // 보스를 쏘던 연타가 바로 넘기지 않게 시작 연출은 0.4초, 결과 화면은 확정한 입력이 넘어오지 않게 0.15초 뒤부터 받음
     float startedAt;
     bool skipIntro;
-    static bool SkipPressed(float since, float guard = 0.15f) => Time.unscaledTime - since > guard && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact));
+    static bool SkipPressed(float since, float guard = 0.15f) => Time.unscaledTime - since > guard && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact) || GamePad.ADown);
 
     IEnumerator Play()
     {
@@ -161,6 +161,13 @@ public class WeaponEvolutionUI : MonoBehaviour
             burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Time.unscaledTime * 12f);
             confirmButton.interactable = selected >= 0;
             confirmText.color = selected >= 0 ? Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f)) : new Color(0.6f, 0.56f, 0.62f);
+            // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)
+            int pad = GamePad.TakeDpadX();
+            if (pad != 0)
+            {
+                Select(selected < 0 ? (pad > 0 ? 0 : cards.Length - 1) : Mathf.Clamp(selected + pad, 0, cards.Length - 1));
+                if (selected >= 0) GamePad.WarpTo(cards[selected]);
+            }
             if (selected >= 0 && KeyBindings.Down(GameAction.Interact)) Confirm();
             yield return null;
         }
@@ -260,7 +267,11 @@ public class WeaponEvolutionUI : MonoBehaviour
         Button b = c.gameObject.AddComponent<Button>();
         b.transition = Selectable.Transition.None;
         int idx = i;
-        b.onClick.AddListener(() => Select(idx));
+        b.onClick.AddListener(() =>
+        {
+            if (GamePad.PadClickNow && selected == idx) Confirm();      // 1.0.5~ 패드: 고른 카드를 A 로 한 번 더 누르면 확정
+            else Select(idx);
+        });
 
         Image inner = Img("Inner", c, Vector2.zero, new Vector2(412f, 612f), null, new Color(0.08f, 0.06f, 0.12f, 0.97f));
         inner.raycastTarget = false;

@@ -136,7 +136,7 @@ public class TooltipUI : MonoBehaviour
     // 마우스 오른쪽 아래에 띄우고, 화면 밖으로 나가면 반대쪽으로 뒤집음
     void Follow()
     {
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, Input.mousePosition, null, out Vector2 local);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, GameInput.PointerPosition, null, out Vector2 local);      // 1.0.5~ 패드 가상 커서도
         Vector2 half = canvasRect.rect.size * 0.5f;
         Vector2 size = panel.sizeDelta;
 

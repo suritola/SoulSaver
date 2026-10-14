@@ -312,7 +312,7 @@ public class SkinShopUI : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+        if (GameInput.EscDown) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
         int f = (int)(Time.unscaledTime * 8f);
         foreach (var a in anims) if (a.img != null) a.img.sprite = a.frames[f % a.frames.Length];
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);

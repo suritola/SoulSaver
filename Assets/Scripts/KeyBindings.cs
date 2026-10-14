@@ -76,15 +76,19 @@ public static class KeyBindings
         Loc.RaiseChanged();
     }
 
+    // 1.0.5~ 패드 버튼도 같이 (GamePad: RT 공격 · LT 필살기 · A 상호작용 · X 재장전 …, 이동은 PlayerController 가 스틱으로 따로)
     public static bool Held(GameAction a)
     {
         if (Input.GetKey(Get(a))) return true;
-        return a <= GameAction.Right && Input.GetKey(Arrows[(int)a]);
+        if (a <= GameAction.Right && Input.GetKey(Arrows[(int)a])) return true;
+        return GamePad.Held(a);
     }
-    public static bool Down(GameAction a) => Input.GetKeyDown(Get(a));
-    public static bool Up(GameAction a) => Input.GetKeyUp(Get(a));
+    public static bool Down(GameAction a) => Input.GetKeyDown(Get(a)) || GamePad.Down(a);
+    // 키보드 · 패드 중 하나를 떼도 다른 쪽을 아직 누르고 있으면 뗀 것으로 치지 않음
+    public static bool Up(GameAction a) => (Input.GetKeyUp(Get(a)) && !GamePad.Held(a)) || (GamePad.Up(a) && !Input.GetKey(Get(a)));
 
-    public static string Name(GameAction a) => KeyName(Get(a));
+    // 1.0.5~ 패드를 쓰는 중이면 패드 버튼 이름 (RT · A …), 설정의 키 바꾸기 칸은 KeyName(Get(a)) 로 늘 키보드 이름
+    public static string Name(GameAction a) => GamePad.Active ? GamePad.ButtonName(a) : KeyName(Get(a));
 
     public static string KeyName(KeyCode k)
     {
@@ -126,7 +130,8 @@ public static class KeyBindings
     {
         if (s == null || s.IndexOf('{') < 0) return s;
         StringBuilder b = new StringBuilder(s);
-        b.Replace("{MOVE}", Name(GameAction.Up) + " " + Name(GameAction.Left) + " " + Name(GameAction.Down) + " " + Name(GameAction.Right));
+        b.Replace("{MOVE}", GamePad.Active ? GamePad.ButtonName(GameAction.Up)
+                            : Name(GameAction.Up) + " " + Name(GameAction.Left) + " " + Name(GameAction.Down) + " " + Name(GameAction.Right));
         b.Replace("{RELOAD}", Name(GameAction.Reload));
         b.Replace("{SWAP}", Name(GameAction.Swap));
         b.Replace("{SKILL1}", Name(GameAction.Skill1));

@@ -301,6 +301,6 @@ public class CharacterUIInput : MonoBehaviour
 {
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) CharacterUI.Back();
+        if (GameInput.EscDown) CharacterUI.Back();
     }
 }
