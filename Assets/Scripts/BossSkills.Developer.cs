@@ -16,10 +16,10 @@ public partial class BossSkills
     // 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
     //   화면이 터져 게임이 멈추지 않게 동시에 도는 필살기는 최대 DevMaxRunning 개 · 날고 있는 적 탄이 DevBulletCap 을 넘으면 더 쏘지 않음
     //   엄마는 필살기 · 탄 피해도 2배 (한 대 상한도 최대 체력의 20% → 40%, 즉사 없음)
-    // 1.0.7~ 필살기 간격은 체력에 따라: 가득 찼을 때 10초 → 체력이 닳을수록 점점 짧아져 바닥에서 1초 (엄마는 그 절반 5초 → 0.5초)
-    const float DevSlowest = 10f, DevFastest = 1f;
+    // 1.0.7~ 필살기 간격은 체력에 따라: 가득 찼을 때 10초 → 체력이 닳을수록 점점 짧아져 바닥에서 1초 (엄마는 5초 → 1초)
+    const float DevSlowest = 10f, MomSlowest = 5f, DevFastest = 1f;
     const int DevBulletCap = 400;
-    float DevInterval => Mathf.Lerp(DevFastest, DevSlowest, HpFrac) * (boss.developerMom ? 0.5f : 1f);
+    float DevInterval => Mathf.Lerp(DevFastest, boss.developerMom ? MomSlowest : DevSlowest, HpFrac);
     // 1.0.6~ 피해 -20% (개발자 ×1 → ×0.8, 엄마 ×2 → ×1.6 — 엄마는 여전히 개발자의 2배)
     const float DevDamageMul = 0.8f;
     float DevPow => (boss != null && boss.developerMom ? 2f : 1f) * DevDamageMul;

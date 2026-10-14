@@ -29,7 +29,7 @@ public class EndlessMode : MonoBehaviour
     //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 900f;
     public const float MomAt = 1800f;
-    public const int DeveloperHp = 150000;      // 1.0.7~ 너무 안 죽어서 절반 (30만 → 15만 · 엄마 60만 → 30만)
+    public const int DeveloperHp = 100000;      // 1.0.7~ 너무 안 죽어서 (30만 → 10만 · 엄마 60만 → 30만)
     public const int MomHp = 300000;
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
@@ -181,7 +181,7 @@ public class EndlessMode : MonoBehaviour
         if (mom == null) momDown = true;
     }
 
-    // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 15만 · 30만 · 1.0.7~)
+    // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 10만 · 30만 · 1.0.7~)
     bosss SpawnFinalBoss(bool isMom)
     {
         GameObject prefab = null;
