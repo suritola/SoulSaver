@@ -198,6 +198,8 @@ public class PlayerController : MonoBehaviour
         new List<GameObject>();
 
     private Vector3 move;
+    // 이동 키(스틱)를 누르고 있는지 — 적에게 밀린 것은 움직인 걸로 치지 않음 (정조준 · 매복)
+    public bool MoveHeld => move.sqrMagnitude > 0.01f;
 
     private Animator animator;
 

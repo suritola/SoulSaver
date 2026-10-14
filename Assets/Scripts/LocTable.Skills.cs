@@ -224,7 +224,7 @@ public static partial class LocTable
         A("가득 당긴 화살을 쏘면 반대쪽으로 짧게 뛰어 물러납니다.", "Firing a full-draw arrow hops you back a short distance.", "引き絞った矢を撃つと反対側へ短く飛び退きます。", "射出满弓之箭时向反方向短距跃退。");
         A("물러나는 거리", "Hop distance", "下がる距離", "后撤距离");
         A("매복", "Ambush Trap", "待ち伏せ", "埋伏");
-        A("2초 동안 움직이지 않으면 발밑에 덫이 깔려 다가오는 적을 묶습니다.", "Stand still for 2s to lay a snare that roots approaching enemies.", "2秒間動かないと足元に罠が敷かれ、近づく敵を縛ります。", "静止2秒后脚下布下陷阱，定住靠近的敌人。");
+        A("1초 동안 서 있으면 발밑에 덫이 깔려, 들어온 적을 묶고 공격력 80% 피해를 줍니다. 묶인 적은 받는 피해가 30% 늘어납니다.", "Stand still for 1s to lay a snare that roots enemies, dealing 80% ATK. Rooted enemies take 30% more damage.", "1秒間立ち止まると足元に罠が敷かれ、入った敵を縛って攻撃力80%のダメージを与えます。縛られた敵は受けるダメージが30%増えます。", "站立1秒后脚下布下陷阱，定住进入的敌人并造成80%攻击力伤害。被定住的敌人受到的伤害增加30%。");
         A("묶는 시간", "Root time", "縛る時間", "定身时间");
         A("높은 자리", "High Ground", "高所", "居高临下");
         A("유성 화살", "Meteor Arrow", "流星の矢", "流星箭");

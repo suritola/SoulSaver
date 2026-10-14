@@ -138,11 +138,14 @@ public partial class CharacterKit : MonoBehaviour
 
     void LateUpdate()
     {
+        // 멈춰 있던 시간 (몸 그림 장수와 상관없이 늘 셈 — 예전엔 그림이 6장 아래면 0에 멈춰 정조준이 안 됐음)
+        bool moving = (transform.position - lastPos).sqrMagnitude > 0.0004f && Time.timeScale > 0f;
+        stillTime = moving ? 0f : stillTime + Time.deltaTime;
+        // 이동 키를 놓고 서 있던 시간 (밀려도 이어짐)
+        standTime = player.MoveHeld ? 0f : standTime + Time.deltaTime;
         // 대기 2장 (느리게) · 달리기 4장
         if (frames != null && frames.Length >= 6)
         {
-            bool moving = (transform.position - lastPos).sqrMagnitude > 0.0004f && Time.timeScale > 0f;
-            stillTime = moving ? 0f : stillTime + Time.deltaTime;
             animT += Time.deltaTime;
             body.sprite = moving ? frames[2 + (int)(animT * 10f) % 4] : frames[(int)(animT * 2f) % 2];
         }
@@ -416,7 +419,7 @@ public partial class CharacterKit : MonoBehaviour
         if (Special != null && (Special.KitFocusActive || Special.KitFreeDraws > 0)) fullTime = 0.05f;
         else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
         // 정조준: 가만히 서서 당기면 더 빨리 가득 당김
-        else if (card[5] > 0 && stillTime > 0.1f) fullTime /= 1f + 0.3f * card[5];
+        else if (card[5] > 0 && standTime > 0.1f) fullTime /= 1f + 0.3f * card[5];
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
         bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning;
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
@@ -1037,6 +1040,8 @@ public partial class CharacterKit : MonoBehaviour
 
     // ================================================================= 캐릭터 전용 레벨업 카드 (특수 능력)
     float stillTime;
+    float standTime;
+    public float StandTime => standTime;        // 매복 (SignatureSkills.Archer)
     int comboCount;
 
     // 검사 굳건한 자세: 우클릭을 모으는 동안 받는 피해 감소 (PlayerController.TryHit)

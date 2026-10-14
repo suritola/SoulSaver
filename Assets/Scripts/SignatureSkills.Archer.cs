@@ -14,9 +14,7 @@ public partial class SignatureSkills
     readonly List<(Vector3 c, float r, float until)> highZones = new List<(Vector3, float, float)>();
     int breath;
     float seedAt;
-    Vector3 stillPos;
-    float stillFor;
-    SigZone trap;
+    readonly List<SigZone> traps = new List<SigZone>();
 
     // ---------------- 게임 코드가 부르는 궁수 훅
     // 화살 하나마다 (split: 분열 화살에서 갈라진 작은 화살)
@@ -245,25 +243,34 @@ public partial class SignatureSkills
     {
         windPaths.RemoveAll(w => w.until < Time.time);
         highZones.RemoveAll(z => z.until < Time.time);
-        // 매복: 2초 동안 가만히 있으면 발밑에 덫
+        // 매복: 1초 동안 이동 키를 놓고 서 있으면 발밑에 덫 (밀려도 이어짐, 시위를 당기는 중이어도 됨)
+        //   덫에 들어온 적은 묶이고 공격력 80% 피해 · 묶인 동안 받는 피해 +30% · 3초마다 다시 걸림
+        //   덫 밖으로 나가 다시 서 있으면 새 덫 (동시에 최대 3개, 8초 유지)
         int am = L("a.ambush");
         if (am <= 0) return;
-        if ((transform.position - stillPos).sqrMagnitude > 0.01f) { stillPos = transform.position; stillFor = 0f; return; }
-        stillFor += Time.deltaTime;
-        if (stillFor < 2f || trap != null) return;
-        float hold = V(am, 1f, 0.5f);
-        HashSet<GameObject> caught = new HashSet<GameObject>();
-        trap = Zone(transform.position, 2.2f, 8f, 0.1f, zone =>
+        traps.RemoveAll(t => t == null);
+        if (Kit == null || Kit.StandTime < 1f) return;
+        Vector3 here = transform.position;
+        foreach (SigZone t in traps)
+            if ((t.transform.position - here).sqrMagnitude < 2.5f * 2.5f) return;      // 이미 덫 위
+        if (traps.Count >= 3) { Destroy(traps[0].gameObject); traps.RemoveAt(0); }
+        float hold = V(am, 1.5f, 0.5f);
+        Dictionary<GameObject, float> caught = new Dictionary<GameObject, float>();
+        traps.Add(Zone(here, 3.2f, 8f, 0.1f, zone =>
         {
             foreach (Collider2D c in Inside(zone))
             {
-                if (!caught.Add(c.gameObject)) continue;
+                if (caught.TryGetValue(c.gameObject, out float again) && Time.time < again) continue;
+                caught[c.gameObject] = Time.time + 3f;
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null) e.Slow(0f, hold);
-                if (E("ae.master")) Mark(c.gameObject, hold, 2f);
+                Mark(c.gameObject, hold, E("ae.master") ? 2f : 1.3f);
+                Deal(c.gameObject, Atk * 0.8f, Vector3.zero, 0f);
                 Fx.Spawn("fx_net", c.transform.position, 2.2f, Color.white, 16f);
+                Hostile.Play("clank", 0.3f, 1.1f);
             }
-        }, "fx_net", new Color(0.85f, 0.8f, 0.6f, 0.6f), 4.6f);
+        }, "fx_net", new Color(0.85f, 0.8f, 0.6f, 0.6f), 6.6f));
+        Flair("a.ambush", here, 3.2f, new Color(0.85f, 0.8f, 0.6f));
         Hostile.Play("clank", 0.4f, 0.9f);
     }
 }
