@@ -201,6 +201,7 @@ public class EndlessMode : MonoBehaviour
             boss.setEnemyHP = isMom ? MomHp : DeveloperHp;
             boss.expReward *= isMom ? 10 : 5;
             boss.coinDrop *= isMom ? 10 : 5;
+            boss.contactDamage *= 0.8f;        // 1.0.6~ 피해 -20% (접촉 48 → 38.4, 엄마 96 → 76.8)
             if (isMom)
             {
                 // 엄마: 접촉 피해 · 이동 속도 2배 (공격 주기 · 필살기 피해 2배는 BossSkills.Developer)

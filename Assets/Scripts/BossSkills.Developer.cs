@@ -17,10 +17,12 @@ public partial class BossSkills
     //   예전: 한 번에 하나씩, 끝난 뒤 1.2초 쉬고 다음까지 최소 2.2초 (분노 1.4초) → 지금: 0.22초 (분노 0.14초)마다 새 필살기 · 엄마는 그 절반
     //   화면이 터져 게임이 멈추지 않게 동시에 도는 필살기는 최대 DevMaxRunning 개 · 날고 있는 적 탄이 DevBulletCap 을 넘으면 더 쏘지 않음
     //   엄마는 필살기 · 탄 피해도 2배 (한 대 상한도 최대 체력의 20% → 40%, 즉사 없음)
-    const float DevRateMul = 2f;            // 1.0.6~ 10 → 2 (공격 빈도를 1.0.4 의 20%로: 0.22초 → 1.1초, 분노 0.14초 → 0.7초 · 엄마 0.11초 → 0.55초, 분노 0.35초)
+    const float DevRateMul = 1.1f;          // 1.0.6~ 10 → 1.1 (필살기 간격 0.22초 → 2초, 분노 0.14초 → 약 1.27초 · 엄마는 그 절반 1초, 분노 약 0.64초)
     const int DevBulletCap = 400;
     float DevRate => boss != null && boss.developerMom ? DevRateMul * 2f : DevRateMul;
-    float DevPow => boss != null && boss.developerMom ? 2f : 1f;
+    // 1.0.6~ 피해 -20% (개발자 ×1 → ×0.8, 엄마 ×2 → ×1.6 — 엄마는 여전히 개발자의 2배)
+    const float DevDamageMul = 0.8f;
+    float DevPow => (boss != null && boss.developerMom ? 2f : 1f) * DevDamageMul;
     int DevMaxRunning => boss != null && boss.developerMom ? 16 : 8;
     string DevName => boss != null && boss.developerMom ? "개발자 엄마" : "개발자";      // 받은 피해 · 쓰러진 곳 이름 (AttackLabel)
     int devRunning;
