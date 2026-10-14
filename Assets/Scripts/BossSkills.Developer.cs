@@ -33,6 +33,7 @@ public partial class BossSkills
         if (Time.time < next || devRunning >= DevMaxRunning) return;
         next = Time.time + (boss.Enraged ? 1.4f : 2.2f) / DevRate;
         int who = devTurn++ % DevHeroes.Length;
+        if (who == (int)CharacterId.Ghost) who = devTurn++ % DevHeroes.Length;       // 1.0.7~ 유령(빙의)은 쓰지 않음
         // 알림은 1.8초에 한 번만 (0.2초마다 덮이면 읽을 수 없음)
         if (StageManager.Instance != null && Time.time >= devBannerAt)
         {
