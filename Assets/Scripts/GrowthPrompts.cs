@@ -47,7 +47,10 @@ public class GrowthPrompts : MonoBehaviour
 
         // 머리 위에서 통통 튀며 숨 쉬듯 커졌다 작아짐
         float bounce = Mathf.Abs(Mathf.Sin(now * 4f));
-        tag.transform.position = p.transform.position + Vector3.up * (2.1f + 0.25f * bounce);
+        // 1.0.4~: 영웅 머리 위 막대 · 연금술사 시약 이름이 있으면 그 위에 (예전엔 셋이 겹칠 수 있었음)
+        float baseY = p.transform.position.y + 2.1f;
+        if (CharacterKit.Instance != null) baseY = Mathf.Max(baseY, CharacterKit.Instance.OverheadTop);
+        tag.transform.position = new Vector3(p.transform.position.x, baseY + 0.25f * bounce, p.transform.position.z);
         tag.transform.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(now * 8f));
     }
 

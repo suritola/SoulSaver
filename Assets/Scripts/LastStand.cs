@@ -10,13 +10,16 @@ public static class LastStand
     static int used;
     public static int Extra;            // 영혼 트리 「불굴」 (장마다 +1회)
     public static int Charges => 1 + Extra;
+    // 이번 장에 남은 횟수 · 아직 남았는지 (체력바 숫자 옆 ◆ · 한 방 사망 막기, 1.0.4~)
+    public static int Left => Mathf.Max(0, Charges - used);
+    public static bool Ready => used < Charges;
 
     public static void ResetRun() { used = 0; Extra = 0; }
     public static void ResetChapter() => used = 0;
     // 판 중간 저장: 이번 장에서 쓴 횟수 (이어하기로 다시 채워지지 않게, 1.0.4~)
     public static int Used { get => used; set => used = Mathf.Max(0, value); }
 
-    // PlayerController.TryHit 에서 피해를 받은 직후
+    // PlayerController.TryHit 에서 피해를 받은 직후 (1.0.4~: 한 방에 쓰러질 피해는 TryHit 이 체력 1로 남겨 여기서 발동)
     public static void Check(PlayerController p)
     {
         if (p == null || p.PlayerHealth <= 0f || p.PlayerHealth > p.PlayerMaxHealth * Threshold || used >= Charges) return;

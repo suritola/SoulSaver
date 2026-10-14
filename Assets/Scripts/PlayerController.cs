@@ -617,10 +617,32 @@ void Shoot()
     // =====================================
 
     // 마우스가 버튼 같은 UI 위에 있으면 사격하지 않음
+    // 1.0.4~: 전투 중엔 설명만 있는 HUD 칸(레벨업 스킬 · 특수 능력 칸, TooltipTrigger.hud)은 발사를 막지 않음
+    // (예전엔 왼쪽 위 · 아래 칸 위를 겨누면 평타가 조용히 멈췄음) · 버튼 같은 진짜 UI 는 그대로 막음
+    static readonly List<UnityEngine.EventSystems.RaycastResult> uiHits = new List<UnityEngine.EventSystems.RaycastResult>();
+    static UnityEngine.EventSystems.PointerEventData uiPointer;
+    static UnityEngine.EventSystems.EventSystem uiPointerEs;
+    static int uiCheckFrame = -1;
+    static bool uiBlocked;
+
     static bool PointerOverUI()
     {
-        return !GameInput.Auto && UnityEngine.EventSystems.EventSystem.current != null
-            && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+        UnityEngine.EventSystems.EventSystem es = UnityEngine.EventSystems.EventSystem.current;
+        if (GameInput.Auto || es == null || !es.IsPointerOverGameObject()) return false;
+        if (Time.timeScale <= 0f) return true;
+        if (uiCheckFrame == Time.frameCount) return uiBlocked;      // 한 프레임에 여러 번 불려도 한 번만 검사
+        uiCheckFrame = Time.frameCount;
+        if (uiPointer == null || uiPointerEs != es) { uiPointer = new UnityEngine.EventSystems.PointerEventData(es); uiPointerEs = es; }
+        uiPointer.position = Input.mousePosition;
+        uiHits.Clear();
+        es.RaycastAll(uiPointer, uiHits);
+        uiBlocked = false;
+        if (uiHits.Count > 0 && uiHits[0].gameObject != null)
+        {
+            TooltipTrigger tip = uiHits[0].gameObject.GetComponentInParent<TooltipTrigger>();
+            uiBlocked = tip == null || !tip.hud;
+        }
+        return uiBlocked;
     }
 
     // 잠깐 동안 목표 방향을 바라보게 함 (이동 입력보다 우선)
@@ -1087,7 +1109,9 @@ void Shoot()
         if (SpecialAbilities.SharedFx != null)
         {
             SpecialAbilities.SharedFx.Shake(0.2f + Mathf.Min(0.3f, taken / 60f), 0.15f);
-            SpecialAbilities.SharedFx.FloatText(transform.position, "-" + Mathf.CeilToInt(taken), new Color(1f, 0.3f, 0.28f), 5f, 0f);
+            // 1.0.4~: 설정 「피해 숫자 끄기」면 받은 피해 숫자도 띄우지 않음 (예전엔 준 피해만 꺼졌음)
+            if (GameSettings.DamageNumbers != 2 && taken > 0f)
+                SpecialAbilities.SharedFx.FloatText(transform.position, "-" + Mathf.CeilToInt(taken), new Color(1f, 0.3f, 0.28f), 5f, 0f);
         }
     }
 
@@ -1114,6 +1138,10 @@ void Shoot()
         if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
         taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
         if (taken <= 0f) return true;
+
+        // 1.0.4~: 한 방에 쓰러질 피해라도 이번 장 「최후의 보루」가 남아 있으면 체력 1로 버티고 발동 (아래 LastStand.Check)
+        // (예전엔 체력이 0 이하가 되면 발동하지 않아 「장마다 한 번 무적」이 한 방 사망에는 소용없었음) · 판마다 한 번인 불사의 맹세보다 먼저
+        if (PlayerHealth - taken <= 0 && PlayerHealth > 0f && LastStand.Ready) taken = Mathf.Max(0f, PlayerHealth - 1f);
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀
         if (PlayerHealth - taken <= 0 && special != null && special.TryUndying())

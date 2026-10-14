@@ -94,7 +94,7 @@ public partial class CharacterKit
         if (Id == CharacterId.Archer)
         {
             if (!drawing && Time.time >= breathRestAt) RestoreBreath(BreathRegen * Time.deltaTime);
-            DrawRuleBar(Breath / BreathMax, Breathless ? new Color(1f, 0.45f, 0.35f) : new Color(0.6f, 0.95f, 1f), Breath < BreathMax - 0.5f);
+            DrawRuleBar(Breath / BreathMax, Breathless ? new Color(1f, 0.45f, 0.35f) : new Color(0.6f, 0.95f, 1f), Breath < BreathMax - 0.5f, "숨");
         }
         else if (Id == CharacterId.Alchemist)
         {
@@ -102,7 +102,7 @@ public partial class CharacterKit
             float k = Instability / InstabilityMax;
             Color c = Color.Lerp(new Color(0.55f, 1f, 0.45f), new Color(0.9f, 0.4f, 1f), k);
             if (k > 0.8f) c = Color.Lerp(c, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.time * 18f));
-            DrawRuleBar(k, c, Instability > 0.5f);
+            DrawRuleBar(k, c, Instability > 0.5f, "불안정");
         }
         // 1.0.2: 새 캐릭터 넷도 고유 수치를 머리 위 막대로 (예전엔 화면에 거의 안 보였음)
         else if (Id == CharacterId.Clockmaker)
@@ -110,7 +110,7 @@ public partial class CharacterKit
             // 시계 눈금: 다 차면 금빛으로 깜빡 (다음 톱니가 정각)
             float k = clockTicks / (float)ClockNeed;
             Color c = ClockReady ? Color.Lerp(new Color(1f, 0.85f, 0.3f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.95f, 0.75f, 0.4f);
-            DrawRuleBar(k, c, true);
+            DrawRuleBar(k, c, true, "눈금", clockTicks, ClockNeed);
             ClockLate();        // 발밑 시계 · 멈춤 · 연출 · 사망 중 되감기 미리 보기 정리 (CharacterKit.Clockmaker)
         }
         else if (Id == CharacterId.Cartographer)
@@ -119,7 +119,7 @@ public partial class CharacterKit
             int step = strokeCount % ShapeEvery;
             bool next = step == ShapeEvery - 1;
             Color c = next ? Color.Lerp(new Color(1f, 0.82f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.45f, 0.6f, 1f);
-            DrawRuleBar((step + 1f) / ShapeEvery, c, true);
+            DrawRuleBar((step + 1f) / ShapeEvery, c, true, "다음 획", step + 1, ShapeEvery);     // 1.0.4~: 「다음 획 1/3」 — 시작부터 1/3 이 찬 까닭
         }
         else if (Id == CharacterId.Postman)
         {
@@ -128,22 +128,41 @@ public partial class CharacterKit
             {
                 float f = ExpressFill;
                 Color ec = f >= 0.999f ? Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : Color.Lerp(new Color(1f, 0.3f, 0.25f), new Color(1f, 0.6f, 0.5f), 0.5f + 0.5f * Mathf.Sin(Time.time * 12f));
-                DrawRuleBar(f, ec, true);
+                DrawRuleBar(f, ec, true, "표식");
                 return;
             }
             // 우편 보너스까지 (배달 10번마다)
             int d = Deliveries % 10;
             Color c = d == 9 ? Color.Lerp(new Color(1f, 0.4f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(1f, 0.45f, 0.4f);
-            DrawRuleBar(d / 10f, c, true);
+            DrawRuleBar(d / 10f, c, true, "배달", d, 10);
         }
         else if (Id == CharacterId.Ghost)
         {
             // 영혼: 몸 둘레를 도는 영혼 수 / 최대
-            DrawRuleBar(Wisps / (float)Mathf.Max(1, WispMax), new Color(0.65f, 0.9f, 1f), true);
+            DrawRuleBar(Wisps / (float)Mathf.Max(1, WispMax), new Color(0.65f, 0.9f, 1f), true, "영혼", Wisps, WispMax);
         }
     }
 
-    void DrawRuleBar(float k, Color c, bool show)
+    // 1.0.4~: 막대 오른쪽에 작은 이름표 (「숨」 · 「다음 획 2/3」 · 「영혼 3/5」…) — 영웅마다 뜻이 달라 체력인지 쿨타임인지 몰랐음
+    TMPro.TextMeshPro ruleBarText;
+    string ruleLabelKo;
+    int ruleLabelNow = int.MinValue, ruleLabelMax = int.MinValue;
+    Loc.Lang ruleLabelLang;
+    float ruleBarY = float.NegativeInfinity;
+
+    // 머리 위 표시(막대 · 연금술사 시약)의 맨 위 높이 — 레벨업 알림(GrowthPrompts)이 그 위에 뜨게 (1.0.4~, 예전엔 겹쳤음)
+    public float OverheadTop
+    {
+        get
+        {
+            float y = float.NegativeInfinity;
+            if (ruleBarBack != null && ruleBarBack.enabled) y = ruleBarY + 0.3f;
+            if (reagentTag != null && reagentTag.activeSelf) y = Mathf.Max(y, reagentTag.transform.position.y + 0.8f);
+            return y;
+        }
+    }
+
+    void DrawRuleBar(float k, Color c, bool show, string label = null, int now = -1, int max = -1)
     {
         if (ruleBarBack == null)
         {
@@ -154,6 +173,8 @@ public partial class CharacterKit
         }
         show &= !PlayerController.Cinematic;
         ruleBarBack.enabled = ruleBarFill.enabled = show;
+        bool labelOn = show && label != null && (ruleBarText != null || BuildRuleBarText());
+        if (ruleBarText != null && ruleBarText.gameObject.activeSelf != labelOn) ruleBarText.gameObject.SetActive(labelOn);
         if (!show) return;
         // 연금술사는 다음 시약 표시 위에, 궁수는 머리 위에
         float top = body.bounds.max.y + (Id == CharacterId.Alchemist ? 2f : 0.6f);
@@ -166,10 +187,45 @@ public partial class CharacterKit
         ruleBarFill.SetPosition(0, left);
         ruleBarFill.SetPosition(1, left + Vector3.right * Mathf.Max(0.02f, w * Mathf.Clamp01(k)));
         ruleBarFill.startColor = ruleBarFill.endColor = c;
+        ruleBarY = top;
+        if (!labelOn) return;
+        // 글자는 이름 · 숫자 · 언어가 바뀔 때만 새로
+        if (label != ruleLabelKo || now != ruleLabelNow || max != ruleLabelMax || ruleLabelLang != Loc.Current)
+        {
+            ruleLabelKo = label;
+            ruleLabelNow = now;
+            ruleLabelMax = max;
+            ruleLabelLang = Loc.Current;
+            ruleBarText.text = Loc.T(label) + (max > 0 ? " " + now + "/" + max : "");
+        }
+        ruleBarText.color = Color.Lerp(c, Color.white, 0.35f);
+        ruleBarText.transform.position = new Vector3(left.x + w + 0.2f, top, 0f);
+    }
+
+    bool BuildRuleBarText()
+    {
+        GameObject go = new GameObject("RuleBarLabel", typeof(TMPro.TextMeshPro));
+        ruleBarText = go.GetComponent<TMPro.TextMeshPro>();
+        UIKit.EnsureStyle();
+        if (UIKit.Font != null) ruleBarText.font = UIKit.Font;
+        if (UIKit.FontMaterial != null) ruleBarText.fontSharedMaterial = UIKit.FontMaterial;
+        ruleBarText.fontSize = 4.5f;
+        ruleBarText.fontStyle = TMPro.FontStyles.Bold;
+        ruleBarText.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+        ruleBarText.enableWordWrapping = false;
+        ruleBarText.outlineWidth = 0.3f;
+        ruleBarText.outlineColor = new Color32(0, 0, 0, 255);
+        ruleBarText.rectTransform.pivot = new Vector2(0f, 0.5f);
+        ruleBarText.rectTransform.sizeDelta = new Vector2(8f, 1.2f);
+        ruleBarText.sortingLayerID = SortingLayer.NameToID("Effect");
+        ruleBarText.sortingOrder = 64;
+        ruleLabelKo = null;
+        return true;
     }
 
     void OnDestroyRules()
     {
+        if (ruleBarText != null) Destroy(ruleBarText.gameObject);
         if (ruleBarBack != null) Destroy(ruleBarBack.gameObject);
         if (ruleBarFill != null) Destroy(ruleBarFill.gameObject);
     }

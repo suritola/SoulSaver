@@ -34,6 +34,9 @@ public class TargetMark : MonoBehaviour
 
         // 처음에는 200%
         transform.localScale = Vector3.one * startScale;
+
+        // 1.0.4~: 표식의 색 · 크기 · 회전 뜻을 처음 한 번 알려 줌
+        Hints.Show("targetmark", "필살기 조준 표식: 회색으로 크게 보이면 아직 필살기 한 방에 쓰러뜨리지 못하고, 작아질수록 가까워지며, 색이 돌아와 빙글빙글 돌면 필살기로 처치할 수 있는 적입니다.");
     }
 
     void Update()
@@ -57,33 +60,28 @@ public class TargetMark : MonoBehaviour
         // 데미지가 아직 부족한 상태
         // =====================================
 
-        if (!damageEnough)
+        // 1.0.4~: 매 프레임 다시 판단 (예전엔 한 번 처치 가능이 되면 적이 회복해도 계속 도는 표식으로 남았음)
+        bool enough = player.skillDamage >= enemy.EnemyHealth;
+        if (!enough)
         {
             // 회색
             if (spriteRenderer != null) spriteRenderer.color = weakColor;
 
-            // 현재 데미지 / 적 체력 비율
-            float damageRatio = player.skillDamage / enemy.EnemyHealth;
+            // 현재 데미지 / 적 체력 비율 (0 ~ 1)
+            float damageRatio = Mathf.Clamp01(player.skillDamage / Mathf.Max(0.01f, enemy.EnemyHealth));
 
-            // 0 ~ 1 사이로 제한
-            damageRatio = Mathf.Clamp01(damageRatio);
-
-            // 데미지 비율에 따라 크기 결정
-            float currentScale = Mathf.Lerp(startScale,endScale,damageRatio);
-
-            transform.localScale = Vector3.one * currentScale;
-
-            // 데미지가 충분해졌는지 확인
-            if (player.skillDamage >= enemy.EnemyHealth)
-            {
-                damageEnough = true;
-
-                // 현재 크기에서 멈춤
-                if (spriteRenderer != null) spriteRenderer.color = normalColor;
-            }
+            // 데미지 비율에 따라 크기 결정 (작아질수록 처치에 가까움)
+            transform.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, damageRatio);
+            damageEnough = false;
 
             // 아직 부족하면 회전하지 않음
-            if (!damageEnough) return;
+            return;
+        }
+        if (!damageEnough)
+        {
+            damageEnough = true;
+            if (spriteRenderer != null) spriteRenderer.color = normalColor;
+            transform.localScale = Vector3.one * endScale;
         }
 
         // =====================================

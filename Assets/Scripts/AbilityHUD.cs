@@ -265,6 +265,7 @@ public class AbilityHUD : MonoBehaviour
         TooltipTrigger tip = slotGo.AddComponent<TooltipTrigger>();
         tip.titleProvider = () => AbilityName(id) + (id >= 1000 ? "  ◆ " + Loc.T("진화") : "  Lv." + (slots.TryGetValue(id, out Slot s) ? s.level : 1));
         tip.bodyProvider = () => AbilityDescription(id);
+        tip.hud = true;            // 1.0.4~: 이 칸 위를 겨눠도 평타가 멈추지 않음 · 전투 중엔 잠깐 머물러야 설명
 
         GameObject iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         RectTransform iconRect = iconGo.GetComponent<RectTransform>();

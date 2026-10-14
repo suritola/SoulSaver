@@ -33,7 +33,8 @@ public class StatsHUD : MonoBehaviour
     static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도",
                                         "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생", "행운" };
     // 6번째 줄부터는 레벨업 카드 아이콘을 빌려 씀 (강철같은 심장 · 노려보는 눈빛 · 관통하는 총알 · 생명의 샘)
-    static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10 };
+    // 1.0.4~: 마지막 줄 「행운」도 아이콘 (영혼 트리 행운 칸과 같은 4번 카드 아이콘, 예전엔 빈칸)
+    static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10, 4 };
 
     PlayerController player;
     TextMeshProUGUI[] values;
@@ -208,7 +209,9 @@ public class StatsHUD : MonoBehaviour
         // 공격 속도: 초당 발사 수
         values[2].text = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");
 
-        values[3].text = player.reloadTime.ToString("0.0") + Loc.T("초");
+        // 1.0.4~: 탄을 쓰지 않는 영웅(근접 · 궁수 등)은 재장전이 없으니 「-」
+        CharacterKit kit = CharacterKit.Instance;
+        values[3].text = kit != null && !kit.UsesAmmo ? "-" : player.reloadTime.ToString("0.0") + Loc.T("초");
 
         // 이동 속도: 시작 속도 대비
         values[4].text = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
@@ -218,7 +221,9 @@ public class StatsHUD : MonoBehaviour
         // 치명타: 영혼 트리에서 얻음 (없으면 0%)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         values[6].text = ((sp != null ? sp.TreeCrit : 0f) * 100f).ToString("0") + "%";
-        values[7].text = ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
+        // 1.0.4~: 치명타 확률이 0% 면 치명타 피해는 쓰이지 않으니 「-」 (예전엔 0% 인데도 200% 가 보였음)
+        float critChance = sp != null ? sp.TreeCrit : 0f;
+        values[7].text = critChance <= 0f ? "-" : ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
 
         // 피해 배율: 버프 · 특수 능력으로 곱해지는 값
         values[8].text = (player.damageMultiplier * 100f).ToString("0") + "%";
