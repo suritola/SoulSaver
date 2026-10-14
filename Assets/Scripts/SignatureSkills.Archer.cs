@@ -15,6 +15,7 @@ public partial class SignatureSkills
     int breath;
     float seedAt;
     readonly List<SigZone> traps = new List<SigZone>();
+    float trapAt;
 
     // ---------------- 게임 코드가 부르는 궁수 훅
     // 화살 하나마다 (split: 분열 화살에서 갈라진 작은 화살)
@@ -130,6 +131,7 @@ public partial class SignatureSkills
         if (L("a.breath") > 0)
             breath = full ? (E("ae.master") && breath >= 5 ? 0 : Mathf.Min(5, breath + 1)) : 0;
         if (!full) return;
+        Ambush(transform.position);
         if (L("a.wind") > 0)
         {
             Vector3 end = start + (Vector3)(dir * 24f);
@@ -243,16 +245,17 @@ public partial class SignatureSkills
     {
         windPaths.RemoveAll(w => w.until < Time.time);
         highZones.RemoveAll(z => z.until < Time.time);
-        // 매복: 1초 동안 이동 키를 놓고 서 있으면 발밑에 덫 (밀려도 이어짐, 시위를 당기는 중이어도 됨)
-        //   덫에 들어온 적은 묶이고 공격력 80% 피해 · 묶인 동안 받는 피해 +30% · 3초마다 다시 걸림
-        //   덫 밖으로 나가 다시 서 있으면 새 덫 (동시에 최대 3개, 8초 유지)
+    }
+
+    // 매복: 가득 당겨 쏠 때마다 발밑에 덫 (2초에 한 번)
+    //   덫에 들어온 적은 묶이고 공격력 80% 피해 · 묶인 동안 받는 피해 +30% · 3초마다 다시 걸림
+    //   동시에 최대 3개, 8초 유지 (후퇴 사격과 함께 쓰면 물러나며 덫을 남김)
+    void Ambush(Vector3 here)
+    {
         int am = L("a.ambush");
-        if (am <= 0) return;
+        if (am <= 0 || Time.time < trapAt) return;
+        trapAt = Time.time + 2f;
         traps.RemoveAll(t => t == null);
-        if (Kit == null || Kit.StandTime < 1f) return;
-        Vector3 here = transform.position;
-        foreach (SigZone t in traps)
-            if ((t.transform.position - here).sqrMagnitude < 2.5f * 2.5f) return;      // 이미 덫 위
         if (traps.Count >= 3) { Destroy(traps[0].gameObject); traps.RemoveAt(0); }
         float hold = V(am, 1.5f, 0.5f);
         Dictionary<GameObject, float> caught = new Dictionary<GameObject, float>();

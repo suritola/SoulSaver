@@ -1048,7 +1048,7 @@ public static partial class LocTable
         { "필살기가 끝나는 자리에서 표창이 사방으로 퍼집니다.", L("Throwing stars burst in all directions where Ultimate ends.", "必殺技の終点で手裏剣が四方に飛び散ります。", "必杀技终点向四周射出飞镖。") },
         { "가득 당긴 화살이 처음 맞힌 적에게서 여러 갈래로 갈라집니다. (갈래마다 피해 40%)", L("Fully drawn arrows split on their first hit. (40% damage each)", "引き絞った矢が最初に当たった敵から複数に分かれます。(1本ごとにダメージ40%)", "满弓之箭在首次命中时分裂。（每支伤害40%）") },
         { "화살을 쏘면 잠시 뒤 유령 화살이 같은 방향으로 한 발 더 날아갑니다.", L("A ghost arrow follows each shot a moment later.", "矢を放つと少し遅れて幽霊の矢がもう一本飛びます。", "射箭后片刻，一支幽灵箭沿同一方向再射出。") },
-        { "가만히 서서 당기면 시위를 더 빨리 가득 당깁니다.", L("Draw to full faster while standing still.", "立ち止まって引くと、より早く引き絞れます。", "站立不动时拉满弓更快。") },
+        { "시위를 더 빨리 가득 당깁니다.", L("Draw to full faster.", "より早く引き絞れます。", "更快拉满弓。") },
         { "가득 당긴 화살에 맞은 적은 4초 동안 피해를 더 받습니다.", L("Enemies hit by a fully drawn arrow take more damage for 4s.", "引き絞った矢が当たった敵は4秒間、受けるダメージが増えます。", "被满弓之箭命中的敌人4秒内受到更多伤害。") },
         { "필살기가 떨어진 자리에 가시 덤불이 남아 적을 느리게 하고 찌릅니다.", L("Ultimate leaves thorns that slow and prick enemies.", "必殺技の跡にいばらが残り、敵を遅くして刺します。", "必杀技落处留下荆棘，减速并刺伤敌人。") },
         { "빙결 시약이 적을 느리게 하는 대신 꽁꽁 얼립니다.", L("Frost reagent freezes enemies solid instead of slowing them.", "氷結試薬が敵を遅くする代わりに凍らせます。", "冰冻试剂不再减速，而是直接冻结敌人。") },
