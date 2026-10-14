@@ -149,7 +149,8 @@ public class DamagePopup : MonoBehaviour
         PlayerController pl = Hostile.Player;
         float baseDmg = pl != null ? Mathf.Max(0.1f, pl.damage) : 1f;
         float k = Mathf.Clamp01((amount / baseDmg - 1f) / 4f);
-        text.color = Color.Lerp(new Color(1f, 1f, 0.95f), new Color(1f, 0.55f, 0.2f), k);
+        // 1.0.4~: 가장 큰 쪽을 주황(1, 0.55, 0.2) → 금빛 노랑(1, 0.78, 0.3)으로 — 받은 피해(빨강)와 헷갈리지 않게
+        text.color = Color.Lerp(new Color(1f, 1f, 0.95f), new Color(1f, 0.78f, 0.3f), k);
         size = 1f + 0.5f * k;
         // 치명타: 금색으로 훨씬 크게
         if (crit)
@@ -160,7 +161,7 @@ public class DamagePopup : MonoBehaviour
         // 보스: 늘 주황 금색으로 크게 (치명타는 더 크게)
         if (boss)
         {
-            if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.4f, 0.15f), k);
+            if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.6f, 0.15f), k);     // 1.0.4~: 끝 색 (1, 0.4, 0.15) → (1, 0.6, 0.15), 붉은빛을 덜어 받은 피해와 구분
             size *= BossSize;
         }
     }

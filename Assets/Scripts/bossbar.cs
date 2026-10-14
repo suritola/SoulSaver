@@ -86,6 +86,7 @@ public class bossbar : MonoBehaviour
         // 슬라임마다 그리던 것에서 돌아오면 첫 줄 이름을 다시 씀
         if (wasMulti) { wasMulti = false; shownKind = -1; }
         ShowExtraBars(0);
+        WriteSingleName();
         if (MaxHealth <= 0) return;
         BarX = Mathf.Clamp01((float)NowHealth / (float)MaxHealth) * MaxBarX;
         barRect.sizeDelta = new Vector2(BarX, BarY);
@@ -180,8 +181,47 @@ public class bossbar : MonoBehaviour
         }
         float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
         ultFill.sizeDelta = new Vector2(UltWidth * g, 10f);
+        UltLabel(g);
         float pulse = g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
         ultFillImg.color = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+    }
+
+    // 1.0.4~: 이름표 없는 보라색 막대라 뜻을 몰랐음 → 게이지 오른쪽 끝에 「결계」 글자 · 처음 찰 때 도움말 한 번
+    TMP_Text ultLabel;
+    Loc.Lang ultLabelLang;
+    bool ultHintTried;
+
+    void UltLabel(float g)
+    {
+        if (ultLabel == null)
+        {
+            if (nameText == null || ultFill == null) return;      // 보스 이름과 같은 글꼴을 씀
+            GameObject go = new GameObject("UltLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform r = go.GetComponent<RectTransform>();
+            r.SetParent(ultFill.parent, false);                  // 게이지 배경 안 (아래로 쌓는 체력바 복제에는 들어가지 않음)
+            r.anchorMin = r.anchorMax = new Vector2(1f, 0.5f);
+            r.pivot = new Vector2(0f, 0.5f);
+            r.sizeDelta = new Vector2(120f, 22f);
+            r.anchoredPosition = new Vector2(6f, 0f);
+            TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
+            t.font = nameText.font;
+            t.fontSharedMaterial = nameText.fontSharedMaterial;
+            t.fontSize = 18f;
+            t.color = new Color(0.82f, 0.6f, 1f);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.enableWordWrapping = false;
+            t.raycastTarget = false;
+            ultLabel = t;
+            ultLabelLang = (Loc.Lang)(-1);
+        }
+        if (ultLabelLang != Loc.Current) { ultLabelLang = Loc.Current; ultLabel.text = Loc.T("결계"); }
+        bool hasUlt = bossKind != DeveloperKind;                  // 개발자는 결계 대신 필살기만
+        if (ultLabel.enabled != hasUlt) ultLabel.enabled = hasUlt;
+        if (!ultHintTried && g >= 0.15f)
+        {
+            ultHintTried = true;
+            Hints.Show("bossult.gauge", "보스 체력바 아래 보라색 게이지는 「결계」입니다. 보스를 때릴수록 차고, 가득 차면 보스가 결계를 펼칩니다. 결계 전에 보스 체력이 40% 아래로 내려가면 곧바로 가득 찹니다.");
+        }
     }
 
     // 체력바 위 이름을 지금 보스의 이름으로
@@ -196,9 +236,20 @@ public class bossbar : MonoBehaviour
                 if (t.name == "BossName") { nameText = t; break; }
             if (nameText == null) return;
         }
-        if (shownKind == bossKind && shownLang == Loc.Current) return;
+    }
+
+    // 보스가 한 마리일 때 이름 + 「현재 / 최대」 (1.0.4~: 예전엔 여러 마리일 때만 숫자가 보였음)
+    // 숫자 · 보스 · 언어가 바뀔 때만 글자를 새로
+    int shownNow = -1, shownMax = -1;
+    void WriteSingleName()
+    {
+        if (nameText == null) return;
+        int now = Mathf.Max(0, NowHealth);
+        if (shownKind == bossKind && shownLang == Loc.Current && shownNow == now && shownMax == MaxHealth) return;
         shownKind = bossKind;
         shownLang = Loc.Current;
-        nameText.text = BossName(bossKind);
+        shownNow = now;
+        shownMax = MaxHealth;
+        nameText.text = BossName(bossKind) + (MaxHealth > 0 ? "  " + now + " / " + MaxHealth : "");
     }
 }

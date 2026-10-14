@@ -1144,7 +1144,7 @@ public partial class SpecialAbilities
                     int pct = Mathf.RoundToInt(Mathf.Min(e ? 0.8f : 0.5f, lost * (e ? 1f : 0.6f)) * 100f);
                     return detail ? Loc.T("지금 공격력 +") + pct + "%" : "+" + pct + "%";
                 }
-            case KitFervor: return detail ? Loc.T("중첩 ") + fervor + Loc.T(" · 공격 속도 +") + Mathf.RoundToInt(fervor * (IsEvolved(id) ? 8f : 6f)) + "%" : "x" + fervor;
+            case KitFervor: return detail ? Loc.T("중첩 ") + fervor + Loc.T(" · 공격 속도 +") + Mathf.RoundToInt(fervor * (IsEvolved(id) ? 8f : 6f)) + "%" : Loc.T("중첩 ") + fervor;     // 1.0.4~: 칸 글자 「x3」 → 「중첩 3」
             case KitEvasion: return (IsEvolved(id) ? "30" : "20") + "%";
             case KitSpree: return Time.time < spreeUntil ? (detail ? Loc.T("질주 중") : "ON") : "";
             case KitTrophy: return detail ? Loc.T("최대 체력 +") + trophyHp.ToString("0.#") : "+" + trophyHp.ToString("0");

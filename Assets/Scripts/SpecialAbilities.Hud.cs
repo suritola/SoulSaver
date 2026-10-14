@@ -174,6 +174,11 @@ public partial class SpecialAbilities
             lr.sizeDelta = new Vector2(0f, 18f);
             lr.anchoredPosition = new Vector2(0f, 2f);
             t.label = HudText(lr, 14f, TileText, TextAlignmentOptions.Center);
+            // 1.0.4~: 「부활 1」 · 「진화 II」처럼 낱말이 붙어 길어지면 칸 폭에 맞게 줄임
+            t.label.enableAutoSizing = true;
+            t.label.fontSizeMin = 9f;
+            t.label.fontSizeMax = 14f;
+            t.label.overflowMode = TextOverflowModes.Truncate;
             t.label.outlineWidth = 0.25f;
             t.label.outlineColor = new Color32(0, 0, 0, 255);
 
@@ -206,6 +211,7 @@ public partial class SpecialAbilities
             TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
             tip.titleProvider = () => TileTitle(id);
             tip.bodyProvider = () => TileBody(id);
+            tip.hud = true;         // 1.0.4~: 이 칸 위를 겨눠도 평타가 멈추지 않음 · 전투 중엔 잠깐 머물러야 설명
             g.list.Add(t);
         }
     }
@@ -325,7 +331,8 @@ public partial class SpecialAbilities
             t.border.color = Color.Lerp(TileActive, Color.white, 0.55f * k);
             EvoGlow(t, k);
             t.cooldown.fillAmount = 0f;
-            string tierText = EvolutionTier >= 2 ? "II" : "I";
+            // 1.0.4~: 「I · II」만으로는 뜻을 몰랐음 → 「진화 I」처럼 낱말을 붙임
+            string tierText = Loc.T("진화") + (EvolutionTier >= 2 ? " II" : " I");
             if (t.label.text != tierText) t.label.text = tierText;
             if (t.keyCap.gameObject.activeSelf) t.keyCap.gameObject.SetActive(false);
             if (t.key.text != "") t.key.text = "";
@@ -407,9 +414,10 @@ public partial class SpecialAbilities
         if (id == UndyingId)
         {
             int left = UndyingMaxUses - undyingUses;
-            return detail ? (left > 0 ? Loc.T("부활 ") + left + Loc.T("번 남음") : Loc.T("이번 판에 다 씀")) : "x" + left;
+            // 1.0.4~: 칸 글자 「x1」 → 「부활 1」 · 「영혼 3」처럼 낱말을 붙임 (툴팁 없이도 뜻이 보이게)
+            return detail ? (left > 0 ? Loc.T("부활 ") + left + Loc.T("번 남음") : Loc.T("이번 판에 다 씀")) : Loc.T("부활 ") + left;
         }
-        if (id == OrbsId) return detail ? Loc.T("수호 영혼 ") + orbs.Count : "x" + orbs.Count;
+        if (id == OrbsId) return detail ? Loc.T("수호 영혼 ") + orbs.Count : Loc.T("영혼") + " " + orbs.Count;
         return IsKit(id) ? KitPassiveState(id, detail) : "";
     }
 
@@ -526,6 +534,27 @@ public class RunClock : MonoBehaviour
         t.raycastTarget = false;
         RunClock c = go.AddComponent<RunClock>();
         c.text = t;
+
+        // 1.0.4~: 저주 제단에서 저주를 받았으면 장이 끝날 때까지 시계 오른쪽에 보라색 저주 표시 (예전엔 배너 한 번뿐이라 잊어버렸음)
+        GameObject cg = new GameObject("CurseTag", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform cr = cg.GetComponent<RectTransform>();
+        cr.SetParent(br, false);
+        cr.anchorMin = cr.anchorMax = new Vector2(1f, 0.5f);
+        cr.pivot = new Vector2(0f, 0.5f);
+        cr.sizeDelta = new Vector2(420f, 40f);
+        cr.anchoredPosition = new Vector2(10f, 0f);
+        TextMeshProUGUI ct = cg.GetComponent<TextMeshProUGUI>();
+        if (UIKit.Font != null) ct.font = UIKit.Font;
+        if (UIKit.FontMaterial != null) ct.fontSharedMaterial = UIKit.FontMaterial;
+        ct.fontSize = 20f;
+        ct.color = new Color(0.85f, 0.6f, 1f);
+        ct.alignment = TextAlignmentOptions.MidlineLeft;
+        ct.enableWordWrapping = false;
+        ct.outlineWidth = 0.2f;
+        ct.outlineColor = new Color32(0, 0, 0, 255);
+        ct.raycastTarget = false;
+        ct.text = "";
+        c.curseText = ct;
         c.start = Time.time - Mathf.Max(0f, already);
         instance = c;
     }
@@ -534,5 +563,15 @@ public class RunClock : MonoBehaviour
     {
         int s = Mathf.FloorToInt(Time.time - start);
         if (text != null && s != shown) { shown = s; text.text = EndlessMode.Clock(s); }
+        if (curseText != null && (Curse.Active != curseShown || Loc.Current != curseLang))
+        {
+            curseShown = Curse.Active;
+            curseLang = Loc.Current;
+            curseText.text = curseShown ? Loc.T("저주") + "  <size=85%>" + Loc.T("적 체력 +30% · 보상 +50%") + "</size>" : "";
+        }
     }
+
+    TextMeshProUGUI curseText;
+    bool curseShown;
+    Loc.Lang curseLang;
 }
