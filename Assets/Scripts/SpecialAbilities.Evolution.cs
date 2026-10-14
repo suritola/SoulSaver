@@ -197,6 +197,7 @@ public partial class SpecialAbilities
         public string name, desc;           // 번역된 글
         public int cost;
         public Sprite icon;
+        public Sprite mark;                 // 아이콘 오른쪽 아래에 겹치는 작은 표식 (무기 숙련 · 패시브 진화 칸, 없으면 null)
         public System.Action apply;
         public bool hidden;                 // 지금은 해당 없음 (예: 탄창이 없는 무기의 탄창 칸)
         public System.Func<string> blocked; // 배울 수 없는 이유 (없으면 null) — 예: 스킬 칸이 가득
@@ -370,12 +371,60 @@ public partial class SpecialAbilities
         Chain(t, "g.exp", 2, 3, "g.exp1", 5, "깨달음", "레벨이 오를 때마다 영혼 조각 +5", new[] { 28, 46 }, LvIcon(4), () => TreeInsight += 5);
         t.Add(Node("g.interest1", "g.coin2", 5, "이자", "30초마다 가진 코인의 5%를 더 받습니다 (최대 20개)", 30, LvIcon(1), () => { interestRate += 0.05f; if (interestAt <= 0f) interestAt = Time.time + 30f; }));
         t.Add(Node("g.interest2", "g.interest1", 5, "이자 II", "이자 +5%", 56, LvIcon(1), () => interestRate += 0.05f));
+        DecorateTreeIcons(t);                           // 칸마다 전용 그림 · 표식 (1.0.6~)
         ApplyFit(t);                                    // 지금 무기에 쓸모없는 칸은 숨김 (SpecialAbilities.Fit)
         string[] rec = RecommendedPrefixes();
         foreach (SoulNode n in t)
             foreach (string r in rec)
                 if (n.key.StartsWith(r)) { n.recommended = true; break; }
         return t;
+    }
+
+    // ---------------- 칸 그림 (1.0.6~): 예전엔 능력치 · 레벨업 카드 그림을 여러 칸이 돌려 써서 한 그림을 많게는 10칸이 같이 썼음
+    //   Icons/tree_<칸 키> (키의 '.' → '_', 예: w.dmg3 → tree_w_dmg3) — tools/pixelart/make_tree_icons.py 가 그림
+    //   여러 단계 칸은 같은 그림에 아래쪽 단계 구슬 수로 다름. 전용 그림이 없는 칸(무기 숙련 · 패시브)은
+    //   무기 · 능력 그림을 그대로 두고 작은 표식(tree_mark_*)을 겹쳐 칸마다 다르게
+    static readonly Dictionary<string, Sprite> treeIcons = new Dictionary<string, Sprite>();
+
+    public static Sprite TreeIcon(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return null;
+        if (!treeIcons.TryGetValue(key, out Sprite s))
+        {
+            s = Resources.Load<Sprite>("Icons/tree_" + key.Replace('.', '_'));
+            treeIcons[key] = s;                         // 없는 그림도 기억 (트리를 만들 때마다 다시 찾지 않게)
+        }
+        return s;
+    }
+
+    void DecorateTreeIcons(List<SoulNode> t)
+    {
+        foreach (SoulNode n in t)
+        {
+            Sprite own = TreeIcon(n.key);
+            if (own != null) { n.icon = own; continue; }
+            n.mark = TreeIcon(TreeMarkName(n.key));
+        }
+    }
+
+    // 표식 이름: 무기 숙련 갈래 (m<무기>.a · .b · .c · .t1~3 · .x) · 패시브 진화 (o.<id>+)
+    string TreeMarkName(string key)
+    {
+        if (key.StartsWith("o.") && key.EndsWith("+")) return "mark.evolve";
+        if (!key.StartsWith("m")) return null;
+        int dot = key.IndexOf('.');
+        if (dot < 0) return null;                       // 숙련 첫 칸은 무기 그림 그대로
+        switch (key.Substring(dot + 1))
+        {
+            case "a": return "mark.rate";               // 빠른 손
+            case "b": return "mark.crit";               // 명사수 · 날카로운 감각
+            case "c": return Gunner ? "mark.reload" : "mark.power";     // 총잡이의 감 · 기본기
+            case "t1": return "mark.1";                 // 단련 · 능력 강화 I~III
+            case "t2": return "mark.2";
+            case "t3": return "mark.3";
+            case "x": return "mark.memory";             // 기억
+        }
+        return null;
     }
 
     // 지금 무기(형태)에 잘 맞는 칸의 앞글자 (영혼 트리 추천 표시)
