@@ -112,7 +112,7 @@ public static class RunSave
     {
         if (Replaying || !Savable) return;
         log.Add(entry);
-        if (entry.Length > 0 && entry[0] == 'e') NeedEvolution = false;
+        if (entry.Length > 0 && (entry[0] == 'e' || entry.StartsWith("aw"))) NeedEvolution = false;
     }
 
     // 메인 메뉴에서 저장된 판 정보 보기 (이어하기 버튼 글)
@@ -272,6 +272,21 @@ public static class RunSave
             foreach (string e in d.log)
             {
                 if (string.IsNullOrEmpty(e)) continue;
+                // 1.1~ 두 글자 기록: aw<번호>@<초> 3장 각성 · tr<번호> 초월 카드 (한 글자 'a' · 't' 보다 먼저)
+                if (e.StartsWith("aw"))
+                {
+                    string[] aw = e.Substring(2).Split('@');
+                    if (!int.TryParse(aw[0], out int awId) || specials == null) continue;
+                    if (aw.Length > 1 && float.TryParse(aw[1], out float awAt)) RunStats.Seconds = awAt;
+                    specials.EvolveWeapon(awId);
+                    RunStats.Seconds = d.seconds;
+                    continue;
+                }
+                if (e.StartsWith("tr"))
+                {
+                    if (int.TryParse(e.Substring(2), out int tr)) shop.ReplayTranscend(tr);
+                    continue;
+                }
                 string arg = e.Substring(1);
                 switch (e[0])
                 {

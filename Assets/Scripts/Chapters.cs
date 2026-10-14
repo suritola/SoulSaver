@@ -69,9 +69,12 @@ public static class Chapters
     static readonly float[] EaseBossPower = { 1f, 1f, 1.3f, 1.45f };
     static readonly float[] EaseBossSkill = { 1.8f, 1.2f, 0.72f, 0.64f };
 
+    // 1.1~ 판 후반 보상(3장 각성 · 초월 카드)으로 세진 만큼 3 · 4장 잡몹(중간 보스 포함) 체력을 조금 더 — 3 · 4장 각각 3~4분 목표 (보스 체력은 그대로)
+    static readonly float[] LateHp = { 1f, 1f, 1.12f, 1.15f };
+
     static float Ease(float[] t, int stage) => IsClassic || stage < 0 || stage >= t.Length ? 1f : t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)];
 
-    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage);
+    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage);
     public static float RewardMul(int stage) => Ratio(Reward, stage) * Ease(EaseReward, stage);
     public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage);
     // 플레이어가 받는 모든 피해 (몸통 · 적 스킬 · 보스 스킬 · 결계): 지금 장 기준
