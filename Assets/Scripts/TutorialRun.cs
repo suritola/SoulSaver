@@ -26,7 +26,7 @@ public class TutorialRun : MonoBehaviour
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
-    static readonly Color Done = new Color(0.55f, 1f, 0.55f);
+    static readonly Color DoneColor = new Color(0.55f, 1f, 0.55f);
 
     // 단계: 제목 · 설명 (번역 키, {RELOAD} 같은 키 표시는 Loc.T 가 지금 키로 바꿈)
     static readonly (string title, string body)[] Steps =
@@ -288,7 +288,7 @@ public class TutorialRun : MonoBehaviour
     {
         SetProgress(1f);
         check.text = "✔ " + Loc.T("완료!");
-        check.color = Done;
+        check.color = DoneColor;
         Hostile.Play("chime", 0.5f, 1.4f);
         yield return new WaitForSecondsRealtime(1.1f);
         check.text = "";
@@ -480,7 +480,7 @@ public class TutorialRun : MonoBehaviour
 
         counter = UIKit.Text(panel, "", 22f, new Color(0.75f, 0.7f, 0.85f), new Vector2(-400f, 48f), new Vector2(180f, 34f), TextAlignmentOptions.Left);
         title = UIKit.Text(panel, "", 34f, Gold, new Vector2(0f, 44f), new Vector2(600f, 46f));
-        check = UIKit.Text(panel, "", 28f, Done, new Vector2(390f, 46f), new Vector2(220f, 40f), TextAlignmentOptions.Right);
+        check = UIKit.Text(panel, "", 28f, DoneColor, new Vector2(390f, 46f), new Vector2(220f, 40f), TextAlignmentOptions.Right);
         body = UIKit.Text(panel, "", 24f, Parch, new Vector2(0f, -10f), new Vector2(940f, 64f));
         body.enableWordWrapping = true;
         body.enableAutoSizing = true;

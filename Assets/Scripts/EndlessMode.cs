@@ -248,8 +248,7 @@ public class EndlessMode : MonoBehaviour
         Prefs.Save();
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);
-        stages.ShowBanner(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "
-" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f, true);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
+        stages.ShowBanner(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f, true);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
         Hostile.Play("chime", 1f, 1f);
         yield return new WaitForSecondsRealtime(5f);
         if (StoryDirector.ShouldSkipAll) yield break;
