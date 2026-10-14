@@ -128,6 +128,7 @@ public class bosss : MonoBehaviour
         // 컴포넌트 가져오기
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        EnemyHitbox.Fit(gameObject);        // 히트박스를 그림 가운데에 맞추고 넉넉하게
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
         // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)

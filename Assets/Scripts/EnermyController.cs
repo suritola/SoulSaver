@@ -77,6 +77,8 @@ public class EnermyController : MonoBehaviour
     public static System.Func<EnermyController, float, float> DamageHook;
 
     private CircleCollider2D bodyCollider;
+    // 그림 가운데에 맞춘 히트박스 (맞는 판정은 넉넉하게, 몸통 피해는 몸 안쪽만)
+    private EnemyHitbox hitbox;
     // 살아 있는 적의 콜라이더 → 적 (밀어내기 계산용)
     static readonly System.Collections.Generic.Dictionary<Collider2D, EnermyController> byCollider = new System.Collections.Generic.Dictionary<Collider2D, EnermyController>();
     private static readonly Collider2D[] nearby = new Collider2D[24];
@@ -134,6 +136,7 @@ public class EnermyController : MonoBehaviour
         }
         EnemyHealth = setEnemyHP;
         bodyCollider = GetComponent<CircleCollider2D>();
+        hitbox = EnemyHitbox.Fit(gameObject);
 
         // 플레이어 찾기
         PlayerController pc = Hostile.Player;      // 적마다 씬 전체를 뒤지지 않게 (캐시)
@@ -216,7 +219,7 @@ public class EnermyController : MonoBehaviour
 
     bool Blocked(Vector3 pos)
     {
-        float r = bodyCollider != null ? WorldRadius(bodyCollider) * 0.8f : 0.5f;
+        float r = bodyCollider != null ? BodyRadius(bodyCollider) * 0.8f : 0.5f;
         Vector2 center = (Vector2)pos + (bodyCollider != null ? bodyCollider.offset * (Vector2)transform.lossyScale : Vector2.zero);
         int n = Physics2D.OverlapCircleNonAlloc(center, r, wallHits);
         for (int i = 0; i < n; i++)
@@ -241,6 +244,10 @@ public class EnermyController : MonoBehaviour
         Die(1);
     }
 
+    // 몸 반지름 (월드): 키운 히트박스가 아니라 예전 크기 — 밀어내기 · 벽 판정이 예전처럼
+    // 아직 Start 전이면 (막 소환된 적) 받은 콜라이더로
+    float BodyRadius(CircleCollider2D fallback) => hitbox != null ? hitbox.BodyWorldRadius : fallback != null ? WorldRadius(fallback) : 0.5f;
+
     // 원 콜라이더의 월드 반지름
     static float WorldRadius(CircleCollider2D c)
     {
@@ -254,7 +261,7 @@ public class EnermyController : MonoBehaviour
         if (bodyCollider == null) return Vector3.zero;
 
         Vector2 center = bodyCollider.bounds.center;
-        float myRadius = WorldRadius(bodyCollider);
+        float myRadius = BodyRadius(bodyCollider);
 
         // 가장 큰 적까지 잡히도록 넉넉하게 검색
         int count = Physics2D.OverlapCircleNonAlloc(center, myRadius * 3f, nearby);
@@ -273,7 +280,7 @@ public class EnermyController : MonoBehaviour
 
             Vector2 away = center - (Vector2)other.bounds.center;
             float dist = away.magnitude;
-            float minDist = myRadius + WorldRadius(otherCircle);
+            float minDist = myRadius + otherEnemy.BodyRadius(otherCircle);
             if (dist >= minDist) continue;
 
             // 완전히 같은 위치면 임의 방향으로 벌림
@@ -415,6 +422,7 @@ public class EnermyController : MonoBehaviour
     void TouchPlayer(Collider2D collision)
     {
         if (isDead || !collision.CompareTag("Player")) return;
+        if (hitbox != null && !hitbox.Touching(collision)) return;      // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음
 
         PlayerController target = collision.GetComponent<PlayerController>();
         if (target != null && target.TryHit(contactDamage * ContactScale))

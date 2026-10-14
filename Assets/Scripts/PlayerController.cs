@@ -1055,11 +1055,16 @@ void Shoot()
 
     // 일반 적은 닿으면 스스로 피해를 주고 자폭함 (EnermyController)
     // 보스는 사라지지 않으므로 여기서 처리
+    Collider2D ownCollider;
+    Collider2D Body => ownCollider != null ? ownCollider : (ownCollider = GetComponent<Collider2D>());
+
     void HandleContact(Collider2D collision)
     {
         if (collision.CompareTag("boss"))
         {
             if (collision.GetComponent<BossPart>() != null) return;     // 등불 · 묘비 · 영혼구는 닿아도 몸통 피해 없음 (영혼구는 스스로 터짐)
+            // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음 (몸 안쪽에 닿아야)
+            if (collision.TryGetComponent(out EnemyHitbox hitbox) && !hitbox.Touching(Body)) return;
             bosss boss = collision.GetComponent<bosss>();
             TryHit(boss != null ? boss.contactDamage : bossContactDamage);
         }
