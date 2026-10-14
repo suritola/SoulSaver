@@ -19,8 +19,12 @@ public static class UltCastFlair
         lastAt = Time.time;
         PlayerController p = Hostile.Player;
         if (p == null) return;
-        Vector3 at = p.transform.position;
-        Color c = CharacterData.Current.color;
+        At(p.transform.position, CharacterData.Current.color);
+    }
+
+    // 1.0.4~ 개발자(무한 모드 최종 보스)가 영웅 필살기를 흉내 낼 때도 같은 연출 (BossSkills.DeveloperFx, 그 영웅 색)
+    public static void At(Vector3 at, Color c)
+    {
         Color bright = Color.Lerp(c, Color.white, 0.35f);
         ShockRing.Spawn(at, 0.5f, 6f, 0.4f, new Color(bright.r, bright.g, bright.b, 0.9f), 0.3f);
         ShockRing.Spawn(at, 0.3f, 3.5f, 0.3f, new Color(1f, 1f, 1f, 0.8f), 0.18f);

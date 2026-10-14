@@ -694,6 +694,57 @@ void Shoot()
         slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
     }
 
+    // 1.0.4~ 개발자(무한 모드 최종 보스)가 거너 조준 사격을 흉내 낼 때: 플레이어 필살기와 같은 화면 색 · 충전 소리 · 카메라 멀어짐
+    // 플레이어가 쓰면 시간이 느려져 적이 느려지는 것을 뒤집어, 느려지는 건 플레이어 · 플레이어 탄 (게임 시간 Time.timeScale 은 그대로)
+    // 겹쳐 써도 쌓이지 않고 끝나는 때만 늘어남 (공격 주기가 빨라져도 끝없이 느려지거나 멈추지 않게)
+    float hostileAimUntil;
+    bool hostileAiming;
+
+    public void HostileTimeSlow(float seconds)
+    {
+        if (IsDying || seconds <= 0f) return;
+        hostileAimUntil = Mathf.Max(hostileAimUntil, Time.time + seconds);
+        float mul = Mathf.Clamp(Skill_setTime, 0.2f, 1f);
+        Slow(mul, hostileAimUntil - Time.time);
+        Bullet.SlowMul = mul;
+        Bullet.SlowUntil = hostileAimUntil;
+        if (hostileAiming) return;
+        hostileAiming = true;
+        PlayUltSound(true);
+        StartCoroutine(HostileAimRoutine());
+    }
+
+    IEnumerator HostileAimRoutine()
+    {
+        if (skillEffectPanel != null && !isSkillUsing)
+        {
+            if (!effectColorSaved) { baseEffectColor = skillEffectPanel.color; effectColorSaved = true; }
+            Color tint = baseEffectColor;
+            tint.a = skillEffectPanel.color.a;
+            skillEffectPanel.color = tint;
+            FadeTo(screenFadeAlpha);
+        }
+        while (Time.time < hostileAimUntil && !IsDying)
+        {
+            // 조준할 때처럼 카메라가 천천히 멀어짐 (플레이어가 그사이 자기 필살기를 조준하면 그쪽이 맡음)
+            if (!isSkillUsing && Time.timeScale > 0f && mainCamera != null && mainCamera.orthographicSize < maxZoom)
+                mainCamera.orthographicSize += 0.05f * Time.unscaledDeltaTime * 60f;
+            yield return null;
+        }
+        hostileAiming = false;
+        if (isSkillUsing || IsDying) yield break;       // 자기 필살기 조준 · 쓰러짐은 그쪽이 화면 · 줌을 되돌림
+        if (audioSource != null) audioSource.Stop();
+        FadeTo(0f);
+        StartCoroutine(ResetZoom());
+    }
+
+    // 거너 필살기 소리 (charge: 조준 시작 · 아니면 한 발) — 개발자가 흉내 낼 때도 같은 소리
+    public void PlayUltSound(bool charge)
+    {
+        AudioClip clip = charge ? chargeSound : shotSound;
+        if (audioSource != null && clip != null) audioSource.PlayOneShot(clip, GameSettings.SfxVolume);
+    }
+
     public void GrantInvincibility(float seconds)
     {
         invincibleUntil = Mathf.Max(invincibleUntil, Time.time + seconds);
@@ -988,7 +1039,7 @@ void Shoot()
     // 안전장치: 조준 중이 아닌데 화면 색이 남아 있으면 흐려지게 (어떤 길로든 남지 않게)
     void GuardScreenTint()
     {
-        if (skillEffectPanel == null || isSkillUsing || screenFade != null) return;
+        if (skillEffectPanel == null || isSkillUsing || hostileAiming || screenFade != null) return;
         if (skillEffectPanel.color.a > 0.001f) FadeTo(0f);
     }
 

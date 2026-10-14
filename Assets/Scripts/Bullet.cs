@@ -63,9 +63,15 @@ public class Bullet : MonoBehaviour
     }
 
 
+    // 1.0.4~ 개발자(무한 모드 최종 보스)가 거너 조준 사격을 쓰는 동안 플레이어 탄이 느려짐 (PlayerController.HostileTimeSlow)
+    // 겹쳐 써도 곱해 쌓이지 않고 끝나는 때만 늘어남
+    public static float SlowUntil;
+    public static float SlowMul = 1f;
+
     void Update()
     {
-        transform.position += (Vector3)dir * speed * Time.deltaTime;
+        float slow = Time.time < SlowUntil ? SlowMul : 1f;
+        transform.position += (Vector3)dir * speed * slow * Time.deltaTime;
     }
 
     private Camera mainCamera;
