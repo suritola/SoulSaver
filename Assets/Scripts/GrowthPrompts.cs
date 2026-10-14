@@ -7,6 +7,9 @@ using UnityEngine;
 public class GrowthPrompts : MonoBehaviour
 {
     const float LevelNagAfter = 15f, LevelNagEvery = 20f, TreeNagAfter = 30f, TreeNagEvery = 40f;
+    // 1.0.4~: 20 ~ 40초마다 종소리와 함께 끝없이 되풀이돼 성가셨음 → 한 번 쌓일 때마다 배너는 최대 MaxNags 번 (머리 위 글자는 그대로)
+    const int MaxNags = 2;
+    int levelNags, treeNags;
 
     TextMeshPro tag;
     LevelShop shop;
@@ -25,9 +28,10 @@ public class GrowthPrompts : MonoBehaviour
         bool tree = can && sm.TreeAffordable;
 
         float now = Time.unscaledTime;
-        Nag(level, ref levelSince, ref nextLevelNag, LevelNagAfter, LevelNagEvery, now, sm,
-            Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "\n[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기"));     // 1.0.4~: 용어 통일
-        Nag(tree, ref treeSince, ref nextTreeNag, TreeNagAfter, TreeNagEvery, now, sm,
+        Nag(level, ref levelSince, ref nextLevelNag, ref levelNags, LevelNagAfter, LevelNagEvery, now, sm,
+            Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "
+[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기"));     // 1.0.4~: 용어 통일
+        Nag(tree, ref treeSince, ref nextTreeNag, ref treeNags, TreeNagAfter, TreeNagEvery, now, sm,
             Loc.T("영혼 트리에서 배울 칸이 있습니다!") + "\n[" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("영혼 트리"));
 
         if (!level && !tree)
@@ -55,14 +59,17 @@ public class GrowthPrompts : MonoBehaviour
     }
 
     // 오래 놓아두면 소리와 배너로 한 번 더
-    static void Nag(bool on, ref float since, ref float next, float after, float every, float now, StageManager sm, string banner)
+    // 1.0.4~: 최대 MaxNags 번 · 다른 알림(보스 · 상점 · 해금)이 떠 있으면 덮지 않고 잠시 미룸 · 보스전에는 종소리 없이
+    static void Nag(bool on, ref float since, ref float next, ref int count, float after, float every, float now, StageManager sm, string banner)
     {
-        if (!on) { since = -1f; return; }
+        if (!on) { since = -1f; count = 0; return; }
         if (since < 0f) { since = now; next = now + after; return; }
-        if (now < next) return;
+        if (now < next || count >= MaxNags) return;
+        if (sm != null && sm.BannerBusy) { next = now + 3f; return; }
         next = now + every;
+        count++;
         if (sm != null) sm.ShowBanner(banner, 2.2f);
-        Hostile.Play("chime", 0.8f, 1.2f);
+        if (bosss.LiveCount == 0) Hostile.Play("chime", 0.8f, 1.2f);
     }
 
     void Build()

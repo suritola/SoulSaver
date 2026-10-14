@@ -327,7 +327,7 @@ public class SoulTreeUI : MonoBehaviour
             v.line = lines[n.key];
             views.Add(v);
         }
-        footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
+        footText.text = Loc.T(TutorialRun.Active ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "칸을 두 번 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
                       + "  ·  " + Loc.T("끌기 · WASD · 화면 끝으로 이동, 휠 확대, [F] 전체 보기");
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
         bounds = new Rect(-120f, -120f, 240f, 240f);
@@ -381,16 +381,31 @@ public class SoulTreeUI : MonoBehaviour
         return v;
     }
 
+    // 1.0.4~: 칸을 한 번 누르면 바로 배워져 실수로 사는 일이 있었음 → 첫 클릭은 고르기만, 같은 칸을 4초 안에 한 번 더 누르면 배움
+    //   튜토리얼은 안내 문구가 「누르면 배움」이라 예전처럼 한 번에
+    NodeView armed;
+    float armedUntil;
+
     void Buy(NodeView v)
     {
         SpecialFeedback fx = SpecialAbilities.SharedFx;
         if (!sp.CanBuy(v.node))
         {
+            armed = null;
             fx?.Play("buzz", 0.5f);
             StartCoroutine(Shake(v.rect));
             TooltipUI.Show(v.node.name, Tip(v.node));
             return;
         }
+        if (!TutorialRun.Active && (armed != v || Time.unscaledTime > armedUntil))
+        {
+            armed = v;
+            armedUntil = Time.unscaledTime + 4f;
+            v.rect.localScale = Vector3.one * 1.25f;
+            TooltipUI.Show(v.node.name, Loc.T(Tip(v.node)) + "\n\n<color=#7CFF9A>" + Loc.T("한 번 더 누르면 배웁니다") + "</color>");
+            return;
+        }
+        armed = null;
         string key = v.node.key;
         Vector2 at = v.rect.anchoredPosition;
         Color c = BranchColor[v.node.branch];

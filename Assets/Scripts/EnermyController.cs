@@ -368,7 +368,8 @@ public class EnermyController : MonoBehaviour
 
             Point point = Cache<Point>.Get;
 
-            if (point != null) point.AddPoint(10);
+            // 1.0.4~: 중간 보스는 +100P (예전엔 일반 적과 같은 10P)
+            if (point != null) point.AddPoint(GetComponent<MidBossMark>() != null ? 100 : 10);
 
             // 영혼 조각: 강한 적 · 중간 보스일수록 많이 (중간 보스는 크게 알림)
             SoulShards.Add(SoulShards.ForEnemy(this), transform.position, GetComponent<MidBossMark>() != null);

@@ -206,7 +206,7 @@ public static class CharacterData
     public static bool ConditionMet(CharUnlock c) => c == CharUnlock.None || Prefs.GetInt(ConditionKey + (int)c, 0) == 1;
     public static bool ConditionMet(CharacterId id) => ConditionMet(Def(id).condition);
 
-    public static string ConditionText(CharUnlock c) => c switch
+    public static string ConditionText(CharUnlock c) => Prerequisite(c) + c switch
     {
         CharUnlock.Endless10 => Loc.T("무한 모드에서 10분 버티기"),
         CharUnlock.EndlessBosses5 => Loc.T("무한 모드 한 판에서 보스 5마리 처치"),
@@ -215,6 +215,14 @@ public static class CharacterData
         _ => "",
     };
 
+    // 1.0.4~: 무한 모드 조건인데 무한 모드가 아직 잠겨 있으면 그 선행 조건을 앞에 (예전엔 무한 모드가 잠긴 줄 모르고 조건만 보였음)
+    static string Prerequisite(CharUnlock c)
+    {
+        bool endless = c == CharUnlock.Endless10 || c == CharUnlock.EndlessBosses5 || c == CharUnlock.EndlessClear;
+        if (!endless || Demo.On || GameMode.IsUnlocked(Difficulty.Endless)) return "";
+        return Loc.T("먼저 「어려움」을 클리어해 무한 모드 열기") + " → ";
+    }
+
     // 게임 중 조건을 처음 달성했을 때 (한 번만 알림)
     public static void Achieve(CharUnlock c)
     {
@@ -222,7 +230,7 @@ public static class CharacterData
         Prefs.SetInt(ConditionKey + (int)c, 1);
         Prefs.Save();
         if (StageManager.Instance != null)
-            StageManager.Instance.ShowBanner(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), 4f);
+            StageManager.Instance.ShowBanner(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), 4f, true);     // 1.0.4~ 보스 처치 등 다른 알림에 덮이지 않게
         Hostile.Play("chime", 0.9f, 1.1f);
     }
 

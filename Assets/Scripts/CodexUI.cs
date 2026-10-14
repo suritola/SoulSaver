@@ -34,6 +34,9 @@ public static class CodexUI
     };
 
     static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };
+    // 1.0.4~: 도감은 플레이 순서로 (예전엔 옛 순서 = 지하 묘역 먼저). 체험판은 예전 순서 그대로 (Chapters.IsClassic)
+    static readonly int[] PlayOrder = { 2, 0, 1, 3 };
+    static int PlaySlot(int stage) => Demo.On ? stage : System.Array.IndexOf(PlayOrder, Mathf.Clamp(stage, 0, 3));
 
     // 적 이름 · 설명 (프리팹 이름으로 찾음)
     // 프리팹 이름으로 적 이름 (번역됨, 모르면 빈 문자열)
@@ -111,9 +114,10 @@ public static class CodexUI
 
     static readonly (string icon, string name, string desc)[] Shops =
     {
-        ("fx_prompt", "능력치 상점", "공격력 · 공격 속도 · 재장전 속도 · 탄창 · 이동 속도를 올립니다. 살수록 값이 오릅니다."),
+        // 1.0.4~: 지금 상점에 없는 공격 속도 · 재장전 · 탄창 · 캐릭터 전용 강화를 소개하던 것을 실제 창에 맞춤
+        ("fx_prompt", "떠돌이 상점", "적을 처치하다 보면 나타나는 떠돌이 상점에서 코인으로 공격력 · 이동 속도를 올리고, 물약(회복 · 축소 · 신속 · 질풍)을 삽니다. 살수록 값이 오르고, 효과는 이번 판 동안만 남습니다."),
         ("fx_muzzle", "무기 진화", "모든 캐릭터. 스테이지 보스를 쓰러뜨릴 때마다 무기가 세 갈래 중 하나로 진화합니다. 거너는 무기가 바뀌고, 다른 캐릭터는 평타 자체가 바뀝니다. 되돌릴 수 없습니다."),
-        ("fx_reticle", "영혼 트리", "모든 캐릭터. 영혼 조각으로 무기 · 필살기 · 스킬 · 생존 · 영혼 · 재물 여섯 가지의 칸을 배웁니다. 캐릭터마다 칸이 다르고, 배운 칸 다음 칸만 보이며, 무기 가지는 진화해도 그대로 이어집니다."),
+        ("fx_reticle", "영혼 트리", "모든 캐릭터. 영혼 조각으로 무기 · 필살기 · 운명 · 생존 · 영혼 · 재물 여섯 가지의 칸을 배웁니다. 캐릭터마다 칸이 다르고, 배운 칸 다음 칸만 보이며, 무기 가지는 진화해도 그대로 이어집니다."),
     };
 
     // ================================================================= window
@@ -190,7 +194,6 @@ public static class CodexUI
             case 7: LevelUpCards(data); break;
             case 8:
                 foreach (var s in Shops) Card(FxIcon(s.icon), Gold, Loc.T(s.name), "", Loc.T(s.desc));
-                KitShops();
                 break;
         }
         scroll.verticalNormalizedPosition = 1f;
@@ -202,7 +205,11 @@ public static class CodexUI
         Card(FxIcon("fx_warn"), Color.white, Loc.T("중간 보스"), Loc.T("2장부터"),
              Loc.T("단계가 오를 때마다 크고 단단한 적이 나타납니다. 체력 12배 · 피해 1.5배. 쓰러뜨리면 영혼 조각을 많이 줍니다."));
         if (data == null || data.enemies == null) return;
-        for (int i = 0; i < data.enemies.Length; i++)
+        List<int> order = new List<int>();
+        for (int i = 0; i < data.enemies.Length; i++) order.Add(i);
+        int StageOf(int i) => data.enemyStage != null && i < data.enemyStage.Length ? data.enemyStage[i] : 0;
+        order.Sort((x, y) => { int cmp = PlaySlot(StageOf(x)).CompareTo(PlaySlot(StageOf(y))); return cmp != 0 ? cmp : x.CompareTo(y); });
+        foreach (int i in order)
         {
             GameObject p = data.enemies[i];
             if (p == null) continue;
@@ -227,7 +234,10 @@ public static class CodexUI
              Loc.T("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.")
              + " " + Loc.T("보스전마다 적어도 한 번: 결계를 펼치기 전에 보스 체력이 40% 아래로 내려가면 게이지가 곧바로 가득 찹니다."));     // 1.0.4~: 40% 규칙도 적음
         if (data == null || data.bosses == null) return;
-        for (int i = 0; i < data.bosses.Length; i++)
+        List<int> order = new List<int>();
+        for (int i = 0; i < data.bosses.Length; i++) order.Add(i);
+        order.Sort((x, y) => { int cmp = PlaySlot(x).CompareTo(PlaySlot(y)); return cmp != 0 ? cmp : x.CompareTo(y); });
+        foreach (int i in order)
         {
             GameObject p = data.bosses[i];
             if (p == null) continue;
@@ -417,30 +427,7 @@ public static class CodexUI
         }
     }
 
-    // 해금한 캐릭터의 상점 업그레이드
-    static void KitShops()
-    {
-        foreach (CharacterId c in UnlockedKits())
-        {
-            string ups = c switch
-            {
-                CharacterId.Swordsman => "장검 공격력 · 베기 사거리 · 베기 각도 · 필살기 위력 · 이동 속도",
-                CharacterId.Rogue => "표창 공격력 · 투척 속도 · 표창 회수 속도 · 표창 주머니 · 이동 속도",
-                CharacterId.Archer => "화살 공격력 · 시위 당기는 속도 · 관통력 · 필살기 위력 · 이동 속도",
-                CharacterId.Alchemist => "플라스크 공격력 · 투척 속도 · 폭발 범위 · 필살기 위력 · 이동 속도",
-                CharacterId.Cartographer => "깃펜 공격력 · 이동 속도",
-                CharacterId.Clockmaker => "톱니 공격력 · 이동 속도",
-                CharacterId.Postman => "편지 공격력 · 이동 속도",
-                CharacterId.Ghost => "손길 공격력 · 이동 속도",
-                _ => "",
-            };
-            if (ups == "") continue;
-            string[] parts = ups.Split(new[] { " · " }, System.StringSplitOptions.None);
-            for (int i = 0; i < parts.Length; i++) parts[i] = Loc.T(parts[i]);
-            Card(CharacterUI.Portrait(c), Color.white, Loc.T("능력치 상점") + " · " + Loc.T(CharacterData.Def(c).name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"),
-                 string.Join(" · ", parts) + "\n" + Loc.T("공격 속도 · 재장전 · 탄창 대신 무기에 맞는 강화가 나옵니다."));
-        }
-    }
+    // 1.0.4~: 캐릭터 전용 상점 강화 카드(KitShops)는 뺌 — 지금 상점 창에는 공격력 · 이동 속도 두 장만 나옴
 
     // ================================================================= card
     static void Card(Sprite icon, Color tint, string title, string tag, string body)
