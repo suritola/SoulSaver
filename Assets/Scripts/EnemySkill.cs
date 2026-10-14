@@ -148,6 +148,9 @@ public class EnemySkill : MonoBehaviour
         busy = false;
     }
 
+    // 1.0.4~ 경고 원 · 띠 길이도 Windup 과 같은 난이도 배율 (보통 · 어려움에서 다 차기 전에 맞던 문제)
+    static float Tw(float seconds) => seconds * GameMode.WindupMul;
+
     // 몸이 깜빡이며 기를 모음 (빛 + 머리 위 느낌표)
     IEnumerator Windup(Color color, float seconds, float speed = 8f)
     {
@@ -180,7 +183,7 @@ public class EnemySkill : MonoBehaviour
     IEnumerator BoneSpike(PlayerController p)
     {
         Vector3 at = p.transform.position;
-        Hostile.Circle(at, 1.4f, 0.8f, new Color(1f, 0.95f, 0.8f, 0.9f));
+        Hostile.Circle(at, 1.4f, Tw(0.8f), new Color(1f, 0.95f, 0.8f, 0.9f));
         yield return Windup(new Color(1f, 1f, 0.8f), 0.8f);
         if (!Alive) yield break;
         Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.4f, new Color(1f, 0.97f, 0.88f), 18f);
@@ -194,7 +197,7 @@ public class EnemySkill : MonoBehaviour
         Vector3 target = Hostile.ClampArena(p.transform.position);
         if (Hostile.IsWall(target)) yield break;
         float r = 1.9f * Size;
-        Hostile.Circle(target, r, 0.7f, Danger);
+        Hostile.Circle(target, r, Tw(0.7f) + 0.35f, Danger);   // 1.0.4~ 착지할 때까지 원을 남김
         yield return Windup(Danger, 0.7f);
         if (!Alive) yield break;
 
@@ -255,9 +258,9 @@ public class EnemySkill : MonoBehaviour
             Vector3 d = new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * half;
             ends[i * 2] = c - d;
             ends[i * 2 + 1] = c + d;
-            Hostile.Line(c - d, c + d, 1.3f, 0.9f, new Color(1f, 0.45f, 0.15f, 0.9f));
+            Hostile.Line(c - d, c + d, 1.3f, Tw(0.9f), new Color(1f, 0.45f, 0.15f, 0.9f));
         }
-        FxAnim rune = Fx.Play("fx_rune", c, 3f, new Color(1f, 0.5f, 0.2f, 0.8f), 1f, 0f, 1, true, 1.1f);
+        FxAnim rune = Fx.Play("fx_rune", c, 3f, new Color(1f, 0.5f, 0.2f, 0.8f), 1f, 0f, 1, true, Tw(0.9f) + 0.2f);
         if (rune != null) rune.spin = 120f;
         yield return Windup(new Color(1f, 0.6f, 0.2f), 0.9f, 12f);
         if (!Alive) yield break;
@@ -304,7 +307,7 @@ public class EnemySkill : MonoBehaviour
         const float length = 10f;
         Vector3 start = transform.position;
         Vector3 end = Hostile.ClampArena(start + (Vector3)(dir * length));
-        Hostile.Line(start, end, 1.6f * Size, 0.55f, Danger);
+        Hostile.Line(start, end, 2.6f * Size, Tw(0.55f), Danger);   // 1.0.4~ 띠 너비 = 판정 지름 (1.3 x 2), 띠 밖에서 맞지 않게
         yield return Windup(Danger, 0.55f);
         if (!Alive) yield break;
 
@@ -359,7 +362,7 @@ public class EnemySkill : MonoBehaviour
     IEnumerator Whirlwind(PlayerController p)
     {
         float r = 2.2f * Size;
-        FxAnim ring = Fx.Play("fx_rune", transform.position, r * 2f, new Color(1f, 0.3f, 0.3f, 0.7f), 1f, 0f, 1, true, 0.7f);
+        FxAnim ring = Fx.Play("fx_rune", transform.position, r * 2f, new Color(1f, 0.3f, 0.3f, 0.7f), 1f, 0f, 1, true, Tw(0.7f));
         if (ring != null) { ring.follow = transform; ring.spin = -200f; }
         yield return Windup(Danger, 0.7f);
         if (!Alive) yield break;
@@ -394,7 +397,7 @@ public class EnemySkill : MonoBehaviour
     {
         float r = 2.2f * Size;
         Vector3 c = transform.position;
-        Hostile.Circle(c, r, 0.6f, new Color(0.5f, 1f, 0.3f, 0.9f));
+        Hostile.Circle(c, r, Tw(0.6f), new Color(0.5f, 1f, 0.3f, 0.9f));
         yield return Windup(new Color(0.6f, 1f, 0.4f), 0.6f);
         if (!Alive) yield break;
         HazardZone.Spawn(c, r, 4f, Dmg * 0.6f, new Color(0.55f, 1f, 0.35f, 0.9f), "fx_puddle", 0f);
@@ -406,7 +409,7 @@ public class EnemySkill : MonoBehaviour
     {
         Vector3 c = p.transform.position;
         float r = 3f * Size;
-        Hostile.Circle(c, r, 0.9f, new Color(1f, 0.9f, 0.35f, 0.9f));
+        Hostile.Circle(c, r, Tw(0.9f), new Color(1f, 0.9f, 0.35f, 0.9f));
         yield return Windup(new Color(1f, 0.95f, 0.5f), 0.9f);
         if (!Alive) yield break;
         HazardZone z = HazardZone.Spawn(c, r, 4f, Dmg * 0.25f, new Color(1f, 0.92f, 0.45f, 0.75f), "fx_cloud", 0.55f);
@@ -465,7 +468,7 @@ public class EnemySkill : MonoBehaviour
         const int count = 7;
         const float spacing = 1.8f;
         Vector3 start = transform.position + (Vector3)(dir * 1.5f);
-        Hostile.Line(start, start + (Vector3)(dir * spacing * count), 1.6f, 0.7f, new Color(0.6f, 0.9f, 0.3f, 0.9f));
+        Hostile.Line(start, start + (Vector3)(dir * spacing * count), 1.6f, Tw(0.7f), new Color(0.6f, 0.9f, 0.3f, 0.9f));
         yield return Windup(new Color(0.6f, 1f, 0.4f), 0.7f);
         for (int i = 0; i < count && Alive; i++)
         {
@@ -489,7 +492,7 @@ public class EnemySkill : MonoBehaviour
         const float length = 11f;
         Vector3 start = transform.position;
         Vector3 end = start + (Vector3)(dir * length);
-        Hostile.Line(start, end, 1.3f, 0.7f, Void);
+        Hostile.Line(start, end, 1.3f, Tw(0.7f), Void);
         yield return Windup(Void, 0.7f);
         if (!Alive) yield break;
 
@@ -531,7 +534,7 @@ public class EnemySkill : MonoBehaviour
         for (int i = -1; i <= 1; i += 2)
         {
             float a = (baseAngle + sweep * 0.5f * i) * Mathf.Deg2Rad;
-            Hostile.Line(transform.position, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length, 0.8f, 0.85f, Void);
+            Hostile.Line(transform.position, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length, 0.8f, Tw(0.85f), Void);
         }
         yield return Windup(Void, 0.85f, 10f);
         if (!Alive) yield break;
@@ -554,7 +557,7 @@ public class EnemySkill : MonoBehaviour
     {
         float r1 = 3.2f * Size, r2 = 5f * Size;
         Vector3 c = transform.position;
-        Hostile.Circle(c, r1, 0.6f, Soul);
+        Hostile.Circle(c, r1, Tw(0.6f), Soul);
         yield return Windup(Soul, 0.6f);
         if (!Alive) yield break;
         Fx.Spawn("fx_slash", c, r1 * 2.2f, new Color(0.7f, 0.95f, 1f), 30f, Random.Range(0f, 360f), 14);
@@ -588,7 +591,7 @@ public class EnemySkill : MonoBehaviour
         {
             float a = (baseAngle + (k - 1) * 22f) * Mathf.Deg2Rad;
             dirs[k] = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-            Hostile.Line(c + (Vector3)(dirs[k] * 1.5f), c + (Vector3)(dirs[k] * (1.5f + spacing * count)), 1.4f, 0.8f, Soul);
+            Hostile.Line(c + (Vector3)(dirs[k] * 1.5f), c + (Vector3)(dirs[k] * (1.5f + spacing * count)), 1.4f, Tw(0.8f), Soul);
         }
         yield return Windup(Soul, 0.8f, 5f);
         if (!Alive) yield break;

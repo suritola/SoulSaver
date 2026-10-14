@@ -13,6 +13,9 @@ public class WeaponEvolutionUI : MonoBehaviour
     static readonly Color Soul = new Color(0.72f, 0.58f, 1f);
 
     public static bool Open { get; private set; }
+    // 1.0.4~ 설정 「번쩍임」을 끄면 화면 섬광을 1/4 로 (알파 1 → 0.25 · 0.6 → 0.15), 「화면 흔들림」을 끄면 무기 떨림 없음
+    static float FlashMul => GameSettings.Flashes ? 1f : 0.25f;
+    static float ShakeMul => GameSettings.ScreenShake ? 1f : 0f;
 
     SpecialAbilities sp;
     int[] options;
@@ -76,7 +79,7 @@ public class WeaponEvolutionUI : MonoBehaviour
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.8f * k);
             burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 90f);
             core.rectTransform.localScale = Vector3.one * (1f + 0.12f * Mathf.Sin(t * 30f) * k);
-            core.rectTransform.anchoredPosition = Random.insideUnitCircle * 6f * k;
+            core.rectTransform.anchoredPosition = Random.insideUnitCircle * 6f * k * ShakeMul;
             if (Random.value < 0.5f) Spark(Random.insideUnitCircle.normalized * Random.Range(350f, 600f), Vector2.zero, 0.5f);
             yield return null;
         }
@@ -92,7 +95,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         for (float t = 0f; t < 0.45f; t += Time.unscaledDeltaTime)
         {
             float k = t / 0.45f;
-            flash.color = new Color(1f, 0.95f, 1f, 1f - k);
+            flash.color = new Color(1f, 0.95f, 1f, (1f - k) * FlashMul);
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(260f, 1500f, k);
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.8f * (1f - k) + 0.12f);
             title.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, EaseOut(k));
@@ -161,7 +164,7 @@ public class WeaponEvolutionUI : MonoBehaviour
                 g.alpha = 1f - k;
                 cards[i].localScale = Vector3.one * (1f - 0.4f * k);
             }
-            flash.color = new Color(1f, 0.92f, 0.7f, 0.6f * Mathf.Sin(k * Mathf.PI));
+            flash.color = new Color(1f, 0.92f, 0.7f, 0.6f * Mathf.Sin(k * Mathf.PI) * FlashMul);
             if (Random.value < 0.6f) Spark(chosen.anchoredPosition, Random.insideUnitCircle.normalized * Random.Range(300f, 900f), 0.6f);
             yield return null;
         }

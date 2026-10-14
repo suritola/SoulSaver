@@ -944,7 +944,7 @@ public partial class BossSkills : MonoBehaviour
     {
         Vector3 start = transform.position;
         Vector3 end = Hostile.ClampArena(start + (Vector3)(DirTo(p) * 20f));
-        Hostile.Line(start, end, 3.5f * SlimeSize + 1f, warn, Acid);
+        Hostile.Line(start, end, 5.2f * SlimeSize + 1.2f, warn, Acid);     // 1.0.4~ 띠 너비 = 판정 지름 (예전 3.5S+1 은 판정 2.6S+0.6 보다 좁아 띠 밖에서 맞았음)
         yield return Windup(Acid, warn);
         if (!Alive) yield break;
         bool hit = false;
@@ -974,7 +974,7 @@ public partial class BossSkills : MonoBehaviour
     {
         Vector3 start = transform.position;
         Vector3 end = Hostile.ClampArena(start + (Vector3)(DirTo(p) * 18f));
-        Hostile.Line(start, end, 3.2f, warn, Fire);
+        Hostile.Line(start, end, 4.8f, warn, Fire);     // 1.0.4~ 띠 너비 = 판정 지름 (예전 3.2 는 판정 반지름 2.4 보다 좁아 띠 밖에서 맞았음)
         yield return Windup(Fire, warn);
         if (!Alive) yield break;
 

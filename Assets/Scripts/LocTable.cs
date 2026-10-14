@@ -242,6 +242,11 @@ public static partial class LocTable
         { "의식이 깨졌다! 리치 왕이 휘청인다!", L("The rite is broken! The Lich King staggers!", "儀式が破れた！リッチキングがよろめく！", "仪式被打破！巫妖王踉跄了！") },
         { "지옥의 군주가 날개를 편다!", L("The Hell Lord spreads its wings!", "地獄の君主が翼を広げた！", "地狱领主展开了双翼！") },
         { "지옥이 무너진다! 가장자리가 용암으로 차오른다!", L("Hell is collapsing! Lava rises from the edges!", "地獄が崩れる！外周から溶岩が迫る！", "地狱正在崩塌！熔岩从边缘涌来！") },
+        // 1.0.4 묶음 3 (전투 공정성 · 연출: 결계 컷신 건너뛰기 · 지옥의 군주 마지막 단계 · 습격 남은 수 · 실패)
+        { "클릭 · Space: 건너뛰기", L("Click · Space: Skip", "クリック・Space：スキップ", "点击 · Space：跳过") },
+        { "지옥의 군주가 분노한다! 공격이 빨라진다!", L("The Hell Lord is enraged! Its attacks grow faster!", "地獄の君主が怒り狂う！攻撃が速くなる！", "地狱领主暴怒了！攻击变得更快！") },
+        { "습격 · 남은 적 {0} · {1}초", L("Ambush · {0} enemies left · {1}s", "襲撃・残りの敵 {0}・{1}秒", "伏击 · 剩余敌人 {0} · {1}秒") },
+        { "습격 실패\n시간 안에 모두 쓰러뜨리지 못해 보물 상자가 없습니다", L("Ambush failed\nYou didn't defeat them all in time, so no treasure chest", "襲撃失敗\n時間内に全滅できなかったため、宝箱はありません", "伏击失败\n未能在时限内全部击败，没有宝箱") },
         // 최후의 보루 (LastStand, 1.0.1)
         { "최후의 보루!", L("Last Stand!", "最後の砦！", "最后的堡垒！") },
         { "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.", L("When your HP drops below 30%, Last Stand triggers once per chapter: 2 seconds of invincibility and a blast that pushes nearby enemies away.", "体力が30%を下回ると、章ごとに一度「最後の砦」が発動し、2秒間無敵になって周囲の敵を押し返します。", "生命低于30%时，每章触发一次「最后的堡垒」：无敌2秒并击退周围敌人。") },
