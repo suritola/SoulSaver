@@ -1066,6 +1066,7 @@ void Shoot()
             // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음 (몸 안쪽에 닿아야)
             if (collision.TryGetComponent(out EnemyHitbox hitbox) && !hitbox.Touching(Body)) return;
             bosss boss = collision.GetComponent<bosss>();
+            if (boss != null && boss.IsDead) return;     // 1.0.4~ 쓰러져 사라지는 중인 보스 몸에 닿아도 피해 없음
             TryHit(boss != null ? boss.contactDamage : bossContactDamage);
         }
     }
@@ -1075,6 +1076,7 @@ void Shoot()
     // 맞은 뒤 이 시간 동안은 다시 맞지 않음 (여러 마리에게 동시에 맞는 것 방지)
     public float hurtInvincibleTime = 0.6f;
     public const float MaxDef = 0.7f;
+    public const float BossHitShare = 0.4f;     // 1.0.4~ 보스전 중 한 대 피해 상한 (최대 체력 비율)
 
     private float invincibleUntil = 0f;
 
@@ -1113,6 +1115,9 @@ void Shoot()
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
         if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
         taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
+        // 1.0.4~ 보스전 한 방 즉사 보호: 보스가 살아 있는 동안 한 대는 최대 체력의 BossHitShare 까지
+        // (3장 지옥의 군주 화염 돌진이 보통에서 약 103 으로 기본 체력 100 을 한 번에 넘었음 · 4장은 원래 20% 상한)
+        if (bosss.LiveCount > 0) taken = Mathf.Min(taken, PlayerMaxHealth * BossHitShare);
         if (taken <= 0f) return true;
 
         // 불사의 맹세: 죽을 피해를 한 번 버팀

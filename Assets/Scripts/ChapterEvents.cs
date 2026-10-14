@@ -8,7 +8,8 @@ using UnityEngine;
 // 무한 모드 · 튜토리얼 · 자동 촬영에서는 쉼 (1.0.3: 체험판도 정식판처럼 켬). StageManager 가 붙임
 public class ChapterEvents : MonoBehaviour
 {
-    const float AmbushAt = 0.3f, EliteAt = 0.55f, AmbushTimeout = 50f, AmbushRadius = 40f;     // 1.0.1: 둘레 8 → 40칸 (훨씬 넓게 둘러쌈)
+    // 1.0.1: 둘레 8 → 40칸 (훨씬 넓게 둘러쌈) · 1.0.4~ 40 → 30칸 (화면 바로 밖, 40칸은 너무 멀어 오기까지 한참 걸렸음)
+    const float AmbushAt = 0.3f, EliteAt = 0.55f, AmbushTimeout = 50f, AmbushRadius = 30f;
 
     EnemySpawner sp;
     int stage = -1;
@@ -51,10 +52,43 @@ public class ChapterEvents : MonoBehaviour
         if (p != null) chests.Add(TreasureChest.Spawn(p.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 2.5f)));
     }
 
+    // 1.0.4~ 습격 중 화면 위에 「남은 적 n · 남은 시간」 (알림판 아래)
+    TMPro.TMP_Text ambushLabel;
+    int labelLeft = -1, labelSec = -1;
+
+    void UpdateLabel(bool show)
+    {
+        if (!show)
+        {
+            if (ambushLabel != null && ambushLabel.gameObject.activeSelf) ambushLabel.gameObject.SetActive(false);
+            labelLeft = labelSec = -1;
+            return;
+        }
+        if (ambushLabel == null)
+        {
+            Canvas canvas = UIKit.HudCanvas();
+            if (canvas == null) return;
+            UIKit.EnsureStyle();
+            ambushLabel = UIKit.Text(canvas.transform, "", 24f, new Color(1f, 0.82f, 0.55f), Vector2.zero, new Vector2(520f, 34f));
+            ambushLabel.outlineWidth = 0.2f;
+            ambushLabel.outlineColor = new Color32(0, 0, 0, 255);
+            UIKit.Pin(ambushLabel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -158f));
+        }
+        if (!ambushLabel.gameObject.activeSelf) ambushLabel.gameObject.SetActive(true);
+        int left = AmbushLeft, sec = Mathf.Max(0, Mathf.CeilToInt(ambushUntil - Time.time));
+        if (left == labelLeft && sec == labelSec) return;
+        labelLeft = left;
+        labelSec = sec;
+        ambushLabel.text = string.Format(Loc.T("습격 · 남은 적 {0} · {1}초"), left, sec);
+    }
+
+    void OnDisable() => UpdateLabel(false);
+
     void Update()
     {
         StageManager sm = StageManager.Instance;
-        if (Off || sp == null || sm == null || !sm.Started) return;
+        if (Off || sp == null || sm == null || !sm.Started) { UpdateLabel(false); return; }
+        UpdateLabel(ambush != null && !sp.bossSpawned && !sp.bossCleared);
 
         // 장이 바뀌면 새로 (지난 장의 상자는 치움)
         if (sm.CurrentStage != stage)
@@ -105,7 +139,11 @@ public class ChapterEvents : MonoBehaviour
                 ambush = null;
                 chests.Add(TreasureChest.Spawn(p.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 2.5f)));
             }
-            else if (Time.time > ambushUntil) ambush = null;        // 너무 오래 걸리면 (멀리 도망친 적) 상자 없이 끝
+            else if (Time.time > ambushUntil)
+            {
+                ambush = null;        // 너무 오래 걸리면 (멀리 도망친 적) 상자 없이 끝
+                sm.ShowBanner(Loc.T("습격 실패\n시간 안에 모두 쓰러뜨리지 못해 보물 상자가 없습니다"), 2.5f);     // 1.0.4~ 조용히 끝나지 않게
+            }
         }
 
         if (!eliteDone && k >= EliteAt)

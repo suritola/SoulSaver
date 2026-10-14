@@ -201,14 +201,27 @@ public class BossUltimate : MonoBehaviour
         name.outlineWidth = 0.25f;
         name.outlineColor = new Color32(0, 0, 0, 255);
         TMP_Text say = UIKit.Text(root, line, 44f, new Color(0.95f, 0.92f, 0.88f), new Vector2(0f, -105f), new Vector2(1600f, 70f));
+        // 1.0.4~ 건너뛰기 안내 (화면 아래)
+        TMP_Text skip = UIKit.Text(root, "클릭 · Space: 건너뛰기", 24f, new Color(0.75f, 0.72f, 0.8f), new Vector2(0f, -330f), new Vector2(900f, 36f));
+        skip.alpha = 0f;
         tag.alpha = name.alpha = say.alpha = 0f;
 
+        // 1.0.4~ 이 보스의 결계를 이번 실행에서 이미 봤으면 짧게 (3.3초 → 1초), 클릭 · Space · Enter 로 건너뜀
+        // 설정 「번쩍임」을 끄면 섬광 · 어두운 막 깜빡임 없음, 「화면 흔들림」을 끄면 글자 떨림 없음
+        bool brief = cutSeen[kind];
+        cutSeen[kind] = true;
+        float darken = brief ? 0.2f : 0.7f, hold = brief ? 0.6f : 2.3f;
+        float flashA = GameSettings.Flashes ? 0.55f : 0f, flicker = GameSettings.Flashes ? 0.1f : 0f;
+        float shakeMul = GameSettings.ScreenShake ? 1f : 0f;
+        bool skipped = false;
+
         // 카메라가 보스 쪽으로 움직이는 동안 화면이 어두워짐
-        for (float t = 0f; t < 0.7f; t += CutDt(canvas))
+        for (float t = 0f; t < darken && !skipped; t += CutDt(canvas))
         {
-            float k = t / 0.7f;
+            float k = t / darken;
             shade.color = new Color(0f, 0f, 0f, 0.55f * k);
             if (boss != null) fx?.HoldCamera(boss.transform.position);
+            if (t > 0.1f) skipped = SkipPressed();      // 컷신이 시작된 그 순간의 공격 클릭으로는 넘어가지 않게
             yield return null;
         }
 
@@ -216,26 +229,31 @@ public class BossUltimate : MonoBehaviour
         PlaySfx("domain_shout", 1f);
         Hostile.Play("roar", 1f, kind == 3 ? 0.5f : kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
         fx?.Shake(0.9f, 0.6f);
-        for (float t = 0f; t < 2.3f; t += CutDt(canvas))
+        for (float t = 0f; t < hold && !skipped; t += CutDt(canvas))
         {
             float k = Mathf.Clamp01(t / 0.25f);
-            flash.color = new Color(color.r, color.g, color.b, 0.55f * (1f - Mathf.Clamp01(t / 0.35f)));
+            flash.color = new Color(color.r, color.g, color.b, flashA * (1f - Mathf.Clamp01(t / 0.35f)));
             band.rectTransform.sizeDelta = new Vector2(0f, Mathf.Lerp(0f, 380f, EaseOut(k)));
             band.color = new Color(0f, 0f, 0f, 0.75f);
             tag.alpha = k;
             name.alpha = k;
+            skip.alpha = k;
             name.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.6f, 1f, EaseOut(k));
-            float shake = Mathf.Lerp(18f, 4f, Mathf.Clamp01(t / 1.5f));
+            float shake = Mathf.Lerp(18f, 4f, Mathf.Clamp01(t / 1.5f)) * shakeMul;
             name.rectTransform.anchoredPosition = new Vector2(0f, 25f) + Random.insideUnitCircle * shake;
-            say.alpha = Mathf.Clamp01((t - 0.45f) / 0.3f);
+            say.alpha = brief ? k : Mathf.Clamp01((t - 0.45f) / 0.3f);
             say.rectTransform.anchoredPosition = new Vector2(0f, -105f) + Random.insideUnitCircle * shake * 0.4f;
-            shade.color = new Color(color.r * 0.15f, color.g * 0.05f, color.b * 0.1f, 0.6f + 0.1f * Mathf.Sin(t * 20f));
+            shade.color = new Color(color.r * 0.15f, color.g * 0.05f, color.b * 0.1f, 0.6f + flicker * Mathf.Sin(t * 20f));
             if (boss != null) fx?.HoldCamera(boss.transform.position);
+            if (t > 0.1f) skipped = SkipPressed();      // 이름이 뜨자마자 누른 공격 클릭으로 넘어가지 않게
             yield return null;
         }
-        for (float t = 0f; t < 0.3f; t += CutDt(canvas))
+        flash.color = Color.clear;
+        skip.alpha = 0f;
+        float fade = brief || skipped ? 0.2f : 0.3f;
+        for (float t = 0f; t < fade; t += CutDt(canvas))
         {
-            float k = 1f - t / 0.3f;
+            float k = 1f - t / fade;
             tag.alpha = name.alpha = say.alpha = k;
             band.color = new Color(0f, 0f, 0f, 0.75f * k);
             shade.color = new Color(0f, 0f, 0f, 0.6f * k);
@@ -245,6 +263,16 @@ public class BossUltimate : MonoBehaviour
         fx?.ReleaseCamera();
         CutscenePlaying = false;
         Time.timeScale = before > 0f ? before : 1f;
+    }
+
+    // 1.0.4~ 보스 종류마다 결계 컷신을 이번 실행에서 본 적 있는지 (두 번째부터 짧게)
+    static readonly bool[] cutSeen = new bool[4];
+
+    // 1.0.4~ 컷신 건너뛰기: 클릭 · Space · Enter (일시정지 메뉴가 열려 있을 때 · 트레일러 자동 조종 중엔 아님)
+    static bool SkipPressed()
+    {
+        if (ESCmenu.IsOpen || GameInput.Auto) return false;
+        return Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
     }
 
     // 1.0.2: 대사 중 ESC 로 일시정지하면 연출이 멈춘 시간에도 계속 흘러, 끝나면서 게임 속도를 되돌려 일시정지가 풀렸음

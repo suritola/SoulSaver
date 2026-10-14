@@ -14,6 +14,8 @@ public class SkillEvolutionUI : MonoBehaviour
     static readonly Color Soul = new Color(0.79f, 0.63f, 1f);
 
     public static bool Open { get; private set; }
+    // 1.0.4~ 설정 「번쩍임」을 끄면 화면 섬광을 1/4 로 (알파 1 → 0.25)
+    static float FlashMul => GameSettings.Flashes ? 1f : 0.25f;
     static readonly Queue<(LevelShop.SkillEvo evo, CharacterId who)> queue = new Queue<(LevelShop.SkillEvo, CharacterId)>();
     static SkillEvolutionUI runner;
 
@@ -174,7 +176,7 @@ public class SkillEvolutionUI : MonoBehaviour
         for (float t = 0f; t < 0.5f; t += Time.unscaledDeltaTime)
         {
             float k = t / 0.5f;
-            flash.color = new Color(1f, 0.95f, 1f, 1f - k);
+            flash.color = new Color(1f, 0.95f, 1f, (1f - k) * FlashMul);
             icon.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.6f, 1f, EaseOut(k));
             name.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.8f, 1f, EaseOut(k));
             name.alpha = desc.alpha = recipe.alpha = k;
