@@ -1,3 +1,38 @@
+@@@ v1.0.5
+# 1.0.5 업데이트
+
+- **게임패드 지원!** (엑스박스 배치 기준 · 스팀 덱 · 플레이스테이션 패드는 스팀 입력으로 같은 배치)
+- 전투: 왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 평타) · RT 공격 · LT 필살기 · A 상호작용 · X 재장전 · Y 무기 교체 · RB / LB / L3 스킬 · View 영혼 트리 · Menu 일시정지
+- 메뉴 · 창: 왼쪽 스틱 · 십자키로 커서, A 누르기, B 뒤로 · 카드 창은 십자키 ← → 로 고르고 A 로 확정
+- 마지막으로 쓴 장치에 따라 화면 안내가 [RT] · [A] 처럼 패드 버튼 이름으로 바뀜
+- 설정 → 조작에서 패드 버튼 배치를 볼 수 있음
+
+=== en
+# 1.0.5 Update
+
+- **Gamepad support!** (Xbox layout · Steam Deck and PlayStation pads use the same layout through Steam Input)
+- Combat: left stick move · right stick aim (tilt to auto-fire) · RT attack · LT ultimate · A interact · X reload · Y swap weapon · RB / LB / L3 skills · View Soul Tree · Menu pause
+- Menus · windows: left stick · D-pad move the cursor, A presses, B goes back · on card screens pick with D-pad ← → and confirm with A
+- On-screen prompts switch to pad button names like [RT] · [A] based on the last device you used
+- See the pad layout in Settings → Controls
+
+=== ja
+# 1.0.5 アップデート
+
+- **ゲームパッド対応！**（Xbox配置基準・Steam Deck / PlayStationのパッドはSteam入力で同じ配置）
+- 戦闘：左スティック移動・右スティック照準（倒すと自動で通常攻撃）・RT攻撃・LT必殺技・A インタラクト・X リロード・Y 武器切り替え・RB / LB / L3 スキル・View 魂のツリー・Menu 一時停止
+- メニュー・ウィンドウ：左スティック・十字キーでカーソル、Aで決定、Bで戻る・カード画面は十字キー ← → で選んでAで確定
+- 最後に使った機器に合わせて、画面の案内が [RT]・[A] のようにパッドのボタン名に切り替わる
+- 設定 → 操作でパッドのボタン配置を確認できる
+
+=== zh
+# 1.0.5 更新
+
+- **支持手柄！**（以 Xbox 布局为准 · Steam Deck 和 PlayStation 手柄通过 Steam 输入使用相同布局）
+- 战斗：左摇杆移动 · 右摇杆瞄准（推动即自动普攻）· RT 攻击 · LT 必杀技 · A 互动 · X 换弹 · Y 切换武器 · RB / LB / L3 技能 · View 灵魂之树 · Menu 暂停
+- 菜单 · 窗口：左摇杆 · 十字键移动光标，A 按下，B 返回 · 卡牌界面用十字键 ← → 选择，A 确认
+- 根据最后使用的设备，画面提示会切换为 [RT] · [A] 等手柄按键名
+- 可在 设置 → 操作 中查看手柄按键布局
 @@@ v1.0.4
 # 1.0.4 업데이트
 
