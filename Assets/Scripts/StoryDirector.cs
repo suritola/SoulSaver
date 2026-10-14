@@ -377,7 +377,9 @@ public class StoryDirector : MonoBehaviour
         Time.timeScale = 1f;
         Playing = false;
         EndingPlaying = false;
-        SceneManager.LoadScene("MainMenu");
+        // 1.0.4~: 엔딩 뒤 바로 메인 메뉴가 아니라 결과 화면(기록 · 획득 포인트 · 다음 해금)을 「클리어!」로 보여 줌
+        RunStats.MarkCleared();
+        SceneManager.LoadScene("GameOver");
     }
 
     // ================================================================= 공통

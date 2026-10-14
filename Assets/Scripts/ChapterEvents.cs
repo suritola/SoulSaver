@@ -56,7 +56,7 @@ public class ChapterEvents : MonoBehaviour
         StageManager sm = StageManager.Instance;
         if (Off || sp == null || sm == null || !sm.Started) return;
 
-        // 장이 바뀌면 새로 (지난 장의 상자는 치움)
+        // 장이 바뀌면 새로 (지난 장의 안 연 상자는 새 장으로 옮김, 1.0.4~)
         if (sm.CurrentStage != stage)
         {
             stage = sm.CurrentStage;
@@ -65,8 +65,11 @@ public class ChapterEvents : MonoBehaviour
             ambushDone = at >= AmbushAt;
             eliteDone = at >= EliteAt && !resumeElite;
             ambush = null;
+            // 1.0.4~: 안 연 보물 상자는 말없이 사라지지 않고 새 장에서 옆에 다시 놓음 (예전엔 문에 들어가면 지워졌음)
+            int carried = UnopenedChests;
             foreach (TreasureChest c in chests) if (c != null) Destroy(c.gameObject);
             chests.Clear();
+            resumeChests = Mathf.Clamp(resumeChests + carried, 0, 5);
             // 이어하기: 진행 중이던 습격은 남은 수만큼 (배너 없이), 안 연 상자는 옆에 다시
             PlayerController owner = Hostile.Player;
             if (owner != null)

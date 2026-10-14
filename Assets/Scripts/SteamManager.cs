@@ -108,7 +108,7 @@ public class SteamManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "GameOver") SteamAchievements.Unlock(SteamAchievements.FirstDeath);
+        if (scene.name == "GameOver" && !RunStats.Cleared) SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
         CheckOwnedSkins();
         if (scene.name != "GameScene") return;
         runKills = runEvolves = runUlts = 0;

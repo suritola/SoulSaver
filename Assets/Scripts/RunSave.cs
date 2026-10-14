@@ -78,8 +78,32 @@ public static class RunSave
         get
         {
             StageManager sm = StageManager.Instance;
-            return Savable && sm != null && sm.Started;
+            // 1.0.4~: 쓰러지는 중(이미 저장을 지움) · 마지막 보스를 쓰러뜨린 뒤(엔딩, 저장 안 함)는 저장되지 않으므로 「저장됨」 안내를 하지 않음
+            PlayerController p = Hostile.Player;
+            return Savable && sm != null && sm.Started && p != null && !p.IsDying && p.PlayerHealth > 0f && !FinalBossDown;
         }
+    }
+
+    // 마지막 장 보스를 쓰러뜨림 (쓰러지는 연출 중 포함) — 판이 끝났으므로 저장하지 않음 (1.0.4~)
+    public static bool FinalBossDown
+    {
+        get
+        {
+            StageManager sm = StageManager.Instance;
+            EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
+            if (sm == null || sp == null || GameMode.IsEndless || Chapters.Next(sm.CurrentStage) >= 0) return false;
+            if (sp.bossCleared) return true;
+            if (!sp.bossSpawned || bosss.LiveCount > 0) return false;
+            foreach (bosss b in Object.FindObjectsByType<bosss>(FindObjectsSortMode.None))
+                if (b != null && b.IsDead) return true;
+            return false;
+        }
+    }
+
+    // ESC 메뉴 「다시 시작」 (1.0.4~): 저장하는 판을 버리고 새로 시작하면 이어할 판도 지움 (무한 모드 · 일일 도전 등은 이야기 판 저장을 건드리지 않음)
+    public static void Abandon()
+    {
+        if (Savable) Delete();
     }
 
     public static void Record(string entry)
@@ -119,6 +143,7 @@ public static class RunSave
         EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
         if (sm == null || p == null || shop == null || sp == null || p.IsDying || p.PlayerHealth <= 0f) return;
         if (!sm.Started) return;                                    // 시작 이야기 · 첫 카드를 고르기 전은 저장할 게 없음
+        if (FinalBossDown) return;                                  // 마지막 보스가 쓰러지는 연출 중에도 저장하지 않음 (1.0.4~, 예전엔 보스전이 다시 저장됐음)
 
         Data d = new Data
         {
@@ -162,6 +187,9 @@ public static class RunSave
             if (next < 0) return;                                   // 마지막 보스를 쓰러뜨림 → 엔딩 (저장 안 함)
             d.stage = next;
             d.kills = 0;
+            // 1.0.4~: 안 연 보물 상자는 다음 장으로 가져감 (ChapterEvents 가 장을 바꿀 때와 같게)
+            ChapterEvents evNext = Object.FindFirstObjectByType<ChapterEvents>();
+            if (evNext != null) d.chests = evNext.UnopenedChests;
             // 문에 들어갈 때 받는 것(첫 문의 특수 능력 · 포인트 +2 · 저주 제단) 과 보스 보상은 이어할 때 받음
             d.gatePending = true;
             d.needBossReward = sp.bossCleared ? NeedBossReward : true;
@@ -305,5 +333,20 @@ public static class RunSave
     class Watcher : MonoBehaviour
     {
         void OnApplicationQuit() => Save();
+
+        // 1.0.4~: 게임이 튕겨도 많이 잃지 않게 1분마다 조용히 저장 (멈춘 창 · 연출 · 장 넘어가는 중 · 쓰러지는 중은 건너뛰고 다음 기회에)
+        const float AutoSaveEvery = 60f;
+        float nextAutoSave;
+
+        void Start() => nextAutoSave = Time.unscaledTime + AutoSaveEvery;
+
+        void Update()
+        {
+            if (Time.unscaledTime < nextAutoSave || Time.timeScale == 0f || StoryDirector.Playing) return;
+            StageManager sm = StageManager.Instance;
+            if (sm == null || sm.IsMenuOpen || !CanSaveNow) { nextAutoSave = Time.unscaledTime + 5f; return; }     // 저장하지 않는 판이면 매 프레임 찾지 않게 잠시 뒤에
+            nextAutoSave = Time.unscaledTime + AutoSaveEvery;
+            Save();
+        }
     }
 }

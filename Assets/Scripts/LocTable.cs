@@ -1704,5 +1704,10 @@ public static partial class LocTable
         // 1.8.4 무기에 맞게 실시간으로
         { "지금 무기에는 효과가 없습니다", L("No effect with your current weapon", "今の武器には効果がありません", "对当前武器无效") },
         { "지금 무기에는 맞지 않아 대신 단계마다 무기 피해 +6%", L("Doesn't fit your current weapon, so it grants +6% weapon damage per level instead", "今の武器に合わないため、代わりに段階ごとに武器ダメージ +6%", "不适合当前武器，改为每级武器伤害 +6%") },
+        // 1.0.4 묶음 6: 죽음 · 결과 · ESC
+        { "정말로 다시 시작하시겠습니까?", L("Really restart?", "本当にリスタートしますか？", "确定要重新开始吗？") },
+        { "지금 판을 버리고 같은 캐릭터 · 난이도로 새로 시작합니다.", L("This run will be abandoned and a new one starts with the same character and difficulty.", "今のプレイを捨てて、同じキャラ・難易度で最初から始めます。", "将放弃本局，以相同角色和难度重新开始。") },
+        { "정말로 게임을 종료하시겠습니까?", L("Really quit the game?", "本当にゲームを終了しますか？", "确定要退出游戏吗？") },
+        { "클리어 기록은 이미 저장되었습니다.", L("Your clear has already been recorded.", "クリア記録はすでに保存されています。", "通关记录已保存。") },
     };
 }

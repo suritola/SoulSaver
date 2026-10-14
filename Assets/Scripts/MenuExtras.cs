@@ -21,6 +21,19 @@ public static class MenuExtras
     static void InstallGameOver()
     {
         Canvas canvas = UIKit.HudCanvas();
+        // 1.0.4~: 끝까지 깨고 엔딩을 본 뒤에도 이 결과 화면을 거침 — 「사망하셨습니다...」 대신 「<난이도> 클리어!」, 해골은 숨김
+        if (RunStats.Cleared)
+        {
+            GameObject msg = GameObject.Find("GameOverMessage");
+            TMP_Text title = msg != null ? msg.GetComponentInChildren<TMP_Text>(true) : null;
+            if (title != null)
+            {
+                title.text = GameMode.Name(GameMode.Current) + " " + Loc.T("클리어!");
+                title.color = new Color(0.96f, 0.83f, 0.47f);
+            }
+            GameObject skull = GameObject.Find("Skull");
+            if (skull != null) skull.SetActive(false);
+        }
         // 이번 판 결과 (왼쪽) · [R] 다시 시작
         if (canvas != null)
         {
@@ -302,14 +315,23 @@ public static class MenuExtras
         foreach (Button b in esc.escMenu.GetComponentsInChildren<Button>(true))
             if (b.transform.parent == esc.escMenu.transform) column.Add((RectTransform)b.transform);      // 방금 만든 설정 버튼 포함
         column.Sort((a, b) => b.anchoredPosition.y.CompareTo(a.anchoredPosition.y));
-        const float Top = 120f, Step = 122f;
+        // 1.0.4~: 맨 아래 줄에 「다시 시작」 · 「게임 종료」 를 반씩 나란히 (확인 창을 거침) — 줄이 하나 늘어 간격을 좁힘 (창 560 · 제목 아래 198 ~ 안내 -272)
+        const float Top = 150f, Step = 106f, H = 96f;
         for (int i = 0; i < column.Count; i++)
         {
-            column[i].sizeDelta = new Vector2(column[i].sizeDelta.x, 106f);
+            column[i].sizeDelta = new Vector2(column[i].sizeDelta.x, H);
             column[i].anchoredPosition = new Vector2(0f, Top - Step * i);
         }
+        float rowY = Top - Step * column.Count;
+        float w = lr.sizeDelta.x, half = (w - 16f) * 0.5f;
+        GameObject restart = UIKit.CloneButton(lowest.gameObject, "RestartButton", "다시 시작", esc.onPressRestart);
+        GameObject quit = UIKit.CloneButton(lowest.gameObject, "QuitButton", "게임 종료", esc.onPressQuit);
+        RectTransform rr = (RectTransform)restart.transform, qr = (RectTransform)quit.transform;
+        rr.sizeDelta = qr.sizeDelta = new Vector2(half, H);
+        rr.anchoredPosition = new Vector2(-(half + 16f) * 0.5f, rowY);
+        qr.anchoredPosition = new Vector2((half + 16f) * 0.5f, rowY);
         Transform hint = esc.escMenu.transform.Find("ResumeHint");
-        if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, Top - Step * (column.Count - 1) - 53f - 34f);
+        if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, rowY - H * 0.5f - 34f);
     }
 }
 
