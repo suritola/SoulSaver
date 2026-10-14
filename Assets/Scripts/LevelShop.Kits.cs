@@ -19,11 +19,15 @@ public partial class LevelShop
         public string stat;             // 레벨마다 바뀌는 수치의 이름 (한국어 키)
         public string[] values;         // 레벨 1 ~ 최대의 수치 ("앞말|숫자|단위", 앞말 · 단위는 번역 키)
         public int icon;                // Resources/Icons/ability_<icon>
+        public string zero;             // 1.0.4~: 배우기 전 기본 수치 (줄어드는 수치는 「없음 → 10」이 거꾸로 읽혀서, 있으면 「12 → 10」)
         public int max => values.Length;    // 최대 선택 횟수
     }
 
     static KitCard Card(string name, string desc, int icon, string stat, params string[] values)
         => new KitCard { name = name, desc = desc, icon = icon, stat = stat, values = values };
+
+    // 1.0.4~: 배우기 전 기본 수치를 붙임 (Card(...) 를 감쌈)
+    static KitCard Zero(string zero, KitCard c) { c.zero = zero; return c; }
 
     // "공격력 |40%|" → "공격력 40%" (앞말 · 단위만 번역)
     static string Val(string v)
@@ -50,7 +54,7 @@ public partial class LevelShop
 
     static string KitText(KitCard c, int level)
     {
-        string now = level > 0 ? Val(c.values[Mathf.Min(level, c.max) - 1]) : Loc.T("없음");
+        string now = level > 0 ? Val(c.values[Mathf.Min(level, c.max) - 1]) : c.zero != null ? Val(c.zero) : Loc.T("없음");     // 1.0.4~ 기본 수치
         string next = level < c.max ? Val(c.values[level]) : Loc.T("최대");
         return CardText(Loc.T(c.desc), Loc.T(c.stat), now, next, level, c.max, c.max > 0 ? Val(c.values[c.max - 1]) : null);
     }

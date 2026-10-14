@@ -62,17 +62,25 @@ public class WeaponEvolutionUI : MonoBehaviour
         picked?.Invoke(id);
     }
 
+    // 1.0.4~: 연출 건너뛰기 — 클릭 · [상호작용 키]로 카드가 펼쳐진 상태 · 결과 화면으로 바로
+    // 보스를 쏘던 연타가 바로 넘기지 않게 시작 연출은 0.4초, 결과 화면은 확정한 입력이 넘어오지 않게 0.15초 뒤부터 받음
+    float startedAt;
+    bool skipIntro;
+    static bool SkipPressed(float since, float guard = 0.15f) => Time.unscaledTime - since > guard && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact));
+
     IEnumerator Play()
     {
         Build();
         SpecialFeedback fx = SpecialAbilities.SharedFx;
+        startedAt = Time.unscaledTime;
 
         // 1) 어두워지며 가운데로 영혼 빛이 모임
         fx?.Play("pulse", 0.7f, 0.7f);
         Image core = Img("Core", root, Vector2.zero, new Vector2(150f, 150f), CurrentSprite(), Color.white);
         core.preserveAspect = true;
-        for (float t = 0f; t < 1.1f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 1.1f && !skipIntro; t += Time.unscaledDeltaTime)
         {
+            if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
             float k = t / 1.1f;
             dim.color = new Color(0.02f, 0.01f, 0.04f, 0.9f * Mathf.Clamp01(k * 2f));
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(900f, 260f, k);
@@ -92,8 +100,9 @@ public class WeaponEvolutionUI : MonoBehaviour
         Destroy(core.gameObject);
         title.gameObject.SetActive(true);
         subtitle.gameObject.SetActive(true);
-        for (float t = 0f; t < 0.45f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.45f && !skipIntro; t += Time.unscaledDeltaTime)
         {
+            if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
             float k = t / 0.45f;
             flash.color = new Color(1f, 0.95f, 1f, (1f - k) * FlashMul);
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(260f, 1500f, k);
@@ -104,6 +113,11 @@ public class WeaponEvolutionUI : MonoBehaviour
             yield return null;
         }
         flash.color = Color.clear;
+        dim.color = new Color(0.02f, 0.01f, 0.04f, 0.9f);          // 1.0.4~ 건너뛰어도 끝 모습으로
+        burst.rectTransform.sizeDelta = Vector2.one * 1500f;
+        burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.12f);
+        title.rectTransform.localScale = Vector3.one;
+        title.alpha = subtitle.alpha = 1f;
 
         // 3) 세 카드가 가운데에서 펼쳐짐
         fx?.Play("whoosh", 0.7f, 0.9f);
@@ -113,8 +127,9 @@ public class WeaponEvolutionUI : MonoBehaviour
             goal[i] = new Vector2((i - (cards.Length - 1) / 2f) * 480f, -40f);
             cards[i].gameObject.SetActive(true);
         }
-        for (float t = 0f; t < 0.55f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.55f && !skipIntro; t += Time.unscaledDeltaTime)
         {
+            if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
             float k = EaseOut(t / 0.55f);
             for (int i = 0; i < cards.Length; i++)
             {
@@ -126,13 +141,18 @@ public class WeaponEvolutionUI : MonoBehaviour
         }
         for (int i = 0; i < cards.Length; i++) { cards[i].anchoredPosition = goal[i]; cards[i].localScale = Vector3.one; cards[i].localRotation = Quaternion.identity; }
         confirmButton.gameObject.SetActive(true);
+        yield return null;          // 1.0.4~ 건너뛴 키 입력이 같은 프레임에 확정으로 이어지지 않게
 
-        // 4) 고르기 (클릭 또는 1 · 2 · 3, 확정은 버튼 또는 Space)
+        // 4) 고르기 (클릭 또는 1 · 2 · 3, 확정은 버튼 · Space · 같은 숫자 한 번 더 — 1.0.4~ 레벨업 · 보스 보상 창과 같은 방식, 키패드 숫자도)
         while (!confirmed)
         {
             for (int i = 0; i < cards.Length; i++)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1 + i)) Select(i);
+                if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+                {
+                    if (selected == i) Confirm();
+                    else Select(i);
+                }
                 float target = i == selected ? 1.08f : 1f;
                 cards[i].localScale = Vector3.one * Mathf.MoveTowards(cards[i].localScale.x, target, Time.unscaledDeltaTime * 1.5f);
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
@@ -171,7 +191,9 @@ public class WeaponEvolutionUI : MonoBehaviour
         title.text = sp.EvolutionName(options[selected], tier);
         subtitle.text = Loc.T("무기가 진화했습니다! 이제 이 무기와 함께 싸웁니다");
         for (int i = 0; i < 40; i++) Spark(new Vector2(0f, -20f), Random.insideUnitCircle.normalized * Random.Range(500f, 1300f), Random.Range(0.5f, 0.9f));
-        yield return new WaitForSecondsRealtime(1.1f);
+        // 1.0.4~: 결과 화면 1.1초도 클릭 · [상호작용 키]로 넘김 (확정한 그 입력은 받지 않게 0.15초 뒤부터)
+        float resultAt = Time.unscaledTime;
+        while (Time.unscaledTime - resultAt < 1.1f && !SkipPressed(resultAt)) yield return null;
 
         // 6) 사라짐
         CanvasGroup all = root.gameObject.AddComponent<CanvasGroup>();

@@ -97,9 +97,19 @@ public partial class LevelShop : MonoBehaviour
         UpdateSkipButton();
         // 마지막 카드를 배워 만렙이 되면 남은 레벨업은 버림
         if (PendingLevels > 0 && !IsOpen && NothingToLearn) PendingLevels = 0;
-        // 숫자 1 · 2 · 3: 그 카드를 바로 고름 (2.1.8, 클릭 → 확정 두 번을 한 번에)
+        // 숫자 1 · 2 · 3: 그 카드를 고름, 이미 고른 카드의 숫자를 한 번 더 누르면 확정
+        // 1.0.4~: 예전엔 한 번에 확정돼 살펴보려다 실수로 골랐음 → 보스 보상 · 무기 진화 창과 같은 방식으로 통일
         int quick = QuickPickKey();
-        if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy) ConfirmSlot(quick);
+        if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy)
+        {
+            if (quick == pendingSlot) ConfirmSlot(quick);
+            else
+            {
+                pendingSlot = quick;
+                lastPickAt = -9f;           // 숫자로 고른 뒤 클릭 한 번이 더블클릭으로 잡히지 않게
+                RefreshCards();
+            }
+        }
         // 클릭으로 고른 카드를 스페이스바로 확정
         else if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
             ConfirmSlot(pendingSlot);
@@ -126,9 +136,10 @@ public partial class LevelShop : MonoBehaviour
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         int n = sp != null ? sp.Rerolls : 0;
         bool open = IsOpen && n > 0 && ShowRerollIntro;
-        if (open && KeyBindings.Down(GameAction.Reroll) && sp.TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
+        // 1.0.4~: 열린 직후 0.6초 잠금(selectReady) 동안은 받지 않음 — 재장전하던 [R]에 다시 뽑기가 써지던 문제
+        if (open && selectReady && KeyBindings.Down(GameAction.Reroll) && sp.TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
         {
-            UpdateLvShopContent();
+            UpdateLvShopContent(true);      // 1.0.4~: 방금 본 세 장은 빼고 뽑음
             pendingSlot = -1;
             RefreshCards();
             PlayRerollFx();             // 1.0.1: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
@@ -311,7 +322,7 @@ public partial class LevelShop : MonoBehaviour
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
             selectHint.color = picked != null ? new Color(1f, 0.86f, 0.4f) : Color.white;
             selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked
-                                             : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#C9BCA4>" + Loc.T("더블클릭 · 숫자 1 2 3 으로 바로") + "</color>";
+                                             : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#C9BCA4>" + Loc.T("더블클릭 · 같은 숫자 두 번으로 바로") + "</color>";     // 1.0.4~ 숫자 키 방식 통일
         }
     }
 
@@ -484,6 +495,8 @@ public partial class LevelShop : MonoBehaviour
         
         LvshopPanel.SetActive(true);
         EnsureSkipButton();
+        DisarmSkip();                       // 1.0.4~: 건너뛰기 두 번 누르기를 처음 상태로
+        evoIntroShowing = false;            // 1.0.4~: 스킬 진화 첫 안내는 처음 본 창에서만
         LockSelection();
         UpdateLvShopContent();
         pendingSlot = -1;
@@ -497,15 +510,23 @@ public partial class LevelShop : MonoBehaviour
         Time.timeScale = 1f;
     }
     private int first = 0, second = 1, third = 2;
-    void UpdateLvShopContent()
+    void UpdateLvShopContent(bool reroll = false)
     {
         // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 비상 보급)
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
+        // 1.0.4~: 다시 뽑기면 방금 보여 준 세 장은 뒤로 미룸 (다른 카드가 모자랄 때만 다시 나옴 — 같은 카드가 또 나오던 문제)
+        System.Collections.Generic.List<int> spare = new System.Collections.Generic.List<int>();
         // 지금 무기에 안 맞는 카드는 빼고 (예: 영혼 저격총에 유도 탄두) — 무기가 바뀌면 다시 나옴
-        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) open.Add(i);
+        for (int i = 0; i < Total_abilitys; i++)
+        {
+            if (ability_selected[i] || !KitFits(i) || SigLocked(i)) continue;
+            if (reroll && (i == first || i == second || i == third)) spare.Add(i);
+            else open.Add(i);
+        }
         // 스킬 진화에 가까운 카드일수록 조금 더 잘 나옴 (가중치 1 ~ 1.8, LevelShop.Signature)
         int Draw()
         {
+            if (open.Count == 0 && spare.Count > 0) { open.AddRange(spare); spare.Clear(); }
             if (open.Count == 0) return SupplyId;
             float total = 0f;
             foreach (int c in open) total += DrawWeight(c);

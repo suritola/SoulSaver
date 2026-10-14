@@ -1773,5 +1773,17 @@ public static partial class LocTable
           L("Ultimate target marks: a large gray mark means your ultimate can't finish that enemy yet, it shrinks as you get closer, and once it regains its color and spins, your ultimate will kill it.",
             "必殺技の照準マーク：灰色で大きいうちはまだ必殺技の一撃で倒せず、小さくなるほど近づき、色が戻ってくるくる回れば必殺技で倒せる敵です。",
             "必杀技瞄准标记：灰色且较大时，必杀技还无法一击击倒；越小越接近；恢复颜色并开始旋转时，即可用必杀技击杀。") },
+        // 1.0.4 묶음 5
+        { "더블클릭 · 같은 숫자 두 번으로 바로", L("Double-click or press the same number twice to pick instantly", "ダブルクリック・同じ数字を2回ですぐ選択", "双击或按同一数字两次直接选择") },
+        { "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", L("Double-click, press the same number twice, or press [Space] to confirm", "ダブルクリック・同じ数字を2回・[Space]で決定", "双击、按同一数字两次或按[Space]确认") },
+        { "이번 레벨업 포기", L("Forfeit This Level-Up", "今回のレベルアップを放棄", "放弃本次升级") },
+        { "한 번 더 누르면 포기", L("Press again to forfeit", "もう一度押すと放棄", "再按一次即放弃") },
+        { "실수로 누르지 않게 두 번 눌러야 포기됩니다.", L("To prevent accidents, you must press it twice to forfeit.", "誤操作を防ぐため、2回押すと放棄されます。", "为防误触，需要按两次才会放弃。") },
+        { "지금 무기로는 안 나옴", L("Not with this weapon", "今の武器では出ない", "当前武器不出现") },
+        { "카드 위 보라 띠는 스킬 진화입니다. 띠의 스킬을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다.", L("The purple strip above a card is a skill evolution. Max out every skill on the strip and they merge into a new ability.", "カード上の紫の帯はスキル進化です。帯のスキルをすべて最大段階にすると1つに合わさり、新しい能力が生まれます。", "卡牌上方的紫色条是技能进化。将条上的技能全部升到最高级，它们会合而为一并获得新能力。") },
+        { "이미 가진 카드와 잘 어울리는 카드입니다. 함께 키우면 서로의 효과를 살려 줍니다.", L("This card pairs well with a card you already have. Grow them together and they boost each other.", "すでに持っているカードと相性の良いカードです。一緒に育てると互いの効果を引き立てます。", "这张卡与你已有的卡很搭配。一起培养可以互相增强效果。") },
+        { "경험치가 차면 레벨업 포인트가 쌓입니다. [{INTERACT}]를 눌러 창을 열고 카드를 고르세요. (클릭 → [{INTERACT}], 더블클릭, 같은 숫자 두 번)", L("When your XP fills up you earn a level-up point. Press [{INTERACT}] to open the window and pick a card. (click → [{INTERACT}], double-click, or the same number twice)", "経験値がたまるとレベルアップポイントがたまります。[{INTERACT}]でウィンドウを開いてカードを選ぼう。（クリック → [{INTERACT}]、ダブルクリック、同じ数字を2回）", "经验值满后会累积升级点数。按[{INTERACT}]打开窗口并选择卡牌。（点击 → [{INTERACT}]、双击或按同一数字两次）") },
+        { "어울리는 카드", L("Pairs with", "相性の良いカード", "搭配卡牌") },
+        { "최대 레벨에 닿았습니다! 더는 레벨이 오르지 않습니다.", L("You've reached the max level! You can't level up any further.", "最大レベルに到達しました！これ以上レベルは上がりません。", "已达到最高等级！无法再升级。") },
     };
 }

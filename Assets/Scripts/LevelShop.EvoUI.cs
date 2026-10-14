@@ -28,6 +28,7 @@ public partial class LevelShop
     void ShowEvoHints()
     {
         int[] ids = { first, second, third };
+        bool anyEvo = false;
         for (int slot = 0; slot < 3; slot++)
         {
             Transform card = CardOf(slot);
@@ -36,6 +37,8 @@ public partial class LevelShop
             SkillEvo e = ids[slot] == SupplyId ? null : EvoUsing(ids[slot]);
             row.root.gameObject.SetActive(e != null);
             if (e == null) continue;
+            anyEvo = true;
+            bool blockedAny = false;
             for (int i = 0; i < 3; i++)
             {
                 bool has = i < e.parts.Length;
@@ -48,9 +51,14 @@ public partial class LevelShop
                 int lv = LevelOf(p);
                 bool done = max > 0 && lv >= max;
                 bool me = p == ids[slot];
-                row.frames[i].color = me ? new Color(0.96f, 0.83f, 0.47f) : done ? EvoDone : new Color(0.35f, 0.3f, 0.45f);
-                row.levels[i].text = (me ? lv + 1 : lv) + "/" + max;
-                row.levels[i].color = done ? EvoDone : Color.white;
+                // 1.0.4~ (거너): 지금 무기에 맞지 않아 뽑히지 않는 재료는 회색
+                bool blocked = !done && !me && !KitFits(p);
+                blockedAny |= blocked;
+                row.frames[i].color = me ? new Color(0.96f, 0.83f, 0.47f) : done ? EvoDone : blocked ? new Color(0.22f, 0.22f, 0.24f) : new Color(0.35f, 0.3f, 0.45f);
+                row.parts[i].color = blocked ? new Color(0.45f, 0.45f, 0.45f, 0.6f) : Color.white;
+                // 1.0.4~: 이 카드는 「지금→고른 뒤/최대」로 (예전엔 고른 뒤 값만 나와 지금 단계로 오해)
+                row.levels[i].text = me ? lv + "→" + (lv + 1) + "/" + max : lv + "/" + max;
+                row.levels[i].color = done ? EvoDone : blocked ? new Color(0.6f, 0.6f, 0.6f) : Color.white;
             }
             row.evo = e;
             row.evoIcon.sprite = Resources.Load<Sprite>("Icons/ability_" + e.icon);
@@ -62,10 +70,42 @@ public partial class LevelShop
                 left += Mathf.Max(0, max - LevelOf(p) - (p == ids[slot] ? 1 : 0));
             }
             string tag = left <= 0 ? "<color=#FFD966>" + Loc.T("바로 진화!") + "</color>" : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
+            if (blockedAny && left > 0) tag = "<color=#A8A8A8>" + Loc.T("지금 무기로는 안 나옴") + "</color>";       // 1.0.4~
             row.name.text = "<size=70%>" + Loc.T("진화") + " · " + tag + "</size>\n" + Loc.T(e.name);
         }
+        ShowEvoIntro(anyEvo);
         ShowRecommend(ids);
         ShowSynergyTags(ids);         // 1.0.1: 가진 카드와 어울리는 카드에 「시너지」
+    }
+
+    // ================================================================= 스킬 진화 첫 안내 (1.0.4~)
+    // 진화 띠가 처음 나온 레벨업 창에서 한 번만, 창 위쪽에 한 줄 (게임 전체에서 한 번, 저장)
+    const string EvoIntroKey = "intro.evoband";
+    TextMeshProUGUI evoIntroText;
+    bool evoIntroShowing;
+
+    void ShowEvoIntro(bool anyEvo)
+    {
+        if (!evoIntroShowing && anyEvo && !TutorialRun.Active && !GameInput.Auto && Prefs.GetInt(EvoIntroKey, 0) == 0)
+        {
+            evoIntroShowing = true;
+            Prefs.SetInt(EvoIntroKey, 1);
+        }
+        if (evoIntroText == null)
+        {
+            if (!evoIntroShowing || LvshopPanel == null) return;
+            UIKit.EnsureStyle();
+            // 「능력을 하나 선택하세요」 띠(380, 0.66배) 바로 위
+            evoIntroText = Label((RectTransform)LvshopPanel.transform, new Vector2(0f, 448f), new Vector2(1500f, 44f), 28f);
+            evoIntroText.name = "EvoIntro";
+            evoIntroText.color = EvoPurple;
+            evoIntroText.enableAutoSizing = true;
+            evoIntroText.fontSizeMin = 16f;
+            evoIntroText.fontSizeMax = 28f;
+        }
+        evoIntroText.gameObject.SetActive(evoIntroShowing);
+        if (evoIntroShowing)
+            evoIntroText.text = "<color=#FFE066>" + Loc.T("도움말") + "</color>  " + Loc.T("카드 위 보라 띠는 스킬 진화입니다. 띠의 스킬을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다.");
     }
 
     // ================================================================= 추천 카드 (2.1.6~)
@@ -122,6 +162,9 @@ public partial class LevelShop
             row.parts[i] = Box(frame.rectTransform, Vector2.zero, new Vector2(40f, 40f), Color.white);
             row.parts[i].preserveAspect = true;
             row.levels[i] = Label(frame.rectTransform, new Vector2(0f, -30f), new Vector2(60f, 22f), 17f);
+            row.levels[i].enableAutoSizing = true;          // 1.0.4~: 「2→3/3」도 칸 안에
+            row.levels[i].fontSizeMin = 11f;
+            row.levels[i].fontSizeMax = 17f;
         }
         TextMeshProUGUI arrow = Label(r, new Vector2(-4f, 4f), new Vector2(30f, 40f), 30f);
         arrow.text = "▶";
@@ -189,30 +232,54 @@ public partial class LevelShop
         skipButton = UIKit.MakeButton(LvshopPanel.transform, "", new Vector2(0f, SkipY), new Vector2(440f, 78f), SkipLevel, 30f);
         skipButton.name = "SkipButton";
         skipText = skipButton.GetComponentInChildren<TextMeshProUGUI>();
-        skipText.text = Loc.T("건너뛰기") + "  ▶▶";
         skipText.fontStyle = FontStyles.Bold;
+        skipText.enableAutoSizing = true;           // 1.0.4~: 번역이 길어도 버튼 안에
+        skipText.fontSizeMin = 18f;
+        skipText.fontSizeMax = 30f;
         Image img = skipButton.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.55f, 0.35f);
         TooltipTrigger tip = skipButton.gameObject.AddComponent<TooltipTrigger>();
-        tip.title = Loc.T("건너뛰기");
-        tip.body = Loc.T("이번 레벨업에서는 아무것도 배우지 않습니다. 원하는 스킬 · 진화를 노릴 때 쓰세요.");
+        tip.title = Loc.T("이번 레벨업 포기");
+        tip.body = Loc.T("이번 레벨업에서는 아무것도 배우지 않습니다. 원하는 스킬 · 진화를 노릴 때 쓰세요.") + "\n" + Loc.T("실수로 누르지 않게 두 번 눌러야 포기됩니다.");
+        DisarmSkip();
+    }
+
+    // 1.0.4~: 「다음」 버튼인 줄 알고 눌러 레벨업이 사라지던 문제 → 두 번 눌러야 포기 (2초 안에), 문구도 「이번 레벨업 포기」
+    const float SkipConfirmTime = 2f;
+    float skipArmedAt = -99f;
+    bool SkipArmed => Time.unscaledTime - skipArmedAt < SkipConfirmTime;
+
+    void DisarmSkip()
+    {
+        skipArmedAt = -99f;
+        if (skipText != null) skipText.text = Loc.T("이번 레벨업 포기") + "  ▶▶";
     }
 
     void UpdateSkipButton()
     {
         if (skipButton == null) return;
-        bool show = IsOpen;
+        bool show = IsOpen && !freePick;            // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드)
         if (skipButton.gameObject.activeSelf != show) skipButton.gameObject.SetActive(show);
         if (!show) return;
         skipButton.interactable = selectReady;
+        if (skipArmedAt > 0f && !SkipArmed) DisarmSkip();
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         skipButton.transform.localScale = Vector3.one * (1f + 0.03f * pulse);
-        if (skipText != null) skipText.color = Color.Lerp(Color.white, new Color(1f, 0.9f, 0.6f), pulse);
+        if (skipText != null) skipText.color = SkipArmed ? Color.Lerp(new Color(1f, 0.45f, 0.4f), Color.white, pulse)
+                                                         : Color.Lerp(Color.white, new Color(1f, 0.9f, 0.6f), pulse);
     }
 
     void SkipLevel()
     {
-        if (!selectReady || !IsOpen) return;
+        if (!selectReady || !IsOpen || freePick) return;
+        if (!SkipArmed)
+        {
+            skipArmedAt = Time.unscaledTime;
+            if (skipText != null) skipText.text = Loc.T("한 번 더 누르면 포기");
+            SpecialAbilities.SharedFx?.Play("ding", 0.4f, 0.8f);
+            return;
+        }
+        DisarmSkip();
         selectReady = false;
         pendingSlot = -1;
         freePick = false;
