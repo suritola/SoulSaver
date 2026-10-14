@@ -13,13 +13,13 @@ public partial class BossSkills
     static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령" };     // CharacterId 순서
     int devTurn;
 
-    // 1.0.4~ 공격 주기 ÷10 (개발자 엄마는 ÷20) → 1.0.6~ ÷2 (엄마 ÷4): 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
-    //   예전: 한 번에 하나씩, 끝난 뒤 1.2초 쉬고 다음까지 최소 2.2초 (분노 1.4초) → 지금: 0.22초 (분노 0.14초)마다 새 필살기 · 엄마는 그 절반
+    // 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
     //   화면이 터져 게임이 멈추지 않게 동시에 도는 필살기는 최대 DevMaxRunning 개 · 날고 있는 적 탄이 DevBulletCap 을 넘으면 더 쏘지 않음
     //   엄마는 필살기 · 탄 피해도 2배 (한 대 상한도 최대 체력의 20% → 40%, 즉사 없음)
-    const float DevRateMul = 1.1f;          // 1.0.6~ 10 → 1.1 (필살기 간격 0.22초 → 2초, 분노 0.14초 → 약 1.27초 · 엄마는 그 절반 1초, 분노 약 0.64초)
+    // 1.0.7~ 필살기 간격은 체력에 따라: 가득 찼을 때 10초 → 체력이 닳을수록 점점 짧아져 바닥에서 1초 (엄마는 그 절반 5초 → 0.5초)
+    const float DevSlowest = 10f, DevFastest = 1f;
     const int DevBulletCap = 400;
-    float DevRate => boss != null && boss.developerMom ? DevRateMul * 2f : DevRateMul;
+    float DevInterval => Mathf.Lerp(DevFastest, DevSlowest, HpFrac) * (boss.developerMom ? 0.5f : 1f);
     // 1.0.6~ 피해 -20% (개발자 ×1 → ×0.8, 엄마 ×2 → ×1.6 — 엄마는 여전히 개발자의 2배)
     const float DevDamageMul = 0.8f;
     float DevPow => (boss != null && boss.developerMom ? 2f : 1f) * DevDamageMul;
@@ -31,7 +31,7 @@ public partial class BossSkills
     void DeveloperTurn(PlayerController p)
     {
         if (Time.time < next || devRunning >= DevMaxRunning) return;
-        next = Time.time + (boss.Enraged ? 1.4f : 2.2f) / DevRate;
+        next = Time.time + DevInterval;
         int who = devTurn++ % DevHeroes.Length;
         if (who == (int)CharacterId.Ghost) who = devTurn++ % DevHeroes.Length;       // 1.0.7~ 유령(빙의)은 쓰지 않음
         // 알림은 1.8초에 한 번만 (0.2초마다 덮이면 읽을 수 없음)
@@ -96,7 +96,7 @@ public partial class BossSkills
                 break;
             case CharacterId.Archer:
                 // 화살비: 더 많은 파도 + 끝에 하늘에서 쏟아지는 고리
-                yield return DevRain(strong ? 5 : 4);
+                yield return DevRain(strong ? 10 : 8);          // 1.0.7~ 4 · 5 → 8 · 10 (한 번 쓰고 끝나지 않게)
                 if (Alive) DevRing(20, 6.5f, 0f, 12f);
                 break;
             case CharacterId.Ghost:
@@ -107,7 +107,8 @@ public partial class BossSkills
             case CharacterId.Postman:
                 // 속달: 플레이어 둘레 곳곳에 표식이 붙고 한꺼번에 터짐 + 편지 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
-                yield return DevExpress(strong ? 14 : 10);
+                for (int i = 0; i < (strong ? 4 : 3) && Alive; i++)        // 1.0.7~ 한 번 → 3 · 4번
+                    yield return DevExpress(strong ? 14 : 10);
                 break;
             case CharacterId.Clockmaker:
                 // 되감기: 지난 자리마다 시계가 터짐 + 톱니 탄막
@@ -121,8 +122,8 @@ public partial class BossSkills
                 break;
             default:
                 // 대폭발: 큰 폭발 사이사이 불꽃놀이
-                StartCoroutine(DevFireworks(strong ? 8 : 6));
-                yield return DevBlast(strong ? 3 : 2);
+                StartCoroutine(DevFireworks(strong ? 16 : 12));
+                yield return DevBlast(strong ? 6 : 5);          // 1.0.7~ 2 · 3 → 5 · 6 (한 번 쓰고 끝나지 않게)
                 break;
         }
     }
