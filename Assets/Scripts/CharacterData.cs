@@ -89,7 +89,7 @@ public static class CharacterData
             name = "유령", title = "죽지 못한 영혼", body = "ghost", held = "lantern",
             description = "세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
             weapon = "차가운 손길", attack = "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
-            skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
+            skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",     // 1.0.4~: 1초 → 3초 · 조종
             hp = 0.8f, damage = 1f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,
             pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f) },
         Coming(),

@@ -5,8 +5,8 @@ using UnityEngine;
 // 유령 (1.0.2): 죽지 못한 영혼
 //   평타 · 차가운 손길: 앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓음 (다섯 번 쌓이면 1초 얼어붙음)
 //   영혼(도깨비불): 적을 쓰러뜨리면 확률로(20%) 영혼이 생겨 몸 둘레를 돎 (최대 4). 맞을 때 영혼이 대신 사라지며 피해를 막음
-//   우클릭 · 빙의: 누르고 있으면 마우스 가까운 적에 표시, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨림
-//                 (들어간 동안 무적 · 둘레 적에게도 피해와 냉기)
+//   우클릭 · 빙의: 누르고 있으면 마우스 가까운 적에 표시, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨림
+//                 (들어간 동안 무적 · 둘레 적에게도 피해와 냉기) — 1.0.4~: 1초 → 3초, 들어간 동안 조종
 // 레벨업 카드 (card): 0 꿰뚫는 냉기 · 1 얼어붙는 손길 · 2 원혼 · 3 빙의 여운 · 5 영혼 수호 · 6 얼음 파편
 // 형태: 사슬 망령 · 얼음 유령 · 그림자 유령 / 강화: 깊은 냉기 · 두 손 · 영혼 폭발
 public partial class CharacterKit
@@ -303,6 +303,20 @@ public partial class CharacterKit
     Transform possessTarget;
     LineRenderer possessRange;          // 빙의 미리 보기: 터질 범위 (반지름 PossessRadius)
     const float PossessRadius = 5f;
+    // 1.0.4~: 빙의 지속 1초 → 3초. 들어간 동안 내가 움직이면 그 적의 몸이 따라오고, 이동 속도는 그 적의 속도(난이도 · 장 배율이 붙은 값) 그대로
+    //         너무 느리거나 빠른 적에서 조작이 망가지지 않게 내 평소 이동 속도의 30% ~ 130% 사이로만 (평소 21쯤이면 6.3 ~ 27.3 · 잡몹 6 ~ 16은 거의 그대로, 보스 5 ~ 7은 6.3 ~ 7)
+    //         보스 · 적이 스킬을 쓰는 동안(casting) · 움직이지 않는 것(보스가 만든 등불 · 묘비)은 예전처럼 그 몸에 붙어 따라감 (스킬 동작이 깨지지 않게)
+    const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.65f;
+    const float PossessSpeedMin = 0.3f, PossessSpeedMax = 1.3f;
+    float possessSpeed = -1f;           // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (MoveMul 이 씀)
+
+    // 플레이어 이동 배율 (MoveMul): 내 속도(player.speed × 고유 스킬 배율)에 곱해 빙의한 적의 속도가 되게
+    float PossessMoveMul()
+    {
+        float own = player != null ? player.speed * SignatureSkills.MoveMul : 0f;
+        if (own <= 0.01f) return 1f;
+        return Mathf.Clamp(possessSpeed, own * PossessSpeedMin, own * PossessSpeedMax) / own;
+    }
 
     // 1.0.2: 적의 중심이 아니라 몸 가장자리까지의 거리로 고름 (큰 적 · 보스는 몸 위에 마우스를 올려도 안 잡히던 것)
     Transform PossessCandidate()
@@ -364,35 +378,45 @@ public partial class CharacterKit
         HidePossessAim();
         if (possessTarget == null) { Play("buzz", 0.4f); return; }          // 적이 없으면 게이지를 쓰지 않음
         StartCoroutine(PossessRoutine(possessTarget, Damage * 6f * UltMul));
-        KitUltAdd(1.2f, possessTarget.position);
+        // 1.0.4~: 무기 필살기 추가 발동은 터지는 순간에 터진 자리로 (PossessRoutine 끝 · 예전엔 1.2초 뒤 들어간 자리)
         Spend(gauge);
     }
 
     IEnumerator PossessRoutine(Transform target, float dmg)
     {
         possessing = true;
-        player.GrantInvincibility(1.8f);
+        // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.65초 (예전과 같은 여유)
+        player.GrantInvincibility(PossessEnter + PossessGrace);
         Color before = body.color;
         Vector3 from = transform.position;
         Play("possess", 0.9f, 1f);
         Play("whoosh", 0.7f, 0.5f);
-        for (float t = 0f; t < 0.15f && target != null; t += Time.deltaTime)
+        for (float t = 0f; t < PossessEnter && target != null; t += Time.deltaTime)
         {
-            transform.position = Vector3.Lerp(from, target.position, t / 0.15f);
+            transform.position = Vector3.Lerp(from, target.position, t / PossessEnter);
             yield return null;
         }
         body.color = new Color(before.r, before.g, before.b, 0.12f);
-        FxAnim glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, 1f) : null;
+        FxAnim glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, PossessTime) : null;
         if (glow != null) glow.follow = target;
-        EnermyController host = target != null ? target.GetComponent<EnermyController>() : null;
+        // 1.0.4~: 콜라이더가 자식에 있는 적 · 보스도 몸통(루트)을 찾아 끌고 다님
+        EnermyController host = target != null ? target.GetComponentInParent<EnermyController>() : null;
+        bosss bossHost = target != null && host == null ? target.GetComponentInParent<bosss>() : null;
+        Transform carry = host != null ? host.transform : bossHost != null ? bossHost.transform : null;
         bool hostDiedEarly = false;
-        for (float t = 0f; t < 1f; t += Time.deltaTime)
+        for (float t = 0f; t < PossessTime; t += Time.deltaTime)
         {
             // 1.0.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
-            if (target == null || (host != null && host.IsDead)) { hostDiedEarly = true; break; }
-            transform.position = target.position;
+            if (target == null || (host != null && host.IsDead) || (bossHost != null && bossHost.IsDead)) { hostDiedEarly = true; break; }
+            player.GrantInvincibility(PossessGrace);
+            // 1.0.4~: 내가 움직이고 그 적의 몸이 따라옴 (이동 속도는 그 적의 속도) · 스킬을 쓰는 중이거나 움직이지 않는 것은 그 몸에 붙어 따라감
+            bool steer = carry != null && !(host != null ? host.casting : bossHost.casting);
+            possessSpeed = steer ? Mathf.Max(0f, host != null ? host.speed : bossHost.speed) : -1f;
+            if (steer) { Vector3 d = transform.position - target.position; d.z = 0f; carry.position += d; }
+            else transform.position = target.position;
             yield return null;
         }
+        possessSpeed = -1f;
         if (glow != null) Destroy(glow.gameObject);
         Vector3 at = transform.position;
         body.color = before;
@@ -420,6 +444,7 @@ public partial class CharacterKit
         Play("wail", 0.8f, 0.8f);
         Play("freeze", 0.7f, 0.8f);
         if (card[3] > 0) StartCoroutine(PossessMist(at, 1f + card[3]));
+        KitUltAdd(0.05f, at);
         SignatureSkills.Possessed(at, killed);
         possessing = false;
     }
