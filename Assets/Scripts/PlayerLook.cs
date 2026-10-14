@@ -43,9 +43,29 @@ public class PlayerLook : MonoBehaviour
         SpecialAbilities.SeekerId => 12f, SpecialAbilities.FlameId => 2f, SpecialAbilities.ScytheId => -70f, _ => 8f,
     };
 
+    // 1.0.4~ 플레이어는 모든 이펙트(스킬 · 필살기 · 보스 패턴 · 경고 · 탄 · 장판 등) 위에: 맨 위 정렬 레이어 "Player" (ProjectSettings/TagManager, HPpack 다음)
+    // 몸(모든 영웅 · 스킨 · 윤곽선은 같은 그림의 재질) · 들고 있는 무기 · 동작 인형 · 머리 위 막대 · 시약 표시 · 알림 글자가 이 레이어
+    // 적은 Character 레이어 그대로(플레이어 아래), 화면 UI · 가장자리 번쩍임 · 페이드는 Screen Space Overlay 캔버스라 지금처럼 그 위
+    static bool topLayerFound;
+    static int topLayer;
+    public static int TopLayer
+    {
+        get
+        {
+            if (topLayerFound) return topLayer;
+            int id = SortingLayer.NameToID("Player");
+            topLayer = SortingLayer.IsValid(id) ? id : SortingLayer.NameToID("HPpack");      // 레이어가 없으면 지금 있는 것 중 맨 위
+            topLayerFound = true;
+            return topLayer;
+        }
+    }
+
     public static void Attach(PlayerController p)
     {
-        if (p == null || p.GetComponent<PlayerLook>() != null) return;
+        if (p == null) return;
+        // 무기(HeldWeapon) · 동작 인형(PlayerMotion)은 몸의 레이어를 따라가므로 PlayerLook 을 붙이기 전에 몸부터 맨 위로
+        if (p.TryGetComponent(out SpriteRenderer sr)) sr.sortingLayerID = TopLayer;
+        if (p.GetComponent<PlayerLook>() != null) return;
         p.gameObject.AddComponent<PlayerLook>();
     }
 
