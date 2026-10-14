@@ -484,8 +484,13 @@ public class RunClock : MonoBehaviour
     TextMeshProUGUI text;
     float start;
     int shown = -1;
+    static RunClock instance;
 
-    public static void Create()
+    // 지금 화면에 보이는 시간 (판 중간 저장이 적어 둠)
+    public static float Elapsed => instance != null ? Time.time - instance.start : 0f;
+
+    // already: 이어하기면 저장할 때까지 흐른 시간부터 (1.0.4~, 예전엔 00:00 부터 다시 셈)
+    public static void Create(float already = 0f)
     {
         // 탄약 패널이 있는 화면 캔버스 (HUD 와 같은 곳)
         Canvas canvas = null;
@@ -521,7 +526,8 @@ public class RunClock : MonoBehaviour
         t.raycastTarget = false;
         RunClock c = go.AddComponent<RunClock>();
         c.text = t;
-        c.start = Time.time;
+        c.start = Time.time - Mathf.Max(0f, already);
+        instance = c;
     }
 
     void Update()

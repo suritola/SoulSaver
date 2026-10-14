@@ -21,6 +21,16 @@ public static class RunSave
         public int character, difficulty, stage, kills, specialPoints, rerolls;
         public int level, earned, pending, coins, shards, shardsTotal, shardsSpent;
         public float hp, nowExp, needExp, gauge, seconds;
+        public float clock;                             // 화면 위 시계 (1.0.4~, 없으면 seconds 로)
+        public bool hasPos;                             // 나갈 때 서 있던 곳 (1.0.4~, 같은 장에서 보스가 나오기 전에만)
+        public float px, py;
+        // 1.0.4~: 끝나지 않은 일 — 보스를 잡고 문에 들어가기 전에 나갔음 · 보스 보상을 아직 안 고름 · 이 장 저주 제단을 아직 안 고름
+        public bool gatePending, needBossReward, altarPending;
+        // 1.0.4~: 진행 중이던 습격 · 살아 있던 중간 보스(엘리트) 는 다시, 안 연 보물 상자는 옆에 다시 놓음 · 이번 장 최후의 보루 쓴 횟수
+        public bool midBossAlive;
+        public int ambushLeft, chests, lastStandUsed;
+        public List<string> takenKeys = new List<string>();
+        public List<float> takenValues = new List<float>();
         public int runKills;
         public bool needEvolution;                      // 보스는 쓰러뜨렸지만 무기 진화를 아직 고르지 않음
         public List<string> log = new List<string>();
@@ -36,6 +46,8 @@ public static class RunSave
     public static bool Replaying { get; private set; }
     // 보스를 쓰러뜨렸고 무기 진화를 아직 고르지 않음
     public static bool NeedEvolution;
+    // 보스를 쓰러뜨렸고 보스 보상 3택을 아직 고르지 않음 (1.0.4~)
+    public static bool NeedBossReward;
     // 튜토리얼처럼 저장하지 않는 판 (TutorialRun 이 켬)
     public static bool Disabled;
 
@@ -48,7 +60,9 @@ public static class RunSave
         {
             if (s.name != "GameScene") return;
             log.Clear();
-            NeedEvolution = false;
+            NeedEvolution = NeedBossReward = false;
+            Curse.PendingStage = -1;                        // 지난 판에서 남은 값이 섞이지 않게
+            ChapterEvents.Resume(0, false, 0);
             new GameObject("RunSaveWatcher").AddComponent<Watcher>();
         };
     }
@@ -117,6 +131,7 @@ public static class RunSave
             nowExp = p.nowEXP,
             needExp = p.needEXP,
             seconds = RunStats.Seconds,
+            clock = RunClock.Elapsed,
             runKills = RunStats.Kills,
             shards = SoulShards.Amount,
             shardsTotal = SoulShards.Total,
@@ -132,20 +147,48 @@ public static class RunSave
         SpecialAbilities specials = SpecialAbilities.SharedInstance;
         d.rerolls = specials != null ? specials.Rerolls : 0;
         foreach (KeyValuePair<string, float> kv in RunStats.DamageDealt) { d.dealtKeys.Add(kv.Key); d.dealtValues.Add(kv.Value); }
+        foreach (KeyValuePair<string, float> kv in RunStats.DamageTaken) { d.takenKeys.Add(kv.Key); d.takenValues.Add(kv.Value); }
 
         // 장 · 처치 수: 보스를 쓰러뜨린 뒤면 다음 장 처음부터, 보스와 싸우는 중이면 보스가 바로 다시 나오게
+        // 마지막 보스가 쓰러지는 연출(1초) 중이면 이미 쓰러뜨린 것으로 (1.0.4~, 예전엔 보스가 다시 나왔음)
         int stage = sm.CurrentStage;
-        if (sp.bossCleared)
+        bool bossDown = sp.bossCleared;
+        if (!bossDown && Chapters.Next(stage) >= 0 && sp.bossSpawned && bosss.LiveCount == 0)
+            foreach (bosss b in Object.FindObjectsByType<bosss>(FindObjectsSortMode.None))
+                if (b != null && b.IsDead) { bossDown = true; break; }
+        if (bossDown)
         {
             int next = Chapters.Next(stage);
             if (next < 0) return;                                   // 마지막 보스를 쓰러뜨림 → 엔딩 (저장 안 함)
             d.stage = next;
             d.kills = 0;
+            // 문에 들어갈 때 받는 것(첫 문의 특수 능력 · 포인트 +2 · 저주 제단) 과 보스 보상은 이어할 때 받음
+            d.gatePending = true;
+            d.needBossReward = sp.bossCleared ? NeedBossReward : true;
+            if (!sp.bossCleared) d.needEvolution = sm.EvolutionAvailable;
         }
         else
         {
             d.stage = stage;
             d.kills = Mathf.Min(sp.killedEnemy, sp.BossKillTarget);
+            d.altarPending = Curse.PendingStage == stage;
+            d.lastStandUsed = LastStand.Used;
+            ChapterEvents ev = Object.FindFirstObjectByType<ChapterEvents>();
+            if (ev != null) d.chests = ev.UnopenedChests;
+            // 습격 · 중간 보스는 보스가 나오기 전에만 (보스전이면 이어할 때 보스가 바로 다시 나옴)
+            if (!sp.bossSpawned)
+            {
+                if (ev != null) d.ambushLeft = ev.AmbushLeft;
+                foreach (EnermyController e in Object.FindObjectsByType<EnermyController>(FindObjectsSortMode.None))
+                    if (e != null && !e.IsDead && e.name.StartsWith("MidBoss_")) { d.midBossAlive = true; break; }
+            }
+            // 장 시작점이 아니라 나갈 때 서 있던 곳에서 이어함 (보스가 나와 있으면 보스가 문에서 다시 나오므로 시작점에서)
+            if (!sp.bossSpawned)
+            {
+                d.hasPos = true;
+                d.px = p.transform.position.x;
+                d.py = p.transform.position.y;
+            }
         }
 
         Prefs.SetString(Key, JsonUtility.ToJson(d));
@@ -178,6 +221,7 @@ public static class RunSave
 
         shop.CancelOpening();                                       // 판을 시작할 때 뜨는 첫 카드 창은 닫음 (기록에 있는 첫 카드로 대신)
         sm.JumpToStage(d.stage);
+        RunStats.Seconds = d.seconds;                               // 다시 적용하는 진화의 시각이 00:00 으로 찍히지 않게 먼저 (1.0.4~)
 
         Replaying = true;
         try
@@ -190,7 +234,15 @@ public static class RunSave
                 {
                     case 'c': if (int.TryParse(arg, out int c)) shop.ReplayPick(c, false); break;
                     case 'f': if (int.TryParse(arg, out int f)) shop.ReplayPick(f, true); break;
-                    case 'e': if (int.TryParse(arg, out int w) && specials != null) specials.EvolveWeapon(w); break;
+                    case 'e':      // e<번호>@<초> (1.0.4~ 진화한 시각, 예전 기록은 번호만)
+                        {
+                            string[] ew = arg.Split('@');
+                            if (!int.TryParse(ew[0], out int w) || specials == null) break;
+                            if (ew.Length > 1 && float.TryParse(ew[1], out float at)) RunStats.Seconds = at;
+                            specials.EvolveWeapon(w);
+                            RunStats.Seconds = d.seconds;
+                            break;
+                        }
                     case 't': if (specials != null) specials.ReplayNode(arg); break;
                     case 's': sm.ReplayPicks(ParseIds(arg)); break;
                     case 'b': if (int.TryParse(arg, out int b) && coinShop != null) coinShop.ReplayBuy(b); break;
@@ -220,12 +272,25 @@ public static class RunSave
         RunStats.Level = d.level;
         RunStats.DamageDealt.Clear();
         for (int i = 0; i < d.dealtKeys.Count && i < d.dealtValues.Count; i++) RunStats.DamageDealt[d.dealtKeys[i]] = d.dealtValues[i];
+        RunStats.DamageTaken.Clear();
+        for (int i = 0; i < d.takenKeys.Count && i < d.takenValues.Count; i++) RunStats.DamageTaken[d.takenKeys[i]] = d.takenValues[i];
         EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
-        if (sp != null) sp.RestoreKills(d.kills);
+        // 2장부터 페이즈마다 나오는 중간 보스가 살아 있었으면 다시 나오게 (1장 엘리트는 ChapterEvents 가)
+        bool firstChapter = Chapters.SlotOf(d.stage) == 0;
+        if (sp != null) sp.RestoreKills(d.kills, d.midBossAlive && !firstChapter);
+        ChapterEvents.Resume(d.ambushLeft, d.midBossAlive && firstChapter, d.chests);
+        if (!d.gatePending) LastStand.Used = d.lastStandUsed;
+        if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
         NeedEvolution = d.needEvolution;
+        NeedBossReward = d.needBossReward;
+        sm.RestoredClock = d.clock > 0f ? d.clock : d.seconds;
         yield return null;
-        // 보스를 쓰러뜨리고 무기 진화를 고르기 전에 나갔으면 지금 고름
+        // 보스를 쓰러뜨리고 무기 진화 · 보스 보상을 고르기 전에 나갔으면 지금 고름
         if (d.needEvolution) yield return sm.Evolution(false);
+        if (d.needBossReward) yield return sm.ResumeBossReward();
+        // 문에 들어가기 전에 나갔으면 문에 들어갈 때 받는 것을 지금 (첫 문 특수 능력 · 포인트 +2 · 저주 제단)
+        if (d.gatePending) yield return sm.ResumeGate(d.stage);
+        else if (d.altarPending) sm.StartCoroutine(Curse.Altar(d.stage));
     }
 
     static int[] ParseIds(string s)

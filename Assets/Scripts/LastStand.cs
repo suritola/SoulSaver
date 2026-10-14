@@ -13,6 +13,8 @@ public static class LastStand
 
     public static void ResetRun() { used = 0; Extra = 0; }
     public static void ResetChapter() => used = 0;
+    // 판 중간 저장: 이번 장에서 쓴 횟수 (이어하기로 다시 채워지지 않게, 1.0.4~)
+    public static int Used { get => used; set => used = Mathf.Max(0, value); }
 
     // PlayerController.TryHit 에서 피해를 받은 직후
     public static void Check(PlayerController p)

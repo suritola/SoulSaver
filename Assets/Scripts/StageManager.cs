@@ -64,9 +64,15 @@ public class StageManager : MonoBehaviour
 
     // 거너: 무기 진화 + 영혼 트리 (특수 능력 포인트 대신)
     static bool Evo => SpecialAbilities.UsesEvolution;
+    // 보스를 잡으면 무기 진화를 고르는지 (진화 캐릭터 · 진화할 단계가 남음)
+    public bool EvolutionAvailable => Evo && specials != null && specials.NextEvolutionOptions() != null;
     bool evolving;
     public bool IsEvolving => evolving;
     bool started;                       // 인트로가 끝나 버튼을 보여도 되는지
+    // 이어하기 (RunSave.Restore 가 정함): 화면 위 시계를 이 시간부터
+    [System.NonSerialized] public float RestoredClock;
+    // 이어하기 배너에 덧붙일 말 (ResumeGate: 특수 능력 포인트 +2)
+    string resumeNote;
     public bool Started => started;     // 판 중간 저장 (RunSave): 시작 이야기 · 첫 카드 전에는 저장하지 않음
     int treeClosedFrame = -1;
     float affordCheckAt;
@@ -171,8 +177,9 @@ public class StageManager : MonoBehaviour
             yield return RunSave.Restore(this);
             if (spawner != null) spawner.spawningEnabled = true;
             started = true;
-            RunClock.Create();
-            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage), 2.5f);
+            RunClock.Create(RestoredClock);
+            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : ""), resumeNote != null ? 3f : 2.5f);
+            resumeNote = null;
             yield break;
         }
         if (endless) PrepareEndless();
@@ -378,7 +385,7 @@ public class StageManager : MonoBehaviour
         yield return WeaponEvolutionUI.Run(specials, options, id => picked = id);
         bool first = specials.EvolutionTier == 0;
         specials.EvolveWeapon(picked);
-        RunSave.Record("e" + picked);                        // 판 중간 저장 (이어할 때 같은 진화를 다시 적용)
+        RunSave.Record("e" + picked + "@" + Mathf.RoundToInt(RunStats.Seconds));      // 판 중간 저장 (이어할 때 같은 진화를 같은 시각으로 다시 적용)
         if (first) specials.OnEvolvedTier1();
         Time.timeScale = before > 0f ? before : 1f;
         evolving = false;
@@ -399,9 +406,12 @@ public class StageManager : MonoBehaviour
     }
 
     // 보스 보상 3택 (1.0.1): 무기 진화 뒤 하나를 고름 — 공격력 · 영혼 조각 · 생명력 (판 중간 저장 'a' · 'h')
+    // 이어하기 (RunSave): 보스를 잡고 보상을 고르기 전에 나갔으면 지금
+    public IEnumerator ResumeBossReward() => BossReward();
+
     IEnumerator BossReward()
     {
-        if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) yield break;
+        if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) { RunSave.NeedBossReward = false; yield break; }
         yield return new WaitForSecondsRealtime(0.5f);
         while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
@@ -413,6 +423,7 @@ public class StageManager : MonoBehaviour
         };
         int pick = 0;
         yield return ChoiceUI.Run("보스 보상", "하나를 고르세요", options, i => pick = i);
+        RunSave.NeedBossReward = false;                     // 고른 뒤에야 (고르기 전에 나가면 이어할 때 다시)
         PlayerController p = Hostile.Player;
         if (p == null) yield break;
         if (pick == 0)
@@ -609,7 +620,8 @@ public class StageManager : MonoBehaviour
         if (next >= 0)
         {
             // 판 중간 저장: 무기 진화를 고르기 전에 나가면 이어할 때 고르게
-            RunSave.NeedEvolution = Evo && specials != null && specials.NextEvolutionOptions() != null;
+            RunSave.NeedEvolution = EvolutionAvailable;
+            RunSave.NeedBossReward = true;
             // 다음 장으로 가는 문 (2.1.1~ 장 순서는 Chapters: 초원 → 지하 묘역 → 불타는 지옥 → 영혼의 심연)
             string text = Loc.T(Defeated[Mathf.Clamp(stage, 0, 3)]) + "\n" + Loc.T(Gate[Mathf.Clamp(next, 0, 3)]);
             if (portal != null) portal.SetActive(true);
@@ -716,6 +728,7 @@ public class StageManager : MonoBehaviour
 
         CurrentStage = stage;
         spawner.StartStage(stage);
+        Curse.MarkPending(stage);       // 페이드 중에 나가도 이어할 때 제단이 나오게 (1.0.4~)
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
         LastStand.ResetChapter();
         bool points = !Evo && !firstGate;
@@ -725,8 +738,36 @@ public class StageManager : MonoBehaviour
         yield return Fade(1f, 0f, 0.8f);
         ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
-        RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9)
         StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (1.0.1)
+        RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9) — 제단을 띄운 뒤 (고르기 전에 나가도 이어할 때 다시, 1.0.4~)
+    }
+
+    // 이어하기 (RunSave): 보스를 잡고 문에 들어가기 전에 나갔으면, 문에 들어갈 때 받는 것을 지금 (맵 · 위치는 이미 그 장)
+    public IEnumerator ResumeGate(int stage)
+    {
+        bool firstGate = Chapters.SlotOf(stage) == 1;
+        if (firstGate && !Evo && specialPanel != null)
+        {
+            transitioning = true;
+            float before = Time.timeScale;
+            Time.timeScale = 0f;
+            pendingPicks = null;
+            specialPanel.SetActive(true);
+            if (specialTree != null) specialTree.Open(specials, OnPickSpecial);
+            while (pendingPicks == null) yield return null;
+            ApplyPicks(pendingPicks);
+            TooltipUI.Hide();
+            specialPanel.SetActive(false);
+            Time.timeScale = before > 0f ? before : 1f;
+            transitioning = false;
+        }
+        bool points = !Evo && !firstGate;
+        if (points)
+        {
+            specialPoints += 2;
+            resumeNote = "특수 능력 포인트 +2";
+        }
+        StartCoroutine(Curse.Altar(stage));
     }
 
     // 보스를 잡은 뒤 제한 시간: 막바지엔 문 쪽으로 끌려가고, 끝나면 자동 입장

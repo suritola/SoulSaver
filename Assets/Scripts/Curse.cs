@@ -6,16 +6,23 @@ using UnityEngine;
 public static class Curse
 {
     public static bool Active;
+    // 제단을 띄웠지만 아직 고르지 않은 장 (판 중간 저장: 고르기 전에 나가면 이어할 때 다시, 1.0.4~)
+    public static int PendingStage = -1;
     public static float HpMul => Active ? 1.3f : 1f;
     public static float RewardMul => Active ? 1.5f : 1f;
 
     static bool Off => GameMode.IsEndless || TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode;
 
+    // 이 장에서 제단이 나올 예정 (EnterStage 가 맵을 바꾼 직후, 페이드 중 저장용)
+    public static void MarkPending(int stage) => PendingStage = Off || Chapters.SlotOf(stage) < 1 ? -1 : stage;
+
     // StageManager.EnterStage 가 장에 들어간 뒤 부름
     public static IEnumerator Altar(int stage)
     {
         Active = false;
+        PendingStage = -1;
         if (Off || Chapters.SlotOf(stage) < 1) yield break;
+        PendingStage = stage;
         yield return new WaitForSeconds(1.2f);          // 장 이름 배너를 먼저 보여 줌
         int pick = 1;
         ChoiceUI.Option[] options =
@@ -24,6 +31,7 @@ public static class Curse
             new ChoiceUI.Option("거절한다", "평소대로 싸웁니다", new Color(0.85f, 0.8f, 0.7f), "refuse"),
         };
         yield return ChoiceUI.Run("저주 제단", "위험을 감수하면 더 큰 보상을 얻습니다", options, i => pick = i);
+        PendingStage = -1;
         if (pick != 0) yield break;
         Active = true;
         RunSave.Record("k" + stage);
