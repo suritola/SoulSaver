@@ -38,7 +38,7 @@ public static partial class LocTable
         A("{MOVE}로 이리저리 움직여 보세요.", "Move around with {MOVE}.", "{MOVE}であちこち動いてみよう。", "用{MOVE}四处移动看看。");
         A("마우스로 조준하고 좌클릭으로 공격합니다. 누르고 있으면 계속 쏩니다. 다가오는 적을 모두 쓰러뜨리세요.", "Aim with the mouse and left-click to attack. Hold it to keep firing. Defeat every approaching enemy.", "マウスで狙い、左クリックで攻撃。押し続けると撃ち続けます。近づく敵をすべて倒そう。", "用鼠标瞄准，左键攻击。按住即可连续射击。击倒所有靠近的敌人。");
         A("총알은 탄창만큼만 쏠 수 있습니다. [{RELOAD}]를 눌러 재장전하세요. (다 쏘면 저절로 재장전)", "You can only fire as many shots as your magazine holds. Press [{RELOAD}] to reload. (It reloads automatically when empty)", "弾は弾倉の分しか撃てません。[{RELOAD}]でリロードしよう。（撃ち切ると自動でリロード）", "子弹只能打完一个弹匣。按[{RELOAD}]装填。（打空后会自动装填）");
-        A("필살기 게이지가 가득 찼습니다! 우클릭을 누르고 있으면 시간이 느려지며 적을 조준하고, 떼면 조준한 적 모두에게 쏩니다.", "Your ultimate gauge is full! Hold right-click to slow time and lock onto enemies, then release to fire at every target.", "必殺技ゲージが満タン！右クリックを押し続けると時間が遅くなって敵を狙い、離すと狙った敵すべてに撃ちます。", "必杀槽已满！按住右键时间会变慢并锁定敌人，松开即可向所有锁定的敌人射击。");
+        A("필살기 게이지가 가득 찼습니다! 우클릭을 누르고 있으면 시간이 느려지며 적을 조준하고, 떼면 조준한 적 모두에게 쏩니다.", "Your ultimate gauge is full! Hold right-click to slow time and lock onto enemies, then release to fire at every target.", "必殺技ゲージが満タン！右クリックを押し続けると時間が遅くなって敵を狙い、離すと狙った敵すべてに撃ちます。", "必杀技槽已满！按住右键时间会变慢并锁定敌人，松开即可向所有锁定的敌人射击。");
         A("경험치가 차면 레벨업 포인트가 쌓입니다. [{INTERACT}]를 눌러 창을 열고 카드를 고르세요. (클릭 → [{INTERACT}], 더블클릭, 숫자 1 · 2 · 3)", "When your XP fills up you earn a level-up point. Press [{INTERACT}] to open the window and pick a card. (click → [{INTERACT}], double-click, or 1 · 2 · 3)", "経験値がたまるとレベルアップポイントがたまります。[{INTERACT}]でウィンドウを開いてカードを選ぼう。（クリック → [{INTERACT}]、ダブルクリック、数字1・2・3）", "经验值满后会累积升级点数。按[{INTERACT}]打开窗口并选择卡牌。（点击 → [{INTERACT}]、双击或数字1 · 2 · 3）");
         A("적이 떨어뜨린 영혼 조각으로 영혼 트리의 칸을 배웁니다. [{UPGRADE}]로 트리를 열고 빛나는 칸을 하나 배운 뒤 닫으세요.", "Soul shards dropped by enemies teach you Soul Tree nodes. Open the tree with [{UPGRADE}], learn one glowing node, then close it.", "敵が落とす魂のかけらで魂のツリーのマスを習得します。[{UPGRADE}]でツリーを開き、光るマスを1つ習得して閉じよう。", "用敌人掉落的灵魂碎片学习灵魂树的节点。按[{UPGRADE}]打开灵魂树，学习一个发光的节点后关闭。");
         A("보스를 쓰러뜨리면 무기가 진화합니다. 세 갈래 중 하나를 고르세요. (판마다 두 번, 되돌릴 수 없음)", "Defeating a boss evolves your weapon. Choose one of three paths. (Twice per run, and there's no going back)", "ボスを倒すと武器が進化します。3つの道から1つを選ぼう。（1回のプレイで2回、やり直し不可）", "击败首领后武器会进化。从三条路线中选择一条。（每局两次，无法反悔）");
@@ -54,11 +54,11 @@ public static partial class LocTable
         A("창이 비활성일 때 소리 끄기", "Mute when the window is inactive", "ウィンドウが非アクティブ時に消音", "窗口未激活时静音");
 
         // ---------------- 도감 (2.1~)
-        A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀槽满时展开结界");
+        A("각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다", "The last foe of each stage · special skills below half health, a barrier when the ultimate gauge fills", "各ステージ最後の敵・体力が半分以下で特殊スキル、必殺技ゲージが満タンで結界を展開", "各关卡最后的敌人 · 血量低于一半施展特殊技能，必杀技槽满时展开结界");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 재료를 모두 올리면 스킬 진화", "Pick one of three cards or skip on each level-up · Max level 50 · Max all ingredients to evolve a skill", "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・素材をすべて上げるとスキル進化", "每次升级从三张中选一张或跳过 · 等级上限50 · 素材全部升满即可技能进化");
         A("필살기 「망자의 묘역」 — 15초 동안 회전하는 영혼 광선 넷 · 틈이 있는 저주 고리 · 발밑에서 솟는 뼈 가시", "Ultimate 「Graveyard of the Dead」 — for 15s: four sweeping soul beams · cursed rings with a gap · bone spikes from below", "必殺技「亡者の墓域」 — 15秒間、回転する魂の光線4本・隙間のある呪いの輪・足元から突き出す骨の棘", "必杀技「亡者墓域」 — 15秒内：四道旋转灵魂光束 · 带缺口的诅咒之环 · 脚下升起的骨刺");
         A("필살기 「연옥 낙화」 — 15초 동안 곳곳의 운석 비 · 내 자리의 거대 운석 · 틈이 있는 운석 행진을 번갈아", "Ultimate 「Purgatory's Fall」 — for 15s, alternating: a meteor shower · a giant meteor at your feet · a marching meteor line with a gap", "必殺技「煉獄落火」 — 15秒間、隕石の雨・足元の巨大隕石・隙間のある隕石の行進を交互に", "必杀技「炼狱落火」 — 15秒内交替发动：陨石雨 · 脚下的巨型陨石 · 留有缺口的陨石行进");
-        A("필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 쏟아지는 산성 비", "Ultimate \"Acid Flood\" — for 9s, acid blobs bounce off the barrier walls and acid rain pours down", "必殺技「酸の氾濫」— 9秒間、結界の壁で跳ね返る酸の塊・降り注ぐ酸の雨", "必杀技「酸液泛滥」— 9秒内，酸液团在结界壁上反弹，酸雨倾泻而下");
+        A("필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 쏟아지는 산성 비", "Ultimate \"Acid Deluge\" — for 9s, acid blobs bounce off the barrier walls and acid rain pours down", "必殺技「酸の氾濫」— 9秒間、結界の壁で跳ね返る酸の塊・降り注ぐ酸の雨", "必杀技「酸性泛滥」— 9秒内，酸液团在结界壁上反弹，酸雨倾泻而下");
         A("모든 보스의 필살기", "Every boss's ultimate", "すべてのボスの必殺技", "所有首领的必杀技");
         A("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.",
           "Every hit on a boss fills the purple gauge under its health bar — one heavy blow fills far more than many weak ones, and it drains very slowly if you stop hitting. When full, the whole map darkens and a huge barrier rises around the boss, raining boss-specific attacks for 15s. An exclamation mark warns of every strike.",
@@ -118,7 +118,7 @@ public static partial class LocTable
         A("쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
         A("최대 피해", "Max damage", "最大ダメージ", "最大伤害");
         A("영혼 탄환", "Soul Rounds", "魂の弾丸", "灵魂弹");
-        A("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "While your ultimate gauge is full, and for shots fired by your ultimate, bullets become soul rounds that hit harder and pierce one more enemy. (Non-bullet ultimates just deal more damage)", "必殺技ゲージが満タンの間と必殺技で撃った弾が魂弾になり、より痛く敵をもう1体貫きます。（弾でない必殺技はダメージのみ増加）", "必杀槽满时以及必杀技射出的子弹会变为灵魂弹，伤害更高并多穿透一名敌人。（非子弹类必杀技仅提升伤害）");
+        A("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "While your ultimate gauge is full, and for shots fired by your ultimate, bullets become soul rounds that hit harder and pierce one more enemy. (Non-bullet ultimates just deal more damage)", "必殺技ゲージが満タンの間と必殺技で撃った弾が魂弾になり、より痛く敵をもう1体貫きます。（弾でない必殺技はダメージのみ増加）", "必杀技槽满时以及必杀技射出的子弹会变为灵魂弹，伤害更高并多穿透一名敌人。（非子弹类必杀技仅提升伤害）");
         A("영혼탄 피해", "Soul round damage", "魂弾ダメージ", "灵魂弹伤害");
         A("섬광 장전", "Flash Reload", "閃光リロード", "闪光装填");
         A("장전을 마치는 순간 섬광이 터져 주변 적을 기절시킵니다.", "Finishing a reload sets off a flash that stuns nearby enemies.", "リロードを終えた瞬間に閃光が走り、周りの敵を気絶させます。", "装填完成的瞬间爆出闪光，击晕周围敌人。");
@@ -193,7 +193,7 @@ public static partial class LocTable
         A("같은 적을 연달아 맞힐수록 피해가 오릅니다. (최대 5중첩)", "Hitting the same enemy in a row deals more and more damage. (Up to 5 stacks)", "同じ敵に続けて当てるほどダメージが上がります。（最大5重）", "连续命中同一敌人时伤害递增。（最多5层）");
         A("중첩당 피해", "Damage per stack", "1重ごとのダメージ", "每层伤害");
         A("넘치는 기세", "Overflowing Momentum", "あふれる勢い", "满溢气势");
-        A("필살기 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "The moment your ultimate gauge fills, shuriken burst out in every direction. (100% attack each)", "必殺技ゲージが満タンになった瞬間、体の周りに手裏剣が四方へ広がります。（攻撃力100%ずつ）", "技能槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
+        A("필살기 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "The moment your ultimate gauge fills, shuriken burst out in every direction. (100% attack each)", "必殺技ゲージが満タンになった瞬間、体の周りに手裏剣が四方へ広がります。（攻撃力100%ずつ）", "必杀技槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
         A("표창 수", "Stars", "手裏剣の数", "飞镖数量");
         A("그림자 매듭", "Shadow Knot", "影の結び目", "暗影之结");
         A("필살기로 벤 적들이 4초 동안 그림자 줄로 묶여, 하나가 받은 피해의 일부를 나머지도 받습니다.", "Enemies cut by Bleed Dash are tied by shadow for 4s; damage to one is partly shared by the rest.", "必殺技で斬った敵が4秒間影の糸で結ばれ、1体が受けたダメージの一部を他も受けます。", "被流血突进斩中的敌人被暗影之线绑定4秒，其中一个受到的伤害会部分传给其余敌人。");
@@ -300,7 +300,7 @@ public static partial class LocTable
         A("칼날 곡예", "Blade Acrobatics", "刃の曲芸", "刀刃杂技");
         A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (150% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力150%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力150%）");
         A("사냥의 절정", "Peak of the Hunt", "狩りの絶頂", "狩猎巅峰");
-        A("필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your ultimate gauge is full or during a Ultimate, kills bring a rain of shuriken down on the spot.", "必殺技ゲージが満タンの間か必殺技中に敵を倒すと、その場に手裏剣の雨が降ります。", "技能槽满时或必杀技中击杀敌人，原地降下飞镖雨。");
+        A("필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your ultimate gauge is full or during a Ultimate, kills bring a rain of shuriken down on the spot.", "必殺技ゲージが満タンの間か必殺技中に敵を倒すと、その場に手裏剣の雨が降ります。", "必杀技槽满时或必杀技中击杀敌人，原地降下飞镖雨。");
         A("폭풍의 길", "Storm Road", "嵐の道", "风暴之路");
         A("바람길 위에서는 시위를 순식간에 가득 당기고, 물러난 자리에 돌풍이 터져 적을 밀어냅니다.", "On a wind lane you draw instantly to full, and a gust erupts where you hop back from, pushing enemies away.", "風の道の上では一瞬で弦を引き絞り、下がった場所で突風が弾けて敵を押し出します。", "在风道上瞬间拉满弓弦，后撤的原位爆发狂风击退敌人。");
         A("명궁의 호흡", "Master Archer's Breath", "名弓の呼吸", "名弓之息");

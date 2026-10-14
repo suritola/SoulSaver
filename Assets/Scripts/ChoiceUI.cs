@@ -77,7 +77,7 @@ public class ChoiceUI : MonoBehaviour
 
         UIKit.Text(r, title, 54f, Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
         if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, 28f, Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
-        UIKit.Text(r, "더블클릭 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
+        UIKit.Text(r, "더블클릭 또는 [{INTERACT}]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
 
         const float w = 400f, h = 500f, gap = 44f;
         int n = options.Length;
@@ -139,7 +139,7 @@ public class ChoiceUI : MonoBehaviour
         {
             for (int i = 0; i < n && i < 9; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i)) ui.Select(i);
-            if (ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+            if (ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))     // 1.0.4~ 바꾼 상호작용 키도
                 ui.confirmed = ui.selected;
             // 고른 카드는 숨 쉬듯 반짝
             if (ui.selected >= 0) ui.frames[ui.selected].color = Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));

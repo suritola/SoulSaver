@@ -245,8 +245,8 @@ public static class CodexUI
     {
         if (kind == SpecialKind.Weapon)
             Card(FxIcon("fx_muzzle"), Gold, Loc.T("기본 권총"), Loc.T("처음부터 가진 무기"),
-                 Loc.T("좌클릭으로 사격, R로 재장전.") + "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(SpecialAbilities.PistolUlt))
-                 + "  " + Loc.T("우클릭을 누른 채 적을 조준하고, 떼면 조준한 적들에게 한꺼번에 쏩니다."));
+                 Loc.T("[{ATTACK}] 사격 · [{RELOAD}] 재장전.") + "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(SpecialAbilities.PistolUlt))     // 1.0.4~ 바꾼 키를 따름
+                 + "  " + Loc.T("[{ULT}]을 누른 채 적을 조준하고, 떼면 조준한 적들에게 한꺼번에 쏩니다."));
         if (data == null || data.specials == null) return;
         for (int id = 0; id < data.specials.Length; id++)
         {
@@ -378,7 +378,7 @@ public static class CodexUI
             string body = Loc.T(d.description)
                 + "\n" + Accent.Tag(Loc.T("기본 무기") + " · " + Loc.T(d.weapon)) + "  " + Loc.T(d.attack)
                 + "  (" + Loc.T("사거리") + " " + (d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한")) + ")"
-                + "\n" + Accent.Tag(Loc.T("우클릭") + " · " + Loc.T(d.skill)) + "  " + Loc.T(d.skillDesc);
+                + "\n" + Accent.Tag(Loc.T("{ULT}") + " · " + Loc.T(d.skill)) + "  " + Loc.T(d.skillDesc);     // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭)
             if (c != CharacterId.Gunner)
             {
                 var names = new System.Collections.Generic.List<string>();

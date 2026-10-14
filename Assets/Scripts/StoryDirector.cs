@@ -516,7 +516,7 @@ public class StoryDirector : MonoBehaviour
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape)) skip = true;
-        else if (Input.GetKeyDown(KeyCode.Space)) advance = true;
+        else if (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact)) advance = true;      // 1.0.4~ 바꾼 상호작용 키도
     }
 
     void OnDestroy()
@@ -552,7 +552,7 @@ public class StoryDirector : MonoBehaviour
         RectTransform br = (RectTransform)b.transform;
         br.anchorMin = br.anchorMax = new Vector2(1f, 0f);
         br.anchoredPosition = new Vector2(-150f, 70f);
-        RectTransform hint = UIKit.Text(go.transform, "Space 대사 넘기기 · ESC 건너뛰기", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(420f, 30f)).rectTransform;
+        RectTransform hint = UIKit.Text(go.transform, "{INTERACT} 대사 넘기기 · ESC 건너뛰기", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(420f, 30f)).rectTransform;
         hint.anchorMin = hint.anchorMax = new Vector2(1f, 0f);
         hint.anchoredPosition = new Vector2(-150f, 120f);
         d.skipButton = b.gameObject;

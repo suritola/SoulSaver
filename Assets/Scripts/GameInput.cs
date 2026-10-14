@@ -31,11 +31,12 @@ public static class GameInput
         }
     }
 
-    public static bool FireDown => Auto ? Time.frameCount == FireDownFrame : Input.GetMouseButtonDown(0);
-    public static bool FireHeld => Auto ? AutoFire : Input.GetMouseButton(0);
-    public static bool FireUp => Auto ? Time.frameCount == FireUpFrame : Input.GetMouseButtonUp(0);
+    // 1.0.4~ 공격 · 필살기 키는 설정 → 조작에서 바꿀 수 있음 (기본 좌 · 우클릭, KeyBindings)
+    public static bool FireDown => Auto ? Time.frameCount == FireDownFrame : KeyBindings.Down(GameAction.Attack);
+    public static bool FireHeld => Auto ? AutoFire : KeyBindings.Held(GameAction.Attack);
+    public static bool FireUp => Auto ? Time.frameCount == FireUpFrame : KeyBindings.Up(GameAction.Attack);
 
-    public static bool UltDown => Auto ? Time.frameCount == UltDownFrame : Input.GetMouseButtonDown(1);
-    public static bool UltHeld => Auto ? AutoUlt : Input.GetMouseButton(1);
-    public static bool UltUp => Auto ? Time.frameCount == UltUpFrame : Input.GetMouseButtonUp(1);
+    public static bool UltDown => Auto ? Time.frameCount == UltDownFrame : KeyBindings.Down(GameAction.Ultimate);
+    public static bool UltHeld => Auto ? AutoUlt : KeyBindings.Held(GameAction.Ultimate);
+    public static bool UltUp => Auto ? Time.frameCount == UltUpFrame : KeyBindings.Up(GameAction.Ultimate);
 }

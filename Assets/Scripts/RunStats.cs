@@ -441,12 +441,12 @@ public class HintRunner : MonoBehaviour
     void Update() => Hints.Tick();
 }
 
-// 게임 오버 화면: [R]로 같은 캐릭터 · 난이도로 바로 다시 시작
+// 게임 오버 화면: [R]로 같은 캐릭터 · 난이도로 바로 다시 시작 (1.0.4~ 재장전 키를 바꿨으면 그 키)
 public class QuickRestart : MonoBehaviour
 {
     void Update()
     {
-        if (!Input.GetKeyDown(KeyCode.R) || SettingsUI.IsOpen) return;
+        if (!KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen) return;
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameScene");
     }

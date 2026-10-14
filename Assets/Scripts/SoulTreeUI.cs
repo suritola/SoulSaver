@@ -107,12 +107,12 @@ public class SoulTreeUI : MonoBehaviour
         // 휠: 마우스 위치를 기준으로 확대 · 축소
         float wheel = Input.mouseScrollDelta.y;
         if (wheel != 0f) ZoomAt(Input.mousePosition, zoom * (wheel > 0f ? 1.12f : 1f / 1.12f));
-        // 키보드로 이동 (WASD · 방향키), 가운데로 (Home · C)
+        // 키보드로 이동 (이동 키 · 방향키, 1.0.4~ 바꾼 이동 키를 따름), 가운데로 (Home · C)
         Vector2 k = Vector2.zero;
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) k.x += 1f;
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) k.x -= 1f;
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) k.y -= 1f;
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) k.y += 1f;
+        if (KeyBindings.Held(GameAction.Left)) k.x += 1f;
+        if (KeyBindings.Held(GameAction.Right)) k.x -= 1f;
+        if (KeyBindings.Held(GameAction.Up)) k.y -= 1f;
+        if (KeyBindings.Held(GameAction.Down)) k.y += 1f;
         if (k != Vector2.zero) Pan(k * 900f * Time.unscaledDeltaTime);
         if (Input.GetKeyDown(KeyCode.Home) || Input.GetKeyDown(KeyCode.C)) Recenter();
         if (Input.GetKeyDown(KeyCode.F)) Fit();
@@ -311,7 +311,8 @@ public class SoulTreeUI : MonoBehaviour
             views.Add(v);
         }
         footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
-                      + "  ·  " + Loc.T("끌기 · WASD · 화면 끝으로 이동, 휠 확대, [F] 전체 보기");
+                      + "  ·  " + Loc.T("끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
+                      + "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기");      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
         bounds = new Rect(-120f, -120f, 240f, 240f);
         foreach (NodeView v in views)

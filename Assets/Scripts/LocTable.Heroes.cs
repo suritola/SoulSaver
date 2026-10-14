@@ -96,13 +96,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 (형태 · 궁극기 · 강화) · 패시브
         A("측량 사슬", "Survey Chain", "測量の鎖", "测量锁链");
         A("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）");
-        A("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)\nUltimate: Triangulation", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）\n究極技：三角測量", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）\n究极技：三角测量");
+        A("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)\nEvolved Ultimate: Triangulation", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）\n究極技：三角測量", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）\n究极技：三角测量");
         A("잉크병", "Inkpot", "インク瓶", "墨水瓶");
         A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)", "An inkpot shatters at each stroke's end in a small burst. (60% damage)", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）");
-        A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nUltimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n究極技：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n究极技：墨潮");
+        A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nEvolved Ultimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n究極技：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n究极技：墨潮");
         A("지구본", "Globe", "地球儀", "地球仪");
         A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。");
-        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.\nUltimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
+        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.\nEvolved Ultimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
         A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");
         A("먹물 해일", "Ink Tide", "墨の津波", "墨潮");
@@ -225,13 +225,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("뻐꾸기 시계", "Cuckoo Clock", "鳩時計", "布谷鸟钟");
         A("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다. (공격력 100%씩)", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies. (100% attack each)", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。（攻撃力100%ずつ）", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。（每只攻击力100%）");
-        A("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n궁극기: 뻐꾸기 떼", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies.\nUltimate: Cuckoo Flock", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。\n究極技：鳩の群れ", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。\n究极技：布谷鸟群");
+        A("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n궁극기: 뻐꾸기 떼", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies.\nEvolved Ultimate: Cuckoo Flock", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。\n究極技：鳩の群れ", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。\n究极技：布谷鸟群");
         A("모래시계", "Hourglass", "砂時計", "沙漏");
         A("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.", "Enemies hit by gears are buried in sand, moving at half speed for 1s.", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。");
-        A("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n궁극기: 모래 폭풍", "Enemies hit by gears are buried in sand, moving at half speed for 1s.\nUltimate: Sandstorm", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。\n究極技：砂嵐", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。\n究极技：沙暴");
+        A("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n궁극기: 모래 폭풍", "Enemies hit by gears are buried in sand, moving at half speed for 1s.\nEvolved Ultimate: Sandstorm", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。\n究極技：砂嵐", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。\n究极技：沙暴");
         A("괘종시계", "Grandfather Clock", "柱時計", "落地钟");
         A("톱니가 크고 느려지지만 피해가 40% 늘어납니다.", "Gears grow larger and slower but deal 40% more damage.", "歯車が大きく遅くなりますが、ダメージが40%増えます。", "齿轮变大变慢，但伤害提升40%。");
-        A("톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n궁극기: 열두 번의 종", "Gears grow larger and slower but deal 40% more damage.\nUltimate: Twelve Tolls", "歯車が大きく遅くなりますが、ダメージが40%増えます。\n究極技：十二の鐘", "齿轮变大变慢，但伤害提升40%。\n究极技：十二响钟");
+        A("톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n궁극기: 열두 번의 종", "Gears grow larger and slower but deal 40% more damage.\nEvolved Ultimate: Twelve Tolls", "歯車が大きく遅くなりますが、ダメージが40%増えます。\n究極技：十二の鐘", "齿轮变大变慢，但伤害提升40%。\n究极技：十二响钟");
         A("뻐꾸기 떼", "Cuckoo Flock", "鳩の群れ", "布谷鸟群");
         A("뻐꾸기 열두 마리가 가까운 적들을 차례로 덮칩니다. (공격력 150%씩)", "Twelve cuckoos swoop on nearby enemies in turn. (150% attack each)", "鳩12羽が近くの敵へ次々と襲いかかります。（攻撃力150%ずつ）", "十二只布谷鸟依次扑向附近敌人。（每只攻击力150%）");
         A("모래 폭풍", "Sandstorm", "砂嵐", "沙暴");
@@ -349,13 +349,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("비둘기 우편", "Pigeon Post", "鳩便", "信鸽");
         A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다. (피해 50%씩)", "A pigeon carries your first letter and pecks the addressee twice more. (50% damage each)", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。（ダメージ50%ずつ）", "第一封信由信鸽衔去，再啄收件人两次。（每次伤害50%）");
-        A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼", "A pigeon carries your first letter and pecks the addressee twice more.\nUltimate: Pigeon Flock", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。\n究極技：鳩の群れ", "第一封信由信鸽衔去，再啄收件人两次。\n究极技：鸽群");
+        A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼", "A pigeon carries your first letter and pecks the addressee twice more.\nEvolved Ultimate: Pigeon Flock", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。\n究極技：鳩の群れ", "第一封信由信鸽衔去，再啄收件人两次。\n究极技：鸽群");
         A("소포 상자", "Parcel Box", "小包箱", "包裹箱");
         A("편지가 소포 상자가 되어 맞은 자리에서 터집니다. (피해 60%)", "Letters become parcel boxes that burst on arrival. (60% damage)", "手紙が小包箱になり、届いた場所で爆発します。（ダメージ60%）", "信件变为包裹箱，送达处爆炸。（伤害60%）");
-        A("편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격", "Letters become parcel boxes that burst on arrival.\nUltimate: Parcel Barrage", "手紙が小包箱になり、届いた場所で爆発します。\n究極技：宅配爆撃", "信件变为包裹箱，送达处爆炸。\n究极技：快递轰炸");
+        A("편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격", "Letters become parcel boxes that burst on arrival.\nEvolved Ultimate: Parcel Barrage", "手紙が小包箱になり、届いた場所で爆発します。\n究極技：宅配爆撃", "信件变为包裹箱，送达处爆炸。\n究极技：快递轰炸");
         A("우체통", "Postbox", "郵便ポスト", "邮筒");
         A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。");
-        A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.\nUltimate: Postbox Parade", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。\n究極技：ポストの行列", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。\n究极技：邮筒行列");
+        A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.\nEvolved Ultimate: Postbox Parade", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。\n究極技：ポストの行列", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。\n究极技：邮筒行列");
         A("비둘기 떼", "Pigeon Flock", "鳩の群れ", "鸽群");
         A("비둘기 스무 마리가 마우스 쪽으로 날아가며 닿는 적을 쪼습니다. (공격력 90%씩)", "Twenty pigeons fly toward the cursor, pecking enemies they touch. (90% attack each)", "鳩20羽がマウスの方へ飛び、触れた敵をつつきます。（攻撃力90%ずつ）", "二十只鸽子飞向鼠标方向，啄击触碰的敌人。（每只攻击力90%）");
         A("택배 폭격", "Parcel Barrage", "宅配爆撃", "快递轰炸");
@@ -477,13 +477,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("사슬 망령", "Chained Wraith", "鎖の亡霊", "锁链亡灵");
         A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다. (피해 40%)", "A soul chain leaps from the first enemy you touch to the nearest other. (40% damage)", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。（ダメージ40%）", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。（伤害40%）");
-        A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬", "A soul chain leaps from the first enemy you touch to the nearest other.\nUltimate: Soul Chains", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。\n究極技：魂の鎖", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。\n究极技：灵魂锁链");
+        A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬", "A soul chain leaps from the first enemy you touch to the nearest other.\nEvolved Ultimate: Soul Chains", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。\n究極技：魂の鎖", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。\n究极技：灵魂锁链");
         A("얼음 유령", "Frost Wraith", "氷の幽霊", "冰霜幽灵");
         A("냉기가 두 배로 쌓입니다.", "Chill builds twice as fast.", "冷気が2倍たまります。", "寒气累积速度翻倍。");
-        A("냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도", "Chill builds twice as fast.\nUltimate: Absolute Zero", "冷気が2倍たまります。\n究極技：絶対零度", "寒气累积速度翻倍。\n究极技：绝对零度");
+        A("냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도", "Chill builds twice as fast.\nEvolved Ultimate: Absolute Zero", "冷気が2倍たまります。\n究極技：絶対零度", "寒气累积速度翻倍。\n究极技：绝对零度");
         A("그림자 유령", "Shadow Wraith", "影の幽霊", "暗影幽灵");
         A("손길이 0.15초 뒤 한 번 더 뻗습니다. (피해 50%)", "Your touch reaches again 0.15s later. (50% damage)", "手が0.15秒後にもう一度伸びます。（ダメージ50%）", "冰手在0.15秒后再伸出一次。（伤害50%）");
-        A("손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단", "Your touch reaches again 0.15s later.\nUltimate: Shadow Legion", "手が0.15秒後にもう一度伸びます。\n究極技：影の軍団", "冰手在0.15秒后再伸出一次。\n究极技：暗影军团");
+        A("손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단", "Your touch reaches again 0.15s later.\nEvolved Ultimate: Shadow Legion", "手が0.15秒後にもう一度伸びます。\n究極技：影の軍団", "冰手在0.15秒后再伸出一次。\n究极技：暗影军团");
         A("영혼 사슬", "Soul Chains", "魂の鎖", "灵魂锁链");
         A("둘레의 적을 모두 영혼 사슬로 묶어 3초 동안 0.5초마다 벱니다. (공격력 70%)", "Bind all nearby enemies with soul chains, cutting them every 0.5s for 3s. (70% attack)", "周りの敵をすべて魂の鎖で縛り、3秒間0.5秒ごとに斬ります。（攻撃力70%）", "以灵魂锁链束缚周围所有敌人，3秒内每0.5秒斩击。（攻击力70%）");
         A("절대 영도", "Absolute Zero", "絶対零度", "绝对零度");

@@ -208,7 +208,7 @@ public class StageManager : MonoBehaviour
                 ShowBanner(Chapters.Title(CurrentStage) + "\n" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString()), 3f);
             }
         }
-        Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
+        Hints.Show("move", "{MOVE} 이동 · 마우스 조준 · [{ATTACK}] 공격");      // 1.0.4~ 바꾼 공격 키를 따름
     }
 
     void PrepareEndless()

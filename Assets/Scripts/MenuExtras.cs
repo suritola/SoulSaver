@@ -35,7 +35,7 @@ public static class MenuExtras
             rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
             rr.anchoredPosition = new Vector2(60f, 0f);
             RunStats.BuildDamagePanel(canvas.transform);      // 오른쪽: 준 피해 · 받은 피해 · 쓰러진 곳
-            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[R] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
+            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
             RectTransform ar = again.rectTransform;
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
             ar.anchoredPosition = new Vector2(0f, 40f);
@@ -683,19 +683,35 @@ public static class SettingsUI
     static void BuildGameplay()
     {
         // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.0.2: 「내 이펙트 투명도」 넣으려고 90 → 75
-        ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
-        CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
-        CycleRow("내 이펙트 투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v);
-        ToggleRow("색각 이상 모드", -25f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);
-        ToggleRow("키 아이콘", -100f, () => GameSettings.KeyIcons, v => GameSettings.KeyIcons = v);
-        ToggleRow("게임 커서", -175f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v);
-        ToggleRow("레벨업 바로 열기", -250f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v);
+        // 1.0.4~ 줄마다 마우스를 올리면 한 줄 설명, 거의 효과가 없던 「키 아이콘」은 뺌 (줄 간격 75 → 80), 「투명도」 → 「불투명도」
+        ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v,
+                  "처음 보는 기능마다 짧은 도움말을 한 번씩 띄웁니다.");
+        CycleRow("피해 숫자", 120f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
+                 "적에게 준 피해를 숫자로 띄웁니다. 끄면 화면이 깔끔해집니다.");
+        CycleRow("내 이펙트 불투명도", 40f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
+                 "내 공격 · 스킬 · 필살기 이펙트의 진하기입니다. 낮추면 캐릭터와 적의 공격이 잘 보입니다. (적 공격은 그대로)");
+        ToggleRow("색각 이상 모드", -40f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
+                  "경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로 그립니다.");
+        ToggleRow("게임 커서", -120f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
+                  "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
+        ToggleRow("레벨업 바로 열기", -200f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
+                  "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
+    }
+
+    // 1.0.4~ 설정 줄 이름에 마우스를 올리면 한 줄 설명 (글자는 TooltipUI.Show 가 Loc.T 로 번역)
+    static void RowTip(TMP_Text label, string ko, string tip)
+    {
+        if (label == null || string.IsNullOrEmpty(tip)) return;
+        label.raycastTarget = true;
+        TooltipTrigger t = label.gameObject.AddComponent<TooltipTrigger>();
+        t.title = ko;
+        t.body = tip;
     }
 
     // 누를 때마다 다음 값으로
-    static void CycleRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set)
+    static void CycleRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
     {
-        RowLabel(ko, y);
+        RowTip(RowLabel(ko, y), ko, tip);
         TMP_Text label = null;
         Button b = null;
         System.Action refresh = () =>
@@ -715,9 +731,9 @@ public static class SettingsUI
         refresh();
     }
 
-    static void ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set)
+    static void ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set, string tip = null)
     {
-        RowLabel(ko, y);
+        RowTip(RowLabel(ko, y), ko, tip);
         Button b = null;
         TMP_Text label = null;
         System.Action refresh = () =>
@@ -743,9 +759,10 @@ public static class SettingsUI
     {
         "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
         "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리", "카드 다시 뽑기",
+        "공격", "필살기",           // 1.0.4~ 좌 · 우클릭도 바꿀 수 있음
     };
-    // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음)
-    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 9, 10, 11 };
+    // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음), 1.0.4~ 공격 · 필살기를 넣어 두 줄 × 5칸
+    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 12, 13, 9, 10, 11 };
 
     static void BuildControls()
     {
@@ -753,8 +770,8 @@ public static class SettingsUI
         {
             int i = ShownActions[j];
             int index = i;
-            int col = j < 4 ? 0 : 1;
-            float y = 220f - 78f * (j % 4);
+            int col = j < 5 ? 0 : 1;
+            float y = 220f - 78f * (j % 5);
             float x = col == 0 ? -540f : 20f;
             UIKit.Text(page, ActionNames[i], 26f, Parch, new Vector2(x + 170f, y), new Vector2(340f, 50f), TextAlignmentOptions.Left);
             Button b = UIKit.MakeButton(page, "", new Vector2(x + 430f, y), new Vector2(170f, 60f), () =>
@@ -765,7 +782,7 @@ public static class SettingsUI
             }, 26f);
             keyLabels.Add(b.GetComponentInChildren<TMP_Text>());
         }
-        UIKit.Text(page, "버튼을 누른 뒤 바꿀 키를 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
+        UIKit.Text(page, "버튼을 누른 뒤 바꿀 키나 마우스 버튼을 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
         UIKit.MakeButton(page, "기본값으로", new Vector2(390f, -255f), new Vector2(260f, 60f), () =>
         {
             capturing = -1;
@@ -795,6 +812,7 @@ public static class SettingsUI
         List<KeyCode> list = new List<KeyCode>();
         foreach (KeyCode k in (KeyCode[])System.Enum.GetValues(typeof(KeyCode)))
             if (k != KeyCode.None && k != KeyCode.Escape && k < KeyCode.Mouse0 && !list.Contains(k)) list.Add(k);
+        for (KeyCode k = KeyCode.Mouse0; k <= KeyCode.Mouse6; k++) list.Add(k);       // 1.0.4~ 마우스 버튼 (좌클릭은 공격 · 필살기에만)
         return list.ToArray();
     }
 
@@ -811,7 +829,7 @@ public static class SettingsUI
         if (capturing < 0) return;
         foreach (KeyCode k in Bindable)
         {
-            if (!Input.GetKeyDown(k)) continue;
+            if (!Input.GetKeyDown(k) || !KeyBindings.CanBind(KeyBindings.All[capturing], k)) continue;      // 1.0.4~ 받을 수 없는 키(좌클릭)는 무시하고 계속 기다림
             KeyBindings.Set(KeyBindings.All[capturing], k);
             capturing = -1;
             RefreshKeys();

@@ -12,7 +12,7 @@ public partial class SpecialAbilities
     // 도감 · 트리가 같이 쓰는 목록 (키, 부모, 이름, 설명, 가격, 아이콘 번호)
     public static readonly (string key, string parent, string name, string desc, int cost, int icon)[] FateInfo =
     {
-        ("f.thread", null, "운명의 실", "레벨업 카드를 한 번 다시 뽑을 수 있습니다 ([R]). 레벨이 오를 때마다 1회 채워짐, 최대 1회 보관", 8, 105),
+        ("f.thread", null, "운명의 실", "레벨업 카드를 한 번 다시 뽑을 수 있습니다 ([{REROLL}]). 레벨이 오를 때마다 1회 채워짐, 최대 1회 보관", 8, 105),     // 1.0.4~ 바꾼 다시 뽑기 키를 따름
         ("f.thread2", "f.thread", "운명의 실 II", "다시 뽑기를 최대 2회까지 보관합니다", 24, 105),
         ("f.thread3", "f.thread2", "운명의 실 III", "다시 뽑기를 최대 3회까지 보관합니다", 44, 105),
         ("f.rift1", "f.thread", "시간의 틈", "체력이 30% 아래로 떨어지면 3초 동안 적이 65% 느려집니다 (60초마다)", 22, 106),

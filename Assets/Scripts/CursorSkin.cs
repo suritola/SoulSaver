@@ -63,7 +63,8 @@ public class CursorSkin : MonoBehaviour
 
         Texture2D tex = Load(name) ?? Load(Default + (aim ? "_aim" : "_arrow"));
         if (tex == null) return;
-        Cursor.SetCursor(tex, aim ? AimHot : ArrowHot, CursorMode.ForceSoftware);
+        // 1.0.4~ 32×32 이하 그림은 하드웨어 커서(마우스를 늦게 따라오지 않음), 그보다 크면 크기 제한이 없는 소프트웨어 커서
+        Cursor.SetCursor(tex, aim ? (tex.width == 48 ? AimHot : new Vector2(tex.width * 0.5f, tex.height * 0.5f)) : ArrowHot, tex.width <= 32 && tex.height <= 32 ? CursorMode.Auto : CursorMode.ForceSoftware);
         shown = name;
     }
 }

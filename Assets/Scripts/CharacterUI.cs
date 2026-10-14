@@ -187,7 +187,7 @@ public static class CharacterUI
         StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), unlocked, ref y);
         y -= 10f;
         Info(dr, "기본 무기", unlocked ? Loc.T(d.weapon) + " — " + Loc.T(d.attack) : "???", ref y);
-        Info(dr, "우클릭", unlocked ? Loc.T(d.skill) + " — " + Loc.T(d.skillDesc) : "???", ref y);
+        Info(dr, "{ULT}", unlocked ? Loc.T(d.skill) + " — " + Loc.T(d.skillDesc) : "???", ref y);      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭)
 
         if (unlocked)
         {

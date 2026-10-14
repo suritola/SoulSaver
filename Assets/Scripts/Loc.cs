@@ -24,7 +24,9 @@ public static class Loc
         if (!LocTable.Entries.TryGetValue(ko, out string[] tr)) return ko;
         int i = (int)Current;
         // 0번(한국어)은 한국어 문장을 새로 고쳐 쓸 때만 채움
-        if (i < tr.Length && !string.IsNullOrEmpty(tr[i])) return tr[i];
+        if (i == 0) return !string.IsNullOrEmpty(tr[0]) ? tr[0] : ko;
+        // 1.0.4~ 다른 언어의 ""는 일부러 비운 번역 (영어에는 붙지 않는 단위 「발」 · 「개」 · 「종」 등) — 한국어로 돌아가지 않음
+        if (i < tr.Length && tr[i] != null) return tr[i];
         return ko;
     }
 

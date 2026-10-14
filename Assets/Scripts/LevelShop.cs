@@ -345,7 +345,7 @@ public partial class LevelShop : MonoBehaviour
         float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
         if (cardGroup != null) cardGroup.alpha = Mathf.Lerp(0.6f, 1f, t);
 
-        bool mouseHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1);
+        bool mouseHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1) || GameInput.FireHeld || GameInput.UltHeld;     // 1.0.4~ 공격 · 필살기를 다른 키로 바꿨어도
         if (t >= 1f && !mouseHeld)
         {
             selectReady = true;
