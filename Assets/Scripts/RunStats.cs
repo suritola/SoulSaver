@@ -17,6 +17,7 @@ public class RunStats : MonoBehaviour
     public static readonly List<KeyValuePair<string, float>> Evolutions = new List<KeyValuePair<string, float>>();
     public static int[] Branches = new int[6];
     public static int ShardsTotal, ShardsSpent;
+    public static int Refines;              // 영혼 정련 횟수 (1.0.4~)
     // 준 피해 · 받은 피해 (출처별 합), 마지막으로 맞은 공격과 그때의 장 (2.1.1~)
     public static readonly Dictionary<string, float> DamageDealt = new Dictionary<string, float>();
     public static readonly Dictionary<string, float> DamageTaken = new Dictionary<string, float>();
@@ -40,6 +41,7 @@ public class RunStats : MonoBehaviour
             Evolutions.Clear();
             Branches = new int[6];
             ShardsTotal = ShardsSpent = 0;
+            Refines = 0;
             Seconds = 0f;
             Kills = 0;
             Level = 1;
@@ -146,6 +148,7 @@ public class RunStats : MonoBehaviour
             Branches = sp.OwnedPerBranch();
             ShardsTotal = SoulShards.Total;
             ShardsSpent = SoulShards.Spent;
+            Refines = sp.Refines;
         }
         if (sp != null && sp.abilities != null)
         {
@@ -161,6 +164,9 @@ public class RunStats : MonoBehaviour
             for (int i = 0; i < shop.ability_level.Length && i < shop.ability_name.Length; i++)
                 if (shop.ability_level[i] > 0 && !string.IsNullOrEmpty(shop.ability_name[i]))
                     Cards.Add(shop.ability_name[i] + " Lv" + shop.ability_level[i]);
+            // 끝없는 성장 카드 (1.0.4~, LevelShop.Growth)
+            for (int k = 0; k < LevelShop.GrowthCount; k++)
+                if (shop.GrowthLevel(k) > 0) Cards.Add(LevelShop.GrowthName(k) + " Lv" + shop.GrowthLevel(k));
         }
     }
 
@@ -190,7 +196,8 @@ public class RunStats : MonoBehaviour
         foreach (int b in order)
             if (Branches[b] > 0) tree += (tree.Length > 0 ? ",  " : "") + Loc.T(SpecialAbilities.BranchNames[b]) + " " + Branches[b];
         s += "\n\n" + gold + Loc.T("영혼 트리") + end + "\n" + (tree.Length > 0 ? tree : "-")
-           + "\n" + Loc.T("영혼 조각") + " " + ShardsTotal + "  (" + Loc.T("씀") + " " + ShardsSpent + ")";
+           + "\n" + Loc.T("영혼 조각") + " " + ShardsTotal + "  (" + Loc.T("씀") + " " + ShardsSpent + ")"
+           + (Refines > 0 ? "     " + Loc.T("영혼 정련") + " x" + Refines : "");      // 1.0.4~
         s += "\n\n" + gold + Loc.T("특수 능력") + end + "\n" + (Abilities.Count > 0 ? string.Join(",  ", Abilities) : "-");
         s += "\n\n" + gold + Loc.T("레벨업 카드") + end + "\n" + (Cards.Count > 0 ? string.Join(",  ", Cards) : "-");
         // ESC 메뉴: 피해 비율 상위 4 (결과 화면은 막대로 따로 보여 줌)

@@ -39,6 +39,10 @@ public class SoulTreeUI : MonoBehaviour
     TMP_Text shardText, footText, affordText;
     RectTransform shardBox;
     float shardFlash;
+    // 영혼 정련 (1.0.4~): 트리를 모두 배운 뒤 남는 조각을 쓰는 버튼 (조각 상자 아래)
+    Button refineBtn;
+    TMP_Text refineText;
+    bool refineReady;
     readonly List<NodeView> views = new List<NodeView>();
     readonly List<GameObject> decor = new List<GameObject>();
     List<SpecialAbilities.SoulNode> nodes;
@@ -147,6 +151,8 @@ public class SoulTreeUI : MonoBehaviour
             v.frame.color = Color.Lerp(new Color(1f, 0.9f, 0.5f), Color.white, pulse);
             if (!hovered.Contains(v)) v.rect.localScale = Vector3.one * (1f + 0.06f * pulse);
         }
+        // 정련할 수 있으면 버튼이 숨 쉬듯 (1.0.4~)
+        if (refineBtn != null) refineBtn.transform.localScale = Vector3.one * (refineReady ? 1f + 0.04f * pulse : 1f);
         // 조각이 바뀌면 숫자 상자가 잠깐 번쩍
         if (shardBox != null)
         {
@@ -254,6 +260,17 @@ public class SoulTreeUI : MonoBehaviour
         shardText.fontStyle = FontStyles.Bold;
         affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
         UIKit.Pin(affordText.rectTransform, new Vector2(0f, 1f), new Vector2(225f, -140f));
+        refineBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(400f, 64f), RefineClick, 22f);
+        refineBtn.name = "RefineButton";
+        UIKit.Pin((RectTransform)refineBtn.transform, new Vector2(0f, 1f), new Vector2(225f, -196f));
+        refineText = refineBtn.GetComponentInChildren<TMP_Text>();
+        refineText.enableWordWrapping = true;
+        refineText.enableAutoSizing = true;
+        refineText.fontSizeMin = 12f;
+        refineText.fontSizeMax = 22f;
+        TooltipTrigger refineTip = refineBtn.gameObject.AddComponent<TooltipTrigger>();
+        refineTip.titleProvider = () => Loc.T("영혼 정련");
+        refineTip.bodyProvider = RefineTip;
         // 위 띠 오른쪽: 화면 오른쪽 끝에 붙여서 화면 비율이 달라도 잘리지 않게
         Button closeBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(230f, 62f), Close, 24f);
         closeBtn.GetComponentInChildren<TMP_Text>().text = Loc.T("닫기") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]";
@@ -392,8 +409,10 @@ public class SoulTreeUI : MonoBehaviour
         shardText.text = SoulShards.Amount.ToString();
         int canCount = 0;
         foreach (NodeView v in views) if (sp.CanBuy(v.node)) canCount++;
-        affordText.text = canCount > 0 ? Loc.T("지금 배울 수 있는 칸") + " " + canCount : Loc.T("조각을 더 모으세요");
-        affordText.color = canCount > 0 ? new Color(0.7f, 1f, 0.6f) : new Color(0.6f, 0.56f, 0.62f);
+        bool complete = nodes != null && sp.TreeComplete(nodes);
+        affordText.text = canCount > 0 ? Loc.T("지금 배울 수 있는 칸") + " " + canCount : complete ? Loc.T("모든 칸을 배웠습니다") : Loc.T("조각을 더 모으세요");
+        affordText.color = canCount > 0 ? new Color(0.7f, 1f, 0.6f) : complete ? Gold : new Color(0.6f, 0.56f, 0.62f);
+        RefreshRefine(complete);
         foreach (NodeView v in views)
         {
             SpecialAbilities.SoulNode n = v.node;
@@ -410,6 +429,43 @@ public class SoulTreeUI : MonoBehaviour
             v.cost.color = owned ? Gold : can ? new Color(0.6f, 1f, 0.5f) : new Color(1f, 0.5f, 0.45f);
             if (v.line != null) v.line.color = owned ? new Color(Gold.r, Gold.g, Gold.b, 0.9f) : new Color(bc.r, bc.g, bc.b, 0.55f);
         }
+    }
+
+    // ================================================================= 영혼 정련 (1.0.4~)
+    void RefreshRefine(bool complete)
+    {
+        if (refineBtn == null) return;
+        int cost = sp.RefineCost;
+        refineReady = complete && SoulShards.Amount >= cost;
+        refineText.text = "<b>" + Loc.T("영혼 정련") + (complete ? "  " + cost : "") + (sp.Refines > 0 ? "  <color=#C9A0FF>x" + sp.Refines + "</color>" : "") + "</b>\n<size=72%>"
+                        + (complete ? Loc.T("모든 무기 피해 +2% · 최대 체력 +4") : Loc.T("트리를 모두 배우면 열립니다")) + "</size>";
+        refineText.color = refineReady ? Color.white : complete ? new Color(1f, 0.6f, 0.55f) : new Color(0.6f, 0.56f, 0.62f);
+        Image bg = refineBtn.GetComponent<Image>();
+        if (bg != null) bg.color = refineReady ? new Color(0.78f, 0.62f, 1f) : complete ? new Color(0.5f, 0.42f, 0.66f) : new Color(0.34f, 0.31f, 0.4f);
+    }
+
+    void RefineClick()
+    {
+        if (!sp.Refine(nodes))
+        {
+            SpecialAbilities.SharedFx?.Play("buzz", 0.5f);
+            StartCoroutine(Shake((RectTransform)refineBtn.transform));
+            return;
+        }
+        Refresh();
+        TooltipUI.Show(Loc.T("영혼 정련"), RefineTip());
+    }
+
+    string RefineTip()
+    {
+        bool complete = nodes != null && sp.TreeComplete(nodes);
+        int cost = sp.RefineCost;
+        string state = !complete ? "<color=#8a8494>" + Loc.T("트리를 모두 배우면 열립니다") + "</color>"
+            : SoulShards.Amount >= cost ? "<color=#b8f5a0>" + Loc.T("눌러서 정련하기") + "  (" + cost + ")</color>"
+            : "<color=#ff8a80>" + Loc.T("영혼 조각이 모자랍니다") + "  (" + SoulShards.Amount + " / " + cost + ")</color>";
+        return Loc.T("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 10씩 오릅니다.")
+             + "\n<color=#F5D478>" + Loc.T("모든 무기 피해 +2% · 최대 체력 +4") + "</color>"
+             + "\n" + Loc.T("정련 횟수") + " " + sp.Refines + "\n" + state;
     }
 
     string Tip(SpecialAbilities.SoulNode n)

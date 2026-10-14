@@ -31,10 +31,16 @@ public class Level : MonoBehaviour
 
         PlayerController player = Cache<PlayerController>.Get;
         playerLevel = player.level;
-        // 레벨업 카드를 모두 배우면 만렙 (LevelShop.NothingToLearn)
+        // 레벨업 카드를 모두 배웠거나 최대 레벨이면 만렙 (LevelShop.GrowthOnly) · 1.0.4~: 그 뒤 고른 성장 카드 수를 「+n」으로
         LevelShop shop = Cache<LevelShop>.Get;
-        int show = shop != null && shop.NothingToLearn ? -2 : playerLevel;
-        if (show != shownLevel) { shownLevel = show; levelText.text = "Lv. " + playerLevel + (show == -2 ? " MAX" : ""); }
+        bool max = shop != null && shop.GrowthOnly;
+        int grown = shop != null ? shop.GrowthPicks : 0;
+        int show = playerLevel * 8192 + grown * 2 + (max ? 1 : 0);
+        if (show != shownLevel)
+        {
+            shownLevel = show;
+            levelText.text = "Lv. " + playerLevel + (max ? " MAX" : "") + (grown > 0 ? " <color=#9FE89F>+" + grown + "</color>" : "");
+        }
         playerEXP = player.nowEXP;
         playerMaxEXP = player.needEXP;
         if (gauge == null) gauge = EXPgauge.GetComponent<RectTransform>();

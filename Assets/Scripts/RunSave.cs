@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 // 판 중간 저장 (2.1.9~): 메인 메뉴로 나가거나 게임을 끄면 지금 판을 저장하고, 메인 메뉴 「이어하기」로 이어서 함
 // 판의 상태를 통째로 적지 않고, 판을 바꾼 "선택"을 순서대로 적어 두었다가 이어할 때 그대로 다시 적용함
 //   c<번호> 레벨업 카드 · f<번호> 시작 카드(레벨이 오르지 않음) · e<번호> 무기 진화 · t<키> 영혼 트리 칸 · s<번호,…> 특수 능력 · b<번호> 코인 상점
+//   1.0.4~: 성장 카드도 c<100 ~ 103> · r 영혼 정련 한 번
 // 그 밖에 바뀌는 값(체력 · 경험치 · 남은 레벨업 · 코인 · 영혼 조각 · 처치 수 · 게이지 · 판 기록)은 저장할 때의 값을 그대로
 // 보통 이야기 판만 저장 (무한 모드 · 일일 도전 · 체험판 · 자동 촬영 · 튜토리얼은 저장하지 않음) · 죽거나 4장을 클리어하거나 새 판을 시작하면 지움
 public static class RunSave
@@ -197,6 +198,7 @@ public static class RunSave
                     case 'h': if (float.TryParse(arg, out float h)) p.PlayerMaxHealth += h; break;     // 보물 상자 「생명」 (1.0.1)
                     case 'a': if (float.TryParse(arg, out float a)) p.damage *= 1f + a / 100f; break;     // 보스 보상 「전설의 힘」 (1.0.1)
                     case 'k': if (int.TryParse(arg, out int ks)) Curse.Active = ks == d.stage; break;   // 저주 제단: 저장한 장에서 받았으면 다시 (1.0.1)
+                    case 'r': if (specials != null) specials.ReplayRefine(); break;                       // 영혼 정련 (1.0.4~)
                 }
             }
         }

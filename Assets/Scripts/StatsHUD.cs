@@ -31,7 +31,7 @@ public class StatsHUD : MonoBehaviour
 
     // 한국어 원문 (static 초기화 중엔 설정을 읽을 수 없으므로 쓸 때 번역)
     static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도",
-                                        "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생", "행운" };
+                                        "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생", "행운", "성장" };     // 1.0.4~ 성장 (성장 카드 · 영혼 정련 횟수)
     // 6번째 줄부터는 레벨업 카드 아이콘을 빌려 씀 (강철같은 심장 · 노려보는 눈빛 · 관통하는 총알 · 생명의 샘)
     static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10 };
 
@@ -231,5 +231,9 @@ public class StatsHUD : MonoBehaviour
         int luck = sp != null ? sp.Luck : 0;
         values[11].text = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
         values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0.#") + Loc.T("/처치") : "");
+        // 성장 (1.0.4~): 만렙 뒤 고른 성장 카드 수 · 영혼 정련 횟수
+        LevelShop shop = Cache<LevelShop>.Get;
+        int grown = shop != null ? shop.GrowthPicks : 0, refines = sp != null ? sp.Refines : 0;
+        values[12].text = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
     }
 }

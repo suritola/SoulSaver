@@ -95,8 +95,7 @@ public partial class LevelShop : MonoBehaviour
 
         UpdateReroll();
         UpdateSkipButton();
-        // 마지막 카드를 배워 만렙이 되면 남은 레벨업은 버림
-        if (PendingLevels > 0 && !IsOpen && NothingToLearn) PendingLevels = 0;
+        // 1.0.4~: 만렙이어도 남은 레벨업은 버리지 않음 (성장 카드로 고름, LevelShop.Growth)
         // 숫자 1 · 2 · 3: 그 카드를 바로 고름 (2.1.8, 클릭 → 확정 두 번을 한 번에)
         int quick = QuickPickKey();
         if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy) ConfirmSlot(quick);
@@ -390,17 +389,12 @@ public partial class LevelShop : MonoBehaviour
     public void GainExp(PlayerController p, float amount)
     {
         if (p == null) return;
-        // 만렙: 더 배울 카드가 없으면 레벨이 오르지 않음 (비상 보급만 끝없이 나와 체력을 채우던 문제)
         // 최대 레벨 50 (무한 모드 100): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
-        if (NothingToLearn || LevelsReserved(p) >= LevelCap)
-        {
-            p.nowEXP = Mathf.Min(p.nowEXP + amount, p.needEXP);
-            return;
-        }
+        // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
         p.nowEXP += amount;
         int gained = 0;
-        while (p.nowEXP >= p.needEXP && p.needEXP > 0f && LevelsReserved(p) + gained < LevelCap)
+        while (p.nowEXP >= p.needEXP && p.needEXP > 0f)
         {
             p.nowEXP -= p.needEXP;
             earned++;
@@ -416,8 +410,6 @@ public partial class LevelShop : MonoBehaviour
     bool freePick;
     // 경험치로 얻은 레벨업 횟수 (경험치 요구량은 이 횟수로 오름 · 레벨 자체는 카드를 고를 때 오름)
     int earned;
-    // 지금 레벨 + 아직 고르지 않은 레벨업 (상한 계산용)
-    int LevelsReserved(PlayerController p) => p.level + PendingLevels + levelUpQueued + (IsOpen ? 1 : 0);
 
     // 한꺼번에 레벨업 포인트를 줌 (무한 모드는 레벨 10 만큼 미리)
     public void GrantLevels(PlayerController p, int n)
@@ -499,14 +491,19 @@ public partial class LevelShop : MonoBehaviour
     private int first = 0, second = 1, third = 2;
     void UpdateLvShopContent()
     {
-        // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 비상 보급)
+        // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 성장 카드, 1.0.4~ — 예전엔 비상 보급)
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
+        // 최대 레벨이면 성장 카드만 (1.0.4~, LevelShop.Growth)
+        bool growthOnly = GrowthOnly;
+        ResetGrowthDeck();
         // 지금 무기에 안 맞는 카드는 빼고 (예: 영혼 저격총에 유도 탄두) — 무기가 바뀌면 다시 나옴
-        for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) open.Add(i);
+        if (!growthOnly)
+            for (int i = 0; i < Total_abilitys; i++) if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) open.Add(i);
+        if (open.Count < 3) GrowthHint();
         // 스킬 진화에 가까운 카드일수록 조금 더 잘 나옴 (가중치 1 ~ 1.8, LevelShop.Signature)
         int Draw()
         {
-            if (open.Count == 0) return SupplyId;
+            if (open.Count == 0) return DrawGrowth();
             float total = 0f;
             foreach (int c in open) total += DrawWeight(c);
             float roll = Random.Range(0f, total);
@@ -524,20 +521,20 @@ public partial class LevelShop : MonoBehaviour
         //첫번째 능력 선택
         first = Draw();
 
-        FirstTitle.text = ability_name[first];
-        FirstAbility.text = ability_content[first];
+        FirstTitle.text = CardTitleOf(first);
+        FirstAbility.text = CardBodyOf(first);
 
         //두번째 능력 선택
         second = Draw();
 
-        SecondTitle.text = ability_name[second];
-        SecondAbility.text = ability_content[second];
+        SecondTitle.text = CardTitleOf(second);
+        SecondAbility.text = CardBodyOf(second);
 
         //세번째 능력 선택
         third = Draw();
 
-        ThirdTitle.text = ability_name[third];
-        ThirdAbility.text = ability_content[third];
+        ThirdTitle.text = CardTitleOf(third);
+        ThirdAbility.text = CardBodyOf(third);
 
         SetCardIcon(FirstIcon, first);
         SetCardIcon(SecondIcon, second);
@@ -656,7 +653,7 @@ public partial class LevelShop : MonoBehaviour
     {
         if (target == null || abilityHUD == null) return;
 
-        Sprite icon = KitIcon(id) ?? abilityHUD.GetIcon(id);
+        Sprite icon = IsGrowth(id) ? GrowthIcon(id - GrowthFirstId) : KitIcon(id) ?? abilityHUD.GetIcon(id);
         if (icon != null) target.sprite = icon;
     }
 
@@ -670,9 +667,15 @@ public partial class LevelShop : MonoBehaviour
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
         RunSave.Record((freePick ? "f" : "c") + what);         // 판 중간 저장 (2.1.9): 고른 카드를 순서대로
-        // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외)
+        // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외) · 최대 레벨에서 멈춤 (그 뒤는 성장 카드, 1.0.4~)
         if (freePick) freePick = false;
-        else if (bul != null) bul.level++;
+        else if (bul != null && bul.level < LevelCap) bul.level++;
+        // 성장 카드 (1.0.4~): 능력 배열 밖이라 HUD · 진화 확인 없이 효과만
+        if (IsGrowth(what))
+        {
+            ApplyGrowth(what - GrowthFirstId);
+            return;
+        }
 
         // 비상 보급은 능력이 아니라 HUD에 남기지 않음
         if (what != SupplyId)
@@ -695,12 +698,21 @@ public partial class LevelShop : MonoBehaviour
     // 기록한 카드를 연출 없이 다시 고름 (free: 판을 시작할 때 준 카드라 레벨이 오르지 않음)
     public void ReplayPick(int what, bool free)
     {
+        if (IsGrowth(what))
+        {
+            // 성장 카드 (1.0.4~): 고를 때와 같이 최대 레벨에서는 레벨이 오르지 않음
+            bul = FindFirstObjectByType<PlayerController>();
+            if (bul == null) return;
+            if (!free && bul.level < LevelCap) bul.level++;
+            ApplyGrowth(what - GrowthFirstId);
+            return;
+        }
         if (what < 0 || what >= ability_level.Length) return;
         skill = FindFirstObjectByType<SkillGauge>();
         bul = FindFirstObjectByType<PlayerController>();
         if (lv == null) lv = FindFirstObjectByType<Level>();
         if (bul == null) return;
-        if (!free) bul.level++;
+        if (!free && bul.level < LevelCap) bul.level++;
         ability_level[what]++;
         if (abilityHUD != null) abilityHUD.SetAbility(what, ability_level[what]);
         if (what == SupplyId) return;
