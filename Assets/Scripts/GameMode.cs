@@ -128,7 +128,8 @@ public static class GameMode
     const float MobStart = 0.6f, MobGrowth = 0.102f;      // 1분마다 e^0.102 ≈ 1.107배
     static float MobRamp => IsEndless ? Mathf.Min(EndlessRampMax, MobStart * Mathf.Exp(MobGrowth * EndlessSeconds / 60f)) : 1f;
 
-    // 최종 국면 (1.0.2): 30분이 지나면 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
+    // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분, EndlessMode.FinalAt): 그때부터 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
+    //   1.0.4~ 개발자가 나온 뒤로는 잡몹 자체가 나오지 않음 (EnemySpawner.NoMobs)
     const float SurgeGrowth = 0.693f, SurgeMax = 16f;
     static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt ? Mathf.Min(SurgeMax, Mathf.Exp(SurgeGrowth * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
 

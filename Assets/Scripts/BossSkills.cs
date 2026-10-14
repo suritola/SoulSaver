@@ -95,7 +95,7 @@ public partial class BossSkills : MonoBehaviour
         for (float t = 0f; t < seconds; t += Time.deltaTime)
         {
             if (!Alive) yield break;
-            sr.color = Color.Lerp(Color.white, color, Mathf.PingPong(Time.time * 6f, 1f));
+            sr.color = Color.Lerp(boss.baseTint, color, Mathf.PingPong(Time.time * 6f, 1f));     // 1.0.4~ 몸 색(개발자 엄마 분홍)에서 깜빡임
             yield return null;
         }
         if (Alive) sr.color = Color.white;
@@ -352,7 +352,12 @@ public partial class BossSkills : MonoBehaviour
         PlayerController pl = Hostile.Player;
         if (!inside || pl == null || pl.IsDying || ultHits >= (boss != null && boss.developer ? DevMaxHits : UltMaxHits)) return false;
         float scale = Mathf.Max(0.01f, GameMode.DamageMul * Chapters.HurtMul);     // TryHit 이 곱하는 배율
-        if (!pl.TryHit(Mathf.Min(UltHitDamage * Power, pl.PlayerMaxHealth * MaxHitShare / scale))) return false;
+        // 1.0.4~ 개발자 · 개발자 엄마: 받은 피해 · 쓰러진 곳에 보스 이름 · 엄마는 피해 2배 (BossSkills.Developer)
+        bool dev = boss != null && boss.developer;
+        if (dev) AttackLabel.Pending = DevName;
+        bool hit = pl.TryHit(Mathf.Min(UltHitDamage * Power, pl.PlayerMaxHealth * MaxHitShare / scale) * (dev ? DevPow : 1f));
+        if (dev) AttackLabel.Pending = null;
+        if (!hit) return false;
         ultHits++;
         return true;
     }

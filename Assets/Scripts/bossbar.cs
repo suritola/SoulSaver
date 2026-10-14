@@ -19,6 +19,7 @@ public class bossbar : MonoBehaviour
 
     public bool bossSpawn = false;
     public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.0.2)
+    public const int DeveloperMomKind = 10;   // 1.0.4~ 30분의 「개발자 엄마」 (이름만)
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
 
     TMP_Text nameText;
@@ -33,6 +34,7 @@ public class bossbar : MonoBehaviour
         2 => Loc.T("킹 슬라임"),
         3 => Loc.T("거울의 군주"),
         DeveloperKind => Loc.T("개발자"),
+        DeveloperMomKind => Loc.T("개발자 엄마"),
         _ => Loc.T("리치 왕"),
     };
     void Start()
@@ -106,7 +108,7 @@ public class bossbar : MonoBehaviour
     {
         float ratio = s.setEnemyHP > 0 ? Mathf.Clamp01(s.EnemyHealth / s.setEnemyHP) : 0f;
         if (fill != null) fill.sizeDelta = new Vector2(ratio * MaxBarX, BarY);
-        string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
+        string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(s.developerMom ? DeveloperMomKind : DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
         if (label != null && label.text != n) label.text = n;
     }
 

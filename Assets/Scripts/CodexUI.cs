@@ -240,6 +240,13 @@ public static class CodexUI
         int mk = AbyssStage.MirrorKind;
         Card(AbyssStage.Frames("mirrorlord")[0], Color.white, bossbar.BossName(mk), Loc.T(StageNames[3]) + "  ·  " + Stats(AbyssStage.MirrorHp, 7.5f, 48f),
              Loc.T(BossDesc[mk]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[mk])));
+        // 1.0.4~ 무한 모드 최종 보스 「개발자」 · 「개발자 엄마」 (무한 모드가 열린 뒤에만 · 거울의 군주 몸 기준 속도 7.5 · 접촉 피해 48)
+        if (!GameMode.IsUnlocked(Difficulty.Endless)) return;
+        Sprite dev = AbyssStage.Frames("developer")[0];
+        Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
+             Loc.T("15분에 깨어난 보스를 모두 쓰러뜨리면 강림합니다. 모든 영웅의 최종 진화 필살기를 쉬지 않고 겹쳐 씁니다 (예고는 그대로). 나온 뒤로는 잡몹이 나오지 않습니다."));
+        Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("무한 모드 30분") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
+             Loc.T("30분에 나타납니다. 개발자의 모든 능력치가 2배 — 체력 · 피해 · 이동 속도 2배, 필살기를 2배 더 자주 씁니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어."));
     }
 
     static void Specials(CodexData data, SpecialKind kind)

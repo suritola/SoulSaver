@@ -66,6 +66,9 @@ public class bosss : MonoBehaviour
     [HideInInspector] public bool difficultyApplied;
     // 무한 모드 최종 보스 「개발자」 (1.0.2 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)만 다르고 결계는 쓰지 않음
     [HideInInspector] public bool developer;
+    // 1.0.4~ 30분의 「개발자 엄마」 (developer 도 함께 켜짐): 개발자의 모든 능력치 2배 · 몸 색 (피격 번쩍임 · 스킬 예고가 끝나면 이 색으로 돌아감)
+    [HideInInspector] public bool developerMom;
+    [HideInInspector] public Color baseTint = Color.white;
     bool IsSlime => bossKind == 2;
 
     // 남은 체력 합계
@@ -154,7 +157,7 @@ public class bosss : MonoBehaviour
         if (IsPrimary)
         {
             bossbar.bossSpawn = true;
-            bossbar.bossKind = developer ? bossbar.DeveloperKind : bossKind;
+            bossbar.bossKind = developer ? (developerMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind) : bossKind;     // 1.0.4~ 엄마
             // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
             bossbar.MaxHealth = setEnemyHP;
             bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
@@ -250,8 +253,10 @@ public class bosss : MonoBehaviour
         else if (flashing)
         {
             flashing = false;
-            spriteRenderer.color = Color.white;
+            spriteRenderer.color = baseTint;
         }
+        // 1.0.4~ 몸 색이 있는 보스(개발자 엄마): 스킬 예고 등이 흰색으로 되돌려 놓으면 다시 몸 색으로
+        else if (baseTint != Color.white && spriteRenderer.color == Color.white) spriteRenderer.color = baseTint;
     }
     PlayerController playerC;
 

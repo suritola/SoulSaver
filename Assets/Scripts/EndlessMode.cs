@@ -22,15 +22,24 @@ public class EndlessMode : MonoBehaviour
     const float MidBossEvery = 70f;         // 강도가 오를수록 짧아짐 (최소 30초)
     float nextMidBoss;
 
-    // 최종 국면 (1.0.2): 30분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
-    // → 그 보스들을 모두 쓰러뜨리면 최종 보스 「개발자」(체력 20만) → 개발자를 쓰러뜨리면 무한 모드 클리어
-    public const float FinalAt = 1800f;
-    public const int DeveloperHp = 200000;
+    // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분): 15분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
+    // → 그 보스들을 모두 쓰러뜨리면 최종 보스 「개발자」(1.0.4~ 체력 20만 → 30만 · 공격 주기 ÷10)
+    //   1.0.4~ 개발자가 나오기 시작한 뒤로는 잡몹 · 습격 · 중간 보스 · 보스 부하가 나오지 않음
+    // → 1.0.4~ 30분이 되면 「개발자 엄마」(개발자의 모든 능력치 2배: 체력 60만 · 공격 주기 ÷20 · 피해 · 이동 속도 2배)
+    //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
+    public const float FinalAt = 900f;
+    public const float MomAt = 1800f;
+    public const int DeveloperHp = 300000;
+    public const int MomHp = 600000;
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
-    int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 · 3 클리어
-    bosss developer;
+    int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 (· 엄마) · 3 클리어
+    bosss developer, mom;
+    bool devSummoned, momSummoned, devDown, momDown;     // 1.0.4~
     public bool FinalPhase => finalStage > 0;
+    // 1.0.4~ 개발자를 부르기 시작한 뒤로는 잡몹이 나오지 않음 (EnemySpawner 가 물어봄)
+    public bool NoMobs => devSummoned;
+    public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
     public int BossesDefeated { get; private set; }
 
@@ -80,15 +89,19 @@ public class EndlessMode : MonoBehaviour
             shownSec = sec;
             shownBosses = BossesDefeated;
             float best = daily ? DailyChallenge.RunBest : BestSeconds;
+            // 1.0.4~ 개발자를 먼저 쓰러뜨렸으면 30분까지 남은 시간
+            string final = devDown && !momSummoned ? Loc.T("누군가 오기까지") + " " + Clock(Mathf.Max(0f, MomAt - s)) : Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간");
             hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
-                     + (finalStage > 0 ? "   <color=#FF5A4A>" + Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간") + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
+                     + (finalStage > 0 ? "   <color=#FF5A4A>" + final + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
 
         if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
         if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
+        // 1.0.4~ 30분: 개발자 엄마 (개발자가 아직 나오지 않았으면 함께)
+        if (finalStage >= 1 && finalStage < 3 && !momSummoned && s >= MomAt && free) { StartCoroutine(SummonMom()); return; }
         if (finalStage == 0 && !spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
-        if (Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
+        if (!NoMobs && Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
         {
             spawner.SpawnMidBoss();
             nextMidBoss = Time.time + Mathf.Max(30f, MidBossEvery / Mathf.Max(1f, GameMode.EndlessIntensity * 0.6f));
@@ -109,7 +122,7 @@ public class EndlessMode : MonoBehaviour
         stages.ShowBanner(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), 2.5f);
     }
 
-    // 30분: 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
+    // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
     void StartFinal()
     {
         finalStage = 1;
@@ -128,36 +141,75 @@ public class EndlessMode : MonoBehaviour
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         Hostile.Play("roar", 1f, 0.6f);
         Hostile.Shake(0.4f);
-        stages.ShowBanner(Loc.T("30분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), 4f);
+        stages.ShowBanner(Loc.T("15분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), 4f);
     }
 
     // 모든 보스를 쓰러뜨리면 최종 보스 「개발자」 (거울의 군주 몸을 빌려 모든 캐릭터의 최종 진화 필살기를 돌려 씀 · BossSkills.Developer)
+    // 1.0.4~ 30분에 엄마와 함께 불릴 수도 있음 (SummonMom) · 부르기 시작한 순간부터 잡몹이 나오지 않고, 화면에 남은 잡몹은 영혼으로 흩어짐
     System.Collections.IEnumerator SummonDeveloper()
     {
-        finalStage = 2;
+        if (devSummoned) yield break;
+        devSummoned = true;
+        bool allDown = bosss.LiveCount == 0;
+        if (finalStage < 2) finalStage = 2;
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        spawner.ClearMobs();
         yield return new WaitForSeconds(1.5f);
-        stages.ShowBanner(Loc.T("모든 보스가 쓰러졌다…") + "\n" + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
+        stages.ShowBanner((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
         Hostile.Play("roar", 1f, 0.45f);
         Hostile.Shake(0.5f);
         yield return new WaitForSeconds(2.5f);
+        developer = SpawnFinalBoss(false);
+        if (developer == null) devDown = true;      // 견본이 없으면 엄마만 쓰러뜨려도 클리어
+    }
+
+    // 1.0.4~ 30분: 「개발자 엄마」 (개발자의 모든 능력치 2배) · 개발자가 아직 나오지 않았으면 둘이 함께
+    System.Collections.IEnumerator SummonMom()
+    {
+        momSummoned = true;
+        if (finalStage < 2) finalStage = 2;
+        bool together = !devSummoned;
+        if (together) StartCoroutine(SummonDeveloper());
+        while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        spawner.ClearMobs();
+        yield return new WaitForSeconds(together ? 4.5f : 1f);      // 함께면 개발자가 먼저 내려온 뒤
+        stages.ShowBanner(Loc.T("30분이 지났다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), 4f);
+        Hostile.Play("roar", 1f, 0.35f);
+        Hostile.Shake(0.7f);
+        yield return new WaitForSeconds(2.5f);
+        mom = SpawnFinalBoss(true);
+        if (mom == null) momDown = true;
+    }
+
+    // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 30만 · 60만 · 1.0.4~)
+    bosss SpawnFinalBoss(bool isMom)
+    {
         GameObject prefab = null;
-        foreach (GameObject g in bossPrefabs)
-            if (g != null && (prefab == null || (g.TryGetComponent(out bosss b) && b.bossKind == AbyssStage.MirrorKind))) prefab = g;
-        if (prefab == null) yield break;
-        GameObject go = Instantiate(prefab, Hostile.ClampArena(spawner.bossSpawnPoint), Quaternion.identity);
-        developer = go.GetComponent<bosss>();
-        if (developer != null)
+        if (bossPrefabs != null)
+            foreach (GameObject g in bossPrefabs)
+                if (g != null && (prefab == null || (g.TryGetComponent(out bosss b) && b.bossKind == AbyssStage.MirrorKind))) prefab = g;
+        if (prefab == null) return null;
+        Vector3 at = (Vector3)spawner.bossSpawnPoint + (isMom && developer != null && !developer.IsDead ? Vector3.right * 5f : Vector3.zero);
+        GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
+        bosss boss = go.GetComponent<bosss>();
+        if (boss != null)
         {
-            // Start 전에 정함: 체력은 난이도 배율 없이 정확히 20만
-            developer.developer = true;
-            developer.bossKind = AbyssStage.MirrorKind;
-            developer.difficultyApplied = true;
-            developer.setEnemyHP = DeveloperHp;
-            developer.expReward *= 5;
-            developer.coinDrop *= 5;
+            boss.developer = true;
+            boss.developerMom = isMom;
+            boss.bossKind = AbyssStage.MirrorKind;
+            boss.difficultyApplied = true;
+            boss.setEnemyHP = isMom ? MomHp : DeveloperHp;
+            boss.expReward *= isMom ? 10 : 5;
+            boss.coinDrop *= isMom ? 10 : 5;
+            if (isMom)
+            {
+                // 엄마: 접촉 피해 · 이동 속도 2배 (공격 주기 · 필살기 피해 2배는 BossSkills.Developer)
+                boss.speed *= 2f;
+                boss.contactDamage *= 2f;
+                boss.baseTint = MomTint;
+            }
         }
-        // 개발자 전용 도트 (Resources/Abyss/developer_0~3: 금빛 후광 · 후드 · 빛나는 안경 · 코드가 흐르는 노트북)
+        // 개발자 전용 도트 (Resources/Abyss/developer_0~3: 금빛 후광 · 후드 · 빛나는 안경 · 코드가 흐르는 노트북) · 엄마는 같은 그림을 분홍빛으로 더 크게
         Sprite[] art = AbyssStage.Frames("developer");
         if (art[0] != null)
         {
@@ -167,17 +219,27 @@ public class EndlessMode : MonoBehaviour
             AbyssBody body = go.GetComponent<AbyssBody>();
             if (body == null) body = go.AddComponent<AbyssBody>();
             body.frames = art;
-            body.fps = 6f;
+            body.fps = isMom ? 8f : 6f;
         }
-        go.transform.localScale *= 1.35f;
-        Fx.Spawn("fx_soulburst", go.transform.position, 14f, new Color(1f, 0.85f, 0.35f), 16f);
+        if (isMom && go.TryGetComponent(out SpriteRenderer tint)) tint.color = MomTint;
+        go.transform.localScale *= isMom ? 1.75f : 1.35f;
+        Fx.Spawn("fx_soulburst", go.transform.position, isMom ? 18f : 14f, isMom ? MomTint : new Color(1f, 0.85f, 0.35f), 16f);
         spawner.bossSpawned = true;
         spawner.bossCleared = false;
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+        return boss;
     }
 
-    // 개발자를 쓰러뜨림: 무한 모드 클리어 (기록 저장 → 엔딩 → 메인 메뉴)
-    System.Collections.IEnumerator ClearEndless()
+    // 1.0.4~ 개발자를 30분 전에 쓰러뜨림: 처치 연출 · 보상이 끝난 뒤 다음을 예고
+    System.Collections.IEnumerator ForeshadowMom()
+    {
+        yield return new WaitForSeconds(3.5f);
+        while (PlayerController.Cinematic || Time.timeScale == 0f || stages.IsMenuOpen) yield return null;
+        if (!momSummoned && finalStage < 3) stages.ShowBanner(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("30분이 되면 누군가 찾아온다…"), 4f);
+    }
+
+    // 개발자와 개발자 엄마를 모두 쓰러뜨림 (1.0.4~ 개발자만으로는 끝나지 않음): 무한 모드 클리어 (기록 저장 → 엔딩 → 메인 메뉴)
+    System.Collections.IEnumerator ClearEndless(bool momLast)
     {
         finalStage = 3;
         spawner.spawningEnabled = false;
@@ -186,7 +248,7 @@ public class EndlessMode : MonoBehaviour
         Prefs.Save();
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);
-        stages.ShowBanner(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f);
+        stages.ShowBanner(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f);
         Hostile.Play("chime", 1f, 1f);
         yield return new WaitForSecondsRealtime(5f);
         if (StoryDirector.ShouldSkipAll) yield break;
@@ -204,8 +266,13 @@ public class EndlessMode : MonoBehaviour
         if (finalStage == 3) return;
         BossesDefeated++;
         if (BossesDefeated >= 5) CharacterData.Achieve(CharUnlock.EndlessBosses5);
-        if (finalStage == 2 && developer != null && developer.IsDead) { StartCoroutine(ClearEndless()); return; }
+        // 1.0.4~ 개발자를 쓰러뜨려도 끝나지 않음: 개발자와 엄마를 모두 쓰러뜨려야 클리어 (보스가 쓰러진 그 순간 불리므로 그때 표시)
+        bool devWas = devDown, momWas = momDown;
+        if (developer != null && developer.IsDead) devDown = true;
+        if (mom != null && mom.IsDead) momDown = true;
+        if (devSummoned && momSummoned && devDown && momDown) { StartCoroutine(ClearEndless(momDown && !momWas)); return; }
         if (finalStage == 1 && bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());
+        if (devDown && !devWas && !momSummoned) StartCoroutine(ForeshadowMom());
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
         if (SpecialAbilities.UsesEvolution)
