@@ -385,66 +385,108 @@ public class RunStats : MonoBehaviour
 }
 
 // 처음 한 번만 뜨는 짧은 도움말 (설정에서 끌 수 있음). 화면 아래 가운데, HUD 위
+// 1.0.4~: 도움말을 줄 세워 하나씩 차례로 보여 줌 (뒤에 온 것이 앞의 것을 덮지 않음)
+//   시간이 멈춘 동안(카드 · 보상 · 영혼 트리 · ESC 창)은 숨기고 남은 시간도 멈춤, 5초를 다 보여 준 뒤에만 '봤음'으로 저장
+//   설정 「도움말 다시 보기」(ResetAll)로 처음부터 다시 볼 수 있음
 public static class Hints
 {
     static GameObject box;
     static TextMeshProUGUI text;
-    static float until;
+    static float left;                  // 지금 도움말이 남은 시간 (시간이 흐를 때만 줄어듦)
+    static string current;              // 지금 띄운 도움말 키 (null = 없음)
     static HintRunner runner;
+    static int sceneHandle = -1;
+    static readonly List<(string key, string ko)> queue = new List<(string key, string ko)>();
+    const float Duration = 5f;
+
+    // 설정 「도움말 다시 보기」가 지우는 키 (Hints.Show 를 부르는 곳의 키를 모두 적음)
+    static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade" };
+
+    public static void ResetAll()
+    {
+        foreach (string k in Keys) Prefs.DeleteKey("hint." + k);
+        Prefs.Save();
+    }
 
     public static void Show(string key, string ko)
     {
         if (!GameSettings.Hints || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning || TutorialRun.Active) return;     // 튜토리얼은 자기 안내를 씀
-        string pref = "hint." + key;
-        if (Prefs.GetInt(pref, 0) == 1) return;
-        Prefs.SetInt(pref, 1);
+        if (Prefs.GetInt("hint." + key, 0) == 1) return;
+        // 씬이 바뀌면 지난 씬에서 줄 선 도움말은 버림 (상자는 캔버스와 함께 사라짐)
+        int scene = SceneManager.GetActiveScene().handle;
+        if (scene != sceneHandle) { sceneHandle = scene; queue.Clear(); current = null; }
+        if (current == key) return;
+        foreach (var q in queue) if (q.key == key) return;
+        if (UIKit.HudCanvas() == null) return;
+        queue.Add((key, ko));
+        if (runner == null) runner = new GameObject("HintRunner").AddComponent<HintRunner>();       // 상자가 꺼져 있어도 줄을 살핌 (씬과 함께 사라짐)
+    }
+
+    static bool Build()
+    {
+        if (box != null) return true;
         Canvas canvas = UIKit.HudCanvas();
-        if (canvas == null) return;
-        if (box == null)
-        {
-            box = new GameObject("Hint", typeof(RectTransform), typeof(Image));
-            RectTransform r = box.GetComponent<RectTransform>();
-            r.SetParent(canvas.transform, false);
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
-            r.pivot = new Vector2(0.5f, 0f);
-            r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
-            r.sizeDelta = new Vector2(920f, 70f);      // 1.0.1: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
-            Image bg = box.GetComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.1f, 0.94f);
-            bg.raycastTarget = false;
-            Outline edge = box.AddComponent<Outline>();
-            edge.effectColor = new Color(0.45f, 0.85f, 1f, 0.95f);
-            edge.effectDistance = new Vector2(3f, -3f);
-            GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-            RectTransform tr = tg.GetComponent<RectTransform>();
-            tr.SetParent(r, false);
-            tr.anchorMin = Vector2.zero;
-            tr.anchorMax = Vector2.one;
-            tr.offsetMin = new Vector2(16f, 4f);
-            tr.offsetMax = new Vector2(-16f, -4f);
-            text = tg.GetComponent<TextMeshProUGUI>();
-            UIKit.EnsureStyle();
-            if (UIKit.Font != null) text.font = UIKit.Font;
-            if (UIKit.FontMaterial != null) text.fontSharedMaterial = UIKit.FontMaterial;
-            text.enableAutoSizing = true;
-            text.fontSizeMin = 16f;
-            text.fontSizeMax = 30f;
-            text.fontStyle = FontStyles.Bold;
-            text.outlineWidth = 0.2f;
-            text.outlineColor = new Color32(0, 0, 0, 255);
-            text.color = Color.white;
-            text.alignment = TextAlignmentOptions.Center;
-            text.raycastTarget = false;
-            runner = box.AddComponent<HintRunner>();
-        }
-        text.text = "<color=#FFE066>" + Loc.T("도움말") + "</color>  " + Loc.T(ko);
-        box.SetActive(true);
-        until = Time.unscaledTime + 5f;
+        if (canvas == null) return false;
+        box = new GameObject("Hint", typeof(RectTransform), typeof(Image));
+        RectTransform r = box.GetComponent<RectTransform>();
+        r.SetParent(canvas.transform, false);
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+        r.pivot = new Vector2(0.5f, 0f);
+        r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
+        r.sizeDelta = new Vector2(920f, 70f);      // 1.0.1: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
+        Image bg = box.GetComponent<Image>();
+        bg.color = new Color(0.05f, 0.05f, 0.1f, 0.94f);
+        bg.raycastTarget = false;
+        Outline edge = box.AddComponent<Outline>();
+        edge.effectColor = new Color(0.45f, 0.85f, 1f, 0.95f);
+        edge.effectDistance = new Vector2(3f, -3f);
+        GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform tr = tg.GetComponent<RectTransform>();
+        tr.SetParent(r, false);
+        tr.anchorMin = Vector2.zero;
+        tr.anchorMax = Vector2.one;
+        tr.offsetMin = new Vector2(16f, 4f);
+        tr.offsetMax = new Vector2(-16f, -4f);
+        text = tg.GetComponent<TextMeshProUGUI>();
+        UIKit.EnsureStyle();
+        if (UIKit.Font != null) text.font = UIKit.Font;
+        if (UIKit.FontMaterial != null) text.fontSharedMaterial = UIKit.FontMaterial;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = 16f;
+        text.fontSizeMax = 30f;
+        text.fontStyle = FontStyles.Bold;
+        text.outlineWidth = 0.2f;
+        text.outlineColor = new Color32(0, 0, 0, 255);
+        text.color = Color.white;
+        text.alignment = TextAlignmentOptions.Center;
+        text.raycastTarget = false;
+        box.SetActive(false);
+        return true;
     }
 
     public static void Tick()
     {
-        if (box != null && box.activeSelf && Time.unscaledTime > until) box.SetActive(false);
+        bool paused = Time.timeScale == 0f;
+        if (current == null)
+        {
+            if (paused || queue.Count == 0 || !GameSettings.Hints) return;
+            if (!Build()) { queue.Clear(); return; }
+            var next = queue[0];
+            queue.RemoveAt(0);
+            if (Prefs.GetInt("hint." + next.key, 0) == 1) return;
+            current = next.key;
+            text.text = "<color=#FFE066>" + Loc.T("도움말") + "</color>  " + Loc.T(next.ko);
+            left = Duration;
+        }
+        if (box == null) { current = null; return; }
+        // 시간이 멈춘 동안은 숨기고 남은 시간도 그대로 (창 뒤에서 흘러가 버리지 않게)
+        if (box.activeSelf == paused) box.SetActive(!paused);
+        if (paused) return;
+        left -= Time.unscaledDeltaTime;
+        if (left > 0f) return;
+        Prefs.SetInt("hint." + current, 1);         // 다 보여 준 뒤에 '봤음'
+        current = null;
+        box.SetActive(false);
     }
 }
 

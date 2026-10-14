@@ -1810,5 +1810,23 @@ public static partial class LocTable
           L("Appears at 30 minutes. Every stat of the Developer doubled: 2x HP, damage and move speed, and ultimates twice as often. Defeat both the Developer and his Mom to clear Endless.",
             "30分に現れます。開発者の全能力値が2倍 — 体力・ダメージ・移動速度2倍、必殺技を2倍の頻度で放ちます。開発者とママを両方倒すとエンドレスクリア。",
             "在30分钟时出现。开发者的所有属性翻倍——生命、伤害、移动速度2倍，必杀技使用频率也是2倍。击败开发者和妈妈即可通关无尽模式。") },
+        // 1.0.4 묶음 2: 튜토리얼 · 도움말
+        { "도움말 다시 보기", L("Show Tips Again", "ヒントをもう一度", "重新显示提示") },
+        { "처음부터 다시 보입니다", L("Tips will show again", "ヒントが再び表示されます", "提示将重新显示") },
+        { "레벨이 오르면 레벨업 카드를 고를 수 있습니다. [{INTERACT}]를 눌러 원할 때 카드를 고르세요.", L("When you level up, you can pick a level-up card. Press [{INTERACT}] whenever you like to pick one.", "レベルが上がるとレベルアップカードを選べます。好きなときに [{INTERACT}] を押してカードを選びましょう。", "升级后可以选择升级卡牌。随时按 [{INTERACT}] 选择卡牌。") },
+        { "카드 고르기", L("Pick a card", "カードを選ぶ", "选择卡牌") },
+        { "[{INTERACT}] · 클릭: 대사 넘기기   ESC 두 번: 건너뛰기", L("[{INTERACT}] · Click: Next line   ESC twice: Skip", "[{INTERACT}] · クリック: セリフ送り   ESC 2回: スキップ", "[{INTERACT}] · 点击: 下一句   按两次 ESC: 跳过") },
+        { "ESC 를 한 번 더 누르면 이야기를 건너뜁니다", L("Press ESC again to skip the story", "もう一度 ESC を押すとストーリーをスキップします", "再按一次 ESC 跳过剧情") },
+        { "경험치가 차면 레벨업 카드를 고를 수 있습니다. [{INTERACT}]를 눌러 창을 열고 카드 한 장을 고르세요.", L("When your EXP bar fills, you can pick a level-up card. Press [{INTERACT}] to open the window and pick one card.", "経験値がたまるとレベルアップカードを選べます。[{INTERACT}] を押して画面を開き、カードを1枚選びましょう。", "经验值满后可以选择升级卡牌。按 [{INTERACT}] 打开窗口并选择一张卡牌。") },
+        { "보스를 쓰러뜨리면 무기가 진화합니다. 세 갈래 중 하나를 고르세요. (보통 판에서는 두 번, 되돌릴 수 없음)", L("Defeating a boss evolves your weapon. Choose one of three paths. (Twice in a normal run, cannot be undone)", "ボスを倒すと武器が進化します。3つの道から1つを選びましょう。(通常のプレイでは2回、元に戻せません)", "击败首领后武器会进化。从三条路线中选择一条。(普通对局中两次，无法撤销)") },
+        { "경고 피하기", L("Dodge Warnings", "警告を避ける", "躲避警告") },
+        { "적의 기술은 바닥에 빨간 경고가 먼저 뜹니다. 안쪽이 다 차면 터지니, 그 전에 원 밖으로 피하세요! (세 번)", L("Enemy skills show a red warning on the ground first. It goes off once the inside fills up, so step out of the circle before then! (3 times)", "敵の技は先に床へ赤い警告が出ます。内側が満ちると発動するので、その前に円の外へ避けましょう！(3回)", "敌人的技能会先在地面显示红色警告。内部填满时就会爆发，在此之前躲到圈外！(三次)") },
+        { "기본 조작을 모두 익혔습니다! 판에서는 떠돌이 상점에 다가가 [{INTERACT}], 보스를 잡으면 열리는 포털로 다음 장, ESC 는 일시정지 · 설정입니다.", L("You've learned all the basics! In a run, walk up to the wandering shop and press [{INTERACT}], take the portal that opens after a boss to reach the next chapter, and press ESC to pause or open settings.", "基本操作をすべて覚えました！本番では放浪の商店に近づいて [{INTERACT}]、ボスを倒すと開くポータルで次の章へ、ESC で一時停止・設定です。", "你已掌握全部基本操作！正式对局中靠近流浪商店按 [{INTERACT}]，击败首领后开启的传送门通往下一章，ESC 为暂停与设置。") },
+        { "바로 첫 판 시작", L("Start First Run", "すぐに最初のプレイへ", "立即开始第一局") },
+        { "적을 조준한 뒤 떼세요", L("Aim at an enemy, then release", "敵を狙ってから離しましょう", "瞄准敌人后再松开") },
+        { "맞았습니다! 다시 한 번", L("Hit! Try again", "当たりました！もう一度", "被击中了！再来一次") },
+        { "튜토리얼을 그만둘까요?", L("Quit the tutorial?", "チュートリアルをやめますか？", "要退出教程吗？") },
+        { "메인 메뉴로 돌아갑니다. 다음에는 1단계부터 시작합니다.", L("You'll return to the main menu. Next time you'll start from step 1.", "メインメニューに戻ります。次回はステップ1から始まります。", "将返回主菜单。下次将从第 1 步开始。") },
+        { "이 단계 건너뛰기", L("Skip This Step", "このステップを飛ばす", "跳过此步骤") },
     };
 }

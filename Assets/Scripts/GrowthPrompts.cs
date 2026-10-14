@@ -26,7 +26,7 @@ public class GrowthPrompts : MonoBehaviour
 
         float now = Time.unscaledTime;
         Nag(level, ref levelSince, ref nextLevelNag, LevelNagAfter, LevelNagEvery, now, sm,
-            Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "\n[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("능력 고르기"));
+            Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "\n[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기"));     // 1.0.4~: 용어 통일
         Nag(tree, ref treeSince, ref nextTreeNag, TreeNagAfter, TreeNagEvery, now, sm,
             Loc.T("영혼 트리에서 배울 칸이 있습니다!") + "\n[" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("영혼 트리"));
 

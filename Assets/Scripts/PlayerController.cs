@@ -183,6 +183,7 @@ public class PlayerController : MonoBehaviour
     // 타겟팅 스킬 사용 중 + 끝난 뒤 자동 연사 중 (이때는 직접 쏠 수 없음)
     public bool IsSkillUsing => isSkillUsing || isVolleying;
     public bool IsAiming => isSkillUsing;       // 시간을 늦춘 조준 중 (일제 사격이 날아가는 중은 아님)
+    public int AimedCount => targets.Count;      // 1.0.4~: 지금 조준한 적 수 (튜토리얼 필살기 단계)
     private bool isVolleying;
     public Camera MainCamera => mainCamera;
 
