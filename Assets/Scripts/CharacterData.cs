@@ -210,7 +210,7 @@ public static class CharacterData
     {
         CharUnlock.Endless10 => Loc.T("무한 모드에서 10분 버티기"),
         CharUnlock.EndlessBosses5 => Loc.T("무한 모드 한 판에서 보스 5마리 처치"),
-        CharUnlock.EasyFast => Loc.T("「쉬움」 난이도를 15분 안에 클리어"),
+        CharUnlock.EasyFast => Loc.T("「쉬움」 난이도를 20분 안에 클리어"),
         CharUnlock.EndlessClear => Loc.T("무한 모드 클리어 (개발자 처치)"),
         _ => "",
     };

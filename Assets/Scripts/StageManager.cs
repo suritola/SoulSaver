@@ -620,7 +620,7 @@ public class StageManager : MonoBehaviour
             ShowBanner(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f);
             // 클리어 기록 · 난이도 잠금 해제는 바로 저장하고, 잠시 뒤 엔딩
             Difficulty cleared = GameMode.Current;
-            if (cleared == Difficulty.Easy && RunStats.Seconds <= 900f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2)
+            if (cleared == Difficulty.Easy && RunStats.Seconds <= 1200f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2, 1.0.4~ 15분 → 20분)
             RunSave.Delete();           // 판이 끝났으므로 이어할 판은 지움 (2.1.9)
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);

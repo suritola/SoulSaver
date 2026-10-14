@@ -135,7 +135,7 @@ public static partial class LocTable
         { "최고 ", L("Best ", "最高 ", "最佳 ") },
         { "무한 모드에서 10분 버티기", L("Survive 10 minutes in Endless", "エンドレスで10分生き残る", "在无尽模式中坚持10分钟") },
         { "무한 모드 한 판에서 보스 5마리 처치", L("Defeat 5 bosses in one Endless run", "エンドレス1回でボスを5体撃破", "在一局无尽模式中击败5个首领") },
-        { "「쉬움」 난이도를 15분 안에 클리어", L("Clear Easy within 15 minutes", "「イージー」を15分以内にクリア", "在15分钟内通关「简单」难度") },
+        { "「쉬움」 난이도를 20분 안에 클리어", L("Clear Easy within 20 minutes", "「イージー」を20分以内にクリア", "在20分钟内通关「简单」难度") },
         { "새 캐릭터 해제 조건 달성!", L("New hero unlock condition met!", "新キャラクターの解放条件を達成！", "达成新角色解锁条件！") },
         { "해제 조건", L("Unlock condition", "解放条件", "解锁条件") },
         { "(달성)", L("(Done)", "(達成)", "(已达成)") },
