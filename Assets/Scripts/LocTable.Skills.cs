@@ -333,6 +333,39 @@ public static partial class LocTable
         A("코인을 주울 때마다 경험치를 조금 얻고, 코인 40개를 모을 때마다 황금 파동이 터져 주변 적에게 피해를 줍니다. (공격력 300%)", "Picking up coins grants a little XP, and every 40 coins releases a golden wave that damages nearby enemies. (300% attack)", "コインを拾うたびに経験値を少し得て、コイン40枚ごとに黄金の波動が弾けて周りの敵にダメージを与えます。（攻撃力300%）", "每拾取金币获得少量经验，每收集40枚金币爆发黄金波动伤害周围敌人。（攻击力300%）");
         A("불멸의 육체", "Undying Flesh", "不滅の肉体", "不灭之躯");
         A("체력이 가득 차 있으면 3초마다 심장 박동 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", "At full health, a heartbeat pulse spreads every 3s, knocking back nearby enemies and dealing damage based on max health.", "体力が満タンのとき、3秒ごとに鼓動の波動が広がり、周りの敵を押し返して最大体力に比例したダメージを与えます。", "生命全满时每3秒扩散心跳波动，击退周围敌人并造成与最大生命成比例的伤害。");
+        // 1.0.4 요청 growth: 끝없는 성장 카드 (LevelShop.Growth) · 영혼 정련 (SoulTreeUI) — A() 는 이미 있는 키를 건너뛰어 다른 갈래와 겹쳐도 안전
+        A("성장: 힘", "Growth: Might", "成長：力", "成长：力量");
+        A("성장: 생명", "Growth: Vitality", "成長：生命", "成长：生命");
+        A("성장: 손놀림", "Growth: Dexterity", "成長：手さばき", "成长：手速");
+        A("성장: 발걸음", "Growth: Stride", "成長：足取り", "成长：步伐");
+        A("모든 무기 피해가 3% 늘어납니다. (기본 공격력 기준)", "All weapon damage +3%. (Based on base attack)", "すべての武器ダメージが3%増えます。（基本攻撃力基準）", "所有武器伤害提升3%。（以基础攻击力计）");
+        A("최대 체력이 5 늘어나고 그만큼 회복합니다.", "Max health +5, and heals that much.", "最大体力が5増え、その分回復します。", "最大生命提升5，并回复等量生命。");
+        A("공격 속도가 2% 빨라집니다.", "Fire rate +2%.", "攻撃速度が2%速くなります。", "攻击速度提升2%。");
+        A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed +1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
+        A("상한 없이 계속 쌓입니다", "Stacks without limit", "上限なく積み重なります", "可无限叠加");
+        A("배울 레벨업 카드를 모두 배웠거나 최대 레벨에 이르면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
+          "Once you've learned every level-up card or reached max level, each level-up lets you pick an endlessly stacking 「Growth」 card.",
+          "覚えるレベルアップカードをすべて覚えるか最大レベルに達すると、レベルアップごとに無限に積み重なる「成長」カードを選びます。",
+          "学会所有升级卡或达到等级上限后，每次升级都可选择一张可无限叠加的「成长」卡。");
+        A("성장 카드", "Growth Cards", "成長カード", "成长卡");
+        A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 (그 뒤로는 성장 카드) · 재료를 모두 올리면 스킬 진화",
+          "Pick one of three cards or skip on each level-up · Max level 50 (then Growth cards) · Max all ingredients to evolve a skill",
+          "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50（その後は成長カード）・素材をすべて上げるとスキル進化",
+          "每次升级从三张中选一张或跳过 · 等级上限50（之后为成长卡）· 素材全部升满即可技能进化");
+        A("최대 레벨에 이르거나 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
+          "Once you reach max level or learn every level-up card, each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
+          "最大レベルに達するか、選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
+          "达到等级上限或学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +3% · 生命：最大生命 +5 · 手速：攻击速度 +2% · 步伐：移动速度 +1%");
+        A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
+        A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
+        A("트리를 모두 배우면 열립니다", "Unlocks once the whole tree is learned", "ツリーをすべて習得すると解放", "学满整棵树后解锁");
+        A("눌러서 정련하기", "Click to refine", "クリックで精錬", "点击精炼");
+        A("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 10씩 오릅니다.",
+          "Spend the Soul Shards left over after learning the whole Soul Tree to raise small stats endlessly. The cost rises by 10 each time.",
+          "魂のツリーをすべて習得した後に残った魂のかけらで、小さな能力値を無限に上げます。行うたびに費用が10ずつ上がります。",
+          "学满灵魂树后，用剩余的灵魂碎片无限提升少量属性。每次精炼费用增加10。");
+        A("정련 횟수", "Times refined", "精錬回数", "精炼次数");
+        A("모든 칸을 배웠습니다", "Every node learned", "すべてのマスを習得しました", "已学会所有节点");
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
     }
 }

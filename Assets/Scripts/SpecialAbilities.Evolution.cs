@@ -646,7 +646,7 @@ public partial class SpecialAbilities
     // 능력치 아이콘 (StatsHUD: 공격력 · 방어력 · 공격 속도 · 재장전 · 이동 속도)
     // 씬 검색은 한 번만 (트리를 만들 때마다 찾지 않게)
     static StatsHUD statsHud;
-    static Sprite StatIcon(int i)
+    public static Sprite StatIcon(int i)        // 1.0.4~: 레벨업 「성장」 카드 아이콘도 (LevelShop.Growth)
     {
         if (statsHud == null) statsHud = FindFirstObjectByType<StatsHUD>(FindObjectsInactive.Include);
         return statsHud != null && statsHud.icons != null && i < statsHud.icons.Length ? statsHud.icons[i] : null;
@@ -697,6 +697,58 @@ public partial class SpecialAbilities
     {
         foreach (SoulNode n in BuildSoulTree()) if (CanBuy(n)) return true;
         return false;
+    }
+
+    // ================================================================= 영혼 정련 (1.0.4~)
+    // 영혼 트리를 모두 배운 뒤 남는 조각을 쓰는 곳: 할 때마다 모든 무기 피해 +2% (기본 공격력 기준) · 최대 체력 +4, 끝없이
+    // 비용은 40에서 시작해 할 때마다 +10. 이어하기 기록은 r (RunSave)
+    public const int RefineBaseCost = 40, RefineCostStep = 10;
+    const float RefineAttack = 0.02f, RefineHp = 4f;
+    public int Refines { get; private set; }
+    public int RefineCost => RefineBaseCost + RefineCostStep * Refines;
+
+    // 지금 배울 수 있는 칸이 하나도 없음 (배울 수 없는 이유가 있는 칸 · 숨은 칸은 빼고)
+    public bool TreeComplete(List<SoulNode> tree = null)
+    {
+        foreach (SoulNode n in tree ?? BuildSoulTree())
+            if (IsOpenNode(n) && BlockReason(n) == null) return false;
+        return true;
+    }
+
+    public bool CanRefine(List<SoulNode> tree = null) => SoulShards.Amount >= RefineCost && TreeComplete(tree);
+
+    public bool Refine(List<SoulNode> tree = null)
+    {
+        if (!CanRefine(tree) || !SoulShards.Spend(RefineCost)) return false;
+        ApplyRefine();
+        RunSave.Record("r");
+        if (fx != null) { fx.Play("chime", 0.6f, 1.1f); fx.Play("pulse", 0.4f, 1.4f); }
+        return true;
+    }
+
+    // 판 중간 저장 (RunSave): 조각 없이 다시 적용 (조각은 저장할 때의 값으로 되돌림)
+    public void ReplayRefine() => ApplyRefine();
+
+    void ApplyRefine()
+    {
+        Refines++;
+        GrowAttack(RefineAttack);
+        if (player == null) return;
+        player.PlayerMaxHealth += RefineHp;
+        player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + RefineHp);
+    }
+
+    // 끝없는 성장 (1.0.4~, LevelShop.Growth · 영혼 정련): 트리와 같은 기준으로 공격력 · 발사 간격
+    public void GrowAttack(float pct)
+    {
+        if (player == null) return;
+        if (baseAttack < 0f) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }     // 트리를 아직 안 열었어도 처음 공격력 기준
+        AddAttack(pct);
+    }
+
+    public void GrowRate(float mul)
+    {
+        if (player != null) AddRate(mul);
     }
 }
 

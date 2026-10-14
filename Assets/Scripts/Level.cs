@@ -31,17 +31,15 @@ public class Level : MonoBehaviour
 
         PlayerController player = Cache<PlayerController>.Get;
         playerLevel = player.level;
-        // 레벨업 카드를 모두 배우면 만렙 (LevelShop.NothingToLearn)
+        // 레벨업 카드를 모두 배웠거나 최대 레벨이면 만렙 (LevelShop.GrowthOnly) · 1.0.4~: 그 뒤 고른 성장 카드 수를 「+n」으로
         LevelShop shop = Cache<LevelShop>.Get;
-        // 1.0.4~: 최대 레벨(LevelShop.LevelCap, 50 · 무한 모드 100)에 닿아도 MAX (경험치 바가 꽉 찬 채 멈춰 버그로 보였음)
-        bool max = shop != null && (shop.NothingToLearn || playerLevel >= LevelShop.LevelCap);
-        int show = max ? -2 - playerLevel : playerLevel;
+        bool max = shop != null && shop.GrowthOnly;
+        int grown = shop != null ? shop.GrowthPicks : 0;
+        int show = playerLevel * 8192 + grown * 2 + (max ? 1 : 0);
         if (show != shownLevel)
         {
-            if (max && shownLevel >= 0 && playerLevel >= LevelShop.LevelCap)
-                Hints.Show("levelmax", "최대 레벨에 닿았습니다! 더는 레벨이 오르지 않습니다.");       // 1.0.4~ 한 번만
             shownLevel = show;
-            levelText.text = "Lv. " + playerLevel + (max ? " MAX" : "");
+            levelText.text = "Lv. " + playerLevel + (max ? " MAX" : "") + (grown > 0 ? " <color=#9FE89F>+" + grown + "</color>" : "");
         }
         playerEXP = player.nowEXP;
         playerMaxEXP = player.needEXP;
