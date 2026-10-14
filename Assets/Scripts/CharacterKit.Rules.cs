@@ -151,6 +151,7 @@ public partial class CharacterKit
             ruleBarBack = Hostile.NewLine("RuleBarBack", new Color(0.04f, 0.02f, 0.08f, 0.85f), 0.26f, 62);
             ruleBarFill = Hostile.NewLine("RuleBarFill", c, 0.16f, 63);
             ruleBarBack.loop = ruleBarFill.loop = false;
+            ruleBarBack.sortingLayerID = ruleBarFill.sortingLayerID = PlayerLook.TopLayer;     // 1.0.4~ 플레이어와 같이 모든 이펙트 위
         }
         show &= !PlayerController.Cinematic;
         ruleBarBack.enabled = ruleBarFill.enabled = show;

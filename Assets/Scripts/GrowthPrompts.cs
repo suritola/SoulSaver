@@ -77,7 +77,7 @@ public class GrowthPrompts : MonoBehaviour
         tag.outlineColor = new Color32(20, 12, 28, 255);
         tag.rectTransform.sizeDelta = new Vector2(12f, 3f);
         MeshRenderer mr = go.GetComponent<MeshRenderer>();
-        mr.sortingLayerName = "Effect";
+        mr.sortingLayerID = PlayerLook.TopLayer;        // 1.0.4~ 머리 위 알림도 플레이어와 같이 모든 이펙트 위
         mr.sortingOrder = 50;
     }
 

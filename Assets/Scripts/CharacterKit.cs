@@ -192,7 +192,7 @@ public partial class CharacterKit : MonoBehaviour
         icon.transform.SetParent(reagentTag.transform, false);
         reagentIcon = icon.AddComponent<SpriteRenderer>();
         reagentIcon.sprite = f[0];
-        reagentIcon.sortingLayerName = "Effect";
+        reagentIcon.sortingLayerID = PlayerLook.TopLayer;       // 1.0.4~ 머리 위 표시도 플레이어와 같이 모든 이펙트 위
         reagentIcon.sortingOrder = 40;
         icon.transform.localScale = Vector3.one * (1.3f / f[0].bounds.size.y);
 
@@ -209,7 +209,7 @@ public partial class CharacterKit : MonoBehaviour
         reagentText.outlineWidth = 0.3f;
         reagentText.outlineColor = new Color32(0, 0, 0, 255);
         reagentText.rectTransform.sizeDelta = new Vector2(16f, 2.5f);
-        reagentText.sortingLayerID = SortingLayer.NameToID("Effect");
+        reagentText.sortingLayerID = PlayerLook.TopLayer;
         reagentText.sortingOrder = 41;
         shownReagent = -1;
         return true;
