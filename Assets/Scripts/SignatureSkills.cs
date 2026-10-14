@@ -193,6 +193,7 @@ public partial class SignatureSkills : MonoBehaviour
     {
         if (who == CharacterId.Gunner) GunnerHurt(taken);
         else if (who == CharacterId.Swordsman) SwordHurt(taken);
+        else if (who == CharacterId.Postman) PostHurt(taken);       // 1.0.6~ 맞으면 우표 절반
     }
 
     void OnAttack(Vector3 start, Vector2 dir)
