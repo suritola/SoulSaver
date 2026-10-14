@@ -2,7 +2,7 @@ using System.Text;
 using UnityEngine;
 
 // 바꿀 수 있는 키 (설정 → 조작)
-public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade, Reroll }     // Reroll: 레벨업 카드 다시 뽑기 (2.1.8~, 저장 번호가 밀리지 않게 맨 뒤)
+public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade, Reroll, Attack, Ultimate }     // Reroll: 레벨업 카드 다시 뽑기 (2.1.8~, 저장 번호가 밀리지 않게 맨 뒤) · Attack · Ultimate: 공격 · 필살기 (1.0.4~, 마우스 버튼도 지정 가능)
 
 // 키 설정: PlayerPrefs에 저장. 이동은 방향키도 항상 같이 됨
 // 화면 글자의 {SKILL1} 같은 표시는 Loc.T가 지금 키 이름으로 바꿔 줌
@@ -18,6 +18,7 @@ public static class KeyBindings
         KeyCode.E, KeyCode.F, KeyCode.C,
         KeyCode.Space, KeyCode.T,
         KeyCode.R,          // 다시 뽑기는 레벨업 창(멈춘 동안)에서만 써서 재장전과 같은 R 이어도 겹치지 않음
+        KeyCode.Mouse0, KeyCode.Mouse1,     // 1.0.4~ 공격 · 필살기 (좌 · 우클릭)
     };
 
     static readonly KeyCode[] Arrows = { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
@@ -38,16 +39,31 @@ public static class KeyBindings
     public static void Set(GameAction a, KeyCode key)
     {
         Load();
+        if (!CanBind(a, key)) return;
         KeyCode old = keys[(int)a];
+        // 1.0.4~ 맞바꿀 키(좌클릭)를 받을 수 없는 동작은 그 동작의 기본 키로 (기본 키도 겹치면 바꾸지 않음)
         for (int i = 0; i < keys.Length; i++)
-            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i)) { keys[i] = old; Prefs.SetInt("keys." + (GameAction)i, (int)old); }
+            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i) && Swapped(i, old) == key) return;
+        for (int i = 0; i < keys.Length; i++)
+            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i))
+            {
+                KeyCode give = Swapped(i, old);
+                keys[i] = give;
+                Prefs.SetInt("keys." + (GameAction)i, (int)give);
+            }
         keys[(int)a] = key;
         Prefs.SetInt("keys." + a, (int)key);
         Loc.RaiseChanged();
     }
 
+    static KeyCode Swapped(int i, KeyCode old) => CanBind((GameAction)i, old) ? old : Defaults[i];
+
     // 다시 뽑기(레벨업 창)와 전투 키는 같은 키를 써도 됨 (서로 다른 화면에서만 쓰임)
     static bool Separate(GameAction a, GameAction b) => (a == GameAction.Reroll) != (b == GameAction.Reroll) && a != GameAction.Interact && b != GameAction.Interact;
+
+    // 1.0.4~ 좌클릭은 버튼 · 카드를 누르는 데도 쓰여서 공격 · 필살기에만 (다른 마우스 버튼은 어디든)
+    public static bool CanBind(GameAction a, KeyCode key) =>
+        key != KeyCode.Mouse0 || a == GameAction.Attack || a == GameAction.Ultimate;
 
     public static void ResetAll()
     {
@@ -74,8 +90,14 @@ public static class KeyBindings
     {
         if (k >= KeyCode.Alpha0 && k <= KeyCode.Alpha9) return ((int)(k - KeyCode.Alpha0)).ToString();
         if (k >= KeyCode.Keypad0 && k <= KeyCode.Keypad9) return "Num" + (int)(k - KeyCode.Keypad0);
+        // 1.0.4~ 마우스 버튼 (좌 · 우 · 휠 클릭, 옆 버튼은 「마우스 4」부터)
+        if (k == KeyCode.Mouse0) return Loc.T("좌클릭");
+        if (k == KeyCode.Mouse1) return Loc.T("우클릭");
+        if (k == KeyCode.Mouse2) return Loc.T("휠 클릭");
+        if (k >= KeyCode.Mouse3 && k <= KeyCode.Mouse6) return Loc.T("마우스") + " " + (int)(k - KeyCode.Mouse0 + 1);
         switch (k)
         {
+            case KeyCode.None: return "-";        // 1.0.4~ 비어 있는 키
             case KeyCode.LeftShift: case KeyCode.RightShift: return "Shift";
             case KeyCode.LeftControl: case KeyCode.RightControl: return "Ctrl";
             case KeyCode.LeftAlt: case KeyCode.RightAlt: return "Alt";
@@ -99,7 +121,7 @@ public static class KeyBindings
         return k.ToString();
     }
 
-    // 글자 속 {MOVE} {RELOAD} {SWAP} {SKILL1~3} {INTERACT} {UPGRADE} 를 지금 키 이름으로
+    // 글자 속 {MOVE} {RELOAD} {SWAP} {SKILL1~3} {INTERACT} {UPGRADE} {REROLL} {ATTACK} {ULT} 를 지금 키 이름으로
     public static string Apply(string s)
     {
         if (s == null || s.IndexOf('{') < 0) return s;
@@ -112,6 +134,9 @@ public static class KeyBindings
         b.Replace("{SKILL3}", Name(GameAction.Skill3));
         b.Replace("{INTERACT}", Name(GameAction.Interact));
         b.Replace("{UPGRADE}", Name(GameAction.Upgrade));
+        b.Replace("{REROLL}", Name(GameAction.Reroll));       // 1.0.4~
+        b.Replace("{ATTACK}", Name(GameAction.Attack));
+        b.Replace("{ULT}", Name(GameAction.Ultimate));
         return b.ToString();
     }
 }

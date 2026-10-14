@@ -156,8 +156,8 @@ public static class GameSettings
         set { Load(); hints = value; Prefs.SetInt(HintsKey, value ? 1 : 0); }
     }
 
-    // 피해 숫자: 0 보통 · 1 크게 · 2 끄기
-    public static readonly string[] DamageNumberNames = { "보통", "크게", "끄기" };
+    // 피해 숫자: 0 보통 · 1 크게 · 2 꺼짐 (1.0.4~ 다른 설정처럼 「꺼짐」)
+    public static readonly string[] DamageNumberNames = { "보통", "크게", "꺼짐" };
     public static int DamageNumbers
     {
         get { Load(); return damageNumbers; }

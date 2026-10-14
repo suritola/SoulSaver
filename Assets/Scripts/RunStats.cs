@@ -495,7 +495,7 @@ public class HintRunner : MonoBehaviour
     void Update() => Hints.Tick();
 }
 
-// 게임 오버 화면: [R]로 같은 캐릭터 · 난이도로 바로 다시 시작
+// 게임 오버 화면: [R]로 같은 캐릭터 · 난이도로 바로 다시 시작 (1.0.4~ 재장전 키를 바꿨으면 그 키)
 public class QuickRestart : MonoBehaviour
 {
     // 1.0.4~: 결과 화면이 뜨고 1초 동안은 받지 않음 (재장전 키와 같은 [R] 을 누르던 중이면 결과를 보기도 전에 새 판이 시작됐음)
@@ -506,7 +506,7 @@ public class QuickRestart : MonoBehaviour
 
     void Update()
     {
-        if (Time.unscaledTime < readyAt || !Input.GetKeyDown(KeyCode.R) || SettingsUI.IsOpen) return;
+        if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameScene");
     }

@@ -167,7 +167,7 @@ public class ChoiceUI : MonoBehaviour
                     if (ui.selected == i) ui.confirmed = i;         // 1.0.4~ 같은 숫자 한 번 더 → 확정
                     else ui.Select(i);
                 }
-            if (ui.confirmed < 0 && ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+            if (ui.confirmed < 0 && ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
                 ui.confirmed = ui.selected;
             // 고른 카드는 숨 쉬듯 반짝
             if (ui.selected >= 0) ui.frames[ui.selected].color = Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));

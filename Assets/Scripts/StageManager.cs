@@ -218,7 +218,7 @@ public class StageManager : MonoBehaviour
         LevelShop cards = FindFirstObjectByType<LevelShop>();
         while ((cards != null && cards.IsOpen) || Time.timeScale == 0f) yield return null;
         ShowBanner(openBanner, openTime);
-        Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
+        Hints.Show("move", "{MOVE} 이동 · 마우스 조준 · [{ATTACK}] 공격");      // 1.0.4~ 바꾼 공격 키를 따름
     }
 
     void PrepareEndless()
