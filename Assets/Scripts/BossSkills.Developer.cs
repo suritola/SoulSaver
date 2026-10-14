@@ -13,11 +13,11 @@ public partial class BossSkills
     static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령" };     // CharacterId 순서
     int devTurn;
 
-    // 1.0.4~ 공격 주기 ÷10 (개발자 엄마는 ÷20): 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
+    // 1.0.4~ 공격 주기 ÷10 (개발자 엄마는 ÷20) → 1.0.6~ ÷2 (엄마 ÷4): 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
     //   예전: 한 번에 하나씩, 끝난 뒤 1.2초 쉬고 다음까지 최소 2.2초 (분노 1.4초) → 지금: 0.22초 (분노 0.14초)마다 새 필살기 · 엄마는 그 절반
     //   화면이 터져 게임이 멈추지 않게 동시에 도는 필살기는 최대 DevMaxRunning 개 · 날고 있는 적 탄이 DevBulletCap 을 넘으면 더 쏘지 않음
     //   엄마는 필살기 · 탄 피해도 2배 (한 대 상한도 최대 체력의 20% → 40%, 즉사 없음)
-    const float DevRateMul = 10f;
+    const float DevRateMul = 2f;            // 1.0.6~ 10 → 2 (공격 빈도를 1.0.4 의 20%로: 0.22초 → 1.1초, 분노 0.14초 → 0.7초 · 엄마 0.11초 → 0.55초, 분노 0.35초)
     const int DevBulletCap = 400;
     float DevRate => boss != null && boss.developerMom ? DevRateMul * 2f : DevRateMul;
     float DevPow => boss != null && boss.developerMom ? 2f : 1f;
