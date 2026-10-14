@@ -277,7 +277,8 @@ public class bosss : MonoBehaviour
 
             Point point = Cache<Point>.Get;
 
-            if (point != null) point.AddPoint(10);
+            // 1.0.4~: 보스도 일반 적과 같은 10P였음 → 보스전을 끝내는 마지막 한 마리는 +300P (슬라임 분열체는 그대로 10P)
+            if (point != null) point.AddPoint(lastOne ? 300 : 10);
 
             // 영혼 조각: 보스전이 끝나는 마지막 한 마리는 크게, 슬라임 분열체는 조금
             if (lastOne) SoulShards.Add(SoulShards.ForBoss(expReward), transform.position, true);

@@ -109,9 +109,13 @@ public partial class Shop : MonoBehaviour
             if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
         }
         ShopStall.Spawn(this, at);
-        Hints.Show("shop", "떠돌이 상점에서는 코인으로 공격력 · 체력 등을 영구히 올릴 수 있습니다. 가까이 가서 [{INTERACT}]");
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n10초 안에 다가가 [{INTERACT}]"), 2.2f);
+        // 1.0.4~: 「영구히 · 체력」 → 이번 판 동안 · 실제로 파는 것 (공격력 · 이동 속도 · 물약), 머무는 시간 10초 → 15초
+        Hints.Show("shop", "떠돌이 상점에서는 코인으로 이번 판 동안 공격력 · 이동 속도를 올리고 물약을 살 수 있습니다. 가까이 가서 [{INTERACT}]");
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n15초 안에 다가가 [{INTERACT}]"), 2.2f);
     }
+
+    // 1.0.4~: 떠돌이 상점을 열지 못하고 놓쳤으면 다음 상점은 절반만 잡아도 나타남 (ShopStall 이 부름)
+    public void StallMissed() => killsForStall = Mathf.Max(killsForStall, killsPerStall * 0.5f);
 
     // 떠돌이 상점을 열었을 때 (업적 등)
     public static event System.Action StallOpened;
@@ -133,6 +137,7 @@ public partial class Shop : MonoBehaviour
         bool specialOpen = StageManager.Instance != null && StageManager.Instance.IsMenuOpen;
         // 상점은 떠돌이 제단으로만 열림 (P는 닫기만)
         if (Input.GetKeyDown(KeyCode.P) && isShopOpen && !specialOpen) ToggleShop();
+        if (brokeLabel != null && brokeLabel.gameObject.activeSelf && Time.unscaledTime > brokeUntil) brokeLabel.gameObject.SetActive(false);
     }
 
 
@@ -163,7 +168,7 @@ public partial class Shop : MonoBehaviour
     {
         price = Discounted(price);
         if (coind == null || playerControllerd == null) return false;
-        if (coind.coins < price) return false;
+        if (coind.coins < price) { NotEnoughCoins(); return false; }      // 1.0.4~ 예전엔 아무 반응이 없어 고장인 줄 알았음
 
         coind.SubCoin(price);
         coins = coind.coins;
@@ -350,7 +355,13 @@ public partial class Shop : MonoBehaviour
     // 상점 텍스트 갱신
     // =====================================
 
-    string PriceText(int price, bool maxed) => maxed ? Loc.T("최대") : Loc.T("구매\n") + Discounted(price) + Loc.T(" 코인");
+    // 1.0.4~: 코인이 모자라면 가격을 빨갛게
+    string PriceText(int price, bool maxed) => maxed ? Loc.T("최대") : Loc.T("구매\n") + CoinPrice(Discounted(price));
+    string CoinPrice(int discounted)
+    {
+        string s = discounted + Loc.T(" 코인");
+        return coind != null && coind.coins < discounted ? "<color=#FF7A6E>" + s + "</color>" : s;
+    }
 
     static string PerSecond(float interval) => (1f / interval).ToString("0.0");
 

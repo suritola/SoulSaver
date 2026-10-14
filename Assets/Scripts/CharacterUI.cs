@@ -97,14 +97,15 @@ public static class CharacterUI
             gi.raycastTarget = false;
         }
 
-        string name = unlocked ? d.name : "???";
+        string name = unlocked || developed ? d.name : "???";       // 1.0.4~ 잠긴 캐릭터도 이름은 보임 (그림만 실루엣)
         TMP_Text nameText = UIKit.Text(t, name, 30f, unlocked ? Gold : Dim, new Vector2(0f, -100f), new Vector2(230f, 40f));
         string sub = selected ? "선택됨" : unlocked ? d.title : developed ? "잠김" : "준비 중";
         TMP_Text subText = UIKit.Text(t, sub, 20f, selected ? new Color(0.5f, 1f, 0.6f) : Dim, new Vector2(0f, -134f), new Vector2(230f, 30f));
         // 영웅 숙련도 (1.0.1): 마지막 보스를 쓰러뜨릴 때마다 +1 (단계마다 시작 레벨업 카드 +1) · 칸 위쪽 안
-        if (unlocked && Mastery.Level(id) > 0)
+        // 1.0.4~: 0단계도 늘 보임 (예전엔 숨어 있어 숙련도가 있는 줄 몰랐음)
+        if (unlocked)
         {
-            TMP_Text star = UIKit.Text(t, "", 20f, new Color(1f, 0.85f, 0.35f), new Vector2(0f, 142f), new Vector2(230f, 26f));
+            TMP_Text star = UIKit.Text(t, "", 20f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(0f, 142f), new Vector2(230f, 26f));
             star.text = Mastery.Label(id);
         }
         if (!unlocked && developed)
@@ -154,8 +155,18 @@ public static class CharacterUI
             gi.preserveAspect = true;
         }
 
-        UIKit.Text(dr, unlocked ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
-        UIKit.Text(dr, unlocked ? d.title : developed ? "잠긴 캐릭터" : "준비 중", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
+        // 1.0.4~: 잠긴 캐릭터도 이름 · 한 줄 소개 · 스탯 · 무기 · 스킬을 보여 줌 (예전엔 모두 ??? 라 최대 15,000P를 모르고 써야 했음, 그림만 실루엣)
+        bool known = unlocked || developed;
+        UIKit.Text(dr, known ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
+        TMP_Text titleText = UIKit.Text(dr, "", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
+        titleText.text = unlocked ? Loc.T(d.title) : developed ? Loc.T(d.title) + " · " + Loc.T("잠김") : Loc.T("준비 중");
+        // 영웅 숙련도: 단계 · 올리는 법 · 효과 (1.0.4~ 0단계도)
+        if (unlocked)
+        {
+            TMP_Text mastery = UIKit.Text(dr, "", 18f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(-470f, -160f), new Vector2(460f, 60f));
+            mastery.text = Mastery.Label(id) + "\n" + Loc.T("마지막 보스를 쓰러뜨릴 때마다 +1 (무한 모드 제외) · 단계마다 시작 레벨업 카드 +1");
+            mastery.enableWordWrapping = true;
+        }
 
         // 해제 조건 (1.0.2)
         if (!unlocked && d.condition != CharUnlock.None)
@@ -172,22 +183,22 @@ public static class CharacterUI
             return;
         }
 
-        // 오른쪽: 설명 · 스탯 (잠겼으면 ???)
+        // 오른쪽: 설명 · 스탯 (1.0.4~ 잠겨도 보임)
         float x = 190f;
-        UIKit.Text(dr, unlocked ? d.description : "포인트로 잠금을 풀면 이 캐릭터의 모습과 능력을 볼 수 있습니다.", 24f, Parch, new Vector2(x, 290f), new Vector2(820f, 70f), TextAlignmentOptions.Left);
+        UIKit.Text(dr, d.description, 24f, Parch, new Vector2(x, 290f), new Vector2(820f, 70f), TextAlignmentOptions.Left);
         float y = 200f;
-        Stat(dr, "체력", d.hp, unlocked, ref y);
-        Stat(dr, "공격력", d.damage, unlocked, ref y);
-        Stat(dr, "공격 속도", d.attackSpeed, unlocked, ref y);
-        StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), unlocked, ref y);
-        // 스킬 게이지는 높을수록 늦게 참 (거너보다 높으면 빨강)
-        UIKit.Text(dr, "높을수록 늦게 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(300f, y - 20f), new Vector2(420f, 18f), TextAlignmentOptions.Center);
-        Stat(dr, "필살기 충전", 1f / Mathf.Max(0.1f, d.gauge), unlocked, ref y);
-        Stat(dr, "이동 속도", d.move, unlocked, ref y);
-        StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), unlocked, ref y);
+        Stat(dr, "체력", d.hp, known, ref y);
+        Stat(dr, "공격력", d.damage, known, ref y);
+        Stat(dr, "공격 속도", d.attackSpeed, known, ref y);
+        StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), known, ref y);
+        // 필살기 충전은 1 / 게이지 (높을수록 빨리 참, 거너보다 낮으면 빨강) — 1.0.4~ 안내가 「높을수록 늦게 참」으로 반대였음
+        UIKit.Text(dr, "높을수록 빨리 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(300f, y - 20f), new Vector2(420f, 18f), TextAlignmentOptions.Center);
+        Stat(dr, "필살기 충전", 1f / Mathf.Max(0.1f, d.gauge), known, ref y);
+        Stat(dr, "이동 속도", d.move, known, ref y);
+        StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), known, ref y);
         y -= 10f;
-        Info(dr, "기본 무기", unlocked ? Loc.T(d.weapon) + " — " + Loc.T(d.attack) : "???", ref y);
-        Info(dr, "우클릭", unlocked ? Loc.T(d.skill) + " — " + Loc.T(d.skillDesc) : "???", ref y);
+        Info(dr, "기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack), ref y);
+        Info(dr, "우클릭", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc), ref y);
 
         if (unlocked)
         {
@@ -212,14 +223,18 @@ public static class CharacterUI
         else
         {
             bool can = CharacterData.Points >= d.price && CharacterData.ConditionMet(id);
+            bool armed = false;
+            TMP_Text bt = null;
             Button buy = UIKit.MakeButton(dr, "", new Vector2(-140f, -330f), new Vector2(300f, 70f), () =>
             {
+                // 1.0.4~: 스킨처럼 두 번 눌러야 구매 (예전엔 캐릭터만 한 번에 결제됨)
+                if (!armed) { armed = true; if (bt != null) bt.text = Loc.T("한 번 더 누르면 구매"); return; }
                 if (!CharacterData.Buy(id)) return;
                 Hostile.Play("levelup", 0.8f);
                 BuildGrid();
                 ShowDetail(id);
             }, 26f);
-            TMP_Text bt = buy.GetComponentInChildren<TMP_Text>();
+            bt = buy.GetComponentInChildren<TMP_Text>();
             bt.text = Loc.T("구매") + "  " + d.price.ToString("N0") + " P";
             buy.interactable = can;
             if (!can && CharacterData.ConditionMet(id)) UIKit.Text(dr, "포인트가 부족합니다. 게임에서 적을 처치하면 포인트가 쌓입니다.", 20f, Dim, new Vector2(0f, -270f), new Vector2(900f, 30f));

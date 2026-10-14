@@ -2,10 +2,10 @@ using TMPro;
 using UnityEngine;
 
 // 떠돌이 상점 제단: 일반 몹을 여러 마리 잡을 때마다 플레이어 근처에 나타나고,
-// 가까이 가서 상호작용 키(기본 Space)를 누르면 상점이 열림. 10초가 지나면 사라짐 (Shop이 만듦)
+// 가까이 가서 상호작용 키(기본 Space)를 누르면 상점이 열림. 15초가 지나면 사라짐 (Shop이 만듦, 놓치면 다음 상점이 빨리 옴)
 public class ShopStall : MonoBehaviour
 {
-    public float lifetime = 10f;
+    public float lifetime = 15f;        // 1.0.4~ 10초 → 15초 (다가가기도 전에 사라져 억울했음)
     public float openDistance = 6f;
 
     // 플레이어가 제단 앞에 있으면 상호작용 키는 상점 열기 (스킬 대신)
@@ -110,6 +110,7 @@ public class ShopStall : MonoBehaviour
         }
         if (left <= 0f)
         {
+            if (shop != null) shop.StallMissed();      // 1.0.4~ 놓쳤으면 다음 상점을 앞당김
             ShockRing.Spawn(transform.position, 1.5f, 0.2f, 0.3f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.2f);
             PlayerNear = false;
             Destroy(gameObject);

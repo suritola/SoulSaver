@@ -54,7 +54,7 @@ public partial class Shop
         for (int i = 0; i < Potions.Length; i++)
         {
             if (potionName[i] == null) continue;
-            string price = Discounted(potionPrice[i]) + Loc.T(" 코인");
+            string price = CoinPrice(Discounted(potionPrice[i]));      // 1.0.4~ 모자라면 빨갛게
             bool blocked = PotionBlocked(i);
             if (blocked)
             {

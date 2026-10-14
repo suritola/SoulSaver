@@ -283,14 +283,14 @@ public static class MenuExtras
         box.anchoredPosition = new Vector2(-30f, -26f);
         Image bg = box.gameObject.AddComponent<Image>();
         bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
-        bg.raycastTarget = false;
-        RectTransform ic = UIKit.Rect("Icon", box, new Vector2(-114f, 0f), new Vector2(44f, 44f));
-        Image ii = ic.gameObject.AddComponent<Image>();
-        ii.sprite = Resources.Load<Sprite>("Icons/menu_coin");
-        ii.preserveAspect = true;
-        ii.raycastTarget = false;
+        bg.raycastTarget = true;        // 툴팁을 받으려고
+        // 1.0.4~: 판 안의 코인과 같은 동전 그림이라 무엇이 다음 판에도 남는지 헷갈렸음 → 그림 대신 「포인트」 글자 + 마우스를 올리면 설명
+        UIKit.Text(box, "포인트", 20f, new Color(0.8f, 0.76f, 0.7f), new Vector2(-88f, 0f), new Vector2(104f, 40f), TextAlignmentOptions.Left);
         TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(26f, 0f), new Vector2(220f, 50f), TextAlignmentOptions.Right);
         box.gameObject.AddComponent<MenuPoints>().text = t;
+        TooltipTrigger tip = box.gameObject.AddComponent<TooltipTrigger>();
+        tip.titleProvider = () => Loc.T("포인트");
+        tip.bodyProvider = () => Loc.T("적을 처치하면 쌓이고 판이 끝나도 남습니다. 메인 메뉴에서 새 영웅과 스킨을 사는 데 씁니다. (판 안에서 떠돌이 상점에 쓰는 코인과는 다릅니다)");
     }
 
     // 게임 시작 버튼 위: 쉬움 · 보통 · 어려움 · 무한 (잠긴 난이도는 회색, 누를 수 없음)

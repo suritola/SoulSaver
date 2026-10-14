@@ -16,6 +16,18 @@ public partial class Shop
     };
 
     TextMeshProUGUI coinLabel;
+    TextMeshProUGUI brokeLabel;
+    float brokeUntil;
+
+    // 1.0.4~: 코인이 모자랄 때 누르면 buzz 소리와 「코인이 부족합니다」 (상점이 시간을 멈추므로 실제 시간으로 셈)
+    void NotEnoughCoins()
+    {
+        Hostile.Play("buzz", 0.5f);
+        if (brokeLabel == null) return;
+        brokeLabel.text = Loc.T("코인이 부족합니다");
+        brokeLabel.gameObject.SetActive(true);
+        brokeUntil = Time.unscaledTime + 1.5f;
+    }
     TextMeshProUGUI[] potionName, potionDesc, potionCost;
     Button[] potionButtons;
     Button buyAttack, buyMove;
@@ -46,13 +58,16 @@ public partial class Shop
         TMP_Text title = UIKit.Text(head, "떠돌이 상점", 50f, Gold, new Vector2(-W * 0.5f + 230f, 8f), new Vector2(420f, 64f), TextAlignmentOptions.Left);
         title.text = Loc.T("떠돌이 상점");
         TMP_Text sub = UIKit.Text(head, "", 20f, Dim, new Vector2(-W * 0.5f + 330f, -32f), new Vector2(620f, 30f), TextAlignmentOptions.Left);
-        sub.text = Loc.T("코인으로 능력을 영구히 올리고, 물약으로 잠시 힘을 빌립니다");
+        sub.text = Loc.T("코인으로 이번 판 동안 능력을 올리고, 물약으로 잠시 힘을 빌립니다");      // 1.0.4~ 「영구히」는 다음 판에도 남는 것처럼 읽혔음
 
         RectTransform coinBox = UIKit.Rect("Coins", head, new Vector2(250f, 0f), new Vector2(260f, 70f));
         Img(coinBox, UIKit.ButtonSprite, new Color(0.28f, 0.22f, 0.12f), true);
         Icon(coinBox, "Icons/menu_coin", new Vector2(-88f, 0f), 50f);
         coinLabel = (TextMeshProUGUI)UIKit.Text(coinBox, "", 34f, Gold, new Vector2(30f, 0f), new Vector2(170f, 56f), TextAlignmentOptions.Left);
         UIKit.MakeButton(head, "닫기 [P]", new Vector2(W * 0.5f - 120f, 0f), new Vector2(170f, 64f), ToggleShop, 24f);
+        // 1.0.4~: 코인이 모자란데 누르면 잠깐 뜨는 글 (Shop.NotEnoughCoins)
+        brokeLabel = (TextMeshProUGUI)UIKit.Text(inner, "", 24f, new Color(1f, 0.48f, 0.43f), new Vector2(250f, H * 0.5f - 138f), new Vector2(460f, 32f));
+        brokeLabel.gameObject.SetActive(false);
 
         // 강화
         Section(inner, "강화", new Vector2(-W * 0.5f + 90f, 238f));

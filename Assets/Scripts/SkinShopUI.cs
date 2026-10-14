@@ -14,7 +14,7 @@ public class SkinShopUI : MonoBehaviour
 
     static GameObject open;
     RectTransform win;
-    TMP_Text pointsText, descText, titleText;
+    TMP_Text pointsText, descText, titleText, newHeroNote;
     Button actionButton, soundButton;
     TMP_Text actionLabel;
     readonly List<GameObject> dynamic = new List<GameObject>();
@@ -34,7 +34,8 @@ public class SkinShopUI : MonoBehaviour
         RectTransform w = UIKit.Modal(root, "SkinShop", new Vector2(1640f, 960f), out open);
         SkinShopUI ui = open.AddComponent<SkinShopUI>();
         ui.win = w;
-        ui.who = (int)CharacterData.Selected;
+        // 1.0.4~: 새 영웅(아직 스킨 없음)을 고른 채 열면 「기본」 한 장만 보였음 → 거너 칸으로 열고 「스킨 준비 중」 안내
+        ui.who = CharacterData.IsNewHero(CharacterData.Selected) ? (int)CharacterId.Gunner : (int)CharacterData.Selected;
         ui.Build();
     }
 
@@ -74,11 +75,18 @@ public class SkinShopUI : MonoBehaviour
             whoButtons.Add(b);
         }
 
+        if (CharacterData.IsNewHero(CharacterData.Selected))
+        {
+            newHeroNote = UIKit.Text(win, "", 18f, Dim, new Vector2(0f, 222f), new Vector2(1400f, 28f));
+            newHeroNote.text = Loc.T("「{0}」의 스킨은 준비 중입니다").Replace("{0}", Loc.T(CharacterData.Def(CharacterData.Selected).name));
+        }
+
         // 아래 설명줄
         Image bar = UIKit.Rect("DetailBar", win, new Vector2(0f, -360f), new Vector2(1560f, 150f)).gameObject.AddComponent<Image>();
         bar.color = new Color(0.05f, 0.04f, 0.08f, 0.9f);
         titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-280f, -318f), new Vector2(980f, 44f), TextAlignmentOptions.Left);
         descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-280f, -382f), new Vector2(980f, 80f), TextAlignmentOptions.TopLeft);
+        descText.fontSizeMin = 14f;         // 1.0.4~ 구매 확인 때 경고 한 줄이 붙어도 칸 안에 (자동 크기)
         soundButton = UIKit.MakeButton(win, "소리 듣기", new Vector2(390f, -360f), new Vector2(200f, 64f), PlayPreview, 22f);
         actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -360f), new Vector2(260f, 64f), OnAction, 22f);
         actionLabel = actionButton.GetComponentInChildren<TMP_Text>();
@@ -101,6 +109,7 @@ public class SkinShopUI : MonoBehaviour
         confirm = false;
         pointsText.text = Loc.T("보유 포인트: ") + CharacterData.Points.ToString("N0") + " P";
         for (int i = 0; i < tabButtons.Count; i++) tabButtons[i].GetComponent<Image>().color = (int)kind == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
+        if (newHeroNote != null) newHeroNote.gameObject.SetActive(!SkinData.IsGlobal(kind));
         foreach (Button b in whoButtons)
         {
             b.gameObject.SetActive(!SkinData.IsGlobal(kind));
@@ -212,11 +221,33 @@ public class SkinShopUI : MonoBehaviour
         soundButton.gameObject.SetActive(s != null);
         if (equipped) actionLabel.text = Loc.T("장착 중");
         else if (owned) actionLabel.text = Loc.T("장착");
-        else if (confirm) actionLabel.text = Loc.T("한 번 더 누르면 구매");
+        else if (confirm)
+        {
+            actionLabel.text = Loc.T("한 번 더 누르면 구매");
+            // 1.0.4~: 스킨은 최대 100,000P인데 영웅과 같은 포인트라는 경고가 없었음 → 다음 영웅 가격을 함께
+            string warn = NextHeroWarning();
+            if (warn != "") descText.text += "\n<color=#FFB37A>" + warn + "</color>";
+        }
         else actionLabel.text = Loc.T("구매") + "  " + s.Price.ToString("N0") + " P";
         actionButton.interactable = !equipped && (owned || CharacterData.Points >= s.Price);
         actionLabel.color = !owned && CharacterData.Points < (s != null ? s.Price : 0) ? new Color(1f, 0.5f, 0.45f) : new Color(0.96f, 0.9f, 0.8f);
         if (!owned && CharacterData.Points < s.Price) actionLabel.text = Loc.T("포인트 부족") + "  " + s.Price.ToString("N0") + " P";
+    }
+
+    // 아직 안 산 영웅 중 가장 싼 값 (체험판 · 모두 샀으면 빈 글)
+    static string NextHeroWarning()
+    {
+        if (Demo.On) return "";
+        CharacterDef next = null;
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            CharacterDef d = CharacterData.Def(c);
+            if (d.price <= 0 || !CharacterData.IsDeveloped(c) || CharacterData.IsUnlocked(c)) continue;
+            if (next == null || d.price < next.price) next = d;
+        }
+        if (next == null) return "";
+        return Loc.T("포인트는 새 영웅 해금에도 씁니다 · 다음 영웅 「{0}」 {1} P").Replace("{0}", Loc.T(next.name)).Replace("{1}", next.price.ToString("N0"));
     }
 
     void OnAction()

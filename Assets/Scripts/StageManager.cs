@@ -417,7 +417,7 @@ public class StageManager : MonoBehaviour
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("전설의 힘", "공격력 +10% (영구 지속)", new Color(1f, 0.6f, 0.3f), "might"),
+            new ChoiceUI.Option("전설의 힘", "공격력 +10% (이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
             new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "shards"),
             new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"),
         };
@@ -629,7 +629,7 @@ public class StageManager : MonoBehaviour
         }
         else
         {
-            ShowBanner(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f);
+            ShowBanner(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f, true);     // 1.0.4~ 뒤 알림(숙련도 · 해금)에 덮이지 않게
             // 클리어 기록 · 난이도 잠금 해제는 바로 저장하고, 잠시 뒤 엔딩
             Difficulty cleared = GameMode.Current;
             if (cleared == Difficulty.Easy && RunStats.Seconds <= 1200f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2, 1.0.4~ 15분 → 20분)
@@ -856,11 +856,42 @@ public class StageManager : MonoBehaviour
         pendingPicks = ids;
     }
 
-    public void ShowBanner(string text, float seconds)
+    // 1.0.4~: 알림판 줄 세우기 — 예전엔 새 알림이 앞 알림을 바로 지워서 해금 달성 · 모든 스테이지 클리어 알림이 보스 처치 · 숙련도 · 재촉 알림에 덮였음
+    //   떠 있는 동안 새 알림이 오면 뒤에 줄을 서고, 줄이 있으면 지금 알림은 최소 MinBannerShow 초만 보인 뒤 다음으로 넘어감
+    //   keep = 해금 · 클리어처럼 꼭 봐야 하는 알림 (기다리는 알림이 있어도 끝까지 보임)
+    const float MinBannerShow = 1.2f;
+    const int MaxBannerQueue = 4;
+    readonly List<(string text, float seconds, bool keep)> bannerQueue = new List<(string text, float seconds, bool keep)>();
+    string bannerShowing;
+    bool bannerKeep;
+    float bannerTick = -1f;
+
+    // 알림판이 떠 있으면 true (재촉 알림처럼 급하지 않은 것은 이때 건너뜀)
+    public bool BannerBusy => bannerRoutine != null && Time.unscaledTime - bannerTick < 3f;
+
+    public void ShowBanner(string text, float seconds) => ShowBanner(text, seconds, false);
+
+    public void ShowBanner(string text, float seconds, bool keep)
     {
         if (banner == null) return;
-        if (bannerRoutine != null) StopCoroutine(bannerRoutine);
-        bannerRoutine = StartCoroutine(BannerRoutine(text, seconds));
+        // 코루틴이 (오브젝트가 꺼지는 등으로) 멈췄으면 줄을 비우고 새로 시작
+        if (bannerRoutine != null && Time.unscaledTime - bannerTick >= 3f) { StopCoroutine(bannerRoutine); bannerRoutine = null; bannerQueue.Clear(); }
+        if (bannerRoutine == null)
+        {
+            bannerTick = Time.unscaledTime;
+            bannerRoutine = StartCoroutine(BannerRoutine(text, seconds, keep));
+            return;
+        }
+        // 같은 글이 떠 있거나 이미 줄에 있으면 또 넣지 않음
+        if (text == bannerShowing) return;
+        foreach (var q in bannerQueue) if (q.text == text) return;
+        if (bannerQueue.Count >= MaxBannerQueue)
+        {
+            int drop = bannerQueue.FindIndex(q => !q.keep);
+            if (drop < 0) { if (!keep) return; drop = 0; }
+            bannerQueue.RemoveAt(drop);
+        }
+        bannerQueue.Add((text, seconds, keep));
     }
 
     Coroutine bannerRoutine;
@@ -914,34 +945,49 @@ public class StageManager : MonoBehaviour
         return Mathf.Min(Normal, bottom - 12f);
     }
 
-    IEnumerator BannerRoutine(string text, float seconds)
+    IEnumerator BannerRoutine(string text, float seconds, bool keep)
     {
-        bannerText.text = text;
-        banner.SetActive(true);
-        // 살짝 내려오며 나타났다가 서서히 사라짐
+        // 1.0.4~: 한 알림이 끝나면 줄 선 다음 알림을 이어서 보임
         RectTransform r = banner.GetComponent<RectTransform>();
-        for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
+        while (true)
         {
-            float k = t / 0.2f;
-            float y = BannerY();
-            if (bannerGroup != null) bannerGroup.alpha = k;
-            if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(y + 20f, y, k));
-            yield return null;
-        }
-        if (bannerGroup != null) bannerGroup.alpha = 1f;
-        // 떠 있는 동안 보스 체력바가 나타나거나 사라지면 따라 움직임
-        for (float t = 0f; t < Mathf.Max(0.3f, seconds - 0.5f); t += Time.unscaledDeltaTime)
-        {
-            if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
-            yield return null;
-        }
-        for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
-        {
-            if (bannerGroup != null) bannerGroup.alpha = 1f - t / 0.3f;
-            if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
-            yield return null;
+            bannerShowing = text;
+            bannerKeep = keep;
+            bannerText.text = text;
+            banner.SetActive(true);
+            // 살짝 내려오며 나타났다가 서서히 사라짐
+            for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
+            {
+                bannerTick = Time.unscaledTime;
+                float k = t / 0.2f;
+                float y = BannerY();
+                if (bannerGroup != null) bannerGroup.alpha = k;
+                if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(y + 20f, y, k));
+                yield return null;
+            }
+            if (bannerGroup != null) bannerGroup.alpha = 1f;
+            // 떠 있는 동안 보스 체력바가 나타나거나 사라지면 따라 움직임 (기다리는 알림이 있으면, 꼭 봐야 하는 알림이 아닌 한 짧게)
+            for (float t = 0f; t < Mathf.Max(0.3f, seconds - 0.5f); t += Time.unscaledDeltaTime)
+            {
+                bannerTick = Time.unscaledTime;
+                if (!bannerKeep && bannerQueue.Count > 0 && t >= MinBannerShow) break;
+                if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
+                yield return null;
+            }
+            for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
+            {
+                bannerTick = Time.unscaledTime;
+                if (bannerGroup != null) bannerGroup.alpha = 1f - t / 0.3f;
+                if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
+                yield return null;
+            }
+            if (bannerQueue.Count == 0) break;
+            (text, seconds, keep) = bannerQueue[0];
+            bannerQueue.RemoveAt(0);
         }
         banner.SetActive(false);
+        bannerShowing = null;
+        bannerRoutine = null;
     }
 
     IEnumerator Fade(float from, float to, float duration)

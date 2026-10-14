@@ -24,6 +24,6 @@ public class Point : MonoBehaviour
 
     void UpdatePointText()
     {
-        if (TextInput != null) TextInput.text = "POINT : " + points;
+        if (TextInput != null) TextInput.text = Loc.T("포인트") + " : " + points;      // 1.0.4~ 번역 없이 「POINT : 」였음 (판 안의 코인과 다른, 영웅 · 스킨을 사는 재화)
     }
 }
