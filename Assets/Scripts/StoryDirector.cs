@@ -513,10 +513,32 @@ public class StoryDirector : MonoBehaviour
         return r;
     }
 
+    // 1.0.4~: ESC 는 두 번 눌러야 건너뜀 (멈추려고 누른 ESC 한 번에 이야기가 통째로 날아갔음)
+    //   대사 넘기기는 Space 와 함께 [상호작용] 키 · 좌클릭으로도 (확정 키를 바꿔도 따라감)
+    const string SkipHintKo = "[{INTERACT}] · 클릭: 대사 넘기기   ESC 두 번: 건너뛰기";
+    const string SkipArmKo = "ESC 를 한 번 더 누르면 이야기를 건너뜁니다";
+    TMP_Text skipHint;
+    float escArmedUntil = -1f;
+
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) skip = true;
-        else if (Input.GetKeyDown(KeyCode.Space)) advance = true;
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (Time.unscaledTime < escArmedUntil) skip = true;
+            else
+            {
+                escArmedUntil = Time.unscaledTime + 2f;
+                if (skipHint != null) { skipHint.text = Loc.T(SkipArmKo); skipHint.color = new Color(1f, 0.88f, 0.4f); }
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetMouseButtonDown(0)) advance = true;
+        // 2초 안에 다시 누르지 않으면 안내를 되돌림
+        if (skipHint != null && escArmedUntil > 0f && Time.unscaledTime >= escArmedUntil)
+        {
+            escArmedUntil = -1f;
+            skipHint.text = Loc.T(SkipHintKo);
+            skipHint.color = new Color(0.78f, 0.74f, 0.68f);
+        }
     }
 
     void OnDestroy()
@@ -552,9 +574,17 @@ public class StoryDirector : MonoBehaviour
         RectTransform br = (RectTransform)b.transform;
         br.anchorMin = br.anchorMax = new Vector2(1f, 0f);
         br.anchoredPosition = new Vector2(-150f, 70f);
-        RectTransform hint = UIKit.Text(go.transform, "Space 대사 넘기기 · ESC 건너뛰기", 18f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(420f, 30f)).rectTransform;
+        // 1.0.4~: 안내 글자 18 → 22, [상호작용] 키 · 클릭 · ESC 두 번 안내 (ESC 를 누르면 「한 번 더」 안내로 바뀜)
+        d.skipHint = UIKit.Text(go.transform, SkipHintKo, 22f, new Color(0.78f, 0.74f, 0.68f), Vector2.zero, new Vector2(620f, 34f), TextAlignmentOptions.Right);
+        UIKit.Forget(d.skipHint);
+        d.skipHint.text = Loc.T(SkipHintKo);
+        d.skipHint.enableAutoSizing = true;
+        d.skipHint.fontSizeMin = 14f;
+        d.skipHint.fontSizeMax = 22f;
+        RectTransform hint = d.skipHint.rectTransform;
         hint.anchorMin = hint.anchorMax = new Vector2(1f, 0f);
-        hint.anchoredPosition = new Vector2(-150f, 120f);
+        hint.pivot = new Vector2(1f, 0.5f);
+        hint.anchoredPosition = new Vector2(-35f, 122f);
         d.skipButton = b.gameObject;
         return d;
     }

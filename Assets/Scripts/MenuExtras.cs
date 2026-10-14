@@ -123,7 +123,7 @@ public static class MenuExtras
         GameObject skins = UIKit.CloneButton(start, "SkinButton", "스킨 상점", () => SkinShopUI.Open(sr.root));
         // 2.1.9: 글 튜토리얼 대신 직접 해 보는 플레이 튜토리얼 (TutorialRun), 한 번도 안 해 봤으면 반짝임
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialRun.Begin());
-        if (!TutorialRun.Seen) tutorial.AddComponent<NewGlow>();
+        if (!TutorialRun.Done) tutorial.AddComponent<NewGlow>();       // 1.0.4~: 시작만 해서는 꺼지지 않고 끝까지 마쳐야 꺼짐 (마치면 아래에서 완료 체크)
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
@@ -163,6 +163,14 @@ public static class MenuExtras
             t.fontSizeMax = 28f;
         }
 
+        // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크
+        if (tutorial != null && TutorialRun.Done)
+        {
+            TMP_Text mark = UIKit.Text(tutorial.transform, "✔", 30f, new Color(0.55f, 1f, 0.55f), new Vector2(66f, 40f), new Vector2(40f, 40f));
+            UIKit.Forget(mark);
+            mark.raycastTarget = false;
+        }
+
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
         // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~)
@@ -172,6 +180,12 @@ public static class MenuExtras
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
         PatchNotesUI.OpenOnLaunch(sr.root);
+        // 1.0.4~: 튜토리얼 완료 화면 「바로 첫 판 시작」 → 게임 시작 버튼을 대신 누름 (저장된 판이 있으면 원래처럼 한 번 물음)
+        if (TutorialRun.ConsumeQuickStart())
+        {
+            Button sb = start.GetComponent<Button>();
+            if (sb != null) sb.onClick.Invoke();
+        }
     }
 
     // 2.1.9: 저장된 판이 있으면 게임 시작 오른쪽에 「이어하기」 (둘이 합쳐 폭 740 안, 왼쪽 캐릭터 그림과 안 겹치게)
@@ -684,6 +698,17 @@ public static class SettingsUI
     {
         // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.0.2: 「내 이펙트 투명도」 넣으려고 90 → 75
         ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v);
+        // 1.0.4~: 본 도움말을 처음부터 다시 볼 수 있게 (켜기 · 끄기 옆)
+        Button again = null;
+        again = UIKit.MakeButton(page, "도움말 다시 보기", new Vector2(370f, 200f), new Vector2(230f, 64f), () =>
+        {
+            Hints.ResetAll();
+            Deselect();
+            TMP_Text t = again.GetComponentInChildren<TMP_Text>();
+            if (t != null) { t.text = Loc.T("처음부터 다시 보입니다"); UIKit.Remember(t, "처음부터 다시 보입니다"); }
+        }, 22f);
+        TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
+        if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
         CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v);
         CycleRow("내 이펙트 투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v);
         ToggleRow("색각 이상 모드", -25f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v);

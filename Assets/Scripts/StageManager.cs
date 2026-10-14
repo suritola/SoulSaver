@@ -54,6 +54,7 @@ public class StageManager : MonoBehaviour
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     GameObject upgradeButton;
+    public GameObject UpgradeButton => upgradeButton;      // 1.0.4~: 튜토리얼이 영혼 트리 버튼을 짚어 줌
     RectTransform upgradeGlow;
     Image upgradeGlowImage;
     TextMeshProUGUI upgradeText;
@@ -189,25 +190,34 @@ public class StageManager : MonoBehaviour
         if (endless && !Evo) yield return PickEndlessSpecials();
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;
+        string openBanner;
+        float openTime;
         if (endless)
         {
             GameMode.StartEndlessClock();
             gameObject.AddComponent<EndlessMode>().Init(this, endlessBosses);
-            ShowBanner(Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?"), 3f);
+            openBanner = Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("얼마나 버틸 수 있을까?");
+            openTime = 3f;
         }
         else
         {
             RunClock.Create();
-            ShowBanner(Chapters.Title(CurrentStage), 2.5f);
+            openBanner = Chapters.Title(CurrentStage);
+            openTime = 2.5f;
             // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (1.0.1)
             int mastery = Mastery.Level(CharacterData.Selected);
             LevelShop shop = FindFirstObjectByType<LevelShop>();
             if (mastery > 0 && shop != null && !Demo.On && !DailyChallenge.Active)
             {
                 shop.GrantFreePicks(mastery);
-                ShowBanner(Chapters.Title(CurrentStage) + "\n" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString()), 3f);
+                openBanner = Chapters.Title(CurrentStage) + "\n" + Loc.T("숙련 보너스: 레벨업 카드 +{0}").Replace("{0}", mastery.ToString());
+                openTime = 3f;
             }
         }
+        // 1.0.4~: 장 제목 · 이동 도움말은 시작 카드 창을 닫고 시간이 흐를 때 띄움 (멈춘 카드 창 뒤에서 흘러가 버렸음)
+        LevelShop cards = FindFirstObjectByType<LevelShop>();
+        while ((cards != null && cards.IsOpen) || Time.timeScale == 0f) yield return null;
+        ShowBanner(openBanner, openTime);
         Hints.Show("move", "{MOVE}로 이동, 마우스로 조준, 좌클릭으로 공격합니다.");
     }
 

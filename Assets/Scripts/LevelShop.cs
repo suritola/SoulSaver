@@ -161,10 +161,11 @@ public partial class LevelShop : MonoBehaviour
     {
         PendingLevels += n;
         SpecialAbilities.SharedInstance?.TreeOnLevelUp(n);       // 영혼 트리 '깨달음'
-        Hints.Show("levelup", "레벨이 오르면 능력 포인트가 쌓입니다. [{INTERACT}]를 눌러 원할 때 능력을 고르세요.");
+        Hints.Show("levelup", "레벨이 오르면 레벨업 카드를 고를 수 있습니다. [{INTERACT}]를 눌러 원할 때 카드를 고르세요.");     // 1.0.4~: 용어를 「레벨업 카드」로 통일
     }
 
     GameObject pendingBadge;
+    public GameObject PendingBadge => pendingBadge;        // 1.0.4~: 튜토리얼이 레벨업 배지를 짚어 줌
     TextMeshProUGUI pendingText;
     int shownPending = -1;
     bool shownTree;
@@ -222,7 +223,7 @@ public partial class LevelShop : MonoBehaviour
         {
             shownPending = PendingLevels;
             shownTree = tree;
-            pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("능력 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "")
+            pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "")
                              + (tree ? "   \u00B7   [" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("배울 칸 있음") : "");
         }
     }
