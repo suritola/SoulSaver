@@ -304,13 +304,8 @@ public class bosss : MonoBehaviour
 
             enemySpawner.killedEnemy++;
             if (Random.Range(0, 100) < chanceofHP) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
-            for (int i = 0; i < coinDrop; i++)
-            {
-                float rx = Random.Range(-5f, 5f);
-                float ry = Random.Range(-5f, 5f);
-                Vector2 drop = new Vector2(transform.position.x + rx, transform.position.y + ry);
-                CoinTag.Register(Instantiate(coin, Hostile.ClampArena(drop), Quaternion.identity));
-            }
+            // 1.0.4~: 한 번에 수십 ~ 수백 개를 따로 만들던 것을 값이 큰 코인 최대 40개로 나눔 (줍는 양은 그대로)
+            CoinTag.Drop(coin, transform.position, coinDrop, new Vector2(5f, 5f), false, CoinTag.BossPieces);
         }
 
         // 스테이지 진행 (신전 문 열기 등) - 슬라임은 모두 쓰러졌을 때만
