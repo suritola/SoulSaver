@@ -352,10 +352,10 @@ public static partial class LocTable
           "Pick one of three cards or skip on each level-up · Max level 50 · Endless 80 (no level-ups after that) · Max all ingredients to evolve a skill",
           "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・エンドレス80（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
           "每次升级从三张中选一张或跳过 · 等级上限50 · 无尽80（之后不再升级）· 素材全部升满即可技能进化");
-        A("최대 레벨에 이르거나 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
-          "Once you reach max level or learn every level-up card, each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
-          "最大レベルに達するか、選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
-          "达到等级上限或学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +3% · 生命：最大生命 +5 · 手速：攻击速度 +2% · 步伐：移动速度 +1%");
+        A("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
+          "If you learn every level-up card before max level (50 · Endless 80), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
+          "最大レベル（50・エンドレス80）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
+          "在达到等级上限（50 · 无尽80）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +3% · 生命：最大生命 +5 · 手速：攻击速度 +2% · 步伐：移动速度 +1%");
         A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         A("트리를 모두 배우면 열립니다", "Unlocks once the whole tree is learned", "ツリーをすべて習得すると解放", "学满整棵树后解锁");
