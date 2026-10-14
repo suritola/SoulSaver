@@ -405,6 +405,7 @@ public partial class LevelShop
         foreach (SkillEvo e in MyEvos)
         {
             if (evolved.Contains(e.key) || System.Array.IndexOf(e.parts, id) < 0) continue;
+            if (EvoBlocked(e, id)) continue;        // 1.0.4~ (거너): 지금 무기로는 다른 재료가 뽑히지 않는 진화는 추천하지 않음
             int have = 0, need = 0;
             foreach (int p in e.parts)
             {
@@ -416,6 +417,14 @@ public partial class LevelShop
             best = Mathf.Max(best, have / (float)need + (have >= need ? 1f : 0f));
         }
         return best;
+    }
+
+    // 1.0.4~: 이 진화의 (지금 카드 말고) 다른 재료 중 아직 최대가 아닌데 지금 무기에 맞지 않아 뽑히지 않는 것이 있음 (거너만 해당)
+    bool EvoBlocked(SkillEvo e, int except)
+    {
+        foreach (int p in e.parts)
+            if (p != except && !Maxed(p) && !KitFits(p)) return true;
+        return false;
     }
 
     // 업적: 첫 스킬 진화 · 한 판에 3번 · 서로 다른 진화 15종 (캐릭터별 진화를 이 PC에 누적)

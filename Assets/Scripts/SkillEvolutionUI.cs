@@ -68,11 +68,20 @@ public class SkillEvolutionUI : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // 1.0.4~: 연출 건너뛰기 — 모여드는 동안 클릭 · [상호작용 키]를 누르면 바로 결과로 (레벨업 카드를 확정한 더블클릭이 넘어오지 않게 열린 직후 0.3초는 받지 않음)
+    //         같은 진화를 이 PC에서 두 번째 볼 때부터는 모여드는 연출이 두 배 빠름
+    static bool SkipPressed(float since) => Time.unscaledTime - since > 0.3f && (Input.GetMouseButtonDown(0) || KeyBindings.Down(GameAction.Interact));
+
     IEnumerator Play(LevelShop.SkillEvo e, CharacterId who)
     {
         for (int i = root.childCount - 1; i >= 0; i--) Destroy(root.GetChild(i).gameObject);
         closeRequested = false;
         SpecialFeedback fx = SpecialAbilities.SharedFx;
+        string seenKey = "seen.evofx." + who + ":" + e.key;
+        float speed = Prefs.GetInt(seenKey, 0) == 1 ? 2f : 1f;
+        if (speed == 1f && !GameInput.Auto) Prefs.SetInt(seenKey, 1);
+        float startedAt = Time.unscaledTime;
+        bool skip = false;
 
         dim = Img("Dim", Vector2.zero, Vector2.zero, null, Color.clear);
         Stretch(dim.rectTransform);
@@ -101,8 +110,9 @@ public class SkillEvolutionUI : MonoBehaviour
         title.alpha = 0f;
 
         float spin = 0f;
-        for (float t = 0f; t < 1.4f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 1.4f; t += Time.unscaledDeltaTime * speed)
         {
+            if (SkipPressed(startedAt)) { skip = true; break; }
             float k = t / 1.4f;
             dim.color = new Color(0.03f, 0.01f, 0.06f, 0.9f * Mathf.Clamp01(k * 2.5f));
             title.alpha = Mathf.Clamp01(k * 2f);
@@ -128,8 +138,9 @@ public class SkillEvolutionUI : MonoBehaviour
         fx?.Play("whoosh", 0.8f, 0.7f);
         Vector2[] from = new Vector2[n];
         for (int i = 0; i < n; i++) from[i] = parts[i].rectTransform.anchoredPosition;
-        for (float t = 0f; t < 0.35f; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.35f && !skip; t += Time.unscaledDeltaTime * speed)
         {
+            if (SkipPressed(startedAt)) { skip = true; break; }
             float k = EaseIn(t / 0.35f);
             for (int i = 0; i < n; i++)
             {
@@ -141,6 +152,8 @@ public class SkillEvolutionUI : MonoBehaviour
             }
             yield return null;
         }
+
+        for (int i = 0; i < n; i++) names[i].alpha = 0f;       // 1.0.4~ 건너뛰었을 때 재료 이름이 남지 않게
 
         // 3) 번쩍! 진화한 스킬
         fx?.Play("shatter", 0.9f, 1.1f);
@@ -171,8 +184,11 @@ public class SkillEvolutionUI : MonoBehaviour
         TMP_Text hint = UIKit.Text(root, "", 24f, new Color(0.65f, 0.6f, 0.7f), new Vector2(0f, -380f), new Vector2(900f, 36f));
         hint.text = Loc.T("클릭하거나 [") + KeyBindings.Name(GameAction.Interact) + Loc.T("] 를 눌러 계속");
 
-        for (float t = 0f; t < 0.5f; t += Time.unscaledDeltaTime)
+        dim.color = new Color(0.03f, 0.01f, 0.06f, 0.9f);           // 1.0.4~ 건너뛰어도 끝 모습으로
+        title.alpha = 1f;
+        for (float t = 0f; t < 0.5f && !skip; t += Time.unscaledDeltaTime * speed)
         {
+            if (SkipPressed(startedAt)) { skip = true; break; }
             float k = t / 0.5f;
             flash.color = new Color(1f, 0.95f, 1f, 1f - k);
             icon.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.6f, 1f, EaseOut(k));
@@ -184,6 +200,11 @@ public class SkillEvolutionUI : MonoBehaviour
             yield return null;
         }
         flash.color = Color.clear;
+        icon.rectTransform.localScale = Vector3.one;                  // 1.0.4~ 건너뛰어도 끝 모습으로
+        name.rectTransform.localScale = Vector3.one;
+        name.alpha = desc.alpha = recipe.alpha = 1f;
+        ring.color = Color.clear;
+        burst.rectTransform.sizeDelta = Vector2.one * 1100f;
         Button closer = dim.gameObject.AddComponent<Button>();
         closer.transition = Selectable.Transition.None;
         closer.onClick.AddListener(() => closeRequested = true);

@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 // 여러 장 중 하나를 고르는 창 (1.0.1): 보물 상자 · 보스 보상 3택 · 저주 제단
 // 카드마다 그림(Icons/choice_<이름>, tools/pixelart/make_choice_icons.py) · 이름 · 설명
-// 누르거나 숫자 키로 고르고(금빛 테두리), 더블클릭 · [Space] · [Enter]로 확정 (레벨업 카드와 같은 방식)
+// 누르거나 숫자 키로 고르고(금빛 테두리), 더블클릭 · 같은 숫자 한 번 더 · [Space] · [Enter]로 확정 (레벨업 카드와 같은 방식, 1.0.4~ 통일)
+// 1.0.4~: 열린 직후 0.6초 · 마우스를 뗄 때까지는 고를 수 없음 (레벨업 창 LockSelection 과 같음 — 쏘던 클릭이 저주 제단 카드를 확정하던 문제)
 // 열린 동안 게임이 멈추고 ESC 메뉴 · 보스 결계는 열리지 않음
 public class ChoiceUI : MonoBehaviour
 {
@@ -25,11 +26,14 @@ public class ChoiceUI : MonoBehaviour
 
     int selected = -1, confirmed = -1, lastClick = -1;
     float lastClickAt;
+    const float SelectDelay = 0.6f;
+    bool ready;                     // 1.0.4~ 열린 직후 입력 보호
     RectTransform[] cards;
     Image[] frames;
 
     void Click(int i)
     {
+        if (!ready) return;
         float now = Time.unscaledTime;
         if (lastClick == i && now - lastClickAt <= DoubleClick) { confirmed = i; return; }
         lastClick = i;
@@ -77,7 +81,7 @@ public class ChoiceUI : MonoBehaviour
 
         UIKit.Text(r, title, 54f, Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
         if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, 28f, Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
-        UIKit.Text(r, "더블클릭 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
+        UIKit.Text(r, "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
 
         const float w = 400f, h = 500f, gap = 44f;
         int n = options.Length;
@@ -135,11 +139,35 @@ public class ChoiceUI : MonoBehaviour
         }
         Hostile.Play("chime", 0.7f, 1.1f);
 
+        // 1.0.4~ 입력 보호: 흐리게 시작해 0.6초 동안 밝아지고, 마우스 버튼을 떼야 고를 수 있음
+        CanvasGroup group = go.GetComponent<CanvasGroup>();
+        if (group == null) group = go.AddComponent<CanvasGroup>();
+        group.interactable = false;
+        group.alpha = 0.6f;
+        float openedAt = Time.unscaledTime;
+
         while (ui.confirmed < 0)
         {
+            if (!ui.ready)
+            {
+                float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
+                group.alpha = Mathf.Lerp(0.6f, 1f, t);
+                if (t >= 1f && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+                {
+                    ui.ready = true;
+                    group.interactable = true;
+                    group.alpha = 1f;
+                }
+                yield return null;
+                continue;
+            }
             for (int i = 0; i < n && i < 9; i++)
-                if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i)) ui.Select(i);
-            if (ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+                {
+                    if (ui.selected == i) ui.confirmed = i;         // 1.0.4~ 같은 숫자 한 번 더 → 확정
+                    else ui.Select(i);
+                }
+            if (ui.confirmed < 0 && ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
                 ui.confirmed = ui.selected;
             // 고른 카드는 숨 쉬듯 반짝
             if (ui.selected >= 0) ui.frames[ui.selected].color = Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
