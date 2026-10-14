@@ -5,7 +5,9 @@ using UnityEngine;
 // 우체부 (1.0.2): 저승 배달부
 //   평타 · 편지 배달: 마우스 쪽(앞 70°) 사거리 안에서 가장 먼 적을 「받는 이」로 정해 편지를 날림.
 //                     편지는 다른 적을 지나쳐 받는 이를 쫓아가고 (쓰러지면 가까운 적으로 다시), 닿으면 배달 완료
-//                     배달 10번마다 우편 보너스 (코인 2 · 필살기 게이지 5%)
+//                     배달 10번마다 우편 보너스 (코인 2 · 필살기 게이지 4%)
+//   1.0.6~ 하향: 배달 횟수는 평타로 직접 보낸 편지만 셈 (등기 · 반송 · 행운의 편지 · 우체통 · 답장 편지는 안 셈 →
+//                파생 편지가 우편 보너스 · 특급 게이지를 끝없이 돌려 속달을 쉬지 않고 쓰던 것), 사거리 14 → 12칸
 //   우클릭 · 속달: 누르고 있는 동안 둘레 사거리 안의 적에게 표식이 차례로 붙고 (오래 누를수록 많이),
 //                   떼면 1초 뒤 표식이 모두 한꺼번에 터짐
 // 레벨업 카드 (card): 0 등기 우편 · 1 소포 · 2 우표 수집 · 3 답장 · 5 빠른 우편 · 6 반송
@@ -24,6 +26,9 @@ public partial class CharacterKit
     float LetterSpeed => 24f * (1f + 0.2f * card[5]);
     float LetterTurn => 540f * (1f + 0.2f * card[5]);
     int StampMax => SignatureSkills.StampMax();
+    const float ExtraLetterRate = 0.4f;         // 1.0.6~ 다발 배송 · 총알 배송으로 덧붙은 편지 피해 50% → 40%
+    const float RegisteredRate = 0.65f;         // 1.0.6~ 등기 우편 다시 배달 피해 80% → 65% (3회면 한 통이 약 2.95배 → 2.35배)
+    const int ReplyCap = 10;                    // 1.0.6~ 답장: 속달 한 번에 최대 10통 (예전엔 표식 수 × 답장 수, 최대 60통)
 
     void PostAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
@@ -33,7 +38,7 @@ public partial class CharacterKit
         {
             Transform to = Addressee(start, dir, taken);
             if (to != null) { taken.Add(to); MarkAddressee(to); }
-            float d = dmg * (i >= Mathf.Max(1, shots) ? 0.5f : 1f);
+            float d = dmg * (i >= Mathf.Max(1, shots) ? ExtraLetterRate : 1f);
             // 1.0.2: 받는 이 쪽으로 출발 (앞 70° 밖 · 바로 옆의 적이면 마우스 쪽으로 출발한 편지가 받는 이 둘레를 맴돌기만 하던 것)
             Vector2 aim = to != null ? (Vector2)(to.position - start) : dir;
             if (aim.sqrMagnitude < 0.01f) aim = dir;
@@ -47,9 +52,10 @@ public partial class CharacterKit
     }
 
     // 받는 이: 마우스 쪽 앞 70° 안에서 가장 먼 적 (이미 받는 이가 된 적은 빼고), 없으면 그 방향 가장 가까운 적
+    // 1.0.6~ 찾는 범위 = 캐릭터 사거리 (14 → 12칸, 화면 끝의 적을 안전한 거리에서 먼저 따던 것)
     Transform Addressee(Vector3 from, Vector2 dir, List<Transform> except)
     {
-        float range = 14f;
+        float range = def.range > 0f ? def.range : 12f;
         Transform far = null, any = null;
         float farD = -1f, anyD = float.MaxValue;
         foreach (Collider2D c in Specials.Overlap(from, range, postHits))
@@ -124,15 +130,20 @@ public partial class CharacterKit
     void Deliver(Transform target, Vector3 at, Vector2 v, float dmg, bool pigeon, int depth)
     {
         GameObject g = target.gameObject;
-        float m = formPower * (1f + 0.04f * card[2] * stampStacks) * SignatureSkills.LetterMul(g, target == lastAddressee, (at - transform.position).magnitude);
+        // 1.0.6~ 우표 중첩당 +4/8/12% → +3/6/9% (맞으면 절반 떨어짐 · LoseStamps)
+        float m = formPower * (1f + 0.03f * card[2] * stampStacks) * SignatureSkills.LetterMul(g, target == lastAddressee, (at - transform.position).magnitude);
         if (augment == AugThickEnvelope) m *= 1.25f;
         bool wasAlive = !(g.TryGetComponent(out EnermyController e) && e.IsDead);
         Specials.Damage(g, dmg * m, v, 0.8f);
         if (pigeon) StartCoroutine(PigeonPeck(target, dmg * 0.5f));
         lastAddressee = target;
-        Deliveries++;
+        // 1.0.6~ 배달 횟수 · 우편 보너스는 평타로 직접 보낸 편지(depth 0)만
+        if (depth == 0)
+        {
+            Deliveries++;
+            if (Deliveries % 10 == 0) PostBonus(at);
+        }
         if (card[2] > 0) stampStacks = Mathf.Min(StampMax, stampStacks + 1);
-        if (Deliveries % 10 == 0) PostBonus(at);
         Fx.Spawn("fx_sparkle", at, 1f, Letter, 24f);
         // 소포 (카드) · 소포 상자 (형태): 맞은 자리에서 터짐
         if (card[1] > 0 || form == SpecialAbilities.KitParcel)
@@ -146,7 +157,7 @@ public partial class CharacterKit
         if (depth < card[0])
         {
             Transform next = NearestOther(at, 8f, target, v, 360f);
-            if (next != null) StartCoroutine(LetterFlight(at, ((Vector2)(next.position - at)).normalized, next, dmg * 0.8f, false, depth + 1));
+            if (next != null) StartCoroutine(LetterFlight(at, ((Vector2)(next.position - at)).normalized, next, dmg * RegisteredRate, false, depth + 1));
         }
         // 반송: 받는 이가 쓰러지면 다른 적에게 한 번 더
         if (killed && card[6] > 0 && depth < 1 + SignatureSkills.ReturnDepth())
@@ -157,6 +168,9 @@ public partial class CharacterKit
         Play("stamp", 0.35f, 1.3f);
         SignatureSkills.Delivered(g, at, killed, depth);
     }
+
+    // 우표 수집 (1.0.6~): 맞으면 쌓인 우표가 절반 떨어짐 (예전엔 한 번 쌓이면 끝까지 +120% · 수집가 +240%)
+    public void LoseStamps() => stampStacks /= 2;
 
     // 다른 효과가 보내는 편지 (행운의 편지 · 답장 폭주): 다시 배달 · 반송은 하지 않음
     public void SendLetter(Vector3 from, Transform to, float dmg)
@@ -179,7 +193,7 @@ public partial class CharacterKit
     {
         Coin coin = Cache<Coin>.Get;
         if (coin != null) coin.AddCoin(2);
-        if (player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * 0.05f);
+        if (player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * 0.04f);      // 1.0.6~ 5% → 4%
         SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.6f, Loc.T("배달 완료!") + " ×" + Deliveries, PostRed, 4f, 0.5f);
         Play("chime", 0.5f, 1.5f);
         SignatureSkills.PostBonus();
@@ -225,7 +239,7 @@ public partial class CharacterKit
     LineRenderer expressRing;
     const float ExpressRange = 15f;
 
-    int ExpressMaxAt(float charge) => Mathf.RoundToInt((6 + 14 * charge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.0.2 조정: 8 ~ 30 → 6 ~ 20
+    int ExpressMaxAt(float charge) => Mathf.RoundToInt((5 + 10 * charge) * (augment == AugRegistered ? 1.5f : 1f));      // 1.0.2 조정: 8 ~ 30 → 6 ~ 20, 1.0.6~ 6 ~ 20 → 5 ~ 15 (등기 표식 9 ~ 30 → 8 ~ 22)
     int ExpressMax => ExpressMaxAt(expressCharge);
     // 머리 위 막대: 속달을 누르는 동안 붙은 표식 수 / 끝까지 눌렀을 때 최대
     public bool Expressing => expressing;
@@ -297,7 +311,7 @@ public partial class CharacterKit
         expressing = false;
         expressRing.enabled = false;
         CancelUltAim();
-        float dmg = Damage * (2f + 2f * expressCharge) * UltMul;
+        float dmg = Damage * (1.8f + 1.4f * expressCharge) * UltMul;       // 1.0.6~ 공격력 200 ~ 400% → 180 ~ 320%
         if (expressMarks.Count > 0)
             SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.8f, Loc.T("속달") + " ×" + expressMarks.Count, PostRed, 4.5f, 0f);
         List<FxAnim> icons = new List<FxAnim>(expressIcons);
@@ -337,6 +351,7 @@ public partial class CharacterKit
         foreach (FxAnim i in icons) expressPending.Remove(i);
         ClearExpressIcons(icons);
         List<Vector3> spots = new List<Vector3>();
+        int replies = 0;
         foreach (Transform t in marks)
         {
             if (!Alive(t)) continue;        // 1.0.2: 그사이 쓰러진 적의 시체에서 터지지 않게
@@ -347,8 +362,9 @@ public partial class CharacterKit
             Fx.Spawn("fx_explosion", p, 2f, new Color(1f, 0.55f, 0.4f), 20f);
             Fx.Spawn("fx_sparkle", p, 1.6f + 1.2f * charge, new Color(1f, 0.85f, 0.6f), 22f);
             // 답장 (카드): 터진 자리에서 작은 편지가 가까운 적에게
-            for (int k = 0; k < card[3]; k++)
+            for (int k = 0; k < card[3] && replies < ReplyCap; k++)
             {
+                replies++;
                 Transform next = Specials.NearestEnemy(p + (Vector3)(Random.insideUnitCircle * 2f), 8f);
                 if (next != null) StartCoroutine(LetterFlight(p, Random.insideUnitCircle.normalized, next, Damage * 0.6f, false, 9));
             }

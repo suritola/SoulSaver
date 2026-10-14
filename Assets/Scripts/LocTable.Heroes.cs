@@ -266,15 +266,7 @@ public static partial class LocTable
         // ================================================================= 우체부
         A("우체부", "Postman", "郵便配達人", "邮差");
         A("저승 배달부", "Courier of the Dead", "冥府の配達人", "冥府信使");
-        A("살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 화면의 적 모두에게 편지가 터집니다.",
-          "A courier who delivers to the living and the dead alike. Letters seek out the farthest foe first, and one Express Delivery bursts letters on every enemy around.",
-          "生者にも死者にも手紙を届ける配達人。手紙は最も遠い敵から探しに行き、速達ひとつで周りの敵すべてに手紙が弾けます。",
-          "无论生者死者都会送达信件的邮差。信件先寻找最远的敌人，一次特快便能让周围所有敌人身上的信件同时爆开。");
         A("편지", "Letters", "手紙", "信件");
-        A("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
-          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries earns coins and Ultimate gauge",
-          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、10回配達するたびにコインと必殺技ゲージがもらえます",
-          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，每送达10次获得金币与必杀技充能");
         A("속달", "Express Delivery", "速達", "特快专递");
         A("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
           "While held, letter marks attach to nearby enemies one by one (more the longer you hold); release and all marks burst together 1s later",
@@ -287,15 +279,12 @@ public static partial class LocTable
 
         // ---------------- 전용 레벨업 카드
         A("등기 우편", "Registered Mail", "書留", "挂号信");
-        A("편지가 받는 이에게 닿으면 가까운 다른 적에게 다시 배달됩니다. (피해 80%)", "After reaching its addressee, a letter is redelivered to another nearby enemy. (80% damage)", "手紙が宛先に届くと、近くの別の敵へもう一度配達されます。（ダメージ80%）", "信件送达收件人后，再投递给附近另一名敌人。（伤害80%）");
         A("다시 배달", "Redeliveries", "再配達", "再次投递");
         A("소포", "Parcel", "小包", "包裹");
         A("편지가 닿은 자리에서 작게 터집니다. (피해 50%)", "Letters burst on arrival. (50% damage)", "手紙が届いた場所で小さく爆発します。（ダメージ50%）", "信件送达处小范围爆炸。（伤害50%）");
         A("폭발 범위", "Blast radius", "爆発範囲", "爆炸范围");
         A("우표 수집", "Stamp Collecting", "切手集め", "集邮");
-        A("배달할 때마다 다음 편지의 피해가 늘어납니다. (최대 10중첩)", "Each delivery strengthens your next letters. (Up to 10 stacks)", "配達するたびに次の手紙のダメージが増えます。（最大10重）", "每次送达都会强化之后的信件。（最多10层）");
         A("답장", "Reply", "返信", "回信");
-        A("속달 표식이 터진 자리에서 작은 편지가 가까운 적에게 날아갑니다. (공격력 60%)", "Where Express marks burst, small letters fly to nearby enemies. (60% attack)", "速達の印が弾けた場所から小さな手紙が近くの敵へ飛びます。（攻撃力60%）", "特快标记爆炸处飞出小信件射向附近敌人。（攻击力60%）");
         A("답장 수", "Replies", "返信の数", "回信数");
         A("빠른 우편", "Quick Post", "速い郵便", "快邮");
         A("편지가 더 빠르게 날아가고 더 날카롭게 꺾입니다.", "Letters fly faster and turn more sharply.", "手紙がより速く飛び、より鋭く曲がります。", "信件飞得更快，转向更灵敏。");
@@ -306,7 +295,6 @@ public static partial class LocTable
 
         // ---------------- 고유 스킬
         A("특급", "Priority Mail", "特急", "特急");
-        A("배달 열 번마다 필살기 게이지가 더 찹니다.", "Every 10 deliveries fill extra Ultimate gauge.", "配達10回ごとに必殺技ゲージがさらにたまります。", "每送达10次额外充能必杀技。");
         A("소인", "Postmark", "消印", "邮戳");
         A("편지를 받은 적에게 소인이 찍혀 4초 동안 받는 피해가 늘어납니다.", "Enemies who receive a letter are postmarked, taking more damage for 4s.", "手紙を受け取った敵に消印が押され、4秒間受けるダメージが増えます。", "收到信件的敌人被盖上邮戳，4秒内受到的伤害提升。");
         A("우편 가방", "Mailbag", "郵便かばん", "邮包");
@@ -318,7 +306,6 @@ public static partial class LocTable
         A("배달 경로", "Delivery Route", "配達ルート", "投递路线");
         A("바로 앞 받는 이와 다른 적에게 배달하면 피해가 늘어납니다.", "Delivering to a different enemy than the last addressee deals more damage.", "直前の宛先と違う敵に配達するとダメージが増えます。", "投递给与上一位收件人不同的敌人时伤害提升。");
         A("영수증", "Receipt", "領収書", "收据");
-        A("배달을 마칠 때마다 체력을 회복합니다.", "Heal each time you complete a delivery.", "配達を終えるたびに体力を回復します。", "每完成一次投递恢复生命。");
         A("궂은 날씨", "Foul Weather", "悪天候", "恶劣天气");
         A("체력이 절반 아래일 때 편지의 피해가 늘어납니다.", "Letters deal more damage while you're below half health.", "体力が半分を下回ると手紙のダメージが増えます。", "生命低于一半时信件伤害提升。");
         A("익일 배송", "Next-Day Delivery", "翌日配送", "次日达");
@@ -336,13 +323,11 @@ public static partial class LocTable
         A("대형 소포", "Bulk Parcel", "大型小包", "大型包裹");
         A("소포 폭발이 두 배로 넓어지고, 행운의 편지 확률이 50%가 됩니다.", "Parcel blasts are twice as wide, and Chain Letter's chance rises to 50%.", "小包の爆発が2倍広くなり、幸運の手紙の確率が50%になります。", "包裹爆炸范围翻倍，幸运信几率提升至50%。");
         A("우표 수집가", "Philatelist", "切手収集家", "集邮家");
-        A("우표가 20중첩까지 쌓이고, 특급 게이지가 두 배가 됩니다.", "Stamps stack up to 20, and Priority Mail's gauge is doubled.", "切手が20重まで重なり、特急のゲージが2倍になります。", "邮票可叠加至20层，特急充能翻倍。");
         A("답장 폭주", "Reply Flood", "返信の嵐", "回信潮");
         A("익일 배송이 터질 때도 답장 편지가 날아갑니다.", "Next-Day Delivery blasts also send reply letters.", "翌日配送が弾けるときも返信の手紙が飛びます。", "次日达爆炸时也会飞出回信。");
         A("총알 배송", "Bullet Delivery", "弾丸配送", "子弹快递");
         A("움직이는 동안 편지를 한 통 더 보냅니다.", "Send one more letter while moving.", "動いている間、手紙をもう1通送ります。", "移动中多寄出一封信。");
         A("반송 불가", "No Returns", "返送不可", "拒绝退回");
-        A("반송된 편지가 최대 세 번까지 계속 이어집니다.", "Returned letters keep going up to three times.", "返送された手紙が最大3回まで続きます。", "退回的信件最多可连续三次。");
         A("전단 폭탄", "Flyer Bomb", "チラシ爆弾", "传单炸弹");
         A("광고 전단이 맞은 자리에서 터집니다. (공격력 60%)", "Junk Mail flyers explode on hit. (60% attack)", "広告チラシが当たった場所で爆発します。（攻撃力60%）", "广告传单命中处爆炸。（攻击力60%）");
 
@@ -365,7 +350,6 @@ public static partial class LocTable
         A("두꺼운 봉투", "Thick Envelope", "分厚い封筒", "厚信封");
         A("편지 피해가 25% 늘어납니다.", "Letter damage +25%.", "手紙のダメージが25%増えます。", "信件伤害提升25%。");
         A("다발 배송", "Bundle Delivery", "まとめ配送", "批量投递");
-        A("편지를 두 통 더 보냅니다. (피해 50%)", "Send two more letters. (50% damage)", "手紙をさらに2通送ります。（ダメージ50%）", "多寄出两封信。（伤害50%）");
         A("등기 표식", "Registered Marks", "書留の印", "挂号标记");
         A("속달 표식이 50% 더 많이 붙습니다.", "Express Delivery places 50% more marks.", "速達の印が50%多く付きます。", "特快标记数量增加50%。");
         A("튼튼한 다리", "Sturdy Legs", "丈夫な脚", "强健双腿");
@@ -376,6 +360,24 @@ public static partial class LocTable
         A("배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%", "Each delivery has a 5% chance to earn 1 coin.\nEvolved: 10%", "配達を終えるたびに5%の確率でコイン1枚をもらいます。\n進化：10%", "每次投递有5%几率获得1枚金币。\n进化：10%");
         A("개 조심", "Beware of Dog", "猛犬注意", "当心恶犬");
         A("둘레 3칸에 적이 넷 이상이면 받는 피해가 10% 줄어듭니다.\n진화: 18%", "Take 10% less damage while four or more enemies are within 3 tiles.\nEvolved: 18%", "周囲3マスに敵が4体以上いると受けるダメージが10%減ります。\n進化：18%", "周围3格内有四名以上敌人时受到的伤害减少10%。\n进化：18%");
+
+        // 1.0.6 우편배달부 하향 (바뀐 수치 · 동작에 맞춘 설명 — 옛 문구 줄은 지움)
+        A("살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 둘레의 적 여럿에게 편지가 한꺼번에 터집니다.",
+          "A courier who delivers to the living and the dead alike. Letters seek out the farthest foe first, and one Express Delivery bursts letters on many nearby enemies at once.",
+          "生者にも死者にも手紙を届ける配達人。手紙は最も遠い敵から探しに行き、速達ひとつで周りの多くの敵に手紙が一斉に弾けます。",
+          "无论生者死者都会送达信件的邮差。信件先寻找最远的敌人，一次特快便能让周围众多敌人身上的信件同时爆开。");
+        A("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
+          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries of letters you sent yourself earn coins and Ultimate gauge",
+          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、自分で送った手紙を10回配達するたびにコインと必殺技ゲージがもらえます",
+          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，亲手寄出的信件每送达10次获得金币与必杀技充能");
+        A("편지가 받는 이에게 닿으면 가까운 다른 적에게 다시 배달됩니다. (피해 65%)", "After reaching its addressee, a letter is redelivered to another nearby enemy. (65% damage)", "手紙が宛先に届くと、近くの別の敵へもう一度配達されます。（ダメージ65%）", "信件送达收件人后，再投递给附近另一名敌人。（伤害65%）");
+        A("배달할 때마다 다음 편지의 피해가 늘어납니다. (최대 10중첩 · 맞으면 절반이 떨어짐)", "Each delivery strengthens your next letters. (Up to 10 stacks · getting hit loses half)", "配達するたびに次の手紙のダメージが増えます。（最大10重・被弾すると半分なくなる）", "每次送达都会强化之后的信件。（最多10层 · 受击时失去一半）");
+        A("속달 표식이 터진 자리에서 작은 편지가 가까운 적에게 날아갑니다. (공격력 60% · 속달 한 번에 최대 10통)", "Where Express marks burst, small letters fly to nearby enemies. (60% attack · up to 10 per Express Delivery)", "速達の印が弾けた場所から小さな手紙が近くの敵へ飛びます。（攻撃力60%・速達1回につき最大10通）", "特快标记爆炸处飞出小信件射向附近敌人。（攻击力60% · 每次特快最多10封）");
+        A("직접 보낸 편지를 열 번 배달할 때마다 필살기 게이지가 더 찹니다.", "Every 10 deliveries of letters you sent yourself fill extra Ultimate gauge.", "自分で送った手紙を10回配達するたびに必殺技ゲージがさらにたまります。", "亲手寄出的信件每送达10次额外充能必杀技。");
+        A("배달을 마칠 때마다 체력을 회복합니다. (0.3초에 한 번)", "Heal each time you complete a delivery. (Once per 0.3s)", "配達を終えるたびに体力を回復します。（0.3秒に1回）", "每完成一次投递恢复生命。（每0.3秒一次）");
+        A("우표가 15중첩까지 쌓이고, 특급 게이지가 1.5배가 됩니다.", "Stamps stack up to 15, and Priority Mail grants 1.5x gauge.", "切手が15重まで重なり、特急のゲージが1.5倍になります。", "邮票可叠加至15层，特急充能变为1.5倍。");
+        A("반송된 편지가 최대 두 번까지 계속 이어집니다.", "Returned letters keep going up to two times.", "返送された手紙が最大2回まで続きます。", "退回的信件最多可连续两次。");
+        A("편지를 두 통 더 보냅니다. (피해 40%)", "Send two more letters. (40% damage)", "手紙をさらに2通送ります。（ダメージ40%）", "多寄出两封信。（伤害40%）");
 
         // ---------------- 이야기
         A("저승 배달부의 가방에 수취인이 「킹 슬라임」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"King Slime.\"", "冥府の配達人のかばんに、宛先が「キングスライム」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「史莱姆王」的信。");

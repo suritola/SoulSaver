@@ -80,10 +80,10 @@ public static class CharacterData
             pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f) },
         new CharacterDef {
             name = "우체부", title = "저승 배달부", body = "postman", held = "letter",
-            description = "살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 화면의 적 모두에게 편지가 터집니다.",
-            weapon = "편지", attack = "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
+            description = "살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 둘레의 적 여럿에게 편지가 한꺼번에 터집니다.",
+            weapon = "편지", attack = "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
             skill = "속달", skillDesc = "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
-            hp = 0.9f, damage = 0.9f, attackSpeed = 1f, gauge = 1.05f, move = 1.08f, range = 14f, price = 12000, condition = CharUnlock.EasyFast,
+            hp = 0.9f, damage = 0.8f, attackSpeed = 1f, gauge = 1.15f, move = 1.08f, range = 12f, price = 12000, condition = CharUnlock.EasyFast,       // 1.0.6~ 하향: 공격력 0.9 → 0.8, 게이지 1.05 → 1.15 (필살기 충전 95% → 87%), 사거리 14 → 12
             pool = new[] { 74, 75, 76, 77, 78, 79, 80 }, color = new Color(0.95f, 0.45f, 0.4f) },
         new CharacterDef {
             name = "유령", title = "죽지 못한 영혼", body = "ghost", held = "lantern",

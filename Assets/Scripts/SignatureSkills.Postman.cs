@@ -11,14 +11,16 @@ public partial class SignatureSkills
 {
     static readonly Color PostRedC = new Color(0.95f, 0.35f, 0.3f);
     static readonly Color PaperC = new Color(1f, 0.96f, 0.85f);
+    const float ReceiptGap = 0.3f;       // 1.0.6~ 영수증 회복 간격
+    float receiptAt;
 
     bool IsPost => who == CharacterId.Postman;
 
     // ---------------- 훅 (CharacterKit.Postman 이 부름)
-    public static int StampMax() => Instance != null && Instance.IsPost && Instance.E("pe.collector") ? 20 : 10;
+    public static int StampMax() => Instance != null && Instance.IsPost && Instance.E("pe.collector") ? 15 : 10;      // 1.0.6~ 우표 수집가 20 → 15중첩
     public static int ExtraLetters() => Instance != null && Instance.IsPost && Instance.E("pe.express") && Instance.Kit != null && Instance.Kit.Moving ? 1 : 0;
     public static float ParcelMul() => Instance != null && Instance.IsPost && Instance.E("pe.parcel") ? 2f : 1f;
-    public static int ReturnDepth() => Instance != null && Instance.IsPost && Instance.E("pe.return") ? 2 : 0;
+    public static int ReturnDepth() => Instance != null && Instance.IsPost && Instance.E("pe.return") ? 1 : 0;       // 1.0.6~ 반송 불가: 최대 3번 → 2번
     public static float LetterMul(GameObject target, bool sameAsLast, float dist) => Instance != null && Instance.IsPost ? Instance.OnLetterMul(sameAsLast, dist) : 1f;
     public static void LettersSent(Vector3 start, Vector2 dir, float dmg) { if (Instance != null && Instance.IsPost) Instance.OnLettersSent(start, dir, dmg); }
     public static void Delivered(GameObject g, Vector3 at, bool killed, int depth) { if (Instance != null && Instance.IsPost) Instance.OnDelivered(g, at, killed, depth); }
@@ -29,7 +31,7 @@ public partial class SignatureSkills
     {
         float m = 1f;
         if (L("p.bag") > 0 && Kit != null && Kit.Moving) m *= 1f + V(L("p.bag"), 0.1f, 0.05f);
-        if (L("p.route") > 0 && !sameAsLast) m *= 1f + V(L("p.route"), 0.15f, 0.07f);
+        if (L("p.route") > 0 && !sameAsLast) m *= 1f + V(L("p.route"), 0.1f, 0.05f);         // 1.0.6~ +15/22/29/36% → +10/15/20/25% (편지가 여러 통이면 거의 늘 켜져 있었음)
         if (L("p.weather") > 0 && player != null && player.PlayerHealth < player.PlayerMaxHealth * 0.5f) m *= 1f + V(L("p.weather"), 0.2f, 0.1f);
         if (L("p.address") > 0 && dist > 8f) m *= 1f + V(L("p.address"), 0.2f, 0.1f);
         return m;
@@ -52,8 +54,12 @@ public partial class SignatureSkills
         // 소인: 받는 피해 + (내용증명: 두 배)
         if (L("p.postmark") > 0 && g != null)
             Mark(g, 4f, 1f + V(L("p.postmark"), 0.08f, 0.04f) * (E("pe.registered") ? 2f : 1f));
-        // 영수증: 회복
-        if (L("p.receipt") > 0) Heal(V(L("p.receipt"), 0.5f, 0.25f));
+        // 영수증: 회복 (1.0.6~ 0.3초에 한 번 — 예전엔 등기 · 반송 · 소포까지 배달마다 회복해 초당 수십을 회복했음)
+        if (L("p.receipt") > 0 && Time.time >= receiptAt)
+        {
+            receiptAt = Time.time + ReceiptGap;
+            Heal(V(L("p.receipt"), 0.5f, 0.25f));
+        }
         // 우편 요금 (패시브): 확률로 코인 1
         if (Sp != null && Sp.Has(SpecialAbilities.KitPostage) && Random.value < (Sp.IsEvolved(SpecialAbilities.KitPostage) ? 0.1f : 0.05f))
         {
@@ -72,9 +78,16 @@ public partial class SignatureSkills
 
     void OnPostBonus()
     {
-        // 특급: 배달 열 번마다 필살기 게이지 (우표 수집가: 두 배)
+        // 특급: 배달 열 번마다 필살기 게이지 (우표 수집가: 1.5배)
+        // 1.0.6~ +10/15/20/25% → +8/11/14/17%, 우표 수집가 두 배 → 1.5배 (배달 열 번에 게이지 55% 까지 차 속달을 쉬지 않고 쓰던 것)
         if (L("p.express") > 0 && player != null && player.skillGauge != null)
-            player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * V(L("p.express"), 0.1f, 0.05f) * (E("pe.collector") ? 2f : 1f));
+            player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * V(L("p.express"), 0.08f, 0.03f) * (E("pe.collector") ? 1.5f : 1f));
+    }
+
+    // 우표 수집 (1.0.6~): 맞으면 쌓인 우표가 절반 떨어짐
+    void PostHurt(float taken)
+    {
+        if (taken > 0f && Kit != null) Kit.LoseStamps();
     }
 
     void OnExpressed(List<Vector3> spots, float dmg)
