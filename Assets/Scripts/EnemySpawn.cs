@@ -80,14 +80,12 @@ public class EnemySpawner : MonoBehaviour
     {
         Coin coin1 = Cache<Coin>.Get;
         if (coin1 == null || playerC == null) return;
-        GameObject[] coins = GameObject.FindGameObjectsWithTag("coin");
-
-        foreach (GameObject coin in coins)
-        {
-            Destroy(coin);
-            coin1.AddCoin(1 + playerC.bonusCoin);
-            SignatureSkills.CoinPicked(1 + playerC.bonusCoin);
-        }
+        // 1.0.4~: 합쳐진 코인은 값만큼 (하나씩 주울 때와 같은 양) · 씬을 태그로 뒤지지 않고 코인 목록에서
+        int units = CoinTag.TakeAll();
+        if (units <= 0) return;
+        int each = 1 + playerC.bonusCoin;
+        coin1.AddCoin(units * each);
+        for (int i = 0; i < units; i++) SignatureSkills.CoinPicked(each);
     }
 
     IEnumerator SpawnLoop()
@@ -284,6 +282,7 @@ public class EnemySpawner : MonoBehaviour
             Vector2 d = t.position - me.position;
             list.Add(new Pulled { t = t, e = e, coin = coin, angle = Mathf.Atan2(d.y, d.x), dist = d.magnitude });
             if (e != null || coin) Quiet(t.gameObject);
+            if (coin) CoinTag.Hold(t.gameObject);      // 1.0.4~: 끌려오는 동안 플레이어가 따로 줍거나 합쳐지지 않게
             if (e != null) e.enabled = false;           // 끌려오는 동안 쫓아오거나 스킬을 쓰지 않음 (영혼이 될 때 다시 켬)
         }
         foreach (GameObject g in GameObject.FindGameObjectsWithTag("enermy"))
@@ -320,7 +319,7 @@ public class EnemySpawner : MonoBehaviour
                 p.t.position = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * d;
                 if (d > 1.3f) continue;
                 if (p.e != null) { purge.Enqueue(p.e); p.t = null; }
-                else if (p.coin) { coins++; Destroy(p.t.gameObject); p.t = null; }
+                else if (p.coin) { coins += CoinTag.ValueOf(p.t.gameObject); CoinTag.Release(p.t.gameObject); p.t = null; }
             }
             PurgeSome(purge);
             if (coins > 0 && (coinSound -= Time.deltaTime) <= 0f) { coinSound = 0.12f; Hostile.Play("chime", 0.25f, Random.Range(1.5f, 1.8f)); }
@@ -337,7 +336,7 @@ public class EnemySpawner : MonoBehaviour
         {
             if (p.t == null) continue;
             if (p.e != null) { if (!p.e.IsDead) purge.Enqueue(p.e); }
-            else if (p.coin) { coins++; Destroy(p.t.gameObject); }
+            else if (p.coin) { coins += CoinTag.ValueOf(p.t.gameObject); CoinTag.Release(p.t.gameObject); }
             else p.t.position = at;
         }
         GiveCoins(coins);

@@ -20,6 +20,14 @@ public class PickupGlow : MonoBehaviour
         g.size = size;
     }
 
+    // 1.0.4~: 값이 큰 코인은 빛 무리 색 · 크기를 바꿈 (CoinTag)
+    public void SetLook(Color c, float s)
+    {
+        color = c;
+        size = s;
+        if (halo != null && halo.TryGetComponent(out SpriteRenderer hr)) hr.color = new Color(c.r, c.g, c.b, 0.6f);
+    }
+
     void Start()
     {
         SpriteOutline.Player(gameObject);       // 층을 옮기기 전에 (Effect 층 그림에는 윤곽선을 안 붙임)

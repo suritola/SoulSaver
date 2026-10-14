@@ -307,17 +307,17 @@ public class PlayerController : MonoBehaviour
             PlayerHealth = Mathf.Min(PlayerMaxHealth, PlayerHealth + regenPerSecond * Time.deltaTime);
 
         // 코인 자석: 주변 코인이 날아옴 (2.1.8: 카드가 없어도 기본으로 2.5칸은 끌어옴, 카드는 거기에 더함)
+        // 1.0.4~: 코인은 물리 트리거 대신 CoinTag 가 한 번에 끌어오고 주움 (코인이 많아지면 프레임이 떨어지던 문제)
         float pull = coinMagnetRange + BaseCoinPull;
-        if (pull > 0f && Time.timeScale > 0f)
+        if (Time.timeScale > 0f)
         {
-            // 떨어진 코인 목록 (매 프레임 씬 전체를 태그로 뒤지던 것을 대신함)
-            var coins = CoinTag.All;
-            for (int i = coins.Count - 1; i >= 0; i--)
+            if (coinBody == null) coinBody = GetComponent<Collider2D>();
+            int units = CoinTag.Tick(transform, coinBody, pull, out int pieces);
+            if (units > 0)
             {
-                Transform c = coins[i];
-                if (c == null) { coins.RemoveAt(i); continue; }
-                float d = Vector2.Distance(c.position, transform.position);
-                if (d < pull) c.position = Vector3.MoveTowards(c.position, transform.position, (10f + (pull - d) * 3f) * Time.deltaTime);
+                bool sound = GainCoins(units, pieces);
+                var at = CoinTag.PickedAt;
+                for (int i = 0; i < at.Count; i++) Juice.CoinPicked(at[i], sound && i == 0);
             }
         }
 
@@ -1041,29 +1041,37 @@ void Shoot()
     int dropCoin;
     float lastCoinSound = -1f;
     int coinStreak;
+    Collider2D coinBody;        // 코인 줍기 판정에 쓰는 몸 콜라이더 (CoinTag.Tick)
+
+    // 코인 units 개 몫을 받음 (pieces: 이번에 주운 코인 개수) → 이번에 줍는 소리를 냈는지
+    // 1.0.4~: 한 프레임에 주운 코인을 한 번에 더함 (값이 큰 코인도 하나씩 주울 때와 같은 양 · 황금 시대도 개수만큼)
+    bool GainCoins(int units, int pieces)
+    {
+        Coin coin = Cache<Coin>.Get;
+        if (coin == null || units <= 0) return false;
+        int each = 1 + bonusCoin;
+        coin.AddCoin(units * each);
+        for (int i = 0; i < units; i++) SignatureSkills.CoinPicked(each);      // 황금 시대 (스킬 진화)
+        // 한꺼번에 여러 개를 주우면 소리가 겹쳐 너무 커지므로: 0.07초에 한 번만, 연달아 주울수록 작게
+        float now = Time.unscaledTime;
+        coinStreak = (now - lastCoinSound < 0.6f ? coinStreak + 1 : 0) + Mathf.Max(0, pieces - 1);
+        bool sound = now - lastCoinSound >= 0.07f;
+        if (sound)
+        {
+            lastCoinSound = now;
+            float vol = Mathf.Max(0.4f, 1f / (1f + 0.15f * coinStreak));
+            if (audioSource != null && getCoin != null) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume * vol);
+        }
+        return sound;
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // 물리가 켜진 채 남은 코인 (CoinTag 를 거치지 않은 것)
         if (collision.CompareTag("coin"))
         {
-            Coin coin = Cache<Coin>.Get;
-
-            if (coin != null)
-            {
-                coin.AddCoin(1 + bonusCoin);
-                SignatureSkills.CoinPicked(1 + bonusCoin);      // 황금 시대 (스킬 진화)
-                // 한꺼번에 여러 개를 주우면 소리가 겹쳐 너무 커지므로: 0.07초에 한 번만, 연달아 주울수록 작게
-                float now = Time.unscaledTime;
-                coinStreak = now - lastCoinSound < 0.6f ? coinStreak + 1 : 0;
-                bool sound = now - lastCoinSound >= 0.07f;
-                if (sound)
-                {
-                    lastCoinSound = now;
-                    float vol = Mathf.Max(0.4f, 1f / (1f + 0.15f * coinStreak));
-                    if (audioSource != null && getCoin != null) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume * vol);
-                }
-                Juice.CoinPicked(collision.transform.position, sound);
-            }
-            Destroy( collision.gameObject );
+            if (Cache<Coin>.Get != null) Juice.CoinPicked(collision.transform.position, GainCoins(CoinTag.ValueOf(collision.gameObject), 1));
+            CoinTag.Release(collision.gameObject);
         }
 
         HandleContact(collision);

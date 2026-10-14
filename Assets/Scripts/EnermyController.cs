@@ -397,12 +397,8 @@ public class EnermyController : MonoBehaviour
 
             enemySpawner.killedEnemy++;
             if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
-            for (int i = 0; i < coinDrop; i++)
-            {
-                Vector2 drop = transform.position;
-                if (i > 0) drop += new Vector2(Random.Range(-1.5f, 1.5f), Random.Range(-1.5f, 1.5f));
-                CoinTag.Register(Instantiate(coin, Hostile.ClampArena(drop), Quaternion.identity));
-            }
+            // 1.0.4~: 많이 떨어뜨리면(엘리트 등) 값이 큰 코인 몇 개로 나눔 · 풀에서 꺼내 씀 (줍는 양은 그대로)
+            CoinTag.Drop(coin, transform.position, coinDrop, new Vector2(1.5f, 1.5f), true, CoinTag.EnemyPieces);
         }
         Destroy(gameObject);
     }
