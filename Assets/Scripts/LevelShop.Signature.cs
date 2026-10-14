@@ -11,7 +11,7 @@ public partial class LevelShop
     public const int SigFirstId = 15, SigCount = 10, SigMaxLevel = 4;
     public static bool IsSig(int id) => id >= SigFirstId && id < SigFirstId + SigCount;
     // 최대 레벨: 다 올리지 못하게 (무한 모드는 더 길게)
-    public static int LevelCap => GameMode.IsEndless ? 100 : 50;
+    public static int LevelCap => GameMode.IsEndless ? 80 : 50;        // 1.0.6~ 무한 모드 100 → 80, 상한에 닿으면 레벨업 카드(성장 카드 포함)를 더 고를 수 없음
 
     // 새 스킬 효과 키 (SignatureSkills 가 이 키로 단계를 읽음)
     public static readonly string[][] SigKeys =

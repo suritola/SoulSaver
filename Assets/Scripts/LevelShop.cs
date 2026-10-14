@@ -95,7 +95,8 @@ public partial class LevelShop : MonoBehaviour
 
         UpdateReroll();
         UpdateSkipButton();
-        // 1.0.4~: 만렙이어도 남은 레벨업은 버리지 않음 (성장 카드로 고름, LevelShop.Growth)
+        // 1.0.6~: 최대 레벨에 닿으면 남은 레벨업은 버림 (상한 뒤로는 카드를 더 고를 수 없음, 성장 카드는 상한 전에 카드를 다 배웠을 때만)
+        if (PendingLevels > 0 && !IsOpen && AtLevelCap) PendingLevels = 0;
         // 숫자 1 · 2 · 3: 그 카드를 고름, 이미 고른 카드의 숫자를 한 번 더 누르면 확정
         // 1.0.4~: 예전엔 한 번에 확정돼 살펴보려다 실수로 골랐음 → 보스 보상 · 무기 진화 창과 같은 방식으로 통일
         // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)
@@ -421,14 +422,22 @@ public partial class LevelShop : MonoBehaviour
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
         p.nowEXP += amount;
+        // 1.0.6~: 최대 레벨(50 · 무한 모드 80)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
+        int room = LevelCap - (p.level + PendingLevels);
+        if (room <= 0)
+        {
+            p.nowEXP = Mathf.Min(p.nowEXP, p.needEXP);
+            return;
+        }
         int gained = 0;
-        while (p.nowEXP >= p.needEXP && p.needEXP > 0f)
+        while (p.nowEXP >= p.needEXP && p.needEXP > 0f && gained < room)
         {
             p.nowEXP -= p.needEXP;
             earned++;
             p.needEXP = PlayerController.NeedExp(1 + earned);
             gained++;
         }
+        if (gained >= room) p.nowEXP = Mathf.Min(p.nowEXP, p.needEXP);
         if (gained == 0) return;
         // 창이 꺼져 있으면 연출 없이 포인트만
         if (!isActiveAndEnabled) { AddPending(gained); return; }

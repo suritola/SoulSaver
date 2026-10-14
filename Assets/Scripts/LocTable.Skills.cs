@@ -343,15 +343,15 @@ public static partial class LocTable
         A("공격 속도가 2% 빨라집니다.", "Fire rate +2%.", "攻撃速度が2%速くなります。", "攻击速度提升2%。");
         A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed +1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
         A("상한 없이 계속 쌓입니다", "Stacks without limit", "上限なく積み重なります", "可无限叠加");
-        A("배울 레벨업 카드를 모두 배웠거나 최대 레벨에 이르면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
-          "Once you've learned every level-up card or reached max level, each level-up lets you pick an endlessly stacking 「Growth」 card.",
-          "覚えるレベルアップカードをすべて覚えるか最大レベルに達すると、レベルアップごとに無限に積み重なる「成長」カードを選びます。",
-          "学会所有升级卡或达到等级上限后，每次升级都可选择一张可无限叠加的「成长」卡。");
+        A("최대 레벨(50 · 무한 모드 80) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
+          "If you learn every level-up card before max level (50 · Endless 80), each level-up lets you pick an endlessly stacking 「Growth」 card.",
+          "最大レベル（50・エンドレス80）の前に覚えるレベルアップカードをすべて覚えると、レベルアップごとに無限に積み重なる「成長」カードを選びます。",
+          "在达到等级上限（50 · 无尽80）前学会所有升级卡后，每次升级都可选择一张可无限叠加的「成长」卡。");
         A("성장 카드", "Growth Cards", "成長カード", "成长卡");
-        A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 (그 뒤로는 성장 카드) · 재료를 모두 올리면 스킬 진화",
-          "Pick one of three cards or skip on each level-up · Max level 50 (then Growth cards) · Max all ingredients to evolve a skill",
-          "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50（その後は成長カード）・素材をすべて上げるとスキル進化",
-          "每次升级从三张中选一张或跳过 · 等级上限50（之后为成长卡）· 素材全部升满即可技能进化");
+        A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 무한 모드 80 (그 뒤로는 레벨업 없음) · 재료를 모두 올리면 스킬 진화",
+          "Pick one of three cards or skip on each level-up · Max level 50 · Endless 80 (no level-ups after that) · Max all ingredients to evolve a skill",
+          "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・エンドレス80（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
+          "每次升级从三张中选一张或跳过 · 等级上限50 · 无尽80（之后不再升级）· 素材全部升满即可技能进化");
         A("최대 레벨에 이르거나 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
           "Once you reach max level or learn every level-up card, each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
           "最大レベルに達するか、選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
