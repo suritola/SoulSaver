@@ -58,6 +58,7 @@ public static class RunSave
     {
         SceneManager.sceneLoaded += (s, m) =>
         {
+            if (s.name == "MainMenu") EndContinue();
             if (s.name != "GameScene") return;
             log.Clear();
             NeedEvolution = NeedBossReward = false;
@@ -196,15 +197,28 @@ public static class RunSave
     }
 
     // 메인 메뉴 「이어하기」: 캐릭터 · 난이도를 맞추고 게임 씬으로
+    // 1.0.4~: 메뉴에서 고른 난이도 · 캐릭터(저장값)를 덮어쓰지 않게 Override 로 잠시만 (메인 메뉴로 돌아오면 EndContinue)
+    //   결과 화면 [R] 다시 시작도 이 판과 같은 캐릭터 · 난이도로
+    static bool continuing;
+
     public static bool Continue()
     {
         Data d = Peek();
         if (d == null) return false;
         Pending = d;
-        CharacterData.Selected = (CharacterId)d.character;
-        GameMode.Current = (Difficulty)d.difficulty;
+        continuing = true;
+        CharacterData.Override = (CharacterId)d.character;
+        GameMode.Override = (Difficulty)Mathf.Clamp(d.difficulty, 0, 3);
         SceneManager.LoadScene("GameScene");
         return true;
+    }
+
+    public static void EndContinue()
+    {
+        if (!continuing) return;
+        continuing = false;
+        CharacterData.Override = null;
+        GameMode.Override = null;
     }
 
     // 게임 씬에서 StageManager.Opening 이 부름: 시작 이야기 · 첫 카드 대신 저장한 판을 되살림

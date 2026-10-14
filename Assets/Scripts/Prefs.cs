@@ -8,6 +8,7 @@ using UnityEngine;
 //   함수는 PlayerPrefs 와 같음 (GetInt · SetInt · GetFloat · SetFloat · GetString · SetString · HasKey · DeleteKey · Save)
 // 옛 저장 옮기기: 파일에 없는 키를 읽으면 레지스트리(PlayerPrefs)에 있던 값을 가져와 파일에 넣음 (모든 키를 한 번에 알 수 없어 읽을 때마다)
 // Save() 는 바뀐 게 있을 때만 파일을 씀 (임시 파일에 쓰고 바꿔치기 · 게임을 끌 때도 씀)
+// 1.0.4~: 바꿔치기 때 지난 저장을 save.json.bak 으로 남기고, 본 파일이 깨졌으면 .tmp → .bak 순서로 되살리고 메인 메뉴에 알림
 public static class Prefs
 {
     [System.Serializable]
@@ -35,21 +36,72 @@ public static class Prefs
     }
     public static string FilePath => Path.Combine(FolderPath, "save.json");
 
+    // 1.0.4~: 읽기에 실패했을 때 메인 메뉴가 띄울 알림 (null = 문제 없음) · Recovered = 백업에서 되살림
+    public static string LoadProblem { get; private set; }
+    public static bool Recovered { get; private set; }
+    public static string BrokenPath { get; private set; }
+    public static void ClearLoadProblem() { LoadProblem = null; }
+
     static void Load()
     {
         if (data != null) return;
         data = new Dictionary<string, (char, string)>();
         if (!hooked) { hooked = true; Application.quitting += Save; }
+        // 1.0.4~: 본 파일 → 쓰다가 꺼졌을 때 남는 임시 파일(.tmp) → 지난 저장 백업(.bak) 차례로 시도 (예전엔 본 파일이 깨지면 빈 저장으로 덮어씀)
+        string main = FilePath;
+        bool mainExists = File.Exists(main);
+        if (mainExists && TryRead(main)) return;
+        // (.bak 은 본 파일이 있는데 깨졌을 때만 · 일부러 save.json 을 지워 처음부터 하려는 경우는 되살리지 않음)
+        foreach (string backup in mainExists ? new[] { main + ".tmp", main + ".bak" } : new[] { main + ".tmp" })
+        {
+            if (!File.Exists(backup) || !TryRead(backup)) continue;
+            if (mainExists)
+            {
+                KeepBroken(main);
+                Recovered = true;
+                LoadProblem = "저장 파일이 손상되어 백업에서 되살렸습니다. 최근 진행 일부가 빠졌을 수 있습니다.";
+            }
+            dirty = true;                                                   // 되살린 내용을 본 파일에 다시 씀
+            Debug.LogWarning("[Prefs] 저장 파일을 백업에서 되살림: " + backup);
+            return;
+        }
+        if (!mainExists) return;                                            // 처음 켬 (저장 없음)
+        // 다 실패: 깨진 파일은 지우지 않고 옆에 남겨 두고 빈 저장으로 (다음 저장이 .bak 을 깨진 내용으로 덮지 않게 본 파일은 옮김)
+        KeepBroken(main);
+        LoadProblem = "저장 파일을 읽지 못해 새 저장으로 시작합니다. 깨진 파일은 지우지 않고 저장 폴더에 남겨 두었습니다.";
+    }
+
+    // 파일 하나를 읽어 data 에 채움 (내용이 깨졌으면 false, data 는 비운 채로)
+    static bool TryRead(string path)
+    {
         try
         {
-            string path = File.Exists(FilePath) ? FilePath : File.Exists(FilePath + ".tmp") ? FilePath + ".tmp" : null;     // 쓰다가 꺼졌으면 임시 파일
-            if (path == null) return;
-            Store s = JsonUtility.FromJson<Store>(File.ReadAllText(path));
-            if (s == null) return;
+            string json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json) || json.TrimStart()[0] != '{') throw new System.FormatException("JSON 이 아님");
+            Store s = JsonUtility.FromJson<Store>(json);
+            if (s == null || s.keys == null || s.types == null || s.values == null) throw new System.FormatException("내용 없음");
             for (int i = 0; i < s.keys.Count && i < s.types.Count && i < s.values.Count; i++)
-                if (!string.IsNullOrEmpty(s.keys[i]) && s.types[i].Length > 0) data[s.keys[i]] = (s.types[i][0], s.values[i]);
+                if (!string.IsNullOrEmpty(s.keys[i]) && !string.IsNullOrEmpty(s.types[i])) data[s.keys[i]] = (s.types[i][0], s.values[i]);
+            return true;
         }
-        catch (System.Exception e) { Debug.LogWarning("[Prefs] 저장 파일을 읽지 못함: " + e.Message); }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[Prefs] 저장 파일을 읽지 못함 (" + Path.GetFileName(path) + "): " + e.Message);
+            data.Clear();
+            return false;
+        }
+    }
+
+    // 깨진 본 파일을 save.json.broken-<시각> 으로 옮겨 둠 (나중에 손으로 되살릴 수 있게)
+    static void KeepBroken(string main)
+    {
+        try
+        {
+            string to = main + ".broken-" + System.DateTime.Now.ToString("yyyyMMdd-HHmmss", Inv);
+            File.Move(main, to);
+            BrokenPath = to;
+        }
+        catch (System.Exception e) { Debug.LogWarning("[Prefs] 깨진 저장 파일을 옮기지 못함: " + e.Message); }
     }
 
     // ---------------- 읽기 (파일에 없으면 옛 레지스트리 값을 옮겨 옴)
@@ -128,7 +180,8 @@ public static class Prefs
             }
             string tmp = FilePath + ".tmp";
             File.WriteAllText(tmp, JsonUtility.ToJson(s));
-            if (File.Exists(FilePath)) File.Replace(tmp, FilePath, null);     // 한 번에 바꿔치기 (중간에 꺼져도 둘 중 하나는 남음)
+            // 한 번에 바꿔치기 (중간에 꺼져도 둘 중 하나는 남음) · 1.0.4~: 바로 전 저장은 save.json.bak 으로 남김 (본 파일이 깨지면 이걸로 되살림)
+            if (File.Exists(FilePath)) File.Replace(tmp, FilePath, FilePath + ".bak");
             else File.Move(tmp, FilePath);
             dirty = false;
         }

@@ -26,6 +26,21 @@ public class SteamManager : MonoBehaviour
     public static SteamManager Instance { get; private set; }
     public static bool Initialized { get; private set; }
 
+    // 스팀에서 고른 이 게임의 언어 ("koreana" · "english" · "japanese" · "schinese" …, 스팀이 없으면 "") · 1.0.4~ 첫 실행 언어 감지
+    public static string GameLanguage
+    {
+        get
+        {
+#if STEAM
+            if (!Initialized) return "";
+            try { return SteamApps.GetCurrentGameLanguage() ?? ""; }
+            catch (System.Exception) { return ""; }
+#else
+            return "";
+#endif
+        }
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Boot()
     {

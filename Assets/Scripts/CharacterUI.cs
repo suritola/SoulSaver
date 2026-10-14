@@ -206,7 +206,7 @@ public static class CharacterUI
         {
             // 체험판: 다른 영웅은 정식판에서
             UIKit.Text(dr, "정식판에서 만날 수 있습니다", 26f, Dim, new Vector2(0f, -270f), new Vector2(900f, 36f));
-            UIKit.MakeButton(dr, "위시리스트에 추가", new Vector2(-140f, -330f), new Vector2(300f, 70f), Demo.OpenStore, 26f);
+            UIKit.MakeButton(dr, "상점 페이지 보기", new Vector2(-140f, -330f), new Vector2(300f, 70f), Demo.OpenStore, 26f);     // 1.0.4~: 위시리스트 → 상점 페이지 (이미 파는 게임)
             UIKit.MakeButton(dr, "취소", new Vector2(190f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
         }
         else

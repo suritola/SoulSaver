@@ -42,13 +42,39 @@ public static class GameSettings
         set
         {
             Load();
+            Prefs.SetInt(LangKey, (int)value);          // 1.0.4~: 감지한 언어와 같은 언어를 골라도 「골랐음」을 남김
+            Prefs.Save();
             if (language == value) return;
             language = value;
-            Prefs.SetInt(LangKey, (int)value);
-            Prefs.Save();
             Loc.ApplyFonts();
             SceneLocalizer.RefreshAll();
             Loc.RaiseChanged();
+        }
+    }
+
+    // 1.0.4~: 언어를 직접 고른 적이 있는지 (없으면 메인 메뉴가 처음 한 번 언어 고르기 창을 띄움)
+    public static bool LanguageChosen => Prefs.HasKey(LangKey);
+
+    // 스팀 게임 언어 → OS 언어 순서로 (지원하지 않는 언어는 영어) · 자동 테스트는 늘 한국어
+    static Loc.Lang DetectLanguage(bool useSteam)
+    {
+        if (Application.isBatchMode || GameInput.Auto) return Loc.Lang.Korean;
+        string steam = useSteam ? SteamManager.GameLanguage : "";
+        if (!string.IsNullOrEmpty(steam))
+        {
+            if (steam == "koreana" || steam == "korean") return Loc.Lang.Korean;
+            if (steam == "japanese") return Loc.Lang.Japanese;
+            if (steam == "schinese" || steam == "tchinese") return Loc.Lang.Chinese;
+            return Loc.Lang.English;
+        }
+        switch (Application.systemLanguage)
+        {
+            case SystemLanguage.Korean: return Loc.Lang.Korean;
+            case SystemLanguage.Japanese: return Loc.Lang.Japanese;
+            case SystemLanguage.Chinese:
+            case SystemLanguage.ChineseSimplified:
+            case SystemLanguage.ChineseTraditional: return Loc.Lang.Chinese;
+            default: return Loc.Lang.English;
         }
     }
 
@@ -69,7 +95,8 @@ public static class GameSettings
     {
         if (loaded) return;
         loaded = true;
-        language = (Loc.Lang)Mathf.Clamp(Prefs.GetInt(LangKey, 0), 0, 3);
+        // 1.0.4~: 아직 언어를 고른 적이 없으면 OS 언어로 (스팀 언어는 스팀이 켜진 뒤 Boot 에서 다시 봄 · 예전엔 무조건 한국어)
+        language = LanguageChosen ? (Loc.Lang)Mathf.Clamp(Prefs.GetInt(LangKey, 0), 0, 3) : DetectLanguage(false);
         volume = Prefs.GetFloat(VolumeKey, 0.5f);
         music = Prefs.GetFloat(MusicKey, 1f);
         sfx = Prefs.GetFloat(SfxKey, 1f);
@@ -212,6 +239,12 @@ public static class GameSettings
     static void Boot()
     {
         Load();
+        // 1.0.4~: 이제 스팀이 켜져 있으니 스팀 언어로 다시 봄 (저장은 고르기 창에서 고를 때)
+        if (!LanguageChosen)
+        {
+            Loc.Lang detected = DetectLanguage(true);
+            if (detected != language) { language = detected; Loc.RaiseChanged(); }
+        }
         AudioListener.volume = volume;
         if (!Application.isBatchMode) ApplyVSync();
         Loc.ApplyFonts();

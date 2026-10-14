@@ -114,6 +114,7 @@ public static class MenuExtras
     static void InstallMainMenu()
     {
         DailyChallenge.End();
+        RunSave.EndContinue();          // 1.0.4~: 이어한 판의 캐릭터 · 난이도를 메뉴 선택에서 거둠 (난이도 버튼을 그리기 전에)
         GameObject start = GameObject.Find("GameStartButton");
         GameObject exit = GameObject.Find("ExitButton");
         if (start == null || GameObject.Find("TutorialButton") != null) return;
@@ -128,6 +129,8 @@ public static class MenuExtras
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
+        // 1.0.4~: 잠긴 일일 도전은 흐리게 · 「잠김」 표시 · 여는 방법 툴팁 (창 안의 오늘 규칙 · 순위표는 그대로 볼 수 있음)
+        bool dailyLocked = !DailyChallenge.Unlocked;
 
         // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
         // 2.1~: 스킬 진화 도감이 더해져 4 × 2, 2.1.1~: 일일 도전으로 8칸이 다 참
@@ -150,8 +153,10 @@ public static class MenuExtras
             r.sizeDelta = new Vector2(176f, 122f);
             r.anchoredPosition = new Vector2(-282f + 188f * (i % 4), -160f - 138f * (i / 4));
             Image img = tiles[i].go.GetComponent<Image>();
-            if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : new Color(0.8f, 0.78f, 0.86f);
+            bool locked = dailyLocked && tiles[i].go == daily;
+            if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);
             AddIcon(tiles[i].go, tiles[i].icon, new Vector2(0f, 20f), 56f);
+            if (locked) MarkLocked(tiles[i].go);
             TMP_Text t = tiles[i].go.GetComponentInChildren<TMP_Text>(true);
             if (t == null) continue;
             RectTransform lr = t.rectTransform;
@@ -161,6 +166,7 @@ public static class MenuExtras
             t.enableAutoSizing = true;
             t.fontSizeMin = 14f;
             t.fontSizeMax = 28f;
+            if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
         }
 
         InstallDifficulty(sr);
@@ -171,7 +177,53 @@ public static class MenuExtras
         nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
-        PatchNotesUI.OpenOnLaunch(sr.root);
+        // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
+        Transform root = sr.root;
+        SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
+    }
+
+    // 1.0.4~: 잠긴 칸 — 아이콘을 흐리게, 오른쪽 위 「잠김」, 마우스를 올리면 여는 방법
+    static void MarkLocked(GameObject tile)
+    {
+        Transform icon = tile.transform.Find("Icon");
+        if (icon != null) icon.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.55f, 0.75f);
+        UIKit.EnsureStyle();
+        RectTransform pill = UIKit.Rect("LockedPill", tile.transform, Vector2.zero, new Vector2(78f, 28f));
+        pill.anchorMin = pill.anchorMax = new Vector2(1f, 1f);
+        pill.anchoredPosition = new Vector2(-36f, -14f);
+        Image pi = pill.gameObject.AddComponent<Image>();
+        pi.sprite = UIKit.ButtonSprite;
+        pi.type = Image.Type.Sliced;
+        pi.color = new Color(0.2f, 0.19f, 0.23f, 0.95f);
+        pi.raycastTarget = false;
+        UIKit.Text(pill, "잠김", 18f, new Color(0.85f, 0.82f, 0.78f), Vector2.zero, new Vector2(72f, 26f));
+        TooltipTrigger tip = tile.AddComponent<TooltipTrigger>();
+        tip.titleProvider = () => Loc.T("일일 도전");
+        tip.bodyProvider = () => Loc.T(Demo.On ? "정식판에서 만날 수 있습니다" : "어려움을 클리어하면 일일 도전이 열립니다");
+    }
+
+    // 1.0.4~: 저장 파일이 깨져서 백업에서 되살렸거나 새 저장으로 시작했으면 한 번 알림 (예전엔 말없이 빈 저장)
+    static void SaveNotice(Transform root, System.Action then)
+    {
+        string problem = Prefs.LoadProblem;
+        if (string.IsNullOrEmpty(problem) || GameInput.Auto || Application.isBatchMode) { then?.Invoke(); return; }
+        Prefs.ClearLoadProblem();
+        RectTransform win = UIKit.Modal(root, "SaveNotice", new Vector2(1000f, 460f), out GameObject blocker);
+        UIKit.Text(win, Prefs.Recovered ? "저장 파일을 되살렸습니다" : "저장 파일을 읽지 못했습니다", 40f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 150f), new Vector2(920f, 60f));
+        UIKit.Text(win, problem, 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 55f), new Vector2(900f, 100f));
+        TMP_Text path = UIKit.Text(win, "", 18f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -30f), new Vector2(900f, 50f));
+        path.text = Prefs.BrokenPath ?? Prefs.FilePath;          // 경로는 번역하지 않음
+        bool closed = false;
+        System.Action close = () =>
+        {
+            if (closed) return;
+            closed = true;
+            if (blocker != null) Object.Destroy(blocker);
+            then?.Invoke();
+        };
+        UIKit.MakeButton(win, "저장 폴더 열기", new Vector2(-160f, -150f), new Vector2(290f, 76f), () => Application.OpenURL("file:///" + Prefs.FolderPath.Replace('\\', '/')), 26f);
+        UIKit.MakeButton(win, "확인", new Vector2(160f, -150f), new Vector2(260f, 76f), () => close(), 28f);
+        UIKit.EscCancel(blocker, () => close());
     }
 
     // 2.1.9: 저장된 판이 있으면 게임 시작 오른쪽에 「이어하기」 (둘이 합쳐 폭 740 안, 왼쪽 캐릭터 그림과 안 겹치게)
@@ -200,8 +252,12 @@ public static class MenuExtras
         if (ct != null)
         {
             UIKit.Forget(ct);           // 언어를 바꿔도 아래 줄(캐릭터 · 장 · 레벨)이 지워지지 않게
-            ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
+            // 1.0.4~: 난이도도 (이어하면 메뉴에서 고른 난이도가 아니라 저장한 판의 난이도로 함) · 언어를 바꾸면 다시 씀
+            System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
+                      + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
                       + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
+            label();
+            ct.gameObject.AddComponent<LocRefresh>().refresh = label;
         }
         Image img = cont.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
@@ -244,22 +300,25 @@ public static class MenuExtras
         // 2.1.9: 이어하기가 있으면 게임 시작 버튼이 왼쪽으로 가므로, 난이도 줄은 가운데(x 0)에 고정
         Vector2 at = new Vector2(0f, start.anchoredPosition.y);
         List<Button> buttons = new List<Button>();
-        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), at + new Vector2(0f, 72f), new Vector2(900f, 26f));
+        // 1.0.4~: 이 줄은 고른 난이도 설명 (예전 잠금 안내 자리), 잠금 안내는 게임 시작 버튼 아래 빈 줄(버튼 아래 끝 -65 ~ 아이콘 칸 위 끝 -99)로
+        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), at + new Vector2(0f, 62f), new Vector2(940f, 26f));
+        TMP_Text lockHint = UIKit.Text(parent, "", 18f, new Color(0.66f, 0.61f, 0.53f), at + new Vector2(0f, -72f), new Vector2(900f, 26f));
         for (int i = 0; i < 4; i++)
         {
             Difficulty d = (Difficulty)i;
             Button b = UIKit.MakeButton(parent, GameMode.Names[i], at + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
             {
                 GameMode.Current = d;
-                HighlightDifficulty(buttons, hint);
+                HighlightDifficulty(buttons, hint, lockHint);
             }, 26f);
             b.name = "Difficulty_" + d;
             buttons.Add(b);
         }
-        HighlightDifficulty(buttons, hint);
+        HighlightDifficulty(buttons, hint, lockHint);
+        hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
     }
 
-    static void HighlightDifficulty(List<Button> buttons, TMP_Text hint)
+    static void HighlightDifficulty(List<Button> buttons, TMP_Text hint, TMP_Text lockHint)
     {
         for (int i = 0; i < buttons.Count; i++)
         {
@@ -272,13 +331,25 @@ public static class MenuExtras
             TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
             label.color = open ? new Color(0.96f, 0.9f, 0.8f) : new Color(0.55f, 0.52f, 0.5f);
         }
-        // 잠긴 난이도가 있으면 여는 방법을 알려 줌
-        string text = !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
-                    : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
-                    : "";
-        hint.text = Loc.T(text);
-        UIKit.Remember(hint, text);
+        // 고른 난이도가 무엇이 다른지 (1.0.4~, 예전엔 잠금 안내만 · 다 열리면 비었음) + 잠긴 난이도가 있으면 여는 방법
+        // 체험판은 쉬움만이라 「쉬움을 클리어하면」 대신 정식판 안내 (1.0.4~)
+        string lockText = Demo.On ? "보통 · 어려움 · 무한 모드는 정식판에서 만날 수 있습니다"
+                        : !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
+                        : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
+                        : "";
+        hint.text = Loc.T(DifficultyDescs[Mathf.Clamp((int)GameMode.Current, 0, DifficultyDescs.Length - 1)]);
+        lockHint.text = Loc.T(lockText);
     }
+
+    // 난이도 설명 (1.0.4~ · 수치는 GameMode 배율 그대로 — 보통: 적 체력 1.15 · 적 피해 1.25 · 예고 0.85 · 보상 1.05,
+    //   어려움: 1.3 · 1.5 · 0.7 · 1.1, 무한: 보상 1.3 · 시간이 지날수록 강해짐 · 보스가 주기마다)
+    static readonly string[] DifficultyDescs =
+    {
+        "기본 난이도 · 처음이라면 여기서 시작하세요",
+        "적 체력 +15% · 적 공격력 +25% · 공격 예고 -15% · 더 많이 몰려옴 · 보상 +5%",
+        "적 체력 +30% · 적 공격력 +50% · 공격 예고 -30% · 훨씬 많이 몰려옴 · 보상 +10%",
+        "끝없이 버티는 모드 · 시간이 지날수록 적이 강해지고 보스가 계속 나옴 · 보상 +30%",
+    };
 
     static void InstallEsc()
     {
@@ -404,6 +475,13 @@ public static class UIKit
     {
         r.anchorMin = r.anchorMax = edge;
         r.anchoredPosition = offset;
+    }
+
+    // 1.0.4~: 확인 창에 ESC = 취소 (같은 프레임에 다른 창도 ESC 로 닫히지 않게 EscHandledFrame 을 씀)
+    public static void EscCancel(GameObject blocker, UnityAction cancel)
+    {
+        if (blocker == null) return;
+        blocker.AddComponent<ModalEsc>().cancel = cancel;
     }
 
     // 화면 전체를 어둡게 덮는 판 + 가운데 창
@@ -867,6 +945,70 @@ public static class SettingsUI
         GameSettings.Save();
         if (open != null) Object.Destroy(open);
         open = null;
+    }
+}
+
+// 1.0.4~: 확인 창의 ESC = 취소 (UIKit.EscCancel)
+public class ModalEsc : MonoBehaviour
+{
+    public UnityAction cancel;
+
+    void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.Escape) || SettingsUI.EscHandledFrame == Time.frameCount) return;
+        SettingsUI.EscHandledFrame = Time.frameCount;
+        cancel?.Invoke();
+    }
+}
+
+// 1.0.4~: 언어가 바뀌면 refresh 를 다시 부름 (여러 조각을 이어 붙인 글처럼 UIKit.Remember 로 안 되는 글)
+public class LocRefresh : MonoBehaviour
+{
+    public System.Action refresh;
+    void OnEnable() => Loc.Changed += Run;
+    void OnDisable() => Loc.Changed -= Run;
+    void Run() => refresh?.Invoke();
+}
+
+// 1.0.4~: 처음 켰을 때 한 번 언어 고르기 (스팀 → OS 언어로 미리 골라 둔 것을 강조, 언어 이름은 그 언어 글꼴로)
+public static class LanguagePicker
+{
+    static GameObject open;
+
+    public static void Open(Transform root, System.Action then)
+    {
+        if (open != null) return;
+        if (GameSettings.LanguageChosen || GameInput.Auto || Application.isBatchMode) { then?.Invoke(); return; }
+        RectTransform win = UIKit.Modal(root, "LanguagePicker", new Vector2(1000f, 440f), out open);
+        GameObject mine = open;
+        TMP_Text title = UIKit.Text(win, "", 44f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 145f), new Vector2(920f, 64f));
+        title.text = Loc.T("언어를 고르세요") + (Loc.Current != Loc.Lang.English ? "  <size=60%><color=#A89C86>Language</color></size>" : "");
+        UIKit.Text(win, "설정 → 일반에서 언제든 바꿀 수 있습니다.", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -150f), new Vector2(900f, 36f));
+        bool done = false;
+        System.Action<Loc.Lang> pick = lang =>
+        {
+            if (done) return;
+            done = true;
+            GameSettings.Language = lang;          // 같은 언어여도 「골랐음」으로 저장
+            if (mine != null) Object.Destroy(mine);
+            open = null;
+            then?.Invoke();
+        };
+        for (int i = 0; i < 4; i++)
+        {
+            Loc.Lang lang = (Loc.Lang)i;
+            Button b = UIKit.MakeButton(win, "", new Vector2(-345f + 230f * i, 10f), new Vector2(210f, 100f), () => pick(lang), 34f);
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            UIKit.Forget(label);
+            label.text = Loc.LangNames[i];
+            TMP_FontAsset native = Loc.NativeFont(lang);
+            if (native != null) label.font = native;
+            bool on = lang == Loc.Current;
+            b.GetComponent<Image>().color = on ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.6f, 0.58f, 0.65f);
+            b.transform.localScale = Vector3.one * (on ? 1.06f : 1f);
+        }
+        // ESC 는 미리 골라 둔 언어 그대로
+        UIKit.EscCancel(open, () => pick(Loc.Current));
     }
 }
 

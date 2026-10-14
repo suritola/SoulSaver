@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 게임을 켤 때마다 메인 메뉴에 이번 버전의 패치노트를 띄움
+// 새 버전으로 처음 켰을 때 메인 메뉴에 이번 버전의 패치노트를 띄움 (1.0.4~, 예전엔 켤 때마다)
 // 내용은 Resources/PatchNotes.txt (docs/patch-notes/v<버전>.md 를 그대로 복사 · 빌드 스크립트가 빌드할 때 덮어씀)
 // 2.1.3~: 메인 메뉴 「패치노트」 버튼 → 지난 버전까지 왼쪽 목록에서 골라 봄 (Resources/PatchNotesAll.txt · tools/patchnotes-all.ps1)
 public static class PatchNotesUI
@@ -17,12 +17,23 @@ public static class PatchNotesUI
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
 
+    // 1.0.4~: 마지막으로 본 버전을 저장해 새 버전일 때만 띄움 (예전엔 켤 때마다) · 처음 산 사람의 첫 실행에는 띄우지 않음
+    const string SeenKey = "patchnotes.seen";
+
     public static void OpenOnLaunch(Transform root)
     {
-        if (shown || GameInput.Auto) return;
+        if (shown || GameInput.Auto || Application.isBatchMode) return;
         shown = true;
+        string seen = Prefs.GetString(SeenKey, "");
+        if (seen == Application.version) return;
+        Prefs.SetString(SeenKey, Application.version);
+        Prefs.Save();
+        if (seen.Length == 0 && !PlayedBefore) return;         // 첫 실행 (업데이트로 처음 이 키를 만나는 기존 플레이어는 보여 줌)
         Open(root);
     }
+
+    // 한 판이라도 해 본 적이 있는지 (처치 누적 · 캐릭터 포인트 기록)
+    public static bool PlayedBefore => Prefs.HasKey("stats.totalKills") || Prefs.HasKey("char.points");
 
     public static void Open(Transform root)
     {
@@ -214,7 +225,8 @@ public static class PatchNotesUI
     {
         void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.Escape)) return;
+            // 1.0.4~: 바로 앞 창(언어 고르기 등)을 닫은 그 ESC 로 같이 닫히지 않게
+            if (!Input.GetKeyDown(KeyCode.Escape) || SettingsUI.EscHandledFrame == Time.frameCount) return;
             SettingsUI.EscHandledFrame = Time.frameCount;
             Close();
         }
