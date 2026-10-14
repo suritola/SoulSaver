@@ -29,15 +29,15 @@ public class EndlessMode : MonoBehaviour
     //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 900f;
     public const float MomAt = 1800f;
-    public const int DeveloperHp = 300000;
-    public const int MomHp = 600000;
+    public const int DeveloperHp = 150000;      // 1.0.7~ 너무 안 죽어서 절반 (30만 → 15만 · 엄마 60만 → 30만)
+    public const int MomHp = 300000;
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
     int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 (· 엄마) · 3 클리어
     bosss developer, mom;
     bool devSummoned, momSummoned, devDown, momDown;     // 1.0.4~
     public bool FinalPhase => finalStage > 0;
-    // 1.0.4~ 개발자를 부르기 시작한 뒤로는 잡몹이 나오지 않음 (EnemySpawner 가 물어봄)
+    // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
     public bool NoMobs => devSummoned;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
@@ -181,7 +181,7 @@ public class EndlessMode : MonoBehaviour
         if (mom == null) momDown = true;
     }
 
-    // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 30만 · 60만 · 1.0.4~)
+    // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 15만 · 30만 · 1.0.7~)
     bosss SpawnFinalBoss(bool isMom)
     {
         GameObject prefab = null;

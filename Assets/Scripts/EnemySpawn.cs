@@ -52,7 +52,7 @@ public class EnemySpawner : MonoBehaviour
     SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
     // 보스를 뺀 적은 (소환 포함) 최대 20마리
     public const int AliveLimit = 20;
-    // 1.0.4~ 무한 모드 최종 보스 「개발자」를 부르기 시작한 뒤로는 일반 적 · 습격 · 중간 보스 · 보스 부하가 나오지 않음
+    // 1.0.4~ 무한 모드 최종 보스 「개발자」를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (1.0.7~ 일반 적은 다시 나옴)
     static bool NoMobs => GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.NoMobs;
     // 화면에 남은 잡몹을 가까운 것부터 영혼으로 흩음 (개발자 · 개발자 엄마가 나올 때)
     public void ClearMobs() => StartCoroutine(PurgeAll());
@@ -109,7 +109,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        if (spawnedEnemys >= MaxAlive || NoMobs) return;
+        if (spawnedEnemys >= MaxAlive) return;      // 1.0.7~ 개발자 · 엄마와 싸우는 동안에도 일반 적은 나옴 (습격 · 중간 보스 · 부하만 막음)
         if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
 
         spawnedEnemys++;
