@@ -26,7 +26,7 @@ public static partial class LocTable
         A("측량 완료!", "Surveyed!", "測量完了！", "测量完成！");
         A("깃펜 공격력", "Quill Damage", "羽ペン攻撃力", "羽毛笔攻击力");
         A("깃펜 공격력 · 이동 속도", "Quill Damage · Move Speed", "羽ペン攻撃力 · 移動速度", "羽毛笔攻击力 · 移动速度");
-        A("무한 모드 클리어 (개발자 처치)", "Clear Endless (defeat the Developer)", "エンドレスをクリア（開発者を撃破）", "通关无尽模式（击败开发者）");
+        A("무한 모드 클리어 (개발자 엄마 처치)", "Clear Endless (defeat the Developer's Mom)", "エンドレスをクリア（開発者のママを撃破）", "通关无尽模式（击败开发者的妈妈）");     // 1.0.4~ 클리어 = 엄마 처치
 
         // ---------------- 전용 레벨업 카드
         A("번지는 잉크", "Spreading Ink", "にじむインク", "晕染墨迹");

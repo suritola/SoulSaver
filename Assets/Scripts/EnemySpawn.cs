@@ -52,6 +52,10 @@ public class EnemySpawner : MonoBehaviour
     SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
     // 보스를 뺀 적은 (소환 포함) 최대 20마리
     public const int AliveLimit = 20;
+    // 1.0.4~ 무한 모드 최종 보스 「개발자」를 부르기 시작한 뒤로는 일반 적 · 습격 · 중간 보스 · 보스 부하가 나오지 않음
+    static bool NoMobs => GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.NoMobs;
+    // 화면에 남은 잡몹을 가까운 것부터 영혼으로 흩음 (개발자 · 개발자 엄마가 나올 때)
+    public void ClearMobs() => StartCoroutine(PurgeAll());
     // 앞쪽 장은 한 화면 최대 수를 줄임 (Chapters · 2.1.5)
     int MaxAlive => Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
 
@@ -107,7 +111,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        if (spawnedEnemys >= MaxAlive) return;
+        if (spawnedEnemys >= MaxAlive || NoMobs) return;
         if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
 
         spawnedEnemys++;
@@ -162,6 +166,7 @@ public class EnemySpawner : MonoBehaviour
     // 지금 페이즈에 나오는 적 중 하나를 크고 단단하게 만들어 소환 (처치하면 특수 능력 포인트)
     public void SpawnMidBoss()
     {
+        if (NoMobs) return;
         var candidates = new System.Collections.Generic.List<GameObject>();
         for (int i = 0; i < Stage.enemies.Length; i++)
             if (Weight(Phase.weights, i) > 0f && Stage.enemies[i] != null) candidates.Add(Stage.enemies[i]);
@@ -224,6 +229,7 @@ public class EnemySpawner : MonoBehaviour
     public System.Collections.Generic.List<GameObject> SpawnAmbush(Vector3 center, int count, float radius)
     {
         var list = new System.Collections.Generic.List<GameObject>();
+        if (NoMobs) return list;
         float off = Random.Range(0f, Mathf.PI * 2f);
         for (int i = 0; i < count; i++)
         {
@@ -241,6 +247,7 @@ public class EnemySpawner : MonoBehaviour
     // 보스가 부르는 부하: 처치 시 수가 줄어들므로 여기서도 세어야 함
     public void SummonMinions(Vector3 here, int count)
     {
+        if (NoMobs) return;
         for (int i = 0; i < count; i++)
         {
             if (spawnedEnemys >= MaxAlive) return;

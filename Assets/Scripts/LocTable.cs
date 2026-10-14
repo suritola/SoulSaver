@@ -1704,5 +1704,25 @@ public static partial class LocTable
         // 1.8.4 무기에 맞게 실시간으로
         { "지금 무기에는 효과가 없습니다", L("No effect with your current weapon", "今の武器には効果がありません", "对当前武器无效") },
         { "지금 무기에는 맞지 않아 대신 단계마다 무기 피해 +6%", L("Doesn't fit your current weapon, so it grants +6% weapon damage per level instead", "今の武器に合わないため、代わりに段階ごとに武器ダメージ +6%", "不适合当前武器，改为每级武器伤害 +6%") },
+        // 1.0.4 요청 endless: 무한 모드 최종 국면 15분 · 개발자 엄마 (30분)
+        { "개발자 엄마", L("Developer's Mom", "開発者のママ", "开发者的妈妈") },
+        { "15분을 버텼다… 모든 보스가 깨어났다!", L("You survived 15 minutes... every boss has awoken!", "15分を耐え抜いた…全てのボスが目覚めた！", "坚持了15分钟……所有首领都苏醒了！") },
+        { "30분이 지났다…", L("30 minutes have passed...", "30分が過ぎた…", "30分钟过去了……") },
+        { "최종 보스 「개발자 엄마」가 나타났다!", L("The final boss, the Developer's Mom, appears!", "最終ボス「開発者のママ」が現れた！", "最终首领「开发者的妈妈」出现了！") },
+        { "「우리 아들 괴롭힌 게 너니?」", L("\"Are you the one picking on my son?\"", "「うちの子をいじめたのはあなた？」", "「是你欺负我儿子吗？」") },
+        { "개발자 엄마를 쓰러뜨렸다!", L("You defeated the Developer's Mom!", "開発者のママを倒した！", "你击败了开发者的妈妈！") },
+        { "30분이 되면 누군가 찾아온다…", L("Someone will come at the 30-minute mark...", "30分になると誰かがやって来る…", "到30分钟时，会有人找上门来……") },
+        { "누군가 오기까지", L("Someone arrives in", "誰かが来るまで", "有人到来还有") },
+        { "개발자 엄마가 「{0}」의 최종 진화 필살기를 쓴다!", L("The Developer's Mom unleashes the {0}'s final evolution!", "開発者のママが「{0}」の最終進化必殺技を放つ！", "开发者的妈妈使出了「{0}」的最终进化必杀技！") },
+        { "무한 모드 15분", L("Endless 15 min", "エンドレス 15分", "无尽模式 15分钟") },
+        { "무한 모드 30분", L("Endless 30 min", "エンドレス 30分", "无尽模式 30分钟") },
+        { "15분에 깨어난 보스를 모두 쓰러뜨리면 강림합니다. 모든 영웅의 최종 진화 필살기를 쉬지 않고 겹쳐 씁니다 (예고는 그대로). 나온 뒤로는 잡몹이 나오지 않습니다.",
+          L("Descends once you defeat every boss that awakens at 15 minutes. Chains every hero's final-evolution ultimate back to back without pause (warnings stay the same). No regular enemies appear after it arrives.",
+            "15分に目覚めたボスを全て倒すと降臨します。全英雄の最終進化必殺技を休みなく重ねて放ちます（予告はそのまま）。登場後は雑魚敵が出なくなります。",
+            "击败15分钟时苏醒的所有首领后降临。不停地叠加使出所有英雄的最终进化必杀技（预警不变）。出现后不再出现杂兵。") },
+        { "30분에 나타납니다. 개발자의 모든 능력치가 2배 — 체력 · 피해 · 이동 속도 2배, 필살기를 2배 더 자주 씁니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어.",
+          L("Appears at 30 minutes. Every stat of the Developer doubled: 2x HP, damage and move speed, and ultimates twice as often. Defeat both the Developer and his Mom to clear Endless.",
+            "30分に現れます。開発者の全能力値が2倍 — 体力・ダメージ・移動速度2倍、必殺技を2倍の頻度で放ちます。開発者とママを両方倒すとエンドレスクリア。",
+            "在30分钟时出现。开发者的所有属性翻倍——生命、伤害、移动速度2倍，必杀技使用频率也是2倍。击败开发者和妈妈即可通关无尽模式。") },
     };
 }

@@ -12,21 +12,56 @@ public partial class BossSkills
     static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령" };     // CharacterId 순서
     int devTurn;
 
+    // 1.0.4~ 공격 주기 ÷10 (개발자 엄마는 ÷20): 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
+    //   예전: 한 번에 하나씩, 끝난 뒤 1.2초 쉬고 다음까지 최소 2.2초 (분노 1.4초) → 지금: 0.22초 (분노 0.14초)마다 새 필살기 · 엄마는 그 절반
+    //   화면이 터져 게임이 멈추지 않게 동시에 도는 필살기는 최대 DevMaxRunning 개 · 날고 있는 적 탄이 DevBulletCap 을 넘으면 더 쏘지 않음
+    //   엄마는 필살기 · 탄 피해도 2배 (한 대 상한도 최대 체력의 20% → 40%, 즉사 없음)
+    const float DevRateMul = 10f;
+    const int DevBulletCap = 400;
+    float DevRate => boss != null && boss.developerMom ? DevRateMul * 2f : DevRateMul;
+    float DevPow => boss != null && boss.developerMom ? 2f : 1f;
+    int DevMaxRunning => boss != null && boss.developerMom ? 16 : 8;
+    string DevName => boss != null && boss.developerMom ? "개발자 엄마" : "개발자";      // 받은 피해 · 쓰러진 곳 이름 (AttackLabel)
+    int devRunning;
+    float devBannerAt, devFxAt;
+
     void DeveloperTurn(PlayerController p)
     {
-        if (Time.time < next) return;
-        next = Time.time + (boss.Enraged ? 1.4f : 2.2f);
+        if (Time.time < next || devRunning >= DevMaxRunning) return;
+        next = Time.time + (boss.Enraged ? 1.4f : 2.2f) / DevRate;
         int who = devTurn++ % DevHeroes.Length;
-        if (StageManager.Instance != null)
-            StageManager.Instance.ShowBanner(Loc.T("개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), 1.8f);
-        StartCoroutine(Run(DeveloperUlt((CharacterId)who, boss.Enraged)));
+        // 알림은 1.8초에 한 번만 (0.2초마다 덮이면 읽을 수 없음)
+        if (StageManager.Instance != null && Time.time >= devBannerAt)
+        {
+            devBannerAt = Time.time + 1.8f;
+            StageManager.Instance.ShowBanner(Loc.T(boss.developerMom ? "개발자 엄마가 「{0}」의 최종 진화 필살기를 쓴다!" : "개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), 1.8f);
+        }
+        StartCoroutine(DevRun(DeveloperUlt((CharacterId)who, boss.Enraged)));
+    }
+
+    // Run 과 같지만 겹쳐 돌 수 있음 (busy 를 켜지 않음) · 하나라도 도는 동안은 걷지 않음
+    IEnumerator DevRun(IEnumerator routine)
+    {
+        devRunning++;
+        boss.casting = true;
+        yield return StartCoroutine(routine);
+        devRunning = Mathf.Max(0, devRunning - 1);
+        if (devRunning > 0) yield break;
+        if (boss != null) boss.casting = false;
+        if (sr != null && Alive) sr.color = Color.white;
+        owned.RemoveAll(g => g == null);
     }
 
     IEnumerator DeveloperUlt(CharacterId who, bool strong)
     {
         ultHits = 0;
-        Fx.Spawn("fx_soulburst", transform.position, 11f, Dev, 16f);
-        Hostile.Play("shimmer", 0.7f, 0.55f);
+        // 시작 번쩍임 · 소리도 0.5초에 한 번만 (겹쳐 쓸 때 이펙트 · 소리가 몰리지 않게)
+        if (Time.time >= devFxAt)
+        {
+            devFxAt = Time.time + 0.5f;
+            Fx.Spawn("fx_soulburst", transform.position, 11f, Dev, 16f);
+            Hostile.Play("shimmer", 0.7f, 0.55f);
+        }
         yield return Windup(Dev, 0.6f);
         if (!Alive) yield break;
         switch (who)
@@ -187,8 +222,10 @@ public partial class BossSkills
     {
         for (int i = 0; i < n; i++)
         {
+            if (HostileProjectile.Live.Count >= DevBulletCap) break;      // 1.0.4~ 탄 수 상한
             float a = (offsetDeg + i * 360f / n) * Mathf.Deg2Rad;
-            Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), speed, Capped(damage * Power), 0.5f, Dev, 1.5f, 4f);
+            HostileProjectile h = Hostile.Shoot(transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), speed, Capped(damage * Power) * DevPow, 0.5f, Dev, 1.5f, 4f);
+            if (h != null) h.label = DevName;
         }
         Hostile.Play("shimmer", 0.4f, 1.3f);
     }
@@ -201,8 +238,10 @@ public partial class BossSkills
         Vector2 d = DirTo(pl);
         for (int i = 0; i < n; i++)
         {
+            if (HostileProjectile.Live.Count >= DevBulletCap) break;      // 1.0.4~ 탄 수 상한
             float off = n == 1 ? 0f : -spreadDeg * 0.5f + spreadDeg * i / (n - 1);
-            Hostile.Shoot(transform.position, Rotate(d, off), 9f, Capped(damage * Power), 0.45f, Dev, 1.3f, 3f);
+            HostileProjectile h = Hostile.Shoot(transform.position, Rotate(d, off), 9f, Capped(damage * Power) * DevPow, 0.45f, Dev, 1.3f, 3f);
+            if (h != null) h.label = DevName;
         }
         Hostile.Play("whoosh", 0.5f, 1.4f);
     }
