@@ -4,6 +4,7 @@ using UnityEngine;
 
 // 무한 모드 최종 보스 「개발자」 (1.0.2): 다섯 캐릭터의 최종 진화 필살기를 차례로 돌려 씀
 // 거너 총알 폭풍 · 검사 회전 베기 · 도적 출혈 돌진 · 궁수 화살비 · 연금술사 대폭발 — 거울의 군주 흉내(UltSpin …)를 더 세게 + 최종 진화 덧붙임
+// 1.0.4~ 흉내 낸 필살기는 플레이어가 쓸 때와 같은 이펙트 · 소리 · 화면 연출 (BossSkills.DeveloperFx.cs, 거울의 군주 흉내는 그대로)
 // 모든 판정은 그대로 경고가 먼저 보이고, 한 번 쓸 때 최대 DevMaxHits 번 · 한 대는 최대 체력의 MaxHitShare 까지 (즉사 없음)
 public partial class BossSkills
 {
@@ -29,18 +30,21 @@ public partial class BossSkills
         Hostile.Play("shimmer", 0.7f, 0.55f);
         yield return Windup(Dev, 0.6f);
         if (!Alive) yield break;
+        DevCastFlair(who);         // 1.0.4~ 플레이어 필살기와 같은 시전 연출 (그 영웅 색)
+        // 1.0.4~ 영웅 필살기는 플레이어가 쓸 때와 같은 이펙트 · 소리 · 화면 연출 (BossSkills.DeveloperFx.cs)
         switch (who)
         {
             case CharacterId.Gunner:
-                // 총알 폭풍: 도는 탄막과 함께 조준 사격
-                StartCoroutine(DevBulletStorm(strong ? 5 : 4));
-                yield return UltLockOn(strong ? 8 : 6);
+                // 조준 사격: 화면이 물들고 플레이어 · 플레이어 탄이 느려진 채 조준 표식 → 풀린 뒤 한 발씩 + 도는 탄막
+                // 1.0.4: 느려진 동안 피하기 어려워 탄막 파도 4(분노 5) → 2(분노 3)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevLockOn(strong ? 8 : 6);
                 break;
             case CharacterId.Swordsman:
                 // 회전 베기: 벨 때마다 사방으로 검기
                 for (int i = 0; i < (strong ? 4 : 3) && Alive; i++)
                 {
-                    yield return UltSpin(1);
+                    yield return DevSpin();
                     DevRing(12, 8f, i * 15f, 12f);
                 }
                 break;
@@ -48,39 +52,39 @@ public partial class BossSkills
                 // 출혈 돌진: 여러 번 꿰뚫고, 멈춘 자리에서 표창 부채
                 for (int i = 0; i < (strong ? 5 : 4) && Alive; i++)
                 {
-                    yield return UltDash(1);
+                    yield return DevDash();
                     DevFan(7, 50f, 10f);
                 }
                 break;
             case CharacterId.Archer:
                 // 화살비: 더 많은 파도 + 끝에 하늘에서 쏟아지는 고리
-                yield return UltRain(strong ? 5 : 4);
+                yield return DevRain(strong ? 5 : 4);
                 if (Alive) DevRing(20, 6.5f, 0f, 12f);
                 break;
             case CharacterId.Ghost:
                 // 빙의: 플레이어 곁으로 스며들었다가 안에서 터지듯 + 냉기 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
-                yield return UltPossess(strong ? 4 : 3);
+                yield return DevPossess(strong ? 4 : 3);
                 break;
             case CharacterId.Postman:
                 // 속달: 플레이어 둘레 곳곳에 표식이 붙고 한꺼번에 터짐 + 편지 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
-                yield return UltExpress(strong ? 14 : 10);
+                yield return DevExpress(strong ? 14 : 10);
                 break;
             case CharacterId.Clockmaker:
                 // 되감기: 지난 자리마다 시계가 터짐 + 톱니 탄막
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
-                yield return UltClock(strong ? 7 : 5);
+                yield return DevClock(strong ? 7 : 5);
                 break;
             case CharacterId.Cartographer:
                 // 지도 접기: 접히는 띠 사이로 잉크 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
-                yield return UltFold(strong ? 4 : 3);
+                yield return DevFold(strong ? 4 : 3);
                 break;
             default:
                 // 대폭발: 큰 폭발 사이사이 불꽃놀이
                 StartCoroutine(DevFireworks(strong ? 8 : 6));
-                yield return UltBlast(strong ? 3 : 2);
+                yield return DevBlast(strong ? 3 : 2);
                 break;
         }
     }
