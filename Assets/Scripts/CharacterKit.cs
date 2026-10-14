@@ -34,7 +34,8 @@ public partial class CharacterKit : MonoBehaviour
     public bool Charging => charging;
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     // 궁수: 시위를 당기는 동안 40% 느려짐 (1.0.1: 쏘면서 마음대로 도망칠 수 있어 위험이 없었음)
-    public float MoveMul => DrawsBow && drawing ? 0.6f : 1f;
+    // 1.0.4~: 유령이 빙의해 적의 몸을 끌고 다니는 동안은 그 적의 이동 속도 그대로 (CharacterKit.Ghost · PossessMoveMul)
+    public float MoveMul => possessSpeed >= 0f ? PossessMoveMul() : DrawsBow && drawing ? 0.6f : 1f;
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
     public bool UsesAmmo => def.mag > 0;

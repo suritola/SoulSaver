@@ -402,10 +402,11 @@ public static partial class LocTable
           "前へ短く伸びる手が一列の敵をすべて貫き冷気をためます（5回たまると凍結）。敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が消えてダメージを防ぎます",
           "向前短伸的手贯穿一整列敌人并累积寒气（叠满五层即冻结）。击败敌人时有几率生成环绕身边的灵魂，受击时由灵魂代替生命消散以抵挡伤害");
         A("빙의", "Possession", "憑依", "附身");
-        A("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어갔다가 1초 뒤 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
-          "Hold to mark the enemy nearest the cursor; release to slip into its body and burst it from within 1s later. You're invulnerable inside, and nearby enemies take damage and chill too",
-          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り1秒後に内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます",
-          "按住标记鼠标附近的敌人，松开后潜入其体内，1秒后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气");
+        // 1.0.4 요청 ghost (빙의 1초 → 3초 · 들어간 동안 그 적의 이동 속도로 조종)
+        A("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
+          "Hold to mark the enemy nearest the cursor; release to slip into its body, steer it around at its own move speed for 3s, then burst it from within. You're invulnerable inside, and nearby enemies take damage and chill too",
+          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り、3秒間その敵の移動速度で体を操って動き回った後、内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます",
+          "按住标记鼠标附近的敌人，松开后潜入其体内，以该敌人的移动速度操控其身体行动3秒，随后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气");
         A("명계의 문!", "Gate of the Dead!", "冥界の門！", "冥界之门！");
         A("손길 공격력", "Touch Damage", "手の攻撃力", "冰手攻击力");
         A("손길 공격력 · 이동 속도", "Touch Damage · Move Speed", "手の攻撃力 · 移動速度", "冰手攻击力 · 移动速度");
