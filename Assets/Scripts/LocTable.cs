@@ -1785,5 +1785,10 @@ public static partial class LocTable
         { "경험치가 차면 레벨업 포인트가 쌓입니다. [{INTERACT}]를 눌러 창을 열고 카드를 고르세요. (클릭 → [{INTERACT}], 더블클릭, 같은 숫자 두 번)", L("When your XP fills up you earn a level-up point. Press [{INTERACT}] to open the window and pick a card. (click → [{INTERACT}], double-click, or the same number twice)", "経験値がたまるとレベルアップポイントがたまります。[{INTERACT}]でウィンドウを開いてカードを選ぼう。（クリック → [{INTERACT}]、ダブルクリック、同じ数字を2回）", "经验值满后会累积升级点数。按[{INTERACT}]打开窗口并选择卡牌。（点击 → [{INTERACT}]、双击或按同一数字两次）") },
         { "어울리는 카드", L("Pairs with", "相性の良いカード", "搭配卡牌") },
         { "최대 레벨에 닿았습니다! 더는 레벨이 오르지 않습니다.", L("You've reached the max level! You can't level up any further.", "最大レベルに到達しました！これ以上レベルは上がりません。", "已达到最高等级！无法再升级。") },
+        // 1.0.4 묶음 6: 죽음 · 결과 · ESC
+        { "정말로 다시 시작하시겠습니까?", L("Really restart?", "本当にリスタートしますか？", "确定要重新开始吗？") },
+        { "지금 판을 버리고 같은 캐릭터 · 난이도로 새로 시작합니다.", L("This run will be abandoned and a new one starts with the same character and difficulty.", "今のプレイを捨てて、同じキャラ・難易度で最初から始めます。", "将放弃本局，以相同角色和难度重新开始。") },
+        { "정말로 게임을 종료하시겠습니까?", L("Really quit the game?", "本当にゲームを終了しますか？", "确定要退出游戏吗？") },
+        { "클리어 기록은 이미 저장되었습니다.", L("Your clear has already been recorded.", "クリア記録はすでに保存されています。", "通关记录已保存。") },
     };
 }

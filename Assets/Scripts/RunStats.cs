@@ -23,6 +23,9 @@ public class RunStats : MonoBehaviour
     public static string LastHurtBy = "";
     public static int LastHurtStage, Stage;
     static bool runActive, cleared;
+    // 이번 판을 끝까지 깼는지 (결과 화면이 「클리어!」로 · 1.0.4~ 엔딩 뒤에도 결과 화면을 거침)
+    public static bool Cleared => cleared;
+    public static void MarkCleared() => cleared = true;
 
     float refresh;
 
@@ -446,9 +449,15 @@ public class HintRunner : MonoBehaviour
 // 게임 오버 화면: [R]로 같은 캐릭터 · 난이도로 바로 다시 시작
 public class QuickRestart : MonoBehaviour
 {
+    // 1.0.4~: 결과 화면이 뜨고 1초 동안은 받지 않음 (재장전 키와 같은 [R] 을 누르던 중이면 결과를 보기도 전에 새 판이 시작됐음)
+    const float Delay = 1f;
+    float readyAt;
+
+    void Start() => readyAt = Time.unscaledTime + Delay;
+
     void Update()
     {
-        if (!Input.GetKeyDown(KeyCode.R) || SettingsUI.IsOpen) return;
+        if (Time.unscaledTime < readyAt || !Input.GetKeyDown(KeyCode.R) || SettingsUI.IsOpen) return;
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameScene");
     }

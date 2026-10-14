@@ -64,15 +64,40 @@ public class ESCmenu : MonoBehaviour
 
     public void onPressMainMenu()
     {
+        // 2.1.9: 판이 저장되어 메인 메뉴 「이어하기」로 계속할 수 있음 (저장하지 않는 판은 예전 안내)
+        Confirm("ConfirmMainMenu", "정말로 메인 메뉴로 가시겠습니까?", SaveNote(), "메인 메뉴로", GoMainMenu);
+    }
+
+    // 1.0.4~: 「다시 시작」 — 지금 판을 버리고 같은 캐릭터 · 난이도로 새 판 (튜토리얼이면 튜토리얼을 처음부터)
+    public void onPressRestart()
+    {
+        Confirm("ConfirmRestart", "정말로 다시 시작하시겠습니까?", "지금 판을 버리고 같은 캐릭터 · 난이도로 새로 시작합니다.", "다시 시작", Restart);
+    }
+
+    // 1.0.4~: 「게임 종료」 — 저장되는 판이면 저장하고 끔
+    public void onPressQuit()
+    {
+        Confirm("ConfirmQuit", "정말로 게임을 종료하시겠습니까?", SaveNote(), "게임 종료", QuitGame);
+    }
+
+    // 나가면 지금 판이 어떻게 되는지 (1.0.4~: 쓰러지는 중 · 마지막 보스를 쓰러뜨린 뒤는 「저장됨」이라고 하지 않음)
+    static string SaveNote()
+    {
+        if (RunSave.CanSaveNow) return "지금 판은 저장되어 메인 메뉴의 「이어하기」로 계속할 수 있습니다.";
+        if (RunSave.FinalBossDown) return "클리어 기록은 이미 저장되었습니다.";
+        return "지금 진행 중인 판이 끝납니다.";
+    }
+
+    // 한 번 더 묻는 창 (메인 메뉴로 · 다시 시작 · 게임 종료가 같이 씀)
+    void Confirm(string name, string question, string note, string okLabel, UnityEngine.Events.UnityAction ok)
+    {
         if (confirm != null) return;
         Transform root = escMenu != null ? escMenu.transform.root : transform.root;
-        RectTransform win = UIKit.Modal(root, "ConfirmMainMenu", new Vector2(780f, 340f), out confirm);
+        RectTransform win = UIKit.Modal(root, name, new Vector2(780f, 340f), out confirm);
         SoulTreeUI.OnTop(confirm, 620);
-        UIKit.Text(win, "정말로 메인 메뉴로 가시겠습니까?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
-        // 2.1.9: 판이 저장되어 메인 메뉴 「이어하기」로 계속할 수 있음 (저장하지 않는 판은 예전 안내)
-        UIKit.Text(win, RunSave.CanSaveNow ? "지금 판은 저장되어 메인 메뉴의 「이어하기」로 계속할 수 있습니다." : "지금 진행 중인 판이 끝납니다.",
-                   26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
-        UIKit.MakeButton(win, "메인 메뉴로", new Vector2(-150f, -90f), new Vector2(260f, 76f), GoMainMenu, 28f);
+        UIKit.Text(win, question, 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
+        UIKit.Text(win, note, 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
+        UIKit.MakeButton(win, okLabel, new Vector2(-150f, -90f), new Vector2(260f, 76f), ok, 28f);
         UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
     }
 
@@ -88,6 +113,22 @@ public class ESCmenu : MonoBehaviour
         RunSave.Save();             // 판 중간 저장 (2.1.9)
         SceneManager.LoadScene("MainMenu");
         Time.timeScale = 1f;
+    }
+
+    void Restart()
+    {
+        CloseConfirm();
+        RunSave.Abandon();          // 저장해 둔 이 판은 지움 (메인 메뉴 「이어하기」에 옛 판이 남지 않게)
+        Time.timeScale = 1f;
+        IsOpen = false;
+        SceneManager.LoadScene("GameScene");
+    }
+
+    void QuitGame()
+    {
+        CloseConfirm();
+        RunSave.Save();             // OnApplicationQuit 에서도 저장하지만, 에디터 · 끄기 실패에 대비해 먼저
+        Application.Quit();
     }
 
     public static bool IsOpen { get; private set; }
