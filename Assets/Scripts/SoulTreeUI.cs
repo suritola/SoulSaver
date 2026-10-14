@@ -58,6 +58,7 @@ public class SoulTreeUI : MonoBehaviour
         public SpecialAbilities.SoulNode node;
         public RectTransform rect;
         public Image frame, icon, glow, line, badge;
+        public Image mark;                  // 무기 숙련 · 패시브 진화 칸의 작은 표식 (없으면 null)
         public TMP_Text cost;
     }
 
@@ -372,6 +373,12 @@ public class SoulTreeUI : MonoBehaviour
         Img("Back", v.rect, Vector2.zero, new Vector2(64f, 64f), null, new Color(0.08f, 0.06f, 0.12f, 1f));
         v.icon = Img("Icon", v.rect, Vector2.zero, new Vector2(56f, 56f), n.icon, Color.white);
         v.icon.preserveAspect = true;
+        if (n.mark != null)
+        {
+            // 같은 무기 · 능력 그림을 쓰는 칸끼리 헷갈리지 않게 오른쪽 아래에 표식 (I · II · III · 기억 · 진화 …)
+            v.mark = Img("Mark", v.rect, new Vector2(21f, -21f), new Vector2(32f, 32f), n.mark, Color.white);
+            v.mark.preserveAspect = true;
+        }
         v.cost = UIKit.Text(v.rect, "", 20f, Parch, new Vector2(0f, -54f), new Vector2(120f, 28f));
         // 추천 칸: 오른쪽 위 금빛 마름모 (아직 안 배운 칸만)
         v.badge = Img("Badge", v.rect, new Vector2(34f, 34f), new Vector2(18f, 18f), null, Gold);
@@ -444,6 +451,7 @@ public class SoulTreeUI : MonoBehaviour
             // 배운 칸 = 금색, 살 수 있는 칸 = 맥박치는 흰 금빛 (Update), 조각이 모자란 칸 = 흐리게
             v.frame.color = owned ? Gold : blocked ? new Color(0.35f, 0.32f, 0.38f) : can ? Color.white : new Color(bc.r * 0.55f, bc.g * 0.55f, bc.b * 0.55f);
             v.icon.color = owned || can ? Color.white : new Color(0.55f, 0.53f, 0.58f, 0.85f);
+            if (v.mark != null) v.mark.color = v.icon.color;
             if (!can && !hovered.Contains(v)) v.rect.localScale = Vector3.one;
             v.cost.text = owned ? "" : n.cost.ToString();           // 배운 칸은 금색 테두리로 충분 (글자는 지저분해서 뺌)
             v.cost.fontStyle = can ? FontStyles.Bold : FontStyles.Normal;

@@ -335,8 +335,8 @@ public static class CodexUI
     static void FateCards()
     {
         Color tint = new Color(0.8f, 0.7f, 1f);
-        foreach (var f in SpecialAbilities.FateInfo)
-            Card(Resources.Load<Sprite>("Icons/ability_" + f.icon), tint, Loc.T(f.name), Loc.T("운명") + " \u00B7 " + f.cost, Loc.T(f.desc));
+        foreach (var f in SpecialAbilities.FateInfo)        // 1.0.6~: 그림은 트리 칸과 같은 것 (단계마다 다름)
+            Card(SpecialAbilities.TreeIcon(f.key) ?? Resources.Load<Sprite>("Icons/ability_" + f.icon), tint, Loc.T(f.name), Loc.T("운명") + " \u00B7 " + f.cost, Loc.T(f.desc));
     }
 
     static void LevelUpCards(CodexData data)
