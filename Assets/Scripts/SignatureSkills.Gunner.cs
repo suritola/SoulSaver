@@ -10,6 +10,8 @@ public partial class SignatureSkills
     static readonly Color Brass = new Color(1f, 0.82f, 0.4f);
     static readonly Color SoulBlue = new Color(0.55f, 0.95f, 1f);
     const int HeatMax = 10;
+    // 처치 파편 한 개 피해 (파편 폭풍의 튕김도): 공격력 40% → 30% (1.1.2 거너 하향, 처치 수만큼 늘어 무한 모드에서 고유 스킬 피해가 너무 컸음)
+    const float ShrapnelRate = 0.3f;
 
     int heat;
     float lastShot;
@@ -82,7 +84,7 @@ public partial class SignatureSkills
             {
                 Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 2.4f, SoulBlue, 0.3f);
                 Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 1.1f, Color.white, 0.25f);
-                Deal(t.gameObject, Atk * 1.5f, Vector3.zero, 0f);
+                Deal(t.gameObject, Atk * 1.2f, Vector3.zero, 0f);       // 1.1.2: 150% → 120% (거너 하향)
                 Fx.Spawn("fx_shock", t.position, 4.6f, SoulBlue, 24f);
                 Flair(null, t.position, 2.6f, SoulBlue);
             }
@@ -217,7 +219,7 @@ public partial class SignatureSkills
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, off + i * 360f / Mathf.Max(1, n)) * Vector2.right;
-                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Tint("g.shrapnel", Brass));
+                Bullet b = Shot(pos, d, Atk * ShrapnelRate, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Tint("g.shrapnel", Brass));
                 if (b != null && E("ge.storm"))
                 {
                     bool bounced = false;
@@ -227,7 +229,7 @@ public partial class SignatureSkills
                         bounced = true;
                         List<Transform> near = Nearest(col.transform.position, 8f, 1, col.gameObject);
                         if (near.Count == 0) return;
-                        Shot(col.transform.position, ((Vector2)(near[0].position - col.transform.position)).normalized, Atk * 0.4f, 1, 26f, 8f, "fx_spark", 0.6f, Brass);
+                        Shot(col.transform.position, ((Vector2)(near[0].position - col.transform.position)).normalized, Atk * ShrapnelRate, 1, 26f, 8f, "fx_spark", 0.6f, Brass);
                     };
                 }
             }

@@ -529,7 +529,7 @@ public partial class SpecialAbilities
             return;
         }
         // 진화 능력: 그 능력을 강하게 하는 세 단계 + 이어지는 보너스
-        string trait = AugTraitName(w), step = AugTraitStep();
+        string trait = AugTraitName(w), step = AugTraitStep(w);
         t.Add(RawNode(k + ".t1", k, 0, trait, step, 18, icon, () => AddTrait(w)));
         t.Add(RawNode(k + ".t2", k + ".t1", 0, trait + " II", step, 34, icon, () => AddTrait(w)));
         t.Add(RawNode(k + ".t3", k + ".t2", 0, trait + " III", step, 56, icon, () => AddTrait(w)));
