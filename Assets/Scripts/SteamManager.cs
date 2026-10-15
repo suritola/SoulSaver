@@ -340,16 +340,20 @@ public static class SteamLeaderboards
     }
 
     // 위에서 count 명 + 내 기록(순위 밖이면 맨 아래에 붙임) → 목록 · 전체 인원
+    // 1.1~ 순위표를 못 찾았거나 받지 못하면 done(null, -1) (화면이 「불러오는 중…」에 멈추지 않게)
     public static void Top(string board, int count, System.Action<List<Entry>, int> done)
     {
 #if STEAM
         if (!Available) return;
         Find(board, h => Download(h, ELeaderboardDataRequest.k_ELeaderboardDataRequestGlobal, 1, count, top =>
+        {
+            if (top == null) { done?.Invoke(null, -1); return; }
             Download(h, ELeaderboardDataRequest.k_ELeaderboardDataRequestGlobalAroundUser, 0, 0, mine =>
             {
-                if (mine.Count > 0 && !top.Exists(e => e.me)) top.Add(mine[0]);
+                if (mine != null && mine.Count > 0 && !top.Exists(e => e.me)) top.Add(mine[0]);
                 done?.Invoke(top, SteamUserStats.GetLeaderboardEntryCount(h));
-            })));
+            });
+        }), () => done?.Invoke(null, -1));
 #endif
     }
 
@@ -357,14 +361,14 @@ public static class SteamLeaderboards
     static readonly Dictionary<string, SteamLeaderboard_t> boards = new Dictionary<string, SteamLeaderboard_t>();
     static readonly List<object> alive = new List<object>();     // 콜백이 올 때까지 CallResult 를 붙잡아 둠
 
-    static void Find(string board, System.Action<SteamLeaderboard_t> then)
+    static void Find(string board, System.Action<SteamLeaderboard_t> then, System.Action fail = null)
     {
         if (boards.TryGetValue(board, out SteamLeaderboard_t known)) { then(known); return; }
         CallResult<LeaderboardFindResult_t> cr = null;
         cr = CallResult<LeaderboardFindResult_t>.Create((r, io) =>
         {
             alive.Remove(cr);
-            if (io || r.m_bLeaderboardFound == 0) return;
+            if (io || r.m_bLeaderboardFound == 0) { fail?.Invoke(); return; }      // 1.1~ 실패도 알림
             boards[board] = r.m_hSteamLeaderboard;
             then(r.m_hSteamLeaderboard);
         });
@@ -378,8 +382,8 @@ public static class SteamLeaderboards
         cr = CallResult<LeaderboardScoresDownloaded_t>.Create((r, io) =>
         {
             alive.Remove(cr);
+            if (io) { then(null); return; }        // 1.1~ 받기 실패는 null (빈 목록 = 「아직 기록이 없습니다」와 구분)
             List<Entry> list = new List<Entry>();
-            if (!io)
             {
                 ulong me = SteamUser.GetSteamID().m_SteamID;
                 int[] details = new int[4];

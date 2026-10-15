@@ -33,8 +33,8 @@ public class NewGlow : MonoBehaviour
         pill.rectTransform.anchorMin = pill.rectTransform.anchorMax = new Vector2(1f, 1f);
         pill.rectTransform.anchoredPosition = br.anchoredPosition;
         pill.rectTransform.sizeDelta = new Vector2(64f, 28f);
-        pill.sprite = UIKit.ButtonSprite;
-        pill.type = Image.Type.Sliced;
+        // 1.1~ 버튼 스프라이트는 가운데가 어두운 보라라 어두운 글자가 안 보였음 → 밝은 금색 단색 판
+        pill.sprite = null;
         pill.color = Gold;
         pill.raycastTarget = false;
         badge.transform.SetAsLastSibling();

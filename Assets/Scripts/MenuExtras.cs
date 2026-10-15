@@ -148,12 +148,8 @@ public static class MenuExtras
         }
 
         // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크
-        if (tutorial != null && TutorialRun.Done)
-        {
-            TMP_Text mark = UIKit.Text(tutorial.transform, "✔", 30f, new Color(0.55f, 1f, 0.55f), new Vector2(66f, 40f), new Vector2(40f, 40f));
-            UIKit.Forget(mark);
-            mark.raycastTarget = false;
-        }
+        // 1.1~ 폰트에 ✔ 글자가 없어 빈 네모(□)로 보였으므로 막대 두 개로 그림
+        if (tutorial != null && TutorialRun.Done) CheckMark(tutorial.transform, new Vector2(66f, 40f));
 
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
@@ -174,6 +170,31 @@ public static class MenuExtras
         }
         // 1.1~ 결과 화면 「캐릭터 바꿔 다시」로 왔으면 캐릭터 창을 바로 엶
         if (ResultScreen.ConsumeHeroPick()) CharacterUI.Open(sr.root);
+    }
+
+    // 1.1~ 초록 체크 표시 (짧은 막대 · 긴 막대가 아래 꼭짓점에서 만남, 어두운 외곽선)
+    static void CheckMark(Transform parent, Vector2 pos)
+    {
+        RectTransform box = UIKit.Rect("DoneCheck", parent, pos, new Vector2(40f, 40f));
+        Bar(box, 14f, 135f);
+        Bar(box, 30f, 50f);
+    }
+
+    static void Bar(RectTransform box, float length, float angle)
+    {
+        Image bar = new GameObject("Stroke", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        RectTransform r = bar.rectTransform;
+        r.SetParent(box, false);
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+        r.pivot = new Vector2(0f, 0.5f);
+        r.anchoredPosition = new Vector2(-5f, -10f);
+        r.sizeDelta = new Vector2(length, 6f);
+        r.localRotation = Quaternion.Euler(0f, 0f, angle);
+        bar.color = new Color(0.55f, 1f, 0.55f);
+        bar.raycastTarget = false;
+        Outline o = bar.gameObject.AddComponent<Outline>();
+        o.effectColor = new Color(0.05f, 0.15f, 0.05f, 0.9f);
+        o.effectDistance = new Vector2(1.5f, -1.5f);
     }
 
     // 1.0.4~: 잠긴 칸 — 아이콘을 흐리게, 오른쪽 위 「잠김」, 마우스를 올리면 여는 방법
@@ -568,6 +589,9 @@ public static class SettingsUI
     // 키 바꾸기: 입력을 기다리는 동작 (-1 = 없음)
     static int capturing = -1;
     static readonly List<TMP_Text> keyLabels = new List<TMP_Text>();
+    // 1.1~ 다른 동작이 쓰는 키라 못 바꾼 칸: 잠깐 「사용 중」 (동작 번호, 끝나는 시각)
+    static int blocked = -1;
+    static float blockedUntil;
 
     // ESC를 이 창이 처리한 프레임 (ESCmenu가 같은 ESC로 메뉴를 닫지 않게)
     public static int EscHandledFrame = -1;
@@ -596,6 +620,7 @@ public static class SettingsUI
     {
         tab = t;
         capturing = -1;
+        blocked = -1;
         keyLabels.Clear();
         for (int i = page.childCount - 1; i >= 0; i--) Object.Destroy(page.GetChild(i).gameObject);
         for (int i = 0; i < tabButtons.Count; i++)
@@ -730,6 +755,12 @@ public static class SettingsUI
         System.Action<int> step = d =>
         {
             List<Vector2Int> list = Resolutions();
+            // 1.1~ 창 모드에서는 모니터보다 작은 해상도만 (창 테두리 · 제목 표시줄이 화면 밖으로 나가지 않게, 「창 모드」 버튼과 같은 조건)
+            if (Screen.fullScreenMode == FullScreenMode.Windowed)
+            {
+                List<Vector2Int> fit = list.FindAll(v => v.x < Display.main.systemWidth && v.y < Display.main.systemHeight);
+                if (fit.Count > 0) list = fit;
+            }
             int at = list.FindIndex(v => v.x == Screen.width && v.y == Screen.height);
             if (at < 0) at = list.Count - 1;
             at = Mathf.Clamp(at + d, 0, list.Count - 1);
@@ -878,8 +909,9 @@ public static class SettingsUI
             keyLabels.Add(b.GetComponentInChildren<TMP_Text>());
         }
         // 1.0.5~ 게임패드 버튼 배치 (바꿀 수 없음, 엑스박스 배열 · 스팀 덱 · 플레이스테이션은 스팀 입력으로 같은 배열)
-        UIKit.Text(page, "게임패드", 24f, Gold, new Vector2(-470f, -165f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
-        UIKit.Text(page, PadLayoutKo, 19f, Parch, new Vector2(70f, -168f), new Vector2(920f, 76f), TextAlignmentOptions.Left);
+        // 1.1~ 두 줄이 폭을 넘어 4줄로 접히며 약 14pt 까지 줄었음 → 위 키 칸(아래 끝 -122) · 아래 안내(위 끝 -233) 사이를 꽉 채움
+        UIKit.Text(page, "게임패드", 24f, Gold, new Vector2(-470f, -172f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
+        UIKit.Text(page, PadLayoutKo, 19f, Parch, new Vector2(80f, -173f), new Vector2(940f, 98f), TextAlignmentOptions.Left);
         UIKit.Text(page, "버튼을 누른 뒤 바꿀 키나 마우스 버튼을 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
         UIKit.MakeButton(page, "기본값으로", new Vector2(390f, -255f), new Vector2(260f, 60f), () =>
         {
@@ -898,8 +930,9 @@ public static class SettingsUI
             if (keyLabels[j] == null) continue;
             int i = ShownActions[j];
             bool waiting = i == capturing;
-            keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : KeyBindings.KeyName(KeyBindings.Get(KeyBindings.All[i]));     // 1.0.5~ 패드를 써도 키보드 키 이름
-            keyLabels[j].color = waiting ? Gold : new Color(0.96f, 0.9f, 0.8f);
+            bool denied = !waiting && i == blocked;
+            keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : denied ? Loc.T("사용 중") : KeyBindings.KeyName(KeyBindings.Get(KeyBindings.All[i]));     // 1.0.5~ 패드를 써도 키보드 키 이름
+            keyLabels[j].color = waiting ? Gold : denied ? new Color(1f, 0.45f, 0.4f) : new Color(0.96f, 0.9f, 0.8f);
         }
     }
 
@@ -924,15 +957,37 @@ public static class SettingsUI
             else Close();
             return;
         }
+        if (blocked >= 0 && Time.unscaledTime >= blockedUntil) { blocked = -1; RefreshKeys(); }
         if (capturing < 0) return;
-        foreach (KeyCode k in Bindable)
+        // 1.1~ 기다리는 칸 밖을 좌클릭하면 취소 (닫기 · 빈 곳을 눌러 취소하려다 좌클릭이 들어가지 않게)
+        if (Input.GetKeyDown(KeyCode.Mouse0) && !PointerOnCapturing())
         {
-            if (!Input.GetKeyDown(k) || !KeyBindings.CanBind(KeyBindings.All[capturing], k)) continue;      // 1.0.4~ 받을 수 없는 키(좌클릭)는 무시하고 계속 기다림
-            KeyBindings.Set(KeyBindings.All[capturing], k);
             capturing = -1;
             RefreshKeys();
             return;
         }
+        foreach (KeyCode k in Bindable)
+        {
+            if (!Input.GetKeyDown(k) || !KeyBindings.CanBind(KeyBindings.All[capturing], k)) continue;      // 1.0.4~ 받을 수 없는 키(좌클릭)는 무시하고 계속 기다림
+            int at = capturing;
+            capturing = -1;
+            if (!KeyBindings.Set(KeyBindings.All[at], k)) { blocked = at; blockedUntil = Time.unscaledTime + 1.2f; }     // 1.1~ 맞바꿀 수 없는 키: 잠깐 「사용 중」
+            else blocked = -1;
+            RefreshKeys();
+            return;
+        }
+    }
+
+    // 1.1~ 마우스가 지금 키 입력을 기다리는 칸 위에 있는지
+    static bool PointerOnCapturing()
+    {
+        int j = System.Array.IndexOf(ShownActions, capturing);
+        if (j < 0 || j >= keyLabels.Count || keyLabels[j] == null) return false;
+        RectTransform box = keyLabels[j].transform.parent as RectTransform;
+        if (box == null) return false;
+        Canvas c = box.GetComponentInParent<Canvas>();
+        Camera cam = c != null && c.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? c.rootCanvas.worldCamera : null;
+        return RectTransformUtility.RectangleContainsScreenPoint(box, Input.mousePosition, cam);
     }
 
     static void Deselect()

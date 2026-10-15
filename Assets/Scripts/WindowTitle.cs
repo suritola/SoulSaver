@@ -12,13 +12,25 @@ public static class WindowTitle
     {
         FixVersion();
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => FixVersion();
+        Loc.Changed += Relabel;         // 1.1~ 언어를 바꾸면 「체험판」도 새 언어로
     }
+
+    // 1.1~ 바꿔 둔 버전 글 (언어가 바뀌면 다시 씀)
+    static readonly System.Collections.Generic.List<TMPro.TMP_Text> labels = new System.Collections.Generic.List<TMPro.TMP_Text>();
 
     static void FixVersion()
     {
-        string v = "v" + Application.version.TrimStart('v');
+        labels.RemoveAll(t => t == null);
         foreach (TMPro.TMP_Text t in Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
-            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$")) t.text = v + Demo.Label;      // 체험판이면 "v1.9.2  체험판"
+            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$") && !labels.Contains(t)) labels.Add(t);
+        Relabel();
+    }
+
+    static void Relabel()
+    {
+        string v = "v" + Application.version.TrimStart('v');
+        foreach (TMPro.TMP_Text t in labels)
+            if (t != null) t.text = v + Demo.Label;      // 체험판이면 "v1.9.2  체험판"
     }
 
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
