@@ -23,8 +23,8 @@ public partial class SpecialAbilities
     // 무한 모드 3번째 진화 (1.8.7~): 각성 — 2차까지 마친 무기에 덧붙는 공통 강화 (모든 캐릭터)
     public const int AwakenFirst = 9000;
     public static readonly int[] AwakenOptions = { AwakenFirst, AwakenFirst + 1, AwakenFirst + 2 };
-    static readonly string[] AwakenNames = { "파괴의 각성", "질풍의 각성", "영혼의 각성" };
-    static readonly string[] AwakenDescs =
+    public static readonly string[] AwakenNames = { "파괴의 각성", "질풍의 각성", "영혼의 각성" };
+    public static readonly string[] AwakenDescs =
     {
         "모든 공격 피해 +50% (기본 공격력 기준)",
         "모든 공격 · 발사 간격 -30%",

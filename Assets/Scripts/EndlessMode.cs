@@ -197,6 +197,7 @@ public class EndlessMode : MonoBehaviour
         {
             boss.developer = true;
             boss.developerMom = isMom;
+            CodexSeen.Mark(isMom ? "sec.mom" : "sec.dev", bossbar.BossName(isMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind));     // 1.2~ 발견형 도감 비밀
             boss.bossKind = AbyssStage.MirrorKind;
             boss.difficultyApplied = true;
             boss.setEnemyHP = isMom ? MomHp : DeveloperHp;

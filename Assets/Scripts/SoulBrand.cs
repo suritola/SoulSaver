@@ -152,6 +152,7 @@ public static class SoulBrand
     {
         if (b == null || run.Contains(b)) return;
         run.Add(b);
+        CodexSeen.Mark("brand." + b.saveCode, b.Name);          // 1.2~ 발견형 도감
         PlayerController p = Hostile.Player;
         if (p != null)
         {

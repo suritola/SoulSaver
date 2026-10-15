@@ -11,7 +11,23 @@ public class NewGlow : MonoBehaviour
     Image image;
     Color baseColor;
     TMP_Text badge;
+    Image pillImage;
     Vector3 baseScale;
+    bool started;
+
+    // 1.2~ 반짝임 · NEW 배지를 걷고 버튼을 원래 색 · 크기로 (도감처럼 창을 닫았을 때 더 볼 것이 없으면)
+    public void Remove()
+    {
+        if (started)
+        {
+            if (image != null) image.color = baseColor;
+            transform.localScale = baseScale;
+            if (outline != null) Destroy(outline);
+            if (badge != null) Destroy(badge.gameObject);
+            if (pillImage != null) Destroy(pillImage.gameObject);
+        }
+        Destroy(this);
+    }
 
     void Start()
     {
@@ -37,7 +53,9 @@ public class NewGlow : MonoBehaviour
         pill.sprite = null;
         pill.color = Gold;
         pill.raycastTarget = false;
+        pillImage = pill;
         badge.transform.SetAsLastSibling();
+        started = true;
     }
 
     void Update()
