@@ -145,7 +145,7 @@ public static class GameMode
 
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
-    static float D(DailyStat s) => DailyChallenge.Mul(s);
+    static float D(DailyStat s) => DailyChallenge.Mul(s) * SoulBrand.Mul(s);     // 1.2~ 영혼 각인도 같은 배율 (각인 없는 판이면 1)
     public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul;     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);

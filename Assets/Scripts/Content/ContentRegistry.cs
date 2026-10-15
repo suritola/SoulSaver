@@ -44,7 +44,7 @@ public sealed class CurseDef
     public int minSlot;
 }
 
-public static class ContentRegistry
+public static partial class ContentRegistry
 {
     // ================================================================= 장 중반 이벤트 (ChapterEvents)
     public const string Raid = "raid", Elite = "elite", Goblin = "goblin", CursedChest = "cursedchest", Altar = "altar", Pack = "pack";
@@ -120,11 +120,87 @@ public static class RunContent
     {
         ChapterEvents.SaveRun(d);
         ChestRewards.SaveRun(d);
+        SoulBrand.SaveRun(d);           // 1.2~ 영혼 각인
     }
 
     public static void Restore(RunSave.Data d)
     {
         ChapterEvents.RestoreRun(d);
         ChestRewards.RestoreRun(d);
+        SoulBrand.RestoreRun(d);        // 1.2~ 영혼 각인 (옛 저장은 각인 없는 판)
+    }
+}
+
+// ================================================================= 영혼 각인 (1.2~, SoulBrand)
+// 이야기 모드 판 규칙 카드: 판을 시작할 때 3택 1, 2장 · 3장 보스를 쓰러뜨릴 때 한 장씩 더 (한 판 최대 3장)
+//   장점과 단점이 함께 있음. 수치형은 일일 도전과 같은 DailyStat 배율 (GameMode 가 곱함)
+//   + 공격력 · 최대 체력 % (고를 때 한 번 · 판 중간 저장 'a' · 'h' 기록으로 이어할 때 다시 적용)
+//   saveCode 는 이어하기(RunSave.Data.soulBrands)에 적는 짧은 이름 — 바꾸지 말 것
+//   이름 · 설명 · 해금 조건은 LocTable.SoulBrand 의 brand.<id>. 열쇠 (4개 언어), 그림은 Icons/choice_brand_<id> (tools/pixelart/make_brand_icons.py)
+public sealed class SoulBrandDef
+{
+    public string id, saveCode, since;
+    public Color color;
+    public (DailyStat stat, float mul)[] muls = new (DailyStat stat, float mul)[0];
+    public int attack;                      // 공격력 % (+40 = +40%, 고를 때 한 번)
+    public int maxHp;                       // 최대 체력 % (-30 = 그때 최대 체력의 -30%)
+    public float pointMul = 1f;             // 포인트 배율 (어려운 각인일수록 큼, Point.AddPoint 에서 곱함)
+    public System.Func<bool> unlocked;      // null = 처음부터 열림
+    public System.Func<string> progress;    // 해금까지 진행 (짧은 숫자 글, 없으면 null)
+    public string Icon => "brand_" + id;
+    public string NameKey => "brand." + id + ".name";
+    public string Name => Loc.T(NameKey);
+    public string Desc => Loc.T("brand." + id + ".desc");
+    public string Hint => Loc.T("brand." + id + ".hint");
+    public bool Unlocked => unlocked == null || unlocked();
+}
+
+public static partial class ContentRegistry
+{
+    // 처음 열린 4장 + 지금 있는 기록(누적 처치 · 스킬 진화 · 난이도 클리어 · 영웅 클리어 · 무한 모드)으로 여는 8장
+    public static readonly List<SoulBrandDef> SoulBrands = new List<SoulBrandDef>
+    {
+        // ---------------- 처음부터
+        new SoulBrandDef { id = "glass", saveCode = "gc", since = "1.2", color = new Color(0.65f, 0.88f, 1f), attack = 40, maxHp = -30, pointMul = 1.15f },
+        new SoulBrandDef { id = "tide", saveCode = "td", since = "1.2", color = new Color(0.45f, 0.7f, 1f), pointMul = 1.1f,
+                           muls = new[] { (DailyStat.Spawn, 0.75f), (DailyStat.Reward, 1.25f) } },
+        new SoulBrandDef { id = "giant", saveCode = "gh", since = "1.2", color = new Color(1f, 0.45f, 0.4f), pointMul = 1.1f,
+                           muls = new[] { (DailyStat.BossHp, 1.4f), (DailyStat.Gauge, 1.5f) } },
+        new SoulBrandDef { id = "iron", saveCode = "io", since = "1.2", color = new Color(0.78f, 0.8f, 0.86f), attack = -15, pointMul = 1f,
+                           muls = new[] { (DailyStat.EnemyDamage, 0.75f) } },
+        // ---------------- 기록으로 열림
+        new SoulBrandDef { id = "greed", saveCode = "gr", since = "1.2", color = new Color(1f, 0.8f, 0.35f), pointMul = 1.15f,
+                           muls = new[] { (DailyStat.Reward, 1.6f), (DailyStat.EnemyHp, 1.3f) },
+                           unlocked = () => SoulBrand.TotalKills >= SoulBrand.GreedKills,
+                           progress = () => Mathf.Min(SoulBrand.TotalKills, SoulBrand.GreedKills).ToString("N0") + " / " + SoulBrand.GreedKills.ToString("N0") },
+        new SoulBrandDef { id = "frenzy", saveCode = "fz", since = "1.2", color = new Color(1f, 0.4f, 0.35f), attack = 25, pointMul = 1.2f,
+                           muls = new[] { (DailyStat.EnemySpeed, 1.2f), (DailyStat.EnemySkill, 0.77f) },
+                           unlocked = () => GameMode.HasCleared(Difficulty.Normal) },
+        new SoulBrandDef { id = "blood", saveCode = "bp", since = "1.2", color = new Color(0.95f, 0.3f, 0.35f), maxHp = -40, pointMul = 1.25f,
+                           muls = new[] { (DailyStat.Reward, 1.4f), (DailyStat.Gauge, 1.4f) },
+                           unlocked = () => SoulBrand.SkillEvoCount >= 5,
+                           progress = () => Mathf.Min(SoulBrand.SkillEvoCount, 5) + " / 5" },
+        new SoulBrandDef { id = "calm", saveCode = "st", since = "1.2", color = new Color(0.7f, 0.9f, 1f), pointMul = 1f,
+                           muls = new[] { (DailyStat.EnemySpeed, 0.85f), (DailyStat.Gauge, 0.65f) },
+                           unlocked = () => CharacterData.ConditionMet(CharUnlock.EasyFast) },
+        new SoulBrandDef { id = "tyrant", saveCode = "tc", since = "1.2", color = new Color(0.8f, 0.5f, 0.9f), attack = 20, pointMul = 1.3f,
+                           muls = new[] { (DailyStat.BossHp, 1.6f), (DailyStat.EnemyDamage, 1.2f) },
+                           unlocked = () => GameMode.HasCleared(Difficulty.Hard) },
+        new SoulBrandDef { id = "surge", saveCode = "ms", since = "1.2", color = new Color(0.8f, 0.55f, 1f), pointMul = 1.15f,
+                           muls = new[] { (DailyStat.Gauge, 1.8f), (DailyStat.EnemySkill, 0.71f) },
+                           unlocked = () => SoulBrand.SkillEvoCount >= 15,
+                           progress = () => Mathf.Min(SoulBrand.SkillEvoCount, 15) + " / 15" },
+        new SoulBrandDef { id = "bulwark", saveCode = "bw", since = "1.2", color = new Color(0.75f, 0.75f, 0.8f), attack = -20, maxHp = 40, pointMul = 1f,
+                           unlocked = () => Mastery.Level(CharacterId.Swordsman) >= 1 },
+        new SoulBrandDef { id = "dance", saveCode = "dd", since = "1.2", color = new Color(1f, 0.55f, 0.3f), attack = 30, pointMul = 1.35f,
+                           muls = new[] { (DailyStat.EnemyDamage, 1.5f), (DailyStat.Reward, 1.3f) },
+                           unlocked = () => EndlessMode.BestSeconds >= 600f,
+                           progress = () => EndlessMode.Clock(Mathf.Min(EndlessMode.BestSeconds, 600f)) + " / 10:00" },
+    };
+
+    public static SoulBrandDef SoulBrandByCode(string code)
+    {
+        foreach (SoulBrandDef b in SoulBrands) if (b.saveCode == code) return b;
+        return null;
     }
 }

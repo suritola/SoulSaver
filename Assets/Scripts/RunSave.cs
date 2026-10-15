@@ -36,6 +36,9 @@ public static class RunSave
         public int runKills;
         public bool needEvolution;                      // 보스는 쓰러뜨렸지만 무기 진화를 아직 고르지 않음
         public int chapterBonus;                        // 1.1~ 보스가 쓰러지는 연출 중에 나가서 아직 못 받은 장 클리어 보너스 (이어할 때 줌)
+        // 1.2~ 영혼 각인 (SoulBrand): 각인을 쓰는 판인지 · 고른 각인 saveCode 를 쉼표로 (옛 저장은 false · "" → 각인 없는 판 그대로)
+        public bool soulBrandOn;
+        public string soulBrands = "";
         public List<string> log = new List<string>();
         public List<string> dealtKeys = new List<string>();
         public List<float> dealtValues = new List<float>();
