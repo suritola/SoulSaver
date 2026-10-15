@@ -824,7 +824,7 @@ public partial class CharacterKit : MonoBehaviour
         if (sword)
         {
             // 회전 베기: 누른 만큼 강해짐 (1.1.3: 3 + 5c → 2.5 + 4.5c, 밸런스 점검)
-            float dmg = Damage * (2.5f + 4.5f * charge) * UltMul;
+            float dmg = Damage * (2f + 3.5f * charge) * UltMul;      // 1.1.3 빌드 뒤 2.5 + 4.5c → 2 + 3.5c
             DamageCircle(transform.position, radius, dmg, 2.5f);
             PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.1)
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
@@ -1136,7 +1136,7 @@ public partial class CharacterKit : MonoBehaviour
         // 근접 특성: 벤 적(최대 3) 하나당 체력 0.2 회복 (1.1.3: 0.3 → 0.2), 흡혈 베기 카드가 레벨마다 +0.5
         if (hits > 0 && player.PlayerHealth > 0f)
         {
-            float heal = Mathf.Min(hits, 3) * (0.2f + 0.5f * card[1]);      // 흡혈 베기: 0.7 / 1.2 / 1.7 (예전 1.3 / 2.3 / 3.3 은 너무 많이 회복)
+            float heal = Mathf.Min(hits, 3) * (0.1f + 0.35f * card[1]);     // 흡혈 베기: 0.45 / 0.8 / 1.15 (1.1.3 빌드 뒤 0.2 + 0.5c → 0.1 + 0.35c)
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
             if (card[1] > 0) Fx.Spawn("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
         }
