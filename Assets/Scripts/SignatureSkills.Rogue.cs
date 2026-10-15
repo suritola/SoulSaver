@@ -50,7 +50,7 @@ public partial class SignatureSkills
         int p = L("r.path");
         if (p > 0 && (to - from).sqrMagnitude > 0.5f)
         {
-            float dmg = Atk * 0.5f;
+            float dmg = Atk * 0.5f * P("r.path");       // 1.1.2~ 칼날 폭풍길: ×1.6
             SigZone z = Zone((from + to) * 0.5f, 1.2f, V(p, 1.5f, 0.5f), 0.3f, null);
             z.segment = true;
             z.a = from;
@@ -65,7 +65,7 @@ public partial class SignatureSkills
                     shotAt = zone.age + 0.3f;
                     Vector3 at = Vector3.Lerp(zone.a, zone.b, Random.value);
                     List<Transform> near = Nearest(at, 10f, 1);
-                    if (near.Count > 0) Shot(at, ((Vector2)(near[0].position - at)).normalized, Atk * 0.8f, 1, 30f, 12f, "fx_shuriken", 0.7f, Color.white, true);
+                    if (near.Count > 0) Shot(at, ((Vector2)(near[0].position - at)).normalized, Atk * 0.8f, 1, 30f, 12f, "fx_shuriken", 0.9f, Vivid(new Color(0.75f, 0.45f, 1f)), true);
                 }
             };
             LineRenderer lr = Hostile.NewLine("BladePath", Big("r.path") ? new Color(1f, 0.75f, 1f, 0.85f) : new Color(0.75f, 0.45f, 1f, 0.6f), 0.5f * Fs("r.path"), 3);
@@ -102,7 +102,7 @@ public partial class SignatureSkills
         // 처형자의 길: 급습 시간 동안 꿰뚫는 그림자 표창이 함께
         if (E("re.executioner") && Time.time < ambushUntil)
         {
-            Bullet s = Shot(start, dir, Atk * 0.8f, 999, 34f, RogueRange * 1.3f, "fx_shuriken", 0.9f, Shade, true);
+            Bullet s = Shot(start, dir, Atk * 1f, 999, 34f, RogueRange * 1.3f, "fx_shuriken", 1.1f, Vivid(Shade), true);      // 1.1.2~ 80 → 100%
             if (s != null) s.hitOnce = new HashSet<int>();
         }
     }
@@ -138,7 +138,7 @@ public partial class SignatureSkills
         {
             Vector3 at = near.Count > 0 ? near[i % near.Count].position + (Vector3)(Random.insideUnitCircle * 0.8f)
                                         : transform.position + (Vector3)(Random.insideUnitCircle * 6f);
-            StartCoroutine(Drop(at, "fx_shuriken", 1.4f * Fs("r.rain"), Tint("r.rain", new Color(0.8f, 0.9f, 1f)), 1.2f, Atk, i * 0.06f));
+            StartCoroutine(Drop(at, "fx_shuriken", 1.4f * Fs("r.rain"), Tint("r.rain", new Color(0.8f, 0.9f, 1f)), 1.2f, Atk * P("r.rain"), i * 0.06f));       // 1.1.2~ 사냥의 절정: ×1.5
         }
         Hostile.Play("whoosh", 0.5f, 1.6f);
     }
@@ -172,11 +172,12 @@ public partial class SignatureSkills
             else if (Time.time - since >= 3f)
             {
                 bleedSince.Remove(target);
-                float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 0.8f, 0.2f);
+                float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 0.8f, 0.2f) * P("r.burst");     // 1.1.2~ 피바다: ×1.5
                 Vector3 p = target.transform.position;
                 Destroy(bleed);
                 if (burst > 0f)
                 {
+                    using var tier = EvoFx("r.burst");
                     Deal(target, burst, Vector3.zero, 0f);
                     if (E("re.sea")) { Circle(p, 3f, burst, 0.5f); Heal(3f); }
                     Fx.Spawn("fx_bleed", p, 3.4f * Fs("r.burst"), Color.white, 16f);
@@ -208,7 +209,8 @@ public partial class SignatureSkills
         {
             acrobatAt = Time.time + 0.5f;
             Vector3 p = target.transform.position;
-            Circle(p, 2.6f, Atk * 1.5f, 0.6f);
+            using var tier = Fx.Tier(3);
+            Circle(p, 2.6f, Atk * 2f, 0.6f);        // 1.1.2~ 150 → 200%
             Fx.Spawn("fx_spinslash", p, 8f, new Color(1f, 0.8f, 1f, 0.95f), 24f);
             Flair(null, p, 3.5f, Shade);
         }
@@ -222,7 +224,7 @@ public partial class SignatureSkills
                 peakAt = Time.time + 0.3f;
                 Vector3 p = target.transform.position;
                 for (int i = 0; i < 4; i++)
-                    StartCoroutine(Drop(p + (Vector3)(Random.insideUnitCircle * 2.5f), "fx_shuriken", 1.2f, Color.white, 1.1f, Atk, i * 0.08f));
+                    StartCoroutine(Drop(p + (Vector3)(Random.insideUnitCircle * 2.5f), "fx_shuriken", 1.5f, Vivid(Shade), 1.1f, Atk, i * 0.08f));
             }
         }
     }
@@ -253,8 +255,9 @@ public partial class SignatureSkills
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n) * Vector2.right;
-                Shot(p, d, Atk, 1, 26f, RogueRange, "fx_shuriken", 0.7f, Color.white, true);
+                Shot(p, d, Atk * P("r.overflow"), 1, 26f, RogueRange, "fx_shuriken", 0.7f * Fs("r.overflow"), Tint("r.overflow", Color.white), true);      // 1.1.2~ 사냥의 절정: ×1.5
             }
+            using var tier = EvoFx("r.overflow");
             Fx.Spawn("fx_shock", p, 6f * Fs("r.overflow"), Shade, 20f);
             Flair("r.overflow", p, 5f, Shade);
             Hostile.Play("whoosh", 0.6f, 1.4f);

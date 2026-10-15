@@ -21,10 +21,22 @@ public static class Fx
     public static int TierOf(string source)
     {
         if (source == null || source == DamageSource.Other) return 1;      // 적 · 처치 연출은 기본
+        if (forcedTier > 1) return forcedTier;                             // 1.1.2~ 진화한 고유 스킬 (SignatureSkills.EvoFx)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         if (sp == null) return 1;
         return sp.IsEvolvedSource(source) ? 3 : 1 + Mathf.Clamp(sp.EvolutionTier, 0, 2);
     }
+
+    // 1.1.2~: 진화한 고유 스킬의 이펙트는 무기 단계와 상관없이 가장 화려한 단계(_t3)로
+    //   using (Fx.Tier(3)) { ... } 안에서 만든 플레이어 이펙트에만 (0 · 1 이면 그대로)
+    static int forcedTier;
+    public readonly struct TierScope : System.IDisposable
+    {
+        readonly int prev;
+        public TierScope(int tier) { prev = forcedTier; if (tier > forcedTier) forcedTier = tier; }
+        public void Dispose() => forcedTier = prev;
+    }
+    public static TierScope Tier(int tier) => new TierScope(tier);
 
     static Sprite[] TieredFrames(string name)
     {
@@ -81,7 +93,8 @@ public static class Fx
     static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
     {
         if (Hostile.Glow == null || size < 1.2f) return;
-        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * 1.7f / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), 0.7f)), layer, order - 1, 0.38f);     // 1.0.2: 더 크고 진하게
+        bool evo = forcedTier >= 3;        // 1.1.2~ 진화한 고유 스킬: 빛 번짐도 더 크고 길게
+        FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * (evo ? 2.2f : 1.7f) / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), evo ? 0.85f : 0.7f)), layer, order - 1, evo ? 0.55f : 0.38f);     // 1.0.2: 더 크고 진하게
     }
 
     static void Style(SpriteRenderer sr)

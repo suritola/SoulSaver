@@ -8,6 +8,15 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        // ---------------- 진화 강화 · 재료 스킬 설명 · 진화 순간 (1.1.2~)
+        A("{0} 피해 ×{1}", "{0} damage ×{1}", "{0}のダメージ×{1}", "{0}伤害×{1}");
+        A("진화 강화", "Evolution boost", "進化強化", "进化强化");
+        A("재료 스킬", "Ingredient skills", "素材スキル", "素材技能");
+        A("진화 뒤에도 효과가 그대로 이어집니다.", "Their effects carry on after evolving.", "進化後も効果はそのまま続きます。", "进化后效果依然保留。");
+        A("이어짐", "Kept", "継続", "保留");
+        A("진화로 강화되어 이어짐", "Kept · boosted by evolution", "進化で強化されて継続", "保留·进化强化");
+        A("재료 스킬 효과는 그대로 이어집니다", "Ingredient skill effects are kept", "素材スキルの効果はそのまま続きます", "素材技能效果依然保留");
+        A("진화까지 1단계!", "1 rank to evolve!", "進化まであと1段階！", "距离进化仅差1级！");
         // ---------------- 카드 설명 고침 (2.0.7~): 검사 밸런스 · 숫자 보강 · 진화 무기 필살기에도 적용
         A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
         A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
@@ -274,11 +283,11 @@ public static partial class LocTable
         A("무법자", "Outlaw", "無法者", "亡命之徒");
         A("겁에 질린 적을 쓰러뜨리면 탄창이 가득 차고, 겁이 가까운 적들에게 번집니다.", "Killing a terrified enemy fully reloads your magazine and spreads the terror to nearby foes.", "怯えた敵を倒すと弾倉が満タンになり、恐怖が近くの敵に広がります。", "击杀恐惧中的敌人会装满弹匣，并让恐惧蔓延到附近敌人。");
         A("완벽한 반격", "Perfect Counter", "完璧な反撃", "完美反击");
-        A("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 250%)", "Getting hit or parrying a projectile turns your next swing into a giant counter wave. (250% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ巨大な反撃の剣気になります。（攻撃力250%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的巨大反击剑气。（攻击力250%）");
+        A("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 300%)", "Getting hit or parrying a projectile turns your next swing into a giant counter wave. (300% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ巨大な反撃の剣気になります。（攻撃力300%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的巨大反击剑气。（攻击力300%）");
         A("천검 궤적", "Thousand-Blade Trail", "千剣の軌跡", "千剑轨迹");
         A("칼날 잔상이 사라질 때 그 자리에서 검기가 사방으로 날아갑니다.", "When a blade afterimage fades, sword waves fly out from it in all directions.", "刃の残像が消えるとき、その場から剣気が四方へ飛びます。", "刀刃残影消失时，剑气从原地向四方飞出。");
         A("피의 성채", "Blood Bastion", "血の城砦", "血之堡垒");
-        A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (200% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力200%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力200%）");
+        A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 250%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (250% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力250%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力250%）");
         A("폭풍의 눈", "Eye of the Storm", "嵐の目", "风暴之眼");
         A("필살기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", "After Ultimate, a vortex pulls in and keeps cutting nearby enemies for 3s.", "必殺技の後3秒間、渦が周りの敵を吸い込みながら斬り続けます。", "必杀技后3秒内，漩涡吸入周围敌人并持续斩击。");
         A("광검무", "Frenzied Blade Dance", "狂剣舞", "狂剑舞");
@@ -298,7 +307,7 @@ public static partial class LocTable
         A("칼날 폭풍길", "Bladestorm Road", "刃の嵐の道", "刃风之路");
         A("칼날 자국에서 표창이 계속 솟구쳐 가까운 적에게 날아갑니다.", "Shuriken keep springing from the blade trail toward nearby enemies.", "刃の跡から手裏剣が次々と飛び出し、近くの敵へ飛びます。", "刀痕中不断弹出飞镖射向附近敌人。");
         A("칼날 곡예", "Blade Acrobatics", "刃の曲芸", "刀刃杂技");
-        A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (150% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力150%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力150%）");
+        A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 200%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (200% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力200%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力200%）");
         A("사냥의 절정", "Peak of the Hunt", "狩りの絶頂", "狩猎巅峰");
         A("필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your ultimate gauge is full or during a Ultimate, kills bring a rain of shuriken down on the spot.", "必殺技ゲージが満タンの間か必殺技中に敵を倒すと、その場に手裏剣の雨が降ります。", "必杀技槽满时或必杀技中击杀敌人，原地降下飞镖雨。");
         A("폭풍의 길", "Storm Road", "嵐の道", "风暴之路");
