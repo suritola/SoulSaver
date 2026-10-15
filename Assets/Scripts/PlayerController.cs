@@ -684,7 +684,7 @@ void Shoot()
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
             // 1.1.2: 납작한 흰 실선 대신 금빛 예광탄 (보이는 크기 3~4배, BulletGlow 예광탄 모드)
-            //   판정 길이 3.27 은 그대로, 두께만 0.022 → 0.3 (BulletGlow.InitTracer, 피해는 그대로)
+            //   판정 = 보이는 예광탄 몸통 (BulletGlow.FitTracerHit, 피해는 그대로) · 터널링은 Bullet 의 스윕 검사가 막음
             BulletGlow glow = newBullet.AddComponent<BulletGlow>();
             if (newBullet.TryGetComponent(out SpriteRenderer bodySr)) glow.tracerSprite = bodySr.sprite;
             glow.tracerBaseScale = newBullet.transform.localScale;

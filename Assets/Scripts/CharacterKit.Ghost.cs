@@ -45,13 +45,16 @@ public partial class CharacterKit
 
     // 1.0.2: 판정을 보이는 그림에 맞춤 — 적의 중심이 아니라 몸(콜라이더) 크기까지, 손끝의 뼈 손 그림 둘레까지,
     // 손이 길어지면(HandReachMul) 찾는 범위도 같이 (예전엔 기본 길이로만 찾아 먼 쪽 적이 빠졌음)
-    const float HandHalfWidth = 0.9f, HandTipRadius = 1.3f;
+    // 1.1.2 뒤: 판정 = 보이는 손길 — 띠 반폭 = 보이는 띠 굵기의 절반(본 손 1.8 · 그림자 손 1.3칸 × 단계 굵기 BandMul),
+    //   손끝 = 보이는 뼈 손 몸통(장식 1.45배로 그린 2 · 1.6칸 그림의 가로 · 세로 반지름 평균 ≈ 0.65 × 그린 크기) × 단계 굵기
+    //   (예전엔 단계 · 손과 상관없이 반폭 0.9 · 손끝 1.3 — 2 · 3단계에 굵어진 띠, 그림자 손의 얇은 띠와 어긋났음)
+    const float HandHalfWidth = 0.9f, HandTipRadius = 1.3f, ShadowHalfWidth = 0.65f, ShadowTipRadius = 1.05f;
     static float BodyRadius(Collider2D c) => Mathf.Max(c.bounds.extents.x, c.bounds.extents.y) * 0.8f;
-    static bool HandTouches(Collider2D c, Vector3 start, Vector3 end)
+    static bool HandTouches(Collider2D c, Vector3 start, Vector3 end, float halfWidth, float tipRadius)
     {
         float r = BodyRadius(c);
         Vector3 p = c.bounds.center;
-        return Hostile.DistanceToSegment(p, start, end) <= HandHalfWidth + r || (p - end).magnitude <= HandTipRadius + r;
+        return Hostile.DistanceToSegment(p, start, end) <= halfWidth + r || (p - end).magnitude <= tipRadius + r;
     }
 
     // 손 하나: 한 줄의 적을 모두
@@ -61,10 +64,12 @@ public partial class CharacterKit
         Vector3 mid = (start + end) * 0.5f;
         bool first = true;
         ghostOnce.Clear();
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (end - start).magnitude * 0.5f + HandTipRadius + 1.5f, ghostHits)))
+        float band = AttackLook.BandMul(AttackLook.Tier);
+        float halfW = (main ? HandHalfWidth : ShadowHalfWidth) * band, tipR = (main ? HandTipRadius : ShadowTipRadius) * band;
+        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(mid, (end - start).magnitude * 0.5f + tipR + 1.5f, ghostHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
-            if (!HandTouches(c, start, end)) continue;
+            if (!HandTouches(c, start, end, halfW, tipR)) continue;
             GameObject g = c.gameObject;
             if (!ghostOnce.Add(g)) continue;        // 콜라이더가 여럿인 적도 손 하나에 한 번만
             Specials.Damage(g, dmg * formPower, dir, 0.6f);
@@ -82,7 +87,6 @@ public partial class CharacterKit
             first = false;
         }
         // 1.1.2: 손길을 한눈에 — 판정 폭(반폭 0.9 = 폭 1.8 + 적 몸)까지 굵게 (예전 1칸), 흰 심 줄 · 뼈 손 2배 가까이, 적 · 맵 물체 위 순서
-        float band = AttackLook.BandMul(AttackLook.Tier);
         Fx.Beam(start, end, (main ? 1.8f : 1.3f) * band, SkinFx.Tint(new Color(0.4f, 0.8f, 1f, 0.85f)), 0.2f, AttackLook.AreaOrder - 1);
         Fx.Beam(start, end, (main ? 0.55f : 0.4f) * band, new Color(1f, 1f, 1f, 0.95f), 0.14f, AttackLook.AreaOrder);
         Fx.Spawn("fx_bonehand", end, (main ? 2f : 1.6f) * band, Wraith, 22f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f, AttackLook.AreaOrder + 1);

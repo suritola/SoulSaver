@@ -87,13 +87,17 @@ public partial class CharacterKit
         Vector3 mid = (a + b) * 0.5f;
         float r = (b - a).magnitude * 0.5f + width;
         Vector2 dir = ((Vector2)(b - a)).normalized;
+        // 1.1.2 뒤: 판정 반폭 = 보이는 획 반폭 (바깥 잉크 띠 2 × width × 단계 굵기 BandMul 의 절반) + 적 몸 — 예전엔 단계와 상관없이 width
+        float band = AttackLook.BandMul(AttackLook.Tier);
+        float half = width * band;
+        r += half - width;
         List<Collider2D> found = new List<Collider2D>(Specials.Overlap(mid, r, mapHits));
         int stacks = 0;
         foreach (Collider2D c in found)
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
             // 1.0.2: 큰 적(보스)은 몸 가장자리에 닿아도 맞게 (예전엔 몸 가운데만 봐서 보이는 획이 지나가도 안 맞았음)
-            if (Hostile.DistanceToSegment(c.bounds.center, a, b) > width + MapBody(c)) continue;
+            if (Hostile.DistanceToSegment(c.bounds.center, a, b) > half + MapBody(c)) continue;
             float m = formPower;
             // 정밀 제도 (패시브): 획 끝 가까이의 적은 더 아프게
             if (Special != null && Special.Has(SpecialAbilities.KitDraft) && (c.transform.position - b).magnitude <= 1.4f)
@@ -108,7 +112,6 @@ public partial class CharacterKit
         }
         // 1.1.2: 획을 한눈에 — 판정 폭(반폭 width = 폭 2 × width + 적 몸)까지 굵게 (예전 1.2 × width), 밝은 잉크 테 + 흰 심 줄
         //   짙은 남색 잉크는 어두운 묘역 · 심연 바닥에 묻혀서 테두리 색을 밝게, 적 · 맵 물체 위 순서
-        float band = AttackLook.BandMul(AttackLook.Tier);
         Fx.Beam(a, b, width * 2f * band, SkinFx.Tint(new Color(0.35f, 0.55f, 1f, 0.95f)), 0.45f, AttackLook.AreaOrder - 1);
         Fx.Beam(a, b, width * 0.8f * band, new Color(0.92f, 0.96f, 1f, 1f), 0.25f, AttackLook.AreaOrder);
         Fx.Spawn("fx_trail_dot", b, 1.8f * band, new Color(0.55f, 0.75f, 1f), 20f, 0f, AttackLook.AreaOrder + 1);

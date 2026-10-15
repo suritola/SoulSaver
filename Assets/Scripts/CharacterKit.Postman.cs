@@ -86,6 +86,8 @@ public partial class CharacterKit
             glow.frames = a.frames;
             glow.haloMul = 1.2f;
         }
+        // 1.1.2 뒤: 닿는 거리 = 보이는 편지 · 비둘기 몸통 반지름 (가로 · 세로 평균, 외곽선 뺌) — 예전엔 크기와 상관없이 0.45칸
+        float touchR = a != null ? AttackLook.TouchRadius(a.sr, pigeon ? "fx_falcon" : art ? "atk_letter" : "fx_card") : 0.45f;
         Vector3 p = from;
         Vector2 v = dir.sqrMagnitude > 0.01f ? dir.normalized : Vector2.right;
         float life = 1.6f;
@@ -111,7 +113,7 @@ public partial class CharacterKit
             }
             if (Hostile.IsWall(p)) break;
             // 받는 이 몸에 닿으면 배달 (예전엔 몸 크기와 상관없이 중심 0.74칸 안이어야 해서 큰 적 · 보스는 몸에 닿고도 지나쳤음)
-            if (target != null && Touches(target, p) && Alive(target))
+            if (target != null && Touches(target, p, touchR) && Alive(target))
             {
                 Deliver(target, p, v, dmg, pigeon, depth);
                 break;
@@ -124,11 +126,11 @@ public partial class CharacterKit
     static bool Alive(Transform t) => t != null && !(t.TryGetComponent(out EnermyController e) && e.IsDead);
 
     // 편지가 받는 이 몸(충돌 범위)에 닿았나: 중심 0.74칸 안이거나, 몸 가장자리에서 0.45칸 안
-    static bool Touches(Transform t, Vector3 p)
+    static bool Touches(Transform t, Vector3 p, float r)
     {
         if (((Vector2)(t.position - p)).sqrMagnitude < 0.55f) return true;
         if (!t.TryGetComponent(out Collider2D col) || !col.enabled) return false;
-        return ((Vector2)p - col.ClosestPoint(p)).sqrMagnitude < 0.2f;
+        return ((Vector2)p - col.ClosestPoint(p)).sqrMagnitude < r * r;
     }
 
     // 받는 이 표시: 편지를 보낼 때 받는 이에게 붉은 조준 표식이 잠깐 (누구에게 가는지 보이게)
