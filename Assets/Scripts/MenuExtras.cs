@@ -42,8 +42,8 @@ public static class MenuExtras
             res.enableAutoSizing = true;
             res.fontSizeMin = 14f;
             res.fontSizeMax = 24f;
-            string next = NextUnlocks();
-            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + (next.Length > 0 ? next + "\n\n" : "") + RunStats.Summary(false);
+            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunStats.Summary(false);
+            ResultScreen.BuildGoals(canvas.transform);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
             RectTransform rr = res.rectTransform;
             rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
             rr.anchoredPosition = new Vector2(60f, 0f);
@@ -53,13 +53,16 @@ public static class MenuExtras
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
             ar.anchoredPosition = new Vector2(0f, 40f);
             canvas.gameObject.AddComponent<QuickRestart>();
+            ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」
         }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
         {
             UIKit.EnsureStyle();
             TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 50f));
-            pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0") + "   " + Loc.T("보유 ") + CharacterData.Points.ToString("N0") + " P";
+            pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0")
+                    + (Point.RunBonus > 0 ? " <size=70%>(" + Loc.T("result.bonus").Replace("{0}", Point.RunBonus.ToString("N0")) + ")</size>" : "")     // 1.1~ 클리어 보너스
+                    + "   " + Loc.T("보유 ") + CharacterData.Points.ToString("N0") + " P";
             RectTransform pr = pt.rectTransform;
             pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
             pr.anchoredPosition = new Vector2(0f, 90f);
@@ -84,44 +87,6 @@ public static class MenuExtras
             line.daily = daily;
         }
         EndlessMode.LastSeconds = -1f;
-    }
-
-    // 1.0.3: 결과 화면의 「다음 해금까지」 — 가장 가까운 캐릭터 해금 하나 · 스킨 하나 (한 판 더 하게)
-    static string NextUnlocks()
-    {
-        if (Demo.On || TutorialRun.Active) return "";
-        List<string> lines = new List<string>();
-        int pts = CharacterData.Points;
-        for (int i = 0; i < CharacterData.All.Length; i++)
-        {
-            CharacterId id = (CharacterId)i;
-            CharacterDef d = CharacterData.Def(id);
-            if (d.price <= 0 || CharacterData.IsUnlocked(id)) continue;
-            string who = "<color=#F5D478>" + Loc.T(d.name) + "</color>  ";
-            if (!CharacterData.ConditionMet(id))
-            {
-                string prog = d.condition == CharUnlock.Endless10 && EndlessMode.BestSeconds > 0f
-                    ? "  <color=#A89C86>(" + Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds) + " / 10:00)</color>" : "";
-                lines.Add(who + CharacterData.ConditionText(d.condition) + prog);
-            }
-            else if (pts < d.price) lines.Add(who + Loc.T("해금까지") + " " + (d.price - pts).ToString("N0") + " P");
-            else lines.Add(who + "<color=#7CFF9A>" + Loc.T("지금 해금할 수 있습니다! (메인 메뉴 → 캐릭터)") + "</color>");
-            break;
-        }
-        SkinDef cheap = null;
-        foreach (SkinDef sk in SkinData.All)
-        {
-            if (SkinData.Owns(sk.id) || (sk.who >= 0 && sk.who != (int)CharacterData.Selected)) continue;
-            if (cheap == null || sk.Price < cheap.Price) cheap = sk;
-        }
-        if (cheap != null)
-        {
-            int left = cheap.Price - pts;
-            lines.Add("<color=#F5D478>" + Loc.T("스킨") + " · " + Loc.T(cheap.name) + "</color>  "
-                      + (left > 0 ? Loc.T("해금까지") + " " + left.ToString("N0") + " P" : "<color=#7CFF9A>" + Loc.T("지금 살 수 있습니다! (메인 메뉴 → 스킨 상점)") + "</color>"));
-        }
-        if (lines.Count == 0) return "";
-        return "<color=#C9A0FF>" + Loc.T("다음 해금까지") + "</color>\n" + string.Join("\n", lines);
     }
 
     static void InstallMainMenu()
@@ -207,6 +172,8 @@ public static class MenuExtras
             Button sb = start.GetComponent<Button>();
             if (sb != null) sb.onClick.Invoke();
         }
+        // 1.1~ 결과 화면 「캐릭터 바꿔 다시」로 왔으면 캐릭터 창을 바로 엶
+        if (ResultScreen.ConsumeHeroPick()) CharacterUI.Open(sr.root);
     }
 
     // 1.0.4~: 잠긴 칸 — 아이콘을 흐리게, 오른쪽 위 「잠김」, 마우스를 올리면 여는 방법
@@ -365,6 +332,8 @@ public static class MenuExtras
                         : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
                         : "";
         hint.text = Loc.T(DifficultyDescs[Mathf.Clamp((int)GameMode.Current, 0, DifficultyDescs.Length - 1)]);
+        float pointRate = GameMode.PointRateOf(GameMode.Current);      // 1.1~ 포인트 배율 (보통 ×1.3 · 어려움 ×1.5)
+        if (pointRate > 1f) hint.text += " · " + Loc.T("result.diffpoints").Replace("{0}", pointRate.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture));
         lockHint.text = Loc.T(lockText);
     }
 
