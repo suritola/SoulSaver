@@ -184,15 +184,10 @@ public class EndlessMode : MonoBehaviour
         if (finalStage < 2) finalStage = 2;
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
-<<<<<<< HEAD
         yield return new WaitForSeconds(0.5f);
         finalMusic = Mathf.Max(finalMusic, 1);      // 1.1.2~ 배너 1초 전: 보스 곡이 끊기고 무음 → 배너와 함께 개발자 곡 첫 타격 (MusicManager)
         yield return new WaitForSeconds(1.0f);
-        stages.ShowBanner((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
-=======
-        yield return new WaitForSeconds(1.5f);
         Notice.Big((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), NoticeIcon.Boss, 3.5f, NoticeLevel.Urgent);
->>>>>>> main
         Hostile.Play("roar", 1f, 0.45f);
         Hostile.Shake(0.5f);
         yield return new WaitForSeconds(2.5f);
@@ -209,15 +204,10 @@ public class EndlessMode : MonoBehaviour
         if (together) StartCoroutine(SummonDeveloper());
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
-<<<<<<< HEAD
         yield return new WaitForSeconds(together ? 3.5f : 0f);      // 함께면 개발자가 먼저 내려온 뒤
         finalMusic = 2;                                              // 1.1.2~ 배너 1초 전: 엄마 곡 (MusicManager)
         yield return new WaitForSeconds(1f);
-        stages.ShowBanner(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), 4f);
-=======
-        yield return new WaitForSeconds(together ? 4.5f : 1f);      // 함께면 개발자가 먼저 내려온 뒤
         Notice.Big(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
->>>>>>> main
         Hostile.Play("roar", 1f, 0.35f);
         Hostile.Shake(0.7f);
         yield return new WaitForSeconds(2.5f);
