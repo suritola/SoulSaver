@@ -752,11 +752,21 @@ public partial class SpecialAbilities
 
     // ================================================================= 영혼 정련 (1.0.4~)
     // 영혼 트리를 모두 배운 뒤 남는 조각을 쓰는 곳: 할 때마다 모든 무기 피해 +2% (기본 공격력 기준) · 최대 체력 +4, 끝없이
-    // 비용은 40에서 시작해 할 때마다 +10. 이어하기 기록은 r (RunSave)
-    public const int RefineBaseCost = 40, RefineCostStep = 10;
+    // 비용은 40에서 시작해 할 때마다 ×1.4 (5 단위로 반올림). 이어하기 기록은 r (RunSave)
+    // 1.1.2~: 예전엔 +10 씩만 올라 조각이 쌓이면 끝없이 눌러 공격력이 지나치게 커졌음 → 40 · 55 · 80 · 110 · 155 · 215 · 300 …
+    public const int RefineBaseCost = 40;
+    const float RefineCostGrowth = 1.4f;
     const float RefineAttack = 0.02f, RefineHp = 4f;
     public int Refines { get; private set; }
-    public int RefineCost => RefineBaseCost + RefineCostStep * Refines;
+    public int RefineCost
+    {
+        get
+        {
+            double c = RefineBaseCost * System.Math.Pow(RefineCostGrowth, Refines);
+            if (c >= int.MaxValue / 2) return int.MaxValue / 2;
+            return Mathf.Max(RefineBaseCost, (int)System.Math.Round(c / 5.0) * 5);
+        }
+    }
 
     // 지금 배울 수 있는 칸이 하나도 없음 (배울 수 없는 이유가 있는 칸 · 숨은 칸은 빼고)
     public bool TreeComplete(List<SoulNode> tree = null)

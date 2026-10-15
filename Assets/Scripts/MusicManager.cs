@@ -52,7 +52,7 @@ public class MusicManager : MonoBehaviour
         Instance = this;
         current = NewSource();
         previous = NewSource();
-        SceneManager.sceneLoaded += (s, m) => spawner = null;
+        SceneManager.sceneLoaded += (s, m) => { Hook(null); spawner = null; bossLatched = false; };
     }
 
     AudioSource NewSource()
@@ -62,6 +62,9 @@ public class MusicManager : MonoBehaviour
         s.playOnAwake = false;
         s.volume = 0f;
         s.spatialBlend = 0f;
+        // 1.1.2~ 음악은 가장 높은 우선순위 (0) — 보스전처럼 효과음이 동시에 32개(실제 재생 목소리 수)를 넘으면
+        // 우선순위가 같은(128) 효과음보다 작게 들리는 음악 쪽이 먼저 가상화돼 잠깐 끊기거나 늦게 돌아왔음
+        s.priority = 0;
         return s;
     }
 
@@ -77,6 +80,7 @@ public class MusicManager : MonoBehaviour
         string scene = sceneName;
         if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
+        Hook(spawner);
         if (BossUltimate.Active) return "bgm_domain";          // 보스 필살기 결계
         // 보스전이면 다른 무엇보다 보스 곡 (판단은 BossFight 한 곳에서만)
         // 1.1.2~: 예전엔 무한 모드 보스전에서 보스 곡 4바퀴(102.4초)마다 4장 곡(bgm_abyss)과 번갈아 틀어서,
@@ -94,7 +98,54 @@ public class MusicManager : MonoBehaviour
     // - 또는 살아 있는 보스가 하나라도 있음 (무한 모드에서 여러 보스가 함께 · 따로 쓰러질 때, 깃발이 잠깐 어긋나도 보스 곡 유지)
     // - 또는 무한 모드 최종 보스(개발자 · 엄마)가 내려오는 중 (앞 보스를 다 잡은 뒤 등장 연출 몇 초 동안 일반 곡으로 갔다 오지 않게)
     // 장 중반 이벤트 · 중간 보스 · 엘리트 · 습격 · 선택 창 · 결계 해제 등은 이 값을 바꾸지 않으므로 보스 곡을 덮을 수 없음
+    // 1.1.2~ 한 번 보스 곡이 켜지면 아래 경우에만 내림 (위 조건이 한 프레임이라도 어긋나 일반 곡으로 튀지 않게)
+    //   ① 보스 처치 (EnemySpawner.onBossDefeated — 처치 연출이 시작되는 순간)  ② 장이 바뀜  ③ 씬이 바뀜 (사망 · 메인 메뉴 · 이어하기)
+    //   ④ 안전장치: 살아 있는 보스가 하나도 없고 위 조건도 모두 거짓인 채로 게임 시간 10초 (트레일러 촬영처럼 깃발만 직접 내리는 경우에 보스 곡이 남지 않게)
+    bool bossLatched;           // 보스 곡을 틀고 있음
+    bool bossDownSignal;        // 보스 곡을 켠 뒤 보스 처치 알림을 받음
+    int latchStage = -1;        // 보스 곡을 켤 때의 장
+    float looseSince = -1f;     // 조건이 모두 거짓이 된 게임 시각 (안전장치)
+    const float LooseRelease = 10f;
+    EnemySpawner hooked;
+
+    void Hook(EnemySpawner sp)
+    {
+        if (hooked == sp) return;
+        if (hooked != null) hooked.onBossDefeated -= OnBossDown;
+        hooked = sp;
+        if (hooked != null) hooked.onBossDefeated += OnBossDown;
+    }
+
+    void OnBossDown(int stage) { if (bossLatched) bossDownSignal = true; }
+
+    void OnDestroy() => Hook(null);
+
     bool BossFight
+    {
+        get
+        {
+            int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : -1;
+            if (BossFightNow)
+            {
+                if (!bossLatched) { bossLatched = true; bossDownSignal = false; }
+                latchStage = stage;
+                looseSince = -1f;
+                return true;
+            }
+            if (!bossLatched) return false;
+            if (looseSince < 0f) looseSince = Time.time;
+            if (bossDownSignal || stage != latchStage || Time.time - looseSince >= LooseRelease)
+            {
+                bossLatched = false;
+                bossDownSignal = false;
+                looseSince = -1f;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    bool BossFightNow
     {
         get
         {
