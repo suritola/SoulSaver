@@ -184,7 +184,7 @@ public static class Juice
     static void OnKill()
     {
         if (!TutorialRun.Active && !GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode) playedThisRun = true;
-        CheckMilestone();
+        if (EnermyController.KillCounts) CheckMilestone();      // 1.2~ 처치 수가 오르지 않은 처치(정화 절반)는 같은 수로 이정표를 또 보지 않게
     }
 }
 

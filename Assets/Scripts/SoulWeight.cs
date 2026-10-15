@@ -142,6 +142,14 @@ public static class SoulWeight
         return s;
     }
 
+    // 판 시작 · 이어하기 알림판 아래 한 줄 (무게가 걸린 판만, 아니면 빈 글)
+    public static string BannerLine()
+    {
+        int w = Level;
+        if (w <= 0) return "";
+        return "\n<size=80%><color=#C9A2FF>" + Loc.T("weight.run").Replace("{0}", w.ToString()).Replace("{1}", Pct(PointAt(w) - 1f)) + "</color></size>";
+    }
+
     // 캐릭터 화면 칸 · 자세히 창 (기록이 없으면 빈 글)
     public static string CardTag(CharacterId id)
     {

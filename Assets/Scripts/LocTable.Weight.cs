@@ -50,6 +50,7 @@ public static partial class LocTable
           "Pick Hard to take on Soul Weight",
           "ハードを選ぶと「魂の重み」を背負えます",
           "选择困难即可背负「灵魂之重」");
+        A("weight.run", "영혼의 무게 {0} · 포인트 +{1}%", "Soul Weight {0} · Points +{1}%", "魂の重み{0}・ポイント+{1}%", "灵魂之重{0} · 点数+{1}%");     // 판 시작 알림 (StageManager.Opening)
         A("weight.potiondesc", "체력 {0}% 회복", "Restore {0}% HP", "体力{0}%回復", "恢复{0}%生命");
     }
 }
