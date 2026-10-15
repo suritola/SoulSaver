@@ -23,6 +23,9 @@ public class RunStats : MonoBehaviour
     public static readonly Dictionary<string, float> DamageTaken = new Dictionary<string, float>();
     public static string LastHurtBy = "";
     public static int LastHurtStage, Stage;
+    // 1.1~ 장별 소요 시간 (balance_log 의 chapter_secs): 장에 들어온 시각 "장@초|장@초" · 이어하기는 RunSave 가 되살림
+    public static string ChapterLog = "";
+    static int chapterSeen;
     static bool runActive, cleared;
     // 이번 판을 끝까지 깼는지 (결과 화면이 「클리어!」로 · 1.0.4~ 엔딩 뒤에도 결과 화면을 거침)
     public static bool Cleared => cleared;
@@ -54,6 +57,8 @@ public class RunStats : MonoBehaviour
             DamageTaken.Clear();
             LastHurtBy = "";
             LastHurtStage = Stage = 0;
+            ChapterLog = "";
+            chapterSeen = 0;
             DamageSource.Current = null;
             new GameObject("RunStats").AddComponent<RunStats>();
         };
@@ -143,6 +148,7 @@ public class RunStats : MonoBehaviour
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
         if (StageManager.Instance != null) Stage = Chapters.Number(StageManager.Instance.CurrentStage);
+        NoteChapter();
 
         // 0.5초마다 씬을 뒤지지 않게 한 번 찾아 두고 씀
         if (sp == null) sp = FindFirstObjectByType<SpecialAbilities>();
@@ -288,13 +294,52 @@ public class RunStats : MonoBehaviour
     // 판이 끝날 때마다 한 줄 (persistentDataPath/balance_log.csv): 영혼 조각 · 진화 시점 · 가지별 칸 수를 숫자로 보고 조정하려고
     public static string BalanceLogPath => System.IO.Path.Combine(Application.persistentDataPath, "balance_log.csv");
 
+    // 1.1~ 새 장에 들어오면 그 시각을 적어 둠
+    static void NoteChapter()
+    {
+        if (Stage <= 0 || Stage == chapterSeen) return;
+        chapterSeen = Stage;
+        ChapterLog += (ChapterLog.Length > 0 ? "|" : "") + Stage + "@" + Seconds.ToString("0");
+    }
+
+    // 이어하기 (RunSave): 저장해 둔 장 기록으로 바꾸고, 마지막으로 적은 장부터 이어서
+    public static void RestoreChapterLog(string log)
+    {
+        ChapterLog = log ?? "";
+        chapterSeen = 0;
+        int at = ChapterLog.LastIndexOf('|') + 1;
+        int sep = ChapterLog.IndexOf('@', at);
+        if (sep > at) int.TryParse(ChapterLog.Substring(at, sep - at), out chapterSeen);
+    }
+
+    // 장마다 머문 시간 "장:초|장:초" (마지막 장은 판이 끝날 때까지)
+    static string ChapterDurations()
+    {
+        if (string.IsNullOrEmpty(ChapterLog)) return "";
+        string[] parts = ChapterLog.Split('|');
+        List<string> outs = new List<string>();
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string[] a = parts[i].Split('@');
+            if (a.Length < 2 || !float.TryParse(a[1], out float from)) continue;
+            float to = Seconds;
+            if (i + 1 < parts.Length)
+            {
+                string[] b = parts[i + 1].Split('@');
+                if (b.Length > 1 && float.TryParse(b[1], out float next)) to = next;
+            }
+            outs.Add(a[0] + ":" + Mathf.Max(0f, to - from).ToString("0"));
+        }
+        return string.Join("|", outs);
+    }
+
     static void WriteBalanceLog(string result)
     {
         if (GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return;     // 테스트 · 자동 플레이는 기록하지 않음
         try
         {
             string path = BalanceLogPath;
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit";
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs";
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
             if (System.IO.File.Exists(path))
             {
@@ -331,7 +376,8 @@ public class RunStats : MonoBehaviour
             b.Append(',').Append(Stage)
              .Append(',').Append(Sum(DamageDealt).ToString("0")).Append(',').Append(By(DamageDealt))
              .Append(',').Append(Sum(DamageTaken).ToString("0")).Append(',').Append(By(DamageTaken))
-             .Append(',').Append(result == "death" ? LastHurtBy : "").AppendLine();
+             .Append(',').Append(result == "death" ? LastHurtBy : "")
+             .Append(',').Append(ChapterDurations()).AppendLine();       // 1.1~ 장별 소요 시간
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
         }
         catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }

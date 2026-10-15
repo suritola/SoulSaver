@@ -23,6 +23,7 @@ public static class RunSave
         public int level, earned, pending, coins, shards, shardsTotal, shardsSpent;
         public float hp, nowExp, needExp, gauge, seconds;
         public float clock;                             // 화면 위 시계 (1.0.4~, 없으면 seconds 로)
+        public string chapterLog = "";                  // 1.1~ 장에 들어온 시각 (RunStats.ChapterLog · balance_log 장별 소요 시간)
         public bool hasPos;                             // 나갈 때 서 있던 곳 (1.0.4~, 같은 장에서 보스가 나오기 전에만)
         public float px, py;
         // 1.0.4~: 끝나지 않은 일 — 보스를 잡고 문에 들어가기 전에 나갔음 · 보스 보상을 아직 안 고름 · 이 장 저주 제단을 아직 안 고름
@@ -159,6 +160,7 @@ public static class RunSave
             needExp = p.needEXP,
             seconds = RunStats.Seconds,
             clock = RunClock.Elapsed,
+            chapterLog = RunStats.ChapterLog,
             runKills = RunStats.Kills,
             shards = SoulShards.Amount,
             shardsTotal = SoulShards.Total,
@@ -314,6 +316,7 @@ public static class RunSave
         RunStats.Seconds = d.seconds;
         RunStats.Kills = d.runKills;
         RunStats.Level = d.level;
+        RunStats.RestoreChapterLog(d.chapterLog);                   // 1.1~
         RunStats.DamageDealt.Clear();
         for (int i = 0; i < d.dealtKeys.Count && i < d.dealtValues.Count; i++) RunStats.DamageDealt[d.dealtKeys[i]] = d.dealtValues[i];
         RunStats.DamageTaken.Clear();

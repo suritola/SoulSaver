@@ -87,6 +87,8 @@ public class EnermyController : MonoBehaviour
     [HideInInspector] public bool difficultyApplied;
     // 보스가 나오기 전에 생긴 적 (처치 수로 보스를 부름): 처치 수가 늘어난 만큼 보상 · 영혼 조각을 나눔
     [HideInInspector] public bool countsTowardBoss;
+    // 1.1~ 영혼 부스러기 무리 (SwarmWave): 있으면 이동 · 몸통 닿기 · 죽은 뒤 처리를 부스러기가 맡음 (체력바 없음 · 한 화면 최대 수 · 보스까지 처치 수와 따로 셈)
+    [HideInInspector] public SwarmMote swarm;
 
     // 생기자마자 대응표에 등록 (같은 물리 단계의 다른 적도 바로 알아보게), 사라지면 지움
     void Awake()
@@ -149,7 +151,7 @@ public class EnermyController : MonoBehaviour
         spriteRenderer.color = baseColor;
 
         // 머리 위 체력바
-        EnemyHealthBar.Attach(this, spriteRenderer);
+        if (swarm == null) EnemyHealthBar.Attach(this, spriteRenderer);       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
 
         if (skill != EnemySkillType.None)
         {
@@ -183,6 +185,7 @@ public class EnermyController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (swarm != null) return;      // 1.1~ 부스러기는 SwarmMote 가 직선으로 움직임 (밀어내기 · 벽 검사 없음)
         // 죽지 않았을 때만 이동
         if (!isDead && player != null && !casting)
         {
@@ -243,6 +246,15 @@ public class EnermyController : MonoBehaviour
         EnemyHealth = 0;
         Die(1);
     }
+
+    // 1.1~ 영혼 부스러기 풀 (SwarmMote): 다시 꺼낼 때 죽은 표시를 풀고 체력을 채움 · 풀로 돌아갈 때 죽은 것으로 (꺼진 채 남은 참조가 때리지 않게)
+    public void ReviveForPool()
+    {
+        isDead = false;
+        EnemyHealth = setEnemyHP;
+        if (bodyCollider != null) bodyCollider.enabled = true;
+    }
+    public void PoolDead() => isDead = true;
 
     // 몸 반지름 (월드): 키운 히트박스가 아니라 예전 크기 — 밀어내기 · 벽 판정이 예전처럼
     // 아직 Start 전이면 (막 소환된 적) 받은 콜라이더로
@@ -345,6 +357,7 @@ public class EnermyController : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        if (swarm != null) { swarm.Died(a == 1); return; }      // 1.1~ 부스러기: 경험치 · 처치 알림 · 풀로 돌려놓기는 SwarmMote (스포너 수 · 코인 · 포인트 없음)
         // 영혼 트리 '저주 전이': 걸려 있던 화상 · 독 · 출혈을 가까운 적에게 (상태 이상이 아직 붙어 있을 때)
         if (a == 1 && SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.FateOnEnemyDie(this);
         if (a == 1) Killed?.Invoke(transform.position);
@@ -418,6 +431,7 @@ public class EnermyController : MonoBehaviour
 
     void TouchPlayer(Collider2D collision)
     {
+        if (swarm != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수)
         if (isDead || !collision.CompareTag("Player")) return;
         if (hitbox != null && !hitbox.Touching(collision)) return;      // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음
 
