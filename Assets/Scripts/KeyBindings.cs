@@ -42,14 +42,16 @@ public static class KeyBindings
         if (!CanBind(a, key)) return false;
         KeyCode old = keys[(int)a];
         // 1.0.4~ 맞바꿀 키(좌클릭)를 받을 수 없는 동작은 그 동작의 기본 키로 (기본 키도 겹치면 바꾸지 않음)
-        // 1.1~ 설정에 안 보이는 동작(무기 교체 · 스킬 1~3, 지금은 쓰지 않음)은 막지 않고 키를 그대로 둠
+        // 1.1~ 설정에 안 보이는 동작(무기 교체 · 스킬 1~3 — 스킬은 보물 상자 「잠든 힘」으로 생김)은 막지 않고 키를 그대로 둠
         for (int i = 0; i < keys.Length; i++)
             if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i) && Swapped(i, old) == key && !Hidden(i)) return false;
         for (int i = 0; i < keys.Length; i++)
             if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i))
             {
-                if (Swapped(i, old) == key) continue;       // 1.1~ 안 보이는 동작: 맞바꿀 수 없으면 그대로
                 KeyCode give = Swapped(i, old);
+                // 1.1.0 다시 올림: 안 보이는 동작(스킬 1~3 · 무기 교체)이 맞바꿀 수 없으면 그대로 겹친 채 저장돼 공격할 때 스킬도 나갔음 → 비어 있는 키로
+                if (give == key) give = FreeKey((GameAction)i, key);
+                if (give == key) continue;
                 keys[i] = give;
                 Prefs.SetInt("keys." + (GameAction)i, (int)give);
             }
@@ -57,6 +59,21 @@ public static class KeyBindings
         Prefs.SetInt("keys." + a, (int)key);
         Loc.RaiseChanged();
         return true;
+    }
+
+    static readonly KeyCode[] Spare = { KeyCode.E, KeyCode.F, KeyCode.C, KeyCode.Q, KeyCode.R, KeyCode.Z, KeyCode.X, KeyCode.V, KeyCode.G, KeyCode.T };
+
+    // 아무 동작도 쓰지 않는 키 (없으면 key 그대로)
+    static KeyCode FreeKey(GameAction a, KeyCode key)
+    {
+        foreach (KeyCode k in Spare)
+        {
+            if (k == key || !CanBind(a, k)) continue;
+            bool used = false;
+            for (int j = 0; j < keys.Length; j++) if (keys[j] == k && !Separate(a, (GameAction)j)) { used = true; break; }
+            if (!used) return k;
+        }
+        return key;
     }
 
     static bool Hidden(int i) => i == (int)GameAction.Swap || (i >= (int)GameAction.Skill1 && i <= (int)GameAction.Skill3);

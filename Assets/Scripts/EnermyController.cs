@@ -426,7 +426,7 @@ public class EnermyController : MonoBehaviour
         if (a == 1) Killed?.Invoke(transform.position);
         if (a == 1) onKilled?.Invoke();
         if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
-        if (a == 1 && GetComponent<MidBossMark>() != null) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
+        if (a == 1 && IsMidBoss) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
         spriteRenderer.color = baseColor;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음
@@ -446,10 +446,10 @@ public class EnermyController : MonoBehaviour
             Point point = Cache<Point>.Get;
 
             // 1.0.4~: 중간 보스는 +100P (예전엔 일반 적과 같은 10P)
-            if (point != null) point.AddPoint(GetComponent<MidBossMark>() != null ? 100 : 10);
+            if (point != null) point.AddPoint(IsMidBoss ? 100 : 10);
 
             // 영혼 조각: 강한 적 · 중간 보스일수록 많이 (중간 보스는 크게 알림)
-            SoulShards.Add(SoulShards.ForEnemy(this), transform.position, GetComponent<MidBossMark>() != null);
+            SoulShards.Add(SoulShards.ForEnemy(this), transform.position, IsMidBoss);
         }
 
         if (animator != null) animator.SetTrigger("death");
@@ -493,9 +493,13 @@ public class EnermyController : MonoBehaviour
         TouchPlayer(collision);
     }
 
+    // 1.1.0 다시 올림: 황금 고블린은 이름표 때문에 MidBossMark 가 붙지만 중간 보스 보상(+100P · 멈춤 · 큰 조각)은 주지 않음 (SignatureSkills.IsBoss 와 같은 기준)
+    public bool IsMidBoss => GetComponent<MidBossMark>() != null && GetComponent<GoldenGoblin>() == null;
+
     void TouchPlayer(Collider2D collision)
     {
         if (swarm != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수)
+        if (contactDamage <= 0f) return;    // 1.1.0 다시 올림: 황금 고블린(피해 0)에 닿으면 보호막이 사라지고 피격음 · 무적이 붙었음
         if (isDead || !collision.CompareTag("Player")) return;
         if (hitbox != null && !hitbox.Touching(collision)) return;      // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음
 

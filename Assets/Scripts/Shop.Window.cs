@@ -131,6 +131,7 @@ public partial class Shop
     // 1.1~ 강화를 사도 소리 · 반응이 없어 산 건지 헷갈렸음 → 소리 + 카드가 잠깐 커졌다 돌아옴 (상점은 시간을 멈추므로 실제 시간)
     void Bought(Button button)
     {
+        if (RunSave.Replaying) return;      // 1.1.0 다시 올림: 이어하기에서 구매 기록을 다시 적용할 때 소리가 구매 수만큼 겹쳤음
         Hostile.Play("levelup", 0.5f, 1.15f);
         if (button != null && button.transform.parent != null && isActiveAndEnabled) StartCoroutine(Pulse(button.transform.parent));
     }
