@@ -496,9 +496,12 @@ public class TutorialRun : MonoBehaviour
         body = UIKit.Text(panel, "", 24f, Parch, new Vector2(0f, -10f), new Vector2(940f, 64f));
         body.enableWordWrapping = true;
         body.enableAutoSizing = true;
-        body.fontSizeMin = 16f;
+        body.fontSizeMin = 20f;      // 1.1.2~ 16 -> 20 (안내 메시지 개편 · 최소 글자 크기)
         body.fontSizeMax = 24f;
         foreach (TMP_Text t in new[] { counter, title, check, body }) UIKit.Forget(t);
+        // 1.1.2~ 안내 메시지와 같은 진한 외곽선 + 그림자 (Notice.TextMaterial)
+        Material outlined = Notice.TextMaterial;
+        if (outlined != null) foreach (TMP_Text t in new[] { counter, title, check, body }) t.fontSharedMaterial = outlined;
 
         RectTransform track = UIKit.Rect("Track", panel, new Vector2(0f, -58f), new Vector2(900f, 10f));
         Image tb = track.gameObject.AddComponent<Image>();

@@ -154,7 +154,7 @@ public static class Juice
             Coin coin = Cache<Coin>.Get;
             if (coin != null) coin.AddCoin(MilestoneCoins[i]);
             if (StageManager.Instance != null)
-                StageManager.Instance.ShowBanner(Loc.T("juice.milestone").Replace("{0}", kills.ToString()).Replace("{1}", MilestoneCoins[i].ToString()), 2.2f);
+                Notice.Toast(NoticeIcon.Coin, Loc.T("juice.milestone").Replace("{0}", kills.ToString()).Replace("{1}", MilestoneCoins[i].ToString()), 4f);
             Hostile.Play("chime", 0.7f);
             return;
         }

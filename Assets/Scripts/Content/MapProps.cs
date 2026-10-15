@@ -171,7 +171,7 @@ public class MapProps : MonoBehaviour
     {
         yield return new WaitForSeconds(4.5f);
         if (sarco == null || sarco.Broken) yield break;
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("prop.sarco.appear"), 3f, true);
+        Notice.Big(Loc.T("prop.sarco.appear"), NoticeIcon.Relic, 3.5f, NoticeLevel.Important);
         Hostile.Play("pulse", 0.6f, 0.7f);
         ShockRing.Spawn(sarco.Home, 0.5f, 5f, 0.8f, SarcoColor, 0.3f);
     }
@@ -301,7 +301,7 @@ public class MapProps : MonoBehaviour
             int coins = 40 + 20 * slot;
             DropCtx c = new DropCtx { player = Hostile.Player, at = at, slot = slot, host = this };
             GiveCoinsAt(c, coins, 1);
-            if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("prop.sarco.empty").Replace("{0}", coins.ToString()), 2.5f);
+            Notice.Toast(NoticeIcon.Coin, Loc.T("prop.sarco.empty").Replace("{0}", coins.ToString()), 4f);
             MarkOpened(slot);
             yield break;
         }
@@ -351,9 +351,10 @@ public class MapProps : MonoBehaviour
         Juice.CoinPicked(c.at, true);
     }
 
-    static void Float(Vector3 at, string text, Color color)
+    // 1.1.2~ 안내 메시지 개편: 줍기 결과는 머리 위 글자(이펙트 · 적 사이에 묻힘) 대신 오른쪽 위 토스트 (그 물건 그림 · 색)
+    static void Float(Vector3 at, string text, Color color, NoticeIcon icon = NoticeIcon.Coin)
     {
-        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.FloatText(at, text, color, 5f, 0f);
+        Notice.Toast(icon, text, 3.5f, color);
     }
 
     public static void DropCoins(DropCtx c)
@@ -380,7 +381,7 @@ public class MapProps : MonoBehaviour
         float before = p.PlayerHealth;
         p.PlayerHealth = Mathf.Min(p.PlayerMaxHealth, p.PlayerHealth + heal);
         Fx.Spawn("fx_levelup", p.transform.position + Vector3.up, 3f, new Color(1f, 0.55f, 0.5f), 16f);
-        Float(p.transform.position + Vector3.up * 1.5f, Loc.T("drop.meat.text").Replace("{0}", Mathf.RoundToInt(p.PlayerHealth - before).ToString()), new Color(1f, 0.55f, 0.5f));
+        Float(p.transform.position + Vector3.up * 1.5f, Loc.T("drop.meat.text").Replace("{0}", Mathf.RoundToInt(p.PlayerHealth - before).ToString()), new Color(1f, 0.55f, 0.5f), NoticeIcon.Meat);
         Hostile.Play("chime", 0.6f, 1.2f);
     }
 
@@ -389,7 +390,7 @@ public class MapProps : MonoBehaviour
         if (c.player == null || c.host == null) return;
         c.host.StartCoroutine(Magnet(c.player));
         ShockRing.Spawn(c.player.transform.position, 0.5f, 16f, 0.6f, new Color(1f, 0.5f, 0.5f, 0.9f), 0.3f);
-        Float(c.player.transform.position + Vector3.up * 1.5f, Loc.T("drop.magnet.text"), new Color(1f, 0.6f, 0.55f));
+        Float(c.player.transform.position + Vector3.up * 1.5f, Loc.T("drop.magnet.text"), new Color(1f, 0.6f, 0.55f), NoticeIcon.Magnet);
         Hostile.Play("rl_magnet", 0.7f, 1f);
     }
 
@@ -415,7 +416,7 @@ public class MapProps : MonoBehaviour
         Fx.Spawn("fx_shock", at, 16f, blue, 12f);
         FxAnim clock = Fx.Play("fx_rune", at, 14f, new Color(0.6f, 0.85f, 1f, 0.45f), 1f, 0f, 1, true, TimeStopSeconds);
         if (clock != null) { clock.follow = p.transform; clock.spin = -40f; }
-        Float(at + Vector3.up * 1.5f, Loc.T("drop.timestop.text"), blue);
+        Float(at + Vector3.up * 1.5f, Loc.T("drop.timestop.text"), blue, NoticeIcon.Hourglass);
         Hostile.Play("shimmer", 0.9f, 0.5f);
         yield return new WaitForSeconds(TimeStopSeconds);
         if (Mathf.Approximately(EnermyController.GlobalSpeedMultiplier, TimeStopMul)) EnermyController.GlobalSpeedMultiplier = 1f;     // 그 사이 다른 효과가 바꿨으면 그대로
@@ -446,7 +447,7 @@ public class MapProps : MonoBehaviour
         ShockRing.Spawn(me, 0.5f, PurifyRadius, 0.6f, new Color(1f, 0.97f, 0.8f, 0.95f), 0.5f);
         Fx.Spawn("fx_shock", me, PurifyRadius * 2f, white, 12f);
         Fx.Spawn("fx_soulburst", me, 6f, white, 16f);
-        Float(me + Vector3.up * 1.5f, Loc.T("drop.purify.text").Replace("{0}", hit.Count.ToString()), white);
+        Float(me + Vector3.up * 1.5f, Loc.T("drop.purify.text").Replace("{0}", hit.Count.ToString()), white, NoticeIcon.Purify);
         Hostile.Play("pulse", 0.9f, 1.4f);
         Hostile.Shake(0.15f);
     }

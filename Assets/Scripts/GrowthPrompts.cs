@@ -67,7 +67,7 @@ public class GrowthPrompts : MonoBehaviour
         if (sm != null && sm.BannerBusy) { next = now + 3f; return; }
         next = now + every;
         count++;
-        if (sm != null) sm.ShowBanner(banner, 2.2f);
+        if (sm != null) Notice.Toast(NoticeIcon.Up, banner, 4.5f);
         if (bosss.LiveCount == 0) Hostile.Play("chime", 0.8f, 1.2f);
     }
 

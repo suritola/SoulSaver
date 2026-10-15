@@ -113,7 +113,7 @@ public partial class Shop : MonoBehaviour
         ShopStall.Spawn(this, at);
         // 1.0.4~: 「영구히 · 체력」 → 이번 판 동안 · 실제로 파는 것 (공격력 · 이동 속도 · 물약), 머무는 시간 10초 → 15초
         Hints.Show("shop", "떠돌이 상점에서는 코인으로 이번 판 동안 공격력 · 이동 속도를 올리고 물약을 살 수 있습니다. 가까이 가서 [{INTERACT}]");
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("떠돌이 상점이 나타났다!\n15초 안에 다가가 [{INTERACT}]"), 2.2f);
+        Notice.Big(Loc.T("떠돌이 상점이 나타났다!\n15초 안에 다가가 [{INTERACT}]"), NoticeIcon.Shop, 3f, NoticeLevel.Normal);
     }
 
     // 1.0.4~: 떠돌이 상점을 열지 못하고 놓쳤으면 다음 상점은 절반만 잡아도 나타남 (ShopStall 이 부름)

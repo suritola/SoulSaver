@@ -123,7 +123,7 @@ public partial class LevelShop
         StageManager sm = StageManager.Instance;
         // 칸이 채워지는 모양 (금빛 ◆ = 채운 막대)
         string pips = "<color=#FFD75A>" + new string('◆', transcendBars) + "</color><color=#5E5272>" + new string('◆', TranscendBarsPer - transcendBars) + "</color>";
-        if (sm != null) sm.ShowBanner(Loc.T("새 규칙까지") + "  " + pips, 1.5f);
+        if (sm != null) Notice.Toast(NoticeIcon.Up, Loc.T("새 규칙까지") + "  " + pips, 3f);
     }
 
     IEnumerator TranscendPick()
@@ -159,7 +159,7 @@ public partial class LevelShop
             transcendBars = 0;
             if (bul != null) Juice.LevelUp(bul.transform.position);
             StageManager sm = StageManager.Instance;
-            if (sm != null) sm.ShowBanner(TranscendName(chosen) + "  <color=#FFD75A>" + TranscendStageText(chosen, before) + "</color>", 2f);
+            if (sm != null) Notice.Toast(NoticeIcon.Up, TranscendName(chosen) + "  <color=#FFD75A>" + TranscendStageText(chosen, before) + "</color>", 3.5f);
             Hints.Show("transcend", "최대 레벨에 닿은 뒤에는 경험치 막대를 세 번 채울 때마다 초월 카드로 판의 규칙 하나를 바꿉니다. (레벨은 오르지 않고, 같은 카드를 다시 고르면 다음 단계가 됩니다)");
         }
         transcendReadyAt = -1f;

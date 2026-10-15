@@ -32,7 +32,7 @@ public partial class SpecialAbilities
         {
             fx.Play("shimmer", 0.8f, 0.9f);
             fx.Play("chime", 0.7f, 1.2f);
-            if (player != null) fx.FloatText(player.transform.position + Vector3.up * 1.4f, Loc.T("relic.equip").Replace("{0}", Loc.T(abilities[id].name)), new Color(0.8f, 0.6f, 1f), 6f, 0f);
+            // 1.1.2~ 머리 위 「유물 장착: 이름」은 큰 키캡 알림(AnnounceKey -> Notice.BigKey)과 같은 말이라 뺌
         }
         if (player != null) Fx.Spawn("fx_soulburst", player.transform.position, 4f, new Color(0.75f, 0.5f, 1f), 18f);
         return true;

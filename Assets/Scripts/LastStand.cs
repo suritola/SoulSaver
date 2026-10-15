@@ -53,7 +53,7 @@ public static class LastStand
         DamageFlash.Show(0.4f);
         Hostile.Play("chime", 0.8f, 0.8f);
         Hostile.Play("pulse", 0.7f, 0.7f);
-        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.FloatText(c + Vector3.up * 1.5f, Loc.T("최후의 보루!"), Gold, 6f, 0f);
+        Notice.Big(Loc.T("최후의 보루!"), Loc.T("notice.laststand.sub"), NoticeIcon.Shield, 2f, NoticeLevel.Urgent);     // 1.1.2~ 머리 위 글자 -> 큰 알림
         Fired?.Invoke(p, c);
         Hints.Show("laststand", "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.");
     }

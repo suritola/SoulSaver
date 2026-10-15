@@ -233,7 +233,7 @@ public static class CharacterData
         Prefs.SetInt(ConditionKey + (int)c, 1);
         Prefs.Save();
         if (StageManager.Instance != null)
-            StageManager.Instance.ShowBanner(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), 4f, true);     // 1.0.4~ 보스 처치 등 다른 알림에 덮이지 않게
+            Notice.Big(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), NoticeIcon.Unlock, 4.5f, NoticeLevel.Important);     // 1.0.4~ 보스 처치 등 다른 알림에 덮이지 않게
         Hostile.Play("chime", 0.9f, 1.1f);
     }
 
