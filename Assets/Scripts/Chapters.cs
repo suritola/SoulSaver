@@ -81,7 +81,11 @@ public static class Chapters
 
     static float Ease(float[] t, int stage) => IsClassic || stage < 0 || stage >= t.Length ? 1f : t[Mathf.Clamp(SlotOf(stage), 0, t.Length - 1)];
 
-    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage);
+    // 1.1.3 빌드 뒤: 「잡몹 체력 20~40% 올려」 — 잡몹 · 엘리트 · 중간 보스(EnermyController) 체력을 장마다 1장 +20% · 2장 +25% · 3장 +30% · 4장 +40%, 무한 모드 +40%
+    //   체험판 · 클래식 순서(IsClassic)에도 걸리게 Ease 와 따로 (보스는 그대로)
+    static readonly float[] MobHpUp = { 1.2f, 1.25f, 1.3f, 1.4f };
+    public static float MobHpBoost(int stage) => GameMode.IsEndless ? 1.4f : stage < 0 ? 1f : MobHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, MobHpUp.Length - 1)];
+    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage) * MobHpBoost(stage);
     public static float RewardMul(int stage) => Ratio(Reward, stage) * Ease(EaseReward, stage);
     public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage);
     // 플레이어가 받는 모든 피해 (몸통 · 적 스킬 · 보스 스킬 · 결계): 지금 장 기준

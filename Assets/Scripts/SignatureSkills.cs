@@ -148,7 +148,7 @@ public partial class SignatureSkills : MonoBehaviour
     //   지금 공격력 ÷ 캐릭터 배율 × 고유 스킬 배율 (레벨업 · 영혼 트리 강화는 그대로 반영)
     //   검사는 2 (2.1.8: 3 → 2, 체력 · 공격력 · 충전 · 생존기를 다 가져 너무 셌음), 도적은 후반 하향으로 0.85, 나머지는 1
     float Atk => player != null ? player.damage * player.damageMultiplier / Mathf.Max(0.1f, CharacterData.Current.damage) * SigPower : 1f;
-    float SigPower => who == CharacterId.Swordsman ? 1.4f : who == CharacterId.Rogue ? 0.85f : 1f;     // 1.1.3: 검사 2 → 1.7 (밸런스 점검 · CharacterData 주석)
+    float SigPower => who == CharacterId.Swordsman ? 0.98f : who == CharacterId.Rogue ? 0.85f : 1f;     // 1.1.3: 검사 2 → 1.7 (밸런스 점검 · CharacterData 주석)
     bool Alive => player != null && !player.IsDying;
 
     // ================================================================= 훅 (게임 코드가 부름 · 없으면 아무것도 안 함)
