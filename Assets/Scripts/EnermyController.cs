@@ -313,6 +313,7 @@ public class EnermyController : MonoBehaviour
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
         if (isDead || !ready) return;
+        damage *= GameMode.PlayerDamageMul;      // 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
 
         if (DamageHook != null) damage = DamageHook(this, damage);
         damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (위협 · 역습 · 표식 …)
