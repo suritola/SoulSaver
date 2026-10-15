@@ -52,7 +52,8 @@ public partial class SignatureSkills
         // 곡소리: 영혼이 막을 때 둘레를 밀치고 피해 (밴시: 얼림)
         if (L("h.wail") <= 0) return;
         float r = 3.5f * Fs("h.wail");
-        Circle(p, r, Atk * V(L("h.wail"), 0.8f, 0.2f), 3f, c => { if (E("he.banshee") && Kit != null) Kit.AddChill(c.gameObject, 9); });
+        using var tier = EvoFx("h.wail");
+        Circle(p, r, Atk * V(L("h.wail"), 0.8f, 0.2f) * P("h.wail"), 3f, c => { if (E("he.banshee") && Kit != null) Kit.AddChill(c.gameObject, 9); });
         ShockRing.Spawn(p, 0.4f, r, 0.35f, Tint("h.wail", GhostC), 0.25f);
         Flair("h.wail", p, r * 0.7f, GhostC);
         Hostile.Play("roar", 0.4f, 1.8f);
@@ -146,6 +147,7 @@ public partial class SignatureSkills
         }
         if (t == null) yield break;
         if (lift) t.position = start;
+        using var tier = EvoFx("h.polter");
         Deal(t.gameObject, Atk * V(L("h.polter"), 1f, 0.4f), Vector3.zero, 0f);
         // 1.0.2: 내리꽂는 피해는 그 적 하나뿐이라, 충격파(범위 이펙트)를 그 적의 몸 크기로 (예전엔 지름 3 · 진화 5칸으로 둘레까지 맞는 것처럼 보였음)
         float body = t.TryGetComponent(out Collider2D col) ? Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 2f + 0.6f : 1.6f;

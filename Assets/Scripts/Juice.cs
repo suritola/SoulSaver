@@ -78,6 +78,16 @@ public static class Juice
         Runner.Hold(SlowScale, 0.35f);
     }
 
+    // 1.1.2~ 스킬 진화 순간 (SignatureSkills.EvolvedMoment): 0.5초 슬로모션(0.3배) + 옅은 번쩍임 (번쩍임 효과를 끄면 슬로모션만)
+    public static void Evolve()
+    {
+        if (Application.isBatchMode) return;
+        if (GameSettings.Flashes) Runner.Flash(0.35f);
+        if (!CanStop()) return;
+        lastStopAt = Time.unscaledTime;
+        Runner.Hold(0.3f, 0.5f);
+    }
+
     static JuiceRunner runner;
     static JuiceRunner Runner
     {
