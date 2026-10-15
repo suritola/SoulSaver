@@ -37,6 +37,10 @@ public static class RunSave
         public List<string> log = new List<string>();
         public List<string> dealtKeys = new List<string>();
         public List<float> dealtValues = new List<float>();
+        // 1.1~ 콘텐츠 항목 표 (RunContent): 이벤트 시드(0 = 옛 저장 → 30% · 55% 고정) · 이번 장 계획(saveCode@처치 비율) · 이번 판에 쓴 이벤트 · 다시 할 이벤트(번호+1) · 상자 전설 · 진화 촉매 횟수
+        public int eventSeed, eventStage, eventActive, chestLegends, chestCatalysts;
+        public List<string> eventPlan = new List<string>();
+        public List<string> eventUsed = new List<string>();
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -221,6 +225,7 @@ public static class RunSave
             }
         }
 
+        RunContent.Save(d);                                         // 1.1~ 이벤트 계획 · 상자 전설 횟수
         Prefs.SetString(Key, JsonUtility.ToJson(d));
         Prefs.Save();
     }
@@ -323,6 +328,7 @@ public static class RunSave
         bool firstChapter = Chapters.SlotOf(d.stage) == 0;
         if (sp != null) sp.RestoreKills(d.kills, d.midBossAlive && !firstChapter);
         ChapterEvents.Resume(d.ambushLeft, d.midBossAlive && firstChapter, d.chests);
+        RunContent.Restore(d);                                      // 1.1~ 이벤트 계획 · 상자 전설 횟수 (옛 저장은 30% · 55% 고정)
         if (!d.gatePending) LastStand.Used = d.lastStandUsed;
         if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
         NeedEvolution = d.needEvolution;

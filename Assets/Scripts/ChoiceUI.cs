@@ -18,7 +18,7 @@ public class ChoiceUI : MonoBehaviour
         public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; }
     }
 
-    public static bool Open { get; private set; }
+    public static bool Open { get; internal set; }      // 1.1~ internal: 전설 상자 룰렛(ChestRewards)도 켬
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.93f, 0.9f, 0.84f);
