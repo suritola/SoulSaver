@@ -52,8 +52,10 @@ public class EndlessMode : MonoBehaviour
         {
             if (finalMusic == 0) return 0;
             if (finalStage >= 3) return finalMusic;
-            bool momLive = momSummoned && !momDown && (mom == null || !mom.IsDead);
-            bool devLive = devSummoned && !devDown && (developer == null || !developer.IsDead);
+            // 처치 처리(devDown · momDown)로만 판단 — IsDead 를 보면 쓰러지는 연출 1초(boss.Death) 동안 0 이 되어
+            // 보스 곡으로 튀었다가 클리어 순간 엄마 곡이 처음부터 다시 나왔음
+            bool momLive = momSummoned && !momDown;
+            bool devLive = devSummoned && !devDown;
             if (finalMusic == 2 && momLive) return 2;
             if (devLive) return 1;
             return momLive ? 1 : 0;      // 엄마가 불렸지만 아직 신호 전(함께 등장) — 개발자 곡 유지
@@ -285,9 +287,14 @@ public class EndlessMode : MonoBehaviour
         Prefs.SetInt(ClearKey, 1);
         CharacterData.Achieve(CharUnlock.EndlessClear);      // 새 캐릭터 해제 조건 (1.0.2)
         Prefs.Save();
+        // 최종 클리어 보너스: 1.1.4~ 엔딩(StoryDirector.RunEnding)을 거치지 않으므로 여기서 같은 조건으로 (일일 도전은 없음 · 판마다 한 번)
+        // 결과 화면의 획득 포인트에 들어감 (Point.RunBonus 는 한계 돌파 뒤 죽을 때까지 남음)
+        int bonusBefore = Point.RunBonus;
+        if (!DailyChallenge.Active) Point.Bonus(Point.FinalBonus);
+        string bonus = Point.RunBonus > bonusBefore ? "\n" + Loc.T("result.finalbonus").Replace("{0}", Point.FinalBonus.ToString("N0")) : "";
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);
-        Notice.Big(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), NoticeIcon.Star, 6f, NoticeLevel.Important);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
+        Notice.Big(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds) + bonus, NoticeIcon.Star, 6f, NoticeLevel.Important);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
         Hostile.Play("chime", 1f, 1f);
         yield return new WaitForSecondsRealtime(5f);
         // 1.1.4~ 한계 돌파: 최종 보스 곡을 끄고(평소 · 보스 곡으로) 적 · 보스를 다시, 초월 카드도 다시 열림 (Cleared 는 finalStage 3 동안만)

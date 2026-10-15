@@ -813,6 +813,21 @@ public partial class SpecialAbilities
         AddAttack(pct);
     }
 
+    // 이어하기 (RunSave): 기준 공격력 · 기준 탄창을 저장해 두었다가 기록을 다시 적용하기 전에 되돌림
+    public void GetBase(out float attack, out int mag)
+    {
+        attack = baseAttack > 0f ? baseAttack : 0f;
+        mag = baseAttack > 0f ? basePistolMag : 0;
+    }
+
+    // 저장값이 없으면(옛 저장 · 아직 정해지지 않음) 지금 = 시작 공격력으로 정함 — 실제 판에서 시작 직후 정해지는 값과 같음
+    public void RestoreBase(float attack, int mag)
+    {
+        if (player == null) player = FindFirstObjectByType<PlayerController>();
+        if (attack > 0f) { baseAttack = attack; basePistolMag = mag; }
+        else if (baseAttack < 0f && player != null) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }
+    }
+
     public void GrowRate(float mul)
     {
         if (player != null) AddRate(mul);

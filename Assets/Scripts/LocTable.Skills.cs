@@ -369,10 +369,10 @@ public static partial class LocTable
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         A("트리를 모두 배우면 열립니다", "Unlocks once the whole tree is learned", "ツリーをすべて習得すると解放", "学满整棵树后解锁");
         A("눌러서 정련하기", "Click to refine", "クリックで精錬", "点击精炼");
-        A("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 10씩 오릅니다.",
-          "Spend the Soul Shards left over after learning the whole Soul Tree to raise small stats endlessly. The cost rises by 10 each time.",
-          "魂のツリーをすべて習得した後に残った魂のかけらで、小さな能力値を無限に上げます。行うたびに費用が10ずつ上がります。",
-          "学满灵魂树后，用剩余的灵魂碎片无限提升少量属性。每次精炼费用增加10。");
+        A("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 5배로 오릅니다.",
+          "Spend the Soul Shards left over after learning the whole Soul Tree to raise small stats endlessly. The cost increases 5x each time.",
+          "魂のツリーをすべて習得した後に残った魂のかけらで、小さな能力値を無限に上げます。行うたびに費用が5倍に上がります。",
+          "学满灵魂树后，用剩余的灵魂碎片无限提升少量属性。每次精炼费用变为原来的5倍。");
         A("정련 횟수", "Times refined", "精錬回数", "精炼次数");
         A("모든 칸을 배웠습니다", "Every node learned", "すべてのマスを習得しました", "已学会所有节点");
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
