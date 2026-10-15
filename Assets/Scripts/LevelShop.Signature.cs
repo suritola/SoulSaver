@@ -439,6 +439,7 @@ public partial class LevelShop
         {
             Prefs.SetString(Key, string.Join("|", seen));
             Prefs.Save();
+            CodexSeen.OnSkillEvo(CharacterData.Selected, e);      // 1.2~ 발견형 도감 알림
         }
         if (seen.Count >= 15) SteamAchievements.Unlock(SteamAchievements.SkillEvolve15);
     }

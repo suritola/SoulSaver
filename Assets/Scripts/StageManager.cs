@@ -397,6 +397,7 @@ public class StageManager : MonoBehaviour
         yield return WeaponEvolutionUI.Run(specials, options, id => picked = id);
         bool first = specials.EvolutionTier == 0;
         specials.EvolveWeapon(picked);
+        CodexSeen.OnWeaponEvolved(specials, picked);        // 1.2~ 발견형 도감 (처음 고른 진화면 알림)
         // 1.1~ 각성은 aw<번호>@<초> (이야기 모드 3장 각성)
         RunSave.Record((SpecialAbilities.IsAwaken(picked) ? "aw" : "e") + picked + "@" + Mathf.RoundToInt(RunStats.Seconds));      // 판 중간 저장 (이어할 때 같은 진화를 같은 시각으로 다시 적용)
         if (first) specials.OnEvolvedTier1();

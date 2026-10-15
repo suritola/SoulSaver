@@ -23,7 +23,16 @@ public static class CodexUI
     static readonly Color Dim = new Color(0.72f, 0.68f, 0.76f);
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
 
-    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "레벨업", "상점" };
+    // 1.2~ 발견형 도감: 유물 · 각인 · 비밀 탭을 더함 · 진화 · 유물 · 각인 · 비밀은 얻은 것만 자세히 (CodexSeen)
+    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점" };
+    const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11;
+    static CodexSeen.Cat? CatOf(int t) => t == TabEvo ? CodexSeen.Cat.Evo : t == TabRelic ? CodexSeen.Cat.Relic : t == TabBrand ? CodexSeen.Cat.Brand : t == TabSecret ? CodexSeen.Cat.Secret : (CodexSeen.Cat?)null;
+    static readonly List<GameObject> tabBadges = new List<GameObject>();
+    static Transform openRoot;
+    static TMP_Text rateText;
+    static RectTransform rateFill;
+    static Button rewardButton;
+    static bool tabWasOpened;       // 지금 그리는 탭을 이번 버전에서 열어 본 적이 있었는지 (이번 업데이트 항목 NEW)
     static readonly string[] Hints =
     {
         "스테이지마다 나오는 적과 스킬 · 붉은 경고가 보이면 피하세요",
@@ -32,7 +41,10 @@ public static class CodexUI
         "무기 진화로 얻는 무기 · [{ULT}] 필살기는 무기마다 다릅니다",      // 1.1~ 바꾼 필살기 키 이름을 따름
         "영혼 트리의 운명 가지 · 모든 캐릭터 공통 · 다른 어디에도 없는 효과",
         "영혼 트리의 영혼 가지에서 배우면 항상 적용되는 능력",
-        "영혼 트리({UPGRADE})에서 배운 능력의 다음 칸을 배우면 진화합니다",
+        "codex.tab.evo",        // 1.2~ 발견형: 무기 진화 · 각성 · 스킬 진화 · 능력 진화
+        "codex.tab.relic",
+        "codex.tab.brand",
+        "codex.tab.secret",
         "레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 무한 모드 80 (그 뒤로는 경험치 막대를 세 번 채울 때마다 초월 카드) · 재료를 모두 올리면 스킬 진화",     // 1.0.4~ 성장 카드 · 1.1~ 초월 카드
         "상점 제단(적을 처치하다 보면 나타남)에서 코인으로 강화합니다",
     };
@@ -130,17 +142,42 @@ public static class CodexUI
     public static void Open(Transform root)
     {
         if (open != null) return;
+        openRoot = root;
+        CodexSeen.Migrate();            // 기존 기록(해금 조건 · 무한 모드 클리어)을 먼저 옮김
         RectTransform win = UIKit.Modal(root, "CodexPanel", new Vector2(1640f, 960f), out open);
         UIKit.Text(win, "도감", 50f, Gold, new Vector2(0f, 425f), new Vector2(600f, 70f));
         UIKit.MakeButton(win, "닫기", new Vector2(720f, 425f), new Vector2(150f, 58f), Close, 22f);
 
+        // 1.2~ 왼쪽 위 수집률 · 오른쪽 수집 보상
+        rateText = UIKit.Text(win, "", 24f, Gold, new Vector2(-560f, 442f), new Vector2(460f, 34f), TextAlignmentOptions.Left);
+        RectTransform bar = UIKit.Rect("RateBar", win, new Vector2(-560f, 412f), new Vector2(460f, 14f));
+        bar.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.17f, 0.26f, 1f);
+        rateFill = UIKit.Rect("Fill", bar, Vector2.zero, Vector2.zero);
+        rateFill.anchorMin = Vector2.zero;
+        rateFill.anchorMax = new Vector2(0f, 1f);
+        rateFill.pivot = new Vector2(0f, 0.5f);
+        rateFill.offsetMin = rateFill.offsetMax = Vector2.zero;
+        rateFill.gameObject.AddComponent<Image>().color = Gold;
+        for (int k = 1; k < 4; k++)     // 25 · 50 · 75% 눈금
+        {
+            RectTransform tick = UIKit.Rect("Tick", bar, new Vector2(-230f + 460f * k / 4f, 0f), new Vector2(3f, 20f));
+            tick.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.1f, 1f);
+        }
+        rewardButton = UIKit.MakeButton(win, "codex.rewards", new Vector2(520f, 425f), new Vector2(200f, 58f), OpenRewards, 22f);
+
         tabButtons.Clear();
-        float w = 164f;
+        tabBadges.Clear();
+        float w = 122f;
         for (int i = 0; i < Tabs.Length; i++)
         {
             int t = i;
-            tabButtons.Add(UIKit.MakeButton(win, Tabs[i], new Vector2((i - (Tabs.Length - 1) * 0.5f) * (w + 12f), 345f), new Vector2(w, 64f), () => Show(t), 26f));
+            Button b = UIKit.MakeButton(win, Tabs[i], new Vector2((i - (Tabs.Length - 1) * 0.5f) * (w + 10f), 345f), new Vector2(w, 64f), () => Show(t), 26f);
+            TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
+            if (bt != null) { bt.enableAutoSizing = true; bt.fontSizeMin = 14f; bt.fontSizeMax = 26f; }
+            tabButtons.Add(b);
+            tabBadges.Add(CatOf(i).HasValue ? Badge(b.transform, new Vector2(-24f, -6f)) : null);
         }
+        RefreshHeader();
         hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 287f), new Vector2(1500f, 36f));
 
         BuildScroll(win);
@@ -189,6 +226,9 @@ public static class CodexUI
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
         hint.text = Loc.T(Hints[tab]);
+        CodexSeen.Cat? cat = CatOf(tab);
+        tabWasOpened = cat.HasValue && CodexSeen.TabOpenedThisVersion(cat.Value);
+        if (cat.HasValue && CodexSeen.ShowAll) hint.text += "  <color=#F5D478>(" + Loc.T("codex.showall.on") + ")</color>";
         CardH = tab == 2 ? HeroCardH : BaseCardH;
         if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
 
@@ -201,9 +241,12 @@ public static class CodexUI
             case 3: Specials(data, SpecialKind.Weapon); break;
             case 4: FateCards(); break;
             case 5: Specials(data, SpecialKind.Passive); break;
-            case 6: Evolutions(data); break;
-            case 7: LevelUpCards(data); break;
-            case 8:
+            case TabEvo: Evolutions(data); break;
+            case TabRelic: Relics(data); break;
+            case TabBrand: Brands(); break;
+            case TabSecret: Secrets(); break;
+            case TabLevelUp: LevelUpCards(data); break;
+            case TabShop:
                 // 1.1~ 떠돌이 상점은 게임 속 상인 제단 그림 그대로 (예전 fx_prompt 는 어두운 말풍선 막대라 빈칸처럼 보였음)
                 foreach (var s in Shops)
                 {
@@ -213,6 +256,8 @@ public static class CodexUI
                 break;
         }
         scroll.verticalNormalizedPosition = 1f;
+        if (cat.HasValue) CodexSeen.TabViewed(cat.Value);       // 그린 뒤에 (이번에 보이는 NEW 는 그대로 두고 다음부터 끔)
+        RefreshHeader();
     }
 
     // ================================================================= tabs
@@ -304,7 +349,19 @@ public static class CodexUI
 
     static void Evolutions(CodexData data)
     {
+        // 1.2~ 스킬 진화 발견 수 (자세한 조합은 메인 메뉴 「스킬 진화」 도감 · 여기 수집률에도 들어감)
+        int sf = 0, st = 0;
+        foreach (CodexSeen.Entry e in CodexSeen.Entries)
+        {
+            if (e.cat != CodexSeen.Cat.Evo || !e.key.StartsWith("se.") || !CodexSeen.Available(e)) continue;
+            st++;
+            if (CodexSeen.Found(e.key)) sf++;
+        }
+        Card(Resources.Load<Sprite>("Icons/ability_205"), Purple, Loc.T("스킬 진화"), Loc.T("발견") + " " + sf + " / " + st,
+             Loc.T("codex.skillevo.body"));
         WeaponEvolutions(data);
+        Awakenings();
+        // 능력 진화 (영혼 트리에 늘 보이는 칸이라 잠그지 않음 · 수집률에도 넣지 않음)
         if (data == null || data.specials == null) return;
         for (int id = 0; id < data.specials.Length && id < SpecialAbilities.EvolveTexts.Length; id++)
         {
@@ -316,37 +373,259 @@ public static class CodexUI
         }
     }
 
-    // 캐릭터별 무기 진화 (거너 + 해금한 캐릭터): 1차 세 갈래 · 2차 세 갈래를 판 시작 전에 계획할 수 있게
+    static readonly Color Purple = new Color(0.79f, 0.63f, 1f);
+
+    // 1.2~ 잠긴 항목 카드 (캐릭터 탭의 잠긴 캐릭터와 같은 방식: 그림은 검은 실루엣 · 이름 ??? · 힌트 한 줄)
+    //   체험판에 없는 항목은 「정식판에서 만날 수 있습니다」
+    static void Hidden(string key, Sprite icon, string tag, string hint, string since = null)
+    {
+        if (!CodexSeen.Available(key)) hint = Loc.T("정식판에서 만날 수 있습니다");
+        Card(icon, Color.black, "???", tag, "<color=#A89C86>" + hint + "</color>", Fresh(key, since));
+    }
+
+    // NEW: 얻었는데 도감에서 아직 못 봤거나 · 이번 업데이트 항목인데 이번 버전에서 이 탭을 처음 엶
+    static bool Fresh(string key, string since = null) => CodexSeen.Unviewed(key) || (!tabWasOpened && CodexSeen.IsLatest(since) && CodexSeen.Available(key));
+
+    // 캐릭터별 무기 진화: 1차 세 갈래 · 2차 세 갈래 (1.2~ 얻은 것만 자세히, 잠긴 캐릭터도 실루엣으로)
     static void WeaponEvolutions(CodexData data)
     {
         Color tint = new Color(1f, 0.85f, 0.55f);
-        // 거너: 권총 그대로 + 1차 능력 → 2차 (같은 계열 극대화 또는 능력 하나 더)
         string gunner = Loc.T(CharacterData.Def(CharacterId.Gunner).name);
+        SpecialDef Def(int w) => data != null && data.specials != null && w >= 0 && w < data.specials.Length ? data.specials[w] : null;
+        // 거너 1차: 권총 그대로 + 능력, 필살기는 고른 무기의 것으로
         foreach (int w in SpecialAbilities.Tier1Options)
         {
-            SpecialDef d = data != null && data.specials != null && w < data.specials.Length ? data.specials[w] : null;
-            if (d == null) continue;
-            // 권총 그대로 + 능력, 필살기는 고른 무기의 것으로 (2차: 같은 계열 극대화 또는 능력 하나 더)
+            SpecialDef d = Def(w);
+            string key = CodexSeen.GunT1(w);
+            string tag = gunner + " · " + Loc.T("1차 진화");
+            if (!CodexSeen.Shown(key)) { Hidden(key, d != null ? d.icon : null, tag, Loc.T("codex.hint.evo1")); continue; }
             string paths = "";
             foreach (int n in SpecialAbilities.Tier2Options(w))
-                paths += (paths.Length > 0 ? " / " : "") + Loc.T(SpecialAbilities.GunAugName(n, n == w));
-            Card(d.icon, tint, Loc.T(SpecialAbilities.GunAugName(w, false)), gunner + " \u00B7 " + Loc.T("1차 진화"),
-                 Loc.T(SpecialAbilities.GunAugDesc(w, false)) + "  " + Accent.Tag(Loc.T(w == SpecialAbilities.DualId ? "필살기" : "필살기에 덧붙음") + " \u00B7 " + SpecialAbilities.UltName(w))
-                 + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths);
+                paths += (paths.Length > 0 ? " / " : "") + (CodexSeen.Shown(CodexSeen.GunT2(w, n)) ? Loc.T(SpecialAbilities.GunAugName(n, n == w)) : "???");
+            Card(d != null ? d.icon : null, tint, Loc.T(SpecialAbilities.GunAugName(w, false)), tag,
+                 Loc.T(SpecialAbilities.GunAugDesc(w, false)) + "  " + Accent.Tag(Loc.T(w == SpecialAbilities.DualId ? "필살기" : "필살기에 덧붙음") + " · " + SpecialAbilities.UltName(w))
+                 + "  <color=#9fd8ff>" + Loc.T("2차") + "</color> " + paths, Fresh(key));
         }
-        // 다른 캐릭터: 1차 형태 셋 · 2차 강화 셋
-        foreach (CharacterId c in UnlockedKits())
+        // 거너 2차: 같은 계열 극대화 셋 + 다른 능력 다섯 (번개 그물은 두 갈래에서 나옴)
+        HashSet<string> done = new HashSet<string>();
+        foreach (int w in SpecialAbilities.Tier1Options)
+            foreach (int n in SpecialAbilities.Tier2Options(w))
+            {
+                string key = CodexSeen.GunT2(w, n);
+                if (!done.Add(key)) continue;
+                bool maxed = n == w;
+                List<string> from = new List<string>();
+                foreach (int f in SpecialAbilities.Tier1Options)
+                    if (System.Array.IndexOf(SpecialAbilities.Tier2Options(f), n) >= 0 && (maxed ? f == n : f != n))
+                        from.Add(CodexSeen.Shown(CodexSeen.GunT1(f)) ? Loc.T(SpecialAbilities.GunAugName(f, false)) : "???");
+                SpecialDef d = Def(n);
+                string tag = gunner + " · " + Loc.T("2차 진화");
+                if (!CodexSeen.Shown(key)) { Hidden(key, d != null ? d.icon : null, tag, Loc.T("codex.hint.evo2").Replace("{0}", string.Join(" · ", from))); continue; }
+                string ult = maxed ? "" : "  " + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + SpecialAbilities.UltName(n));
+                Card(d != null ? d.icon : null, tint, Loc.T(SpecialAbilities.GunAugName(n, maxed)), tag + " · " + string.Join(" · ", from),
+                     Loc.T(SpecialAbilities.GunAugDesc(n, maxed)) + ult, Fresh(key));
+            }
+        // 다른 캐릭터: 1차 형태 셋 · 2차 강화 셋 (잠긴 캐릭터는 이름도 숨김)
+        for (int i = 1; i < CharacterData.All.Length; i++)
         {
-            string who = Loc.T(CharacterData.Def(c).name);
+            CharacterId c = (CharacterId)i;
+            if (!CharacterData.IsDeveloped(c)) continue;
+            bool known = CharacterData.IsUnlocked(c) || CodexSeen.ShowAll;
+            string who = known ? Loc.T(CharacterData.Def(c).name) : Loc.T("잠긴 캐릭터");
             foreach (int id in CharacterData.Def(c).pool)
             {
                 if (!SpecialAbilities.IsKit(id) || !SpecialAbilities.KitIsWeapon(id)) continue;
-                Card(Resources.Load<Sprite>("Icons/ability_" + id), tint, Loc.T(CharacterKit.FormAugName(id)), who + " \u00B7 " + Loc.T("1차 진화"),
-                     Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기에 덧붙음") + " \u00B7 " + Loc.T(SpecialAbilities.KitUltName(id))));
+                string key = "evo.f." + id;
+                Sprite icon = Resources.Load<Sprite>("Icons/ability_" + id);
+                string tag = who + " · " + Loc.T("1차 진화");
+                if (!known || !CodexSeen.Shown(key)) { Hidden(key, icon, tag, Loc.T(known ? "codex.hint.evo1" : "codex.hint.lockedhero")); continue; }
+                Card(icon, tint, Loc.T(CharacterKit.FormAugName(id)), tag,
+                     Loc.T(CharacterKit.FormDesc(id)) + "  " + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + Loc.T(SpecialAbilities.KitUltName(id))), Fresh(key));
             }
             foreach (int a in CharacterKit.AugmentsFor(c))
-                Card(Resources.Load<Sprite>(CharacterKit.AugIcon(a)), tint, Loc.T(CharacterKit.AugmentName(a)), who + " \u00B7 " + Loc.T("2차 진화"), Loc.T(CharacterKit.AugmentDesc(a)));
+            {
+                string key = "evo.a." + a;
+                Sprite icon = Resources.Load<Sprite>(CharacterKit.AugIcon(a));
+                string tag = who + " · " + Loc.T("2차 진화");
+                if (!known || !CodexSeen.Shown(key)) { Hidden(key, icon, tag, Loc.T(known ? "codex.hint.evo2k" : "codex.hint.lockedhero")); continue; }
+                Card(icon, tint, Loc.T(CharacterKit.AugmentName(a)), tag, Loc.T(CharacterKit.AugmentDesc(a)), Fresh(key));
+            }
         }
+    }
+
+    // 1.2~ 무기 각성 셋 (2차 진화 뒤 3장 보스 · 무한 모드 세 번째 보스)
+    static void Awakenings()
+    {
+        Color tint = new Color(1f, 0.75f, 0.4f);
+        for (int i = 0; i < SpecialAbilities.AwakenOptions.Length; i++)
+        {
+            int id = SpecialAbilities.AwakenOptions[i];
+            string key = "evo.aw." + id;
+            Sprite icon = i == 0 ? SpecialAbilities.StatIcon(0) : i == 1 ? SpecialAbilities.StatIcon(2) : SpecialAbilities.LvIcon(3);
+            if (!CodexSeen.Shown(key)) { Hidden(key, icon, Loc.T("무기 각성"), Loc.T("codex.hint.awaken")); continue; }
+            Card(icon, tint, Loc.T(SpecialAbilities.AwakenNames[i]), Loc.T("무기 각성") + " · " + Loc.T("모든 캐릭터"), Loc.T(SpecialAbilities.AwakenDescs[i]), Fresh(key));
+        }
+    }
+
+    // ================================================================= 1.2~ 유물 (봉인된 석관)
+    static void Relics(CodexData data)
+    {
+        foreach (RelicDef r in ContentRegistry.Relics)
+        {
+            int id = r.abilityId;
+            string key = "relic." + r.saveCode;
+            SpecialDef d = data != null && data.specials != null && id >= 0 && id < data.specials.Length ? data.specials[id] : null;
+            Sprite icon = Resources.Load<Sprite>("Icons/ability_" + id);
+            if (icon == null && d != null) icon = d.icon;
+            string name = SpecialAbilities.IsKit(id) ? SpecialAbilities.KitName(id) : d != null ? d.name : "";
+            string desc = SpecialAbilities.IsKit(id) ? SpecialAbilities.KitDesc(id) : d != null ? d.description : "";
+            string tag = Loc.T("relic.tag");
+            if (!CodexSeen.Shown(key)) { Hidden(key, icon, tag, Loc.T("codex.hint.relic"), r.since); continue; }
+            Card(icon, Color.white, Loc.T(name), tag, SpecialAbilities.BodyText(id, desc).Replace("\n", " "), Fresh(key, r.since));
+        }
+    }
+
+    // ================================================================= 1.2~ 영혼 각인
+    static void Brands()
+    {
+        foreach (SoulBrandDef b in ContentRegistry.SoulBrands)
+        {
+            string key = "brand." + b.saveCode;
+            Sprite icon = Resources.Load<Sprite>(ChoiceUI.IconPath(b.Icon));
+            string tag = Loc.T("brand.title") + (b.pointMul > 1.001f ? "  ·  " + Loc.T("brand.points").Replace("{0}", b.pointMul.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture)) : "");
+            if (!CodexSeen.Shown(key))
+            {
+                string hint;
+                if (!SoulBrand.FeatureUnlocked) hint = Loc.T("brand.menu.locked");
+                else if (!b.Unlocked) hint = Loc.T("brand.menu.unlock") + ": " + b.Hint + (b.progress != null ? "  (" + b.progress() + ")" : "");
+                else hint = Loc.T("codex.hint.brand");
+                Hidden(key, icon, Loc.T("brand.title"), hint, b.since);
+                continue;
+            }
+            Card(icon, Color.white, "<color=#" + ColorUtility.ToHtmlStringRGB(b.color) + ">" + b.Name + "</color>", tag, b.Desc.Replace("\n", " · "), Fresh(key, b.since));
+        }
+    }
+
+    // ================================================================= 1.2~ 비밀: 조건으로 만나는 영웅 · 무한 모드 최종 보스 둘 · 전설 상자 대박
+    static void Secrets()
+    {
+        foreach (CharacterId c in CodexSeen.SecretHeroes())
+        {
+            string key = "sec.hero." + (int)c;
+            CharacterDef d = CharacterData.Def(c);
+            Sprite portrait = CharacterUI.Portrait(c);
+            string cond = CharacterData.ConditionText(d.condition);
+            if (!CodexSeen.Shown(key)) { Hidden(key, portrait, Loc.T("codex.sec.hero"), cond); continue; }
+            string body = Loc.T(d.description) + "\n" + Accent.Tag(Loc.T("brand.menu.unlock")) + "  " + cond
+                        + (CharacterData.IsUnlocked(c) ? "" : "\n" + Loc.T("codex.sec.hero.buy").Replace("{0}", d.price.ToString("N0")));
+            Card(portrait, Color.white, Loc.T(d.name) + "  <size=70%>" + Loc.T(d.title) + "</size>", Loc.T("codex.sec.hero"), body, Fresh(key));
+        }
+        Sprite dev = AbyssStage.Frames("developer")[0];
+        if (!CodexSeen.Shown("sec.dev")) Hidden("sec.dev", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.dev"));
+        else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
+                  Loc.T("15분에 깨어난 보스를 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번, 체력이 닳을수록 점점 빨라져 1초까지. 싸우는 동안에도 잡몹이 계속 몰려옵니다."), Fresh("sec.dev"));
+        if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
+        else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 30분"),
+                  Loc.T("30분에 나타납니다. 개발자보다 체력 3배 · 피해 · 이동 속도 2배, 필살기는 처음엔 5초에 한 번, 체력이 닳을수록 1초까지. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어."), Fresh("sec.mom"));
+        Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
+        if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));
+        else Card(chest, Color.white, Loc.T("chest.jackpot.name"), Loc.T("codex.sec.luck") + "  ·  " + Loc.T("chest.legend.title"), Loc.T("codex.sec.jackpot.desc"), Fresh("sec.jackpot"));
+    }
+
+    // ================================================================= 1.2~ 수집률 · 보상 · NEW 배지
+    static void RefreshHeader()
+    {
+        CodexSeen.Count(out int f, out int t);
+        int pct = CodexSeen.Percent();
+        if (rateText != null) rateText.text = Loc.T("codex.rate").Replace("{0}", pct.ToString()).Replace("{1}", f.ToString()).Replace("{2}", t.ToString());
+        if (rateFill != null) rateFill.anchorMax = new Vector2(t > 0 ? Mathf.Clamp01((float)f / t) : 0f, 1f);
+        for (int i = 0; i < tabBadges.Count; i++)
+        {
+            CodexSeen.Cat? c = CatOf(i);
+            if (tabBadges[i] != null && c.HasValue) tabBadges[i].SetActive(i != tab && CodexSeen.TabNew(c.Value));
+        }
+        if (rewardButton != null)
+        {
+            NewGlow g = rewardButton.GetComponent<NewGlow>();
+            bool can = CodexSeen.CanClaimAny;
+            if (can && g == null) rewardButton.gameObject.AddComponent<NewGlow>();
+            else if (!can && g != null) g.Remove();
+        }
+    }
+
+    // 작은 금빛 「NEW」 알약 (NewGlow 배지와 같은 색)
+    static GameObject Badge(Transform parent, Vector2 offset)
+    {
+        RectTransform r = UIKit.Rect("NewBadge", parent, Vector2.zero, new Vector2(54f, 24f));
+        r.anchorMin = r.anchorMax = new Vector2(1f, 1f);
+        r.anchoredPosition = offset;
+        Image pill = r.gameObject.AddComponent<Image>();
+        pill.color = new Color(1f, 0.84f, 0.35f);
+        pill.raycastTarget = false;
+        TMP_Text t = UIKit.Text(r, "", 18f, new Color(0.15f, 0.08f, 0f), Vector2.zero, new Vector2(54f, 24f));
+        t.text = "NEW";
+        return r.gameObject;
+    }
+
+    static GameObject rewardsOpen;
+
+    static void OpenRewards()
+    {
+        if (rewardsOpen != null || openRoot == null) return;
+        RectTransform win = UIKit.Modal(openRoot, "CodexRewards", new Vector2(980f, 660f), out rewardsOpen);
+        UIKit.EscCancel(rewardsOpen, CloseRewards);
+        UIKit.Text(win, "codex.rewards.title", 42f, Gold, new Vector2(0f, 270f), new Vector2(800f, 60f));
+        TMP_Text how = UIKit.Text(win, "codex.rewards.how", 20f, Dim, new Vector2(0f, 212f), new Vector2(880f, 56f));
+        how.enableWordWrapping = true;
+        int pct = CodexSeen.Percent();
+        for (int i = 0; i < CodexSeen.Rewards.Length; i++)
+        {
+            var r = CodexSeen.Rewards[i];
+            float y = 120f - i * 96f;
+            RectTransform row = UIKit.Rect("Row", win, new Vector2(0f, y), new Vector2(880f, 84f));
+            row.gameObject.AddComponent<Image>().color = new Color(0.16f, 0.13f, 0.2f, 1f);
+            TMP_Text p = UIKit.Text(row, "", 34f, pct >= r.pct ? Gold : Dim, new Vector2(-370f, 0f), new Vector2(120f, 60f));
+            p.text = r.pct + "%";
+            string what = r.points.ToString("N0") + " P";
+            if (r.pct >= 100)
+            {
+                SkinDef s = SkinData.Get(CodexSeen.RewardSkin);
+                if (s != null) what += " + " + Loc.T("codex.reward.skin").Replace("{0}", Loc.T(s.name))
+                                     + "\n<size=75%><color=#A89C86>" + Loc.T("codex.reward.owned").Replace("{0}", CodexSeen.RewardSkinOwnedPoints.ToString("N0")) + "</color></size>";
+            }
+            TMP_Text wt = UIKit.Text(row, "", 24f, Parch, new Vector2(-20f, 0f), new Vector2(560f, 76f), TextAlignmentOptions.Left);
+            wt.text = what;
+            int at = r.pct;
+            bool claimed = CodexSeen.IsClaimed(at), can = CodexSeen.CanClaim(at);
+            Button b = UIKit.MakeButton(row, claimed ? "codex.claimed" : can ? "codex.claim" : "", new Vector2(350f, 0f), new Vector2(170f, 62f), () =>
+            {
+                string got = CodexSeen.Claim(at);
+                if (got == null) return;
+                Hostile.Play("chime", 0.9f, 1.1f);
+                CloseRewards();
+                OpenRewards();
+                RefreshHeader();
+                if (rewardsOpen != null)
+                {
+                    TMP_Text msg = UIKit.Text(rewardsOpen.transform.GetChild(0).GetChild(0), "", 24f, new Color(0.6f, 1f, 0.6f), new Vector2(0f, -298f), new Vector2(900f, 34f));
+                    msg.text = Loc.T("codex.got").Replace("{0}", got);
+                }
+            }, 24f);
+            if (!can)
+            {
+                b.interactable = false;
+                b.GetComponent<Image>().color = new Color(0.45f, 0.43f, 0.5f);
+                if (!claimed) { TMP_Text bt = b.GetComponentInChildren<TMP_Text>(); if (bt != null) bt.text = Loc.T("잠김"); }
+            }
+            else b.GetComponent<Image>().color = Gold;
+        }
+        UIKit.MakeButton(win, "닫기", new Vector2(0f, -246f), new Vector2(220f, 58f), CloseRewards, 24f);
+    }
+
+    static void CloseRewards()
+    {
+        if (rewardsOpen != null) Object.Destroy(rewardsOpen);
+        rewardsOpen = null;
     }
 
     // 운명 가지 (예전 액티브 스킬 자리): 트리와 같은 목록
@@ -467,7 +746,7 @@ public static class CodexUI
     // 1.0.4~: 캐릭터 전용 상점 강화 카드(KitShops)는 뺌 — 지금 상점 창에는 공격력 · 이동 속도 두 장만 나옴
 
     // ================================================================= card
-    static void Card(Sprite icon, Color tint, string title, string tag, string body)
+    static void Card(Sprite icon, Color tint, string title, string tag, string body, bool fresh = false)
     {
         float extra = CardH - BaseCardH;        // 1.1~ 늘어난 높이: 제목 · 태그는 위쪽에 붙이고 본문 칸을 그만큼 키움
         RectTransform card = UIKit.Rect("Card", grid, Vector2.zero, new Vector2(756f, CardH));
@@ -499,6 +778,7 @@ public static class CodexUI
         b.fontSizeMin = 14f;
         if (extra > 0f) b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표
         b.text = body;
+        if (fresh) Badge(card, new Vector2(-40f, -18f));        // 1.2~ 새로 얻었거나 이번 업데이트 항목
     }
 
     static string Stats(float hp, float speed, float damage) =>
@@ -520,8 +800,16 @@ public static class CodexUI
 
     public static void Close()
     {
+        CloseRewards();
         if (open != null) Object.Destroy(open);
         open = null;
+        // 1.2~ 메인 메뉴 도감 버튼: 더 볼 NEW · 받을 보상이 없으면 반짝임을 걷음
+        GameObject button = GameObject.Find("CodexButton");
+        if (button == null) return;
+        NewGlow glow = button.GetComponent<NewGlow>();
+        bool want = CodexSeen.HasNew;
+        if (glow != null && !want) glow.Remove();
+        else if (glow == null && want) button.AddComponent<NewGlow>();
     }
 }
 

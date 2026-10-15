@@ -165,6 +165,7 @@ public static class ChestRewards
         foreach (RewardDef r in picks) lines.Add("· " + (r.describe != null ? r.describe(c) : r.Name));
 
         yield return Roulette(picks);
+        CodexSeen.Mark("sec.jackpot", Loc.T("chest.jackpot.name"));      // 1.2~ 발견형 도감 비밀
 
         ChoiceUI.Option[] options =
         {

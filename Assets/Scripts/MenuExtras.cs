@@ -104,6 +104,7 @@ public static class MenuExtras
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialRun.Begin());
         if (!TutorialRun.Done) tutorial.AddComponent<NewGlow>();       // 1.0.4~: 시작만 해서는 꺼지지 않고 끝까지 마쳐야 꺼짐 (마치면 아래에서 완료 체크)
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
+        if (CodexSeen.HasNew) codex.AddComponent<NewGlow>();          // 1.2~ 발견형 도감: NEW 탭 · 받을 수집 보상
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
@@ -824,16 +825,19 @@ public static class SettingsUI
         }, 22f);
         TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
         if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
-        CycleRow("피해 숫자", 120f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
+        CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
                  "적에게 준 피해를 숫자로 띄웁니다. 끄면 화면이 깔끔해집니다.");
-        CycleRow("내 이펙트 불투명도", 40f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
+        CycleRow("내 이펙트 불투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
                  "내 공격 · 스킬 · 필살기 이펙트의 진하기입니다. 낮추면 캐릭터와 적의 공격이 잘 보입니다. (적 공격은 그대로)");
-        ToggleRow("색각 이상 모드", -40f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
+        ToggleRow("색각 이상 모드", -25f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
                   "경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로 그립니다.");
-        ToggleRow("게임 커서", -120f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
+        ToggleRow("게임 커서", -100f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
-        ToggleRow("레벨업 바로 열기", -200f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
+        ToggleRow("레벨업 바로 열기", -175f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
                   "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
+        // 1.2~ 발견형 도감의 스포일러 허용 (줄 간격 80 → 75 로 한 줄 더)
+        ToggleRow("도감 모두 보기", -250f, () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
+                  "켜면 도감의 진화 · 유물 · 각인 · 비밀 탭에서 아직 못 얻은 것도 모두 보입니다 (스포일러). 수집률과 보상에는 들어가지 않습니다.");
     }
 
     // 1.0.4~ 설정 줄 이름에 마우스를 올리면 한 줄 설명 (글자는 TooltipUI.Show 가 Loc.T 로 번역)
