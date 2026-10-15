@@ -45,9 +45,11 @@ public class EndlessMode : MonoBehaviour
     public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
     // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
     public bool NoMobs => devSummoned;
-    // 1.1.2~ 개발자가 나온 뒤로는 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (엄마까지 잡몹 3000마리를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
+    // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹이 3배로)
+    public bool FinalBossAlive => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead) || FinalBossIncoming);
+    // 1.1.2~ 개발자를 쓰러뜨린 뒤 엄마가 오기 전까지 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (영혼 3000개를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
     public const float AfterDevSpawnMul = 3f;
-    public static float MobSpawnBoost => Instance != null && Instance.devSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
+    public static float MobSpawnBoost => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
     public int BossesDefeated { get; private set; }
