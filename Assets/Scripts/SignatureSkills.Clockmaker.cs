@@ -19,7 +19,7 @@ public partial class SignatureSkills
     public static void GearHit(Collider2D c, float dmg, bool big) { }
     public static void GearBounced() { if (Instance != null && Instance.IsClock) Instance.OnGearBounced(); }
     public static float BounceMul() => Instance != null && Instance.IsClock && Instance.L("t.cog") > 0 ? 1f + V(Instance.L("t.cog"), 0.15f, 0.07f) : 1f;
-    public static float BigGearMul() => Instance != null && Instance.IsClock && Instance.L("t.minute") > 0 ? 1f + V(Instance.L("t.minute"), 0.4f, 0.2f) : 1f;
+    public static float BigGearMul() => Instance != null && Instance.IsClock && Instance.L("t.minute") > 0 ? 1f + V(Instance.L("t.minute"), 0.3f, 0.15f) : 1f;     // 1.1.3: +40~100% → +30~75% (LevelShop.NewHeroes 분침 카드 표시와 같게)
     public static void BigGear(Vector3 p) { if (Instance != null && Instance.IsClock) Instance.OnBigGear(p); }
     public static float RewindHealMul() => Instance != null && Instance.IsClock && Instance.L("t.pocket") > 0 ? 1f + V(Instance.L("t.pocket"), 0.2f, 0.1f) : 1f;
     public static float LeftClockMul() => Instance != null && Instance.IsClock && Instance.E("te.paradox") ? 2f : 1f;

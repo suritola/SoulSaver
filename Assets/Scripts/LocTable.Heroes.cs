@@ -377,7 +377,7 @@ public static partial class LocTable
         A("배달을 마칠 때마다 체력을 회복합니다. (0.3초에 한 번)", "Heal each time you complete a delivery. (Once per 0.3s)", "配達を終えるたびに体力を回復します。（0.3秒に1回）", "每完成一次投递恢复生命。（每0.3秒一次）");
         A("우표가 15중첩까지 쌓이고, 특급 게이지가 1.5배가 됩니다.", "Stamps stack up to 15, and Priority Mail grants 1.5x gauge.", "切手が15重まで重なり、特急のゲージが1.5倍になります。", "邮票可叠加至15层，特急充能变为1.5倍。");
         A("반송된 편지가 최대 두 번까지 계속 이어집니다.", "Returned letters keep going up to two times.", "返送された手紙が最大2回まで続きます。", "退回的信件最多可连续两次。");
-        A("편지를 두 통 더 보냅니다. (피해 40%)", "Send two more letters. (40% damage)", "手紙をさらに2通送ります。（ダメージ40%）", "多寄出两封信。（伤害40%）");
+        A("편지를 두 통 더 보냅니다. (피해 55%)", "Send two more letters. (55% damage)", "手紙をさらに2通送ります。（ダメージ55%）", "多寄出两封信。（伤害55%）");
 
         // ---------------- 이야기
         A("저승 배달부의 가방에 수취인이 「킹 슬라임」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"King Slime.\"", "冥府の配達人のかばんに、宛先が「キングスライム」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「史莱姆王」的信。");

@@ -74,7 +74,7 @@ public partial class CharacterKit
         AugTwinGear => "톱니를 하나 더 던집니다.",
         AugRift => "정각 톱니가 터진 자리에 2초 동안 시간 균열이 생겨 안의 적을 느리게 하고 벱니다.",
         AugThickEnvelope => "편지 피해가 25% 늘어납니다.",
-        AugBundle => "편지를 두 통 더 보냅니다. (피해 40%)",        // 1.0.6~ 50% → 40%
+        AugBundle => "편지를 두 통 더 보냅니다. (피해 55%)",        // 1.0.6~ 50% → 40% · 1.1.3: 55% (CharacterKit.Postman.ExtraLetterRate)
         AugRegistered => "속달 표식이 50% 더 많이 붙습니다.",
         AugDeepChill => "얼어붙는 시간이 50% 늘어납니다.",
         AugTwoHands => "손길이 양옆으로 두 갈래 더 뻗습니다. (피해 70%)",

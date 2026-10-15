@@ -39,7 +39,8 @@ public static class CharacterData
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
             weapon = "장검", attack = "검을 크게 휘둘러 앞쪽 부채꼴의 적을 직접 벱니다. 근접 특성: 휘두르는 동안 받는 피해 절반 · 벤 적을 크게 밀쳐냄 · 벤 만큼 조금 회복",
             skill = "회전 베기", skillDesc = "검을 사방으로 휘둘러 주변을 벱니다. 오래 누를수록 피해가 커집니다",
-            hp = 1.3f, damage = 3.4f, attackSpeed = 0.55f,     // 1.0.1: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
+            hp = 1.3f, damage = 3.1f, attackSpeed = 0.55f,     // 1.0.1: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
+                                                                 // 1.1.3: 3.4 → 3.1 — 근접이라 다른 영웅보다 +30~50% 빠른 처치는 정상으로 보되, 보스 처치가 원거리 중앙값의 2배 · 사망률은 가장 낮아 그 넘는 몫만 (SigPower 2 → 1.7 · 회전 베기 · 휘두름 보호 · 회복과 함께)
             gauge = 0.85f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
             color = new Color(0.45f, 0.6f, 1f) },
         new CharacterDef {
@@ -61,7 +62,7 @@ public static class CharacterData
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
-            hp = 1f, damage = 0.8f, attackSpeed = 0.75f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),
+            hp = 1f, damage = 0.8f, attackSpeed = 0.8f, gauge = 1.2f, range = 10f, price = 2500, pool = Pool(44, 58, 59),     // 1.1.3: 공격 속도 0.75 → 0.8 (클리어가 9영웅 중 가장 느림 · 화력 중앙값 −7~12%)
             color = new Color(0.65f, 0.4f, 0.95f) },
         // ---------------- 1.0.2 새 캐릭터: 해제 조건 달성 뒤 포인트로
         new CharacterDef {
@@ -90,7 +91,7 @@ public static class CharacterData
             description = "세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
             weapon = "차가운 손길", attack = "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
             skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",     // 1.0.4~: 1초 → 3초 · 조종
-            hp = 0.8f, damage = 1f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,
+            hp = 0.9f, damage = 1f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,     // 1.1.3: 체력 0.8 → 0.9 (사거리 4.5 근접인데 화력은 중앙값 · 받는 피해의 70~77% 가 접촉 · 사망률 가장 높음)
             pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f) },
         Coming(),
     };
