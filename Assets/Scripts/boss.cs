@@ -196,6 +196,7 @@ public class bosss : MonoBehaviour
     public void TakeDamage(float damage, float knockBack, Vector3 dir)
     {
         if (isDead || !ready) return;
+        damage *= GameMode.PlayerDamageMul;      // 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
         if (invulnerable)
         {
             // 의식 중 무적: 맞은 자리에 막히는 불꽃만
