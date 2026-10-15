@@ -3,6 +3,8 @@ using UnityEngine;
 
 // 보물 상자 (1.0.1): 습격을 이겨 내거나 중간 보스 · 엘리트를 쓰러뜨리면 나옴 (ChapterEvents)
 // 다가가면 열리고 셋 중 하나를 고름: 코인 · 영혼 조각 · 체력 모두 회복 + 최대 체력 +10
+// 1.1~: 보상은 ContentRegistry 보상 풀에서 3택 (ChestRewards) · 중간 보스 · 정예 상자(elite)는 전설 확률이 높음
+//       저주받은 상자(장 중반 이벤트)는 보라색이고, 열면 보상 대신 onOpen (저주받은 적이 깨어남)
 public class TreasureChest : MonoBehaviour
 {
     static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
@@ -13,30 +15,56 @@ public class TreasureChest : MonoBehaviour
     SpriteRenderer sr;
     Vector3 home;
     bool opening;
+    bool elite;                         // 1.1~ 정예 상자 (전설 15%)
+    System.Action onOpen;               // 1.1~ 저주받은 상자: 열면 보상 대신 이것
 
-    public static TreasureChest Spawn(Vector3 at)
+    public static TreasureChest Spawn(Vector3 at) => Spawn(at, false);
+
+    // 1.1~ 저주받은 상자 (ChapterEvents): 보라색 · 열면 onOpen
+    public static TreasureChest SpawnCursed(Vector3 at, System.Action onOpen)
+    {
+        TreasureChest c = Make(at, CursedTint, Loc.T("event.cursed.name"));
+        c.onOpen = onOpen;
+        return c;
+    }
+
+    static readonly Color CursedTint = new Color(0.75f, 0.45f, 1f);
+    static readonly Color EliteTint = new Color(1f, 0.6f, 0.35f);
+
+    public static TreasureChest Spawn(Vector3 at, bool elite)
+    {
+        TreasureChest c = Make(at, elite ? EliteTint : Gold, Loc.T(elite ? "chest.elite.title" : "보물 상자"));
+        c.elite = elite;
+        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T(elite ? "chest.elite.appear" : "보물 상자가 나타났다!"), 2f);
+        return c;
+    }
+
+    static TreasureChest Make(Vector3 at, Color tint, string label)
     {
         at = Hostile.ClampArena(at);
         // 상자 그림 (tools/pixelart/make_choice_icons.py 의 chest) · 뒤에 금빛
         Sprite art = Resources.Load<Sprite>("Icons/choice_chest");
-        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? Color.white : Gold, "Effect", 8);
+        Color body = tint == Gold ? Color.white : Color.Lerp(Color.white, tint, 0.55f);
+        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? body : tint, "Effect", 8);
         TreasureChest c = go.AddComponent<TreasureChest>();
         c.sr = go.GetComponent<SpriteRenderer>();
         c.home = at;
-        c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(1f, 0.82f, 0.3f, 0.6f), "Effect", 7);
-        c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(1f, 0.85f, 0.4f, 0.4f), "Effect", 6);
+        c.tint = tint;
+        c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(tint.r, tint.g, tint.b, 0.6f), "Effect", 7);
+        c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(tint.r, tint.g, tint.b, 0.4f), "Effect", 6);
         c.pillar.transform.localScale = new Vector3(0.22f, 2.6f, 1f);
         c.pointer = SpecialAbilities.MakeSprite("ChestPointer", art != null ? art : Hostile.Glow, at, 0.9f, Color.white, "Effect", 40);
-        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, 0.25f, new Color(1f, 0.82f, 0.3f, 0.7f), "Effect", 39);
+        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, 0.25f, new Color(tint.r, tint.g, tint.b, 0.7f), "Effect", 39);
         pointerGlow.transform.SetParent(c.pointer.transform, true);
         c.pointer.SetActive(false);
-        c.label = SkillTag.Show(go.transform, Loc.T("보물 상자"), 2.6f);
-        Fx.Spawn("fx_soulburst", at, 3.5f, Gold, 18f);
-        ShockRing.Spawn(at, 0.4f, 3f, 0.4f, Gold, 0.3f);
+        c.label = SkillTag.Show(go.transform, label, 2.6f);
+        Fx.Spawn("fx_soulburst", at, 3.5f, tint, 18f);
+        ShockRing.Spawn(at, 0.4f, 3f, 0.4f, tint, 0.3f);
         Hostile.Play("chime", 0.8f, 1.3f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("보물 상자가 나타났다!"), 2f);
         return c;
     }
+
+    Color tint = Gold;
 
     void Update()
     {
@@ -47,10 +75,10 @@ public class TreasureChest : MonoBehaviour
         if (halo != null)
         {
             halo.transform.localScale = Vector3.one * (0.6f + 0.1f * Mathf.Sin(t * 4f));
-            halo.GetComponent<SpriteRenderer>().color = new Color(1f, 0.82f, 0.3f, 0.5f + 0.2f * Mathf.Sin(t * 4f));
+            halo.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.5f + 0.2f * Mathf.Sin(t * 4f));
         }
-        if (pillar != null) pillar.GetComponent<SpriteRenderer>().color = new Color(1f, 0.85f, 0.4f, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
-        if (Random.value < Time.deltaTime * 9f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.4f), 1.2f, Gold, 20f);
+        if (pillar != null) pillar.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
+        if (Random.value < Time.deltaTime * 9f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.4f), 1.2f, tint, 20f);
         UpdatePointer(t);
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || Time.timeScale == 0f) return;
@@ -60,30 +88,21 @@ public class TreasureChest : MonoBehaviour
     IEnumerator OpenChest(PlayerController p)
     {
         opening = true;
-        Fx.Spawn("fx_shock", home, 5f, Gold, 18f);
+        Fx.Spawn("fx_shock", home, 5f, tint, 18f);
+        if (onOpen != null)
+        {
+            // 저주받은 상자: 보상 대신 저주가 깨어남 (ChapterEvents)
+            Hostile.Play("roar", 0.6f, 1.2f);
+            System.Action a = onOpen;
+            onOpen = null;
+            if (label != null) Destroy(label);
+            Destroy(gameObject);
+            a();
+            yield break;
+        }
         Hostile.Play("shimmer", 0.8f, 1.2f);
-        int slot = StageManager.Instance != null ? Chapters.SlotOf(StageManager.Instance.CurrentStage) : 0;
-        int coins = 20 + 10 * slot, shards = 20 + 10 * slot;
-        ChoiceUI.Option[] options =
-        {
-            new ChoiceUI.Option("황금", Loc.T("코인 +{0}").Replace("{0}", coins.ToString()), new Color(1f, 0.82f, 0.3f), "gold"),
-            new ChoiceUI.Option("영혼", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "soul"),
-            new ChoiceUI.Option("생명", "체력을 모두 회복하고 최대 체력 +10", new Color(1f, 0.45f, 0.45f), "life"),
-        };
-        int pick = 0;
-        yield return ChoiceUI.Run("보물 상자", "하나를 고르세요", options, i => pick = i);
-        if (pick == 0)
-        {
-            Coin coin = FindFirstObjectByType<Coin>();
-            if (coin != null) coin.AddCoin(coins);
-        }
-        else if (pick == 1) SoulShards.Add(shards, home, false);
-        else if (p != null)
-        {
-            p.PlayerMaxHealth += 10f;
-            p.PlayerHealth = p.PlayerMaxHealth;
-            RunSave.Record("h10");                  // 판 중간 저장: 이어할 때 최대 체력도 다시 (RunSave 'h')
-        }
+        // 1.1~ 보상 풀 3택 · 전설 룰렛 (ChestRewards, 예전엔 코인 · 영혼 조각 · 생명 고정)
+        yield return ChestRewards.Open(p, home, elite);
         Fx.Spawn("fx_sparkle", home, 3f, Color.white, 20f);
         if (label != null) Destroy(label);
         Destroy(gameObject);
