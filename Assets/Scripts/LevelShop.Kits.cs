@@ -37,20 +37,25 @@ public partial class LevelShop
         return (p[0].Length > 0 ? Loc.T(p[0]) : "") + p[1] + (p[2].Length > 0 ? Loc.T(p[2]) : "");
     }
 
-    // 모든 레벨업 카드 설명의 모양: 한 문장 + 금색 "수치  지금 → 다음" + Lv
+    // 모든 레벨업 카드 설명의 모양: 한 문장 + "수치  지금 ▶ 다음(금빛 굵게)"
+    // 1.1.2~ 단계(「Lv 2 / 3」)는 글자 대신 카드 맨 위 단계 칸(LevelPips, LevelShop.Pips)으로 — 숫자 나열이 읽기 어렵다는 의견
     // HudView: 왼쪽 위 레벨업 스킬 칸 설명 (1.0.1) — 「지금 → 다음」 대신 지금 수치만, 그리고 최대 단계일 때의 수치(maxVal)
     public static bool HudView;
     public static string CardText(string sentence, string stat, string now, string next, int level, int max, string maxVal = null)
     {
-        string lv = max > 0 ? "   <color=#A89C86>Lv " + level + " / " + max + "</color>" : "";
         if (HudView)
         {
-            string cap = max > 0 && level >= max ? "  <color=#A89C86>(" + Loc.T("최대") + ")</color>"
+            // 단계는 HUD 칸의 단계 칸 · 툴팁 제목(Lv)에 있음
+            string cap = max > 0 && level >= max ? "  <color=#FFD34D>MAX</color>"
                        : maxVal != null ? "\n<color=#A89C86>" + Loc.T("최대") + "  " + maxVal + "</color>" : "";
-            return sentence + "\n<color=#F5D478>" + stat + "  " + now + "</color>" + lv + cap;
+            return sentence + "\n<color=#F5D478>" + stat + "  " + now + "</color>" + cap;
         }
-        return sentence + "\n<color=#F5D478>" + stat + "  " + now + "  →  " + next + "</color>" + lv;
+        return sentence + "\n" + StatLine(stat, now, next);
     }
+
+    // 「공격력  20% ▶ 30%」: 이름은 금색 · 지금 값은 밝은 양피지색 · ▶ 는 흐리게 · 다음 값은 금빛 굵게 (1.1.2~)
+    public static string StatLine(string stat, string now, string next)
+        => "<color=#F5D478>" + stat + "</color>  <color=#E6DCC4>" + now + "</color> <color=#A89C86>▶</color> <b><color=#FFD34D>" + next + "</color></b>";
 
     static string KitText(KitCard c, int level)
     {
@@ -60,6 +65,15 @@ public partial class LevelShop
     }
 
     static KitCard KitCardOf(int id) => KitCardOf(CharacterData.Selected, id);
+
+    // 도감용 단계별 수치: 「튕긴 탄 피해  40% ▶ 55% ▶ 70%」 (1.1.2~ 예전엔 「40% / 55% / 70%」라 나눗셈처럼 읽힘) · 최대 단계 값은 금빛 굵게
+    static string StepValues(KitCard c)
+    {
+        string[] v = new string[c.max];
+        for (int i = 0; i < c.max; i++)
+            v[i] = i == c.max - 1 && c.max > 1 ? "<b><color=#FFD34D>" + Val(c.values[i]) + "</color></b>" : Val(c.values[i]);
+        return "<color=#F5D478>" + Loc.T(c.stat) + "</color>  <color=#E6DCC4>" + string.Join(" <color=#A89C86>▶</color> ", v) + "</color>";
+    }
 
     // 도감용: 이 캐릭터의 전용 레벨업 카드 (이름 · 설명(레벨별 수치 포함) · 아이콘 번호)
     public static System.Collections.Generic.List<(string name, string desc, int icon)> KitCardsFor(CharacterId who)
@@ -71,9 +85,7 @@ public partial class LevelShop
         {
             KitCard c = KitCardOf(who, id);
             if (c == null) continue;
-            string[] v = new string[c.max];
-            for (int i = 0; i < c.max; i++) v[i] = Val(c.values[i]);
-            list.Add((c.name, Loc.T(c.desc) + "\n<color=#F5D478>" + Loc.T(c.stat) + "  " + string.Join(" / ", v) + "</color>", c.icon));
+            list.Add((c.name, Loc.T(c.desc) + "\n" + StepValues(c), c.icon));
         }
         return list;
     }

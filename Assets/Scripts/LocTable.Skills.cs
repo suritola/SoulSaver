@@ -8,6 +8,15 @@ public static partial class LocTable
 
         // ================================================================= 화면 · 공통
         A("재료", "Ingredients", "素材", "素材");
+        // ---------------- 진화 강화 · 재료 스킬 설명 · 진화 순간 (1.1.2~)
+        A("{0} 피해 ×{1}", "{0} damage ×{1}", "{0}のダメージ×{1}", "{0}伤害×{1}");
+        A("진화 강화", "Evolution boost", "進化強化", "进化强化");
+        A("재료 스킬", "Ingredient skills", "素材スキル", "素材技能");
+        A("진화 뒤에도 효과가 그대로 이어집니다.", "Their effects carry on after evolving.", "進化後も効果はそのまま続きます。", "进化后效果依然保留。");
+        A("이어짐", "Kept", "継続", "保留");
+        A("진화로 강화되어 이어짐", "Kept · boosted by evolution", "進化で強化されて継続", "保留·进化强化");
+        A("재료 스킬 효과는 그대로 이어집니다", "Ingredient skill effects are kept", "素材スキルの効果はそのまま続きます", "素材技能效果依然保留");
+        A("진화까지 1단계!", "1 rank to evolve!", "進化まであと1段階！", "距离进化仅差1级！");
         // ---------------- 카드 설명 고침 (2.0.7~): 검사 밸런스 · 숫자 보강 · 진화 무기 필살기에도 적용
         A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
         A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
@@ -112,7 +121,7 @@ public static partial class LocTable
         A("장전을 시작하면 발밑에 탄피 지뢰를 흩뿌립니다. 적이 밟으면 터집니다. (공격력 80%)", "Starting a reload scatters shell-casing mines at your feet. They blow up when stepped on. (80% attack)", "リロードを始めると足元に薬莢地雷をばらまきます。敵が踏むと爆発します。（攻撃力80%）", "开始装填时在脚下撒出弹壳地雷，敌人踩到就会爆炸。（攻击力80%）");
         A("지뢰 수", "Mines", "地雷の数", "地雷数量");
         A("처치 파편", "Kill Shrapnel", "撃破破片", "击杀破片");
-        A("적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 40%씩)", "Kills burst into shrapnel in every direction. (40% attack each)", "敵を倒すとその場で破片が四方に飛び散ります。（攻撃力40%ずつ）", "击杀敌人时在原地向四周迸出破片。（每片攻击力40%）");
+        A("적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 30%씩)", "Kills burst into shrapnel in every direction. (30% attack each)", "敵を倒すとその場で破片が四方に飛び散ります。（攻撃力30%ずつ）", "击杀敌人时在原地向四周迸出破片。（每片攻击力30%）");
         A("파편 수", "Shards", "破片の数", "破片数量");
         A("총열 과열", "Barrel Heat", "銃身過熱", "枪管过热");
         A("쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
@@ -260,7 +269,7 @@ public static partial class LocTable
 
         // ================================================================= 진화
         A("천둥 장전", "Thunder Reload", "雷鳴リロード", "雷鸣装填");
-        A("장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 150%), 탄피 지뢰가 두 배로 깔립니다.", "Finishing a reload strikes six nearby enemies with lightning (150% attack), and twice as many shell mines are laid.", "リロードを終えると周りの敵6体に雷が落ち（攻撃力150%）、薬莢地雷が2倍敷かれます。", "装填完成时向附近六名敌人降下雷击（攻击力150%），弹壳地雷数量翻倍。");
+        A("장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 120%), 탄피 지뢰가 두 배로 깔립니다.", "Finishing a reload strikes six nearby enemies with lightning (120% attack), and twice as many shell mines are laid.", "リロードを終えると周りの敵6体に雷が落ち（攻撃力120%）、薬莢地雷が2倍敷かれます。", "装填完成时向附近六名敌人降下雷击（攻击力120%），弹壳地雷数量翻倍。");
         A("용광로 탄두", "Furnace Rounds", "溶鉱炉弾頭", "熔炉弹头");
         A("총열이 가장 뜨거울 때 모든 총알이 맞은 자리에서 불꽃 폭발을 일으키고 적을 태웁니다.", "At maximum barrel heat, every bullet erupts in a fiery blast that burns enemies.", "銃身が最も熱いとき、すべての弾が当たった場所で炎の爆発を起こし敵を焼きます。", "枪管最热时，所有子弹在命中处引发火焰爆炸并灼烧敌人。");
         A("파편 폭풍", "Shrapnel Storm", "破片の嵐", "破片风暴");
@@ -274,11 +283,11 @@ public static partial class LocTable
         A("무법자", "Outlaw", "無法者", "亡命之徒");
         A("겁에 질린 적을 쓰러뜨리면 탄창이 가득 차고, 겁이 가까운 적들에게 번집니다.", "Killing a terrified enemy fully reloads your magazine and spreads the terror to nearby foes.", "怯えた敵を倒すと弾倉が満タンになり、恐怖が近くの敵に広がります。", "击杀恐惧中的敌人会装满弹匣，并让恐惧蔓延到附近敌人。");
         A("완벽한 반격", "Perfect Counter", "完璧な反撃", "完美反击");
-        A("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 250%)", "Getting hit or parrying a projectile turns your next swing into a giant counter wave. (250% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ巨大な反撃の剣気になります。（攻撃力250%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的巨大反击剑气。（攻击力250%）");
+        A("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 300%)", "Getting hit or parrying a projectile turns your next swing into a giant counter wave. (300% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ巨大な反撃の剣気になります。（攻撃力300%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的巨大反击剑气。（攻击力300%）");
         A("천검 궤적", "Thousand-Blade Trail", "千剣の軌跡", "千剑轨迹");
         A("칼날 잔상이 사라질 때 그 자리에서 검기가 사방으로 날아갑니다.", "When a blade afterimage fades, sword waves fly out from it in all directions.", "刃の残像が消えるとき、その場から剣気が四方へ飛びます。", "刀刃残影消失时，剑气从原地向四方飞出。");
         A("피의 성채", "Blood Bastion", "血の城砦", "血之堡垒");
-        A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (200% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力200%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力200%）");
+        A("보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 250%)", "Max shield is multiplied by 1.5, and a blood wave bursts the moment it breaks. (250% attack)", "シールド最大値が1.5倍になり、シールドが割れた瞬間に血の波動が弾けます。（攻撃力250%）", "护盾上限变为1.5倍，护盾破碎的瞬间爆发血之波动。（攻击力250%）");
         A("폭풍의 눈", "Eye of the Storm", "嵐の目", "风暴之眼");
         A("필살기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", "After Ultimate, a vortex pulls in and keeps cutting nearby enemies for 3s.", "必殺技の後3秒間、渦が周りの敵を吸い込みながら斬り続けます。", "必杀技后3秒内，漩涡吸入周围敌人并持续斩击。");
         A("광검무", "Frenzied Blade Dance", "狂剣舞", "狂剑舞");
@@ -298,7 +307,7 @@ public static partial class LocTable
         A("칼날 폭풍길", "Bladestorm Road", "刃の嵐の道", "刃风之路");
         A("칼날 자국에서 표창이 계속 솟구쳐 가까운 적에게 날아갑니다.", "Shuriken keep springing from the blade trail toward nearby enemies.", "刃の跡から手裏剣が次々と飛び出し、近くの敵へ飛びます。", "刀痕中不断弹出飞镖射向附近敌人。");
         A("칼날 곡예", "Blade Acrobatics", "刃の曲芸", "刀刃杂技");
-        A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (150% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力150%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力150%）");
+        A("던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 200%)", "At max Practiced Throw stacks, a ring of blades bursts around the enemy you hit. (200% attack)", "投てき練習が最大重のとき、当てた敵の周りに刃の輪が弾けます。（攻撃力200%）", "投掷练习叠满时，命中的敌人周围爆发刀刃之环。（攻击力200%）");
         A("사냥의 절정", "Peak of the Hunt", "狩りの絶頂", "狩猎巅峰");
         A("필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", "While your ultimate gauge is full or during a Ultimate, kills bring a rain of shuriken down on the spot.", "必殺技ゲージが満タンの間か必殺技中に敵を倒すと、その場に手裏剣の雨が降ります。", "必杀技槽满时或必杀技中击杀敌人，原地降下飞镖雨。");
         A("폭풍의 길", "Storm Road", "嵐の道", "风暴之路");
@@ -338,9 +347,9 @@ public static partial class LocTable
         A("성장: 생명", "Growth: Vitality", "成長：生命", "成长：生命");
         A("성장: 손놀림", "Growth: Dexterity", "成長：手さばき", "成长：手速");
         A("성장: 발걸음", "Growth: Stride", "成長：足取り", "成长：步伐");
-        A("모든 무기 피해가 3% 늘어납니다. (기본 공격력 기준)", "All weapon damage +3%. (Based on base attack)", "すべての武器ダメージが3%増えます。（基本攻撃力基準）", "所有武器伤害提升3%。（以基础攻击力计）");
+        A("모든 무기 피해가 2% 늘어납니다. (기본 공격력 기준)", "All weapon damage +2%. (Based on base attack)", "すべての武器ダメージが2%増えます。（基本攻撃力基準）", "所有武器伤害提升2%。（以基础攻击力计）");
         A("최대 체력이 5 늘어나고 그만큼 회복합니다.", "Max health +5, and heals that much.", "最大体力が5増え、その分回復します。", "最大生命提升5，并回复等量生命。");
-        A("공격 속도가 2% 빨라집니다.", "Fire rate +2%.", "攻撃速度が2%速くなります。", "攻击速度提升2%。");
+        A("공격 속도가 1% 빨라집니다.", "Fire rate +1%.", "攻撃速度が1%速くなります。", "攻击速度提升1%。");
         A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed +1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
         A("상한 없이 계속 쌓입니다", "Stacks without limit", "上限なく積み重なります", "可无限叠加");
         A("최대 레벨(50 · 무한 모드 80) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
@@ -352,10 +361,10 @@ public static partial class LocTable
           "Pick one of three cards or skip on each level-up · Max level 50 · Endless 80 (no level-ups after that) · Max all ingredients to evolve a skill",
           "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・エンドレス80（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
           "每次升级从三张中选一张或跳过 · 等级上限50 · 无尽80（之后不再升级）· 素材全部升满即可技能进化");
-        A("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
-          "If you learn every level-up card before max level (50 · Endless 80), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
-          "最大レベル（50・エンドレス80）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
-          "在达到等级上限（50 · 无尽80）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +3% · 生命：最大生命 +5 · 手速：攻击速度 +2% · 步伐：移动速度 +1%");
+        A("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%",
+          "If you learn every level-up card before max level (50 · Endless 80), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: fire rate +1% · Stride: move speed +1%",
+          "最大レベル（50・エンドレス80）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%",
+          "在达到等级上限（50 · 无尽80）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
         A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         A("트리를 모두 배우면 열립니다", "Unlocks once the whole tree is learned", "ツリーをすべて習得すると解放", "学满整棵树后解锁");

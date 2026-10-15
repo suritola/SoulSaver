@@ -107,20 +107,32 @@ public class TooltipUI : MonoBehaviour
 
     void ShowInternal(string title, string body)
     {
-        float inner = width - padding * 2f;
-
+        // 1.1.2~ 진화 스킬처럼 긴 설명: 화면 높이의 70%를 넘으면 폭을 넓히고 (최대 1.7배 · 화면 폭 45%), 그래도 넘치면 통째로 줄임 (Follow 가 화면 안에 둠)
+        float w = width;
+        float limitH = canvasRect.rect.height * 0.7f;
+        float maxW = Mathf.Max(width, Mathf.Min(width * 1.7f, canvasRect.rect.width * 0.45f));
+        float inner, titleH, bodyH, gap;
         titleText.text = title;
         bodyText.text = body;
-        float titleH = titleText.GetPreferredValues(title, inner, 0f).y;
-        float bodyH = string.IsNullOrEmpty(body) ? 0f : bodyText.GetPreferredValues(body, inner, 0f).y;
-        float gap = bodyH > 0f ? 10f : 0f;
+        while (true)
+        {
+            inner = w - padding * 2f;
+            titleH = titleText.GetPreferredValues(title, inner, 0f).y;
+            bodyH = string.IsNullOrEmpty(body) ? 0f : bodyText.GetPreferredValues(body, inner, 0f).y;
+            gap = bodyH > 0f ? 10f : 0f;
+            if (padding * 2f + titleH + gap + bodyH <= limitH || w >= maxW) break;
+            w = Mathf.Min(maxW, w + 80f);
+        }
+        float total = padding * 2f + titleH + gap + bodyH;
+        float fit = Mathf.Clamp(canvasRect.rect.height * 0.92f / Mathf.Max(1f, total), 0.6f, 1f);
+        panel.localScale = Vector3.one * fit;
 
         titleText.rectTransform.sizeDelta = new Vector2(inner, titleH);
         titleText.rectTransform.anchoredPosition = new Vector2(padding, -padding);
         bodyText.rectTransform.sizeDelta = new Vector2(inner, bodyH);
         bodyText.rectTransform.anchoredPosition = new Vector2(padding, -padding - titleH - gap);
 
-        panel.sizeDelta = new Vector2(width, padding * 2f + titleH + gap + bodyH);
+        panel.sizeDelta = new Vector2(w, total);
         panel.gameObject.SetActive(true);
         panel.SetAsLastSibling();
         Canvas top = panel.GetComponent<Canvas>();
@@ -138,13 +150,18 @@ public class TooltipUI : MonoBehaviour
     {
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, GameInput.PointerPosition, null, out Vector2 local);      // 1.0.5~ 패드 가상 커서도
         Vector2 half = canvasRect.rect.size * 0.5f;
-        Vector2 size = panel.sizeDelta;
+        Vector2 size = panel.sizeDelta * panel.localScale.x;       // 1.1.2~ 줄인 크기로
 
         bool left = local.x + 24f + size.x > half.x;
         bool up = local.y - 24f - size.y < -half.y;
         panel.pivot = new Vector2(left ? 1f : 0f, up ? 0f : 1f);
 
         Vector2 pos = local + new Vector2(left ? -24f : 24f, up ? 24f : -24f);
+        // 1.1.2~ 뒤집어도 화면 밖으로 나가면 (아주 긴 설명) 화면 안으로 밀어 넣음
+        float minX = -half.x + 8f + (left ? size.x : 0f), maxX = half.x - 8f - (left ? 0f : size.x);
+        float minY = -half.y + 8f + (up ? 0f : size.y), maxY = half.y - 8f - (up ? size.y : 0f);
+        pos.x = minX <= maxX ? Mathf.Clamp(pos.x, minX, maxX) : pos.x;
+        pos.y = minY <= maxY ? Mathf.Clamp(pos.y, minY, maxY) : pos.y;
         panel.anchoredPosition = pos;
     }
 }

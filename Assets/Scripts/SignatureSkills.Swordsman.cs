@@ -42,7 +42,8 @@ public partial class SignatureSkills
         if (counterReady)
         {
             counterReady = false;
-            Bullet b = Shot(origin + (Vector3)(dir * 0.8f), dir, Atk * 2.5f * mul, 999, 30f, 18f, "fx_swordwave", 6f, new Color(1f, 0.9f, 0.6f));
+            using var tier = Fx.Tier(3);
+            Bullet b = Shot(origin + (Vector3)(dir * 0.8f), dir, Atk * 3f * mul, 999, 30f, 18f, "fx_swordwave", 7f, new Color(1f, 0.9f, 0.6f));      // 1.1.2~ 250 → 300%
             Flair(null, origin, 4f, new Color(1f, 0.9f, 0.6f));
             if (b != null) b.hitOnce = new HashSet<int>();
             Fx.Spawn("fx_shock", origin, 5f, new Color(1f, 0.85f, 0.45f, 0.9f), 22f);
@@ -81,8 +82,9 @@ public partial class SignatureSkills
             if (n >= need)
             {
                 n = 0;
-                float dmg = Atk * V(cr, 0.8f, 0.4f);
+                float dmg = Atk * V(cr, 0.8f, 0.4f) * P("s.crack");     // 1.1.2~ 거인 처단: ×1.5
                 Vector3 p = c.transform.position;
+                using var tier = EvoFx("s.crack");
                 Deal(g, dmg, Vector3.zero, 0f);
                 if (E("se.giant")) Circle(p, 2.6f, dmg * 0.6f, 0.5f);
                 Fx.Spawn("fx_fissure", p, 2.4f * Fs("s.crack"), Color.white, 14f, Random.Range(0f, 360f), 14);
@@ -109,7 +111,8 @@ public partial class SignatureSkills
         if (tr <= 0) return;
         Vector3 at = origin + (Vector3)(dir * reach * 0.55f);
         float r = reach * 0.55f;
-        float dmg = Atk * V(tr, 0.08f, 0.03f);         // 휘두를 때마다 겹쳐서 예전 15 ~ 36% 는 너무 셌음
+        float dmg = Atk * V(tr, 0.08f, 0.03f) * P("s.trail");         // 휘두를 때마다 겹쳐서 예전 15 ~ 36% 는 너무 셌음 · 1.1.2~ 천검 궤적: ×1.6
+        using var tier = EvoFx("s.trail");
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SigZone z = Zone(at, r, 1f, 0.25f, zone => { foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f); });
         FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, Big("s.trail") ? Vivid(new Color(0.7f, 0.85f, 1f), 0.75f) : new Color(0.7f, 0.85f, 1f, 0.45f), 6f, rot, 13, true, 1f);
@@ -117,6 +120,7 @@ public partial class SignatureSkills
         if (E("se.trail"))
             z.onEnd = zone =>
             {
+                using var evoTier = Fx.Tier(3);
                 for (int i = 0; i < 6; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 60f + rot) * Vector2.right;
@@ -135,7 +139,7 @@ public partial class SignatureSkills
             rateUntil = Time.time + 1.5f + 2.5f * charge;
         }
         int ec = L("s.echo");
-        if (ec > 0) StartCoroutine(EchoSpin(origin, radius, dmg * V(ec, 0.4f, 0.15f)));
+        if (ec > 0) StartCoroutine(EchoSpin(origin, radius, dmg * V(ec, 0.4f, 0.15f) * P("s.echo")));       // 1.1.2~ 영혼 회오리: ×1.4
         if (E("se.eye")) StartCoroutine(EyeOfStorm(3f));
     }
 
@@ -152,6 +156,7 @@ public partial class SignatureSkills
             souls = souls / 2;
         }
         Vector3 p = transform.position;
+        using var tier = EvoFx("s.echo");
         Circle(p, r, dmg, 2f);
         Fx.Spawn("fx_spinslash", p, r * 2.4f * Fs("s.echo"), Big("s.echo") ? new Color(1f, 0.85f, 0.5f, 0.9f) : new Color(0.8f, 0.9f, 1f, 0.7f), 22f);
         Flair("s.echo", p, r, new Color(0.8f, 0.9f, 1f));
@@ -160,7 +165,8 @@ public partial class SignatureSkills
 
     IEnumerator EyeOfStorm(float seconds)
     {
-        FxAnim t = Fx.Play("fx_tornado", transform.position, 14f, new Color(1f, 0.9f, 0.6f, 0.6f), 14f, 0f, 3, true, seconds);
+        FxAnim t;
+        using (Fx.Tier(3)) t = Fx.Play("fx_tornado", transform.position, 14f, new Color(1f, 0.9f, 0.6f, 0.6f), 14f, 0f, 3, true, seconds);
         Flair(null, transform.position, 7f, Steel);
         if (t != null) t.follow = transform;
         for (float time = 0f; time < seconds && Alive; time += 0.25f)
@@ -171,7 +177,7 @@ public partial class SignatureSkills
                 if (c == null || !c.CompareTag("enermy")) continue;
                 c.transform.position = Vector3.MoveTowards(c.transform.position, p, 1.2f);
             }
-            Circle(p, 3f, Atk * 0.4f, 0f);
+            Circle(p, 3f, Atk * 0.5f, 0f);          // 1.1.2~ 40 → 50%
             yield return new WaitForSeconds(0.25f);
         }
     }
@@ -205,7 +211,8 @@ public partial class SignatureSkills
             if (E("se.blood"))
             {
                 Vector3 p = transform.position;
-                Circle(p, 4.5f, Atk * 2f, 2.5f);
+                using var tier = Fx.Tier(3);
+                Circle(p, 4.5f, Atk * 2.5f, 2.5f);      // 1.1.2~ 200 → 250%
                 Fx.Spawn("fx_shock", p, 15f, Blood, 20f);
                 Fx.Spawn("fx_bleed", p, 7f, Color.white, 16f);
                 Flair(null, p, 6f, Blood);

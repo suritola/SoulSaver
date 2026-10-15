@@ -43,9 +43,9 @@ public partial class SignatureSkills
         if (L("p.junk") <= 0 || Random.value >= 0.2f) return;
         for (int i = -1; i <= 1; i++)
         {
-            Bullet b = Shot(start, Quaternion.Euler(0f, 0f, i * 20f) * dir, Atk * V(L("p.junk"), 0.3f, 0.1f), 1, 22f, 10f, "fx_card", 0.8f * Fs("p.junk"), Tint("p.junk", new Color(1f, 0.85f, 0.5f)), true);
+            Bullet b = Shot(start, Quaternion.Euler(0f, 0f, i * 20f) * dir, Atk * V(L("p.junk"), 0.3f, 0.1f) * P("p.junk"), 1, 22f, 10f, "fx_card", 0.8f * Fs("p.junk"), Tint("p.junk", new Color(1f, 0.85f, 0.5f)), true);
             if (b != null && E("pe.flyers"))
-                b.onHitEnemy += (s, c) => { if (c != null) { Circle(c.transform.position, 1.6f, Atk * 0.6f, 1f); Fx.Spawn("fx_explosion", c.transform.position, 3f, new Color(1f, 0.8f, 0.4f), 20f); } };
+                b.onHitEnemy += (s, c) => { if (c != null) { using var tier = Fx.Tier(3); Circle(c.transform.position, 1.6f, Atk * 0.6f, 1f); Fx.Spawn("fx_explosion", c.transform.position, 3.4f, new Color(1f, 0.8f, 0.4f), 20f); } };       // 1.1.2~ 진화 폭발은 가장 화려한 단계 (전단 피해 ×1.6 은 위 Shot)
         }
     }
 
@@ -93,12 +93,13 @@ public partial class SignatureSkills
     void OnExpressed(List<Vector3> spots, float dmg)
     {
         // 익일 배송: 1초 뒤 같은 자리가 한 번 더 터짐 (답장 폭주: 그때도 답장 편지)
-        if (L("p.overnight") > 0 && spots.Count > 0) StartCoroutine(Overnight(new List<Vector3>(spots), dmg * V(L("p.overnight"), 0.3f, 0.1f)));
+        if (L("p.overnight") > 0 && spots.Count > 0) StartCoroutine(Overnight(new List<Vector3>(spots), dmg * V(L("p.overnight"), 0.3f, 0.1f) * P("p.overnight")));      // 1.1.2~ 답장 폭주: ×1.5
     }
 
     IEnumerator Overnight(List<Vector3> spots, float dmg)
     {
         yield return new WaitForSeconds(1f);
+        using var tier = EvoFx("p.overnight");
         foreach (Vector3 p in spots)
         {
             Circle(p, 1.8f * Fs("p.overnight"), dmg, 1f);

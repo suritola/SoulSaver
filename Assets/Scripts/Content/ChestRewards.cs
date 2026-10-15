@@ -139,6 +139,9 @@ public static class ChestRewards
             string desc = r.describe != null ? r.describe(c) : "";
             if (r.rarity == RewardRarity.Rare) desc = "<color=#7FD3FF>" + Loc.T("chest.rare") + "</color>\n" + desc;
             options[i] = new ChoiceUI.Option(r.nameKey, desc, r.color, r.icon);
+            // 1.1.2~ 「숙련」(카드 +1단계): 그 카드의 단계 칸 — 찬 칸 + 이번에 차오를 칸 맥동
+            if (r.nameKey == "chest.card.name" && c.shop != null && c.cardId >= 0)
+                options[i] = options[i].WithPips(c.shop.LevelOf(c.cardId), LevelShop.MaxLevelOf(CharacterData.Selected, c.cardId));
         }
         int pick = 0;
         yield return ChoiceUI.Run(elite ? "chest.elite.title" : "chest.title", "chest.pick", options, i => pick = i);
@@ -162,7 +165,7 @@ public static class ChestRewards
 
         List<string> lines = new List<string>();
         if (evo != null) lines.Add("<color=#FFC94D>" + Loc.T("chest.catalyst.line").Replace("{0}", Loc.T(evo.name)) + "</color>");
-        foreach (RewardDef r in picks) lines.Add("· " + (r.describe != null ? r.describe(c) : r.Name));
+        foreach (RewardDef r in picks) lines.Add("· " + (r.describe != null ? r.describe(c).Replace("\n", " · ") : r.Name));     // 1.1.2~ 잠든 힘의 칸 · 키 줄도 한 줄로
 
         yield return Roulette(picks);
         CodexSeen.Mark("sec.jackpot", Loc.T("chest.jackpot.name"));      // 1.2~ 발견형 도감 비밀
@@ -341,8 +344,7 @@ public static class ChestRewards
     public static void GiveMight(Ctx c)
     {
         if (c.player == null) return;
-        c.player.damage *= 1.05f;
-        RunSave.Record("a5");                                   // RunSave 'a' (공격력 %)
+        RunSave.AddBaseAttack(c.player, 5f);                    // 1.1.2~ 평타 고점 하향: 지금 공격력 ×1.05 → 기본 공격력의 +5% (RunSave 'ap')
     }
 
     public static void GiveCard(Ctx c)

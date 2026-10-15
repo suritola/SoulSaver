@@ -14,6 +14,8 @@ public partial class SpecialAbilities
         public Image border, icon, cooldown;
         public TextMeshProUGUI label, key;
         public Image keyCap;
+        public Color capBase = Color.white;
+        public Image glow, arrow;           // 1.1.2~ 새로 얻은 칸 반짝임 · 가리키는 화살표 (SpecialAbilities.KeyGuide)
     }
 
     class HudGroup
@@ -143,7 +145,11 @@ public partial class SpecialAbilities
 
     void FillGroup(HudGroup g, List<int> ids)
     {
-        foreach (HudTile t in g.list) Destroy(t.border.gameObject);
+        foreach (HudTile t in g.list)
+        {
+            Destroy(t.border.gameObject);
+            if (t.glow != null) Destroy(t.glow.gameObject);     // 1.1.2~ 새 칸 빛무리는 칸 뒤(창 안)에 따로 있음
+        }
         g.list.Clear();
         for (int i = 0; i < ids.Count; i++)
         {
@@ -185,36 +191,32 @@ public partial class SpecialAbilities
             t.label.outlineWidth = 0.25f;
             t.label.outlineColor = new Color32(0, 0, 0, 255);
 
-            RectTransform kr = new GameObject("Key", typeof(RectTransform)).GetComponent<RectTransform>();
-            kr.SetParent(r, false);
-            kr.anchorMin = new Vector2(0f, 1f);
-            kr.anchorMax = new Vector2(1f, 1f);
-            kr.pivot = new Vector2(0.5f, 1f);
-            kr.sizeDelta = new Vector2(0f, 30f);      // 1.1~ 24 → 30: 자동 크기가 높이 때문에 글자를 줄이지 않게 (위 기준이라 자리는 그대로)
-            kr.anchoredPosition = new Vector2(0f, -2f);
-            // 키 배지: 설정 「키 아이콘」이면 흰 키보드 키 모양, 아니면 어두운 배지 (어느 쪽이든 크게 잘 보이게)
+            // 키 배지 (1.1.2~): 키캡 모양(밝은 면 · 진한 글자 · 테두리)을 칸 아래 바깥에 붙임 → 아이콘 · 쿨타임 원과 겹치지 않음
+            //   예전엔 칸 안 왼쪽 위 26×24 에 「SPACE」가 그려진 fx_keycap 그림을 늘려 깔아 「E」와 섞여 읽히지 않았음
+            //   스킬 · 유물 창은 LayoutGroups 가 칸 아래에 KeyRow 만큼 자리를 비워 둠 · 키가 없는 칸(무기 · 패시브)은 숨김
             GameObject cap = new GameObject("KeyCap", typeof(RectTransform), typeof(Image));
             RectTransform cr = cap.GetComponent<RectTransform>();
             cr.SetParent(r, false);
-            cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(0f, 1f);
-            cr.anchoredPosition = new Vector2(2f, -2f);
-            cr.sizeDelta = new Vector2(26f, 24f);
+            cr.anchorMin = cr.anchorMax = new Vector2(0.5f, 0f);
+            cr.pivot = new Vector2(0.5f, 1f);
+            cr.anchoredPosition = new Vector2(0f, -3f);
+            cr.sizeDelta = new Vector2(KeyCapMinW, KeyCapH);
             t.keyCap = cap.GetComponent<Image>();
-            t.keyCap.color = new Color(0.92f, 0.9f, 0.85f, 0.95f);
+            t.keyCap.sprite = KeyCapSprite;
+            t.keyCap.type = Image.Type.Sliced;
+            t.keyCap.pixelsPerUnitMultiplier = 0.7f;      // 테두리 · 옆면을 조금 굵게
+            t.keyCap.color = Color.white;
             t.keyCap.raycastTarget = false;
-            Sprite[] capSprite = Fx.Frames("fx_keycap");
-            if (capSprite.Length > 0) t.keyCap.sprite = capSprite[0];
             cap.SetActive(false);
-            t.key = HudText(kr, 18f, new Color(1f, 0.85f, 0.45f), TextAlignmentOptions.TopLeft);
+            t.key = HudText(cr, 20f, KeyCapInk, TextAlignmentOptions.Center);
+            t.key.rectTransform.offsetMin = new Vector2(3f, 4f);       // 아래쪽 옆면(그림자)만큼 글자를 올림
+            t.key.rectTransform.offsetMax = new Vector2(-3f, -1f);
             t.key.fontStyle = FontStyles.Bold;
-            t.key.margin = new Vector4(8f, 1f, 0f, 0f);
-            // 1.1~: 긴 키 이름(마우스 4 · 휠 클릭 · Num5)이 배지 · 칸 밖으로 나가 옆 칸을 덮었음 → 배지 안에서 글자를 줄임
+            // 긴 키 이름(마우스 4 · 휠 클릭 · Num5)은 배지 안에서 글자를 줄임
             t.key.enableAutoSizing = true;
-            t.key.fontSizeMax = 18f;
-            t.key.fontSizeMin = 9f;
+            t.key.fontSizeMax = 20f;
+            t.key.fontSizeMin = 10f;
             t.key.overflowMode = TextOverflowModes.Truncate;
-            t.key.outlineWidth = 0.25f;
-            t.key.outlineColor = new Color32(0, 0, 0, 255);
 
             TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
             tip.titleProvider = () => TileTitle(id);
@@ -242,13 +244,15 @@ public partial class SpecialAbilities
             g.root.gameObject.SetActive(any);
             if (!any) continue;
             float tilesH = g.collapsed ? 0f : TileSize;
+            // 1.1.2~ 스킬 · 유물 창은 칸 아래에 키 배지 자리 (KeyRow)
+            float keyRow = !g.collapsed && (g == skillGroup || g == relicGroup) ? KeyRow : 0f;
             g.tiles.gameObject.SetActive(!g.collapsed);
-            g.tiles.anchoredPosition = Vector2.zero;
+            g.tiles.anchoredPosition = new Vector2(0f, keyRow);
             Transform head = g.header.transform.parent;
-            ((RectTransform)head).anchoredPosition = new Vector2(0f, tilesH + (g.collapsed ? 0f : 4f));
+            ((RectTransform)head).anchoredPosition = new Vector2(0f, keyRow + tilesH + (g.collapsed ? 0f : 4f));
             g.header.text = (g.collapsed ? "+ " : "- ") + g.title + (g.collapsed ? "  (" + g.list.Count + ")" : "");
             g.root.anchoredPosition = new Vector2(24f, y);
-            y += tilesH + (g.collapsed ? 0f : 4f) + HeaderHeight + GroupGap;
+            y += keyRow + tilesH + (g.collapsed ? 0f : 4f) + HeaderHeight + GroupGap;
         }
     }
 
@@ -269,6 +273,7 @@ public partial class SpecialAbilities
             {
                 if (full) UpdateTile(t);
                 else t.cooldown.fillAmount = TileCool(t.id);
+                if (g == skillGroup || g == relicGroup) AnimateKeyGuide(t);     // 1.1.2~ 새로 얻은 칸 반짝임 · 화살표 · 키 배지 맥동
             }
         }
     }
@@ -353,8 +358,7 @@ public partial class SpecialAbilities
         }
         else if (abilities[id].kind == SpecialKind.Skill)
         {
-            int slot = skills.IndexOf(id);
-            key = relics.Contains(id) ? KeyBindings.Name(GameAction.Relic) : slot >= 0 && slot < SkillKeys.Length ? KeyBindings.Name(SkillKeys[slot]) : "";
+            key = SlotKeyName(id);
             float left = CooldownUntil(id) - Time.time;
             float length = cooldownLength.TryGetValue(id, out float l) ? l : 1f;
             cool = left > 0f ? Mathf.Clamp01(left / length) : 0f;
@@ -371,25 +375,25 @@ public partial class SpecialAbilities
         t.border.color = flash ? Color.white : active ? TileActive : TileBorder;
         t.cooldown.fillAmount = cool;
         if (t.label.text != label) t.label.text = label;
-        // 키가 있으면 늘 배지 위에 크게 (키 아이콘 설정: 흰 키 + 어두운 글자, 아니면 어두운 배지 + 금빛 글자)
+        // 키 배지 (1.1.2~ 칸 아래 바깥의 키캡): 설정 「키 아이콘」이면 밝은 키캡 + 진한 글자, 끄면 어두운 키캡 + 금빛 글자
+        //   쿨타임 중에도 배지는 가리지 않고 면만 조금 어둡게 (글자는 그대로 진함)
         bool cap = key.Length > 0;
         bool icons = GameSettings.KeyIcons;
         if (t.keyCap.gameObject.activeSelf != cap) t.keyCap.gameObject.SetActive(cap);
-        string keyText = key + (id >= 0 && IsEvolved(id) ? (key.Length > 0 ? " " : "") + "+" : "");
+        string keyText = key + (id >= 0 && IsEvolved(id) ? "+" : "");
         if (cap)
         {
-            // 배지 폭은 실제로 보이는 글자(진화 표시 " +" 포함)에 맞춤
-            // 1.1~: 한글 · 가나는 글자당 18px 로 셈 · 칸 폭(58)을 넘지 않게 54 까지, 글자는 배지 안쪽까지만 (넘치면 자동으로 작아짐)
+            // 배지 폭은 실제로 보이는 글자에 맞춤 (한글 · 가나는 글자당 18px) · 옆 칸 배지와 닿지 않게 칸 폭 + 간격까지
             float est = 0f;
-            foreach (char ch in keyText) est += ch >= '\u2E80' ? 18f : 11f;
-            float capW = Mathf.Clamp(14f + est, 26f, TileSize - 4f);
-            t.keyCap.rectTransform.sizeDelta = new Vector2(capW, 24f);
-            Vector4 m = t.key.margin;
-            float right = TileSize - (2f + capW) + 5f;
-            if (!Mathf.Approximately(m.z, right)) t.key.margin = new Vector4(m.x, m.y, right, m.w);
-            t.keyCap.color = icons ? new Color(0.92f, 0.9f, 0.85f, 0.95f) : new Color(0.05f, 0.04f, 0.08f, 0.85f);
+            foreach (char ch in keyText) est += ch >= 0x2E80 ? 18f : 12f;
+            float capW = Mathf.Clamp(16f + est, KeyCapMinW, TileSize + TileGap - 2f);
+            t.keyCap.rectTransform.sizeDelta = new Vector2(capW, KeyCapH);
+            Color face = icons ? Color.white : new Color(0.32f, 0.28f, 0.36f);
+            if (cool > 0f) face *= new Color(0.82f, 0.82f, 0.82f, 1f);
+            t.capBase = face;
+            t.keyCap.color = face;
         }
-        t.key.color = cap && icons ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.88f, 0.4f);
+        t.key.color = icons ? KeyCapInk : new Color(1f, 0.86f, 0.4f);
         if (t.key.text != keyText) t.key.text = keyText;
     }
 
@@ -482,6 +486,7 @@ public partial class SpecialAbilities
                 float left = CooldownUntil(id) - Time.time;
                 state = left > 0f ? Loc.T("쿨타임 ") + left.ToString("0.0") + Loc.T("초") : Loc.T("사용 가능");
                 if (relics.Contains(id)) state = Loc.T("relic.tag") + " · " + state;     // 1.2~ 유물 칸 [Q] · 쿨타임 1.5배
+                else if (SlotKeyName(id).Length > 0) state = Loc.T("keyguide.use").Replace("{0}", SlotKeyName(id)) + " · " + state;     // 1.1.2~ 어느 키인지 설명에도
                 if (id == SoulBurstId) state += Loc.T(" · 영혼 ") + souls;
             }
             else state = PassiveState(id, true);

@@ -95,6 +95,8 @@ public partial class Shop : MonoBehaviour
 
     void OnEnemyKilled(Vector3 pos)
     {
+        // 1.1.2~ 무한 모드에서 개발자가 나온 뒤로는 떠돌이 상점이 나오지 않음
+        if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.NoMobs) return;
         // 보스 전에는 처치 수가 늘어난 만큼 천천히 셈 (한 판에 나오는 상점 수 · 코인과 맞춤)
         EnemySpawner sp = Cache<EnemySpawner>.Get;
         killsForStall += sp != null && !sp.bossSpawned && !sp.bossCleared ? 1f / GameMode.KillStretch : 1f;
@@ -191,6 +193,7 @@ public partial class Shop : MonoBehaviour
 
         // 캐릭터 공격력 배율을 지키도록 플레이어 값에 바로 더함 (검사 150% · 도적 70% …)
         playerControllerd.damage += KitDamageStep;
+        damageBuys++;                           // 다음 강화는 덜 오름 (Shop.Kits KitDamageStep)
         damage = playerControllerd.damage;
         damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();
