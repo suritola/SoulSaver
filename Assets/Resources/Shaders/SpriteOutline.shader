@@ -10,6 +10,7 @@ Shader "SoulSaver/SpriteOutline"
         _Saturation ("Saturation", Float) = 1
         _Brightness ("Brightness", Float) = 1
         _EmptyAlpha ("Empty below alpha", Float) = 0.5
+        [PerRendererData] _Flash ("Hit flash", Float) = 0       // 1.1~ 피격 흰 번쩍임 (Juice.SetFlash 가 렌더러마다)
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
         [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
@@ -38,6 +39,7 @@ Shader "SoulSaver/SpriteOutline"
             float4 _MainTex_TexelSize;
             fixed4 _OutlineColor;
             float _Saturation, _Brightness, _EmptyAlpha;
+            float _Flash;
 
             fixed4 Frag (v2f IN) : SV_Target
             {
@@ -61,6 +63,7 @@ Shader "SoulSaver/SpriteOutline"
                 // 채도 · 밝기 (이펙트를 더 선명하게, 캐릭터는 1 · 1 그대로)
                 float l = dot(c.rgb, float3(0.299, 0.587, 0.114));
                 c.rgb = saturate(lerp(l.xxx, c.rgb, _Saturation) * _Brightness);
+                c.rgb = lerp(c.rgb, float3(1, 1, 1), _Flash);      // 1.1~ 피격 흰 번쩍임 (윤곽선은 그대로)
                 c.rgb *= c.a;
                 return c;
             }
