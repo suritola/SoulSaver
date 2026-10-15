@@ -257,20 +257,18 @@ public partial class CharacterKit : MonoBehaviour
         Sprite[] f = Fx.Frames(fx);
         if (sr != null && f.Length > 0)
         {
-            // 1.1.2: 평타를 한눈에 (AttackLook) — 보이는 크기는 3~4배, 판정 상자는 예전(한 변 = 크기 ÷ 그림 높이)의 1.3배
+            // 1.1.2: 평타를 한눈에 (AttackLook) — 보이는 크기는 예전의 0.9~1.2배(검기 0.6~0.78배, 큰 톱니 0.72~0.9배)
             //   표창 · 화살 · 톱니는 새 그림(흰 심 + 영웅색 테두리 + 어두운 외곽선), 나머지는 예전 그림을 키움
+            //   판정 = 보이는 그림의 몸통 (AttackLook.BodyOf: 외곽선 · 빛 무리 · 잔상 뺌), 표창 · 톱니는 원
             int tier = AttackLook.Tier;
-            float oldHit = size / f[0].bounds.size.y;
             bool wave = fx == "fx_swordwave";
             string look = AttackLook.LookFor(fx, Id == CharacterId.Clockmaker);
             Sprite[] lf = look != null ? Fx.Frames(look) : null;
             if (lf == null || lf.Length == 0) { lf = f; look = null; }
             float vis = size * (wave ? AttackLook.WaveMul(tier) : size >= 1.8f ? AttackLook.BigMul(tier) : AttackLook.SmallMul(tier));
-            // 검기는 세로로 긴 초승달: 판정 세로를 예전처럼 보이는 높이의 절반으로 (3.4칸 → 판정 1.7칸이던 비율)
-            Vector2 hit = wave ? new Vector2(oldHit * AttackLook.HitMul, Mathf.Max(vis, size) * 0.5f) : Vector2.one * oldHit * AttackLook.HitMul;
             sr.sprite = lf[0];
             sr.color = tint;
-            AttackLook.Shape(b, lf[0], vis, hit);
+            AttackLook.Shape(b, lf[0], look ?? fx, vis);
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
             loop.frames = lf;
             loop.spin = spin ? -900f : 0f;

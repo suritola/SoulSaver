@@ -92,6 +92,34 @@ public class BulletGlow : MonoBehaviour
         MakeHalo();
     }
 
+    // 예광탄 보이는 높이: 단계 높이 × 특수 총기가 키운 배율 (저격 1.4 등)
+    float TracerHeight(Vector3 ps)
+    {
+        float rel = tracerBaseScale.x != 0f ? Mathf.Abs(ps.x / tracerBaseScale.x) : 1f;
+        return AttackLook.GunnerHeight(tier) * Mathf.Max(0.5f, rel);
+    }
+
+    // 예광탄으로 그릴 총알의 판정을 보이는 예광탄 몸통에 맞춤 (프리팹 실선 3.27 × 0.022 → 길이 0.92 × 2.4 × 높이 · 두께 0.8 × 높이)
+    //   Bullet 이 첫 스윕 검사 전에 부름 (꾸미기는 LateUpdate 라 그보다 늦음) · 한 번만
+    //   그림을 바꾼 탄 · 그림을 꺼 둔 탄 · 예광탄 그림이 없으면 그대로 (보이는 것이 실선 · 그 그림이라)
+    bool fitted;
+    public void FitTracerHit()
+    {
+        if (fitted) return;
+        fitted = true;
+        if (tracerSprite == null || SpecialAbilities.GlowSprite == null) return;
+        if (!TryGetComponent(out SpriteRenderer sr) || sr.sprite != tracerSprite || (!sr.enabled && !ready)) return;
+        Sprite[] f = Fx.Frames("atk_bullet");
+        if (f == null || f.Length == 0) return;
+        if (!TryGetComponent(out BoxCollider2D box)) return;
+        Vector3 ps = transform.lossyScale;
+        if (Mathf.Abs(ps.x) < 0.0001f || Mathf.Abs(ps.y) < 0.0001f) return;
+        Vector2 hit = AttackLook.BodySize(f[0], "atk_bullet", TracerHeight(ps));
+        box.size = new Vector2(hit.x / Mathf.Abs(ps.x), hit.y / Mathf.Abs(ps.y));
+        box.offset = Vector2.zero;
+        if (TryGetComponent(out Bullet b)) b.RefreshSweepShape();
+    }
+
     // 예광탄: 실선은 숨기고 금빛 예광탄 + 흰 심을 자식으로 (프리팹이 납작해서 축마다 되돌림)
     void InitTracer()
     {
@@ -99,12 +127,9 @@ public class BulletGlow : MonoBehaviour
         tracerCore = Fx.Frames("atk_bullet_core");
         if (tracerFrames == null || tracerFrames.Length == 0) { LegacyInit(); return; }
         body.enabled = false;
+        FitTracerHit();
         Vector3 ps = transform.lossyScale;
-        // 판정 두께만 0.022 → 0.3 (길이 그대로, 피해 그대로) — 그림을 바꾸지 않은 실선 총알에만 (스킬이 그림 · 크기를 바꾼 탄은 그대로)
-        if (TryGetComponent(out BoxCollider2D box) && Mathf.Abs(ps.y) > 0.0001f)
-            box.size = new Vector2(box.size.x, Mathf.Max(box.size.y, AttackLook.GunnerHitThick / Mathf.Abs(ps.y)));
-        float rel = tracerBaseScale.x != 0f ? Mathf.Abs(ps.x / tracerBaseScale.x) : 1f;      // 특수 총기가 키운 배율 (저격 1.4 등)
-        float h = AttackLook.GunnerHeight(tier) * Mathf.Max(0.5f, rel);
+        float h = TracerHeight(ps);
         float k = h / tracerFrames[0].bounds.size.y;
         tracerSr = Child("AtkTracer", tracerFrames[0], new Color(tint.r, tint.g, tint.b, alpha * 0.97f), AttackLook.Order, new Vector3(k / Safe(ps.x), k / Safe(Mathf.Abs(ps.y)), 1f));
         if (tracerCore != null && tracerCore.Length > 0)

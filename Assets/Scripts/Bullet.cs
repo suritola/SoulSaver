@@ -54,12 +54,23 @@ public class Bullet : MonoBehaviour
     }
 
     private int remainPene;
+
+    void Awake()
+    {
+        // 플레이어 탄 전용 층: 스윕 검사가 다른 플레이어 탄을 건너뛰게 (충돌 행렬은 모든 층과 그대로 닿음)
+        if (shotLayer == -2) shotLayer = LayerMask.NameToLayer("PlayerShot");
+        if (shotLayer >= 0) gameObject.layer = shotLayer;
+    }
+
     void Start()
     {
         remainPene = pene;
         playerC = Hostile.Player;                  // 총알마다 씬 전체를 뒤지지 않게 (캐시)
         mainCamera = Camera.main;
         Destroy(gameObject, lifetime);
+        lastPos = transform.position;
+        if (TryGetComponent(out BulletGlow g)) g.FitTracerHit();      // 예광탄 판정을 첫 검사 전에 보이는 몸통으로
+        RefreshSweepShape();
     }
 
 
@@ -72,6 +83,125 @@ public class Bullet : MonoBehaviour
     {
         float slow = Time.time < SlowUntil ? SlowMul : 1f;
         transform.position += (Vector3)dir * speed * slow * Time.deltaTime;
+        Sweep();
+    }
+
+    // =========================
+    // 스윕 검사 (1.1.2 뒤: 판정을 보이는 크기로 줄여서)
+    // =========================
+    // 총알은 Kinematic · 이산 충돌이라 판정이 짧으면 프레임 사이에 적을 뚫고 지나감 (거너 예광탄 몸통 길이 ≈ 0.6, 한 프레임에 1칸 넘게 날아감)
+    // → 매 프레임 지난 자리 → 지금 자리를 판정 모양(상자 · 원) 그대로 쓸어(BoxCast · CircleCast) 그 길의 적 · 보스 · 벽을 가까운 순서로 맞힘
+    //   맞음 처리는 예전 OnTriggerEnter2D 그대로(Hit) — 관통 수 · 한 번만(hitOnce) · 보스 · BossPart · 벽(onHitWall)
+    //   「들어올 때만」: 지난 프레임에 이미 닿아 있던 콜라이더는 다시 맞히지 않음 (트리거 Enter 와 같게, 떨어졌다 다시 닿으면 또)
+    //   다른 사람이 옮기는 탄(부메랑 낫 · 유도탄 등)도 지난 자리 → 지금 자리를 쓸어서 같음
+    //   할당 없음: 결과 버퍼 · 필터는 모든 탄이 같이 씀, 닿아 있는 목록은 탄마다 작은 배열 두 개(처음 닿을 때 만듦)
+    //   상자 · 원이 아닌 판정(없음)이면 예전처럼 트리거로
+    static int shotLayer = -2;
+    static readonly RaycastHit2D[] castBuf = new RaycastHit2D[48];
+    static readonly Collider2D[] overlapBuf = new Collider2D[48];
+    static ContactFilter2D filter;
+    static int filterLayer = -99;
+    const float TeleportDist = 30f;        // 이보다 멀리 한 번에 옮겨졌으면(되돌아오기 · 자리 옮김) 지금 자리만 검사
+
+    Vector3 lastPos;
+    Collider2D sweepCol;                    // 쓸 판정 (켜진 상자 · 원), 없으면 트리거
+    int[] touching, touchingNext;
+    int touchCount;
+    bool gone;                              // 이번 프레임에 사라지기로 함 (Destroy 는 프레임 끝이라)
+
+    // 판정 모양이 바뀌었을 때 (AttackLook.Shape · BulletGlow.FitTracerHit)
+    public void RefreshSweepShape()
+    {
+        sweepCol = null;
+        if (TryGetComponent(out CircleCollider2D c) && c.enabled) sweepCol = c;
+        else if (TryGetComponent(out BoxCollider2D b) && b.enabled) sweepCol = b;
+    }
+
+    static ContactFilter2D Filter(int layer)
+    {
+        if (filterLayer != layer)
+        {
+            filterLayer = layer;
+            int mask = Physics2D.GetLayerCollisionMask(layer);
+            if (shotLayer >= 0) mask &= ~(1 << shotLayer);           // 플레이어 탄끼리는 건너뜀
+            filter = new ContactFilter2D { useTriggers = true, useLayerMask = true, layerMask = mask };
+        }
+        return filter;
+    }
+
+    void Sweep()
+    {
+        Vector3 now = transform.position;
+        Vector2 from = lastPos;
+        lastPos = now;
+        if (gone || sweepCol == null || !sweepCol.enabled) return;
+
+        Vector2 d = (Vector2)now - from;
+        float dist = d.magnitude;
+        if (dist > TeleportDist) { from = now; dist = 0f; }
+        Vector2 way = dist > 0.0001f ? d / dist : (Vector2)transform.right;
+        float angle = transform.eulerAngles.z;
+        Vector3 ls = transform.lossyScale;
+        ContactFilter2D f = Filter(gameObject.layer);
+        int n;
+        bool cast = dist > 0.0001f;
+
+        if (sweepCol is BoxCollider2D box)
+        {
+            Vector2 size = new Vector2(Mathf.Abs(box.size.x * ls.x), Mathf.Abs(box.size.y * ls.y));
+            Vector2 off = transform.TransformVector(box.offset);
+            n = cast ? Physics2D.BoxCast(from + off, size, angle, way, f, castBuf, dist)
+                     : Physics2D.OverlapBox(from + off, size, angle, f, overlapBuf);
+        }
+        else
+        {
+            CircleCollider2D circle = (CircleCollider2D)sweepCol;
+            float r = circle.radius * Mathf.Max(Mathf.Abs(ls.x), Mathf.Abs(ls.y));
+            Vector2 off = transform.TransformVector(circle.offset);
+            n = cast ? Physics2D.CircleCast(from + off, r, way, f, castBuf, dist)
+                     : Physics2D.OverlapCircle(from + off, r, f, overlapBuf);
+        }
+
+        // 가까운 순서로 (벽 뒤의 적은 맞지 않게, 관통 수가 다하면 거기서 끝)
+        if (cast)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                RaycastHit2D h = castBuf[i];
+                int j = i - 1;
+                while (j >= 0 && castBuf[j].distance > h.distance) { castBuf[j + 1] = castBuf[j]; j--; }
+                castBuf[j + 1] = h;
+            }
+        }
+
+        int next = 0;
+        for (int i = 0; i < n; i++)
+        {
+            Collider2D c = cast ? castBuf[i].collider : overlapBuf[i];
+            if (c == null || c == sweepCol) continue;
+            if (!c.CompareTag("enermy") && !c.CompareTag("boss") && !c.CompareTag("Wall")) continue;
+            int id = c.GetInstanceID();
+            if (touching == null) { touching = new int[8]; touchingNext = new int[8]; }
+            bool was = false;
+            for (int k = 0; k < touchCount; k++) if (touching[k] == id) { was = true; break; }
+            if (next == touchingNext.Length) { System.Array.Resize(ref touching, next * 2); System.Array.Resize(ref touchingNext, next * 2); }
+            touchingNext[next++] = id;
+            if (was) continue;
+            Hit(c);
+            if (gone || this == null) break;
+        }
+        for (int i = 0; i < n; i++) { castBuf[i] = default; overlapBuf[i] = null; }       // 지운 콜라이더를 붙잡고 있지 않게
+        if (touching != null)
+        {
+            int[] t = touching; touching = touchingNext; touchingNext = t;
+            touchCount = next;
+        }
+    }
+
+    void Gone()
+    {
+        gone = true;
+        Destroy(gameObject);
     }
 
     private Camera mainCamera;
@@ -79,6 +209,13 @@ public class Bullet : MonoBehaviour
         Collider2D collision
     )
     {
+        if (sweepCol != null) return;          // 스윕 검사가 맞힘 (Sweep)
+        Hit(collision);
+    }
+
+    void Hit(Collider2D collision)
+    {
+        if (gone) return;
         using var source = DamageSource.As(dmgSource);
         // =========================
         // 벽에 맞으면 삭제
@@ -87,7 +224,7 @@ public class Bullet : MonoBehaviour
         if (collision.CompareTag("Wall"))
         {
             if (onHitWall != null) { onHitWall(); return; }
-            Destroy(gameObject);
+            Gone();
 
             return;
         }
@@ -130,7 +267,7 @@ public class Bullet : MonoBehaviour
 
             // 총알 삭제
             if (remainPene < 1)
-            Destroy(gameObject);
+            Gone();
         }
         if (collision.CompareTag("boss"))
         {
@@ -172,7 +309,7 @@ public class Bullet : MonoBehaviour
 
             // 총알 삭제
             if (remainPene < 1)
-                Destroy(gameObject);
+                Gone();
         }
     }
     public void arisePene()

@@ -3,7 +3,7 @@ using UnityEngine;
 // 1.1.2: 평타를 한눈에 — 「여전히 평타가 안 보인다」
 //   예전: 거너 총알은 납작한 흰 실선(3.27 × 0.02) + 작은 흰 빛, 표창 · 화살 · 톱니는 1칸 남짓한 옅은 흰 그림이라
 //         밝은 초원(흰색 명도 대비 3.3)에서 묻히고, 흰 · 하늘색 적 탄과도 색이 겹쳤음
-//   지금: 보이는 크기 3~4배(판정과 따로) · 밝은 흰 심 + 영웅 고유색 테두리 + 어두운 외곽선 3단 · 가산 혼합 빛 무리 · 짧은 잔상
+//   지금: 보이는 크기 3~4배 (빌드 뒤 그 30%, 판정은 보이는 몸통 그대로 — BodyOf) · 밝은 흰 심 + 영웅 고유색 테두리 + 어두운 외곽선 3단 · 가산 혼합 빛 무리 · 짧은 잔상
 //         강해질수록(Fx.TierOf: 기본 → 1차 → 2차 진화) 더 크고 밝게
 // 그림: tools/pixelart/make_attacks.py (atk_* · atk_*_core · fx_swordswing*)
 public static class AttackLook
@@ -42,12 +42,47 @@ public static class AttackLook
     // 판 위 범위 공격(베기 · 획 · 손길)은 판정 범위 = 그림이라 바깥 크기는 그대로, 띠 굵기만 단계마다
     public static float BandMul(int tier) => tier >= 3 ? 1.2f : tier == 2 ? 1.1f : 1f;
 
-    // 판정: 그림이 3~4배 커져 「맞은 것 같은데 안 맞는」 어긋남이 커서 투사체 판정 상자만 1.3배 (피해는 그대로)
-    public const float HitMul = 1.3f;
-    // 거너 총알 판정 두께: 0.022 → 0.3 (길이 3.27 은 그대로)
-    public const float GunnerHitThick = 0.3f;
+    // ---------------------------------------------------------------- 판정 = 보이는 몸통
+    // 1.1.2 의 「판정 상자 = 예전 판정 × 1.3 (HitMul)」 · 「거너 판정 두께 0.3 · 길이 3.27 그대로 (GunnerHitThick)」는 없앰
+    //   → 「실제 히트박스도 보이는 크기에 맞춰」: 판정 = 화면에 보이는 그림의 불투명한 몸통 (피해 수치는 그대로)
+    // 몸통 기준: 알파 ≥ 50% 칸의 테두리 상자에서 바깥 어두운 외곽선(1칸)은 뺌 — 빛 무리 · 잔상(가산 혼합 · 옅은 층)도 뺌
+    //   (외곽선은 바닥과 구분하려는 1칸 테두리라 「몸에 닿았다」고 느끼는 자리가 아님)
+    //   잰 값: 그림(Resources/FX/*.png)의 프레임마다 칸을 세어 — 프레임 칸 수에 대한 비율 (가로, 세로)
+    //   둥근 것(표창 · 톱니)은 원(지름 = 비율 × 보이는 높이), 길쭉한 것(총알 · 화살 · 검기 · 표식 화살 · 얼음 파편)은 상자
+    //   검기 초승달: 날아가는 쪽 두께는 짧고 옆으로 긴 그림이라 상자 = 그림의 테두리 상자 (관통 무제한이라 지나간 자리 = 초승달 폭)
+    public struct Body
+    {
+        public Vector2 frac;    // 프레임 크기에 대한 몸통 비율 (가로, 세로)
+        public bool round;      // 원 판정
+        public Body(float x, float y, bool r = false) { frac = new Vector2(x, y); round = r; }
+    }
+
+    public static Body BodyOf(string sprite) => sprite switch
+    {
+        "atk_bullet" => new Body(22f / 24f, 8f / 10f),           // 24×10 칸: 외곽선 뺀 21~23 × 8
+        "atk_arrow" => new Body(19f / 20f, 8f / 8f),            // 20×8 칸: 19 × 8 (촉 · 깃이 위아래 끝까지)
+        "atk_shuriken" => new Body(14f / 16f, 14f / 16f, true),  // 16×16 칸: 날 끝까지 12~16 (평균 14), 돌아서 원
+        "atk_gear" => new Body(15f / 16f, 15f / 16f, true),      // 16×16 칸: 14~16
+        "fx_swordwave" => new Body(23f / 24f, 28f / 32f),        // 24×32 칸: 23 × 28 (외곽선 없음)
+        "fx_markbolt" => new Body(11f / 16f, 15f / 16f),         // 16×16 칸: 11 × 15
+        "fx_spike" => new Body(14f / 16f, 31f / 32f),            // 16×32 칸: 다 자란 얼음 가시 14 × 31
+        "atk_letter" => new Body(16f / 18f, 11f / 13f),          // 18×13 칸: 16 × 11
+        "fx_falcon" => new Body(21f / 24f, 11f / 16f),           // 24×16 칸: 21 × 11
+        "fx_card" => new Body(13f / 16f, 11f / 16f),             // 16×16 칸: 13 × 11
+        _ => new Body(1f, 1f),
+    };
+
+    // 그림 한 장이 world 높이 visibleHeight 로 보일 때 몸통 크기 (월드)
+    public static Vector2 BodySize(Sprite s, string name, float visibleHeight)
+    {
+        Body b = BodyOf(name);
+        float h = s.bounds.size.y;
+        float k = h > 0f ? visibleHeight / h : 1f;
+        return new Vector2(s.bounds.size.x * k * b.frac.x, visibleHeight * b.frac.y);
+    }
 
     // 거너 예광탄 보이는 높이 (예전 흰 심 지름 ≈ 0.3 → 0.85 · 1.0 · 1.15, 길이는 그 2.4배)
+    // 판정 = 몸통 (길이 0.92 × 2.4 × 높이, 두께 0.8 × 높이) — BulletGlow.FitTracerHit
     public static float GunnerHeight(int tier) => (tier >= 3 ? 1.15f : tier == 2 ? 1f : 0.85f) * SizeScale;
 
     // 빛 무리 진하기 · 잔상 (단계마다 더 밝고 길게)
@@ -95,16 +130,45 @@ public static class AttackLook
     }
 
     // ---------------------------------------------------------------- 모양
-    // 투사체 보이는 높이 · 판정 상자(월드 크기)를 따로: 몸을 보이는 크기로 늘리고 상자는 그만큼 줄여 판정을 맞춤
-    public static void Shape(Bullet b, Sprite s, float visibleHeight, Vector2 hitWorld)
+    // 투사체를 보이는 높이로 키우고 판정을 그 그림의 몸통(BodyOf)에 맞춤
+    //   둥근 몸통은 상자를 끄고 원 판정을 붙임 (돌아가는 표창 · 톱니가 상자 대각선만큼 커졌다 작아졌다 하지 않게)
+    //   총알 프리팹은 상자(1 × 1) 하나, Bullet 의 스윕 검사가 켜진 상자 · 원 판정을 그대로 씀
+    public static void Shape(Bullet b, Sprite s, string name, float visibleHeight)
     {
         if (b == null || s == null) return;
         float h = s.bounds.size.y;
         if (h <= 0f || visibleHeight <= 0f) return;
         float k = visibleHeight / h;
         b.transform.localScale = new Vector3(k, k, 1f);
-        if (b.TryGetComponent(out BoxCollider2D box)) { box.size = hitWorld / k; box.offset = Vector2.zero; }
-        else if (b.TryGetComponent(out CircleCollider2D circle)) circle.radius = Mathf.Max(hitWorld.x, hitWorld.y) * 0.5f / k;
+        Body body = BodyOf(name);
+        Vector2 hit = BodySize(s, name, visibleHeight);
+        b.TryGetComponent(out BoxCollider2D box);
+        b.TryGetComponent(out CircleCollider2D circle);
+        if (body.round)
+        {
+            if (circle == null)
+            {
+                circle = b.gameObject.AddComponent<CircleCollider2D>();
+                circle.isTrigger = true;
+            }
+            circle.offset = Vector2.zero;
+            circle.radius = Mathf.Max(hit.x, hit.y) * 0.5f / k;
+            circle.enabled = true;
+            if (box != null) box.enabled = false;
+        }
+        else if (box != null) { box.size = hit / k; box.offset = Vector2.zero; box.enabled = true; if (circle != null) circle.enabled = false; }
+        else if (circle != null) circle.radius = Mathf.Max(hit.x, hit.y) * 0.5f / k;
+        b.RefreshSweepShape();
+    }
+
+    // 날아가는 그림(편지 · 비둘기)이 닿았다고 볼 거리 = 몸통 가로 · 세로 반지름의 평균 (월드)
+    public static float TouchRadius(SpriteRenderer sr, string name)
+    {
+        if (sr == null || sr.sprite == null) return 0.45f;
+        Vector3 ls = sr.transform.lossyScale;
+        Vector2 frac = BodyOf(name).frac;
+        Vector2 size = sr.sprite.bounds.size;
+        return (size.x * Mathf.Abs(ls.x) * frac.x + size.y * Mathf.Abs(ls.y) * frac.y) * 0.25f;
     }
 
     // 평타 그림 이름 (예전 그림 이름 → 새 그림), 없으면 null (예전 그림을 키우기만)
