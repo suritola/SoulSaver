@@ -1,5 +1,11 @@
-# 맵 물체 · 석관 · 떨어지는 것 그림 (1.2~, MapProps · ContentRegistry.Props · Drops): 32x32, 배경 없이 윤곽선 있는 도트
+# 맵 물체 · 석관 · 떨어지는 것 그림 (1.2~, MapProps · ContentRegistry.Props · Drops): 배경 없이 윤곽선 있는 도트
 #   → Assets/Resources/Icons/prop_<이름>.png · drop_<이름>.png
+# 1.1.2~ 적 떼 · 화려한 이펙트 속에서도 「부술 수 있는 것」으로 읽히게:
+#   몸통(32칸) 둘레에 어두운 윤곽 1칸 + 밝은 테두리 1칸 (부서지는 물체는 금빛 · 석관은 영혼빛 보라 · 떨어지는 것은 종류별 색)
+#   물체 그림은 40x40 (몸통 32칸 + 둘레 4칸 여백) · 떨어지는 것은 36x36 (둘레 2칸)
+#   prop_<이름>_glow.png: 테두리 바깥 2칸까지 넓힌 흰 실루엣 (MapProp 이 몸통 뒤에 금빛으로 맥동 · 가까이 가면 밝아짐 · 부서질 때 흰 번쩍임)
+#   몸통 색도 장 바닥과 겹치지 않게 다시 칠함 (화로: 어두운 쇠 → 놋쇠 · 나무통: 초원 흙길과 같은 갈색 → 밝은 꿀색 나무 · 수정: 심연 파랑 → 밝은 청록)
+#   python tools/pixelart/make_map_props.py --preview <png> : 장별 바닥 타일 위에 얹은 비교 그림 (커밋하지 않는 확인용)
 #   장마다 부서지는 물체: urn 낡은 항아리(지하 묘역) · brazier 꺼진 화로(불타는 지옥) · barrel 나무통(초원) · crystal 영혼 수정(영혼의 심연)
 #   sarcophagus 봉인된 석관 (2장부터, 부수면 유물 2택)
 #   떨어지는 것: meat 고기(회복) · magnet 자석 · hourglass 시간 정지 · purify 정화 (코인 · 금화는 게임 안 코인 그림 그대로)
@@ -8,30 +14,38 @@ import os, re, sys, uuid
 sys.path.insert(0, os.path.dirname(__file__))
 from png import Img, write
 from make_fx import disc, ring, line
+from make_fx import ROOT
 from make_menu_icons import outline, retry, OUT, K, W, G, GD, R, B, P, S
 
-BR = (130, 80, 45, 255)         # 나무
-BRL = (170, 110, 65, 255)
-BRD = (90, 55, 30, 255)
+BR = (206, 140, 72, 255)        # 나무 (밝은 꿀색 · 초원 흙길 (128, 96, 48) 보다 확실히 밝게)
+BRL = (240, 184, 108, 255)
+BRD = (140, 84, 40, 255)
 CLAY = (176, 120, 86, 255)      # 흙 항아리
 CLAYL = (212, 160, 120, 255)
 CLAYD = (122, 78, 58, 255)
 STONE = (128, 124, 140, 255)    # 돌
 STONEL = (170, 166, 182, 255)
 STONED = (84, 80, 98, 255)
-IRON = (78, 74, 86, 255)
-IRONL = (120, 116, 130, 255)
+IRON = (150, 146, 162, 255)     # 쇠 띠 (밝게)
+IRONL = (205, 202, 216, 255)
+BRASS = (196, 140, 58, 255)     # 화로 놋쇠 (지옥 바닥의 어두운 빨강과 겹치지 않게)
+BRASSL = (246, 200, 106, 255)
+BRASSD = (128, 84, 36, 255)
 EMBER = (255, 120, 40, 255)
 EMBERL = (255, 210, 110, 255)
-SOUL = (150, 210, 255, 255)
-SOULL = (225, 245, 255, 255)
-SOULD = (80, 110, 210, 255)
+SOUL = (110, 236, 255, 255)     # 수정 (심연 바닥의 파랑 · 보라보다 밝은 청록)
+SOULL = (226, 255, 255, 255)
+SOULD = (40, 168, 214, 255)
 VIO = (175, 110, 245, 255)
 VIOL = (225, 190, 255, 255)
 MEAT = (196, 86, 60, 255)
 MEATL = (236, 136, 96, 255)
 MEATD = (140, 54, 40, 255)
 BONE = (238, 230, 214, 255)
+RIM_GOLD = (255, 222, 110, 255)  # 부서지는 물체 테두리 (보물 상자와 같은 금빛 = 「건드리면 뭔가 나옴」)
+RIM_SOUL = (214, 170, 255, 255)  # 석관 테두리
+RIM_DROP = {'drop_meat': (130, 255, 140, 255), 'drop_magnet': (255, 110, 120, 255),
+            'drop_hourglass': (130, 210, 255, 255), 'drop_purify': (255, 250, 200, 255)}
 
 
 def urn(img):
@@ -55,21 +69,21 @@ def urn(img):
 
 def brazier(img):
     # 세 발 쇠 화로 + 남은 불씨
-    line(img, 9, 20, 6, 29, IRON, 2)
-    line(img, 23, 20, 26, 29, IRON, 2)
-    line(img, 16, 21, 16, 29, IRON, 2)
+    line(img, 9, 20, 6, 29, BRASSD, 2)
+    line(img, 23, 20, 26, 29, BRASSD, 2)
+    line(img, 16, 21, 16, 29, BRASS, 2)
     for y in range(13, 22):                         # 그릇
         half = 12 - (y - 13) * 0.6
         for x in range(int(16 - half), int(16 + half) + 1):
-            img.set(x, y, IRONL if y < 15 else IRON)
-    img.rect(3, 12, 26, 2, IRONL)
-    for x in range(5, 28, 4): img.set(x, 12, (160, 156, 170, 255))
+            img.set(x, y, BRASSL if y < 15 else BRASS if x < 20 else BRASSD)
+    img.rect(3, 12, 26, 2, BRASSL)
+    for x in range(5, 28, 4): img.set(x, 12, (255, 236, 170, 255))
+    for x in range(6, 27, 5): img.set(x, 17, BRASSD)        # 그릇 무늬
     for cx, cy, r in ((11, 11, 2.6), (16, 10, 3.2), (21, 11, 2.6)):   # 불씨 더미
-        disc(img, cx, cy, r, (70, 40, 34, 255))
-    for cx, cy in ((10, 10), (15, 9), (18, 10), (22, 10), (13, 11)):
+        disc(img, cx, cy, r, (90, 46, 36, 255))
+    for cx, cy in ((10, 10), (15, 9), (18, 10), (22, 10), (13, 11), (20, 11), (12, 10)):
         img.set(cx, cy, EMBER)
-    disc(img, 16, 8.5, 1.4, EMBERL)
-    for x, y in ((12, 5), (19, 4), (16, 2)): img.set(x, y, EMBER)       # 튀는 불티
+    disc(img, 16, 8.5, 1.6, EMBERL)
 
 
 def barrel(img):
@@ -107,7 +121,6 @@ def crystal(img):
     shard(23, 13, 11, 3)
     shard(16, 2, 22, 4.5)
     line(img, 15, 6, 15, 19, (255, 255, 255, 255), 1)
-    for x, y in ((6, 6), (27, 8), (20, 3)): img.set(x, y, VIOL)
 
 
 def sarcophagus(img):
@@ -163,7 +176,6 @@ def magnet(img):
     for y in range(22, 28):
         for x in list(range(5, 10)) + list(range(23, 28)):
             img.set(x, y, W if y < 24 else S)
-    for x, y in ((3, 30), (16, 30), (29, 30)): img.set(x, y, G)
 
 
 def hourglass(img):
@@ -207,19 +219,109 @@ ICONS = {'prop_urn': urn, 'prop_brazier': brazier, 'prop_barrel': barrel, 'prop_
          'prop_sarcophagus': sarcophagus,
          'drop_meat': meat, 'drop_magnet': magnet, 'drop_hourglass': hourglass, 'drop_purify': purify}
 
+# 테두리 없이 맨 나중에 찍는 낱 픽셀 (튀는 불티 · 반짝임): 테두리를 두르면 네모 점처럼 보였음 · 몸통 32칸 기준 좌표
+SPECKS = {'prop_brazier': [(12, 5, EMBER), (19, 4, EMBERL), (16, 2, EMBER)],
+          'prop_crystal': [(6, 6, (255, 255, 255, 255)), (27, 8, VIOL), (20, 3, (255, 255, 255, 255))],
+          'drop_magnet': [(3, 30, G), (16, 31, G), (29, 30, G)]}
+
+N8 = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1))
+
+
+def grow(img, c, near=N8):
+    # 칠한 칸 둘레 1칸을 c 로 (8방향이면 대각선까지 꽉 찬 굵은 테두리)
+    src = [[img.px[y][x][3] > 0 for x in range(img.w)] for y in range(img.h)]
+    for y in range(img.h):
+        for x in range(img.w):
+            if src[y][x]: continue
+            for dx, dy in near:
+                xx, yy = x + dx, y + dy
+                if 0 <= xx < img.w and 0 <= yy < img.h and src[yy][xx]:
+                    img.px[y][x] = c
+                    break
+
+
+def framed(name, draw, size, rim):
+    # 몸통(32칸)을 가운데에 그리고 → 어두운 윤곽 1칸 → 밝은 테두리 1칸
+    body = Img(32, 32)
+    draw(body)
+    img = Img(size, size)
+    m = (size - 32) // 2
+    img.paste(body, m, m)
+    grow(img, K)                                    # 대각선까지 꽉 찬 어두운 윤곽 (밝은 테두리와 몸통 사이를 끊음)
+    grow(img, rim)
+    for x, y, c in SPECKS.get(name, ()):
+        if img.get(x + m, y + m)[3] == 0: img.set(x + m, y + m, c)
+    return img
+
+
+def glow_of(img):
+    # 테두리 바깥 2칸까지 넓힌 흰 실루엣 (안쪽은 진하게 · 바깥 칸으로 갈수록 옅게)
+    out = Img(img.w, img.h)
+    for y in range(img.h):
+        for x in range(img.w):
+            if img.px[y][x][3] > 0: out.px[y][x] = (255, 255, 255, 255)
+    grow(out, (255, 255, 255, 190))
+    grow(out, (255, 255, 255, 90))
+    return out
+
+
+def save(img, name, tpl):
+    path = os.path.join(OUT, '%s.png' % name)
+    meta = re.sub(r'guid: [0-9a-f]{32}', 'guid: ' + uuid.uuid4().hex, tpl, count=1)
+    if not os.path.exists(path + '.meta'):          # 이미 있는 .meta 는 그대로 (guid 유지)
+        retry(lambda: open(path + '.meta', 'w', encoding='utf-8', newline='\n').write(meta))
+    retry(lambda: write(img, path))
+    print('그림 저장:', name)
+
+
+def build():
+    arts = {}
+    for name, draw in ICONS.items():
+        if name.startswith('prop_'):
+            img = framed(name, draw, 40, RIM_SOUL if name == 'prop_sarcophagus' else RIM_GOLD)
+            arts[name] = img
+            arts[name + '_glow'] = glow_of(img)
+        else:
+            arts[name] = framed(name, draw, 36, RIM_DROP[name])
+    return arts
+
+
+# ---------------------------------------------------------------- 확인용 비교 그림 (장별 바닥 위)
+TILES = ['Assets/Sprites/tileset_cave_32.png', 'Assets/Sprites/tileset_hell_32.png',
+         'Assets/Sprites/tileset_meadow_32.png', 'Assets/Resources/Abyss/tileset_abyss_32.png']
+
+
+def preview(arts, path, scale=3):
+    from png import read
+    names = ['prop_urn', 'prop_brazier', 'prop_barrel', 'prop_crystal', 'prop_sarcophagus',
+             'drop_meat', 'drop_magnet', 'drop_hourglass', 'drop_purify']
+    cw = 44
+    w, h = cw * len(names), 48 * len(TILES)
+    sheet = Img(w, h)
+    for row, tile in enumerate(TILES):
+        t = read(os.path.join(ROOT, tile))
+        for y in range(48):
+            for x in range(w):
+                sheet.px[row * 48 + y][x] = t.px[y % 32][x % 32][:3] + (255,)
+        for col, n in enumerate(names):
+            a = arts[n]
+            sheet.paste(a, col * cw + (cw - a.w) // 2, row * 48 + (48 - a.h) // 2)
+    big = Img(w * scale, h * scale)
+    for y in range(big.h):
+        for x in range(big.w):
+            big.px[y][x] = sheet.px[y // scale][x // scale]
+    write(big, path)
+    print('비교 그림:', path)
+
 
 def main():
+    arts = build()
+    if '--preview' in sys.argv:
+        preview(arts, sys.argv[sys.argv.index('--preview') + 1])
+        return
     tpl = open(os.path.join(OUT, 'ability_85.png.meta'), encoding='utf-8').read()
-    for name, draw in ICONS.items():
-        img = Img(32, 32)
-        draw(img)
-        outline(img)
-        path = os.path.join(OUT, '%s.png' % name)
-        meta = re.sub(r'guid: [0-9a-f]{32}', 'guid: ' + uuid.uuid4().hex, tpl, count=1)
-        if not os.path.exists(path + '.meta'):
-            retry(lambda: open(path + '.meta', 'w', encoding='utf-8', newline='\n').write(meta))
-        retry(lambda: write(img, path))
-        print('그림 저장:', name)
+    for name, img in arts.items():
+        save(img, name, tpl)
 
 
 if __name__ == '__main__':
