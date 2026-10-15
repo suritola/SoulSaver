@@ -257,13 +257,30 @@ public partial class CharacterKit : MonoBehaviour
         Sprite[] f = Fx.Frames(fx);
         if (sr != null && f.Length > 0)
         {
-            sr.sprite = f[0];
+            // 1.1.2: 평타를 한눈에 (AttackLook) — 보이는 크기는 3~4배, 판정 상자는 예전(한 변 = 크기 ÷ 그림 높이)의 1.3배
+            //   표창 · 화살 · 톱니는 새 그림(흰 심 + 영웅색 테두리 + 어두운 외곽선), 나머지는 예전 그림을 키움
+            int tier = AttackLook.Tier;
+            float oldHit = size / f[0].bounds.size.y;
+            bool wave = fx == "fx_swordwave";
+            string look = AttackLook.LookFor(fx, Id == CharacterId.Clockmaker);
+            Sprite[] lf = look != null ? Fx.Frames(look) : null;
+            if (lf == null || lf.Length == 0) { lf = f; look = null; }
+            float vis = size * (wave ? AttackLook.WaveMul(tier) : size >= 1.8f ? AttackLook.BigMul(tier) : AttackLook.SmallMul(tier));
+            // 검기는 세로로 긴 초승달: 판정 세로를 예전처럼 보이는 높이의 절반으로 (3.4칸 → 판정 1.7칸이던 비율)
+            Vector2 hit = wave ? new Vector2(oldHit * AttackLook.HitMul, vis * 0.5f) : Vector2.one * oldHit * AttackLook.HitMul;
+            sr.sprite = lf[0];
             sr.color = tint;
-            b.transform.localScale = Vector3.one * (size / f[0].bounds.size.y);
+            AttackLook.Shape(b, lf[0], vis, hit);
             FrameLoop loop = b.gameObject.AddComponent<FrameLoop>();
-            loop.frames = f;
+            loop.frames = lf;
             loop.spin = spin ? -900f : 0f;
-            if (fx == "fx_swordwave") SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.1)
+            if (wave) SlashTrail.Attach(b);      // 검기: 총알 빛 대신 초승달 잔상 (1.0.1)
+            else if (b.TryGetComponent(out BulletGlow glow))
+            {
+                glow.styled = true;
+                glow.frames = lf;
+                if (look != null) glow.coreFrames = Fx.Frames(look + "_core");
+            }
         }
         return b;
     }
@@ -367,7 +384,9 @@ public partial class CharacterKit : MonoBehaviour
         SignatureSkills.AfterSwing(origin, dir, reach, hits);
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(combo ? new Color(1f, 0.85f, 0.4f, 1f) : new Color(1f, 1f, 1f, 0.9f)), 24f, rot, 15);
+        // 1.1.2: 굵은 칼날 그림(흰 날 · 하늘색 테 · 어두운 외곽선, make_attacks.py) — 바깥 크기 = 판정 반지름 그대로
+        //   적 · 맵 물체 · 적 이펙트 위 순서 (AttackLook.AreaOrder), 연속 베기는 색을 곱해 탁해지지 않게 옅은 금빛
+        FxAnim a = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(combo ? new Color(1f, 0.95f, 0.75f, 1f) : new Color(1f, 1f, 1f, 0.95f)), 24f, rot, AttackLook.AreaOrder);
         if (combo)
         {
             Play("crack", 0.6f, 0.9f);
@@ -383,8 +402,8 @@ public partial class CharacterKit : MonoBehaviour
         if (half > 52f)
         {
             // 넓어진 폭: 양옆으로 한 번씩 더 그림
-            FxAnim b = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.8f, 0.9f, 1f, 0.5f)), 24f, rot + (half - 50f), 14);
-            FxAnim c = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.8f, 0.9f, 1f, 0.5f)), 24f, rot - (half - 50f), 14);
+            FxAnim b = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.85f, 0.95f, 1f, 0.6f)), 24f, rot + (half - 50f), AttackLook.AreaOrder - 1);
+            FxAnim c = Fx.Play("fx_swordswing", origin, reach * 2.03f, SkinFx.Tint(new Color(0.85f, 0.95f, 1f, 0.6f)), 24f, rot - (half - 50f), AttackLook.AreaOrder - 1);
             if (b != null) b.sr.flipY = a != null && a.sr.flipY;
             if (c != null) c.sr.flipY = a != null && a.sr.flipY;
         }
@@ -537,7 +556,7 @@ public partial class CharacterKit : MonoBehaviour
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
                     else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
-                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f);
+                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f, 0f, AttackLook.AreaOrder - 2);
                 Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
@@ -546,7 +565,7 @@ public partial class CharacterKit : MonoBehaviour
             }
             Collider2D[] inside = Physics2D.OverlapCircleAll(p, r);
             DamageCircle(p, r, hit, 1.2f);
-            Fx.Spawn("fx_alchemyblast", p, r * 2.2f, SkinFx.Tint(ReagentColors[kind]), 18f);
+            Fx.Spawn("fx_alchemyblast", p, r * 2.2f, SkinFx.Tint(ReagentColors[kind]), 18f, 0f, AttackLook.AreaOrder - 2);      // 1.1.2: 적 · 맵 물체 · 적 이펙트 위 (크기 = 판정 그대로)
             foreach (Collider2D c in inside)
             {
                 if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
@@ -1459,13 +1478,17 @@ public class FlaskLob : MonoBehaviour
 
     public static void Throw(Vector3 from, Vector3 to, float time, float size, Color tint, System.Action<Vector3> onLand)
     {
-        Sprite[] f = Fx.Frames("fx_flask");
+        // 1.1.2: 새 플라스크 그림(시약색 병 · 흰 반짝임 · 어두운 외곽선) + 빛 무리 · 잔상, 보이는 크기 2.4 → 2.7 → 3배 (터지는 자리 판정은 그대로)
+        Sprite[] f = Fx.Frames("atk_flask");
+        bool look = f.Length > 0;
+        if (!look) f = Fx.Frames("fx_flask");
         size *= 1.5f;           // 날아가는 플라스크가 너무 작아 잘 안 보였음 (모든 플라스크 공통)
+        if (look) size *= AttackLook.BigMul(AttackLook.Tier);
         GameObject go = new GameObject("Flask");
         go.transform.position = from;
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sortingLayerName = "Effect";
-        sr.sortingOrder = 8;
+        sr.sortingOrder = AttackLook.Order;
         sr.color = tint;
         if (f.Length > 0)
         {
@@ -1474,6 +1497,14 @@ public class FlaskLob : MonoBehaviour
             FrameLoop loop = go.AddComponent<FrameLoop>();
             loop.frames = f;
             loop.spin = -600f;
+            if (look)
+            {
+                BulletGlow glow = go.AddComponent<BulletGlow>();
+                glow.styled = true;
+                glow.frames = f;
+                glow.coreFrames = Fx.Frames("atk_flask_core");
+                glow.haloMul = 1.3f;
+            }
         }
         FlaskLob l = go.AddComponent<FlaskLob>();
         l.from = from;

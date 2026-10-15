@@ -15,41 +15,25 @@ public class SlashTrail : MonoBehaviour
         b.gameObject.AddComponent<SlashTrail>();
     }
 
-    void Start() => body = GetComponent<SpriteRenderer>();
+    // 1.1.2: 평타와 같은 순서(적 · 맵 물체 위, AttackLook.Order) · 잔상은 새로 만들고 지우지 않고 FadeSprite 를 다시 씀
+    void Start()
+    {
+        body = GetComponent<SpriteRenderer>();
+        if (body == null) return;
+        body.sortingLayerID = AttackLook.Layer;
+        body.sortingOrder = AttackLook.Order;
+    }
 
     void LateUpdate()
     {
-        if (body == null || body.sprite == null) return;
+        if (body == null || body.sprite == null || !body.enabled) return;
         tick += Time.deltaTime;
-        if (tick < 0.025f) return;
+        if (tick < 0.03f) return;
         tick = 0f;
-        GameObject g = new GameObject("SlashGhost", typeof(SpriteRenderer));
-        g.transform.SetPositionAndRotation(transform.position, transform.rotation);
-        g.transform.localScale = transform.localScale;
-        SpriteRenderer sr = g.GetComponent<SpriteRenderer>();
-        sr.sprite = body.sprite;
         Color c = body.color;
-        sr.color = new Color(c.r, c.g, c.b, c.a * 0.5f);
-        sr.sortingLayerID = body.sortingLayerID;
-        sr.sortingOrder = body.sortingOrder - 1;
-        g.AddComponent<Ghost>();
-    }
-
-    // 0.18초 동안 옅어지며 조금 작아짐
-    class Ghost : MonoBehaviour
-    {
-        SpriteRenderer sr;
-        float t, a0;
-        Vector3 s0;
-        void Start() { sr = GetComponent<SpriteRenderer>(); a0 = sr.color.a; s0 = transform.localScale; }
-        void Update()
-        {
-            t += Time.deltaTime;
-            float k = t / 0.18f;
-            if (k >= 1f) { Destroy(gameObject); return; }
-            Color c = sr.color;
-            sr.color = new Color(c.r, c.g, c.b, a0 * (1f - k));
-            transform.localScale = s0 * (1f - 0.25f * k);
-        }
+        FadeSprite f = FadeSprite.Spawn("SlashGhost", body.sprite, transform.position, 1f, new Color(c.r, c.g, c.b, c.a * 0.5f),
+                                        "Effect", AttackLook.TrailOrder, 0.18f);
+        Vector3 s = transform.lossyScale;
+        f.Shape(transform.rotation, new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), 1f));
     }
 }
