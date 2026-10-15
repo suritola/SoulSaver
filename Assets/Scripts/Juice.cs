@@ -40,6 +40,7 @@ public static class Juice
     {
         Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), SkinFx.EffectSkin != null ? 1.1f : 0.8f, SkinFx.CoinColor(new Color(1f, 0.88f, 0.4f)), 16f, 0f, 20);
         if (sound) Hostile.Play("sparkle", 0.2f, Random.Range(0.95f, 1.15f));
+        TranscendRules.Coin(pos);       // 1.2~ 초월 카드 「연금 손」
     }
 
     // ================================================================= 1.1~ 손맛 묶음 (로드맵 1-1)

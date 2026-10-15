@@ -216,11 +216,28 @@ public class MapProps : MonoBehaviour
             return;
         }
         brokenHere++;
+        TranscendRules.PropBroken(prop.Def, prop.Home);        // 1.2~ 초월 카드 「맵 지배」: 터지고 다시 생김
         DropDef drop = RollDrop();
         if (drop == null) return;
         DropCtx c = new DropCtx { player = Hostile.Player, at = prop.Home, slot = slot, host = this };
         if (string.IsNullOrEmpty(drop.icon)) drop.apply?.Invoke(c);
         else pickups.Add(MapPickup.Make(drop, c));
+    }
+
+    // 1.2~ 초월 카드 「맵 지배」: 부서진 물체를 이 장 안 빈자리에 다시 놓음 (부순 수도 하나 되돌려 이어하기 수와 맞춤) · 놓은 자리 (못 놓으면 null)
+    public Vector3? RespawnProp(PropDef def)
+    {
+        StageManager sm = StageManager.Instance;
+        EnemySpawner sp = Cache<EnemySpawner>.Get;
+        PlayerController p = Hostile.Player;
+        if (def == null || def.sarcophagus || Off || sm == null || sp == null || p == null || sm.CurrentStage != placedStage) return null;
+        props.RemoveAll(q => q == null);
+        List<Vector3> taken = new List<Vector3>();
+        foreach (MapProp q in props) if (!q.Broken) taken.Add(q.Home);
+        Vector3 at = Spot(sp, p.transform.position, MinFromPlayer, taken, def.size * 0.5f + 0.8f);
+        props.Add(MapProp.Make(def, at));
+        if (brokenStage == placedStage) brokenHere = Mathf.Max(0, brokenHere - 1);
+        return at;
     }
 
     static DropDef RollDrop()
