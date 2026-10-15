@@ -958,6 +958,35 @@ public class StageManager : MonoBehaviour
         return Mathf.Min(Normal, bottom - 12f);
     }
 
+    // 1.1~ 레벨업 창이 열린 동안은 알림판을 숨기고 시간을 세지 않음 (창 위쪽 「레벨업 카드 3/5」 · 진화 안내 줄을 알림판이 덮었음) → 창을 닫으면 이어서 보임
+    LevelShop bannerShop;
+    float bannerShopFindAt;
+    bool BannerHeld()
+    {
+        if (bannerShop == null && Time.unscaledTime >= bannerShopFindAt)
+        {
+            bannerShopFindAt = Time.unscaledTime + 1f;
+            bannerShop = FindFirstObjectByType<LevelShop>();
+        }
+        return bannerShop != null && bannerShop.IsOpen;
+    }
+
+    // 1.1~ 글이 길면(이벤트 예고 2~3줄 등) 알림판을 아래로 늘림: 20pt 로 들어가는 높이 (72 ~ 140) · 600×60 칸에서 16pt 까지 줄던 문제
+    void FitBanner(RectTransform r, string text)
+    {
+        if (r == null || bannerText == null || r.anchorMin.y < 1f) return;     // CompactBanner 를 거친 작은 띠일 때만
+        const float Read = 20f;
+        float w = r.sizeDelta.x - 40f;
+        bool auto = bannerText.enableAutoSizing;
+        float size = bannerText.fontSize;
+        bannerText.enableAutoSizing = false;
+        bannerText.fontSize = Read;
+        float h = bannerText.GetPreferredValues(text, w, 0f).y;
+        bannerText.enableAutoSizing = auto;
+        bannerText.fontSize = size;
+        r.sizeDelta = new Vector2(r.sizeDelta.x, Mathf.Clamp(h + 14f, 72f, 140f));
+    }
+
     IEnumerator BannerRoutine(string text, float seconds, bool keep)
     {
         // 1.0.4~: 한 알림이 끝나면 줄 선 다음 알림을 이어서 보임
@@ -967,22 +996,34 @@ public class StageManager : MonoBehaviour
             bannerShowing = text;
             bannerKeep = keep;
             bannerText.text = text;
+            FitBanner(r, text);
             banner.SetActive(true);
+            if (bannerGroup != null) bannerGroup.alpha = 0f;
+            while (BannerHeld()) { bannerTick = Time.unscaledTime; yield return null; }
             // 살짝 내려오며 나타났다가 서서히 사라짐
             for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
             {
                 bannerTick = Time.unscaledTime;
                 float k = t / 0.2f;
                 float y = BannerY();
-                if (bannerGroup != null) bannerGroup.alpha = k;
+                if (bannerGroup != null) bannerGroup.alpha = BannerHeld() ? 0f : k;
                 if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(y + 20f, y, k));
                 yield return null;
             }
-            if (bannerGroup != null) bannerGroup.alpha = 1f;
+            if (bannerGroup != null && !BannerHeld()) bannerGroup.alpha = 1f;
             // 떠 있는 동안 보스 체력바가 나타나거나 사라지면 따라 움직임 (기다리는 알림이 있으면, 꼭 봐야 하는 알림이 아닌 한 짧게)
             for (float t = 0f; t < Mathf.Max(0.3f, seconds - 0.5f); t += Time.unscaledDeltaTime)
             {
                 bannerTick = Time.unscaledTime;
+                if (BannerHeld())
+                {
+                    // 레벨업 창이 열린 동안: 숨기고 시간을 멈춤 (닫히면 다시 나타남)
+                    if (bannerGroup != null) bannerGroup.alpha = 0f;
+                    t -= Time.unscaledDeltaTime;
+                    yield return null;
+                    continue;
+                }
+                if (bannerGroup != null && bannerGroup.alpha < 1f) bannerGroup.alpha = Mathf.Min(1f, bannerGroup.alpha + Time.unscaledDeltaTime * 6f);
                 if (!bannerKeep && bannerQueue.Count > 0 && t >= MinBannerShow) break;
                 if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
                 yield return null;
@@ -990,7 +1031,7 @@ public class StageManager : MonoBehaviour
             for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
             {
                 bannerTick = Time.unscaledTime;
-                if (bannerGroup != null) bannerGroup.alpha = 1f - t / 0.3f;
+                if (bannerGroup != null) bannerGroup.alpha = BannerHeld() ? 0f : 1f - t / 0.3f;
                 if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
                 yield return null;
             }

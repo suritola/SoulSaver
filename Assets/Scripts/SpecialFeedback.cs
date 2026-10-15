@@ -664,7 +664,7 @@ public class SpecialFeedback : MonoBehaviour
     readonly Dictionary<string, float> lastText = new Dictionary<string, float>();
 
     // 캐릭터 위로 떠오르며 사라지는 글자 (같은 글자는 잠깐 동안 한 번만)
-    public void FloatText(Vector3 pos, string text, Color color, float size = 5f, float throttle = 0.6f)
+    public void FloatText(Vector3 pos, string text, Color color, float size = 5f, float throttle = 0.6f, float duration = 0.9f)
     {
         if (lastText.TryGetValue(text, out float t) && Time.time - t < throttle) return;
         lastText[text] = Time.time;
@@ -681,7 +681,7 @@ public class SpecialFeedback : MonoBehaviour
         tmp.enableWordWrapping = false;
         tmp.sortingLayerID = SortingLayer.NameToID("Effect");
         tmp.sortingOrder = 30;
-        go.AddComponent<FloatUp>();
+        go.AddComponent<FloatUp>().duration = duration;     // 1.1~ 읽어야 하는 안내는 더 오래 남김
     }
 
     // ================================================================= screen shake

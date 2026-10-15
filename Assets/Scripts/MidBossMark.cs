@@ -12,13 +12,14 @@ public class MidBossMark : MonoBehaviour
 
     static Sprite white;
 
-    public static void Attach(GameObject go, string name)
+    // 1.1~ prefix = false: 「중간 보스 · 」 없이 이름만 (황금 고블린처럼 달아나는 보상 몹이 보스처럼 보이지 않게)
+    public static void Attach(GameObject go, string name, bool prefix = true)
     {
         if (go == null) return;
-        go.AddComponent<MidBossMark>().Build(name);
+        go.AddComponent<MidBossMark>().Build(name, prefix);
     }
 
-    void Build(string name)
+    void Build(string name, bool prefix)
     {
         body = GetComponent<SpriteRenderer>();
         enemy = GetComponent<EnermyController>();
@@ -35,7 +36,7 @@ public class MidBossMark : MonoBehaviour
         UIKit.EnsureStyle();
         if (UIKit.Font != null) tag.font = UIKit.Font;
         if (UIKit.FontMaterial != null) tag.fontSharedMaterial = UIKit.FontMaterial;
-        tag.text = Loc.T("중간 보스 이름표") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
+        tag.text = !prefix && !string.IsNullOrEmpty(name) ? name : Loc.T("중간 보스 이름표") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
         tag.fontSize = 9f;          // 3.6 은 화면(세로 40칸)에서 10픽셀 남짓이라 안 보였음
         tag.fontStyle = FontStyles.Bold;
         tag.color = new Color(1f, 0.86f, 0.35f);

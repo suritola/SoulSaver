@@ -225,12 +225,14 @@ public static class ChestRewards
         List<Sprite> sprites = new List<Sprite>();
         foreach (RewardDef d in ContentRegistry.Rewards)
         {
-            Sprite s = Resources.Load<Sprite>("Icons/choice_" + d.icon);
+            Sprite s = Resources.Load<Sprite>(ChoiceUI.IconPath(d.icon));
             if (s != null && !sprites.Contains(s)) sprites.Add(s);
         }
         if (sprites.Count == 0) icon.enabled = false;
 
-        AudioSource src = go.AddComponent<AudioSource>();
+        // 1.1~ 소리는 따로 둔 오브젝트에서: 룰렛 창(go)과 함께 지우면 상승 화음(1.1초)이 0.8초에 뚝 끊겼음 → 화음이 끝난 뒤 지움
+        GameObject sfx = new GameObject("ChestRouletteSfx");
+        AudioSource src = sfx.AddComponent<AudioSource>();
         src.playOnAwake = false;
         src.spatialBlend = 0f;
         src.ignoreListenerPause = true;
@@ -274,6 +276,7 @@ public static class ChestRewards
         }
 
         Object.Destroy(go);
+        Object.Destroy(sfx, 0.5f);
         ChoiceUI.Open = false;
         Time.timeScale = before > 0f ? before : 1f;
     }

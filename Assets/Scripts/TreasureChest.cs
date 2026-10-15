@@ -53,8 +53,9 @@ public class TreasureChest : MonoBehaviour
         c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(tint.r, tint.g, tint.b, 0.6f), "Effect", 7);
         c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(tint.r, tint.g, tint.b, 0.4f), "Effect", 6);
         c.pillar.transform.localScale = new Vector3(0.22f, 2.6f, 1f);
-        c.pointer = SpecialAbilities.MakeSprite("ChestPointer", art != null ? art : Hostile.Glow, at, 0.9f, Color.white, "Effect", 40);
-        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, 0.25f, new Color(tint.r, tint.g, tint.b, 0.7f), "Effect", 39);
+        // 1.1~ 화면 가장자리 포인터도 몸통과 같은 색 (저주받은 · 정예 상자가 보통 상자 포인터와 똑같이 보였음) · 뒤 빛도 보통 상자가 아니면 크게
+        c.pointer = SpecialAbilities.MakeSprite("ChestPointer", art != null ? art : Hostile.Glow, at, 0.9f, art != null ? body : tint, "Effect", 40);
+        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, tint == Gold ? 0.25f : 0.4f, new Color(tint.r, tint.g, tint.b, tint == Gold ? 0.7f : 0.85f), "Effect", 39);
         pointerGlow.transform.SetParent(c.pointer.transform, true);
         c.pointer.SetActive(false);
         c.label = SkillTag.Show(go.transform, label, 2.6f);

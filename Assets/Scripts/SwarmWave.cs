@@ -124,7 +124,7 @@ public class SwarmWave : MonoBehaviour
         if (!announced && SpecialAbilities.SharedFx != null)
         {
             announced = true;
-            SpecialAbilities.SharedFx.FloatText(p.transform.position + Vector3.up * 2.2f, Loc.T("swarm.incoming"), new Color(0.7f, 0.95f, 1f), 5f, 0f);
+            SpecialAbilities.SharedFx.FloatText(p.transform.position + Vector3.up * 2.2f, Loc.T("swarm.incoming"), new Color(0.7f, 0.95f, 1f), 5f, 0f, 3f);     // 1.1~ 0.9초면 무리가 보이기 전에 사라졌음
         }
     }
 

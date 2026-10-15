@@ -33,9 +33,9 @@ public static class ResultScreen
 
     struct Goal
     {
-        public string label, detail;
+        public string label, detail, hint;     // 1.1~ hint: 막대 아래 왼쪽 작은 설명 (숙련 +1 방법)
         public float progress;      // 0 ~ 1
-        public Goal(string label, float progress, string detail) { this.label = label; this.progress = Mathf.Clamp01(progress); this.detail = detail; }
+        public Goal(string label, float progress, string detail, string hint = null) { this.label = label; this.progress = Mathf.Clamp01(progress); this.detail = detail; this.hint = hint; }
     }
 
     // ================================================================= 다음 목표
@@ -79,7 +79,7 @@ public static class ResultScreen
         int lv = Mastery.Level(me);
         if (lv < Mastery.Max && !GameMode.IsEndless && !DailyChallenge.Active)
             all.Add(new Goal(Loc.T("result.goal.mastery").Replace("{0}", Loc.T(CharacterData.Def(me).name)), (float)lv / Mastery.Max,
-                             Mastery.Label(me) + " · " + Loc.T("result.goal.masteryhint")));
+                             Mastery.Label(me), Loc.T("result.goal.masteryhint")));
 
         // 업적: 누적 처치 · 무한 모드 20분 중 가까운 것
         Goal? ach = null;
@@ -108,7 +108,9 @@ public static class ResultScreen
         List<Goal> goals = Goals();
         if (goals.Count == 0) return;
         UIKit.EnsureStyle();
-        const float RowH = 64f, HeadH = 34f, W = 480f;
+        // 1.1~ 한 줄: 위 이름(전체 폭) → 막대 → 아래 왼쪽 설명 · 「거의 다!」 + 오른쪽 수치 (예전엔 이름 옆 192 폭 칸에 수치 · 숙련 설명이 다 들어가 12pt 두 줄로 넘쳤음)
+        //   세 줄이면 34 + 72×3 = 250 → 아래 끝 y 265 (이번 판 결과 글 위끝 260 과 안 겹침)
+        const float RowH = 72f, HeadH = 34f, W = 480f;
         RectTransform panel = UIKit.Rect("NextGoals", canvas, Vector2.zero, new Vector2(W, HeadH + RowH * goals.Count));
         panel.anchorMin = panel.anchorMax = new Vector2(0f, 0.5f);
         panel.pivot = new Vector2(0f, 1f);
@@ -116,17 +118,19 @@ public static class ResultScreen
         TMP_Text head = UIKit.Text(panel, "result.goal.title", 24f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
         FixTop(head.rectTransform, -HeadH * 0.5f);
 
-        List<(TMP_Text label, TMP_Text detail)> rows = new List<(TMP_Text, TMP_Text)>();
+        List<(TMP_Text label, TMP_Text detail, TMP_Text hint)> rows = new List<(TMP_Text, TMP_Text, TMP_Text)>();
         for (int i = 0; i < goals.Count; i++)
         {
             Goal g = goals[i];
             float y = -HeadH - RowH * i - RowH * 0.5f;
             RectTransform row = UIKit.Rect("Goal", panel, Vector2.zero, new Vector2(W, RowH));
             FixTop(row, y);
-            TMP_Text label = UIKit.Text(row, "", 20f, Parch, new Vector2(-W * 0.2f, 12f), new Vector2(W * 0.6f, 28f), TextAlignmentOptions.Left);
-            TMP_Text detail = UIKit.Text(row, "", 17f, Dim, new Vector2(W * 0.3f, 12f), new Vector2(W * 0.4f, 28f), TextAlignmentOptions.Right);
+            TMP_Text label = UIKit.Text(row, "", 20f, Parch, new Vector2(0f, 21f), new Vector2(W, 28f), TextAlignmentOptions.Left);
+            TMP_Text hint = UIKit.Text(row, "", 16f, Dim, new Vector2(-W * 0.2f, -21f), new Vector2(W * 0.6f, 24f), TextAlignmentOptions.Left);
+            TMP_Text detail = UIKit.Text(row, "", 17f, Dim, new Vector2(W * 0.3f, -21f), new Vector2(W * 0.4f, 24f), TextAlignmentOptions.Right);
+            label.enableWordWrapping = hint.enableWordWrapping = detail.enableWordWrapping = false;      // 줄을 접어 칸 높이를 넘지 않게 (자동 크기로 한 줄에)
             // 막대: 어두운 바탕 + 진행률만큼 채움
-            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -14f), new Vector2(W, 14f));
+            RectTransform bar = UIKit.Rect("Bar", row, Vector2.zero, new Vector2(W, 14f));
             Image bg = bar.gameObject.AddComponent<Image>();
             bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
             bg.raycastTarget = false;
@@ -137,7 +141,7 @@ public static class ResultScreen
             Image fi = fill.gameObject.AddComponent<Image>();
             fi.color = g.progress >= 1f ? Ready : g.progress >= AlmostAt ? Gold : Fill;
             fi.raycastTarget = false;
-            rows.Add((label, detail));
+            rows.Add((label, detail, hint));
         }
 
         // 글자는 언어를 바꾸면 다시 씀 (막대는 그대로)
@@ -148,8 +152,9 @@ public static class ResultScreen
             {
                 Goal g = now[i];
                 bool almost = g.progress >= AlmostAt && g.progress < 1f;
-                rows[i].label.text = g.label + (almost ? "  <color=#F5D478><b>" + Loc.T("result.goal.almost") + "</b></color>" : "");
+                rows[i].label.text = g.label;
                 rows[i].detail.text = g.detail;
+                rows[i].hint.text = (almost ? "<color=#F5D478><b>" + Loc.T("result.goal.almost") + "</b></color>" + (string.IsNullOrEmpty(g.hint) ? "" : "  ") : "") + (g.hint ?? "");
             }
         };
         write();
@@ -174,8 +179,11 @@ public static class ResultScreen
         RectTransform rr = (RectTransform)restart.transform;
         Vector2 at = rr.anchoredPosition;
         float h = rr.sizeDelta.y;
+        // 1.1~ [R] 다시 시작(QuickRestart)처럼 결과 화면이 뜨고 1초 동안은 받지 않음 (죽을 때 패드 A 를 연타하던 중이면 결과를 보기도 전에 새 판이 시작됐음)
+        float readyAt = Time.unscaledTime + 1f;
         GameObject same = UIKit.CloneButton(restart, "RetrySameButton", "result.retry.same", () =>
         {
+            if (Time.unscaledTime < readyAt) return;
             Time.timeScale = 1f;
             SceneManager.LoadScene("GameScene");
         });
@@ -187,13 +195,24 @@ public static class ResultScreen
         {
             GameObject hero = UIKit.CloneButton(restart, "RetryHeroButton", "result.retry.hero", () =>
             {
+                if (Time.unscaledTime < readyAt) return;
                 openHeroPick = true;
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
             });
-            // 둘이 합쳐 폭 740 (오른쪽 피해 패널 x 420 ~ 과 안 겹치게)
-            Place(same, new Vector2(at.x - 150f, at.y), new Vector2(424f, h));
-            Place(hero, new Vector2(at.x + 226f, at.y), new Vector2(300f, h));
+            // 둘이 합쳐 폭 740 (16:9 에서 오른쪽 피해 패널 x 420 ~ 과 안 겹치게)
+            // 1.1~ 16:10 · 4:3 처럼 화면이 좁으면 왼쪽 결과 글 · 오른쪽 피해 패널(각각 가장자리 60 + 폭 480) 사이 폭에 맞춰 줄임
+            const float Gap = 14f, SameW = 424f, HeroW = 300f;
+            float total = SameW + Gap + HeroW;
+            Canvas cv = restart.GetComponentInParent<Canvas>();
+            if (cv != null && cv.rootCanvas.scaleFactor > 0f)
+                total = Mathf.Min(total, Screen.width / cv.rootCanvas.scaleFactor - 2f * (60f + 480f) - 2f * 12f);
+            total = Mathf.Max(total, 440f);
+            float k = (total - Gap) / (SameW + HeroW);
+            float sw = SameW * k, hw = HeroW * k;
+            float mid = at.x + 7f * k;          // 원래 배치(-362 ~ 376)의 가운데
+            Place(same, new Vector2(mid - total * 0.5f + sw * 0.5f, at.y), new Vector2(sw, h));
+            Place(hero, new Vector2(mid + total * 0.5f - hw * 0.5f, at.y), new Vector2(hw, h));
         }
         Image img = same.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);

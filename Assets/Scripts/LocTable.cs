@@ -236,7 +236,7 @@ public static partial class LocTable
 
         // ================================================================= 보스 · 스테이지
         // 1.1~ 영혼 부스러기 무리 (SwarmWave): 처음 몰려올 때 한 번
-        { "swarm.incoming", E("영혼 부스러기 무리가 몰려온다!", "A swarm of soul motes is rushing in!", "魂のかけらの群れが押し寄せる！", "灵魂碎屑群蜂拥而来！") },
+        { "swarm.incoming", E("영혼 부스러기 무리가 몰려온다!", "A swarm of soul motes is rushing in!", "魂の粒の群れが押し寄せる！", "灵魂碎屑群蜂拥而来！") },
         { "킹 슬라임이 둘로 갈라졌다!", L("The King Slime split in two!", "キングスライムが二つに分裂した！", "史莱姆王分裂成了两只！") },
         { "슬라임이 또 갈라진다!", L("The slimes split again!", "スライムがまた分裂する！", "史莱姆又分裂了！") },
         { "리치 왕이 망자의 의식을 시작한다!", L("The Lich King begins the Rite of the Dead!", "リッチ王が死者の儀式を始める！", "巫妖王开始了亡者仪式！") },

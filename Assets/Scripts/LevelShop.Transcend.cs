@@ -25,7 +25,8 @@ public partial class LevelShop
     // 중첩 상한 (카드마다)
     public static readonly int[] TranscendMax = { 5, 3, 4, 4, 5 };
     // Icons/choice_<이름> · 급소 · 질풍은 재화 그림(코인 · 영혼 조각)으로 보이지 않게 각성 카드와 같은 그림을 직접 (TranscendSprite)
-    static readonly string[] TranscendIcons = { "might", "soul", null, "life", null };
+    // 1.1~ 충전(필살기 게이지)도 영혼 조각 그림 대신 영혼 트리의 게이지 그림
+    static readonly string[] TranscendIcons = { "might", "tree_u_gauge1", null, "life", null };
     static Sprite TranscendSprite(int k) => k == 2 ? SpecialAbilities.LvIcon(3) : k == 4 ? SpecialAbilities.StatIcon(2) : null;
     static readonly Color TranscendGold = new Color(1f, 0.84f, 0.32f);                                // 금테
 

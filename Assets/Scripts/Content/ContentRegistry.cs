@@ -73,6 +73,7 @@ public static class ContentRegistry
 
     // ================================================================= 보물 상자 보상 (ChestRewards)
     // 일반 6 · 희귀 5 · 전설 1 (전설 = 룰렛 대박, 3택에는 나오지 않음)
+    // 1.1~ 그림은 보상마다 하나씩 (치유의 샘 · 깨달음 · 숙련 · 영혼 트리의 축복 · 운명의 주사위는 영혼 트리 그림 tree_*, ChoiceUI.IconPath)
     public static readonly List<RewardDef> Rewards = new List<RewardDef>
     {
         // ---------------- 일반
@@ -82,19 +83,19 @@ public static class ContentRegistry
                         describe = c => Loc.T("chest.shards.desc").Replace("{0}", c.Shards.ToString()), apply = ChestRewards.GiveShards },
         new RewardDef { id = "life", saveCode = "li", since = "1.1", nameKey = "chest.life.name", rarity = RewardRarity.Common, heal = true, icon = "life", color = new Color(1f, 0.45f, 0.45f),
                         describe = c => Loc.T("chest.life.desc"), apply = c => ChestRewards.GiveMaxHp(c, 10f) },
-        new RewardDef { id = "heal", saveCode = "he", since = "1.1", nameKey = "chest.heal.name", rarity = RewardRarity.Common, heal = true, icon = "life", color = new Color(1f, 0.6f, 0.6f),
+        new RewardDef { id = "heal", saveCode = "he", since = "1.1", nameKey = "chest.heal.name", rarity = RewardRarity.Common, heal = true, icon = "tree_s_regen1", color = new Color(1f, 0.6f, 0.6f),
                         available = c => c.player != null && c.player.PlayerHealth < c.player.PlayerMaxHealth,
                         describe = c => Loc.T("chest.heal.desc"), apply = ChestRewards.GiveHeal },
-        new RewardDef { id = "level", saveCode = "lv", since = "1.1", nameKey = "chest.level.name", rarity = RewardRarity.Common, weight = 0.8f, icon = "essence", color = new Color(0.6f, 1f, 0.6f),
+        new RewardDef { id = "level", saveCode = "lv", since = "1.1", nameKey = "chest.level.name", rarity = RewardRarity.Common, weight = 0.8f, icon = "tree_g_exp1", color = new Color(0.6f, 1f, 0.6f),
                         available = c => c.shop != null && c.shop.ChestCanLevel, describe = c => Loc.T("chest.level.desc"), apply = ChestRewards.GiveLevel },
         new RewardDef { id = "might", saveCode = "mi", since = "1.1", nameKey = "chest.might.name", rarity = RewardRarity.Common, weight = 0.8f, icon = "might", color = new Color(1f, 0.6f, 0.3f),
                         describe = c => Loc.T("chest.might.desc"), apply = ChestRewards.GiveMight },
         // ---------------- 희귀
-        new RewardDef { id = "card", saveCode = "ca", since = "1.1", nameKey = "chest.card.name", rarity = RewardRarity.Rare, icon = "might", color = new Color(1f, 0.85f, 0.45f),
+        new RewardDef { id = "card", saveCode = "ca", since = "1.1", nameKey = "chest.card.name", rarity = RewardRarity.Rare, icon = "tree_mark_evolve", color = new Color(1f, 0.85f, 0.45f),
                         available = c => c.cardId >= 0, describe = c => Loc.T("chest.card.desc").Replace("{0}", c.CardName), apply = ChestRewards.GiveCard },
-        new RewardDef { id = "node", saveCode = "no", since = "1.1", nameKey = "chest.node.name", rarity = RewardRarity.Rare, icon = "soul", color = new Color(0.75f, 0.6f, 1f),
+        new RewardDef { id = "node", saveCode = "no", since = "1.1", nameKey = "chest.node.name", rarity = RewardRarity.Rare, icon = "tree_o_root", color = new Color(0.75f, 0.6f, 1f),
                         available = c => c.node != null, describe = c => Loc.T("chest.node.desc").Replace("{0}", c.node.name), apply = ChestRewards.GiveNode },
-        new RewardDef { id = "reroll", saveCode = "rr", since = "1.1", nameKey = "chest.reroll.name", rarity = RewardRarity.Rare, weight = 0.8f, icon = "chest", color = new Color(0.6f, 0.85f, 1f),
+        new RewardDef { id = "reroll", saveCode = "rr", since = "1.1", nameKey = "chest.reroll.name", rarity = RewardRarity.Rare, weight = 0.8f, icon = "tree_g_fate", color = new Color(0.6f, 0.85f, 1f),
                         available = c => c.specials != null, describe = c => Loc.T("chest.reroll.desc"), apply = ChestRewards.GiveReroll },
         new RewardDef { id = "dormant", saveCode = "do", since = "1.1", nameKey = "chest.dormant.name", rarity = RewardRarity.Rare, weight = 0.9f, icon = "curse", color = new Color(0.85f, 0.5f, 1f),
                         available = c => c.dormantId >= 0, describe = c => Loc.T("chest.dormant.desc").Replace("{0}", c.DormantName), apply = ChestRewards.GiveDormant },

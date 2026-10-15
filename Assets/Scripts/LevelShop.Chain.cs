@@ -24,6 +24,13 @@ public partial class LevelShop
         if (show && chainText == null) BuildChainText();
         if (chainText == null) return;
         if (chainText.gameObject.activeSelf != show) chainText.gameObject.SetActive(show);
+        // 1.1~ 진화 첫 안내 줄(LevelShop.EvoUI, y 448)이 떠 있으면 그 위로 (같은 자리에 겹쳐 둘 다 읽을 수 없었음)
+        if (show)
+        {
+            float y = evoIntroShowing && evoIntroText != null && evoIntroText.gameObject.activeSelf ? 496f : 445f;
+            RectTransform cr = chainText.rectTransform;
+            if (!Mathf.Approximately(cr.anchoredPosition.y, y)) cr.anchoredPosition = new Vector2(0f, y);
+        }
         if (!show || (shownChainIndex == chainIndex && shownChainTotal == total && shownChainLang == Loc.Current)) return;
         shownChainIndex = chainIndex;
         shownChainTotal = total;

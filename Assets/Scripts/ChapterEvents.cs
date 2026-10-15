@@ -364,7 +364,8 @@ public class ChapterEvents : MonoBehaviour
             case ContentRegistry.Pack: where = AwayPoint(me, 15f, 18f); hasWhere = true; break;
             default: where = me; hasWhere = false; break;
         }
-        sm.ShowBanner(Loc.T("event.soon").Replace("{0}", current.def.Name).Replace("{1}", current.def.Desc), WarnSeconds);
+        // 1.1~ keep: 줄 선 다른 알림 때문에 1.2초 만에 넘어가지 않게 (예고 3초는 끝까지) · 긴 설명은 알림판이 아래로 늘어남 (StageManager.FitBanner)
+        sm.ShowBanner(Loc.T("event.soon").Replace("{0}", current.def.Name).Replace("{1}", current.def.Desc), WarnSeconds, true);
         Hostile.Play("pulse", 0.6f, 0.8f);
     }
 
@@ -441,7 +442,7 @@ public class ChapterEvents : MonoBehaviour
                     }
                     goblin.transform.localScale *= 1.3f;
                     goblin.AddComponent<GoldenGoblin>();
-                    MidBossMark.Attach(goblin, Loc.T("event.goblin.name"));
+                    MidBossMark.Attach(goblin, Loc.T("event.goblin.name"), false);     // 1.1~ 「중간 보스 · 」 없이 이름만
                     sm.ShowBanner(Loc.T("event.goblin.start"), 2.5f);
                     Hostile.Play("chime", 0.8f, 1.5f);
                     break;

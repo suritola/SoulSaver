@@ -14,11 +14,14 @@ public class ChoiceUI : MonoBehaviour
     {
         public string name, desc;       // 한국어 원문 (번역은 UIKit.Text)
         public Color color;
-        public string icon;             // Icons/choice_<icon>
+        public string icon;             // Icons/choice_<icon> (1.1~ tree_ 로 시작하면 영혼 트리 그림 Icons/<icon>, IconPath)
         public Sprite sprite;           // 1.1~ 그림을 직접 줄 때 (있으면 icon 대신 · 능력치 · 레벨업 카드 아이콘 등)
         public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; sprite = null; }
         public Option(string name, string desc, Color color, Sprite sprite) { this.name = name; this.desc = desc; this.color = color; icon = null; this.sprite = sprite; }
     }
+
+    // 1.1~ 보상마다 다른 그림을 쓰려고 영혼 트리 그림(tree_*)도 받음 (영혼 트리의 축복이 영혼 조각 그림을 같이 쓰던 문제)
+    public static string IconPath(string icon) => icon.StartsWith("tree_") ? "Icons/" + icon : "Icons/choice_" + icon;
 
     public static bool Open { get; internal set; }      // 1.1~ internal: 전설 상자 룰렛(ChestRewards)도 켬
 
@@ -128,7 +131,7 @@ public class ChoiceUI : MonoBehaviour
             b.onClick.AddListener(() => ui.Click(idx));
 
             // 그림 (뒤에 옅은 빛)
-            Sprite icon = o.sprite != null ? o.sprite : string.IsNullOrEmpty(o.icon) ? null : Resources.Load<Sprite>("Icons/choice_" + o.icon);
+            Sprite icon = o.sprite != null ? o.sprite : string.IsNullOrEmpty(o.icon) ? null : Resources.Load<Sprite>(IconPath(o.icon));
             if (icon != null)
             {
                 RectTransform glow = UIKit.Rect("Glow", face, new Vector2(0f, 120f), new Vector2(210f, 210f));

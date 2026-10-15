@@ -1128,7 +1128,8 @@ void Shoot()
             if (src != null && getCoin != null)
             {
                 src.pitch = pitch;
-                src.PlayOneShot(getCoin, GameSettings.SfxVolume * 0.85f);
+                // 1.1~ 오래 이어 주우면 조금씩 작게 (꼭대기 음높이에서 같은 크기로 초당 14번 울리던 것 · 최소 60%)
+                src.PlayOneShot(getCoin, GameSettings.SfxVolume * 0.85f * Mathf.Max(0.6f, 1f / (1f + 0.04f * coinStreak)));
             }
         }
         return sound;
@@ -1136,7 +1137,8 @@ void Shoot()
 
     // 1.1~ 코인 소리 전용 소스 묶음 (음높이를 바꿔도 총소리 · 재장전 소리에 걸리지 않게)
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로, 같은 음높이 소스 · 쉬고 있는 소스 · 가장 오래된 소스 순으로 돌려 씀
-    const int CoinSourceCount = 4;
+    // 1.1~ 4 → 8: 0.07초마다 하나씩 쓰면 4개는 0.28초에 한 바퀴라, 아직 울리는 코인 소리(약 0.47초)를 Stop() 으로 뚝 끊어 딸깍거렸음
+    const int CoinSourceCount = 8;
     readonly List<AudioSource> coinSources = new List<AudioSource>();
     int coinSourceNext;
     AudioSource CoinSource(float pitch)
