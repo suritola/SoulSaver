@@ -24,6 +24,9 @@ public class DamagePopup : MonoBehaviour
     int key;
     bool crit, boss;
     float amount, t, lastAdd, size = 1f;
+    // 1.1~: 합칠 때마다 t 를 0 으로 되돌려 떠오르던 숫자가 처음 자리로 툭 떨어지며 덜덜 떨렸음
+    //   → 떠오르기(riseT)는 이어서, 수명(t)만 늘림 · 합칠 때 튀는 크기는 작게
+    float riseT, popT, popAmp;
     Vector3 start;
 
     public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false)
@@ -141,9 +144,13 @@ public class DamagePopup : MonoBehaviour
 
     void Add(float damage)
     {
+        bool first = amount <= 0f;
         amount += damage;
         lastAdd = Time.time;
         t = 0f;
+        popT = 0f;
+        if (first) { riseT = 0f; popAmp = crit ? 0.3f : 0.35f; }       // 1.1~: 치명타 처음 튐 1.8배 → 1.3배
+        else popAmp = 0.08f;
         text.text = (amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString()) + (crit ? "!" : "");
         // 큰 피해일수록 크고 붉은 금색
         PlayerController pl = Hostile.Player;
@@ -162,17 +169,22 @@ public class DamagePopup : MonoBehaviour
         if (boss)
         {
             if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.6f, 0.15f), k);     // 1.0.4~: 끝 색 (1, 0.4, 0.15) → (1, 0.6, 0.15), 붉은빛을 덜어 받은 피해와 구분
-            size *= BossSize;
+            // 1.1~: 치명타 1.9~2.3 × 1.8 = 최대 4.1배라 보스 패턴 시작점 · 적 탄을 덮었음 → 보스 치명타는 1.3배까지 · 최대 2.8
+            size = crit ? Mathf.Min(size * 1.3f, 2.8f) : size * BossSize;
         }
     }
 
     void Update()
     {
         t += Time.deltaTime;
-        float k = t / (boss ? BossLife : Life);
+        riseT += Time.deltaTime;
+        popT += Time.deltaTime;
+        float life = boss ? BossLife : Life;
+        float k = t / life;
         if (k >= 1f) { Release(); return; }
-        float up = 1f - (1f - k) * (1f - k);
-        float pop = t < 0.08f ? (crit ? 1.8f - 0.8f * (t / 0.08f) : 1.35f - 0.35f * (t / 0.08f)) : 1f;
+        float kr = Mathf.Clamp01(riseT / life);
+        float up = 1f - (1f - kr) * (1f - kr);
+        float pop = popT < 0.08f ? 1f + popAmp * (1f - popT / 0.08f) : 1f;
         transform.position = start + new Vector3(0f, (boss ? BossRise : Rise) * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
         Color c = text.color;

@@ -119,6 +119,8 @@ public class bossbar : MonoBehaviour
         {
             GameObject clone = Instantiate(backBar, backBar.transform.parent);
             clone.name = backBar.name + "_" + (extraBars.Count + 1);
+            // 1.1~: 복제는 캔버스 맨 뒤에 붙어 레벨업 · 일시정지 창 위에 그려졌음 → 원래 체력바 바로 뒤 순서로
+            clone.transform.SetSiblingIndex(backBar.transform.GetSiblingIndex() + 1 + extraBars.Count);
             Transform cg = clone.transform.Find("UltGauge");        // 필살기 게이지는 맨 위 줄에만
             if (cg != null) Destroy(cg.gameObject);
             RectTransform main = backBar.GetComponent<RectTransform>();
@@ -134,7 +136,7 @@ public class bossbar : MonoBehaviour
             Transform fill = clone.transform.Find(bar.name);
             TMP_Text label = null;
             foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))
-                if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; }    // 원래 이름 글자 찾기와 헷갈리지 않게
+                if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; FitName(t); }    // 원래 이름 글자 찾기와 헷갈리지 않게
             extraBars.Add(clone);
             extraFills.Add(fill as RectTransform);
             extraNames.Add(label);
@@ -181,6 +183,11 @@ public class bossbar : MonoBehaviour
             ultFillImg = fill.GetComponent<Image>();
             ultFillImg.raycastTarget = false;
         }
+        // 1.1~: 개발자 · 개발자 엄마는 결계를 쓰지 않음 → 늘 비어 있는 게이지(엄마는 「결계」 글자까지)가 보였음, 게이지째 숨김
+        bool hasUlt = bossKind < DeveloperKind;
+        GameObject gaugeObj = ultFill.parent.gameObject;
+        if (gaugeObj.activeSelf != hasUlt) gaugeObj.SetActive(hasUlt);
+        if (!hasUlt) return;
         float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
         ultFill.sizeDelta = new Vector2(UltWidth * g, 10f);
         UltLabel(g);
@@ -217,7 +224,7 @@ public class bossbar : MonoBehaviour
             ultLabelLang = (Loc.Lang)(-1);
         }
         if (ultLabelLang != Loc.Current) { ultLabelLang = Loc.Current; ultLabel.text = Loc.T("결계"); }
-        bool hasUlt = bossKind != DeveloperKind;                  // 개발자는 결계 대신 필살기만
+        bool hasUlt = bossKind < DeveloperKind;                   // 개발자 · 개발자 엄마는 결계 대신 필살기만
         if (ultLabel.enabled != hasUlt) ultLabel.enabled = hasUlt;
         if (!ultHintTried && g >= 0.15f)
         {
@@ -237,7 +244,19 @@ public class bossbar : MonoBehaviour
             foreach (TMP_Text t in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (t.name == "BossName") { nameText = t; break; }
             if (nameText == null) return;
+            FitName(nameText);
         }
+    }
+
+    // 1.1~: 긴 이름 + 체력 숫자(영어 「Developer's Mom  300000 / 300000」 등)가 두 줄로 꺾여 체력바를 덮었음 → 한 줄 고정, 넘치면 글자를 줄임
+    static void FitName(TMP_Text t)
+    {
+        if (t == null) return;
+        float max = t.enableAutoSizing ? t.fontSizeMax : t.fontSize;
+        t.enableWordWrapping = false;
+        t.fontSizeMax = max;
+        t.fontSizeMin = Mathf.Min(26f, max);
+        t.enableAutoSizing = true;
     }
 
     // 보스가 한 마리일 때 이름 + 「현재 / 최대」 (1.0.4~: 예전엔 여러 마리일 때만 숫자가 보였음)

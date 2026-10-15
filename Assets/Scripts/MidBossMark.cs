@@ -25,7 +25,9 @@ public class MidBossMark : MonoBehaviour
         if (white == null) white = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 4f, 4f), Vector2.one * 0.5f, 4f);
 
         root = new GameObject("MidBossTag").transform;
-        int layer = SortingLayer.NameToID("TargetMark");
+        // 1.1~: TargetMark 레이어(이펙트 위)라 불투명 판이 이 보스의 피해 숫자 · 지나가는 적 탄을 가렸음
+        //   → Effect 레이어에서 피해 숫자(40 · 45)보다 아래 순서로 (적 탄은 그보다 위 레이어)
+        int layer = SortingLayer.NameToID("Effect");
 
         GameObject t = new GameObject("Text", typeof(TextMeshPro));
         t.transform.SetParent(root, false);
@@ -33,7 +35,7 @@ public class MidBossMark : MonoBehaviour
         UIKit.EnsureStyle();
         if (UIKit.Font != null) tag.font = UIKit.Font;
         if (UIKit.FontMaterial != null) tag.fontSharedMaterial = UIKit.FontMaterial;
-        tag.text = Loc.T("중간 보스") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
+        tag.text = Loc.T("중간 보스 이름표") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
         tag.fontSize = 9f;          // 3.6 은 화면(세로 40칸)에서 10픽셀 남짓이라 안 보였음
         tag.fontStyle = FontStyles.Bold;
         tag.color = new Color(1f, 0.86f, 0.35f);
@@ -42,13 +44,13 @@ public class MidBossMark : MonoBehaviour
         tag.outlineWidth = 0.3f;
         tag.outlineColor = new Color32(0, 0, 0, 255);
         tag.sortingLayerID = layer;
-        tag.sortingOrder = 52;
+        tag.sortingOrder = 38;
 
         // 글자 크기에 맞춘 판 (금빛 테두리 → 어두운 붉은 판 → 글자)
         Vector2 size = tag.GetPreferredValues(tag.text);
         tag.rectTransform.sizeDelta = size;
-        border = Plate("Border", size + new Vector2(0.9f, 0.5f), new Color(1f, 0.78f, 0.3f, 0.95f), layer, 50);
-        plate = Plate("Plate", size + new Vector2(0.65f, 0.3f), new Color(0.22f, 0.03f, 0.05f, 0.88f), layer, 51);
+        border = Plate("Border", size + new Vector2(0.9f, 0.5f), new Color(1f, 0.78f, 0.3f, 0.95f), layer, 36);
+        plate = Plate("Plate", size + new Vector2(0.65f, 0.3f), new Color(0.22f, 0.03f, 0.05f, 0.88f), layer, 37);
     }
 
     SpriteRenderer Plate(string name, Vector2 size, Color color, int layer, int order)

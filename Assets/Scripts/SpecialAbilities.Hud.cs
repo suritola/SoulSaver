@@ -187,7 +187,7 @@ public partial class SpecialAbilities
             kr.anchorMin = new Vector2(0f, 1f);
             kr.anchorMax = new Vector2(1f, 1f);
             kr.pivot = new Vector2(0.5f, 1f);
-            kr.sizeDelta = new Vector2(0f, 24f);
+            kr.sizeDelta = new Vector2(0f, 30f);      // 1.1~ 24 → 30: 자동 크기가 높이 때문에 글자를 줄이지 않게 (위 기준이라 자리는 그대로)
             kr.anchoredPosition = new Vector2(0f, -2f);
             // 키 배지: 설정 「키 아이콘」이면 흰 키보드 키 모양, 아니면 어두운 배지 (어느 쪽이든 크게 잘 보이게)
             GameObject cap = new GameObject("KeyCap", typeof(RectTransform), typeof(Image));
@@ -205,6 +205,11 @@ public partial class SpecialAbilities
             t.key = HudText(kr, 18f, new Color(1f, 0.85f, 0.45f), TextAlignmentOptions.TopLeft);
             t.key.fontStyle = FontStyles.Bold;
             t.key.margin = new Vector4(8f, 1f, 0f, 0f);
+            // 1.1~: 긴 키 이름(마우스 4 · 휠 클릭 · Num5)이 배지 · 칸 밖으로 나가 옆 칸을 덮었음 → 배지 안에서 글자를 줄임
+            t.key.enableAutoSizing = true;
+            t.key.fontSizeMax = 18f;
+            t.key.fontSizeMin = 9f;
+            t.key.overflowMode = TextOverflowModes.Truncate;
             t.key.outlineWidth = 0.25f;
             t.key.outlineColor = new Color32(0, 0, 0, 255);
 
@@ -371,7 +376,14 @@ public partial class SpecialAbilities
         if (cap)
         {
             // 배지 폭은 실제로 보이는 글자(진화 표시 " +" 포함)에 맞춤
-            t.keyCap.rectTransform.sizeDelta = new Vector2(Mathf.Max(26f, 14f + keyText.Length * 11f), 24f);
+            // 1.1~: 한글 · 가나는 글자당 18px 로 셈 · 칸 폭(58)을 넘지 않게 54 까지, 글자는 배지 안쪽까지만 (넘치면 자동으로 작아짐)
+            float est = 0f;
+            foreach (char ch in keyText) est += ch >= '\u2E80' ? 18f : 11f;
+            float capW = Mathf.Clamp(14f + est, 26f, TileSize - 4f);
+            t.keyCap.rectTransform.sizeDelta = new Vector2(capW, 24f);
+            Vector4 m = t.key.margin;
+            float right = TileSize - (2f + capW) + 5f;
+            if (!Mathf.Approximately(m.z, right)) t.key.margin = new Vector4(m.x, m.y, right, m.w);
             t.keyCap.color = icons ? new Color(0.92f, 0.9f, 0.85f, 0.95f) : new Color(0.05f, 0.04f, 0.08f, 0.85f);
         }
         t.key.color = cap && icons ? new Color(0.1f, 0.08f, 0.12f) : new Color(1f, 0.88f, 0.4f);
@@ -510,7 +522,10 @@ public class RunClock : MonoBehaviour
         GameObject box = new GameObject("RunClockBox", typeof(RectTransform), typeof(Image));
         RectTransform br = box.GetComponent<RectTransform>();
         br.SetParent(canvas.transform, false);
-        br.SetAsLastSibling();
+        // 1.1~: 맨 뒤(SetAsLastSibling)에 두면 페이드 · 일시정지 · 보상 창 위에도 떠 있었음 → HUD 순서 안(탄약 패널 바로 뒤)
+        Transform ammoPanel = canvas.transform.Find("AmmoPanel");
+        if (ammoPanel != null) br.SetSiblingIndex(ammoPanel.GetSiblingIndex() + 1);
+        else br.SetAsLastSibling();
         br.anchorMin = br.anchorMax = new Vector2(0.5f, 1f);
         br.pivot = new Vector2(0.5f, 1f);
         br.sizeDelta = new Vector2(150f, 44f);

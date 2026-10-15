@@ -1060,6 +1060,10 @@ public class HostileProjectile : MonoBehaviour
         orb = Dress(gameObject, body != null ? body.color : Color.red, orbSize);
     }
 
+    // 1.1~: 적 탄 구슬 · 심 · 그림자는 Effect 보다 위 레이어(HitScan, 다른 곳은 안 씀) — 내 스킬 이펙트 · 처치 폭발 · 피해 숫자 · 총알 빛 아래에 깔려 안 보였음
+    //   (중간 보스 이름표 · 조준 표시의 TargetMark 보다는 아래)
+    const string EnemyShotLayer = "HitScan";
+
     // 탄 꾸미기 (산성 덩어리 같은 다른 적 탄도 같이 씀): 뿌연 빛은 작고 진하게 줄이고, 그 위에 테두리 구슬 · 하얀 심
     public static Transform Dress(GameObject go, Color color, float diameter)
     {
@@ -1068,11 +1072,11 @@ public class HostileProjectile : MonoBehaviour
         go.transform.localScale = Vector3.one * (diameter * 2.3f / 8f);      // 빛 그림은 8칸 크기
         if (sr != null) sr.color = new Color(v.r, v.g, v.b, 0.8f);
         Vector3 at = go.transform.position;
-        GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.5f / 8f, new Color(0.02f, 0f, 0.04f, 0.7f), "Effect", 7);
+        GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.5f / 8f, new Color(0.02f, 0f, 0.04f, 0.7f), EnemyShotLayer, 7);
         shadow.transform.SetParent(go.transform, true);
-        GameObject ball = SpecialAbilities.MakeSprite("Orb", OrbSprite, at, diameter, v, "Effect", 10);
+        GameObject ball = SpecialAbilities.MakeSprite("Orb", OrbSprite, at, diameter, v, EnemyShotLayer, 10);
         ball.transform.SetParent(go.transform, true);
-        GameObject core = SpecialAbilities.MakeSprite("Core", OrbSprite, at, diameter * 0.42f, Color.white, "Effect", 11);
+        GameObject core = SpecialAbilities.MakeSprite("Core", OrbSprite, at, diameter * 0.42f, Color.white, EnemyShotLayer, 11);
         core.transform.SetParent(ball.transform, true);
         return ball.transform;
     }

@@ -39,20 +39,38 @@ public class SkillGauge : MonoBehaviour
     float fullSince = -99f;
     Vector3 frameScale = Vector3.one;
 
-    // 게이지 바로 뒤에 같은 모양의 후광 (테두리 밖으로 조금 넘침)
+    // 게이지 틀 뒤에 부드러운 후광 (테두리 밖으로 조금 넘침)
+    // 1.1~: 틀(SkillFrame)의 자식이라 틀 그림 위에 금색 판으로 덮였고, 크게 번쩍일 때 왼쪽 스킬 아이콘까지 덮었음
+    //   → 틀과 같은 부모에서 틀 앞 순서(뒤에 그려짐) · 부드러운 빛 그림 · 번쩍일 때는 세로로만 퍼짐
     void MakeGlow()
     {
         if (gaugeImage == null || gaugeImage.transform.parent == null) return;
-        RectTransform src = gaugeImage.rectTransform;
+        RectTransform frame = gaugeImage.transform.parent as RectTransform;
+        if (frame == null) return;
         GameObject go = new GameObject("ReadyGlow", typeof(RectTransform), typeof(Image));
         RectTransform rt = go.GetComponent<RectTransform>();
-        rt.SetParent(src.parent, false);
-        rt.SetSiblingIndex(src.GetSiblingIndex());
-        rt.anchorMin = src.anchorMin; rt.anchorMax = src.anchorMax; rt.pivot = src.pivot;
-        rt.anchoredPosition = src.anchoredPosition;
-        rt.sizeDelta = src.sizeDelta + new Vector2(30f, 30f);
+        bool sibling = frame.GetComponent<Canvas>() == null && frame.parent != null && frame.anchorMin == frame.anchorMax;
+        if (sibling)
+        {
+            rt.SetParent(frame.parent, false);
+            rt.SetSiblingIndex(frame.GetSiblingIndex());
+            rt.anchorMin = rt.anchorMax = frame.anchorMin;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            // 틀 가운데 (틀의 기준점이 가운데가 아니어도)
+            rt.anchoredPosition = frame.anchoredPosition + Vector2.Scale(new Vector2(0.5f, 0.5f) - frame.pivot, frame.sizeDelta);
+            rt.sizeDelta = frame.sizeDelta + new Vector2(24f, 40f);
+        }
+        else
+        {
+            RectTransform src = gaugeImage.rectTransform;
+            rt.SetParent(src.parent, false);
+            rt.SetSiblingIndex(src.GetSiblingIndex());
+            rt.anchorMin = src.anchorMin; rt.anchorMax = src.anchorMax; rt.pivot = src.pivot;
+            rt.anchoredPosition = src.anchoredPosition;
+            rt.sizeDelta = src.sizeDelta + new Vector2(30f, 30f);
+        }
         glow = go.GetComponent<Image>();
-        glow.sprite = gaugeImage.sprite;
+        glow.sprite = SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : gaugeImage.sprite;
         glow.raycastTarget = false;
         glow.color = new Color(1f, 0.85f, 0.35f, 0f);
         frameScale = src.parent.localScale;
@@ -82,23 +100,29 @@ public class SkillGauge : MonoBehaviour
         }
         wasFull = full;
         float t = Time.unscaledTime;
+        // 1.1~: 「번쩍임」 설정을 끄면 금↔흰 깜빡임 · 큰 번쩍 · 1.2초 번쩍 · 틀 튀어오름 없이 고정 금색 후광만
+        bool flashes = GameSettings.Flashes;
         if (gaugeImage != null)
-            gaugeImage.color = full ? Color.Lerp(ReadyGold, ReadyWhite, 0.5f + 0.5f * Mathf.Sin(t * 10f)) : baseColor;
+            gaugeImage.color = full ? (flashes ? Color.Lerp(ReadyGold, ReadyWhite, 0.5f + 0.5f * Mathf.Sin(t * 10f)) : ReadyGold) : baseColor;
 
         // 가득 찬 순간의 큰 번쩍임 (0.6초) + 1.2초마다 작은 번쩍임
         float since = t - fullSince;
-        float burst = full ? Mathf.Clamp01(1f - since / 0.6f) : 0f;
-        float tick = full ? Mathf.Clamp01(1f - Mathf.Repeat(since, 1.2f) / 0.35f) * 0.5f : 0f;
+        float burst = full && flashes ? Mathf.Clamp01(1f - since / 0.6f) : 0f;
+        float tick = full && flashes ? Mathf.Clamp01(1f - Mathf.Repeat(since, 1.2f) / 0.35f) * 0.5f : 0f;
         if (glow != null)
         {
-            float breathe = 0.45f + 0.3f * Mathf.Sin(t * 7f);
+            if (SpecialAbilities.GlowSprite != null && glow.sprite != SpecialAbilities.GlowSprite) glow.sprite = SpecialAbilities.GlowSprite;
+            float breathe = flashes ? 0.45f + 0.3f * Mathf.Sin(t * 7f) : 0.6f;
             float a = full ? Mathf.Max(breathe, burst, tick + 0.4f) : 0f;
             glow.color = new Color(1f, 0.85f, 0.35f, a);
-            glow.transform.localScale = Vector3.one * (full ? 1f + 0.08f * Mathf.Sin(t * 7f) + 0.5f * burst + 0.15f * tick : 1f);
+            // 가로는 거의 그대로 (왼쪽 스킬 아이콘을 덮지 않게), 세로로 퍼짐
+            float wave = flashes ? 0.08f * Mathf.Sin(t * 7f) : 0f;
+            glow.transform.localScale = full ? new Vector3(1f + 0.02f * burst, 1f + wave + 0.6f * burst + 0.15f * tick, 1f) : Vector3.one;
         }
         // 게이지 틀이 튀어 오름 (가득 찬 순간 크게, 그 뒤 작게)
+        float pop = full && flashes ? 0.22f * Mathf.Sin(Mathf.Clamp01(since / 0.35f) * Mathf.PI) : 0f;
         if (gaugeImage != null && gaugeImage.transform.parent != null && gaugeImage.transform.parent.GetComponent<Canvas>() == null)
-            gaugeImage.transform.parent.localScale = frameScale * (1f + 0.22f * Mathf.Sin(Mathf.Clamp01(since / 0.35f) * Mathf.PI) * (full ? 1f : 0f) + 0.05f * tick);
+            gaugeImage.transform.parent.localScale = frameScale * (1f + pop + 0.05f * tick);
     }
 
     void Update()

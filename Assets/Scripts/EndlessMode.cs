@@ -325,6 +325,9 @@ public class EndlessMode : MonoBehaviour
         GameObject go = new GameObject("EndlessHud", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform r = go.GetComponent<RectTransform>();
         r.SetParent(canvas.transform, false);
+        // 1.1~: 맨 뒤에 붙어 보스 체력바 · 일시정지 · 레벨업 창 위에 그려졌음 → HUD 순서 안(탄약 패널 바로 뒤)
+        Transform ammoPanel = canvas.transform.Find("AmmoPanel");
+        if (ammoPanel != null) r.SetSiblingIndex(ammoPanel.GetSiblingIndex() + 1);
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
         r.sizeDelta = new Vector2(1200f, 50f);
         r.anchoredPosition = new Vector2(0f, -40f);
@@ -335,6 +338,11 @@ public class EndlessMode : MonoBehaviour
         hud.fontSize = 30f;
         hud.color = new Color(1f, 0.78f, 0.45f);
         hud.alignment = TextAlignmentOptions.Center;
+        // 1.1~: 긴 일일 도전 규칙 이름이면 두 줄로 꺾여 아래 보스 이름과 겹쳤음 → 한 줄 고정, 넘치면 줄임
+        hud.enableWordWrapping = false;
+        hud.enableAutoSizing = true;
+        hud.fontSizeMax = 30f;
+        hud.fontSizeMin = 18f;
         hud.raycastTarget = false;
     }
 

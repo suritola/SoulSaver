@@ -30,6 +30,8 @@ public class AbilityHUD : MonoBehaviour
     LevelShop levelShop;
 
     readonly Dictionary<int, Slot> slots = new Dictionary<int, Slot>();
+    // 1.1~: 화면에 놓인 순서 (Dictionary 는 지운 자리를 다시 써서 열거 순서가 바뀜 → 진화를 두 번 하면 칸들이 다른 자리로 튀었음)
+    readonly List<int> order = new List<int>();
 
     public Sprite GetIcon(int id)
     {
@@ -122,6 +124,7 @@ public class AbilityHUD : MonoBehaviour
         {
             slot = CreateSlot(id, slots.Count);
             slots.Add(id, slot);
+            order.Add(id);
             ApplyOpen();
         }
 
@@ -210,14 +213,24 @@ public class AbilityHUD : MonoBehaviour
     // 스킬 진화: 재료 칸들을 지우고 그 자리에 진화 칸 하나 (빛나는 테두리)
     public void Merge(int[] parts, int evoId)
     {
+        // 진화 칸은 첫 재료가 있던 자리에 (없으면 맨 끝)
+        int at = -1;
+        foreach (int p in parts)
+        {
+            int i = order.IndexOf(p);
+            if (i >= 0 && (at < 0 || i < at)) at = i;
+        }
         foreach (int p in parts)
         {
             if (!slots.TryGetValue(p, out Slot s)) continue;
             Destroy(s.rect.gameObject);
             slots.Remove(p);
         }
+        order.RemoveAll(p => !slots.ContainsKey(p));
+        if (slots.TryGetValue(evoId, out Slot old)) { Destroy(old.rect.gameObject); slots.Remove(evoId); order.Remove(evoId); }
         Slot slot = CreateSlot(evoId, slots.Count);
         slots.Add(evoId, slot);
+        order.Insert(at >= 0 && at <= order.Count ? at : order.Count, evoId);
         ApplyOpen();       // 접혀 있으면 새 진화 칸도 숨기고 수 갱신
         slot.level = 0;
         slot.label.text = Loc.T("진화");
@@ -232,8 +245,9 @@ public class AbilityHUD : MonoBehaviour
     void Relayout()
     {
         int i = 0;
-        foreach (Slot s in slots.Values)
+        foreach (int id in order)
         {
+            if (!slots.TryGetValue(id, out Slot s)) continue;
             int col = i % columns, row = i / columns;
             s.rect.anchoredPosition = new Vector2(
                 ToggleWidth + spacing + slotSize.x * 0.5f + col * (slotSize.x + spacing),
