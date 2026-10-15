@@ -44,6 +44,42 @@ public sealed class CurseDef
     public int minSlot;
 }
 
+// 1.1.1~ 유물 하나 (봉인된 석관을 부수면 2택 · [Q] 유물 칸에 장착): 지금 얻을 길이 없는 「잠든 스킬」을 쿨타임 1.5배로 되살림
+//   abilityId = SpecialAbilities 능력 번호 (스킬만) · 고른 영웅의 능력(CharacterData.pool)과 이미 가진 것은 후보에서 뺌
+public sealed class RelicDef
+{
+    public string id, saveCode, since;
+    public int abilityId;
+    public float weight = 1f;
+}
+
+// 1.1.1~ 부서지는 맵 물체 하나 (MapProps): 장마다 6~8개 · 닿으면 부서져 DropDef 하나를 떨어뜨림
+//   stage = 스테이지 번호(Chapters.StageNames 순서, -1 = 어느 장이든) · sarcophagus = 봉인된 석관 (2장부터 60%, 부수면 유물 2택)
+//   그림은 Icons/<icon> (tools/pixelart/make_map_props.py)
+public sealed class PropDef
+{
+    public string id, saveCode, since;
+    public string nameKey, icon;
+    public int stage = -1;
+    public bool sarcophagus;
+    public float size = 2f;
+    public Color color = Color.white;               // 부서질 때 파편 · 빛 색
+    public string Name => Loc.T(nameKey);
+}
+
+// 1.1.1~ 맵 물체가 떨어뜨리는 것 하나 (MapProps)
+//   icon 이 있으면 바닥에 놓이고 닿으면 apply, 없으면(코인 · 금화) 부서진 자리에서 바로 apply (코인을 흩뿌림)
+public sealed class DropDef
+{
+    public string id, saveCode, since;
+    public string nameKey, icon;
+    public float weight = 1f;
+    public bool heal;                               // 회복: 체력 40% 아래면 가중치 ×2
+    public Color color = Color.white;
+    public System.Action<MapProps.DropCtx> apply;
+    public string Name => Loc.T(nameKey);
+}
+
 public static class ContentRegistry
 {
     // ================================================================= 장 중반 이벤트 (ChapterEvents)
@@ -106,6 +142,63 @@ public static class ContentRegistry
                         describe = c => Loc.T("chest.jackpot.desc") },
     };
 
+    // ================================================================= 유물 (1.1.1~, MapProps 봉인된 석관 · SpecialAbilities.Relics)
+    // 첫 출시 8종: 영웅마다 고유 장치(활시위 · 플라스크 · 탄창 · 영혼 개수)에 묶이지 않고 누르면 바로 나가는 스킬만
+    //   (조준해서 떼는 그림자 대시 · 화염 장판 · 갈고리, 활 전용 사냥꾼의 집중, 플라스크 전용 현자의 돌, 시계공 되감기와 겹치는 시간 역행 물약,
+    //    영혼을 모아야 하는 영혼 폭발, 체력을 깎는 희생의 계약, 분신, 맵 물체 「시간 정지」와 같은 값을 건드리는 시간 왜곡 · 소매치기 · 대지 가르기는 다음 업데이트로)
+    public static readonly List<RelicDef> Relics = new List<RelicDef>
+    {
+        new RelicDef { id = "warcry",    saveCode = "wc", since = "1.1.1", abilityId = SpecialAbilities.KitWarCry },
+        new RelicDef { id = "judgment",  saveCode = "jd", since = "1.1.1", abilityId = SpecialAbilities.KitJudgment },
+        new RelicDef { id = "deathmark", saveCode = "dm", since = "1.1.1", abilityId = SpecialAbilities.KitDeathMark },
+        new RelicDef { id = "caltrops",  saveCode = "ct", since = "1.1.1", abilityId = SpecialAbilities.KitCaltrops },
+        new RelicDef { id = "falcon",    saveCode = "fa", since = "1.1.1", abilityId = SpecialAbilities.KitFalcon },
+        new RelicDef { id = "gale",      saveCode = "ga", since = "1.1.1", abilityId = SpecialAbilities.KitGale },
+        new RelicDef { id = "giant",     saveCode = "gi", since = "1.1.1", abilityId = SpecialAbilities.KitGiant },
+        new RelicDef { id = "skeletons", saveCode = "sk", since = "1.1.1", abilityId = SpecialAbilities.SkeletonsId },
+    };
+
+    public static RelicDef RelicByCode(string code)
+    {
+        foreach (RelicDef r in Relics) if (r.saveCode == code) return r;
+        return null;
+    }
+
+    public static RelicDef RelicByAbility(int abilityId)
+    {
+        foreach (RelicDef r in Relics) if (r.abilityId == abilityId) return r;
+        return null;
+    }
+
+    // ================================================================= 부서지는 맵 물체 (1.1.1~, MapProps)
+    // 스테이지 번호: 0 지하 묘역 · 1 불타는 지옥 · 2 초원 · 3 영혼의 심연
+    public const string Sarcophagus = "sarcophagus";
+    public static readonly List<PropDef> Props = new List<PropDef>
+    {
+        new PropDef { id = "urn",     saveCode = "u", since = "1.1.1", nameKey = "prop.urn.name",     icon = "prop_urn",     stage = 0, size = 1.9f, color = new Color(0.85f, 0.62f, 0.45f) },
+        new PropDef { id = "brazier", saveCode = "z", since = "1.1.1", nameKey = "prop.brazier.name", icon = "prop_brazier", stage = 1, size = 2f,   color = new Color(1f, 0.55f, 0.2f) },
+        new PropDef { id = "barrel",  saveCode = "b", since = "1.1.1", nameKey = "prop.barrel.name",  icon = "prop_barrel",  stage = 2, size = 1.9f, color = new Color(0.8f, 0.55f, 0.3f) },
+        new PropDef { id = "crystal", saveCode = "y", since = "1.1.1", nameKey = "prop.crystal.name", icon = "prop_crystal", stage = 3, size = 2f,   color = new Color(0.6f, 0.85f, 1f) },
+        new PropDef { id = Sarcophagus, saveCode = "S", since = "1.1.1", nameKey = "prop.sarco.name", icon = "prop_sarcophagus", sarcophagus = true, size = 3.2f, color = new Color(0.75f, 0.5f, 1f) },
+    };
+
+    public static PropDef PropById(string id)
+    {
+        foreach (PropDef p in Props) if (p.id == id) return p;
+        return null;
+    }
+
+    // ================================================================= 맵 물체가 떨어뜨리는 것 (1.1.1~, MapProps)
+    public static readonly List<DropDef> Drops = new List<DropDef>
+    {
+        new DropDef { id = "coin",     saveCode = "co", since = "1.1.1", nameKey = "drop.coin.name",     weight = 34f, color = new Color(1f, 0.82f, 0.3f),  apply = MapProps.DropCoins },
+        new DropDef { id = "meat",     saveCode = "me", since = "1.1.1", nameKey = "drop.meat.name",     weight = 22f, heal = true, icon = "drop_meat", color = new Color(1f, 0.55f, 0.45f), apply = MapProps.DropMeat },
+        new DropDef { id = "gold",     saveCode = "go", since = "1.1.1", nameKey = "drop.gold.name",     weight = 14f, color = new Color(1f, 0.9f, 0.5f),   apply = MapProps.DropGold },
+        new DropDef { id = "magnet",   saveCode = "mg", since = "1.1.1", nameKey = "drop.magnet.name",   weight = 12f, icon = "drop_magnet", color = new Color(1f, 0.45f, 0.45f), apply = MapProps.DropMagnet },
+        new DropDef { id = "timestop", saveCode = "ts", since = "1.1.1", nameKey = "drop.timestop.name", weight = 9f,  icon = "drop_hourglass", color = new Color(0.6f, 0.85f, 1f), apply = MapProps.DropTimeStop },
+        new DropDef { id = "purify",   saveCode = "pu", since = "1.1.1", nameKey = "drop.purify.name",   weight = 9f,  icon = "drop_purify", color = new Color(1f, 0.97f, 0.8f), apply = MapProps.DropPurify },
+    };
+
     // ================================================================= 저주
     public static readonly List<CurseDef> Curses = new List<CurseDef>
     {
@@ -114,17 +207,20 @@ public static class ContentRegistry
 }
 
 // 이어하기 (RunSave) 에 판 콘텐츠 상태를 적고 되살림: 이벤트 시드 · 이번 장 계획 · 쓴 이벤트 · 상자 전설 · 촉매 횟수 (1.1~)
+// 1.1.1~ 장착한 유물(saveCode) · 맵 물체 시드 · 이번 장에 부순 물체 수 · 석관을 연 장 (MapProps)
 public static class RunContent
 {
     public static void Save(RunSave.Data d)
     {
         ChapterEvents.SaveRun(d);
         ChestRewards.SaveRun(d);
+        MapProps.SaveRun(d);
     }
 
     public static void Restore(RunSave.Data d)
     {
         ChapterEvents.RestoreRun(d);
         ChestRewards.RestoreRun(d);
+        MapProps.RestoreRun(d);
     }
 }

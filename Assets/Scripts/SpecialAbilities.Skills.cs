@@ -129,15 +129,23 @@ public partial class SpecialAbilities
     void StartCooldown(int id, float seconds)
     {
         seconds *= TreeCooldownMul;
+        if (relics.Contains(id)) seconds *= RelicCooldownMul;     // 1.1.1~ 유물로 되살린 스킬은 쿨타임 1.5배
         cooldownLength[id] = seconds;
         cooldownUntil[id] = Time.time + seconds;
         wasReady[id] = false;
     }
 
+    // 1.1.1~ 유물 칸 스킬도 쿨타임이 끝나면 알림
+    IEnumerable<int> ReadyChimeIds()
+    {
+        foreach (int id in skills) yield return id;
+        foreach (int id in relics) yield return id;
+    }
+
     // 쿨타임이 끝나면 알림음과 HUD 반짝임
     void UpdateReadyChimes()
     {
-        foreach (int id in skills)
+        foreach (int id in ReadyChimeIds())
         {
             bool ready = Time.time >= CooldownUntil(id);
             if (ready && wasReady.TryGetValue(id, out bool before) && !before)
