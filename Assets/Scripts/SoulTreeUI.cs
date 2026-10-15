@@ -511,7 +511,7 @@ public class SoulTreeUI : MonoBehaviour
         string state = !complete ? "<color=#8a8494>" + Loc.T("트리를 모두 배우면 열립니다") + "</color>"
             : SoulShards.Amount >= cost ? "<color=#b8f5a0>" + Loc.T("눌러서 정련하기") + "  (" + cost + ")</color>"
             : "<color=#ff8a80>" + Loc.T("영혼 조각이 모자랍니다") + "  (" + SoulShards.Amount + " / " + cost + ")</color>";
-        return Loc.T("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 10씩 오릅니다.")
+        return Loc.T("영혼 트리를 모두 배운 뒤 남는 영혼 조각으로 작은 능력치를 끝없이 올립니다. 할 때마다 비용이 5배로 오릅니다.")
              + "\n<color=#F5D478>" + Loc.T("모든 무기 피해 +2% · 최대 체력 +4") + "</color>"
              + "\n" + Loc.T("정련 횟수") + " " + sp.Refines + "\n" + state;
     }

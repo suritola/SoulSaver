@@ -79,9 +79,10 @@ public partial class SpecialAbilities
     void KeyAnnounceNow(int id, bool relic)
     {
         string key = SlotKeyName(id);
-        bool none = key.Length == 0 || key == "-";
         GameAction act = SlotAction(id) ?? GameAction.Relic;
         KeyCode kc = KeyBindings.Get(act);
+        // 빈 키는 KeyCode 로 판정 — 표시 이름 「-」는 빈 키(None)와 '-'(Minus) 키가 같아서 글자로는 가를 수 없음
+        bool none = SlotAction(id) == null || key.Length == 0 || (!GamePad.Active && kc == KeyCode.None);
         bool button = GamePad.Active || (kc >= KeyCode.Mouse0 && kc <= KeyCode.Mouse6);
         string press = none ? Loc.T("keyguide.press.none")
                      : Loc.T(button ? "keyguide.press.pad" : "keyguide.press.key").Replace("{0}", "<color=#FFE07A>" + key + "</color>");

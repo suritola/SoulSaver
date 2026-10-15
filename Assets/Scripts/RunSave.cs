@@ -53,6 +53,10 @@ public static class RunSave
         public string sarcoOpened = "";
         // 1.2~ 영혼의 무게 (SoulWeight, 0 = 무게 없음 · 옛 저장에는 없어 0)
         public int weight;
+        // 영혼 트리 · 성장 · 「전설의 힘」(ap) 이 더하는 기준 공격력 · 기준 탄창 (SpecialAbilities.baseAttack · basePistolMag)
+        // 옛 저장에는 없어 0 → 기록을 다시 적용하기 전(시작 공격력일 때) 기준을 정함
+        public float baseAttack;
+        public int baseMag;
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -201,6 +205,7 @@ public static class RunSave
         d.gauge = g != null ? g.SkillPoint : 0f;
         SpecialAbilities specials = SpecialAbilities.SharedInstance;
         d.rerolls = specials != null ? specials.Rerolls : 0;
+        if (specials != null) specials.GetBase(out d.baseAttack, out d.baseMag);
         foreach (KeyValuePair<string, float> kv in RunStats.DamageDealt) { d.dealtKeys.Add(kv.Key); d.dealtValues.Add(kv.Value); }
         foreach (KeyValuePair<string, float> kv in RunStats.DamageTaken) { d.takenKeys.Add(kv.Key); d.takenValues.Add(kv.Value); }
 
@@ -303,6 +308,9 @@ public static class RunSave
         shop.CancelOpening();                                       // 판을 시작할 때 뜨는 첫 카드 창은 닫음 (기록에 있는 첫 카드로 대신)
         sm.JumpToStage(d.stage);
         RunStats.Seconds = d.seconds;                               // 다시 적용하는 진화의 시각이 00:00 으로 찍히지 않게 먼저 (1.0.4~)
+        // 기준 공격력을 기록 재생 전에 고정: 실제 판은 시작 직후 첫 프레임(영혼 트리 버튼)에 시작 공격력으로 정해지는데,
+        // 재생 중 처음 GrowAttack 에서 정하면 앞서 재생한 상점 공격력(b1) 만큼 부푼 값이 기준이 되어 ap · 트리 · 성장이 더 크게 들어갔음
+        if (specials != null) specials.RestoreBase(d.baseAttack, d.baseMag);
 
         Replaying = true;
         try

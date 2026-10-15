@@ -84,7 +84,8 @@ public static class Notice
     // 키캡이 달린 큰 알림 (새 스킬 · 유물: 「[E] 전투 함성 / E 키를 눌러 사용」) — tag 는 제목 위 작은 글 (「새 스킬」)
     public static void BigKey(string key, string tag, string title, string sub, Color accent, float seconds = 4.2f)
     {
-        Push(new BigItem { key = string.IsNullOrEmpty(key) || key == "-" ? "?" : key, tag = tag, title = Clean(title), sub = Clean(sub), accent = accent, seconds = seconds, level = NoticeLevel.Important });
+        // 빈 키 판정은 부르는 쪽(KeyCode 로)에서 — 「-」는 '-'(Minus) 키의 정상 이름이기도 해서 여기서 바꾸지 않음
+        Push(new BigItem { key = string.IsNullOrEmpty(key) ? "?" : key, tag = tag, title = Clean(title), sub = Clean(sub), accent = accent, seconds = seconds, level = NoticeLevel.Important });
     }
 
     // 토스트: 첫 줄 = 굵게, 둘째 줄부터 작게 · 같은 글이 떠 있으면 새로 띄우지 않고 시간을 늘리며 「×2」
