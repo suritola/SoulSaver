@@ -152,11 +152,13 @@ public class EnemySpawner : MonoBehaviour
         int phase = 1;
         for (int i = 1; i < Stage.phases.Length; i++)
         {
-            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter)) phase = i + 1;
+            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter) && GameMode.EndlessSeconds >= Stage.phases[i].minSeconds) phase = i + 1;
+            else break;
         }
         paze = phase;
 
-        if (Chapters.SlotOf(stageIndex) >= midBossFromStage && phase > midBossPhase)      // 몇 번째 장인지로 (2.1.1~ 장 순서)
+        if (Chapters.SlotOf(stageIndex) >= midBossFromStage && phase > midBossPhase      // 몇 번째 장인지로 (2.1.1~ 장 순서)
+            && (!GameMode.IsEndless || GameMode.EndlessSeconds >= EndlessMode.MidBossPhaseFrom))      // 1.1.7~ 무한 모드 1:30 전에는 페이즈가 올라도 중간 보스 없음
         {
             midBossPhase = phase;
             SpawnMidBoss();
@@ -254,7 +256,7 @@ public class EnemySpawner : MonoBehaviour
 
             spawnedEnemys++;
             Vector2 offset = Random.insideUnitCircle.normalized * Random.Range(3f, 6f);
-            Instantiate(Pick(Stage.minionWeights), here + (Vector3)offset, Quaternion.identity);
+            Instantiate(Pick(GameMode.IsEndless ? Phase.weights : Stage.minionWeights), here + (Vector3)offset, Quaternion.identity);     // 1.1.7~ 무한 모드 부하는 지금 나오는 등급에서
         }
     }
 

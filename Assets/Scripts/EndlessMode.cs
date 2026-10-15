@@ -15,11 +15,12 @@ public class EndlessMode : MonoBehaviour
     const string BestKey = "endless.bestSeconds";
     public static float BestSeconds => Prefs.GetFloat(BestKey, 0f);
 
-    const float FirstBossAt = 90f;          // 시작 후 첫 보스
+    const float FirstBossAt = 240f;         // 시작 후 첫 보스 (1.1.7~ 1:30 → 4:00)
     const float BossEvery = 150f;           // 보스를 쓰러뜨린 뒤 다음 보스까지 (보스를 잡을 때마다 15초씩 짧아짐, 최소 75초)
     const float BossEveryMin = 75f;
     const float MidBossFrom = 360f;         // 6분부터 중간 보스가 주기적으로 (후반이 지루하지 않게)
     const float MidBossEvery = 70f;         // 강도가 오를수록 짧아짐 (최소 30초)
+    public const float MidBossPhaseFrom = 90f;  // 1.1.7~ 페이즈가 오를 때 나오는 중간 보스는 1:30 뒤에만 (EnemySpawn.UpdatePhase)
     float nextMidBoss;
 
     // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분): 15분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
@@ -142,6 +143,8 @@ public class EndlessMode : MonoBehaviour
         }
     }
 
+    const float SecondBossHpMul = 0.5f;     // 1.1.7~ 첫 바퀴 두 번째 보스(지옥의 군주 · 기본 체력이 리치 왕의 5배)만: 이야기 2장 보스 수준으로
+
     void SpawnBoss()
     {
         if (bossPrefabs == null || bossPrefabs.Length == 0) return;
@@ -151,7 +154,8 @@ public class EndlessMode : MonoBehaviour
         spawner.bossSpawned = true;
         spawner.bossCleared = false;
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
-        Instantiate(prefab, spawner.bossSpawnPoint, Quaternion.identity);
+        GameObject go = Instantiate(prefab, spawner.bossSpawnPoint, Quaternion.identity);
+        if (finalStage == 0 && bossTurn == 2 && go.TryGetComponent(out bosss b)) b.setEnemyHP = Mathf.RoundToInt(b.setEnemyHP * SecondBossHpMul);   // bossTurn 은 위에서 이미 ++ 됨 · Start 가 BossHpMul 을 곱하기 전 · finalStage 0: 15분 전에 보스를 하나만 잡고 한계 돌파로 간 판에서 뒤늦게 걸리지 않게
         Hostile.Play("roar", 1f, 0.9f);
         Notice.Big(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), NoticeIcon.Boss, 2.5f, NoticeLevel.Urgent);
     }
@@ -421,6 +425,7 @@ public class EndlessMode : MonoBehaviour
         // 처치 수에 따라 강한 적이 차례로 풀리는 페이즈 9개: 처음엔 1장 첫 적들만, 점점 강한 적 위주로
         // 아직 차례가 안 된 강한 적은 나오지 않고, 이미 풀린 약한 적은 계속 조금씩 섞여 나옴
         int[] kills = { 0, 25, 55, 90, 130, 180, 240, 310, 390 };
+        float[] minSec = { 0f, 45f, 90f, 150f, 210f, 285f, 360f, 420f, 480f };   // 1.1.7~ 등급은 이 시각 뒤에만 (처치 수와 둘 다)
         float[] interval = { 1.2f, 1.05f, 0.95f, 0.85f, 0.78f, 0.72f, 0.66f, 0.62f, 0.58f };
         int[] alive = { 8, 10, 12, 14, 16, 18, 19, 20, 22 };
         float topTier = 0f;
@@ -432,7 +437,7 @@ public class EndlessMode : MonoBehaviour
             float[] w = new float[enemies.Count];
             for (int i = 0; i < w.Length; i++)
                 w[i] = tiers[i] > focus + 0.35f ? 0f : Mathf.Max(0.25f, 1.2f - Mathf.Abs(tiers[i] - focus) * 0.5f);
-            phases[p] = new SpawnPhase { killsToEnter = kills[p], spawnInterval = interval[p], maxAlive = alive[p], weights = w };
+            phases[p] = new SpawnPhase { killsToEnter = kills[p], minSeconds = minSec[p], spawnInterval = interval[p], maxAlive = alive[p], weights = w };
         }
         float[] minions = new float[enemies.Count];
         for (int i = 0; i < minions.Length; i++) minions[i] = 1f;

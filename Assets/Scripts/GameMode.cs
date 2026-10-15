@@ -136,6 +136,14 @@ public static class GameMode
     const float SurgeGrowth = 0.693f, SurgeMax = 16f;
     static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt ? Mathf.Min(SurgeMax, Mathf.Exp(SurgeGrowth * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
 
+    // 1.1.7~ 무한 모드 초반 완화: 처음 5분은 잡몹 체력 ×0.5 · 받는 피해 ×0.6 · 보스 체력 ×0.5 · 적 스킬 간격 ×1.5 로 시작하고
+    //   5분 → 9분 사이에 SmoothStep 으로 1 에 합류 (9분 뒤 · 최종 국면 · 개발자 · 엄마 · 한계 돌파는 그대로)
+    //   1.1.4 잡몹 +40% · 1.1.6 피해 ×0.8 이 무한 초반에 겹쳐 처치 시간이 1.1.3 대비 ×1.75 였음 (이야기 모드의 1장 완화는 무한에 걸리지 않음)
+    const float EarlyHold = 300f, EarlyEnd = 540f;
+    const float EarlyHp = 0.5f, EarlyHurt = 0.6f, EarlyBoss = 0.5f, EarlySkill = 1.5f;
+    static float EarlyT => IsEndless ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(EarlyHold, EarlyEnd, EndlessSeconds)) : 1f;
+    static float Early(float mul) => Mathf.Lerp(mul, 1f, EarlyT);
+
     // 무한 모드 강도 (1 = 기본). 보스 간격 · 중간 보스 주기 등에 씀
     public static float EndlessIntensity => Ramp;
 
@@ -146,22 +154,22 @@ public static class GameMode
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
     static float D(DailyStat s) => DailyChallenge.Mul(s) * SoulBrand.Mul(s);     // 1.2~ 영혼 각인도 같은 배율 (각인 없는 판이면 1)
-    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul;     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
+    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp);     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
     // 1.1.6~ 「전체적인 데미지 밸런스 하향」: 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물)에 공통으로 곱함
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     public const float PlayerDamageMul = 0.8f;
-    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
+    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt);
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];
     public static float ProjectileSpeedMul => ProjectileSpeed[I];
-    public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, MobRamp, 0.3f) * D(DailyStat.EnemySkill);
+    public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, MobRamp, 0.3f) * D(DailyStat.EnemySkill) * Early(EarlySkill);
     public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, MobRamp, 0.4f) / Surge * D(DailyStat.Spawn) / (IsEndless ? EndlessMode.MobSpawnBoost : 1f);
     // 보스 · 페이즈까지 필요한 처치 수 배율
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
     // 무한 모드는 강도가 오를수록 한 번에 나오는 적도 늘어남
     public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, MobRamp - 1f) * 4f + (Surge - 1f) * 6f) : 0) + SoulWeight.ExtraAlive;     // 최종 국면 최대 +90 · 영혼의 무게 2~ (1.2~, 무한 모드는 0)
-    public static float BossHpMul => BossHp[I] * Ramp * Harder * D(DailyStat.BossHp) * Curse.HpMul;
+    public static float BossHpMul => BossHp[I] * Ramp * Harder * D(DailyStat.BossHp) * Curse.HpMul * Early(EarlyBoss);
     public static float GaugeMul => Gauge[I] * D(DailyStat.Gauge);
     // 일반 적 한 마리 보상 (처치 수가 늘어난 만큼 줄여 한 판 총량을 맞춤)
     public static float RewardMul => Reward[I] / Kills[I] * D(DailyStat.Reward) * Curse.RewardMul;
