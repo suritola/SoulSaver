@@ -33,9 +33,12 @@ public static class AttackLook
     //   작은 투사체(총알 · 표창 · 화살 · 톱니 · 뼈 손 등): 3 → 3.5 → 4배
     //   원래 큰 것(정각 톱니 · 편지 · 플라스크): 2.4 → 2.7 → 3배
     //   검기(이미 3.4칸): 2 → 2.3 → 2.6배 (화면을 덮지 않게)
-    public static float SmallMul(int tier) => tier >= 3 ? 4f : tier == 2 ? 3.5f : 3f;
-    public static float BigMul(int tier) => tier >= 3 ? 3f : tier == 2 ? 2.7f : 2.4f;
-    public static float WaveMul(int tier) => tier >= 3 ? 2.6f : tier == 2 ? 2.3f : 2f;
+    // 1.1.2 빌드 뒤: 「평타 크기가 너무 크다, 지금의 30% 정도로」 → 모든 배율 × 0.3 (작은 것 0.9 → 1.2배, 큰 것 0.72 → 0.9배, 검기 0.6 → 0.78배)
+    //   색 대비(흰 심 · 영웅색 테두리 · 외곽선) · 빛 무리 · 잔상 · 정렬은 그대로라 예전보다 작아도 또렷함
+    public const float SizeScale = 0.3f;
+    public static float SmallMul(int tier) => (tier >= 3 ? 4f : tier == 2 ? 3.5f : 3f) * SizeScale;
+    public static float BigMul(int tier) => (tier >= 3 ? 3f : tier == 2 ? 2.7f : 2.4f) * SizeScale;
+    public static float WaveMul(int tier) => (tier >= 3 ? 2.6f : tier == 2 ? 2.3f : 2f) * SizeScale;
     // 판 위 범위 공격(베기 · 획 · 손길)은 판정 범위 = 그림이라 바깥 크기는 그대로, 띠 굵기만 단계마다
     public static float BandMul(int tier) => tier >= 3 ? 1.2f : tier == 2 ? 1.1f : 1f;
 
@@ -45,7 +48,7 @@ public static class AttackLook
     public const float GunnerHitThick = 0.3f;
 
     // 거너 예광탄 보이는 높이 (예전 흰 심 지름 ≈ 0.3 → 0.85 · 1.0 · 1.15, 길이는 그 2.4배)
-    public static float GunnerHeight(int tier) => tier >= 3 ? 1.15f : tier == 2 ? 1f : 0.85f;
+    public static float GunnerHeight(int tier) => (tier >= 3 ? 1.15f : tier == 2 ? 1f : 0.85f) * SizeScale;
 
     // 빛 무리 진하기 · 잔상 (단계마다 더 밝고 길게)
     public static float HaloAlpha(int tier) => tier >= 3 ? 0.6f : tier == 2 ? 0.5f : 0.42f;

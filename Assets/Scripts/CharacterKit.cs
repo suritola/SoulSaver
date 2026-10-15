@@ -267,7 +267,7 @@ public partial class CharacterKit : MonoBehaviour
             if (lf == null || lf.Length == 0) { lf = f; look = null; }
             float vis = size * (wave ? AttackLook.WaveMul(tier) : size >= 1.8f ? AttackLook.BigMul(tier) : AttackLook.SmallMul(tier));
             // 검기는 세로로 긴 초승달: 판정 세로를 예전처럼 보이는 높이의 절반으로 (3.4칸 → 판정 1.7칸이던 비율)
-            Vector2 hit = wave ? new Vector2(oldHit * AttackLook.HitMul, vis * 0.5f) : Vector2.one * oldHit * AttackLook.HitMul;
+            Vector2 hit = wave ? new Vector2(oldHit * AttackLook.HitMul, Mathf.Max(vis, size) * 0.5f) : Vector2.one * oldHit * AttackLook.HitMul;
             sr.sprite = lf[0];
             sr.color = tint;
             AttackLook.Shape(b, lf[0], vis, hit);
