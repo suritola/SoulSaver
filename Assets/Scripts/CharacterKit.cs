@@ -1129,8 +1129,8 @@ public partial class CharacterKit : MonoBehaviour
     {
         if (card[0] > 0)
         {
-            // 검기: 휘두른 방향으로 적을 꿰뚫는 칼바람이 날아감
-            Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.2f + 0.2f * card[0]), 9999, 22f, 14f, "fx_swordwave", 3.4f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
+            // 검기: 휘두른 방향으로 적을 꿰뚫는 칼바람이 날아감 (1.1.2~ 판정 세로 1.7 → 3.4~4.4 로 커져 피해 40 · 60 · 80% → 30 · 45 · 60%)
+            Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.15f + 0.15f * card[0]), 9999, 22f, 14f, "fx_swordwave", 3.4f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
         }
         // 근접 특성: 휘두르는 동안 받는 피해 절반
         swingGuardUntil = Time.time + 0.3f;
