@@ -527,10 +527,10 @@ public partial class SpecialAbilities
         if (!Gunner)
         {
             // 다른 캐릭터의 형태: 그 형태로 치는 평타 피해 세 단계 + 이어지는 보너스 (모든 무기 피해)
-            System.Action power = () => { if (Kit != null) Kit.formPower += 0.08f; };       // 1.1.2~ 평타 고점 하향: 단계마다 +12% → +8%
-            t.Add(RawNode(k + ".t1", k, 0, wname + " " + Loc.T("단련"), Loc.T("평타 피해 +8%"), 18, icon, power));
-            t.Add(RawNode(k + ".t2", k + ".t1", 0, wname + " " + Loc.T("단련") + " II", Loc.T("평타 피해 +8%"), 34, icon, power));
-            t.Add(RawNode(k + ".t3", k + ".t2", 0, wname + " " + Loc.T("단련") + " III", Loc.T("평타 피해 +8%"), 56, icon, power));
+            System.Action power = () => { if (Kit != null) Kit.formPower += 0.05f; };       // 1.1.2~ 평타 고점 하향: 단계마다 +12% → +5% (투사체 판정 ×1.3 반영)
+            t.Add(RawNode(k + ".t1", k, 0, wname + " " + Loc.T("단련"), Loc.T("평타 피해 +5%"), 18, icon, power));
+            t.Add(RawNode(k + ".t2", k + ".t1", 0, wname + " " + Loc.T("단련") + " II", Loc.T("평타 피해 +5%"), 34, icon, power));
+            t.Add(RawNode(k + ".t3", k + ".t2", 0, wname + " " + Loc.T("단련") + " III", Loc.T("평타 피해 +5%"), 56, icon, power));
             t.Add(RawNode(k + ".x", k, 0, Loc.T("기억: ") + wname, Loc.T("모든 무기 피해 +8%"), 30, icon, () => AddAttack(0.08f)));
             return;
         }
