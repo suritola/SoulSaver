@@ -194,6 +194,7 @@ public partial class Shop : MonoBehaviour
         damage = playerControllerd.damage;
         damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();
+        Bought(buyAttack);
     }
 
     // =====================================
@@ -257,6 +258,7 @@ public partial class Shop : MonoBehaviour
         playerControllerd.speed *= moveSpeedMultiplier;
         moveSpeedPrice = Mathf.CeilToInt(moveSpeedPrice * moveSpeedPriceGrowth);
         UpdateShopText();
+        Bought(buyMove);
     }
 
     // ================================================================= 판 중간 저장 (RunSave, 2.1.9~)
@@ -313,6 +315,7 @@ public partial class Shop : MonoBehaviour
             if (shopPanel != null) shopPanel.SetActive(true);
 
             UpdateShopText();
+            RefreshCloseLabel();
 
             Time.timeScale = 0f;
         }

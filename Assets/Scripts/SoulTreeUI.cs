@@ -108,6 +108,18 @@ public class SoulTreeUI : MonoBehaviour
             return;
         }
         if (KeyBindings.Down(GameAction.Upgrade) && Time.frameCount > openFrame) { Close(); return; }
+        // 1.1~ 고른 칸이 4초 지나면 풀림: 예전엔 「한 번 더 누르면 배웁니다」 안내 · 큰 크기가 그대로 남아, 안내대로 눌러도 다시 고르기만 됐음
+        if (armed != null && Time.unscaledTime > armedUntil)
+        {
+            NodeView a = armed;
+            armed = null;
+            if (a.rect != null)
+            {
+                bool over = hovered.Contains(a);
+                a.rect.localScale = Vector3.one * (over ? 1.15f : 1f);
+                if (over) TooltipUI.Show(a.node.name, Tip(a.node));
+            }
+        }
 
         // 휠: 마우스 위치를 기준으로 확대 · 축소
         float wheel = Input.mouseScrollDelta.y;
@@ -283,8 +295,15 @@ public class SoulTreeUI : MonoBehaviour
         Button fitBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(200f, 62f), Fit, 22f);
         fitBtn.GetComponentInChildren<TMP_Text>().text = Loc.T("전체 보기") + " [F]";
         UIKit.Pin((RectTransform)fitBtn.transform, Vector2.one, new Vector2(-405f, -60f));
-        footText = UIKit.Text(root, "", 22f, Dim, Vector2.zero, new Vector2(1800f, 36f));
-        UIKit.Pin(footText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 32f));       // 아래 띠(64) 가운데
+        // 1.1~ 아래 띠(64) 가운데: 예전엔 1800 고정 폭이라 UI 크기 110% 이상(캔버스 폭 1600~1745)에서 양 끝이 잘림
+        //   → 화면 폭을 따라 좌우 40 여백, 두 줄까지 · 글자색도 Dim(대비 약 3.9:1) → 밝게(약 8:1)
+        footText = UIKit.Text(root, "", 22f, new Color(0.72f, 0.68f, 0.78f), Vector2.zero, new Vector2(0f, 56f));
+        footText.enableWordWrapping = true;
+        footText.fontSizeMin = 14f;
+        RectTransform fr = footText.rectTransform;
+        fr.anchorMin = new Vector2(0f, 0f); fr.anchorMax = new Vector2(1f, 0f);
+        fr.sizeDelta = new Vector2(-80f, 56f);
+        fr.anchoredPosition = new Vector2(0f, 32f);
         // 가지 색 범례 (트리 위에 이름을 띄우면 칸과 겹쳐서, 위 띠에 한 줄로)
         string legend = "";
         for (int b = 0; b < SpecialAbilities.BranchCount; b++)
@@ -335,7 +354,7 @@ public class SoulTreeUI : MonoBehaviour
         footText.text = Loc.T(TutorialRun.Active ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "칸을 두 번 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
                       + "  ·  " + Loc.T(GamePad.Active ? "오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기"      // 1.0.5~ 패드 안내
                                                        : "끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
-                      + "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기");      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름
+                      + (GamePad.Active ? "" : "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기"));      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름 · 1.1~ 패드엔 없는 조합(「[Shift]+[View]」)이라 패드일 땐 뺌
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
         bounds = new Rect(-120f, -120f, 240f, 240f);
         foreach (NodeView v in views)
@@ -455,7 +474,7 @@ public class SoulTreeUI : MonoBehaviour
             if (!can && !hovered.Contains(v)) v.rect.localScale = Vector3.one;
             v.cost.text = owned ? "" : n.cost.ToString();           // 배운 칸은 금색 테두리로 충분 (글자는 지저분해서 뺌)
             v.cost.fontStyle = can ? FontStyles.Bold : FontStyles.Normal;
-            v.cost.color = owned ? Gold : can ? new Color(0.6f, 1f, 0.5f) : new Color(1f, 0.5f, 0.45f);
+            v.cost.color = owned ? Gold : can ? new Color(0.6f, 1f, 0.5f) : blocked ? new Color(0.55f, 0.53f, 0.58f) : new Color(1f, 0.5f, 0.45f);     // 1.1~ 막힌 칸은 회색 (빨강이면 조각이 모자란 것처럼 보였음)
             if (v.line != null) v.line.color = owned ? new Color(Gold.r, Gold.g, Gold.b, 0.9f) : new Color(bc.r, bc.g, bc.b, 0.55f);
         }
     }
@@ -594,8 +613,12 @@ public class SoulTreeUI : MonoBehaviour
         if (s != null) Destroy(s.gameObject);
     }
 
+    // 1.1~ 흔들리는 중에 또 누르면 흔들린 자리를 원래 자리로 잡아 칸 · 정련 버튼이 어긋난 채 남았음 → 흔들리는 동안은 새로 흔들지 않음
+    readonly HashSet<RectTransform> shaking = new HashSet<RectTransform>();
+
     System.Collections.IEnumerator Shake(RectTransform r)
     {
+        if (r == null || !shaking.Add(r)) yield break;
         Vector2 home = r.anchoredPosition;
         for (float t = 0f; t < 0.25f && r != null; t += Time.unscaledDeltaTime)
         {
@@ -603,6 +626,7 @@ public class SoulTreeUI : MonoBehaviour
             yield return null;
         }
         if (r != null) r.anchoredPosition = home;
+        shaking.Remove(r);
     }
 
     // 따로 그리기 순서를 가진 캔버스: HUD의 다른 캔버스보다 위에, 클릭도 받음
