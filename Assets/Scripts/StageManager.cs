@@ -623,6 +623,7 @@ public class StageManager : MonoBehaviour
             if (EndlessMode.Instance != null) EndlessMode.Instance.OnBossDefeated();
             return;
         }
+        Point.Bonus(Point.ChapterBonusPer * Chapters.Number(stage));     // 1.1~ 장 클리어 보너스 200 × 장 번호 (체험판 1장 포함 · 무한 모드는 위에서 빠짐)
         if (stage == 0 && Demo.On)
         {
             StartCoroutine(DemoFinish());

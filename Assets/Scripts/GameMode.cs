@@ -36,6 +36,9 @@ public static class GameMode
     // 일반 적 영혼 조각을 이만큼만 (판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게)
     const float KillShardRate = 0.6f;      // 1.0.1: 0.75 → 0.6 (영혼 트리가 천천히 차게, 보스 · 상자 보상은 그대로)
     static readonly float[] Tempo =              { 0.8f, 0.8f,  0.85f,  1f };     // 생성 간격 배율 (작을수록 빨리 나옴)
+    // 1.1~ 포인트(영웅 · 스킨 재화) 배율: 어려울수록 더 벎 (무한 · 일일 도전은 처치 수가 많아 그대로)
+    static readonly float[] PointRate =          { 1f,   1.3f,  1.5f,   1f };
+    const float CursePointRate = 1.15f;     // 1.1~ 저주를 받은 장에서 얻는 포인트
 
     // 무한 모드 (1.8.7 조정): 초반이 너무 어렵고 후반이 지루하던 곡선을 바꿈
     //   처음 3분은 0.7배에서 1배로 워밍업, 그 뒤로는 멈추지 않고 가속 (10분 ≈ 2배, 20분 ≈ 3.6배, 30분 ≈ 6배)
@@ -161,6 +164,9 @@ public static class GameMode
     public static float RewardMul => Reward[I] / Kills[I] * D(DailyStat.Reward) * Curse.RewardMul;
     // 보스 · 중간 보스 보상 (처치 수와 상관없이 나오는 수가 정해져 있음)
     public static float FixedRewardMul => Reward[I] / RewardBasis[I] * D(DailyStat.Reward) * Curse.RewardMul;
+    // 1.1~ 포인트 배율 (Point.AddPoint 한 곳에서 곱함): 난이도 × 이번 장 저주
+    public static float PointMul => PointRate[I] * (Curse.Active ? CursePointRate : 1f);
+    public static float PointRateOf(Difficulty d) => PointRate[Mathf.Clamp((int)d, 0, PointRate.Length - 1)];     // 메뉴 난이도 설명용
     // 처치 수가 예전보다 몇 배인지 (떠돌이 상점 간격 등 처치 수로 세는 것을 맞출 때)
     public static float KillStretch => Kills[I] / RewardBasis[I];
     // 일반 적 영혼 조각 배율 (예전 한 마리 몫 기준, 무한 모드는 그대로)

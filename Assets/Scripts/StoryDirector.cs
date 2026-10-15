@@ -274,6 +274,9 @@ public class StoryDirector : MonoBehaviour
     IEnumerator RunIntro(bool endless)
     {
         Playing = true;
+        // 1.1~ 같은 캐릭터로 같은 이야기를 이미 봤으면 (두 번째 판부터) 이야기는 건너뛰고 떨어지는 연출만 짧게
+        string seenKey = "intro.seen." + (endless ? "e" : Chapters.IsClassic ? "c" : "m") + "." + (int)CharacterData.Selected;
+        bool seen = Prefs.GetInt(seenKey, 0) == 1;
         // 게임 시작 때 뜨는 능력 카드 창은 연출이 끝날 때까지 숨김
         LevelShop shop = Cache<LevelShop>.Get;
         GameObject cards = shop != null ? shop.LvshopPanel : null;
@@ -334,7 +337,7 @@ public class StoryDirector : MonoBehaviour
         }
 
         // 2) 이야기 (시간을 멈추고 글자가 한 줄씩)
-        if (!skip)
+        if (!skip && !seen)
         {
             float before = Time.timeScale;
             Time.timeScale = 0f;
@@ -344,6 +347,7 @@ public class StoryDirector : MonoBehaviour
             Time.timeScale = before;         // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
         }
         if (cards != null && cardsWere) cards.SetActive(true);
+        if (!seen) { Prefs.SetInt(seenKey, 1); Prefs.Save(); }
         Playing = false;
     }
 
@@ -360,6 +364,10 @@ public class StoryDirector : MonoBehaviour
         Playing = true;
         EndingPlaying = true;
         Time.timeScale = 0f;
+        // 1.1~ 최종 클리어 보너스 (결과 화면의 획득 포인트에 들어가게 씬을 바꾸기 전에)
+        int bonusBefore = Point.RunBonus;
+        Point.Bonus(Point.FinalBonus);
+        bool gotBonus = Point.RunBonus > bonusBefore;
         SetAlpha(black, 0f);
         SetAlpha(shade, 0f);
         yield return Fade(black, 0f, 1f, 1.5f);
@@ -369,7 +377,8 @@ public class StoryDirector : MonoBehaviour
         skip = false;
         title.text = GameMode.Name(cleared) + " " + Loc.T("클리어!");
         string sub = opened != null ? Loc.T("새 난이도 해금: ") + Loc.T(opened) + "\n\n" : "";
-        body.text = sub + Loc.T("플레이해 주셔서 고맙습니다!");
+        string bonus = gotBonus ? Loc.T("result.finalbonus").Replace("{0}", Point.FinalBonus.ToString("N0")) + "\n\n" : "";
+        body.text = sub + bonus + Loc.T("플레이해 주셔서 고맙습니다!");
         yield return Fade(title, 0f, 1f, 0.6f);
         advance = false;
         for (float t = 0f; t < 4f && !skip && !advance; t += Time.unscaledDeltaTime) yield return null;
