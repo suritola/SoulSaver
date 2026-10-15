@@ -91,7 +91,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 465f9f36a615f2e54e4f210fb478f5ab, type: 3}
   - name: "\uBD88\uC0AC\uC758 \uB9F9\uC138"
     kind: 2
-    description: "\uD55C \uD310\uC5D0 \uD55C \uBC88, \uC8FD\uC744 \uD53C\uD574\uB97C \uBC1B\uC73C\uBA74\n\uCCB4\uB825 1\uB85C \uBC84\uD2F0\uACE0 3\uCD08 \uB3D9\uC548 \uBB34\uC801\uC774 \uB429\uB2C8\uB2E4."
+    description: "\uD310\uB9C8\uB2E4 \uD55C \uBC88, \uC8FD\uC744 \uD53C\uD574\uB97C \uBC1B\uC73C\uBA74\n\uCCB4\uB825 1\uB85C \uBC84\uD2F0\uACE0 3\uCD08 \uB3D9\uC548 \uBB34\uC801\uC774 \uB429\uB2C8\uB2E4."
     icon: {fileID: 21300000, guid: f25b45685d16776e4cda74eaeeae5af9, type: 3}
   abilityIcons:
   - {fileID: 21300000, guid: 7b50a0344fc74ad3cca966cfcf21c4cb, type: 3}

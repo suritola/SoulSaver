@@ -63,11 +63,13 @@ public static class SkillEvoCodexUI
             tabs.Add(b);
         }
         TMP_Text hint = UIKit.Text(win, "", 21f, Dim, new Vector2(0f, 282f), new Vector2(1500f, 56f));
-        hint.text = Loc.T("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50 (무한 모드 100) 까지라 모두 올릴 수는 없습니다.");
+        hint.text = Loc.T("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50 (무한 모드 80) 까지라 모두 올릴 수는 없습니다.");
         hint.enableWordWrapping = true;
 
         BuildScroll(win);
         Show(Mathf.Max(0, heroes.IndexOf(CharacterData.Selected)));
+        UIKit.EscCancel(open, Close);       // 1.1~ ESC · 패드 B 로도 닫힘
+        WindowFit.Attach(win, new Vector2(1660f, 980f));      // 1.1~ UI 크기 120% · 좁은 화면에서 창이 화면 밖으로 나가지 않게
     }
 
     static void BuildScroll(RectTransform win)
@@ -149,17 +151,20 @@ public static class SkillEvoCodexUI
         Image evo = Icon(inner, new Vector2(arrowX + 50f, 54f), 76f, Resources.Load<Sprite>("Icons/ability_" + e.icon), known ? new Color(0.45f, 0.32f, 0.62f) : Color.black);
         if (known) Tip(evo, Loc.T(e.name) + "  ◆ " + Loc.T("진화"), LevelShop.EvoTooltip(e, who));
 
-        TMP_Text name = UIKit.Text(inner, "", 32f, Gold, new Vector2(arrowX + 100f + 160f, 70f), new Vector2(330f, 44f), TextAlignmentOptions.Left);
+        // 1.1~ 재료 줄을 두 줄 높이(44)로 키우고 이름 줄을 조금 위로 (영어 재료 셋이 12px 까지 줄던 것)
+        TMP_Text name = UIKit.Text(inner, "", 32f, Gold, new Vector2(arrowX + 100f + 160f, 76f), new Vector2(330f, 44f), TextAlignmentOptions.Left);
         name.text = known ? Loc.T(e.name) : "???";
         name.enableAutoSizing = true;
         name.fontSizeMin = 18f;
         name.fontSizeMax = 32f;
         List<string> parts = new List<string>();
         foreach (int p in e.parts) parts.Add(LevelShop.CardName(who, p));
-        TMP_Text recipe = UIKit.Text(inner, "", 19f, Purple, new Vector2(arrowX + 100f + 160f, 36f), new Vector2(330f, 30f), TextAlignmentOptions.Left);
+        TMP_Text recipe = UIKit.Text(inner, "", 19f, Purple, new Vector2(arrowX + 100f + 160f, 30f), new Vector2(330f, 44f), TextAlignmentOptions.Left);
         recipe.text = string.Join(" + ", parts);
         recipe.enableAutoSizing = true;
-        recipe.fontSizeMin = 12f;
+        recipe.enableWordWrapping = true;
+        recipe.fontSizeMin = 15f;
+        recipe.overflowMode = TextOverflowModes.Ellipsis;      // 아주 긴 조합은 줄임표 (재료 이름은 아이콘 툴팁에도 있음)
         recipe.fontSizeMax = 19f;
 
         TMP_Text body = UIKit.Text(inner, "", 22f, Parch, new Vector2(0f, -58f), new Vector2(700f, 118f), TextAlignmentOptions.TopLeft);

@@ -148,7 +148,7 @@ public static class CharacterUI
         {
             bool met = CharacterData.ConditionMet(id);
             TMP_Text cond = UIKit.Text(t, "", 15f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, 141f), new Vector2(236f, 36f));
-            cond.text = (met ? "✔ " : "") + CharacterData.ConditionText(d.condition, false);
+            cond.text = (met ? "√ " : "") + CharacterData.ConditionText(d.condition, false);
             cond.enableWordWrapping = true;
             cond.enableAutoSizing = true;
             cond.fontSizeMin = 12f;

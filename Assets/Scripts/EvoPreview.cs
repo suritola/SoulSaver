@@ -23,6 +23,8 @@ public class EvoPreview : MonoBehaviour
 
     public static void Attach(RectTransform panel, int id, Sprite glow)
     {
+        // 1.1~ 각성(무한 모드 3번째 진화)은 수치만 오르는 강화라 공격 그림을 붙이지 않음 (예전엔 셋 다 같은 보라 폭탄)
+        if (SpecialAbilities.IsAwaken(id)) return;
         EvoPreview p = panel.gameObject.AddComponent<EvoPreview>();
         p.Setup(id, glow);
     }
@@ -58,13 +60,15 @@ public class EvoPreview : MonoBehaviour
     void Configure(int id)
     {
         Color orange = new Color(1f, 0.6f, 0.25f), cyan = new Color(0.55f, 0.95f, 1f), gold = new Color(1f, 0.85f, 0.45f),
-              purple = new Color(0.75f, 0.5f, 1f), green = new Color(0.6f, 1f, 0.45f), white = new Color(0.9f, 0.95f, 1f), red = new Color(1f, 0.4f, 0.35f);
+              purple = new Color(0.75f, 0.5f, 1f), green = new Color(0.6f, 1f, 0.45f), white = new Color(0.9f, 0.95f, 1f), red = new Color(1f, 0.4f, 0.35f),
+              ink = new Color(0.45f, 0.6f, 1f), brass = new Color(1f, 0.72f, 0.4f), sand = new Color(0.95f, 0.85f, 0.55f), paper = new Color(0.95f, 0.88f, 0.72f),
+              ice = new Color(0.7f, 0.92f, 1f), shade = new Color(0.62f, 0.5f, 0.9f);
         switch (id)
         {
             case SpecialAbilities.ShotgunId: Set(Kind.Cone, orange, 5, 1f); break;
             case SpecialAbilities.SniperId: Set(Kind.Beam, cyan, 1, 1.4f); break;
             case SpecialAbilities.DualId: Set(Kind.Spray, gold, 4, 1f); break;
-            case SpecialAbilities.FlameId: Set(Kind.Cone, orange, 8, 0.7f); break;
+            case SpecialAbilities.FlameId: Set(Kind.Cone, orange, 8, 0.95f); break;     // 1.1~ 0.7 → 0.95 (불길이 첫 적까지 닿게)
             case SpecialAbilities.SeekerId: Set(Kind.Homing, purple, 2, 1f); break;
             case SpecialAbilities.ChainId: Set(Kind.Chain, cyan, 1, 1f); break;
             case SpecialAbilities.ScytheId: Set(Kind.Boomerang, purple, 1, 1.4f); break;
@@ -92,7 +96,33 @@ public class EvoPreview : MonoBehaviour
             case CharacterKit.AugGale: Set(Kind.Beam, cyan, 1, 0.8f); break;
             case CharacterKit.AugDouble: Set(Kind.Lob, orange, 1, 1f); twice = true; break;
             case CharacterKit.AugGiant: Set(Kind.Lob, green, 1, 1.7f); break;
-            default: Set(Kind.Lob, purple, 1, 1.5f); break;      // 연금 폭주 등
+            case CharacterKit.AugOverload: Set(Kind.Lob, purple, 1, 1.5f); break;      // 연금 폭주
+            // 1.1~ 새 캐릭터(지도 제작자 · 시계공 · 우체부 · 유령) 형태 · 강화 — 예전엔 모두 기본값(보라 투척 폭발)이라 세 카드가 같은 그림이었음
+            case SpecialAbilities.KitSurveyChain: Set(Kind.Chain, gold, 1, 1f); break;
+            case SpecialAbilities.KitInkpot: Set(Kind.Lob, ink, 1, 0.8f); break;
+            case SpecialAbilities.KitGlobe: Set(Kind.Pull, new Color(0.5f, 0.9f, 0.8f), 1, 1.5f); break;
+            case SpecialAbilities.KitCuckoo: Set(Kind.Lob, brass, 1, 1f); sparks = true; break;
+            case SpecialAbilities.KitHourglass: Set(Kind.Boomerang, sand, 1, 1f); break;
+            case SpecialAbilities.KitGrandfather: Set(Kind.Around, brass, 1, 1.4f); break;
+            case SpecialAbilities.KitPigeon: Set(Kind.Homing, white, 2, 1f); break;
+            case SpecialAbilities.KitParcel: Set(Kind.Lob, paper, 1, 1f); break;
+            case SpecialAbilities.KitPostbox: Set(Kind.Spray, red, 3, 1f); break;
+            case SpecialAbilities.KitSoulChain: Set(Kind.Chain, cyan, 1, 1f); break;
+            case SpecialAbilities.KitIceGhost: Set(Kind.Beam, ice, 1, 1.2f); break;
+            case SpecialAbilities.KitShadowGhost: Set(Kind.Spray, shade, 1, 1f); twice = true; break;
+            case CharacterKit.AugSurvey: Set(Kind.Chain, ink, 1, 1f); break;
+            case CharacterKit.AugReprint: Set(Kind.Spray, ink, 2, 1f); twice = true; break;
+            case CharacterKit.AugEngrave: Set(Kind.Lob, ink, 1, 1.5f); break;
+            case CharacterKit.AugPrecise: Set(Kind.Boomerang, gold, 1, 1f); break;
+            case CharacterKit.AugTwinGear: Set(Kind.Spray, brass, 2, 1f); break;
+            case CharacterKit.AugRift: Set(Kind.Pull, purple, 1, 1.2f); break;
+            case CharacterKit.AugThickEnvelope: Set(Kind.Homing, paper, 1, 1f); break;
+            case CharacterKit.AugBundle: Set(Kind.Homing, paper, 3, 1f); break;
+            case CharacterKit.AugRegistered: Set(Kind.Chain, red, 1, 1f); break;
+            case CharacterKit.AugDeepChill: Set(Kind.Around, ice, 1, 1.3f); break;
+            case CharacterKit.AugTwoHands: Set(Kind.Cone, shade, 3, 1f); break;
+            case CharacterKit.AugSoulBurst: Set(Kind.Around, new Color(0.8f, 0.7f, 1f), 1, 1.5f); break;
+            default: Set(Kind.Lob, purple, 1, 1.5f); break;
         }
     }
 
@@ -140,7 +170,12 @@ public class EvoPreview : MonoBehaviour
                     Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
                     Dot(i, me + d * 230f * size * (t / 0.5f), 1f - t / 0.5f);
                 }
-                if (t > 0.3f && t < 0.5f) { hit[0] = true; if (size >= 1f) hit[1] = true; }
+                // 1.1~ 탄이 실제로 닿은 적만 번쩍임 (예전엔 시간으로 정해 탄이 닿기 전 · 닿지 않는 적도 번쩍였음)
+                if (t < 0.65f)
+                {
+                    float reach = 230f * size * Mathf.Clamp01(t / 0.5f);
+                    for (int i = 0; i < 3; i++) hit[i] = reach >= Vector2.Distance(me, foes[i]) - 13f;
+                }
                 break;
             case Kind.Around:
                 if (t < 0.5f) { Ring(ring, me, 30f + 150f * size * t / 0.5f, 1f - t / 0.5f); if (t > 0.3f) hit[0] = true; }

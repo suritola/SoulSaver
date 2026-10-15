@@ -183,7 +183,7 @@ public class ShopStall : MonoBehaviour
     }
 
     // 금화 표지가 달린 작은 상인 제단 (코드로 그린 도트)
-    static Sprite StallSprite => stallSprite != null ? stallSprite : (stallSprite = MakeStall());
+    public static Sprite StallSprite =>stallSprite != null ? stallSprite : (stallSprite = MakeStall());
 
     static Sprite MakeStall()
     {

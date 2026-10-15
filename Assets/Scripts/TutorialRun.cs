@@ -287,7 +287,7 @@ public class TutorialRun : MonoBehaviour
     IEnumerator Cleared()
     {
         SetProgress(1f);
-        check.text = "✔ " + Loc.T("완료!");
+        check.text = "√ " + Loc.T("완료!");
         check.color = DoneColor;
         Hostile.Play("chime", 0.5f, 1.4f);
         yield return new WaitForSecondsRealtime(1.1f);
