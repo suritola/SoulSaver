@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// 배경음악: 메뉴 / 1장 / 2장 / 3장 / 4장 / 보스전 곡을 상황에 맞게 부드럽게 바꿔 틀어줌
+// 배경음악: 메뉴 / 1장 / 2장 / 3장 / 4장 / 보스전 / 결계 / 무한 모드 최종 보스(개발자 · 엄마) 곡을 상황에 맞게 부드럽게 바꿔 틀어줌
 // 게임이 시작되면 스스로 만들어지고 씬이 바뀌어도 유지됨 (Resources/Music/bgm_*.wav)
 public class MusicManager : MonoBehaviour
 {
@@ -29,6 +29,9 @@ public class MusicManager : MonoBehaviour
             case "bgm_desert": return 0.93f;    // -14.4
             case "bgm_menu": return 0.76f;      // -12.6 → -2.4 dB
             case "bgm_domain": return 0.75f;    // -10.5 → -2.5 dB
+            // 1.1.2~ 무한 모드 최종 보스 곡 (tools/audio/make_developer_bgm.py 가 RMS -15.0 으로 맞춰 냄): 기준보다 1 dB 크게 — 보스 곡과 결계 곡(-13) 사이
+            case "bgm_developer": return 1.12f;
+            case "bgm_developer_mom": return 1.12f;
             default: return 1f;
         }
     }
@@ -81,6 +84,15 @@ public class MusicManager : MonoBehaviour
         if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         Hook(spawner);
+        // 1.1.2~ 무한 모드 최종 보스 (개발자 · 엄마) 전용 곡 — 등장 배너 1초 전부터 쓰러질 때까지 (EndlessMode.FinalBossMusic · 둘이 함께면 엄마 곡)
+        // 결계 곡보다 앞에 둠: 개발자 · 엄마는 결계를 쓰지 않고(BossUltimate 가 developer 를 거름) 다른 보스는 모두 쓰러진 뒤라 결계가 켜질 일이 없지만,
+        // 혹시 켜지더라도 24초짜리 결계 곡이 1분 넘게 고조되는 최종 곡을 끊지 않게. 보스 곡 붙잡아 두기(BossFight)는 이 아래에서만 평가되므로 서로 건드리지 않음
+        if (GameMode.IsEndless && EndlessMode.Instance != null)
+        {
+            int final = EndlessMode.Instance.FinalBossMusic;
+            if (final == 2) return "bgm_developer_mom";
+            if (final == 1) return "bgm_developer";
+        }
         if (BossUltimate.Active) return "bgm_domain";          // 보스 필살기 결계
         // 보스전이면 다른 무엇보다 보스 곡 (판단은 BossFight 한 곳에서만)
         // 1.1.2~: 예전엔 무한 모드 보스전에서 보스 곡 4바퀴(102.4초)마다 4장 곡(bgm_abyss)과 번갈아 틀어서,
@@ -164,6 +176,14 @@ public class MusicManager : MonoBehaviour
         leftAt[s.clip] = Time.unscaledTime;
     }
 
+    // 1.1.2~ 최종 보스 등장 연출: 흐르던 곡을 0.35초에 끊고, 바뀐 순간부터 1초 뒤 무음 속에서 새 곡이 첫 타격(곡 머리)과 함께 바로 최대 음량으로 시작
+    // (EndlessMode 가 배너 1초 전에 FinalBossMusic 을 켜므로 타격이 「최종 보스 「개발자」가 강림한다!」 배너와 맞물림)
+    const float StrikeFade = 0.35f, StrikeSilence = 1.0f;
+    float strikeAt = -1f;           // 무음 뒤 새 곡을 시작할 시각 (unscaled) · 음수면 없음
+    float fadeOut = FadeTime;       // 이전 곡이 사라지는 데 걸리는 시간 (보통 FadeTime)
+
+    static bool IsFinalBossTrack(string name) => name == "bgm_developer" || name == "bgm_developer_mom";
+
     void Update()
     {
         string want = Wanted();
@@ -172,6 +192,7 @@ public class MusicManager : MonoBehaviour
             AudioClip clip = Resources.Load<AudioClip>("Music/" + want);
             if (clip != null)
             {
+                bool strike = IsFinalBossTrack(want) && !IsFinalBossTrack(playing);
                 // 두 소스를 바꿔 가며 교차 페이드
                 AudioSource t = previous; previous = current; current = t;
                 // 1.1.2~ 페이드 도중 또 바뀌면 (A→B→C) 새 곡에 쓸 소스로 둘 중 더 작은 쪽을 고름 — 아직 크게 들리던 곡이 딸깍 끊기지 않게
@@ -181,15 +202,29 @@ public class MusicManager : MonoBehaviour
                 }
                 Remember(previous);
                 if (current.clip != clip) Remember(current);     // 곡을 갈아 끼우기 전에 위치를 적어 둠 (곧 돌아오면 이어서)
-                // 페이드아웃 중인 소스가 바로 그 곡이면 끊지 않고 그대로 되살림 (A→B→A 로 빠르게 바뀔 때)
-                if (current.clip != clip || !current.isPlaying)
+                if (strike)
                 {
+                    // 최종 보스 곡은 무음 뒤에 처음(첫 타격)부터 — 이어서 재생하지 않음
+                    current.Stop();
                     current.clip = clip;
                     current.volume = 0f;
-                    current.Play();
-                    if (resumeAt.TryGetValue(clip, out int pos) && leftAt.TryGetValue(clip, out float left)
-                        && Time.unscaledTime - left < 60f && clip.samples > 0)
-                        current.timeSamples = pos % clip.samples;
+                    strikeAt = Time.unscaledTime + StrikeSilence;
+                    fadeOut = StrikeFade;
+                }
+                else
+                {
+                    strikeAt = -1f;
+                    fadeOut = FadeTime;
+                    // 페이드아웃 중인 소스가 바로 그 곡이면 끊지 않고 그대로 되살림 (A→B→A 로 빠르게 바뀔 때)
+                    if (current.clip != clip || !current.isPlaying)
+                    {
+                        current.clip = clip;
+                        current.volume = 0f;
+                        current.Play();
+                        if (resumeAt.TryGetValue(clip, out int pos) && leftAt.TryGetValue(clip, out float left)
+                            && Time.unscaledTime - left < 60f && clip.samples > 0)
+                            current.timeSamples = pos % clip.samples;
+                    }
                 }
                 currentGain = TrackGain(want);
             }
@@ -200,10 +235,24 @@ public class MusicManager : MonoBehaviour
         // 전투 중 일시정지 · 레벨업 · 상점 창이 열려 멈춘 동안에는 조금 작게 (1.1~: 보스 결계 컷신은 연출이라 제외)
         float duck = sceneName == "GameScene" && Time.timeScale == 0f && !StoryDirector.Playing && !BossUltimate.CutscenePlaying ? 0.55f : 1f;
         float target = MusicGain * currentGain * GameSettings.MusicVolume * duck;
-        // 설정에서 줄이면 페이드를 기다리지 않고 바로 따라감
-        if (current.volume > target && duck == 1f) current.volume = target;
-        current.volume = Mathf.MoveTowards(current.volume, target, step);
-        previous.volume = Mathf.MoveTowards(previous.volume, 0f, step);
+        if (strikeAt >= 0f)
+        {
+            // 무음 대기 → 때가 되면 페이드 없이 바로 시작
+            if (Time.unscaledTime >= strikeAt)
+            {
+                strikeAt = -1f;
+                current.Play();
+                current.volume = target;
+            }
+            else current.volume = 0f;
+        }
+        else
+        {
+            // 설정에서 줄이면 페이드를 기다리지 않고 바로 따라감
+            if (current.volume > target && duck == 1f) current.volume = target;
+            current.volume = Mathf.MoveTowards(current.volume, target, step);
+        }
+        previous.volume = Mathf.MoveTowards(previous.volume, 0f, step * FadeTime / fadeOut);
         if (previous.volume <= 0f && previous.isPlaying) previous.Stop();
     }
 }

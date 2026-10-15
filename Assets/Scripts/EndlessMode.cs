@@ -42,6 +42,23 @@ public class EndlessMode : MonoBehaviour
     public bool FinalPhase => finalStage > 0;
     // 최종 보스(개발자 · 엄마)를 부르기 시작했지만 아직 나오지 않음 — 등장 연출 동안에도 보스 곡을 유지 (MusicManager)
     public bool FinalBossIncoming => finalStage < 3 && ((devSummoned && developer == null && !devDown) || (momSummoned && mom == null && !momDown));
+    // 1.1.2~ 최종 보스 전용 곡 (MusicManager): 0 없음 · 1 개발자 곡 · 2 엄마 곡
+    // 등장 배너 1초 전에 켜져 「흐르던 곡이 끊김 → 무음 → 첫 타격」이 배너와 맞물림. 살아 있는 쪽을 따르고 둘이 함께면 엄마 곡.
+    // 둘 다 쓰러지면(클리어 연출) 마지막 곡을 엔딩이 시작될 때까지 그대로 (엔딩은 MusicManager 가 메뉴 곡으로)
+    int finalMusic;
+    public int FinalBossMusic
+    {
+        get
+        {
+            if (finalMusic == 0) return 0;
+            if (finalStage >= 3) return finalMusic;
+            bool momLive = momSummoned && !momDown && (mom == null || !mom.IsDead);
+            bool devLive = devSummoned && !devDown && (developer == null || !developer.IsDead);
+            if (finalMusic == 2 && momLive) return 2;
+            if (devLive) return 1;
+            return momLive ? 1 : 0;      // 엄마가 불렸지만 아직 신호 전(함께 등장) — 개발자 곡 유지
+        }
+    }
     public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
     // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
     public bool NoMobs => devSummoned;
@@ -165,7 +182,9 @@ public class EndlessMode : MonoBehaviour
         if (finalStage < 2) finalStage = 2;
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(0.5f);
+        finalMusic = Mathf.Max(finalMusic, 1);      // 1.1.2~ 배너 1초 전: 보스 곡이 끊기고 무음 → 배너와 함께 개발자 곡 첫 타격 (MusicManager)
+        yield return new WaitForSeconds(1.0f);
         stages.ShowBanner((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
         Hostile.Play("roar", 1f, 0.45f);
         Hostile.Shake(0.5f);
@@ -183,7 +202,9 @@ public class EndlessMode : MonoBehaviour
         if (together) StartCoroutine(SummonDeveloper());
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
-        yield return new WaitForSeconds(together ? 4.5f : 1f);      // 함께면 개발자가 먼저 내려온 뒤
+        yield return new WaitForSeconds(together ? 3.5f : 0f);      // 함께면 개발자가 먼저 내려온 뒤
+        finalMusic = 2;                                              // 1.1.2~ 배너 1초 전: 엄마 곡 (MusicManager)
+        yield return new WaitForSeconds(1f);
         stages.ShowBanner(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), 4f);
         Hostile.Play("roar", 1f, 0.35f);
         Hostile.Shake(0.7f);
