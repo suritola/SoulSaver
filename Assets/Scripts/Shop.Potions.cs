@@ -133,6 +133,14 @@ public class PotionBuffs : MonoBehaviour
             GameObject go = new GameObject("PotionBuffs", typeof(RectTransform), typeof(TextMeshProUGUI));
             RectTransform r = go.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);
+            // 1.1~ 첫 구매는 상점이 열린 채라 맨 뒤 자식으로 붙어 상점 창 위에 그려졌음 (UI 120% 에서 창 왼쪽과 겹침) → 상점 판보다 앞 순서로
+            Shop shop = Object.FindFirstObjectByType<Shop>();
+            if (shop != null && shop.shopPanel != null)
+            {
+                Transform s = shop.shopPanel.transform;
+                while (s.parent != null && s.parent != canvas.transform) s = s.parent;
+                if (s.parent == canvas.transform) r.SetSiblingIndex(s.GetSiblingIndex());
+            }
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 0.5f);
             r.anchoredPosition = new Vector2(30f, -40f);      // 왼쪽 위 능력 칸이 세 줄로 늘어도 겹치지 않게 조금 아래
             r.sizeDelta = new Vector2(360f, 120f);

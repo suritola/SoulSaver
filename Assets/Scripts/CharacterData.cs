@@ -206,7 +206,10 @@ public static class CharacterData
     public static bool ConditionMet(CharUnlock c) => c == CharUnlock.None || Prefs.GetInt(ConditionKey + (int)c, 0) == 1;
     public static bool ConditionMet(CharacterId id) => ConditionMet(Def(id).condition);
 
-    public static string ConditionText(CharUnlock c) => Prerequisite(c) + c switch
+    public static string ConditionText(CharUnlock c) => ConditionText(c, true);
+
+    // 1.1~ prerequisite = false: 선행 조건(무한 모드 열기)은 빼고 조건만 (캐릭터 카드처럼 좁은 칸)
+    public static string ConditionText(CharUnlock c, bool prerequisite) => (prerequisite ? Prerequisite(c) : "") + c switch
     {
         CharUnlock.Endless10 => Loc.T("무한 모드에서 10분 버티기"),
         CharUnlock.EndlessBosses5 => Loc.T("무한 모드 한 판에서 보스 5마리 처치"),

@@ -17,6 +17,7 @@ public partial class Shop
 
     TextMeshProUGUI coinLabel;
     TextMeshProUGUI brokeLabel;
+    TMP_Text closeLabel;
     float brokeUntil;
 
     // 1.0.4~: 코인이 모자랄 때 누르면 buzz 소리와 「코인이 부족합니다」 (상점이 시간을 멈추므로 실제 시간으로 셈)
@@ -64,7 +65,8 @@ public partial class Shop
         Img(coinBox, UIKit.ButtonSprite, new Color(0.28f, 0.22f, 0.12f), true);
         Icon(coinBox, "Icons/menu_coin", new Vector2(-88f, 0f), 50f);
         coinLabel = (TextMeshProUGUI)UIKit.Text(coinBox, "", 34f, Gold, new Vector2(30f, 0f), new Vector2(170f, 56f), TextAlignmentOptions.Left);
-        UIKit.MakeButton(head, "닫기 [P]", new Vector2(W * 0.5f - 120f, 0f), new Vector2(170f, 64f), ToggleShop, 24f);
+        closeLabel = UIKit.MakeButton(head, "", new Vector2(W * 0.5f - 120f, 0f), new Vector2(170f, 64f), ToggleShop, 24f).GetComponentInChildren<TMP_Text>();
+        RefreshCloseLabel();
         // 1.0.4~: 코인이 모자란데 누르면 잠깐 뜨는 글 (Shop.NotEnoughCoins)
         brokeLabel = (TextMeshProUGUI)UIKit.Text(inner, "", 24f, new Color(1f, 0.48f, 0.43f), new Vector2(250f, H * 0.5f - 138f), new Vector2(460f, 32f));
         brokeLabel.gameObject.SetActive(false);
@@ -126,11 +128,36 @@ public partial class Shop
         potionCost[i] = potionButtons[i].GetComponentInChildren<TextMeshProUGUI>();
     }
 
+    // 1.1~ 강화를 사도 소리 · 반응이 없어 산 건지 헷갈렸음 → 소리 + 카드가 잠깐 커졌다 돌아옴 (상점은 시간을 멈추므로 실제 시간)
+    void Bought(Button button)
+    {
+        Hostile.Play("levelup", 0.5f, 1.15f);
+        if (button != null && button.transform.parent != null && isActiveAndEnabled) StartCoroutine(Pulse(button.transform.parent));
+    }
+
+    System.Collections.IEnumerator Pulse(Transform card)
+    {
+        for (float t = 0f; t < 0.2f && card != null; t += Time.unscaledDeltaTime)
+        {
+            card.localScale = Vector3.one * (1f + 0.05f * Mathf.Sin(t / 0.2f * Mathf.PI));
+            yield return null;
+        }
+        if (card != null) card.localScale = Vector3.one;
+    }
+
+    // 1.1~ 닫기 키 안내: 패드면 B (ESC 와 같은 취소), 아니면 P · 상점을 열 때마다 다시 씀
+    void RefreshCloseLabel()
+    {
+        if (closeLabel != null) closeLabel.text = Loc.T("닫기") + " [" + (GamePad.Active ? "B" : "P") + "]";
+    }
+
     void Section(RectTransform parent, string ko, Vector2 pos)
     {
         TMP_Text t = UIKit.Text(parent, "", 30f, Gold, pos + new Vector2(60f, 0f), new Vector2(240f, 44f), TextAlignmentOptions.Left);
         t.text = "◆ " + Loc.T(ko);
-        RectTransform line = UIKit.Rect("Line", parent, new Vector2(70f, pos.y - 26f), new Vector2(1180f, 3f));
+        // 1.1~ 구분선을 제목 아래(카드 밑에 깔려 토막난 금색 점처럼 보였음) → 제목 오른쪽 같은 줄, 창 안쪽 끝 30 앞까지
+        float lineL = pos.x + 190f, lineR = -pos.x + 52f;
+        RectTransform line = UIKit.Rect("Line", parent, new Vector2((lineL + lineR) * 0.5f, pos.y), new Vector2(lineR - lineL, 3f));
         Img(line, null, new Color(Gold.r, Gold.g, Gold.b, 0.35f), false);
     }
 

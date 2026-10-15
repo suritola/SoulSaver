@@ -27,11 +27,16 @@ public class SkinShopUI : MonoBehaviour
     bool confirm;
     float confirmUntil;
     SpecialFeedback audioFx;
+    Coroutine preview;          // 1.1~ 소리 듣기를 연타하면 미리듣기가 겹쳐 쌓였음 → 하나만
 
     public static void Open(Transform root)
     {
         if (open != null) return;
         RectTransform w = UIKit.Modal(root, "SkinShop", new Vector2(1640f, 960f), out open);
+        // 1.1~ UI 크기 120% 면 캔버스가 1600x900 이라 창(1640x960)의 위아래 · 좌우가 화면 밖으로 잘렸음 → 화면에 맞게 통째로 줄임
+        Rect area = ((RectTransform)open.transform).rect;
+        float fit = Mathf.Min(1f, (area.width - 16f) / 1640f, (area.height - 16f) / 960f);
+        if (fit > 0f && fit < 1f) w.parent.localScale = Vector3.one * fit;
         SkinShopUI ui = open.AddComponent<SkinShopUI>();
         ui.win = w;
         // 1.0.4~: 새 영웅(아직 스킨 없음)을 고른 채 열면 「기본」 한 장만 보였음 → 거너 칸으로 열고 「스킨 준비 중」 안내
@@ -104,6 +109,7 @@ public class SkinShopUI : MonoBehaviour
     {
         foreach (GameObject g in dynamic) if (g != null) Destroy(g);
         dynamic.Clear();
+        StopPreview();          // 1.1~ 다른 카드 · 탭으로 바꾸면 돌던 미리듣기도 멈춤
         anims.Clear();
         pulses.Clear();
         confirm = false;
@@ -144,10 +150,13 @@ public class SkinShopUI : MonoBehaviour
         Image back = UIKit.Rect("Back", t, Vector2.zero, new Vector2(262f, 332f)).gameObject.AddComponent<Image>();
         back.color = new Color(0.08f, 0.06f, 0.11f, 0.97f);
         back.raycastTarget = false;
+        // 1.1~ 등급 띠: 예전엔 같은 색 반투명 띠 위에 같은 색 글자라 희귀 · 영웅이 대비 2~2.5:1 로 흐렸음
+        //   → 띠는 등급색을 어둡게, 글자는 등급색을 조금 밝게 + 굵게 (대비 6:1 이상)
         Image tierBand = UIKit.Rect("Tier", t, new Vector2(0f, 150f), new Vector2(262f, 32f)).gameObject.AddComponent<Image>();
-        tierBand.color = new Color(tc.r, tc.g, tc.b, 0.35f);
+        tierBand.color = new Color(tc.r * 0.22f, tc.g * 0.22f, tc.b * 0.22f, 1f);
         tierBand.raycastTarget = false;
-        TMP_Text tierText = UIKit.Text(t, "", 20f, tc, new Vector2(0f, 150f), new Vector2(250f, 30f));
+        TMP_Text tierText = UIKit.Text(t, "", 20f, Color.Lerp(tc, Color.white, 0.25f), new Vector2(0f, 150f), new Vector2(250f, 30f));
+        tierText.fontStyle = FontStyles.Bold;
         tierText.text = s != null ? Loc.T(SkinData.TierNames[tier]) : Loc.T("기본");
 
         // 미리보기 그림 (캐릭터는 달리는 모습을 되풀이)
@@ -271,7 +280,14 @@ public class SkinShopUI : MonoBehaviour
     void PlayPreview()
     {
         if (selected == null || audioFx == null) return;
-        StartCoroutine(Preview(selected));
+        StopPreview();
+        preview = StartCoroutine(Preview(selected));
+    }
+
+    void StopPreview()
+    {
+        if (preview != null) StopCoroutine(preview);
+        preview = null;
     }
 
     IEnumerator Preview(SkinDef s)

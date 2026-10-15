@@ -11,6 +11,7 @@ public static class CharacterUI
     static RectTransform win;
     static GameObject detail;
     static TMP_Text pointsText;
+    static SpecialFeedback menuFx;      // 1.1~ 메인 메뉴에는 게임의 합성기(SharedFx)가 없어 선택 · 구매 소리가 안 났음 → 창마다 하나
     public static bool IsOpen => open != null;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
@@ -23,6 +24,13 @@ public static class CharacterUI
         rootRef = root;
         win = UIKit.Modal(root, "CharacterPanel", new Vector2(1500f, 880f), out open);
         open.AddComponent<CharacterUIInput>();
+        if (SpecialAbilities.SharedFx == null)
+        {
+            GameObject a = new GameObject("CharacterAudio");
+            a.transform.SetParent(open.transform, false);       // 창을 닫으면 같이 사라짐
+            menuFx = a.AddComponent<SpecialFeedback>();
+            menuFx.Init(UIKit.Font, UIKit.FontMaterial);
+        }
         UIKit.Text(win, "캐릭터", 52f, Gold, new Vector2(0f, 380f), new Vector2(600f, 70f));
         pointsText = UIKit.Text(win, "", 28f, Parch, new Vector2(520f, 380f), new Vector2(420f, 50f), TextAlignmentOptions.Right);
         UIKit.MakeButton(win, "닫기", new Vector2(0f, -385f), new Vector2(240f, 70f), Close, 28f);
@@ -35,6 +43,25 @@ public static class CharacterUI
         if (open != null) Object.Destroy(open);
         open = null;
         detail = null;
+        menuFx = null;
+    }
+
+    // 1.1~ 게임 안이면 게임 합성기, 메인 메뉴면 창의 합성기로
+    static void PlaySound(string sound, float vol, float pitch = 1f)
+    {
+        if (SpecialAbilities.SharedFx != null) Hostile.Play(sound, vol, pitch);
+        else if (menuFx != null) menuFx.Play(sound, vol, pitch);
+    }
+
+    // 1.1~ 잠긴 영웅 실루엣: 예전엔 거의 검정(0.02)이라 어두운 배경과 구분이 안 돼 빈 칸처럼 보임
+    //   → 조금 밝은 회보라 + 밝은 외곽선으로 윤곽이 보이게
+    static void Silhouette(Image img, float edge)
+    {
+        img.color = new Color(0.13f, 0.12f, 0.17f, 1f);
+        Outline o = img.gameObject.AddComponent<Outline>();
+        o.effectColor = new Color(0.78f, 0.72f, 0.92f, 0.8f);
+        o.effectDistance = new Vector2(edge, -edge);
+        o.useGraphicAlpha = true;
     }
 
     static void RefreshPoints() => pointsText.text = Loc.T("보유 포인트: ") + CharacterData.Points.ToString("N0") + " P";
@@ -49,7 +76,7 @@ public static class CharacterUI
         for (int i = 0; i < CharacterData.All.Length; i++)
         {
             CharacterId id = (CharacterId)i;
-            Vector2 pos = new Vector2(-560f + 280f * (i % 5), i < 5 ? 150f : -200f);
+            Vector2 pos = new Vector2(-560f + 280f * (i % 5), i < 5 ? 150f : -190f);     // 1.1~ 아래 줄 -200 → -190 (가운데 카드가 「닫기」 버튼 위를 10px 덮었음)
             cards.Add(Card(id, pos));
         }
     }
@@ -86,7 +113,8 @@ public static class CharacterUI
         img.sprite = Portrait(id);
         img.preserveAspect = true;
         img.raycastTarget = false;
-        img.color = unlocked ? Color.white : new Color(0.02f, 0.02f, 0.03f, 1f);
+        if (unlocked) img.color = Color.white;
+        else Silhouette(img, 2f);
         if (d.body == null && unlocked)
         {
             // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음)
@@ -114,14 +142,16 @@ public static class CharacterUI
             subText.color = CharacterData.Points >= d.price && CharacterData.ConditionMet(id) ? new Color(1f, 0.85f, 0.4f) : Dim;
         }
         // 해제 조건 (1.0.2): 칸 아래쪽에 조건 · 달성하면 초록 체크
+        // 1.1~ 카드에는 조건만 (「먼저 무한 모드 열기 → …」 선행 조건까지 붙으면 10pt 로 줄어 읽기 어려웠음 · 전체 문장은 자세히 창),
+        //   칸 36 높이 · 최소 12pt
         if (!unlocked && d.condition != CharUnlock.None)
         {
             bool met = CharacterData.ConditionMet(id);
-            TMP_Text cond = UIKit.Text(t, "", 15f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, 144f), new Vector2(236f, 30f));
-            cond.text = (met ? "✔ " : "") + CharacterData.ConditionText(d.condition);
+            TMP_Text cond = UIKit.Text(t, "", 15f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, 141f), new Vector2(236f, 36f));
+            cond.text = (met ? "✔ " : "") + CharacterData.ConditionText(d.condition, false);
             cond.enableWordWrapping = true;
             cond.enableAutoSizing = true;
-            cond.fontSizeMin = 10f;
+            cond.fontSizeMin = 12f;
             cond.fontSizeMax = 15f;
         }
         return b.gameObject;
@@ -146,7 +176,8 @@ public static class CharacterUI
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = Portrait(id);
         img.preserveAspect = true;
-        img.color = unlocked ? Color.white : new Color(0.02f, 0.02f, 0.03f, 1f);
+        if (unlocked) img.color = Color.white;
+        else Silhouette(img, 3f);
         if (d.body == null && unlocked)
         {
             RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(88f, -32f), new Vector2(100f, 50f));
@@ -169,10 +200,13 @@ public static class CharacterUI
         }
 
         // 해제 조건 (1.0.2)
+        // 1.1~ 가운데 아래(y -220)에 있어 필살기 설명 줄 위에 겹쳤음 → 왼쪽 그림 아래 (잠긴 영웅은 숙련도 줄이 없어 비어 있음), 여러 줄
         if (!unlocked && d.condition != CharUnlock.None)
         {
             bool met = CharacterData.ConditionMet(id);
-            TMP_Text cond = UIKit.Text(dr, "", 24f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(0f, -220f), new Vector2(1100f, 34f));
+            TMP_Text cond = UIKit.Text(dr, "", 22f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(-470f, -180f), new Vector2(460f, 110f));
+            cond.enableWordWrapping = true;
+            cond.fontSizeMin = 15f;
             cond.text = Loc.T("해제 조건") + " : " + CharacterData.ConditionText(d.condition) + "  " + (met ? Loc.T("(달성)") : Loc.T("(미달성)"));
         }
 
@@ -206,7 +240,7 @@ public static class CharacterUI
             Button sel = UIKit.MakeButton(dr, selected ? "선택됨" : "선택", new Vector2(-140f, -330f), new Vector2(240f, 70f), () =>
             {
                 CharacterData.Selected = id;
-                Hostile.Play("chime", 0.6f, 1.2f);
+                PlaySound("chime", 0.6f, 1.2f);
                 CloseDetail();
                 BuildGrid();
             }, 28f);
@@ -230,7 +264,7 @@ public static class CharacterUI
                 // 1.0.4~: 스킨처럼 두 번 눌러야 구매 (예전엔 캐릭터만 한 번에 결제됨)
                 if (!armed) { armed = true; if (bt != null) bt.text = Loc.T("한 번 더 누르면 구매"); return; }
                 if (!CharacterData.Buy(id)) return;
-                Hostile.Play("levelup", 0.8f);
+                PlaySound("levelup", 0.8f);
                 BuildGrid();
                 ShowDetail(id);
             }, 26f);
