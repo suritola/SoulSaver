@@ -16,8 +16,11 @@ public class ChoiceUI : MonoBehaviour
         public Color color;
         public string icon;             // Icons/choice_<icon> (1.1~ tree_ 로 시작하면 영혼 트리 그림 Icons/<icon>, IconPath)
         public Sprite sprite;           // 1.1~ 그림을 직접 줄 때 (있으면 icon 대신 · 능력치 · 레벨업 카드 아이콘 등)
-        public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; sprite = null; }
-        public Option(string name, string desc, Color color, Sprite sprite) { this.name = name; this.desc = desc; this.color = color; icon = null; this.sprite = sprite; }
+        public int pipLevel, pipMax, pipAdd;    // 1.1.2~ 이름 아래 단계 칸 (LevelPips, pipMax 0 이면 없음)
+        public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; sprite = null; pipLevel = pipMax = pipAdd = 0; }
+        public Option(string name, string desc, Color color, Sprite sprite) { this.name = name; this.desc = desc; this.color = color; icon = null; this.sprite = sprite; pipLevel = pipMax = pipAdd = 0; }
+        // 단계 칸을 붙인 선택지 (now: 지금 단계 · max: 최대 · add: 고르면 차오를 칸)
+        public Option WithPips(int now, int max, int add = 1) { pipLevel = now; pipMax = max; pipAdd = add; return this; }
     }
 
     // 1.1~ 보상마다 다른 그림을 쓰려고 영혼 트리 그림(tree_*)도 받음 (영혼 트리의 축복이 영혼 조각 그림을 같이 쓰던 문제)
@@ -146,7 +149,10 @@ public class ChoiceUI : MonoBehaviour
                 ii.raycastTarget = false;
             }
             UIKit.Text(face, o.name, 38f, o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
-            UIKit.Text(face, o.desc, 26f, Parch, new Vector2(0f, -105f), new Vector2(w - 50f, 160f));
+            // 1.1.2~ 단계 칸이 있으면 이름 바로 아래에 두고 설명을 그만큼 내림 (설명은 UIKit.Text 의 자동 크기라 칸 안에서 줄어듦)
+            bool pips = o.pipMax > 0;
+            if (pips) LevelPips.Create(face, new Vector2(0f, -32f), new Vector2(w - 120f, 16f)).Set(o.pipLevel, o.pipMax, o.pipAdd);
+            UIKit.Text(face, o.desc, 26f, Parch, new Vector2(0f, pips ? -118f : -105f), new Vector2(w - 50f, pips ? 134f : 160f));
             TMP_Text key = UIKit.Text(face, "", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
             key.text = "[" + (i + 1) + "]";
         }
