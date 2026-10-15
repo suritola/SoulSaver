@@ -647,10 +647,14 @@ public class StageManager : MonoBehaviour
             Difficulty cleared = GameMode.Current;
             if (cleared == Difficulty.Easy && RunStats.Seconds <= 1200f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2, 1.0.4~ 15분 → 20분)
             RunSave.Delete();           // 판이 끝났으므로 이어할 판은 지움 (2.1.9)
+            bool weightWasOpen = SoulWeight.Unlocked;
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);
             if (Mastery.OnCleared(CharacterData.Selected))
                 ShowBanner(Loc.T("영웅 숙련도가 올랐다!") + "  " + Mastery.Label(CharacterData.Selected), 4f);
+            // 1.2~ 영혼의 무게: 처음 어려움을 깨면 열림 · 무게를 진 판이면 이 영웅의 가장 무거운 클리어를 새로 적고 다음 무게를 엶
+            string weight = SoulWeight.OnCleared(CharacterData.Selected, cleared, weightWasOpen);
+            if (weight != null) ShowBanner(weight, 4f);
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }

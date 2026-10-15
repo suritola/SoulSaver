@@ -146,7 +146,7 @@ public static class GameMode
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
     static float D(DailyStat s) => DailyChallenge.Mul(s);
-    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul;     // 저주 제단 (1.0.1)
+    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul;     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage);
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];
@@ -157,14 +157,14 @@ public static class GameMode
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
     // 무한 모드는 강도가 오를수록 한 번에 나오는 적도 늘어남
-    public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, MobRamp - 1f) * 4f + (Surge - 1f) * 6f) : 0);     // 최종 국면 최대 +90
+    public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, MobRamp - 1f) * 4f + (Surge - 1f) * 6f) : 0) + SoulWeight.ExtraAlive;     // 최종 국면 최대 +90 · 영혼의 무게 2~ (1.2~, 무한 모드는 0)
     public static float BossHpMul => BossHp[I] * Ramp * Harder * D(DailyStat.BossHp) * Curse.HpMul;
     public static float GaugeMul => Gauge[I] * D(DailyStat.Gauge);
     // 일반 적 한 마리 보상 (처치 수가 늘어난 만큼 줄여 한 판 총량을 맞춤)
     public static float RewardMul => Reward[I] / Kills[I] * D(DailyStat.Reward) * Curse.RewardMul;
     // 보스 · 중간 보스 보상 (처치 수와 상관없이 나오는 수가 정해져 있음)
     public static float FixedRewardMul => Reward[I] / RewardBasis[I] * D(DailyStat.Reward) * Curse.RewardMul;
-    // 1.1~ 포인트 배율 (Point.AddPoint 한 곳에서 곱함): 난이도 × 이번 장 저주
+    // 1.1~ 포인트 배율: 난이도 × 이번 장 저주 (1.2~ 다른 배율과 곱하는 곳은 Point.TotalMul)
     public static float PointMul => PointRate[I] * (Curse.Active ? CursePointRate : 1f);
     public static float PointRateOf(Difficulty d) => PointRate[Mathf.Clamp((int)d, 0, PointRate.Length - 1)];     // 메뉴 난이도 설명용
     // 처치 수가 예전보다 몇 배인지 (떠돌이 상점 간격 등 처치 수로 세는 것을 맞출 때)

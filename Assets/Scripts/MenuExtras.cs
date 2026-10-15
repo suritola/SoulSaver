@@ -270,6 +270,7 @@ public static class MenuExtras
             // 1.0.4~: 난이도도 (이어하면 메뉴에서 고른 난이도가 아니라 저장한 판의 난이도로 함) · 언어를 바꾸면 다시 씀
             System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
+                      + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
                       + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
             label();
             ct.gameObject.AddComponent<LocRefresh>().refresh = label;
@@ -329,6 +330,8 @@ public static class MenuExtras
             b.name = "Difficulty_" + d;
             buttons.Add(b);
         }
+        // 1.2~ 영혼의 무게: 어려움을 클리어하면 잠금 안내 줄 자리(이때는 늘 비어 있음)에 버튼 · 어려움을 고를 때만 보임
+        SoulWeight.InstallMenu(parent, at + new Vector2(0f, -72f));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
     }
@@ -351,6 +354,7 @@ public static class MenuExtras
         string lockText = Demo.On ? "보통 · 어려움 · 무한 모드는 정식판에서 만날 수 있습니다"
                         : !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
                         : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
+                        : SoulWeight.Unlocked && GameMode.Current != Difficulty.Hard ? "weight.menu.hardonly"     // 1.2~ (어려움이면 이 자리에 무게 버튼)
                         : "";
         hint.text = Loc.T(DifficultyDescs[Mathf.Clamp((int)GameMode.Current, 0, DifficultyDescs.Length - 1)]);
         float pointRate = GameMode.PointRateOf(GameMode.Current);      // 1.1~ 포인트 배율 (보통 ×1.3 · 어려움 ×1.5)

@@ -33,7 +33,7 @@ public partial class SpecialAbilities
     int rerollMax, rerolls = 1;
     // 행운 (1.0.2): 높을수록 지금 키우는 레벨업 카드(이미 가진 카드 · 진화 재료)가 더 자주 나옴 (LevelShop.DrawWeight) · 영혼 트리 재물 가지
     public int Luck { get; private set; }
-    public int Rerolls => rerolls;
+    public int Rerolls => SoulWeight.NoReroll ? 0 : rerolls;     // 1.2~ 영혼의 무게 5: 다시 뽑기 없음
     public void SetRerolls(int n) => rerolls = Mathf.Max(0, n);     // 판 중간 저장 (RunSave)
     float riftSeconds, riftEvery, riftReadyAt;
     float novaRadius, novaMul;
@@ -82,7 +82,7 @@ public partial class SpecialAbilities
 
     public bool TryReroll()
     {
-        if (rerolls <= 0) return false;
+        if (rerolls <= 0 || SoulWeight.NoReroll) return false;
         rerolls--;
         Rerolled?.Invoke();
         if (fx != null) fx.Play("shimmer", 0.6f, 1.4f);

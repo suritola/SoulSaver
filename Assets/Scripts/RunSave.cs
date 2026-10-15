@@ -43,6 +43,8 @@ public static class RunSave
         public int eventSeed, eventStage, eventActive, chestLegends, chestCatalysts;
         public List<string> eventPlan = new List<string>();
         public List<string> eventUsed = new List<string>();
+        // 1.2~ 영혼의 무게 (SoulWeight, 0 = 무게 없음 · 옛 저장에는 없어 0)
+        public int weight;
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -172,6 +174,7 @@ public static class RunSave
             shardsSpent = SoulShards.Spent,
             log = new List<string>(log),
             needEvolution = NeedEvolution,
+            weight = SoulWeight.Level,                  // 1.2~
         };
         shop.SaveLevels(out d.earned, out d.pending);
         Coin coin = Object.FindFirstObjectByType<Coin>();
@@ -251,6 +254,8 @@ public static class RunSave
         continuing = true;
         CharacterData.Override = (CharacterId)d.character;
         GameMode.Override = (Difficulty)Mathf.Clamp(d.difficulty, 0, 3);
+        SoulWeight.Override = Mathf.Clamp(d.weight, 0, SoulWeight.Max);      // 1.2~ 저장한 판의 무게로 (메뉴에서 고른 무게는 그대로 둠)
+        SoulWeight.Invalidate();
         SceneManager.LoadScene("GameScene");
         return true;
     }
@@ -261,6 +266,8 @@ public static class RunSave
         continuing = false;
         CharacterData.Override = null;
         GameMode.Override = null;
+        SoulWeight.Override = null;
+        SoulWeight.Invalidate();
     }
 
     // 게임 씬에서 StageManager.Opening 이 부름: 시작 이야기 · 첫 카드 대신 저장한 판을 되살림

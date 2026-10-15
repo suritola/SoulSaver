@@ -33,11 +33,35 @@ public class Point : MonoBehaviour
         UpdatePointText();
     }
 
+    // ================================================================= 포인트 배율 (1.2~ 여러 배율을 이 한 곳에서 곱함)
+    // 지금 곱하는 것: 난이도 × 이번 장 저주 (GameMode.PointMul) × 영혼의 무게 (SoulWeight.PointMul) × 아래 RegisterMul 로 더한 것
+    // 새 배율을 더하려면 (예: 영혼 각인) 판이 시작되기 전 아무 때나 한 번:
+    //     Point.RegisterMul("imprint", () => Imprint.PointMul);
+    //   같은 열쇠로 다시 부르면 덮어씀 · null 을 넘기면 뺌 · 걸리지 않는 판에서는 함수가 1 을 돌려주면 됨
+    static readonly System.Collections.Generic.Dictionary<string, System.Func<float>> extraMuls = new System.Collections.Generic.Dictionary<string, System.Func<float>>();
+
+    public static void RegisterMul(string key, System.Func<float> mul)
+    {
+        if (string.IsNullOrEmpty(key)) return;
+        if (mul == null) extraMuls.Remove(key);
+        else extraMuls[key] = mul;
+    }
+
+    public static float TotalMul
+    {
+        get
+        {
+            float m = GameMode.PointMul * SoulWeight.PointMul;
+            foreach (System.Func<float> f in extraMuls.Values) m *= Mathf.Max(0f, f());
+            return m;
+        }
+    }
+
     public void AddPoint(int point)
     {
-        // 1.1~ 난이도 · 저주 배율 (GameMode.PointMul) — 포인트를 주는 곳(boss.cs · EnermyController.cs)은 이 함수 하나만 부름
+        // 1.1~ 포인트 배율 (1.2~ TotalMul) — 포인트를 주는 곳(boss.cs · EnermyController.cs)은 이 함수 하나만 부름
         // 소수는 확률로 반올림 (11.5 → 50% 확률로 12) · 게임 난수(UnityEngine.Random, 일일 도전 시드)는 건드리지 않게 따로 뽑음
-        float v = point * GameMode.PointMul;
+        float v = point * TotalMul;
         point = Mathf.FloorToInt(v + 0.001f);
         if (v - point > 0.001f && Rng.NextDouble() < v - point) point++;
         points += point;

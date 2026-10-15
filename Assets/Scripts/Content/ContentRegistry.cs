@@ -96,7 +96,7 @@ public static class ContentRegistry
         new RewardDef { id = "node", saveCode = "no", since = "1.1", nameKey = "chest.node.name", rarity = RewardRarity.Rare, icon = "tree_o_root", color = new Color(0.75f, 0.6f, 1f),
                         available = c => c.node != null, describe = c => Loc.T("chest.node.desc").Replace("{0}", c.node.name), apply = ChestRewards.GiveNode },
         new RewardDef { id = "reroll", saveCode = "rr", since = "1.1", nameKey = "chest.reroll.name", rarity = RewardRarity.Rare, weight = 0.8f, icon = "tree_g_fate", color = new Color(0.6f, 0.85f, 1f),
-                        available = c => c.specials != null, describe = c => Loc.T("chest.reroll.desc"), apply = ChestRewards.GiveReroll },
+                        available = c => c.specials != null && !SoulWeight.NoReroll, describe = c => Loc.T("chest.reroll.desc"), apply = ChestRewards.GiveReroll },
         new RewardDef { id = "dormant", saveCode = "do", since = "1.1", nameKey = "chest.dormant.name", rarity = RewardRarity.Rare, weight = 0.9f, icon = "curse", color = new Color(0.85f, 0.5f, 1f),
                         available = c => c.dormantId >= 0, describe = c => Loc.T("chest.dormant.desc").Replace("{0}", c.DormantName), apply = ChestRewards.GiveDormant },
         new RewardDef { id = "essence", saveCode = "es", since = "1.1", nameKey = "chest.essence.name", rarity = RewardRarity.Rare, heal = true, icon = "essence", color = new Color(1f, 0.4f, 0.5f),
