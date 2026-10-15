@@ -162,7 +162,7 @@ public static class ChestRewards
 
         List<string> lines = new List<string>();
         if (evo != null) lines.Add("<color=#FFC94D>" + Loc.T("chest.catalyst.line").Replace("{0}", Loc.T(evo.name)) + "</color>");
-        foreach (RewardDef r in picks) lines.Add("· " + (r.describe != null ? r.describe(c) : r.Name));
+        foreach (RewardDef r in picks) lines.Add("· " + (r.describe != null ? r.describe(c).Replace("\n", " · ") : r.Name));     // 1.1.2~ 잠든 힘의 칸 · 키 줄도 한 줄로
 
         yield return Roulette(picks);
         CodexSeen.Mark("sec.jackpot", Loc.T("chest.jackpot.name"));      // 1.2~ 발견형 도감 비밀

@@ -16,6 +16,7 @@ public partial class SpecialAbilities
         if (KeyBindings.Get(key) == KeyBindings.Get(GameAction.Interact) && ShopStall.PlayerNear) return;
         if (KeyBindings.Down(key))
         {
+            KeyTried(id);           // 1.1.2~ 처음 눌러 봤으면 키 배지 맥동을 멈춤
             float left = CooldownUntil(id) - Time.time;
             if (left > 0f)
             {

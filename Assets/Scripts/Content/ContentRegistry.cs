@@ -134,7 +134,7 @@ public static partial class ContentRegistry
         new RewardDef { id = "reroll", saveCode = "rr", since = "1.1", nameKey = "chest.reroll.name", rarity = RewardRarity.Rare, weight = 0.8f, icon = "tree_g_fate", color = new Color(0.6f, 0.85f, 1f),
                         available = c => c.specials != null && !SoulWeight.NoReroll, describe = c => Loc.T("chest.reroll.desc"), apply = ChestRewards.GiveReroll },
         new RewardDef { id = "dormant", saveCode = "do", since = "1.1", nameKey = "chest.dormant.name", rarity = RewardRarity.Rare, weight = 0.9f, icon = "curse", color = new Color(0.85f, 0.5f, 1f),
-                        available = c => c.dormantId >= 0, describe = c => Loc.T("chest.dormant.desc").Replace("{0}", c.DormantName), apply = ChestRewards.GiveDormant },
+                        available = c => c.dormantId >= 0, describe = c => Loc.T("chest.dormant.desc").Replace("{0}", c.DormantName) + "\n" + c.specials.DormantSlotNote(), apply = ChestRewards.GiveDormant },
         new RewardDef { id = "essence", saveCode = "es", since = "1.1", nameKey = "chest.essence.name", rarity = RewardRarity.Rare, heal = true, icon = "essence", color = new Color(1f, 0.4f, 0.5f),
                         describe = c => Loc.T("chest.essence.desc"), apply = c => ChestRewards.GiveMaxHp(c, 20f) },
         // ---------------- 전설 (룰렛)

@@ -293,7 +293,8 @@ public class MapProps : MonoBehaviour
         for (int i = 0; i < picks.Count; i++)
         {
             SpecialDef def = sa.abilities[picks[i].abilityId];
-            string desc = "<color=#C9A2FF>" + Loc.T("relic.tag") + "</color>\n" + SpecialAbilities.BodyText(picks[i].abilityId, def.description);
+            // 1.1.2~ 어느 칸 · 키로 들어가는지 (몇 번째 유물인지 · 같은 키를 나눠 쓰는지 · 마지막 칸이면 그 뒤엔 어떻게 되는지)
+            string desc = "<color=#C9A2FF>" + sa.RelicSlotNote() + "</color>\n" + SpecialAbilities.BodyText(picks[i].abilityId, def.description);
             options[i] = new ChoiceUI.Option(def.name, desc, SarcoColor, def.icon);
         }
         int chosen = 0;
