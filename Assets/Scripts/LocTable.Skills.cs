@@ -112,7 +112,7 @@ public static partial class LocTable
         A("장전을 시작하면 발밑에 탄피 지뢰를 흩뿌립니다. 적이 밟으면 터집니다. (공격력 80%)", "Starting a reload scatters shell-casing mines at your feet. They blow up when stepped on. (80% attack)", "リロードを始めると足元に薬莢地雷をばらまきます。敵が踏むと爆発します。（攻撃力80%）", "开始装填时在脚下撒出弹壳地雷，敌人踩到就会爆炸。（攻击力80%）");
         A("지뢰 수", "Mines", "地雷の数", "地雷数量");
         A("처치 파편", "Kill Shrapnel", "撃破破片", "击杀破片");
-        A("적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 40%씩)", "Kills burst into shrapnel in every direction. (40% attack each)", "敵を倒すとその場で破片が四方に飛び散ります。（攻撃力40%ずつ）", "击杀敌人时在原地向四周迸出破片。（每片攻击力40%）");
+        A("적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 30%씩)", "Kills burst into shrapnel in every direction. (30% attack each)", "敵を倒すとその場で破片が四方に飛び散ります。（攻撃力30%ずつ）", "击杀敌人时在原地向四周迸出破片。（每片攻击力30%）");
         A("파편 수", "Shards", "破片の数", "破片数量");
         A("총열 과열", "Barrel Heat", "銃身過熱", "枪管过热");
         A("쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", "The longer you keep firing, the hotter the barrel and the harder your bullets hit. Cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり弾が痛くなります。1.5秒休むと冷めます。", "持续射击会让枪管升温、子弹更痛。停火1.5秒后冷却。");
@@ -260,7 +260,7 @@ public static partial class LocTable
 
         // ================================================================= 진화
         A("천둥 장전", "Thunder Reload", "雷鳴リロード", "雷鸣装填");
-        A("장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 150%), 탄피 지뢰가 두 배로 깔립니다.", "Finishing a reload strikes six nearby enemies with lightning (150% attack), and twice as many shell mines are laid.", "リロードを終えると周りの敵6体に雷が落ち（攻撃力150%）、薬莢地雷が2倍敷かれます。", "装填完成时向附近六名敌人降下雷击（攻击力150%），弹壳地雷数量翻倍。");
+        A("장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 120%), 탄피 지뢰가 두 배로 깔립니다.", "Finishing a reload strikes six nearby enemies with lightning (120% attack), and twice as many shell mines are laid.", "リロードを終えると周りの敵6体に雷が落ち（攻撃力120%）、薬莢地雷が2倍敷かれます。", "装填完成时向附近六名敌人降下雷击（攻击力120%），弹壳地雷数量翻倍。");
         A("용광로 탄두", "Furnace Rounds", "溶鉱炉弾頭", "熔炉弹头");
         A("총열이 가장 뜨거울 때 모든 총알이 맞은 자리에서 불꽃 폭발을 일으키고 적을 태웁니다.", "At maximum barrel heat, every bullet erupts in a fiery blast that burns enemies.", "銃身が最も熱いとき、すべての弾が当たった場所で炎の爆発を起こし敵を焼きます。", "枪管最热时，所有子弹在命中处引发火焰爆炸并灼烧敌人。");
         A("파편 폭풍", "Shrapnel Storm", "破片の嵐", "破片风暴");
