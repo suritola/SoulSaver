@@ -131,6 +131,16 @@ public static class RunSave
         if (entry.Length > 0 && (entry[0] == 'e' || entry.StartsWith("aw"))) NeedEvolution = false;
     }
 
+    // 1.1.2~ 평타 고점 하향: 보스 보상 「전설의 힘」 · 보물 상자 「힘」은 지금 공격력에 곱하지 않고 기본 공격력의 pct% 를 더함
+    // (영혼 트리 「무기 화력」과 같은 기준 · 예전엔 곱이라 판 후반에 고를수록 다른 강화까지 불려 고점을 키웠음). 기록은 ap<pct>
+    public static void AddBaseAttack(PlayerController p, float pct, bool record = true)
+    {
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        if (sp != null) sp.GrowAttack(pct / 100f);
+        else if (p != null) p.damage *= 1f + pct / 100f;
+        if (record) Record("ap" + pct.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     // 메인 메뉴에서 저장된 판 정보 보기 (이어하기 버튼 글)
     public static Data Peek()
     {
@@ -310,6 +320,11 @@ public static class RunSave
                     if (aw.Length > 1 && float.TryParse(aw[1], out float awAt)) RunStats.Seconds = awAt;
                     specials.EvolveWeapon(awId);
                     RunStats.Seconds = d.seconds;
+                    continue;
+                }
+                if (twoDigit && e.StartsWith("ap"))
+                {
+                    if (float.TryParse(e.Substring(2), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float ap)) AddBaseAttack(p, ap, false);
                     continue;
                 }
                 if (twoDigit && e.StartsWith("tr"))

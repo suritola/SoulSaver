@@ -193,6 +193,7 @@ public partial class Shop : MonoBehaviour
 
         // 캐릭터 공격력 배율을 지키도록 플레이어 값에 바로 더함 (검사 150% · 도적 70% …)
         playerControllerd.damage += KitDamageStep;
+        damageBuys++;                           // 다음 강화는 덜 오름 (Shop.Kits KitDamageStep)
         damage = playerControllerd.damage;
         damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
         UpdateShopText();

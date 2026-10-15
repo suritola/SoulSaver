@@ -38,10 +38,10 @@ public static partial class LocTable
           "After reaching max level (50 · Endless 80), every third time your XP bar fills (your level doesn't rise) you pick one of three gold-framed Transcendence cards. Ruin: all weapon damage +10% (up to 5) · Charge: ultimate gauge charge speed +25% (up to 3) · Vitals: crit chance +5%, crit damage +20% (up to 4) · Life: max health +25, fully heal (up to 4) · Gale: fire rate +6% (up to 5)",
           "最大レベル（50・エンドレス80）に達した後、経験値バーを3回満タンにするたびに（レベルは上がりません）金枠の超越カード3枚から1枚を選びます。破壊：すべての武器ダメージ +10%（最大5回）・充填：必殺技ゲージの溜まる速さ +25%（最大3回）・急所：会心率 +5%、会心ダメージ +20%（最大4回）・生命：最大体力 +25、体力全回復（最大4回）・疾風：攻撃速度 +6%（最大5回）",
           "达到等级上限（50 · 无尽80）后，每填满经验条三次（等级不会提升），就从三张金框超越卡中选择一张。毁灭：所有武器伤害 +10%（最多5次）· 充能：必杀技槽充能速度 +25%（最多3次）· 要害：暴击率 +5%，暴击伤害 +20%（最多4次）· 生命：最大生命 +25，生命全部恢复（最多4次）· 疾风：攻击速度 +6%（最多5次）");
-        A("모든 캐릭터. 이야기 모드에서 3장 보스를, 무한 모드에서 세 번째 보스를 쓰러뜨리면 2차까지 진화한 무기가 각성합니다. 파괴(모든 공격 피해 +50%) · 질풍(공격 · 발사 간격 -30%) · 영혼(치명타 확률 +20%, 치명타 피해 +80%) 가운데 하나를 고릅니다.",
-          "All characters. Defeat the Chapter 3 boss in Story mode, or the third boss in Endless mode, and your twice-evolved weapon awakens. Choose one: Ruin (all attack damage +50%) · Gale (attack / fire interval -30%) · Soul (crit chance +20%, crit damage +80%).",
-          "全キャラクター。ストーリーモードで3章のボスを、エンドレスモードで3体目のボスを倒すと、2次まで進化した武器が覚醒します。破壊（すべての攻撃ダメージ +50%）・疾風（攻撃・発射間隔 -30%）・魂（会心率 +20%、会心ダメージ +80%）から1つを選びます。",
-          "所有角色。在故事模式击败第3章首领，或在无尽模式击败第三个首领后，完成二次进化的武器将会觉醒。从毁灭（所有攻击伤害 +50%）· 疾风（攻击·射击间隔 -30%）· 灵魂（暴击率 +20%，暴击伤害 +80%）中选择一个。");
+        A("모든 캐릭터. 이야기 모드에서 3장 보스를, 무한 모드에서 세 번째 보스를 쓰러뜨리면 2차까지 진화한 무기가 각성합니다. 파괴(모든 공격 피해 +35%) · 질풍(공격 · 발사 간격 -25%) · 영혼(치명타 확률 +15%, 치명타 피해 +60%) 가운데 하나를 고릅니다.",
+          "All characters. Defeat the Chapter 3 boss in Story mode, or the third boss in Endless mode, and your twice-evolved weapon awakens. Choose one: Ruin (all attack damage +35%) · Gale (attack / fire interval -25%) · Soul (crit chance +15%, crit damage +60%).",
+          "全キャラクター。ストーリーモードで3章のボスを、エンドレスモードで3体目のボスを倒すと、2次まで進化した武器が覚醒します。破壊（すべての攻撃ダメージ +35%）・疾風（攻撃・発射間隔 -25%）・魂（会心率 +15%、会心ダメージ +60%）から1つを選びます。",
+          "所有角色。在故事模式击败第3章首领，或在无尽模式击败第三个首领后，完成二次进化的武器将会觉醒。从毁灭（所有攻击伤害 +35%）· 疾风（攻击·射击间隔 -25%）· 灵魂（暴击率 +15%，暴击伤害 +60%）中选择一个。");
         A("보스를 쓰러뜨리면 무기가 진화합니다. 세 갈래 중 하나를 고르세요. (보통 판에서는 두 번 · 3장 보스는 각성, 되돌릴 수 없음)",
           "Defeating a boss evolves your weapon. Choose one of three paths. (Twice in a normal run · the Chapter 3 boss awakens it, cannot be undone)",
           "ボスを倒すと武器が進化します。3つの道から1つを選びましょう。(通常のプレイでは2回・3章のボスで覚醒、元に戻せません)",

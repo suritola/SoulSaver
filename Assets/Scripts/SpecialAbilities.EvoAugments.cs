@@ -27,8 +27,9 @@ public partial class SpecialAbilities
 
     bool HasAug(int id) => gunEvo1 == id || gunEvo2 == id;
     bool AugMaxed(int id) => gunEvo1 == id && gunEvo2 == id;      // 2차에서 같은 계열 = 극대화
-    // 영혼 트리 숙련 특성 (단계마다 +25%, 쌍발 총구만 +15% — 1.1.2 거너 하향: 거의 늘 쌍발 총구를 골라 숙련까지 다 찍으면 덤 총알이 원래 총알만큼 셌음)
-    static float AugStep(int id) => id == DualId ? 0.15f : 0.25f;
+    // 영혼 트리 숙련 특성 (예전 단계마다 +25%, 쌍발 총구만 +15% — 1.1.2 거너 하향: 거의 늘 쌍발 총구를 골라 숙련까지 다 찍으면 덤 총알이 원래 총알만큼 셌음)
+    // 1.1.2~ 평타 고점 하향: +25% → +15%, 쌍발 총구 +15% → +10% (숙련 세 단계가 진화 능력 위에 곱으로 얹혀 고점을 키웠음)
+    static float AugStep(int id) => id == DualId ? 0.10f : 0.15f;
     float AugPower(int id) => 1f + AugStep(id) * Trait(id);
 
     // ---------------- 이름 · 설명 (한국어 원문, 쓸 때 번역)
@@ -75,7 +76,7 @@ public partial class SpecialAbilities
 
     // 영혼 트리 숙련 가지의 특성 칸 (예전 무기 특성 대신 능력을 강화)
     static string AugTraitName(int id) => Loc.T(GunAugName(id, false)) + " " + Loc.T("강화");
-    static string AugTraitStep(int id) => Loc.T(id == DualId ? "능력 효과 +15%" : "능력 효과 +25%");
+    static string AugTraitStep(int id) => Loc.T(id == DualId ? "능력 효과 +10%" : "능력 효과 +15%");
 
     // ---------------- 총알에 붙는 능력 (ApplyGunCards 에서, 권총 총알마다). main = 쏠 때 나가는 첫 발 (쌍발 · 산탄 덤 총알이 아님)
     float lastMainShot = -99f;
@@ -255,13 +256,13 @@ public partial class SpecialAbilities
         string got;
         switch (n % 3)
         {
-            case 1: AddAttack(0.12f); got = Loc.T("모든 공격 피해 +12%"); break;
+            case 1: AddAttack(0.08f); got = Loc.T("모든 공격 피해 +8%"); break;       // 1.1.2~ 평타 고점 하향: +12% → +8%
             case 2:
                 GrowHp(player, 1.15f);
                 player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * 0.3f);
                 got = Loc.T("최대 체력 +15% · 체력 30% 회복");
                 break;
-            default: AddRate(0.92f); got = Loc.T("모든 무기 발사 간격 -8%"); break;
+            default: AddRate(0.95f); got = Loc.T("모든 무기 발사 간격 -5%"); break;     // -8% → -5%
         }
         if (fx != null) { fx.Play("levelup", 0.7f, 1f); fx.FloatText(player.transform.position, got, new Color(1f, 0.85f, 0.4f), 6f, 0f); }
         Flash(player.transform.position, 6f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.5f);
