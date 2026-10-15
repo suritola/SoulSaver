@@ -338,9 +338,9 @@ public static partial class LocTable
         A("성장: 생명", "Growth: Vitality", "成長：生命", "成长：生命");
         A("성장: 손놀림", "Growth: Dexterity", "成長：手さばき", "成长：手速");
         A("성장: 발걸음", "Growth: Stride", "成長：足取り", "成长：步伐");
-        A("모든 무기 피해가 3% 늘어납니다. (기본 공격력 기준)", "All weapon damage +3%. (Based on base attack)", "すべての武器ダメージが3%増えます。（基本攻撃力基準）", "所有武器伤害提升3%。（以基础攻击力计）");
+        A("모든 무기 피해가 2% 늘어납니다. (기본 공격력 기준)", "All weapon damage +2%. (Based on base attack)", "すべての武器ダメージが2%増えます。（基本攻撃力基準）", "所有武器伤害提升2%。（以基础攻击力计）");
         A("최대 체력이 5 늘어나고 그만큼 회복합니다.", "Max health +5, and heals that much.", "最大体力が5増え、その分回復します。", "最大生命提升5，并回复等量生命。");
-        A("공격 속도가 2% 빨라집니다.", "Fire rate +2%.", "攻撃速度が2%速くなります。", "攻击速度提升2%。");
+        A("공격 속도가 1% 빨라집니다.", "Fire rate +1%.", "攻撃速度が1%速くなります。", "攻击速度提升1%。");
         A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed +1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
         A("상한 없이 계속 쌓입니다", "Stacks without limit", "上限なく積み重なります", "可无限叠加");
         A("최대 레벨(50 · 무한 모드 80) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
@@ -352,10 +352,10 @@ public static partial class LocTable
           "Pick one of three cards or skip on each level-up · Max level 50 · Endless 80 (no level-ups after that) · Max all ingredients to evolve a skill",
           "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・エンドレス80（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
           "每次升级从三张中选一张或跳过 · 等级上限50 · 无尽80（之后不再升级）· 素材全部升满即可技能进化");
-        A("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%",
-          "If you learn every level-up card before max level (50 · Endless 80), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +3% · Vitality: max health +5 · Dexterity: fire rate +2% · Stride: move speed +1%",
-          "最大レベル（50・エンドレス80）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +3%・生命：最大体力 +5・手さばき：攻撃速度 +2%・足取り：移動速度 +1%",
-          "在达到等级上限（50 · 无尽80）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +3% · 生命：最大生命 +5 · 手速：攻击速度 +2% · 步伐：移动速度 +1%");
+        A("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%",
+          "If you learn every level-up card before max level (50 · Endless 80), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: fire rate +1% · Stride: move speed +1%",
+          "最大レベル（50・エンドレス80）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%",
+          "在达到等级上限（50 · 无尽80）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
         A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         A("트리를 모두 배우면 열립니다", "Unlocks once the whole tree is learned", "ツリーをすべて習得すると解放", "学满整棵树后解锁");

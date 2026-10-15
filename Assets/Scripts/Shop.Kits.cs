@@ -18,7 +18,11 @@ public partial class Shop
     CharacterKit Kit => CharacterKit.Instance;
 
     // 공격력 버튼: 캐릭터 기본 배율만큼 오름 (거너 +0.25, 검사 +0.375 …)
-    float KitDamageStep => damageStep * CharacterData.Current.damage;
+    // 1.1.2~ 평타 고점 하향: 살 때마다 오르는 양이 ×0.85 씩 줄어듦 (+25% · +21% · +18% …, 처음의 30% 아래로는 안 내려감)
+    // 예전엔 끝없이 +25% 씩 더해져 코인이 넘치는 판 후반에 공격력이 기본의 몇 배로 불었음
+    const float DamageStepFalloff = 0.85f, DamageStepFloor = 0.3f;
+    int damageBuys;
+    float KitDamageStep => damageStep * CharacterData.Current.damage * Mathf.Max(DamageStepFloor, Mathf.Pow(DamageStepFalloff, damageBuys));
 
     string KitDamageLabel => Char switch
     {

@@ -341,8 +341,7 @@ public static class ChestRewards
     public static void GiveMight(Ctx c)
     {
         if (c.player == null) return;
-        c.player.damage *= 1.05f;
-        RunSave.Record("a5");                                   // RunSave 'a' (공격력 %)
+        RunSave.AddBaseAttack(c.player, 5f);                    // 1.1.2~ 평타 고점 하향: 지금 공격력 ×1.05 → 기본 공격력의 +5% (RunSave 'ap')
     }
 
     public static void GiveCard(Ctx c)
