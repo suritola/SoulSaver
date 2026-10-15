@@ -87,7 +87,7 @@ public class RecommendGlow : MonoBehaviour
             RectTransform pr = pill.rectTransform;
             pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
             pr.pivot = new Vector2(0.5f, 0.5f);
-            pr.anchoredPosition = Vector2.zero;
+            pr.anchoredPosition = new Vector2(0f, 10f);     // 1.1~ 카드 아래 테두리보다 10 위 (아래 확정 안내 줄과 띄움)
             pr.sizeDelta = new Vector2(360f, 58f);       // 1.0.1: 300×44 → 360×58 (더 잘 보이게)
             badge = new GameObject("RecommendBadge", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             RectTransform br = badge.rectTransform;

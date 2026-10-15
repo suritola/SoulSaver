@@ -421,7 +421,8 @@ public class RunStats : MonoBehaviour
         if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;
         t.fontSize = 22f;
         t.enableAutoSizing = true;
-        t.fontSizeMin = 14f;
+        t.fontSizeMin = 12f;         // 1.1~ 14 → 12 + 넘치면 말줄임 (판 후반 카드가 많으면 패널 아래로 글자가 넘쳤음)
+        t.overflowMode = TextOverflowModes.Ellipsis;
         t.fontSizeMax = 22f;
         t.color = new Color(0.93f, 0.9f, 0.84f);
         t.alignment = TextAlignmentOptions.TopLeft;
