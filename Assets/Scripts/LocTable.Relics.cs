@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 번역표 (1.1.1~): 봉인된 석관 · 유물 · 부서지는 맵 물체 · 떨어지는 것 (MapProps · SpecialAbilities.Relics · ContentRegistry)
+// 번역표 (1.2~): 봉인된 석관 · 유물 · 부서지는 맵 물체 · 떨어지는 것 (MapProps · SpecialAbilities.Relics · ContentRegistry)
 // 열쇠는 relic. · prop. · drop. 접두어 (한국어 원문은 0번 칸) · 이미 있는 키는 건드리지 않음 (키 중복 크래시 방지)
 public static partial class LocTable
 {

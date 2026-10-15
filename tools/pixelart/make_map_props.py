@@ -1,4 +1,4 @@
-# 맵 물체 · 석관 · 떨어지는 것 그림 (1.1.1~, MapProps · ContentRegistry.Props · Drops): 32x32, 배경 없이 윤곽선 있는 도트
+# 맵 물체 · 석관 · 떨어지는 것 그림 (1.2~, MapProps · ContentRegistry.Props · Drops): 32x32, 배경 없이 윤곽선 있는 도트
 #   → Assets/Resources/Icons/prop_<이름>.png · drop_<이름>.png
 #   장마다 부서지는 물체: urn 낡은 항아리(지하 묘역) · brazier 꺼진 화로(불타는 지옥) · barrel 나무통(초원) · crystal 영혼 수정(영혼의 심연)
 #   sarcophagus 봉인된 석관 (2장부터, 부수면 유물 2택)

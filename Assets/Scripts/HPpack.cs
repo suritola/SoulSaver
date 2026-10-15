@@ -29,7 +29,7 @@ public class HPpack : MonoBehaviour
         used = true;
         Destroy(pack);
         float before = playerC.PlayerHealth;
-        playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + healAmount);
+        playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + healAmount * SoulWeight.HealMul);     // 1.2~ 영혼의 무게 4: -40%
 
         // 회복한 양을 머리 위에 초록 숫자로 + 짧은 소리
         int healed = Mathf.CeilToInt(playerC.PlayerHealth - before);

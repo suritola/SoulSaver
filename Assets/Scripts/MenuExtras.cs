@@ -159,6 +159,7 @@ public static class MenuExtras
         nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
+        SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
@@ -270,6 +271,7 @@ public static class MenuExtras
             // 1.0.4~: 난이도도 (이어하면 메뉴에서 고른 난이도가 아니라 저장한 판의 난이도로 함) · 언어를 바꾸면 다시 씀
             System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
+                      + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
                       + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
             label();
             ct.gameObject.AddComponent<LocRefresh>().refresh = label;
@@ -329,6 +331,8 @@ public static class MenuExtras
             b.name = "Difficulty_" + d;
             buttons.Add(b);
         }
+        // 1.2~ 영혼의 무게: 어려움을 클리어하면 잠금 안내 줄 자리(이때는 늘 비어 있음)에 버튼 · 어려움을 고를 때만 보임
+        SoulWeight.InstallMenu(parent, at + new Vector2(0f, -72f));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
     }
@@ -351,6 +355,7 @@ public static class MenuExtras
         string lockText = Demo.On ? "보통 · 어려움 · 무한 모드는 정식판에서 만날 수 있습니다"
                         : !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
                         : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
+                        : SoulWeight.Unlocked && GameMode.Current != Difficulty.Hard ? "weight.menu.hardonly"     // 1.2~ (어려움이면 이 자리에 무게 버튼)
                         : "";
         hint.text = Loc.T(DifficultyDescs[Mathf.Clamp((int)GameMode.Current, 0, DifficultyDescs.Length - 1)]);
         float pointRate = GameMode.PointRateOf(GameMode.Current);      // 1.1~ 포인트 배율 (보통 ×1.3 · 어려움 ×1.5)
@@ -893,10 +898,10 @@ public static class SettingsUI
         "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
         "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리", "카드 다시 뽑기",
         "공격", "필살기",           // 1.0.4~ 좌 · 우클릭도 바꿀 수 있음
-        "유물",                     // 1.1.1~ [Q] 유물 칸 (봉인된 석관)
+        "유물",                     // 1.2~ [Q] 유물 칸 (봉인된 석관)
     };
     // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음), 1.0.4~ 공격 · 필살기를 넣어 두 줄 × 5칸
-    // 1.1.1~ 유물(14)을 넣어 두 줄 × 6칸 (줄 간격 78 → 63 · 버튼 높이 60 → 56, 아래 게임패드 안내와 겹치지 않게)
+    // 1.2~ 유물(14)을 넣어 두 줄 × 6칸 (줄 간격 78 → 63 · 버튼 높이 60 → 56, 아래 게임패드 안내와 겹치지 않게)
     static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 14, 12, 13, 9, 10, 11 };
     const int RowsPerColumn = 6;
     const string PadLayoutKo = "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · RT 공격 · LT 필살기 · A 상호작용 · 확정 · B 취소 · X 재장전 · Y 유물\nRB · LB · L3 스킬 1 · 2 · 3 · View 영혼 트리 · Menu 일시정지 · 메뉴에서는 왼쪽 스틱 · 십자키로 커서, A 클릭, 오른쪽 스틱 스크롤";

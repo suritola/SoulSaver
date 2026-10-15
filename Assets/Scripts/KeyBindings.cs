@@ -11,7 +11,7 @@ public static class KeyBindings
     public static readonly GameAction[] All = (GameAction[])System.Enum.GetValues(typeof(GameAction));
 
     // 스킬 3번은 상점 · 레벨업 확정(Space)과 겹치지 않게 C
-    // 1.1.1~ 유물(Relic) = Q · 무기 교체(Swap)는 진화 방식이 된 뒤 쓰지 않아(SpecialAbilities.UsesEvolution) 기본 키를 비움 (Q 를 유물에 줌)
+    // 1.2~ 유물(Relic) = Q · 무기 교체(Swap)는 진화 방식이 된 뒤 쓰지 않아(SpecialAbilities.UsesEvolution) 기본 키를 비움 (Q 를 유물에 줌)
     //   영웅마다 쓰는 키: 공격 좌클릭 · 필살기 우클릭 · 재장전 R · 상호작용 Space · 영혼 트리 T · 잠든 힘 스킬 E F C — Q 는 어느 영웅도 쓰지 않음
     static readonly KeyCode[] Defaults =
     {
@@ -21,7 +21,7 @@ public static class KeyBindings
         KeyCode.Space, KeyCode.T,
         KeyCode.R,          // 다시 뽑기는 레벨업 창(멈춘 동안)에서만 써서 재장전과 같은 R 이어도 겹치지 않음
         KeyCode.Mouse0, KeyCode.Mouse1,     // 1.0.4~ 공격 · 필살기 (좌 · 우클릭)
-        KeyCode.Q,                          // 1.1.1~ 유물
+        KeyCode.Q,                          // 1.2~ 유물
     };
 
     static readonly KeyCode[] Arrows = { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
@@ -34,7 +34,7 @@ public static class KeyBindings
         keys = (KeyCode[])Defaults.Clone();
         for (int i = 0; i < keys.Length; i++)
             keys[i] = (KeyCode)Prefs.GetInt("keys." + (GameAction)i, (int)Defaults[i]);
-        // 1.1.1~ 유물 키를 아직 정하지 않았는데 다른 동작이 이미 Q 를 쓰면 (예전에 스킬 · 재장전을 Q 로 바꿨음) 비어 있는 키로
+        // 1.2~ 유물 키를 아직 정하지 않았는데 다른 동작이 이미 Q 를 쓰면 (예전에 스킬 · 재장전을 Q 로 바꿨음) 비어 있는 키로
         int relic = (int)GameAction.Relic;
         if (!Prefs.HasKey("keys." + GameAction.Relic))
             for (int i = 0; i < keys.Length; i++)
@@ -181,7 +181,7 @@ public static class KeyBindings
         b.Replace("{REROLL}", Name(GameAction.Reroll));       // 1.0.4~
         b.Replace("{ATTACK}", Name(GameAction.Attack));
         b.Replace("{ULT}", Name(GameAction.Ultimate));
-        b.Replace("{RELIC}", Name(GameAction.Relic));         // 1.1.1~
+        b.Replace("{RELIC}", Name(GameAction.Relic));         // 1.2~
         return b.ToString();
     }
 }

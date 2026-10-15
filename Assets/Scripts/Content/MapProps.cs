@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// 부서지는 맵 물체 · 봉인된 석관 (1.1.1~, 로드맵 2-3): ContentRegistry.Props · Drops · Relics
+// 부서지는 맵 물체 · 봉인된 석관 (1.2~, 로드맵 2-3): ContentRegistry.Props · Drops · Relics
 //   장마다 그 장 모양의 물체(항아리 · 화로 · 나무통 · 영혼 수정) 6~8개를 맵 곳곳에 놓음 · 닿으면 부서지며 하나를 떨어뜨림
 //     코인(흩뿌림) · 고기(회복) · 금화(큰 코인 하나) · 자석(바닥 코인을 모두 끌어옴) · 시간 정지(적이 거의 멈춤) · 정화(둘레 잡몹 처치, 보스까지 처치 수 · 이번 판 처치 수에는 0.5배)
 //   2장부터 판마다 60% 확률로 「봉인된 석관」 하나 (화살표로 위치 안내) · 곁에 1.5초 머물면 봉인이 깨지고 유물 2택 → [Q] 유물 칸 (한 판 최대 2개)

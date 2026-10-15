@@ -36,6 +36,9 @@ public static class RunSave
         public int runKills;
         public bool needEvolution;                      // 보스는 쓰러뜨렸지만 무기 진화를 아직 고르지 않음
         public int chapterBonus;                        // 1.1~ 보스가 쓰러지는 연출 중에 나가서 아직 못 받은 장 클리어 보너스 (이어할 때 줌)
+        // 1.2~ 영혼 각인 (SoulBrand): 각인을 쓰는 판인지 · 고른 각인 saveCode 를 쉼표로 (옛 저장은 false · "" → 각인 없는 판 그대로)
+        public bool soulBrandOn;
+        public string soulBrands = "";
         public List<string> log = new List<string>();
         public List<string> dealtKeys = new List<string>();
         public List<float> dealtValues = new List<float>();
@@ -43,11 +46,13 @@ public static class RunSave
         public int eventSeed, eventStage, eventActive, chestLegends, chestCatalysts;
         public List<string> eventPlan = new List<string>();
         public List<string> eventUsed = new List<string>();
-        // 1.1.1~ 맵 물체 · 유물 (MapProps): 장착한 유물(RelicDef.saveCode, 장착 순서) · 맵 물체 시드(0 = 옛 저장 → 새로 뽑음)
+        // 1.2~ 맵 물체 · 유물 (MapProps): 장착한 유물(RelicDef.saveCode, 장착 순서) · 맵 물체 시드(0 = 옛 저장 → 새로 뽑음)
         //   이번 장에 부순 물체 수(propStage = 그 장 스테이지 번호 + 1, 0 = 없음) · 석관을 이미 연 장(Chapters 자리 번호 글자, 예 "13")
         public List<string> relics = new List<string>();
         public int propSeed, propStage, propsBroken;
         public string sarcoOpened = "";
+        // 1.2~ 영혼의 무게 (SoulWeight, 0 = 무게 없음 · 옛 저장에는 없어 0)
+        public int weight;
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -177,6 +182,7 @@ public static class RunSave
             shardsSpent = SoulShards.Spent,
             log = new List<string>(log),
             needEvolution = NeedEvolution,
+            weight = SoulWeight.Level,                  // 1.2~
         };
         shop.SaveLevels(out d.earned, out d.pending);
         Coin coin = Object.FindFirstObjectByType<Coin>();
@@ -256,6 +262,8 @@ public static class RunSave
         continuing = true;
         CharacterData.Override = (CharacterId)d.character;
         GameMode.Override = (Difficulty)Mathf.Clamp(d.difficulty, 0, 3);
+        SoulWeight.Override = Mathf.Clamp(d.weight, 0, SoulWeight.Max);      // 1.2~ 저장한 판의 무게로 (메뉴에서 고른 무게는 그대로 둠)
+        SoulWeight.Invalidate();
         SceneManager.LoadScene("GameScene");
         return true;
     }
@@ -266,6 +274,8 @@ public static class RunSave
         continuing = false;
         CharacterData.Override = null;
         GameMode.Override = null;
+        SoulWeight.Override = null;
+        SoulWeight.Invalidate();
     }
 
     // 게임 씬에서 StageManager.Opening 이 부름: 시작 이야기 · 첫 카드 대신 저장한 판을 되살림

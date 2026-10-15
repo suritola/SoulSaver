@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 유물 칸 (1.1.1~, 로드맵 2-3): 봉인된 석관(MapProps)에서 고른 「잠든 스킬」을 [Q](GameAction.Relic) 하나로 씀 · 한 판 최대 2개
+// 유물 칸 (1.2~, 로드맵 2-3): 봉인된 석관(MapProps)에서 고른 「잠든 스킬」을 [Q](GameAction.Relic) 하나로 씀 · 한 판 최대 2개
 //   스킬 1~3(E · F · C) 칸과 따로 · 쿨타임 1.5배 (StartCooldown) · 두 개면 누를 때 준비된 것부터 (둘 다 쿨타임이면 남은 시간이 짧은 쪽을 알림)
 //   장착하면 equipped 에도 들어가 Has() · 처치 효과 · HUD · 결과 화면 능력 목록이 그대로 따라옴 (skills 목록에는 넣지 않음)
 //   이어하기: RunSave.Data.relics (RelicDef.saveCode, MapProps.SaveRun · RestoreRun)

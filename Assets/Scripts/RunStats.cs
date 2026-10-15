@@ -144,7 +144,7 @@ public class RunStats : MonoBehaviour
     {
         CharacterDef d = CharacterData.Current;
         Character = Loc.T(d.name);
-        Difficulty = GameMode.Name(GameMode.Current);
+        Difficulty = GameMode.Name(GameMode.Current) + SoulWeight.RunTag();      // 1.2~ 「· 무게 3 (최고 4)」
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
         if (StageManager.Instance != null) Stage = Chapters.Number(StageManager.Instance.CurrentStage);
@@ -449,7 +449,7 @@ public static class Hints
     // 설정 「도움말 다시 보기」가 지우는 키 (Hints.Show 를 부르는 곳의 키를 모두 적음)
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
                                              "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
-                                             "relic", "mapprop" };       // 1.1.1~ 유물 · 맵 물체
+                                             "relic", "mapprop" };       // 1.2~ 유물 · 맵 물체
 
     public static void ResetAll()
     {

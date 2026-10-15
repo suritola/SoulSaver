@@ -255,7 +255,7 @@ public class GamePad : MonoBehaviour
         BtnA, BtnView,                  // 상호작용 · 영혼 트리
         BtnX,                           // 다시 뽑기 (레벨업 창에서만, 키보드의 R 처럼 재장전과 같은 버튼)
         KeyCode.None, KeyCode.None,     // 공격 · 필살기 = RT · LT (트리거 축)
-        BtnY,                           // 1.1.1~ 유물 (무기 교체는 쓰지 않아 Y 를 넘겨받음)
+        BtnY,                           // 1.2~ 유물 (무기 교체는 쓰지 않아 Y 를 넘겨받음)
     };
 
     static KeyCode PadButton(GameAction a) => (int)a < Buttons.Length ? Buttons[(int)a] : KeyCode.None;

@@ -25,7 +25,7 @@ public partial class SpecialAbilities
         public readonly List<HudTile> list = new List<HudTile>();
     }
 
-    HudGroup weaponGroup, skillGroup, passiveGroup, relicGroup;     // 1.1.1~ 유물 칸 (스킬 칸 위)
+    HudGroup weaponGroup, skillGroup, passiveGroup, relicGroup;     // 1.2~ 유물 칸 (스킬 칸 위)
     const int PistolRow = -1;
     const int EvoRow = -2;      // 1.0.1: 진화한 무기 칸 (마우스를 올리면 진화 능력 · 덧붙은 궁극기 설명)
     const float TileSize = 58f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
@@ -481,7 +481,7 @@ public partial class SpecialAbilities
             {
                 float left = CooldownUntil(id) - Time.time;
                 state = left > 0f ? Loc.T("쿨타임 ") + left.ToString("0.0") + Loc.T("초") : Loc.T("사용 가능");
-                if (relics.Contains(id)) state = Loc.T("relic.tag") + " · " + state;     // 1.1.1~ 유물 칸 [Q] · 쿨타임 1.5배
+                if (relics.Contains(id)) state = Loc.T("relic.tag") + " · " + state;     // 1.2~ 유물 칸 [Q] · 쿨타임 1.5배
                 if (id == SoulBurstId) state += Loc.T(" · 영혼 ") + souls;
             }
             else state = PassiveState(id, true);

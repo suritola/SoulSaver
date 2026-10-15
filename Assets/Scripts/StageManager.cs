@@ -188,6 +188,7 @@ public class StageManager : MonoBehaviour
         yield return StoryDirector.Intro(endless);
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
         if (endless && !Evo) yield return PickEndlessSpecials();
+        if (!endless) yield return SoulBrand.RunStart();        // 1.2~ 영혼 각인 3택 1 (쉬움을 클리어한 이야기 판만)
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;
         string openBanner;
@@ -412,6 +413,8 @@ public class StageManager : MonoBehaviour
         // 진화 창이 뜨기 전에 이미 문으로 들어갔으면 안내 · 카운트다운은 생략
         if (CurrentStage != fromStage) yield break;
         yield return BossReward();
+        if (CurrentStage != fromStage) yield break;
+        yield return SoulBrand.CatchUp(Chapters.Next(fromStage));      // 1.2~ 2장 · 3장 보스: 영혼 각인 한 장 더
         if (CurrentStage != fromStage) yield break;
         ShowBanner(banner, time);
         StartCoroutine(PortalCountdown(fromStage));
@@ -647,10 +650,14 @@ public class StageManager : MonoBehaviour
             Difficulty cleared = GameMode.Current;
             if (cleared == Difficulty.Easy && RunStats.Seconds <= 1200f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2, 1.0.4~ 15분 → 20분)
             RunSave.Delete();           // 판이 끝났으므로 이어할 판은 지움 (2.1.9)
+            bool weightWasOpen = SoulWeight.Unlocked;
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);
             if (Mastery.OnCleared(CharacterData.Selected))
                 ShowBanner(Loc.T("영웅 숙련도가 올랐다!") + "  " + Mastery.Label(CharacterData.Selected), 4f);
+            // 1.2~ 영혼의 무게: 처음 어려움을 깨면 열림 · 무게를 진 판이면 이 영웅의 가장 무거운 클리어를 새로 적고 다음 무게를 엶
+            string weight = SoulWeight.OnCleared(CharacterData.Selected, cleared, weightWasOpen);
+            if (weight != null) ShowBanner(weight, 4f);
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }
@@ -752,7 +759,8 @@ public class StageManager : MonoBehaviour
         ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
         transitioning = false;
         StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (1.0.1)
-        RunSave.Save();             // 장에 들어갈 때마다 자동 저장 (2.1.9) — 제단을 띄운 뒤 (고르기 전에 나가도 이어할 때 다시, 1.0.4~)
+        StartCoroutine(SoulBrand.CatchUp(stage));       // 1.2~ 보스 각인을 고르기 전에 문에 들어왔으면 지금 (이미 골랐으면 그냥 끝남)
+        RunSave.Save();            // 장에 들어갈 때마다 자동 저장 (2.1.9) — 제단을 띄운 뒤 (고르기 전에 나가도 이어할 때 다시, 1.0.4~)
     }
 
     // 이어하기 (RunSave): 보스를 잡고 문에 들어가기 전에 나갔으면, 문에 들어갈 때 받는 것을 지금 (맵 · 위치는 이미 그 장)
