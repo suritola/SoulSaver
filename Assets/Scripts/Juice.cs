@@ -96,10 +96,10 @@ public static class Juice
     public static void SetFlash(SpriteRenderer sr, bool on)
     {
         if (sr == null) return;
-        if (!on) { sr.SetPropertyBlock(null); return; }       // 블록을 지워 다시 함께 그려지게
+        // 1.1.1: 끌 때 SetPropertyBlock(null) 로 블록을 통째로 지우면 스프라이트 그림(_MainTex)까지 지워져 적이 하얗게 남았음 → 값만 0 으로
         if (flashBlock == null) flashBlock = new MaterialPropertyBlock();
         sr.GetPropertyBlock(flashBlock);
-        flashBlock.SetFloat(FlashId, 1f);
+        flashBlock.SetFloat(FlashId, on ? 1f : 0f);
         sr.SetPropertyBlock(flashBlock);
     }
 
