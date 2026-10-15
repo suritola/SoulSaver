@@ -24,6 +24,7 @@ public partial class SpecialAbilities
         KitOnEquip(id, false);
         RebuildHudRows();
         if (silent) return true;
+        AnnounceKey(id, true);          // 1.1.2~ 「[Q] 이름 / Q 키를 눌러 사용」 + 칸 반짝임 (SpecialAbilities.KeyGuide)
         RelicDef codexRelic = ContentRegistry.RelicByAbility(id);
         if (codexRelic != null) CodexSeen.Mark("relic." + codexRelic.saveCode, Loc.T(abilities[id].name));      // 1.2~ 발견형 도감
         Hints.Show("relic", "유물은 [{RELIC}]로 씁니다. 두 개를 가지면 준비된 것부터 나갑니다. 쿨타임은 1.5배입니다.");
@@ -44,6 +45,7 @@ public partial class SpecialAbilities
         // 상점 제단 앞에서는 상호작용 키가 상점 열기 (유물 키를 같은 키로 바꿨을 때)
         if (KeyBindings.Get(GameAction.Relic) == KeyBindings.Get(GameAction.Interact) && ShopStall.PlayerNear) return;
         if (!KeyBindings.Down(GameAction.Relic)) return;
+        foreach (int r in relics) KeyTried(r);      // 두 유물이 같은 키
         if (player.IsSkillUsing) return;
         int wait = -1;
         float soonest = float.MaxValue;

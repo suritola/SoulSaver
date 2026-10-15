@@ -53,7 +53,7 @@ public partial class LevelShop
                 switch (k)
                 {
                     case 0: return Card("탄피 지뢰", "장전을 시작하면 발밑에 탄피 지뢰를 흩뿌립니다. 적이 밟으면 터집니다. (공격력 80%)", 0, "지뢰 수", "|2|개", "|3|개", "|4|개", "|5|개");
-                    case 1: return Card("처치 파편", "적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 40%씩)", 0, "파편 수", "|3|개", "|4|개", "|5|개", "|6|개");
+                    case 1: return Card("처치 파편", "적을 쓰러뜨리면 그 자리에서 파편이 사방으로 튑니다. (공격력 30%씩)", 0, "파편 수", "|3|개", "|4|개", "|5|개", "|6|개");
                     case 2: return Card("총열 과열", "쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", 0, "최대 피해", "|+20%|", "|+30%|", "|+40%|", "|+50%|");
                     case 3: return Card("영혼 탄환", "필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", 0, "영혼탄 피해", "|+25%|", "|+40%|", "|+55%|", "|+70%|");
                     case 4: return Card("섬광 장전", "장전을 마치는 순간 섬광이 터져 주변 적을 기절시킵니다.", 0, "기절 시간", "|0.6|초", "|0.9|초", "|1.2|초", "|1.5|초");
@@ -146,7 +146,7 @@ public partial class LevelShop
     {
         new[]   // 거너
         {
-            Evo("ge.thunder", "천둥 장전", "장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 150%), 탄피 지뢰가 두 배로 깔립니다.", 170, ExtraBId, S(4), S(0)),
+            Evo("ge.thunder", "천둥 장전", "장전을 마칠 때 주변 적 여섯에게 번개가 떨어지고 (공격력 120%), 탄피 지뢰가 두 배로 깔립니다.", 170, ExtraBId, S(4), S(0)),
             Evo("ge.furnace", "용광로 탄두", "총열이 가장 뜨거울 때 모든 총알이 맞은 자리에서 불꽃 폭발을 일으키고 적을 태웁니다.", 171, MultiId, KnockId, S(2)),
             Evo("ge.storm", "파편 폭풍", "파편이 두 배로 튀고, 파편이 맞힌 적에게서 한 번 더 가까운 적에게 튕깁니다.", 172, PierceId, S(1)),
             Evo("ge.seeker", "영혼 추적자", "영혼탄이 적을 쫓아가고, 맞힌 적에게서 영혼 구슬이 튀어나와 가까운 적을 덮칩니다.", 173, GlareId, S(3)),
@@ -156,9 +156,9 @@ public partial class LevelShop
         },
         new[]   // 검사
         {
-            Evo("se.counter", "완벽한 반격", "맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 250%)", 177, KnockId, S(0), ExtraAId),
+            Evo("se.counter", "완벽한 반격", "맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 300%)", 177, KnockId, S(0), ExtraAId),
             Evo("se.trail", "천검 궤적", "칼날 잔상이 사라질 때 그 자리에서 검기가 사방으로 날아갑니다.", 178, PierceId, S(1)),
-            Evo("se.blood", "피의 성채", "보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 200%)", 179, MultiId, S(2)),
+            Evo("se.blood", "피의 성채", "보호막 최대치가 1.5배가 되고, 보호막이 깨지는 순간 피의 파동이 터집니다. (공격력 250%)", 179, MultiId, S(2)),
             Evo("se.eye", "폭풍의 눈", "필살기 뒤 3초 동안 소용돌이가 주변 적을 빨아들이며 계속 벱니다.", 180, GlareId, S(3), S(4)),
             Evo("se.dance", "광검무", "검무가 최대 중첩일 때 모든 베기가 강한 일격(두 배 피해 · 더 멀리)이 됩니다.", 181, ExtraBId, S(5)),
             Evo("se.giant", "거인 처단", "보스는 두 번만 베어도 균열이 터지고, 균열이 주변 적에게도 퍼집니다.", 182, S(6), S(7)),
@@ -171,7 +171,7 @@ public partial class LevelShop
             Evo("re.executioner", "처형자의 길", "급습 시간 동안 표창을 던질 때마다 모든 적을 꿰뚫는 그림자 표창이 함께 날아가고, 묶인 적이 쓰러지면 급습 시간이 다시 채워집니다.", 186, ExtraAId, S(3), S(8)),
             Evo("re.return", "귀환하는 칼날", "되돌아오는 표창이 두 개가 되고, 되돌아올 때마다 탄창에 한 발이 돌아옵니다.", 187, ExtraBId, S(4)),
             Evo("re.road", "칼날 폭풍길", "칼날 자국에서 표창이 계속 솟구쳐 가까운 적에게 날아갑니다.", 188, GlareId, S(5)),
-            Evo("re.acrobat", "칼날 곡예", "던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 150%)", 189, PierceId, S(6)),
+            Evo("re.acrobat", "칼날 곡예", "던지기 연습이 최대 중첩일 때 맞힌 적 둘레로 칼날 고리가 터집니다. (공격력 200%)", 189, PierceId, S(6)),
             Evo("re.peak", "사냥의 절정", "필살기 게이지가 가득 찬 동안이나 필살기 중에 적을 쓰러뜨리면 그 자리에 표창 비가 내립니다.", 190, HungerId, S(7), S(9)),
         },
         new[]   // 궁수
@@ -347,6 +347,8 @@ public partial class LevelShop
     // ================================================================= 진화 확인
     readonly HashSet<string> evolved = new HashSet<string>();
     public bool IsEvolved(string key) => evolved.Contains(key);
+    // 1.1.2~ 이번 판에 진화한 순서 · 플레이 시각 (결과 화면 · balance_log 의 skill_evos)
+    public readonly List<KeyValuePair<SkillEvo, float>> EvoLog = new List<KeyValuePair<SkillEvo, float>>();
     List<SkillEvo> myEvos;
     public List<SkillEvo> MyEvos => myEvos ??= EvosFor(CharacterData.Selected);
 
@@ -360,6 +362,7 @@ public partial class LevelShop
             foreach (int p in e.parts) if (!Maxed(p)) { all = false; break; }
             if (!all) continue;
             evolved.Add(e.key);
+            EvoLog.Add(new KeyValuePair<SkillEvo, float>(e, RunStats.Seconds));
             EvolveAchievements(e);
             SignatureSkills.Ensure()?.Refresh(this);
             if (abilityHUD != null) abilityHUD.Merge(e.parts, e.Id);
@@ -458,10 +461,67 @@ public partial class LevelShop
         return null;
     }
 
+    // ================================================================= 진화 강화 (1.1.2~): 진화하면 재료 고유 스킬의 피해가 크게 오름
+    // 「진화했는데 별로 안 달라 보인다」 → 새 효과만 더해지던 진화 중 위력 상승이 작던 것(약 1.2 ~ 1.5배)에 재료 스킬 피해 배율을 줌
+    // 이미 두 배 · 세 배로 늘어나는 진화(파편 · 지뢰 · 유성 · 등고선 · 톱니 잔상 …)와 거너(방금 하향)는 배율 없음
+    // 값: (배율, 피해가 오르는 고유 스킬 카드 번호) — SignatureSkills.P(key) 가 읽음
+    static readonly Dictionary<string, (float mul, int[] parts)> EvoPowTable = new Dictionary<string, (float, int[])>
+    {
+        { "se.trail", (1.6f, new[] { S(1) }) },         // 검의 궤적
+        { "se.giant", (1.5f, new[] { S(6) }) },         // 균열
+        { "se.vortex", (1.4f, new[] { S(8) }) },        // 잔향 베기
+        { "re.sea", (1.5f, new[] { S(2) }) },           // 출혈 폭발
+        { "re.road", (1.6f, new[] { S(5) }) },          // 궤적 칼날
+        { "re.peak", (1.5f, new[] { S(7), S(9) }) },    // 넘치는 기세 · 빈 주머니의 비
+        { "ae.master", (1.8f, new[] { S(7) }) },        // 매복 덫
+        { "ae.forest", (1.7f, new[] { S(2) }) },        // 가시 씨앗
+        { "ae.echo", (1.25f, new[] { S(3) }) },         // 울림 화살촉 (울림이 두 번이라 조금만)
+        { "le.swamp", (1.6f, new[] { S(0) }) },         // 인화성 기체
+        { "le.frost", (1.6f, new[] { S(1) }) },         // 서리 결정
+        { "le.collapse", (1.5f, new[] { S(2) }) },      // 촉매 반응
+        { "le.glass", (1.6f, new[] { S(5) }) },         // 유리 비
+        { "le.march", (1.6f, new[] { S(8) }) },         // 연소 흔적
+        { "ke.blot", (1.5f, new[] { S(9) }) },          // 잉크 폭풍
+        { "pe.reply", (1.5f, new[] { S(7) }) },         // 익일 배송
+        { "pe.flyers", (1.6f, new[] { S(9) }) },        // 광고 전단
+        { "he.banshee", (1.6f, new[] { S(1) }) },       // 곡소리
+    };
+
+    public static float EvoPowMul(SkillEvo e) => e != null && EvoPowTable.TryGetValue(e.key, out var v) ? v.mul : 1f;
+    public static int[] EvoPowParts(SkillEvo e) => e != null && EvoPowTable.TryGetValue(e.key, out var v) ? v.parts : System.Array.Empty<int>();
+
+    // 「무엇이 좋아졌나」 한 줄: 「검의 궤적 피해 ×1.6」 (배율이 없는 진화는 빈 글)
+    public static string EvoPowerLine(SkillEvo e, CharacterId who)
+    {
+        float mul = EvoPowMul(e);
+        if (mul <= 1.001f) return "";
+        List<string> names = new List<string>();
+        foreach (int p in EvoPowParts(e)) names.Add(CardName(who, p));
+        return Loc.T("{0} 피해 ×{1}").Replace("{0}", string.Join(" · ", names)).Replace("{1}", mul.ToString("0.0#"));
+    }
+
+    // 재료 한 줄: 이름 · Lv · 최대 단계 수치 · 진화 뒤에도 이어지는지
+    // 진화는 재료의 효과를 없애지 않음 (SignatureSkills · CharacterKit 은 진화 뒤에도 재료 단계를 그대로 읽음) → 모두 「이어짐」, 피해 배율을 받는 재료는 「진화로 강화되어 이어짐」
+    static string PartLine(SkillEvo e, CharacterId who, int id)
+    {
+        int max = MaxLevelOf(who, id);
+        string s = "· " + CardName(who, id) + (max > 0 ? " <color=#A89C86>Lv " + max + "</color>" : "");
+        KitCard c = KitCardOf(who, id);
+        if (c != null && c.max > 0) s += "  <color=#F5D478>" + Loc.T(c.stat) + " " + Val(c.values[c.max - 1]) + "</color>";
+        bool boosted = System.Array.IndexOf(EvoPowParts(e), id) >= 0;
+        s += boosted ? "  <color=#9CFF9C>" + Loc.T("진화로 강화되어 이어짐") + " (×" + EvoPowMul(e).ToString("0.0#") + ")</color>"
+                     : "  <color=#9CFF9C>" + Loc.T("이어짐") + "</color>";
+        return s;
+    }
+
+    // 진화 스킬 설명 (HUD 칸 · 레벨업 카드 진화 띠 · 도감): 새 능력 + 진화 강화 + 재료 스킬의 능력 (1.1.2~)
     public static string EvoTooltip(SkillEvo e, CharacterId who)
     {
-        List<string> names = new List<string>();
-        foreach (int p in e.parts) names.Add(CardName(who, p));
-        return Loc.T(e.desc) + "\n<color=#C9A0FF>" + Loc.T("재료") + "  " + string.Join(" + ", names) + "</color>";
+        string s = Loc.T(e.desc);
+        string pow = EvoPowerLine(e, who);
+        if (pow.Length > 0) s += "\n<color=#FFD966>" + Loc.T("진화 강화") + "  " + pow + "</color>";
+        s += "\n\n<color=#C9A0FF>" + Loc.T("재료 스킬") + "</color>  <size=80%><color=#A89C86>" + Loc.T("진화 뒤에도 효과가 그대로 이어집니다.") + "</color></size>";
+        foreach (int p in e.parts) s += "\n<size=88%>" + PartLine(e, who, p) + "</size>";
+        return s;
     }
 }

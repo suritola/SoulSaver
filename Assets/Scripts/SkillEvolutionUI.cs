@@ -59,14 +59,17 @@ public class SkillEvolutionUI : MonoBehaviour
         float before = Time.timeScale;
         Time.timeScale = 0f;
         glow = SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.glowSprite : null;
+        LevelShop.SkillEvo last = null;
         while (queue.Count > 0)
         {
             var next = queue.Dequeue();
+            last = next.evo;
             yield return Play(next.evo, next.who);
         }
         // 다른 창(레벨업 · 일시정지)이 시간을 멈춰 두지 않았다면 되돌림
         Time.timeScale = ESCmenu.IsOpen ? 0f : (before > 0f ? before : 1f);
         Open = false;
+        SignatureSkills.EvolvedMoment(last);       // 1.1.2~ 게임으로 돌아온 순간 슬로모션 · 몸 둘레 진화 장식 · 「진화!」
         Destroy(gameObject);
     }
 
@@ -177,13 +180,21 @@ public class SkillEvolutionUI : MonoBehaviour
         TMP_Text name = UIKit.Text(root, "", 58f, Gold, new Vector2(0f, -100f), new Vector2(1400f, 80f));
         name.text = Loc.T(e.name);
         name.fontStyle = FontStyles.Bold;
-        TMP_Text recipe = UIKit.Text(root, "", 24f, Soul, new Vector2(0f, -158f), new Vector2(1400f, 36f));
+        TMP_Text recipe = UIKit.Text(root, "", 24f, Soul, new Vector2(0f, -150f), new Vector2(1400f, 36f));
         List<string> rn = new List<string>();
         foreach (int p in e.parts) rn.Add(LevelShop.CardName(who, p));
-        recipe.text = string.Join("  +  ", rn);
-        TMP_Text desc = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, -240f), new Vector2(1100f, 120f), TextAlignmentOptions.Top);
+        recipe.text = string.Join("  +  ", rn) + "  <color=#F5D478>▶  " + Loc.T(e.name) + "</color>";       // 1.1.2~ 진화 전 → 진화 후
+        // 1.1.2~ 무엇이 좋아졌나: 「검의 궤적 피해 ×1.6」 (배율이 없는 진화는 새 능력 설명만) + 재료 효과는 그대로 이어짐
+        string pow = LevelShop.EvoPowerLine(e, who);
+        TMP_Text gain = UIKit.Text(root, "", 32f, new Color(1f, 0.85f, 0.4f), new Vector2(0f, -196f), new Vector2(1400f, 44f));
+        gain.text = (pow.Length > 0 ? "▲ " + pow + "   " : "") + "<size=80%><color=#9CFF9C>" + Loc.T("재료 스킬 효과는 그대로 이어집니다") + "</color></size>";
+        gain.fontStyle = FontStyles.Bold;
+        gain.enableAutoSizing = true;
+        gain.fontSizeMin = 18f;
+        gain.fontSizeMax = 32f;
+        TMP_Text desc = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, -280f), new Vector2(1100f, 120f), TextAlignmentOptions.Top);
         desc.text = Loc.T(e.desc);
-        TMP_Text hint = UIKit.Text(root, "", 24f, new Color(0.65f, 0.6f, 0.7f), new Vector2(0f, -380f), new Vector2(900f, 36f));
+        TMP_Text hint = UIKit.Text(root, "", 24f, new Color(0.65f, 0.6f, 0.7f), new Vector2(0f, -400f), new Vector2(900f, 36f));
         hint.text = Loc.T("클릭하거나 [") + KeyBindings.Name(GameAction.Interact) + Loc.T("] 를 눌러 계속");
 
         dim.color = new Color(0.03f, 0.01f, 0.06f, 0.9f);           // 1.0.4~ 건너뛰어도 끝 모습으로
@@ -195,7 +206,8 @@ public class SkillEvolutionUI : MonoBehaviour
             flash.color = new Color(1f, 0.95f, 1f, (1f - k) * FlashMul);
             icon.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.6f, 1f, EaseOut(k));
             name.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.8f, 1f, EaseOut(k));
-            name.alpha = desc.alpha = recipe.alpha = k;
+            name.alpha = desc.alpha = recipe.alpha = gain.alpha = k;
+            gain.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.6f, 1f, EaseOut(k));
             ring.color = new Color(Gold.r, Gold.g, Gold.b, 0.7f * (1f - k));
             ring.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(200f, 1400f, k);
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(300f, 1100f, k);
@@ -204,7 +216,8 @@ public class SkillEvolutionUI : MonoBehaviour
         flash.color = Color.clear;
         icon.rectTransform.localScale = Vector3.one;                  // 1.0.4~ 건너뛰어도 끝 모습으로
         name.rectTransform.localScale = Vector3.one;
-        name.alpha = desc.alpha = recipe.alpha = 1f;
+        name.alpha = desc.alpha = recipe.alpha = gain.alpha = 1f;
+        gain.rectTransform.localScale = Vector3.one;
         ring.color = Color.clear;
         burst.rectTransform.sizeDelta = Vector2.one * 1100f;
         Button closer = dim.gameObject.AddComponent<Button>();
@@ -222,6 +235,7 @@ public class SkillEvolutionUI : MonoBehaviour
             burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Time.unscaledTime * 15f);
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.25f + 0.1f * pulse);
             hint.alpha = 0.5f + 0.5f * pulse;
+            gain.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, 0.35f * pulse);
             if (Random.value < 0.15f) Spark(new Vector2(0f, 90f), Random.insideUnitCircle.normalized * Random.Range(150f, 400f), 0.7f);
             yield return null;
         }

@@ -56,7 +56,7 @@ public partial class SignatureSkills
         Transform t = Specials.NearestEnemy(player.transform.position, 10f);
         if (t == null) return;
         Vector3 from = t.position + (Vector3)(Random.insideUnitCircle.normalized * 2f);
-        Shot(from, ((Vector2)(t.position - from)).normalized, Atk * 0.5f, 1, 30f, 6f, "fx_shuriken", 0.7f, Tint("t.cog", ClockBrass), true);
+        Shot(from, ((Vector2)(t.position - from)).normalized, Atk * 0.7f, 1, 30f, 6f, "fx_shuriken", 0.9f, Tint("t.cog", ClockBrass), true);       // 1.1.2~ 50 → 70%
     }
 
     void OnBigGear(Vector3 p)
@@ -70,6 +70,7 @@ public partial class SignatureSkills
         // 대종: 둘레 모든 적이 0.5초 멈춤
         if (E("te.chime"))
         {
+            using var tier = Fx.Tier(3);
             Circle(p, 14f, 0f, 0f, c => Stun(c.gameObject, 0.5f));
             ShockRing.Spawn(p, 1f, 14f, 0.5f, new Color(ClockBrass.r, ClockBrass.g, ClockBrass.b, 0.8f), 0.3f);
             Flair(null, p, 6f, ClockBrass);

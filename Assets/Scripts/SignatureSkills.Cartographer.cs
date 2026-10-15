@@ -91,9 +91,12 @@ public partial class SignatureSkills
         for (int i = 0; i < rings; i++)
         {
             float rr = r * (1f + 0.45f * i) * Fs("c.contour");
-            Circle(c, rr, dmg, 1.5f);
-            ShockRing.Spawn(c, rr * 0.6f, rr, 0.35f, Tint("c.contour", MapInk), 0.2f);
-            Flair(i == rings - 1 ? "c.contour" : null, c, rr * 0.6f, MapInk);
+            using (EvoFx("c.contour"))          // 기다리기(yield) 전에 단계를 되돌림
+            {
+                Circle(c, rr, dmg, 1.5f);
+                ShockRing.Spawn(c, rr * 0.6f, rr, 0.35f, Tint("c.contour", MapInk), 0.2f);
+                Flair(i == rings - 1 ? "c.contour" : null, c, rr * 0.6f, MapInk);
+            }
             Hostile.Play("thump", 0.4f, 1.2f + 0.15f * i);
             yield return new WaitForSeconds(0.25f);
         }
@@ -106,6 +109,7 @@ public partial class SignatureSkills
             yield return new WaitForSeconds(0.3f);
             foreach (Collider2D col in inside)
                 if (col != null) Deal(col.gameObject, Atk * 1.3f, (col.transform.position - c).normalized, 0.5f);
+            using var tier = Fx.Tier(3);
             Fx.Spawn("fx_shock", c, r * 2.4f, new Color(MapGold.r, MapGold.g, MapGold.b, 0.7f), 20f);
         }
         Circle(c, r * 1.6f, 0f, 0f, col => Mark(col.gameObject, 4f, 1.2f));
@@ -133,7 +137,8 @@ public partial class SignatureSkills
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e == null || !e.IsDead) continue;
                 Vector3 p = c.transform.position;
-                Circle(p, 2.2f * Fs("c.inkstorm"), Atk * V(L("c.inkstorm"), 0.5f, 0.2f), 1f);
+                using var tier = EvoFx("c.inkstorm");
+                Circle(p, 2.2f * Fs("c.inkstorm"), Atk * V(L("c.inkstorm"), 0.5f, 0.2f) * P("c.inkstorm"), 1f);      // 1.1.2~ 먹물 홍수: ×1.5
                 Fx.Spawn("fx_puddle", p, 3.5f * Fs("c.inkstorm"), Tint("c.inkstorm", new Color(0.2f, 0.28f, 0.8f, 0.9f)), 18f);
                 if (E("ke.blot") && Sp != null) Sp.SpawnZone(p, 1.4f, 2.5f, Atk * 0.25f, new Color(0.2f, 0.3f, 0.85f, 0.55f));
             }

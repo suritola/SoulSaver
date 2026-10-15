@@ -10,6 +10,8 @@ public partial class SignatureSkills
     static readonly Color Brass = new Color(1f, 0.82f, 0.4f);
     static readonly Color SoulBlue = new Color(0.55f, 0.95f, 1f);
     const int HeatMax = 10;
+    // 처치 파편 한 개 피해 (파편 폭풍의 튕김도): 공격력 40% → 30% (1.1.2 거너 하향, 처치 수만큼 늘어 무한 모드에서 고유 스킬 피해가 너무 컸음)
+    const float ShrapnelRate = 0.3f;
 
     int heat;
     float lastShot;
@@ -53,6 +55,7 @@ public partial class SignatureSkills
         {
             if (Inside(zone).Count == 0) return;
             Vector3 p = zone.transform.position;
+            using var tier = EvoFx("g.mine");       // 1.1.2~ 진화한 지뢰는 가장 화려한 폭발 그림
             Circle(p, 2f * (Big("g.mine") ? 1.7f : 1f), Atk * 0.8f, 1f);      // 판정 범위는 이펙트 배율(Fs)과 따로 (2.1.8)
             Fx.Spawn("fx_explosion", p, 3.6f * Fs("g.mine"), Color.white, 20f);
             Flair("g.mine", p, 3f, Brass);
@@ -70,6 +73,7 @@ public partial class SignatureSkills
         int f = L("g.flash");
         if (f > 0)
         {
+            using var tier = EvoFx("g.flash");
             Circle(p, 5f, 0f, 0f, c => Stun(c.gameObject, V(f, 0.6f, 0.3f)));
             Fx.Spawn("fx_shock", p, 10f * Fs("g.flash"), new Color(1f, 1f, 0.85f, 0.9f), 24f);
             Fx.Spawn("fx_sparkle", p, 4f * Fs("g.flash"), Color.white, 20f);
@@ -78,11 +82,12 @@ public partial class SignatureSkills
         }
         if (E("ge.thunder"))
         {
+            using var tier = Fx.Tier(3);
             foreach (Transform t in Nearest(p, 9f, 6))
             {
                 Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 2.4f, SoulBlue, 0.3f);
                 Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 1.1f, Color.white, 0.25f);
-                Deal(t.gameObject, Atk * 1.5f, Vector3.zero, 0f);
+                Deal(t.gameObject, Atk * 1.2f, Vector3.zero, 0f);       // 1.1.2: 150% → 120% (거너 하향)
                 Fx.Spawn("fx_shock", t.position, 4.6f, SoulBlue, 24f);
                 Flair(null, t.position, 2.6f, SoulBlue);
             }
@@ -116,6 +121,7 @@ public partial class SignatureSkills
             b.onHitEnemy += (bullet, col) =>
             {
                 Vector3 p = col.transform.position;
+                using var tier = Fx.Tier(3);
                 Circle(p, 1.7f, Atk * 0.5f, 0.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));
                 Fx.Spawn("fx_explosion", p, 5.2f, new Color(1f, 0.6f, 0.3f), 22f);
                 Fx.Spawn("fx_firepillar", p + Vector3.up * 1f, 3f, Color.white, 22f);
@@ -137,7 +143,8 @@ public partial class SignatureSkills
                     List<Transform> near = Nearest(col.transform.position, 10f, 1, col.gameObject);
                     if (near.Count == 0) return;
                     Vector2 d = ((Vector2)(near[0].position - col.transform.position)).normalized;
-                    Bullet orb = Shot(col.transform.position, d, Atk * 0.6f, 1, 22f, 12f, "fx_orb", 1.5f, SoulBlue);
+                    using var tier = Fx.Tier(3);
+                    Bullet orb = Shot(col.transform.position, d, Atk * 0.75f, 1, 22f, 12f, "fx_orb", 1.8f, SoulBlue);       // 1.1.2~ 60 → 75% (거너는 조금만) · 구슬 더 크게
                     if (orb != null) orb.gameObject.AddComponent<Homing>().turnSpeed = 720f;
                 };
             }
@@ -190,6 +197,7 @@ public partial class SignatureSkills
         }
         if (E("ge.thunderback"))
         {
+            using var tier = Fx.Tier(3);
             Circle(p, 6f, Atk * 2f, 2f, col => Stun(col.gameObject, 0.8f));
             for (int i = 0; i < 10; i++)
             {
@@ -213,11 +221,12 @@ public partial class SignatureSkills
             n = Mathf.Min(n, fragBudget);
             fragBudget -= n;
             float off = Random.Range(0f, 360f);
+            using var tier = EvoFx("g.shrapnel");
             Flair("g.shrapnel", pos, 2.4f, Brass);
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, off + i * 360f / Mathf.Max(1, n)) * Vector2.right;
-                Bullet b = Shot(pos, d, Atk * 0.4f, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Tint("g.shrapnel", Brass));
+                Bullet b = Shot(pos, d, Atk * ShrapnelRate, 1, 24f, 6f, "fx_spark", 0.7f * Fs("g.shrapnel"), Tint("g.shrapnel", Brass));
                 if (b != null && E("ge.storm"))
                 {
                     bool bounced = false;
@@ -227,7 +236,7 @@ public partial class SignatureSkills
                         bounced = true;
                         List<Transform> near = Nearest(col.transform.position, 8f, 1, col.gameObject);
                         if (near.Count == 0) return;
-                        Shot(col.transform.position, ((Vector2)(near[0].position - col.transform.position)).normalized, Atk * 0.4f, 1, 26f, 8f, "fx_spark", 0.6f, Brass);
+                        Shot(col.transform.position, ((Vector2)(near[0].position - col.transform.position)).normalized, Atk * ShrapnelRate, 1, 26f, 8f, "fx_spark", 0.6f, Brass);
                     };
                 }
             }

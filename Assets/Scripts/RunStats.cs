@@ -15,6 +15,8 @@ public class RunStats : MonoBehaviour
     public static readonly List<string> Cards = new List<string>();         // 레벨업 카드 "이름 Lv n"
     // 무기 진화 · 영혼 트리 (1.7.9~): 결과 화면과 밸런스 기록에 씀
     public static readonly List<KeyValuePair<string, float>> Evolutions = new List<KeyValuePair<string, float>>();
+    public static readonly List<KeyValuePair<string, float>> SkillEvos = new List<KeyValuePair<string, float>>();     // 1.1.2~ 스킬 진화 (번역한 이름 · 시각)
+    static string LogSkillEvos = "";        // 1.1.2~ balance_log 의 skill_evos: "키@초|키@초"
     public static int[] Branches = new int[6];
     public static int ShardsTotal, ShardsSpent;
     public static int Refines;              // 영혼 정련 횟수 (1.0.4~)
@@ -47,6 +49,8 @@ public class RunStats : MonoBehaviour
             runActive = true;
             cleared = false;
             Evolutions.Clear();
+            SkillEvos.Clear();
+            LogSkillEvos = "";
             Branches = new int[6];
             ShardsTotal = ShardsSpent = 0;
             Refines = 0;
@@ -192,6 +196,15 @@ public class RunStats : MonoBehaviour
             // 끝없는 성장 카드 (1.0.4~, LevelShop.Growth)
             for (int k = 0; k < LevelShop.GrowthCount; k++)
                 if (shop.GrowthLevel(k) > 0) Cards.Add(LevelShop.GrowthName(k) + " Lv" + shop.GrowthLevel(k));
+            // 1.1.2~ 스킬 진화
+            SkillEvos.Clear();
+            List<string> codes = new List<string>();
+            foreach (KeyValuePair<LevelShop.SkillEvo, float> kv in shop.EvoLog)
+            {
+                SkillEvos.Add(new KeyValuePair<string, float>(Loc.T(kv.Key.name), kv.Value));
+                codes.Add(kv.Key.key + "@" + kv.Value.ToString("0"));
+            }
+            LogSkillEvos = string.Join("|", codes);
         }
     }
 
@@ -225,6 +238,13 @@ public class RunStats : MonoBehaviour
            + (Refines > 0 ? "     " + Loc.T("영혼 정련") + " x" + Refines : "");      // 1.0.4~
         s += "\n\n" + gold + Loc.T("특수 능력") + end + "\n" + (Abilities.Count > 0 ? string.Join(",  ", Abilities) : "-");
         s += "\n\n" + gold + Loc.T("레벨업 카드") + end + "\n" + (Cards.Count > 0 ? string.Join(",  ", Cards) : "-");
+        // 1.1.2~ 스킬 진화: 이름 (시각)
+        if (SkillEvos.Count > 0)
+        {
+            List<string> se = new List<string>();
+            foreach (KeyValuePair<string, float> kv in SkillEvos) se.Add("<color=#C9A0FF>" + kv.Key + "</color> <color=#A89C86>(" + EndlessMode.Clock(kv.Value) + ")</color>");
+            s += "\n\n" + gold + Loc.T("스킬 진화") + end + "\n" + string.Join(",  ", se);
+        }
         // ESC 메뉴: 피해 비율 상위 4 (결과 화면은 막대로 따로 보여 줌)
         if (withStats && DamageDealt.Count > 0)
         {
@@ -353,7 +373,7 @@ public class RunStats : MonoBehaviour
         try
         {
             string path = BalanceLogPath;
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics";     // 1.2~ 끝에 세 칸 (머리줄이 바뀌면 예전 기록은 따로 남김)
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos";     // 1.2~ 끝에 세 칸 · 1.1.2~ 스킬 진화 한 칸 (머리줄이 바뀌면 예전 기록은 따로 남김)
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
             if (System.IO.File.Exists(path))
             {
@@ -392,7 +412,8 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(Sum(DamageTaken).ToString("0")).Append(',').Append(By(DamageTaken))
              .Append(',').Append(result == "death" ? LastHurtBy : "")
              .Append(',').Append(ChapterDurations())       // 1.1~ 장별 소요 시간
-             .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics).AppendLine();     // 1.2~ 무게 · 각인 · 유물
+             .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics)     // 1.2~ 무게 · 각인 · 유물
+             .Append(',').Append(LogSkillEvos).AppendLine();       // 1.1.2~ 스킬 진화 "키@초|…"
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
         }
         catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }

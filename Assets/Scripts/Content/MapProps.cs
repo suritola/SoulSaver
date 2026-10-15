@@ -293,7 +293,8 @@ public class MapProps : MonoBehaviour
         for (int i = 0; i < picks.Count; i++)
         {
             SpecialDef def = sa.abilities[picks[i].abilityId];
-            string desc = "<color=#C9A2FF>" + Loc.T("relic.tag") + "</color>\n" + SpecialAbilities.BodyText(picks[i].abilityId, def.description);
+            // 1.1.2~ 어느 칸 · 키로 들어가는지 (몇 번째 유물인지 · 같은 키를 나눠 쓰는지 · 마지막 칸이면 그 뒤엔 어떻게 되는지)
+            string desc = "<color=#C9A2FF>" + sa.RelicSlotNote() + "</color>\n" + SpecialAbilities.BodyText(picks[i].abilityId, def.description);
             options[i] = new ChoiceUI.Option(def.name, desc, SarcoColor, def.icon);
         }
         int chosen = 0;
@@ -342,6 +343,7 @@ public class MapProps : MonoBehaviour
     {
         int n = 4 + 2 * c.slot;
         GiveCoinsAt(c, n, n);
+        ShockRing.Spawn(c.at, 0.2f, 1.8f, 0.35f, new Color(1f, 0.82f, 0.3f, 0.9f), 0.15f);     // 1.1.2~ 바닥에서 금빛 고리
     }
 
     public static void DropGold(DropCtx c)
@@ -349,6 +351,7 @@ public class MapProps : MonoBehaviour
         int n = 20 + 10 * c.slot;
         GiveCoinsAt(c, n, 1);                                   // 값이 큰 코인 하나 (크고 밝게 보임)
         Fx.Spawn("fx_sparkle", c.at, 2.4f, new Color(1f, 0.9f, 0.5f), 18f);
+        ShockRing.Spawn(c.at, 0.3f, 2.4f, 0.45f, new Color(1f, 0.9f, 0.5f, 0.95f), 0.2f);
         Float(c.at + Vector3.up, Loc.T("drop.gold.name") + " +" + n, new Color(1f, 0.88f, 0.4f));
     }
 
@@ -458,35 +461,80 @@ public class MapProps : MonoBehaviour
 }
 
 // 부서지는 물체 하나 (MapProps 가 놓음): 닿으면 부서짐 · 석관은 곁에 머물러야 부서짐 (둘레 고리가 차오름)
+// 1.1.2~ 적 떼 · 화려한 이펙트 속에서도 「부술 수 있는 것」으로 읽히게 (보물 상자 TreasureChest 와 같은 방식)
+//   그림: 금빛 테두리(석관은 영혼빛) · 몸통 뒤 금빛 실루엣(prop_<이름>_glow)이 숨 쉬듯 맥동 · 적보다 위(Effect 9)에 그림
+//   바닥: 은은히 맥동하는 빛 웅덩이 + 그림자 · 몸은 위아래로 살짝 둥실 · 가끔 반짝이는 별
+//   가까이 가면 (7칸 안부터) 실루엣이 밝아지고 몸이 최대 12% 커짐 · 부서질 때 흰 번쩍임 + 파편 + 화면 살짝 흔들림
+//   석관: 위로 솟는 영혼빛 기둥 · 머물 자리를 알리는 옅은 고리 · 굵고 밝아지는 진행 고리 · 25%마다 금 가는 소리
+//   설정 「번쩍임 효과」가 꺼져 있으면 맥동 폭 · 반짝임을 줄이고 흰 번쩍임은 내지 않음
 public class MapProp : MonoBehaviour
 {
+    const float ArtBody = 0.8f;                         // 그림 40칸 중 몸통 32칸 (def.size = 몸통 크기)
+    const float Pulse = 2f * Mathf.PI / 1.6f;           // 맥동 1.6초
+    const float Bob = 2f * Mathf.PI / 1.8f, BobHeight = 0.09f;     // 둥실 1.8초 · 위아래 0.09칸
+    const float NearFrom = 7f, NearFull = 2.2f, NearGrow = 0.12f;  // 7칸 안부터 밝아지기 시작해 2.2칸에서 가장 밝고 12% 커짐
+    static readonly Color Gold = new Color(1f, 0.85f, 0.35f);
+
     PropDef def;
     Vector3 home;
-    GameObject shadow, glow, nameTag;
-    LineRenderer ring;
-    SpriteRenderer sr;
-    float hold;
+    GameObject shadow, glow, nameTag, ground, pillar, pillarCore;
+    LineRenderer ring, zone;
+    SpriteRenderer sr, rimSr, groundSr, pillarSr, coreSr, glowSr;
+    Sprite rimArt;
+    float hold, near, phase, scale;
+    int ticks;
     bool broken;
 
     public PropDef Def => def;
     public Vector3 Home => home;
     public bool Broken => broken;
 
+    Color RimColor => def.sarcophagus ? def.color : Gold;
+
     public static MapProp Make(PropDef def, Vector3 at)
     {
         at = Hostile.ClampArena(at);
         Sprite art = Resources.Load<Sprite>("Icons/" + def.icon);
-        GameObject go = SpecialAbilities.MakeSprite("MapProp_" + def.id, art != null ? art : Hostile.Glow, at, def.size, art != null ? Color.white : def.color, "Background", 9);
+        float scale = art != null ? def.size * ArtBody : def.size;
+        // 적 떼에 묻히지 않게 적(Character)보다 위 Effect 층 · 보물 상자(8)와 같은 높이 · 스킬 이펙트(12~)보다는 아래
+        GameObject go = SpecialAbilities.MakeSprite("MapProp_" + def.id, art != null ? art : Hostile.Glow, at, scale, art != null ? Color.white : def.color, "Effect", 9);
         MapProp p = go.AddComponent<MapProp>();
         p.def = def;
         p.home = at;
+        p.scale = scale;
+        p.phase = Random.Range(0f, 10f);                 // 여러 개가 한꺼번에 맥동하지 않게
         p.sr = go.GetComponent<SpriteRenderer>();
-        p.shadow = SpecialAbilities.MakeSprite("PropShadow", Hostile.Glow, at + Vector3.down * def.size * 0.42f, 1f, new Color(0f, 0f, 0f, 0.45f), "Background", 8);
+        Color rim = p.RimColor;
+
+        // 몸통 뒤 금빛 실루엣 (테두리 바깥 2칸까지): 맥동 · 가까이 가면 밝아짐
+        p.rimArt = Resources.Load<Sprite>("Icons/" + def.icon + "_glow");
+        if (p.rimArt != null)
+        {
+            GameObject r = SpecialAbilities.MakeSprite("PropRim", p.rimArt, at, scale, new Color(rim.r, rim.g, rim.b, 0.5f), "Effect", 8);
+            r.transform.SetParent(go.transform, true);
+            p.rimSr = r.GetComponent<SpriteRenderer>();
+        }
+        // 바닥: 빛 웅덩이(맥동) + 그림자
+        p.ground = SpecialAbilities.MakeSprite("PropGround", Hostile.Glow, at + Vector3.down * def.size * 0.38f, 1f, new Color(rim.r, rim.g, rim.b, 0.4f), "Background", 7);
+        p.groundSr = p.ground.GetComponent<SpriteRenderer>();
+        p.shadow = SpecialAbilities.MakeSprite("PropShadow", Hostile.Glow, at + Vector3.down * def.size * 0.42f, 1f, new Color(0f, 0f, 0f, 0.5f), "Background", 8);
         p.shadow.transform.localScale = new Vector3(def.size * 0.32f, def.size * 0.1f, 1f);
         if (def.sarcophagus)
         {
             p.glow = SpecialAbilities.MakeSprite("SarcoGlow", Hostile.Glow, at, 1f, new Color(def.color.r, def.color.g, def.color.b, 0.5f), "Background", 7);
-            p.ring = Hostile.NewLine("SarcoRing", def.color, 0.16f, 7);
+            p.glowSr = p.glow.GetComponent<SpriteRenderer>();
+            // 하늘로 솟는 영혼빛 기둥 (보물 상자 기둥보다 굵고 높게 · 바깥 옅은 빛 + 안쪽 밝은 심)
+            p.pillar = SpecialAbilities.MakeSprite("SarcoPillar", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(def.color.r, def.color.g, def.color.b, 0.35f), "Effect", 6);
+            p.pillar.transform.localScale = new Vector3(0.3f, 2.4f, 1f);
+            p.pillarSr = p.pillar.GetComponent<SpriteRenderer>();
+            p.pillarCore = SpecialAbilities.MakeSprite("SarcoPillarCore", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(0.95f, 0.9f, 1f, 0.5f), "Effect", 7);
+            p.pillarCore.transform.localScale = new Vector3(0.08f, 2.2f, 1f);
+            p.coreSr = p.pillarCore.GetComponent<SpriteRenderer>();
+            // 머물 자리 (옅은 고리) · 봉인 진행 고리
+            p.zone = Hostile.NewLine("SarcoZone", def.color, 0.08f, 7);
+            p.zone.loop = true;
+            Hostile.SetArc(p.zone, at, MapProps.SarcoRange, 0f, 354f);
+            p.ring = Hostile.NewLine("SarcoRing", def.color, 0.26f, 8);
             p.ring.enabled = false;
             p.nameTag = SkillTag.Show(go.transform, def.Name, def.size * 0.75f);
             Fx.Spawn("fx_soulburst", at, 4f, def.color, 16f);
@@ -498,34 +546,89 @@ public class MapProp : MonoBehaviour
     {
         if (broken || Time.timeScale == 0f) return;
         PlayerController p = Hostile.Player;
-        float t = Time.time;
-        if (def.sarcophagus)
+        bool flashes = GameSettings.Flashes;
+        float t = Time.time + phase;
+        float wave = 0.5f + 0.5f * Mathf.Sin(t * Pulse);          // 0~1
+        float d = p != null ? Vector2.Distance(p.transform.position, home) : 99f;
+        near = Mathf.MoveTowards(near, Mathf.Clamp01((NearFrom - d) / (NearFrom - NearFull)), Time.deltaTime * 4f);
+        Color rim = RimColor;
+
+        // 실루엣: 기본 맥동 (번쩍임 끄면 폭을 줄임) + 가까이 가면 밝고 흰빛으로
+        if (rimSr != null)
         {
-            if (glow != null)
-            {
-                glow.transform.localScale = Vector3.one * (0.75f + 0.12f * Mathf.Sin(t * 3f) + 0.4f * hold);
-                glow.GetComponent<SpriteRenderer>().color = new Color(def.color.r, def.color.g, def.color.b, 0.4f + 0.2f * Mathf.Sin(t * 3f) + 0.3f * hold);
-            }
-            if (Random.value < Time.deltaTime * (4f + 20f * hold))
-                Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.6f), 1.1f, def.color, 20f);
+            float a = flashes ? 0.3f + 0.45f * wave : 0.5f + 0.15f * wave;
+            a = Mathf.Lerp(a, 1f, near);
+            Color c = Color.Lerp(rim, Color.white, 0.45f * near);
+            rimSr.color = new Color(c.r, c.g, c.b, a);
         }
+        if (groundSr != null)
+        {
+            float g = def.size * (0.28f + 0.04f * wave + 0.08f * near);       // 빛 스프라이트는 8칸 (옅게 퍼짐)
+            ground.transform.localScale = new Vector3(g, g * 0.4f, 1f);
+            groundSr.color = new Color(rim.r, rim.g, rim.b, 0.28f + 0.17f * wave + 0.2f * near);
+        }
+
+        if (def.sarcophagus) { UpdateSarco(p, d, t, wave, flashes); return; }
+
+        // 둥실 · 가까이 가면 커짐 (그림자는 떠오를수록 조금 작게)
+        float bob = Mathf.Sin(t * Bob);
+        transform.position = home + Vector3.up * (BobHeight * (bob + 1f));
+        transform.localScale = Vector3.one * scale * (1f + NearGrow * near + 0.02f * wave);
+        if (shadow != null) shadow.transform.localScale = new Vector3(def.size * (0.32f - 0.02f * bob), def.size * 0.1f, 1f);
+        if (Random.value < Time.deltaTime * (flashes ? 1.3f : 0.5f) * (1f + 2f * near))
+            Fx.Spawn("fx_sparkle", home + new Vector3(Random.Range(-0.45f, 0.45f) * def.size, Random.Range(-0.1f, 0.5f) * def.size, 0f), 0.9f, Color.Lerp(Gold, Color.white, 0.4f), 20f);
+
         if (p == null || p.IsDying) return;
-        float d = Vector2.Distance(p.transform.position, home);
-        if (!def.sarcophagus)
+        if (d <= def.size * 0.4f + 0.9f) Break();
+    }
+
+    // 석관: 곁에 머무는 동안 봉인 고리가 차오르고 몸이 떨림 · 벗어나면 천천히 줄어듦
+    void UpdateSarco(PlayerController p, float d, float t, float wave, bool flashes)
+    {
+        Color c = def.color;
+        if (glowSr != null)
         {
-            if (d <= def.size * 0.4f + 0.9f) Break();
-            return;
+            glow.transform.localScale = Vector3.one * (0.75f + 0.12f * Mathf.Sin(t * 3f) + 0.4f * hold);
+            glowSr.color = new Color(c.r, c.g, c.b, 0.4f + 0.2f * Mathf.Sin(t * 3f) + 0.3f * hold);
         }
-        // 석관: 곁에 머무는 동안 봉인 고리가 차오르고 몸이 떨림 · 벗어나면 천천히 줄어듦
-        bool near = d <= MapProps.SarcoRange;
+        if (pillarSr != null)
+        {
+            float shimmer = flashes ? 0.12f * Mathf.Sin(t * 2.5f) + 0.05f * Mathf.Sin(t * 9.3f) : 0.05f * Mathf.Sin(t * 2.5f);
+            pillarSr.color = new Color(c.r, c.g, c.b, 0.3f + shimmer + 0.35f * hold);
+            pillar.transform.localScale = new Vector3(0.3f + 0.04f * wave + 0.25f * hold, 2.4f, 1f);
+            coreSr.color = new Color(0.95f, 0.9f, 1f, 0.45f + shimmer + 0.4f * hold);
+        }
+        if (zone != null)
+        {
+            zone.enabled = hold < 1f;
+            zone.startColor = zone.endColor = new Color(c.r, c.g, c.b, 0.2f + 0.2f * wave + 0.25f * near);
+        }
+        if (Random.value < Time.deltaTime * ((flashes ? 4f : 1.5f) + 20f * hold))
+            Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.6f), 1.1f, c, 20f);
+        // 위로 오르는 영혼 불티 (기둥을 따라)
+        if (Random.value < Time.deltaTime * (flashes ? 2.5f : 1f))
+            Fx.Spawn("fx_sparkle", home + new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(1.5f, 7f), 0f), 0.8f, new Color(0.9f, 0.8f, 1f), 18f);
+
+        if (p == null || p.IsDying) return;
+        bool inside = d <= MapProps.SarcoRange;
         float before = hold;
-        hold = near ? hold + Time.deltaTime / MapProps.SarcoHoldSeconds : Mathf.Max(0f, hold - Time.deltaTime * 0.5f);
-        if (near && before <= 0f) Hostile.Play("crack", 0.5f, 0.6f);
+        hold = inside ? hold + Time.deltaTime / MapProps.SarcoHoldSeconds : Mathf.Max(0f, hold - Time.deltaTime * 0.5f);
+        if (inside && before <= 0f) Hostile.Play("crack", 0.5f, 0.6f);
+        int tick = Mathf.FloorToInt(Mathf.Clamp01(hold) * 4f);               // 25%마다 금 가는 소리 (점점 높게)
+        if (tick > ticks && tick < 4) Hostile.Play("crack", 0.35f, 0.7f + 0.15f * tick);
+        ticks = tick;
         transform.position = home + (Vector3)(Random.insideUnitCircle * 0.1f * hold);
+        transform.localScale = Vector3.one * scale * (1f + 0.04f * near + 0.06f * hold);
         if (ring != null)
         {
             ring.enabled = hold > 0f;
-            if (hold > 0f) Hostile.SetArc(ring, home, MapProps.SarcoRange, 90f, 90f - 360f * Mathf.Clamp01(hold));
+            if (hold > 0f)
+            {
+                Hostile.SetArc(ring, home, MapProps.SarcoRange, 90f, 90f - 360f * Mathf.Clamp01(hold));
+                Color rc = Color.Lerp(c, Color.white, 0.6f * hold);
+                ring.startColor = ring.endColor = new Color(rc.r, rc.g, rc.b, 0.85f + 0.15f * wave);
+                ring.startWidth = ring.endWidth = 0.26f + 0.12f * hold;
+            }
         }
         if (hold >= 1f) Break();
     }
@@ -539,8 +642,13 @@ public class MapProp : MonoBehaviour
         Fx.Spawn("fx_shock", home, def.size * 2.2f, c, 18f);
         ShockRing.Spawn(home, 0.3f, def.size * 1.2f, 0.35f, c, 0.25f);
         for (int i = 0; i < 6; i++) Fx.Spawn("fx_spark", home + (Vector3)(Random.insideUnitCircle * def.size * 0.4f), 0.9f, c, 22f);
-        Hostile.Play("crack", 0.6f, def.sarcophagus ? 0.6f : 1.2f);
-        Hostile.Play("pop", 0.5f, 0.9f);
+        // 흰 번쩍임 (실루엣 그대로) · 파편 · 화면 살짝 흔들림
+        if (GameSettings.Flashes && rimArt != null)
+            FadeSprite.Spawn("PropFlash", rimArt, transform.position, transform.localScale.x * 1.05f, new Color(1f, 1f, 1f, 0.9f), "Effect", 20, 0.2f);
+        PropShard.Burst(home, def.size, c, RimColor, def.sarcophagus ? 14 : 8);
+        if (!def.sarcophagus) Hostile.Shake(0.05f);
+        Hostile.Play("crack", 0.6f, def.sarcophagus ? 0.6f : Random.Range(1.1f, 1.3f));
+        Hostile.Play("pop", 0.5f, Random.Range(0.85f, 1f));
         if (MapProps.Instance != null) MapProps.Instance.OnBroken(this);
         Destroy(gameObject);
     }
@@ -548,28 +656,102 @@ public class MapProp : MonoBehaviour
     void OnDestroy()
     {
         if (shadow != null) Destroy(shadow);
+        if (ground != null) Destroy(ground);
         if (glow != null) Destroy(glow);
+        if (pillar != null) Destroy(pillar);
+        if (pillarCore != null) Destroy(pillarCore);
         if (nameTag != null) Destroy(nameTag);
         if (ring != null) Destroy(ring.gameObject);
+        if (zone != null) Destroy(zone.gameObject);
+    }
+}
+
+// 부서질 때 튀는 파편 (1.1.2~): 작은 네모 조각이 포물선으로 튀어 바닥에 한 번 튕긴 뒤 옅어짐 · 물체 색 · 어두운 색 · 테두리 색이 섞임
+public class PropShard : MonoBehaviour
+{
+    const float Gravity = 26f, Life = 0.85f;
+    static Sprite square;
+    SpriteRenderer sr;
+    Vector3 ground;
+    Vector2 vel;
+    float height, up, spin, age;
+    Color color;
+    bool bounced;
+
+    static Sprite Square
+    {
+        get
+        {
+            if (square != null) return square;
+            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            tex.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+            tex.Apply();
+            square = Sprite.Create(tex, new Rect(0f, 0f, 2f, 2f), new Vector2(0.5f, 0.5f), 2f);
+            return square;
+        }
+    }
+
+    public static void Burst(Vector3 at, float size, Color body, Color rim, int count)
+    {
+        Color dark = Color.Lerp(body, Color.black, 0.45f);
+        for (int i = 0; i < count; i++)
+        {
+            Color c = i % 3 == 0 ? rim : i % 3 == 1 ? body : dark;
+            float s = Random.Range(0.12f, 0.24f) * size;
+            GameObject go = SpecialAbilities.MakeSprite("PropShard", Square, at, s, c, "Effect", 10);
+            PropShard sh = go.AddComponent<PropShard>();
+            sh.sr = go.GetComponent<SpriteRenderer>();
+            sh.color = c;
+            sh.ground = at + Vector3.down * size * Random.Range(0.1f, 0.4f);
+            sh.height = at.y - sh.ground.y;
+            sh.vel = Random.insideUnitCircle.normalized * Random.Range(2f, 5f) * Mathf.Sqrt(size / 2f);
+            sh.up = Random.Range(5f, 9f);
+            sh.spin = Random.Range(-720f, 720f);
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 90f));
+        }
+    }
+
+    void Update()
+    {
+        float dt = Time.deltaTime;
+        age += dt;
+        ground += (Vector3)(vel * dt);
+        up -= Gravity * dt;
+        height += up * dt;
+        if (height <= 0f)
+        {
+            height = 0f;
+            if (!bounced) { bounced = true; up = -up * 0.35f; vel *= 0.4f; }
+            else { up = 0f; vel *= 0.85f; spin *= 0.8f; }
+        }
+        transform.position = ground + Vector3.up * height;
+        transform.Rotate(0f, 0f, spin * dt);
+        float fade = Mathf.Clamp01((Life - age) / 0.3f);
+        sr.color = new Color(color.r, color.g, color.b, color.a * fade);
+        if (age >= Life) Destroy(gameObject);
     }
 }
 
 // 맵 물체가 떨어뜨린 것 (고기 · 자석 · 시간 정지 · 정화): 바닥에서 통통 튀며 빛나고, 닿으면 효과 · 40초 뒤 사라짐 (마지막 6초는 깜빡임)
+// 1.1.2~ 종류별 색 테두리 그림(고기 초록 · 자석 빨강 · 시간 정지 하늘 · 정화 흰 금빛) · 바닥에 같은 색 빛 고리가 맥동 · 크기 1.3 → 1.5
 public class MapPickup : MonoBehaviour
 {
-    const float PickRange = 1.5f, Life = 40f, Size = 1.3f;
+    const float PickRange = 1.5f, Life = 40f, Size = 1.5f;
+    const float ArtBody = 32f / 36f;                    // 그림 36칸 중 몸통 32칸
+    const float Pulse = 2f * Mathf.PI / 1.2f;           // 맥동 1.2초
     DropDef def;
     MapProps.DropCtx ctx;
     Vector3 home;
     GameObject glow;
-    SpriteRenderer sr;
+    SpriteRenderer sr, glowSr;
+    LineRenderer ring;
     float born;
 
     public static MapPickup Make(DropDef def, MapProps.DropCtx ctx)
     {
         Vector3 at = Hostile.ClampArena(ctx.at);
         Sprite art = Resources.Load<Sprite>("Icons/" + def.icon);
-        GameObject go = SpecialAbilities.MakeSprite("MapPickup_" + def.id, art != null ? art : Hostile.Glow, at, Size, art != null ? Color.white : def.color, "Effect", 6);
+        GameObject go = SpecialAbilities.MakeSprite("MapPickup_" + def.id, art != null ? art : Hostile.Glow, at, art != null ? Size * ArtBody : Size, art != null ? Color.white : def.color, "Effect", 6);
         MapPickup m = go.AddComponent<MapPickup>();
         m.def = def;
         m.ctx = ctx;
@@ -577,6 +759,9 @@ public class MapPickup : MonoBehaviour
         m.sr = go.GetComponent<SpriteRenderer>();
         m.born = Time.time;
         m.glow = SpecialAbilities.MakeSprite("PickupGlow", Hostile.Glow, at, 0.5f, new Color(def.color.r, def.color.g, def.color.b, 0.6f), "Effect", 5);
+        m.glowSr = m.glow.GetComponent<SpriteRenderer>();
+        m.ring = Hostile.NewLine("PickupRing", def.color, 0.08f, 5);
+        m.ring.loop = true;
         ShockRing.Spawn(at, 0.2f, 1.6f, 0.3f, def.color, 0.15f);
         return m;
     }
@@ -585,17 +770,27 @@ public class MapPickup : MonoBehaviour
     {
         if (Time.timeScale == 0f) return;
         float t = Time.time, age = t - born;
+        float wave = 0.5f + 0.5f * Mathf.Sin(t * Pulse);
+        bool flashes = GameSettings.Flashes;
         // 처음 0.35초는 튀어 오름, 그 뒤 통통
         float pop = age < 0.35f ? Mathf.Sin(age / 0.35f * Mathf.PI) * 0.9f : 0f;
         transform.position = home + Vector3.up * (pop + 0.15f * Mathf.Sin(t * 4f));
+        bool blink = age > Life - 6f && Mathf.Repeat(t * 6f, 1f) <= 0.35f;
+        if (sr != null) sr.enabled = !blink;
         if (glow != null)
         {
             glow.transform.position = home;
-            glow.transform.localScale = Vector3.one * (0.5f + 0.08f * Mathf.Sin(t * 5f));
+            glow.transform.localScale = Vector3.one * (0.5f + (flashes ? 0.1f : 0.04f) * wave);
+            glowSr.color = new Color(def.color.r, def.color.g, def.color.b, 0.45f + 0.25f * wave);
         }
-        if (age > Life - 6f && sr != null) sr.enabled = Mathf.Repeat(t * 6f, 1f) > 0.35f;
+        if (ring != null)
+        {
+            ring.enabled = !blink;
+            Hostile.SetArc(ring, home + Vector3.down * 0.35f, 0.75f + 0.12f * wave, 0f, 354f);
+            ring.startColor = ring.endColor = new Color(def.color.r, def.color.g, def.color.b, 0.45f + 0.4f * wave);
+        }
         if (age > Life) { Destroy(gameObject); return; }
-        if (Random.value < Time.deltaTime * 3f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 0.6f), 0.8f, def.color, 20f);
+        if (Random.value < Time.deltaTime * (flashes ? 3f : 1.2f)) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 0.6f), 0.8f, def.color, 20f);
 
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying) return;
@@ -610,5 +805,6 @@ public class MapPickup : MonoBehaviour
     void OnDestroy()
     {
         if (glow != null) Destroy(glow);
+        if (ring != null) Destroy(ring.gameObject);
     }
 }

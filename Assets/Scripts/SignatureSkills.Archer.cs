@@ -59,7 +59,7 @@ public partial class SignatureSkills
             };
         }
         if (L("a.ring") > 0)
-            b.onHitEnemy += (bullet, col) => StartCoroutine(Ring(col.transform.position, bullet.damage * V(L("a.ring"), 0.25f, 0.1f), E("ae.echo") ? 2 : 1));
+            b.onHitEnemy += (bullet, col) => StartCoroutine(Ring(col.transform.position, bullet.damage * V(L("a.ring"), 0.25f, 0.1f) * P("a.ring"), E("ae.echo") ? 2 : 1));       // 1.1.2~ 천 개의 메아리: ×1.25
         if (full && L("a.spread") > 0)
             b.onHitEnemy += (bullet, col) =>
             {
@@ -86,6 +86,7 @@ public partial class SignatureSkills
             if (E("ae.bow") && count == 5)
             {
                 Vector3 p = col.transform.position;
+                using var tier = Fx.Tier(3);
                 Circle(p, 2.6f, bullet.damage, 1f);
                 Fx.Spawn("fx_explosion", p, 8f, Color.white, 18f);
                 Flair(null, p, 4f, Leaf);
@@ -97,7 +98,8 @@ public partial class SignatureSkills
     void ThornSeed(Vector3 at)
     {
         float r = E("ae.forest") ? 1.95f : 1.3f;
-        float dmg = Atk * 0.2f;
+        float dmg = Atk * 0.2f * P("a.seed");         // 1.1.2~ 가시 숲: ×1.7
+        using var tier = EvoFx("a.seed");
         Zone(at, r, V(L("a.seed"), 1.5f, 0.5f), 0.3f, zone =>
         {
             foreach (Collider2D c in Inside(zone))
@@ -116,6 +118,7 @@ public partial class SignatureSkills
         for (int i = 0; i < times; i++)
         {
             yield return new WaitForSeconds(0.4f);
+            using var tier = EvoFx("a.ring");
             Circle(at, 1.9f, dmg, 0.3f);
             ShockRing.Spawn(at, 0.2f, 2.2f * Fs("a.ring"), 0.3f, new Color(1f, 0.95f, 0.7f, 0.8f), 0.12f * Fs("a.ring"));
             Flair("a.ring", at, 1.8f, new Color(1f, 0.95f, 0.7f));
@@ -163,7 +166,8 @@ public partial class SignatureSkills
         // 폭풍의 길: 물러난 자리에 돌풍
         if (E("ae.storm"))
         {
-            Circle(from, 3f, Atk * 0.6f, 4f);
+            using var tier = Fx.Tier(3);
+            Circle(from, 3f, Atk * 1.2f, 4f);       // 1.1.2~ 60 → 120%
             Fx.Spawn("fx_tornado", from, 7.5f, new Color(0.8f, 1f, 1f, 0.8f), 18f);
             Flair(null, from, 4f, Wind);
             Hostile.Play("whoosh", 0.5f, 1.1f);
@@ -186,6 +190,7 @@ public partial class SignatureSkills
         for (int i = 0; i < n; i++)
         {
             Vector3 at = i == 0 ? center : center + (Vector3)(Random.insideUnitCircle * radius * 0.7f);
+            using var tier = EvoFx("a.meteor");
             StartCoroutine(Drop(at, "fx_meteor", 4f * Fs("a.meteor"), new Color(1f, 0.95f, 0.7f), 3f, dmg, i * 0.2f));
             if (Big("a.meteor")) StartCoroutine(FlairLater(at, 0.45f + i * 0.2f, 5f, new Color(1f, 0.9f, 0.5f)));
             if (E("ae.sky")) StartCoroutine(Starlight(at, i * 0.2f + 0.3f));
@@ -235,7 +240,8 @@ public partial class SignatureSkills
         {
             Vector3 p = target.transform.position;
             marks.Remove(target);
-            Circle(p, 2.6f, Atk * 1.2f, 1f);
+            using var tier = Fx.Tier(3);
+            Circle(p, 2.6f, Atk * 2f, 1f);          // 1.1.2~ 120 → 200%
             Fx.Spawn("fx_explosion", p, 7f, new Color(1f, 0.6f, 0.5f), 18f);
             Flair(null, p, 3.5f, new Color(1f, 0.5f, 0.45f));
         }
@@ -268,8 +274,8 @@ public partial class SignatureSkills
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null) e.Slow(0f, hold);
                 Mark(c.gameObject, hold, E("ae.master") ? 2f : 1.3f);
-                Deal(c.gameObject, Atk * 0.8f, Vector3.zero, 0f);
-                Fx.Spawn("fx_net", c.transform.position, 2.2f, Color.white, 16f);
+                Deal(c.gameObject, Atk * 0.8f * P("a.ambush"), Vector3.zero, 0f);       // 1.1.2~ 명궁의 호흡: ×1.8
+                Fx.Spawn("fx_net", c.transform.position, 2.2f * Fs("a.ambush"), Tint("a.ambush", Color.white), 16f);
                 Hostile.Play("clank", 0.3f, 1.1f);
             }
         }, "fx_net", new Color(0.85f, 0.8f, 0.6f, 0.6f), 6.6f));

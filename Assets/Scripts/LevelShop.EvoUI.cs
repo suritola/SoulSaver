@@ -22,6 +22,8 @@ public partial class LevelShop
         public Image evoIcon;
         public SkillEvo evo;
         public TextMeshProUGUI name;
+        public bool near;           // 1.1.2~ 이 카드를 고르면 진화하거나 한 단계만 남음 → 띠가 숨 쉬듯 빛남 (EvoRowPulse)
+        public Image bg;
     }
     readonly EvoRow[] evoRows = new EvoRow[3];
 
@@ -69,10 +71,14 @@ public partial class LevelShop
                 int max = MaxLevelOf(CharacterData.Selected, p);
                 left += Mathf.Max(0, max - LevelOf(p) - (p == ids[slot] ? 1 : 0));
             }
-            string tag = left <= 0 ? "<color=#FFD966>" + Loc.T("바로 진화!") + "</color>" : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
+            // 1.1.2~ 하나 남으면 「진화까지 1단계!」를 금빛으로 (기대감) · 바로 진화는 더 크게
+            string tag = left <= 0 ? "<size=125%><color=#FFD966>" + Loc.T("바로 진화!") + "</color></size>"
+                       : left == 1 ? "<color=#FFE08A>" + Loc.T("진화까지 1단계!") + "</color>"
+                       : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
             if (blockedAny && left > 0) tag = "<color=#A8A8A8>" + Loc.T("지금 무기로는 안 나옴") + "</color>";       // 1.0.4~
             // 1.1~ 앞의 「진화 · 」를 뺌 (칸이 150 이라 영어 · 일본어에서 글자가 9~11px 까지 작아졌음, 보라 띠 · ▶ 가 이미 진화를 뜻함)
             row.name.text = "<size=70%>" + tag + "</size>\n" + Loc.T(e.name);
+            row.near = !blockedAny && left <= 1;
         }
         ShowEvoIntro(anyEvo);
         ShowRecommend(ids);
@@ -146,6 +152,7 @@ public partial class LevelShop
         bg.color = new Color(0.32f, 0.2f, 0.48f, 0.95f);
         bg.raycastTarget = false;
         row.root = r;
+        row.bg = bg;
 
         float x = -175f;
         for (int i = 0; i < 3; i++)
@@ -184,6 +191,19 @@ public partial class LevelShop
         row.name.fontSizeMin = 13f;
         row.name.fontSizeMax = 21f;
         return row;
+    }
+
+    // 1.1.2~ 진화가 가까운 카드의 띠: 보라 ↔ 금빛으로 숨 쉬고 진화 아이콘이 살짝 커졌다 작아짐 (게임이 멈춰 있어 실제 시간)
+    void EvoRowPulse()
+    {
+        float k = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+        foreach (EvoRow row in evoRows)
+        {
+            if (row == null || row.root == null || !row.root.gameObject.activeSelf) continue;
+            row.bg.color = row.near ? Color.Lerp(new Color(0.32f, 0.2f, 0.48f, 0.95f), new Color(0.62f, 0.45f, 0.18f, 0.98f), k)
+                                    : new Color(0.32f, 0.2f, 0.48f, 0.95f);
+            row.evoIcon.rectTransform.localScale = Vector3.one * (row.near ? 1f + 0.12f * k : 1f);
+        }
     }
 
     static Image Box(RectTransform parent, Vector2 pos, Vector2 size, Color c)
@@ -258,6 +278,7 @@ public partial class LevelShop
 
     void UpdateSkipButton()
     {
+        if (IsOpen) EvoRowPulse();
         if (skipButton == null) return;
         bool show = IsOpen && !freePick;            // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드)
         if (skipButton.gameObject.activeSelf != show) skipButton.gameObject.SetActive(show);

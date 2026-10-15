@@ -53,7 +53,8 @@ public static class MenuExtras
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
             ar.anchoredPosition = new Vector2(0f, 40f);
             canvas.gameObject.AddComponent<QuickRestart>();
-            ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」
+            ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」 · 「메인 메뉴로」 (1.1.2~ 가운데 세로 한 줄)
+            ResultScreen.FitTitle();
         }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
@@ -78,7 +79,7 @@ public static class MenuExtras
             TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 140f : 110f));
             t.text = text;
             RectTransform r = t.rectTransform;
-            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 메인 메뉴 버튼(-256 ~) 아래로, 아래 획득 포인트(-475 ~ -425)와도 안 겹치게
+            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 결과 버튼 열(아래끝 -268, ResultScreen.BuildRetry) 아래로, 아래 획득 포인트(-475 ~ -425)와도 안 겹치게
             r.anchoredPosition = new Vector2(0f, daily ? -345f : -330f);
             // 스팀 순위: 올린 결과가 오면 마지막 줄 끝에 붙임
             DailyChallenge.RankLine line = t.gameObject.AddComponent<DailyChallenge.RankLine>();

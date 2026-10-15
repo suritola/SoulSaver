@@ -69,6 +69,7 @@ public partial class SignatureSkills
         // 불꽃 행진: 농축 플라스크가 터진 자리에 불길 고리
         if (concentrated && E("le.march"))
         {
+            using var tier = Fx.Tier(3);
             for (int i = 0; i < 10; i++)
             {
                 float a = i * 36f * Mathf.Deg2Rad;
@@ -88,7 +89,8 @@ public partial class SignatureSkills
             var a = acids[i];
             if ((a.p - p).sqrMagnitude > (a.r + r) * (a.r + r)) continue;
             acids.RemoveAt(i);
-            Circle(a.p, a.r * 1.3f, Atk * V(L("l.ignite"), 1.2f, 0.5f), 1.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));
+            using var tier = EvoFx("l.ignite");
+            Circle(a.p, a.r * 1.3f, Atk * V(L("l.ignite"), 1.2f, 0.5f) * P("l.ignite"), 1.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));      // 1.1.2~ 타오르는 늪: ×1.6
             Fx.Spawn("fx_firepillar", a.p + Vector3.up * 1.2f, a.r * 2.4f * Fs("l.ignite"), Color.white, 18f);
             Fx.Spawn("fx_explosion", a.p, a.r * 2.6f * Fs("l.ignite"), new Color(1f, 0.7f, 0.4f), 18f);
             Flair("l.ignite", a.p, a.r * 1.5f, Ember);
@@ -112,8 +114,9 @@ public partial class SignatureSkills
         if (mask != 7) { elements[g] = (mask, Time.time + 6f); return; }
         elements.Remove(g);
         Vector3 p = g.transform.position;
-        float dmg = Atk * V(L("l.catalyst"), 2.5f, 1f);
+        float dmg = Atk * V(L("l.catalyst"), 2.5f, 1f) * P("l.catalyst");        // 1.1.2~ 삼원소 붕괴: ×1.5
         bool big = E("le.collapse");
+        using var tier = EvoFx("l.catalyst");
         Deal(g, dmg, Vector3.zero, 0f);
         Circle(p, big ? 4f : 2f, dmg * 0.5f, 1.5f, c =>
         {
@@ -154,10 +157,11 @@ public partial class SignatureSkills
 
     void GlassDrop(Vector3 from, Vector3 at)
     {
-        float dmg = Atk * 0.5f;
+        float dmg = Atk * 0.5f * P("l.glassrain");        // 1.1.2~ 유리 폭풍: ×1.6
         float fs = Fs("l.glassrain");
         FlaskLob.Throw(from, at, 0.35f, 0.5f * fs, new Color(0.85f, 0.95f, 1f), q =>
         {
+            using var tier = EvoFx("l.glassrain");
             Circle(q, 1.4f, dmg, 0.6f);
             Fx.Spawn("fx_alchemyblast", q, 3f * fs, new Color(0.85f, 0.95f, 1f), 20f);
             Flair("l.glassrain", q, 1.6f, new Color(0.85f, 0.95f, 1f));
@@ -211,10 +215,11 @@ public partial class SignatureSkills
             chilled.Remove(target);
             Vector3 p = target.transform.position;
             int n = (int)V(f, 4f, 1f);
+            using var tier = EvoFx("l.frost");
             for (int i = 0; i < n; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n + Random.Range(-10f, 10f)) * Vector2.right;
-                Bullet b = Shot(p, d, Atk * 0.5f, 2, 22f, 7f, "fx_spark", 0.7f * Fs("l.frost"), Ice);
+                Bullet b = Shot(p, d, Atk * 0.5f * P("l.frost"), 2, 22f, 7f, "fx_spark", 0.7f * Fs("l.frost"), Tint("l.frost", Ice));       // 1.1.2~ 영구 동토: ×1.6
                 if (b != null && E("le.frost"))
                     b.onHitEnemy += (bullet, col) =>
                     {
@@ -234,11 +239,11 @@ public partial class SignatureSkills
     {
         embers.RemoveAll(z => z == null);
         if (embers.Count >= 10) { if (embers[0] != null) Destroy(embers[0].gameObject); embers.RemoveAt(0); }
-        float dmg = Atk * V(Mathf.Max(1, L("l.embers")), 0.15f, 0.07f) * 0.5f;
+        float dmg = Atk * V(Mathf.Max(1, L("l.embers")), 0.15f, 0.07f) * 0.5f * P("l.embers");       // 1.1.2~ 불꽃 행진: ×1.6
         embers.Add(Zone(at, r, 2f, 0.5f, zone =>
         {
             foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f);
-        }, "fx_puddle", new Color(1f, 0.5f, 0.15f, 0.4f), r * 1.8f, true));        // 바닥에 옅게 (시야를 가리지 않게)
+        }, "fx_puddle", Big("l.embers") ? new Color(1f, 0.6f, 0.2f, 0.55f) : new Color(1f, 0.5f, 0.15f, 0.4f), r * 1.8f, true));        // 바닥에 옅게 (시야를 가리지 않게) · 진화하면 조금 더 밝게
     }
 
     void AlchemistTick()

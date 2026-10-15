@@ -52,7 +52,7 @@ public class MusicManager : MonoBehaviour
         Instance = this;
         current = NewSource();
         previous = NewSource();
-        SceneManager.sceneLoaded += (s, m) => spawner = null;
+        SceneManager.sceneLoaded += (s, m) => { Hook(null); spawner = null; bossLatched = false; };
     }
 
     AudioSource NewSource()
@@ -62,6 +62,9 @@ public class MusicManager : MonoBehaviour
         s.playOnAwake = false;
         s.volume = 0f;
         s.spatialBlend = 0f;
+        // 1.1.2~ 음악은 가장 높은 우선순위 (0) — 보스전처럼 효과음이 동시에 32개(실제 재생 목소리 수)를 넘으면
+        // 우선순위가 같은(128) 효과음보다 작게 들리는 음악 쪽이 먼저 가상화돼 잠깐 끊기거나 늦게 돌아왔음
+        s.priority = 0;
         return s;
     }
 
@@ -77,17 +80,89 @@ public class MusicManager : MonoBehaviour
         string scene = sceneName;
         if (scene != "GameScene" || StoryDirector.EndingPlaying) return "bgm_menu";
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
+        Hook(spawner);
         if (BossUltimate.Active) return "bgm_domain";          // 보스 필살기 결계
-        // 1.1~: 무한 모드는 같은 짧은 곡만 수십 분 반복되지 않게 시간에 따라 돌려 씀 (보스전은 보스 곡 4바퀴마다 4장 곡과 번갈아)
+        // 보스전이면 다른 무엇보다 보스 곡 (판단은 BossFight 한 곳에서만)
+        // 1.1.2~: 예전엔 무한 모드 보스전에서 보스 곡 4바퀴(102.4초)마다 4장 곡(bgm_abyss)과 번갈아 틀어서,
+        //         보스와 싸우는 중에 「갑자기 일반 배경음으로 바뀌는」 것처럼 들렸음 → 보스전 내내 보스 곡
+        if (BossFight) return "bgm_boss";
+        // 1.1~: 무한 모드는 같은 짧은 곡만 수십 분 반복되지 않게 시간에 따라 돌려 씀 (보스가 없을 때만)
         float played = Time.timeSinceLevelLoad;
-        if (spawner != null && spawner.bossSpawned && !spawner.bossCleared)
-            return GameMode.IsEndless && ((int)(played / 102.4f)) % 2 == 1 ? "bgm_abyss" : "bgm_boss";
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
         if (GameMode.IsEndless) return EndlessTracks[((int)(played / 128f)) % EndlessTracks.Length];
         return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_abyss";
     }
 
+    // 지금 보스전인가 (1.1.2~ 배경음의 유일한 판단 기준)
+    // - 처치 수로 보스가 불렸고 아직 쓰러뜨리지 않음 (EnemySpawner 의 bossSpawned · bossCleared — 처치 · 장 이동 · 이어하기에서만 바뀜)
+    // - 또는 살아 있는 보스가 하나라도 있음 (무한 모드에서 여러 보스가 함께 · 따로 쓰러질 때, 깃발이 잠깐 어긋나도 보스 곡 유지)
+    // - 또는 무한 모드 최종 보스(개발자 · 엄마)가 내려오는 중 (앞 보스를 다 잡은 뒤 등장 연출 몇 초 동안 일반 곡으로 갔다 오지 않게)
+    // 장 중반 이벤트 · 중간 보스 · 엘리트 · 습격 · 선택 창 · 결계 해제 등은 이 값을 바꾸지 않으므로 보스 곡을 덮을 수 없음
+    // 1.1.2~ 한 번 보스 곡이 켜지면 아래 경우에만 내림 (위 조건이 한 프레임이라도 어긋나 일반 곡으로 튀지 않게)
+    //   ① 보스 처치 (EnemySpawner.onBossDefeated — 처치 연출이 시작되는 순간)  ② 장이 바뀜  ③ 씬이 바뀜 (사망 · 메인 메뉴 · 이어하기)
+    //   ④ 안전장치: 살아 있는 보스가 하나도 없고 위 조건도 모두 거짓인 채로 게임 시간 10초 (트레일러 촬영처럼 깃발만 직접 내리는 경우에 보스 곡이 남지 않게)
+    bool bossLatched;           // 보스 곡을 틀고 있음
+    bool bossDownSignal;        // 보스 곡을 켠 뒤 보스 처치 알림을 받음
+    int latchStage = -1;        // 보스 곡을 켤 때의 장
+    float looseSince = -1f;     // 조건이 모두 거짓이 된 게임 시각 (안전장치)
+    const float LooseRelease = 10f;
+    EnemySpawner hooked;
+
+    void Hook(EnemySpawner sp)
+    {
+        if (hooked == sp) return;
+        if (hooked != null) hooked.onBossDefeated -= OnBossDown;
+        hooked = sp;
+        if (hooked != null) hooked.onBossDefeated += OnBossDown;
+    }
+
+    void OnBossDown(int stage) { if (bossLatched) bossDownSignal = true; }
+
+    void OnDestroy() => Hook(null);
+
+    bool BossFight
+    {
+        get
+        {
+            int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : -1;
+            if (BossFightNow)
+            {
+                if (!bossLatched) { bossLatched = true; bossDownSignal = false; }
+                latchStage = stage;
+                looseSince = -1f;
+                return true;
+            }
+            if (!bossLatched) return false;
+            if (looseSince < 0f) looseSince = Time.time;
+            if (bossDownSignal || stage != latchStage || Time.time - looseSince >= LooseRelease)
+            {
+                bossLatched = false;
+                bossDownSignal = false;
+                looseSince = -1f;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    bool BossFightNow
+    {
+        get
+        {
+            if (spawner != null && spawner.bossSpawned && !spawner.bossCleared) return true;
+            if (bosss.LiveCount > 0) return true;
+            return GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.FinalBossIncoming;
+        }
+    }
+
     static readonly string[] EndlessTracks = { "bgm_desert", "bgm_cave", "bgm_hell", "bgm_meadow", "bgm_abyss" };
+
+    void Remember(AudioSource s)
+    {
+        if (s.clip == null || !s.isPlaying) return;
+        resumeAt[s.clip] = s.timeSamples;
+        leftAt[s.clip] = Time.unscaledTime;
+    }
 
     void Update()
     {
@@ -99,11 +174,13 @@ public class MusicManager : MonoBehaviour
             {
                 // 두 소스를 바꿔 가며 교차 페이드
                 AudioSource t = previous; previous = current; current = t;
-                if (previous.clip != null && previous.isPlaying)
+                // 1.1.2~ 페이드 도중 또 바뀌면 (A→B→C) 새 곡에 쓸 소스로 둘 중 더 작은 쪽을 고름 — 아직 크게 들리던 곡이 딸깍 끊기지 않게
+                if (current.clip != clip && current.isPlaying && previous.clip != clip && current.volume > previous.volume)
                 {
-                    resumeAt[previous.clip] = previous.timeSamples;
-                    leftAt[previous.clip] = Time.unscaledTime;
+                    t = previous; previous = current; current = t;
                 }
+                Remember(previous);
+                if (current.clip != clip) Remember(current);     // 곡을 갈아 끼우기 전에 위치를 적어 둠 (곧 돌아오면 이어서)
                 // 페이드아웃 중인 소스가 바로 그 곡이면 끊지 않고 그대로 되살림 (A→B→A 로 빠르게 바뀔 때)
                 if (current.clip != clip || !current.isPlaying)
                 {
