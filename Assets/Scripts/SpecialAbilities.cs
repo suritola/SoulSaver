@@ -161,12 +161,13 @@ public partial class SpecialAbilities : MonoBehaviour
     public void Equip(IEnumerable<int> ids)
     {
         bool hadWeapons = weapons.Count > 0;
+        List<int> newSkills = new List<int>();
         foreach (int id in ids)
         {
             if (id < 0 || id >= abilities.Length || equipped.Contains(id)) continue;
             equipped.Add(id);
             if (abilities[id].kind == SpecialKind.Weapon) weapons.Add(id);
-            if (abilities[id].kind == SpecialKind.Skill) skills.Add(id);
+            if (abilities[id].kind == SpecialKind.Skill) { skills.Add(id); newSkills.Add(id); }
             if (id == OrbsId) SpawnOrbs(3);
             KitOnEquip(id, false);
         }
@@ -175,6 +176,7 @@ public partial class SpecialAbilities : MonoBehaviour
         // 처음 무기를 골랐다면 바로 꺼내 들고 시작 (이미 들고 있던 무기는 그대로)
         if (!hadWeapons) weaponIndex = weapons.Count > 0 ? 0 : -1;
         RebuildHudRows();
+        foreach (int id in newSkills) AnnounceKey(id, false);      // 1.1.2~ 어느 키로 쓰는지 화면 가운데 + 칸 반짝임 (SpecialAbilities.KeyGuide)
     }
 
     public bool Has(int id) => equipped.Contains(id);
