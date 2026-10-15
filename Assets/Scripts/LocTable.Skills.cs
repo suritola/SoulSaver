@@ -367,5 +367,6 @@ public static partial class LocTable
         A("정련 횟수", "Times refined", "精錬回数", "精炼次数");
         A("모든 칸을 배웠습니다", "Every node learned", "すべてのマスを習得しました", "已学会所有节点");
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
+        AddTranscend();     // 1.1~ 3장 각성 · 초월 카드 (LocTable.Transcend)
     }
 }

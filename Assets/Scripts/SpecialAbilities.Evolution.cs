@@ -31,6 +31,8 @@ public partial class SpecialAbilities
         "치명타 확률 +20%, 치명타 피해 +80%",
     };
     public static bool IsAwaken(int id) => id >= AwakenFirst && id < AwakenFirst + AwakenOptions.Length;
+    // 1.1~: 이야기 모드도 3장 보스를 쓰러뜨리면 각성 (3장부터 · 이어하기로 4장에서 고르는 경우 포함, 4장 보스는 마지막이라 진화 없음)
+    public static bool AwakenOpen => GameMode.IsEndless || Chapters.SlotOf(Chapters.CurrentStage) >= 2;
 
     void ApplyAwaken(int id)
     {
@@ -53,7 +55,7 @@ public partial class SpecialAbilities
     public int[] NextEvolutionOptions()
     {
         if (!UsesEvolution) return null;
-        if (EvolutionTier == 2 && GameMode.IsEndless) return AwakenOptions;
+        if (EvolutionTier == 2 && AwakenOpen) return AwakenOptions;
         if (!Gunner)
         {
             // 1차: 캐릭터 전용 무기 셋의 모양으로 평타가 바뀜 · 2차: 형태 위에 덧붙는 강화
@@ -259,7 +261,7 @@ public partial class SpecialAbilities
         Chain(t, "w.reload", 2, 3, "w.reload1", 0, "재빠른 장전", "모든 무기 장전 시간 -12%", new[] { 28, 46 }, rel, () => AddReload(0.88f));
         t.Add(Node("w.crit1", "w.dmg1", 0, "급소 사격", "치명타 확률 +8% (치명타는 피해 2배)", 16, LvIcon(3), () => TreeCrit += 0.08f));
         Chain(t, "w.crit", 2, 3, "w.crit1", 0, "급소 사격", "치명타 확률 +8%", new[] { 30, 50 }, LvIcon(3), () => TreeCrit += 0.08f);
-        t.Add(Node("w.critdmg", "w.crit3", 0, "처참한 일격", "치명타 피해 2배 → 2.6배", 60, LvIcon(3), () => TreeCritDamage = 2.6f));
+        t.Add(Node("w.critdmg", "w.crit3", 0, "처참한 일격", "치명타 피해 2배 → 2.6배", 60, LvIcon(3), () => TreeCritDamage += 0.6f));     // 1.1~ 더하기로 (각성 · 초월 카드의 치명타 피해가 덮이지 않게)
         bool pierces = Gunner || CharacterData.Selected == CharacterId.Rogue || CharacterData.Selected == CharacterId.Archer;
         t.Add(Node("w.pene1", "w.crit1", 0, "철갑탄", "모든 총알 관통 +1", 24, LvIcon(0), () => AddPene()));
         t.Add(Node("w.pene2", "w.pene1", 0, "철갑탄 II", "모든 총알 관통 +1", 48, LvIcon(0), () => AddPene()));

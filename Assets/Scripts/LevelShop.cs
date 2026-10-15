@@ -97,6 +97,7 @@ public partial class LevelShop : MonoBehaviour
         UpdateSkipButton();
         // 1.0.6~: 최대 레벨에 닿으면 남은 레벨업은 버림 (상한 뒤로는 카드를 더 고를 수 없음, 성장 카드는 상한 전에 카드를 다 배웠을 때만)
         if (PendingLevels > 0 && !IsOpen && AtLevelCap) PendingLevels = 0;
+        UpdateTranscend();          // 1.1~ 최대 레벨 뒤 막대가 차면 초월 카드 (LevelShop.Transcend)
         // 숫자 1 · 2 · 3: 그 카드를 고름, 이미 고른 카드의 숫자를 한 번 더 누르면 확정
         // 1.0.4~: 예전엔 한 번에 확정돼 살펴보려다 실수로 골랐음 → 보스 보상 · 무기 진화 창과 같은 방식으로 통일
         // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)
