@@ -19,10 +19,10 @@ public static class ResultScreen
         return on;
     }
 
-    // 누적 처치 업적 (SteamManager.TotalKillsKey · TotalKillsGoal 과 같은 값)
-    const string TotalKillsKey = "stats.totalKills";
-    const int TotalKillsGoal = 3000;
-    const float EndlessGoal = 1200f;        // 업적 「무한 모드 20분」 (SteamAchievements.Endless20)
+    // 누적 처치 · 무한 모드 20분 업적은 SteamManager 의 값을 그대로 (복사해 두면 한쪽만 바뀌어 어긋남)
+    const string TotalKillsKey = SteamManager.TotalKillsKey;
+    const int TotalKillsGoal = SteamManager.TotalKillsGoal;
+    const float EndlessGoal = SteamManager.EndlessGoal;
     const float AlmostAt = 0.9f;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
@@ -74,10 +74,10 @@ public static class ResultScreen
         }
         if (cheap != null) all.Add(new Goal(Loc.T("스킨") + " · " + Loc.T(cheap.name), (float)pts / cheap.Price, PointsLeft(cheap.Price - pts)));
 
-        // 숙련: 지금 영웅 (이야기 모드를 클리어할 때마다 +1)
+        // 숙련: 지금 영웅 (이야기 모드를 클리어할 때마다 +1) · 무한 모드 · 일일 도전 판에서는 오르지 않으므로 빼기
         CharacterId me = CharacterData.Selected;
         int lv = Mastery.Level(me);
-        if (lv < Mastery.Max)
+        if (lv < Mastery.Max && !GameMode.IsEndless && !DailyChallenge.Active)
             all.Add(new Goal(Loc.T("result.goal.mastery").Replace("{0}", Loc.T(CharacterData.Def(me).name)), (float)lv / Mastery.Max,
                              Mastery.Label(me) + " · " + Loc.T("result.goal.masteryhint")));
 
@@ -179,16 +179,22 @@ public static class ResultScreen
             Time.timeScale = 1f;
             SceneManager.LoadScene("GameScene");
         });
-        GameObject hero = UIKit.CloneButton(restart, "RetryHeroButton", "result.retry.hero", () =>
-        {
-            openHeroPick = true;
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
-        });
         restart.SetActive(false);
-        // 둘이 합쳐 폭 740 (오른쪽 피해 패널 x 420 ~ 과 안 겹치게)
-        Place(same, new Vector2(at.x - 150f, at.y), new Vector2(424f, h));
-        Place(hero, new Vector2(at.x + 226f, at.y), new Vector2(300f, h));
+        // 일일 도전(캐릭터 고정 · 메인 메뉴로 가면 도전이 끝남) · 튜토리얼 판은 「캐릭터 바꿔 다시」 없이 원래 자리 · 폭으로
+        if (DailyChallenge.Active || TutorialRun.Active)
+            Place(same, at, new Vector2(540f, h));
+        else
+        {
+            GameObject hero = UIKit.CloneButton(restart, "RetryHeroButton", "result.retry.hero", () =>
+            {
+                openHeroPick = true;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            });
+            // 둘이 합쳐 폭 740 (오른쪽 피해 패널 x 420 ~ 과 안 겹치게)
+            Place(same, new Vector2(at.x - 150f, at.y), new Vector2(424f, h));
+            Place(hero, new Vector2(at.x + 226f, at.y), new Vector2(300f, h));
+        }
         Image img = same.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
         same.AddComponent<ResultPadFocus>();

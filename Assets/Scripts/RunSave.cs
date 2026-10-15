@@ -35,6 +35,7 @@ public static class RunSave
         public List<float> takenValues = new List<float>();
         public int runKills;
         public bool needEvolution;                      // 보스는 쓰러뜨렸지만 무기 진화를 아직 고르지 않음
+        public int chapterBonus;                        // 1.1~ 보스가 쓰러지는 연출 중에 나가서 아직 못 받은 장 클리어 보너스 (이어할 때 줌)
         public List<string> log = new List<string>();
         public List<string> dealtKeys = new List<string>();
         public List<float> dealtValues = new List<float>();
@@ -201,7 +202,12 @@ public static class RunSave
             // 문에 들어갈 때 받는 것(첫 문의 특수 능력 · 포인트 +2 · 저주 제단) 과 보스 보상은 이어할 때 받음
             d.gatePending = true;
             d.needBossReward = sp.bossCleared ? NeedBossReward : true;
-            if (!sp.bossCleared) d.needEvolution = sm.EvolutionAvailable;
+            if (!sp.bossCleared)
+            {
+                d.needEvolution = sm.EvolutionAvailable;
+                // 장 클리어 보너스는 연출이 끝난 뒤(OnBossDefeated)에 주므로, 그 전에 나가면 이어할 때 받게 남김
+                if (!GameMode.IsEndless) d.chapterBonus = Point.ChapterBonusPer * Chapters.Number(stage);
+            }
         }
         else
         {
@@ -280,7 +286,9 @@ public static class RunSave
             {
                 if (string.IsNullOrEmpty(e)) continue;
                 // 1.1~ 두 글자 기록: aw<번호>@<초> 3장 각성 · tr<번호> 초월 카드 (한 글자 'a' · 't' 보다 먼저)
-                if (e.StartsWith("aw"))
+                // 다음 글자가 숫자일 때만 (나중에 'w' · 'r' 로 시작하는 트리 칸 key 가 생겨도 "tr.xxx" 같은 트리 기록을 먹지 않게)
+                bool twoDigit = e.Length > 2 && char.IsDigit(e[2]);
+                if (twoDigit && e.StartsWith("aw"))
                 {
                     string[] aw = e.Substring(2).Split('@');
                     if (!int.TryParse(aw[0], out int awId) || specials == null) continue;
@@ -289,7 +297,7 @@ public static class RunSave
                     RunStats.Seconds = d.seconds;
                     continue;
                 }
-                if (e.StartsWith("tr"))
+                if (twoDigit && e.StartsWith("tr"))
                 {
                     if (int.TryParse(e.Substring(2), out int tr)) shop.ReplayTranscend(tr);
                     continue;
@@ -347,6 +355,7 @@ public static class RunSave
         if (sp != null) sp.RestoreKills(d.kills, d.midBossAlive && !firstChapter);
         ChapterEvents.Resume(d.ambushLeft, d.midBossAlive && firstChapter, d.chests);
         RunContent.Restore(d);                                      // 1.1~ 이벤트 계획 · 상자 전설 횟수 (옛 저장은 30% · 55% 고정)
+        if (d.chapterBonus > 0) Point.Bonus(d.chapterBonus);       // 1.1~ 보스가 쓰러지는 연출 중에 나가서 못 받은 장 클리어 보너스
         if (!d.gatePending) LastStand.Used = d.lastStandUsed;
         if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
         NeedEvolution = d.needEvolution;

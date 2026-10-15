@@ -383,13 +383,32 @@ public class EnermyController : MonoBehaviour
         Vector3 s = transform.localScale;
         squashRestore = s;
         transform.localScale = new Vector3(s.x * Mathf.Lerp(1f, 1.15f, k), s.y * Mathf.Lerp(1f, 0.85f, k), s.z);
-        StartCoroutine(Unsquash());
+        squashed.Add(this);
+        QueueUnsquash();
     }
 
-    IEnumerator Unsquash()
+    // 찌그러진 적을 한 목록에 모아 프레임 끝에 한 번에 되돌림 (적마다 프레임마다 코루틴을 만들지 않게 · 광역기로 수백 마리를 때려도 코루틴은 프레임당 하나)
+    // 적이 중간에 꺼져도(풀로 돌아감) 크기는 여기서 되돌아감
+    static readonly System.Collections.Generic.List<EnermyController> squashed = new System.Collections.Generic.List<EnermyController>();
+    static SquashRestorer squashHost;
+    static bool unsquashQueued;
+
+    static void QueueUnsquash()
+    {
+        if (unsquashQueued && squashHost != null) return;
+        if (squashHost == null)
+            squashHost = new GameObject("SquashRestorer").AddComponent<SquashRestorer>();      // 씬과 함께 사라짐 → 다음에 다시 만듦
+        unsquashQueued = true;
+        squashHost.StartCoroutine(UnsquashAll());
+    }
+
+    static IEnumerator UnsquashAll()
     {
         yield return Juice.EndOfFrame;
-        transform.localScale = squashRestore;
+        for (int i = 0; i < squashed.Count; i++)
+            if (squashed[i] != null) squashed[i].transform.localScale = squashed[i].squashRestore;
+        squashed.Clear();
+        unsquashQueued = false;
     }
     PlayerController playerC;
     
@@ -489,3 +508,6 @@ public class EnermyController : MonoBehaviour
 
 
 }
+
+// 1.1~ 적 찌그러짐을 프레임 끝에 한 번에 되돌리는 코루틴 자리 (EnermyController.QueueUnsquash)
+public class SquashRestorer : MonoBehaviour { }

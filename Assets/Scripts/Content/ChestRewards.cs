@@ -156,9 +156,9 @@ public static class ChestRewards
             RewardDef r = Draw(c, Random.value < LegendRareShare ? RewardRarity.Rare : RewardRarity.Common, picks);
             if (r != null) picks.Add(r);
         }
-        // 진화 촉매: 재료를 모두 가진 진화가 있으면 그 재료를 최대로 (체험판은 스킬 진화가 막혀 있으므로 빼고)
+        // 진화 촉매: 재료를 모두 가진 진화가 있으면 그 재료를 최대로 (체험판도 스킬 진화는 그대로라 같은 기준 · 「숙련」 카드와 맞춤)
         LevelShop.SkillEvo evo = null;
-        if (Catalysts < MaxCatalysts && !Demo.On && c.shop != null) evo = c.shop.ChestCatalystCandidate();
+        if (Catalysts < MaxCatalysts && c.shop != null) evo = c.shop.ChestCatalystCandidate();
 
         List<string> lines = new List<string>();
         if (evo != null) lines.Add("<color=#FFC94D>" + Loc.T("chest.catalyst.line").Replace("{0}", Loc.T(evo.name)) + "</color>");

@@ -1123,30 +1123,44 @@ void Shoot()
         {
             lastCoinSound = now;
             // 1.1~: 0.6초 안에 이어 주울수록 작게 하던 것 → 반음씩 높게 (최대 12단계 = 한 옥타브)
-            AudioSource src = CoinSource();
+            float pitch = Mathf.Pow(2f, Mathf.Min(coinStreak, 12) / 12f);
+            AudioSource src = CoinSource(pitch);
             if (src != null && getCoin != null)
             {
-                src.pitch = Mathf.Pow(2f, Mathf.Min(coinStreak, 12) / 12f);
+                src.pitch = pitch;
                 src.PlayOneShot(getCoin, GameSettings.SfxVolume * 0.85f);
             }
         }
         return sound;
     }
 
-    // 1.1~ 코인 소리 전용 소스 (음높이를 바꿔도 총소리 · 재장전 소리에 걸리지 않게)
-    AudioSource coinSource;
-    AudioSource CoinSource()
+    // 1.1~ 코인 소리 전용 소스 묶음 (음높이를 바꿔도 총소리 · 재장전 소리에 걸리지 않게)
+    // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로, 같은 음높이 소스 · 쉬고 있는 소스 · 가장 오래된 소스 순으로 돌려 씀
+    const int CoinSourceCount = 4;
+    readonly List<AudioSource> coinSources = new List<AudioSource>();
+    int coinSourceNext;
+    AudioSource CoinSource(float pitch)
     {
-        if (coinSource == null && audioSource != null)
+        if (audioSource == null) return null;
+        for (int i = 0; i < coinSources.Count; i++)
+            if (Mathf.Approximately(coinSources[i].pitch, pitch)) return coinSources[i];
+        for (int i = 0; i < coinSources.Count; i++)
+            if (!coinSources[i].isPlaying) return coinSources[i];
+        if (coinSources.Count < CoinSourceCount)
         {
-            coinSource = gameObject.AddComponent<AudioSource>();
-            coinSource.playOnAwake = false;
-            coinSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
-            coinSource.spatialBlend = audioSource.spatialBlend;
-            coinSource.volume = audioSource.volume;
-            coinSource.priority = audioSource.priority;
+            AudioSource s = gameObject.AddComponent<AudioSource>();
+            s.playOnAwake = false;
+            s.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+            s.spatialBlend = audioSource.spatialBlend;
+            s.volume = audioSource.volume;
+            s.priority = audioSource.priority;
+            coinSources.Add(s);
+            return s;
         }
-        return coinSource;
+        AudioSource old = coinSources[coinSourceNext];
+        coinSourceNext = (coinSourceNext + 1) % CoinSourceCount;
+        old.Stop();
+        return old;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

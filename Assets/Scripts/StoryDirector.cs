@@ -337,17 +337,19 @@ public class StoryDirector : MonoBehaviour
         }
 
         // 2) 이야기 (시간을 멈추고 글자가 한 줄씩)
+        bool watched = false;           // 1.1~ 이야기를 [건너뛰기] 없이 끝까지 봤을 때만 「본 것」으로 기록 (건너뛰었으면 다음 판에 다시 나옴)
         if (!skip && !seen)
         {
             float before = Time.timeScale;
             Time.timeScale = 0f;
             yield return Fade(shade, 0f, 0.78f, 0.4f);
             yield return Lines(endless ? EndlessLines : Chapters.IsClassic ? IntroFor(CharacterData.Selected) : MeadowIntroFor(CharacterData.Selected));
+            watched = !skip;
             yield return Fade(shade, GetAlpha(shade), 0f, 0.4f);
             Time.timeScale = before;         // 시작 능력 카드 창이 떠 있으면 그대로 멈춰 있음
         }
         if (cards != null && cardsWere) cards.SetActive(true);
-        if (!seen) { Prefs.SetInt(seenKey, 1); Prefs.Save(); }
+        if (!seen && watched) { Prefs.SetInt(seenKey, 1); Prefs.Save(); }
         Playing = false;
     }
 
@@ -365,8 +367,9 @@ public class StoryDirector : MonoBehaviour
         EndingPlaying = true;
         Time.timeScale = 0f;
         // 1.1~ 최종 클리어 보너스 (결과 화면의 획득 포인트에 들어가게 씬을 바꾸기 전에)
+        // 일일 도전은 같은 날 몇 번이고 다시 깰 수 있어 포인트 벌이 길이 되므로 주지 않음 (이야기 · 무한 모드는 판마다 한 번)
         int bonusBefore = Point.RunBonus;
-        Point.Bonus(Point.FinalBonus);
+        if (!DailyChallenge.Active) Point.Bonus(Point.FinalBonus);
         bool gotBonus = Point.RunBonus > bonusBefore;
         SetAlpha(black, 0f);
         SetAlpha(shade, 0f);

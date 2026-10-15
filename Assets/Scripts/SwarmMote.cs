@@ -97,7 +97,8 @@ public class SwarmMote : MonoBehaviour
         float dt = Time.deltaTime;
         if (dt <= 0f) return;
 
-        age += dt;
+        // 수명은 기본 속도로 화면을 지나는 시간이라, 적 이동 배율(시간 왜곡 등)만큼 늘려 셈 (느려져도 화면 한가운데서 사라지지 않게)
+        age += dt * Mathf.Max(0f, EnermyController.GlobalSpeedMultiplier);
         if (age >= life) { Vanish(); return; }
 
         PlayerController p = Hostile.Player;

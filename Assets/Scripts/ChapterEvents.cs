@@ -28,7 +28,8 @@ public class ChapterEvents : MonoBehaviour
     static readonly Color AltarColor = new Color(0.55f, 0.9f, 1f);
 
     // 이번 장에 나올 이벤트 하나
-    public class Planned { public EventDef def; public float at; public bool done; }
+    // savedDone: 이어하기로 불러온 계획의 「실제로 열었는지」 기록 (-1 = 옛 저장이라 모름 · 0 = 안 열림 · 1 = 열림)
+    public class Planned { public EventDef def; public float at; public bool done; public int savedDone = -1; }
 
     EnemySpawner sp;
     int stage = -1;
@@ -62,15 +63,18 @@ public class ChapterEvents : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) =>
-        {
-            if (s.name != "GameScene") return;
-            seed = Random.Range(1, int.MaxValue);
-            used.Clear();
-            plan.Clear();
-            planStage = -1;
-            resumeActive = -1;
-        };
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => { if (s.name == "GameScene") NewRun(); };
+        // 에디터에서 GameScene 을 바로 재생하면 첫 sceneLoaded 가 Boot 보다 먼저 지나가 seed 가 0(옛 고정 방식)으로 남으므로 여기서 한 번
+        if (seed == 0 && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene") NewRun();
+    }
+
+    static void NewRun()
+    {
+        seed = Random.Range(1, int.MaxValue);
+        used.Clear();
+        plan.Clear();
+        planStage = -1;
+        resumeActive = -1;
     }
 
     public static void SaveRun(RunSave.Data d)
@@ -78,7 +82,8 @@ public class ChapterEvents : MonoBehaviour
         d.eventSeed = seed;
         d.eventStage = planStage;
         d.eventPlan = new List<string>();
-        foreach (Planned p in plan) d.eventPlan.Add(p.def.saveCode + "@" + p.at.ToString("0.####", CultureInfo.InvariantCulture));
+        // 「코드@처치 비율」 뒤에 실제로 열었으면 '!' · 아니면 '?' (처치 비율이 지났어도 앞 이벤트가 도는 동안 못 연 이벤트를 이어하기에서 건너뛰지 않게)
+        foreach (Planned p in plan) d.eventPlan.Add(p.def.saveCode + "@" + p.at.ToString("0.####", CultureInfo.InvariantCulture) + (p.done ? "!" : "?"));
         d.eventUsed = new List<string>(used);
         ChapterEvents ev = FindFirstObjectByType<ChapterEvents>();
         d.eventActive = ev != null && planStage == d.stage ? ev.RestartIndex + 1 : 0;
@@ -99,8 +104,13 @@ public class ChapterEvents : MonoBehaviour
             {
                 string[] w = s.Split('@');
                 EventDef def = ContentRegistry.EventByCode(w[0]);
-                if (def == null || w.Length < 2 || !float.TryParse(w[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float at)) continue;
-                plan.Add(new Planned { def = def, at = at });
+                if (def == null || w.Length < 2) continue;
+                string num = w[1];
+                int savedDone = -1;
+                if (num.EndsWith("!")) { savedDone = 1; num = num.Substring(0, num.Length - 1); }
+                else if (num.EndsWith("?")) { savedDone = 0; num = num.Substring(0, num.Length - 1); }
+                if (!float.TryParse(num, NumberStyles.Float, CultureInfo.InvariantCulture, out float at)) continue;
+                plan.Add(new Planned { def = def, at = at, savedDone = savedDone });
             }
             planStage = d.stage;
             resumeActive = d.eventActive - 1;
@@ -286,7 +296,13 @@ public class ChapterEvents : MonoBehaviour
         if (planStage != stage) GeneratePlan(stage);
         // 이어하기로 장 중간부터 시작하면 이미 지난 이벤트는 다시 하지 않음 (1.0.4~, 예전엔 이어하자마자 습격 · 엘리트가 한꺼번에)
         float at = sp.killedEnemy / (float)Mathf.Max(1, sp.BossKillTarget);
-        for (int i = 0; i < plan.Count; i++) plan[i].done = plan[i].at <= at && i != resumeActive;
+        // 저장에 「열었는지」가 있으면 그대로 (처치 비율은 지났지만 앞 이벤트 때문에 아직 못 연 이벤트는 다시 차례가 옴), 옛 저장은 처치 비율로
+        for (int i = 0; i < plan.Count; i++)
+        {
+            bool opened = plan[i].savedDone >= 0 ? plan[i].savedDone == 1 : plan[i].at <= at;
+            plan[i].done = opened && i != resumeActive;
+            plan[i].savedDone = -1;
+        }
         ambush = null;
         // 1.0.4~: 안 연 보물 상자는 말없이 사라지지 않고 새 장에서 옆에 다시 놓음 (예전엔 문에 들어가면 지워졌음)
         int carried = UnopenedChests;

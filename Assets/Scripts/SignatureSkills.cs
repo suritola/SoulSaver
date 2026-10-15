@@ -352,7 +352,8 @@ public partial class SignatureSkills : MonoBehaviour
     }
 
     static bool IsFoe(Collider2D c) => c.CompareTag("enermy") || c.CompareTag("boss");
-    static bool IsBoss(GameObject g) => g.CompareTag("boss") || g.GetComponent<MidBossMark>() != null;
+    // 황금 고블린(이벤트)은 이름표 때문에 MidBossMark 가 붙지만 보스 대상 효과는 받지 않음 (20초 안에 잡는 난이도 유지)
+    static bool IsBoss(GameObject g) => g.CompareTag("boss") || (g.GetComponent<MidBossMark>() != null && g.GetComponent<GoldenGoblin>() == null);
 
     // 가까운 적 (살아 있는) 여럿
     public static List<Transform> Nearest(Vector3 pos, float r, int count, GameObject except = null)

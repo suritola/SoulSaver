@@ -17,6 +17,7 @@ public class Point : MonoBehaviour
 
     static readonly System.Random Rng = new System.Random();
     Coroutine pulse;
+    int pulseBonus;                 // 금빛으로 보여 주는 중인 보너스 (그사이 적을 잡아 글자를 다시 써도 「+보너스」 꼬리를 유지)
     Color baseColor;
     Vector3 baseScale;
 
@@ -63,13 +64,14 @@ public class Point : MonoBehaviour
         {
             if (p.pulse != null) p.StopCoroutine(p.pulse);
             else { p.baseColor = p.TextInput.color; p.baseScale = p.TextInput.rectTransform.localScale; }
-            p.pulse = p.StartCoroutine(p.Pulse(n));
+            p.pulseBonus = n;
+            p.pulse = p.StartCoroutine(p.Pulse());
+            p.UpdatePointText();                                // 코루틴을 단 뒤에 써야 「+보너스」 꼬리가 붙음
         }
     }
 
-    IEnumerator Pulse(int n)
+    IEnumerator Pulse()
     {
-        TextInput.text = Loc.T("포인트") + " : " + points + "  <color=#F5D478>+" + n.ToString("N0") + "</color>";
         for (float t = 0f; t < 2.5f; t += Time.unscaledDeltaTime)
         {
             float k = t < 0.2f ? t / 0.2f : 1f - Mathf.Clamp01((t - 1.8f) / 0.7f);
@@ -83,8 +85,23 @@ public class Point : MonoBehaviour
         UpdatePointText();
     }
 
+    // 금빛 효과 도중 꺼지면 코루틴이 멈추므로 크기 · 색을 여기서 되돌림
+    void OnDisable()
+    {
+        if (pulse == null) return;
+        pulse = null;
+        if (TextInput != null)
+        {
+            TextInput.rectTransform.localScale = baseScale;
+            TextInput.color = baseColor;
+        }
+        UpdatePointText();
+    }
+
     void UpdatePointText()
     {
-        if (TextInput != null) TextInput.text = Loc.T("포인트") + " : " + points;      // 1.0.4~ 번역 없이 「POINT : 」였음 (판 안의 코인과 다른, 영웅 · 스킨을 사는 재화)
+        if (TextInput == null) return;
+        TextInput.text = Loc.T("포인트") + " : " + points;
+        if (pulse != null) TextInput.text += "  <color=#F5D478>+" + pulseBonus.ToString("N0") + "</color>";      // 1.0.4~ 번역 없이 「POINT : 」였음 (판 안의 코인과 다른, 영웅 · 스킨을 사는 재화)
     }
 }

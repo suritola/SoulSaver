@@ -67,12 +67,13 @@ public static class Juice
         Runner.Hold(StopScale, seconds);
     }
 
-    // 장 보스 처치: 0.35초 슬로모션(0.15배) + 화면 흰 번쩍임 (방금 멈춤이 있었어도 보스는 덮어씀)
+    // 장 보스 처치: 0.35초 슬로모션(0.15배) + 화면 흰 번쩍임 (방금 멈춤이 있었어도 보스는 덮어씀 · 1초 제한도 보지 않음)
+    // 번쩍임 효과를 끈 설정(광과민 접근성)이면 번쩍임 없이 슬로모션만
     public static void BossDown()
     {
         if (Application.isBatchMode) return;
-        Runner.Flash(GameSettings.Flashes ? 0.55f : 0.15f);
-        if (!CanStop() || (Time.unscaledTime - lastStopAt < 1f && !(runner != null && runner.Owns))) return;
+        if (GameSettings.Flashes) Runner.Flash(0.55f);
+        if (!CanStop()) return;
         lastStopAt = Time.unscaledTime;
         Runner.Hold(SlowScale, 0.35f);
     }
@@ -199,12 +200,24 @@ public class JuiceRunner : MonoBehaviour
     // 지금 시간 배율이 우리가 건 값인지
     public bool Owns => active && Mathf.Abs(Time.timeScale - scale) < 0.0001f;
 
+    // 물리 간격도 배율만큼 줄여 슬로모션 중 FixedUpdate 움직임이 뚝뚝 끊기지 않게 (원래 값은 처음 바꿀 때 한 번만 기억)
+    float baseFixed;
+    bool fixedChanged;
+
     public void Hold(float s, float seconds)
     {
         until = Mathf.Max(Owns ? until : 0f, Time.unscaledTime + seconds);
         scale = s;
         active = true;
         Time.timeScale = s;
+        if (!fixedChanged) { baseFixed = Time.fixedDeltaTime; fixedChanged = true; }
+        Time.fixedDeltaTime = baseFixed * s;
+    }
+
+    void Release()
+    {
+        active = false;
+        if (fixedChanged) { Time.fixedDeltaTime = baseFixed; fixedChanged = false; }
     }
 
     public void Flash(float strength)
@@ -239,17 +252,22 @@ public class JuiceRunner : MonoBehaviour
             if (flash.enabled != a > 0f) flash.enabled = a > 0f;
             if (a > 0f) flash.color = new Color(1f, 1f, 1f, a);
         }
+    }
 
+    // 시간 관리는 LateUpdate 에서: 다른 곳이 같은 프레임 Update 에서 시간을 바꿨으면 다음 물리 단계 전에 물리 간격을 되돌림
+    void LateUpdate()
+    {
         if (!active) return;
         float t = Time.timeScale;
         if (t == 0f) return;                                    // 다른 창이 멈춤 → 그 창이 우리 값으로 돌려놓으면 그때 1배로
-        if (Mathf.Abs(t - scale) > 0.0001f) { active = false; return; }      // 다른 곳이 시간을 바꿈 → 손대지 않음
-        if (Time.unscaledTime >= until) { Time.timeScale = 1f; active = false; }
+        if (Mathf.Abs(t - scale) > 0.0001f) { Release(); return; }      // 다른 곳이 시간을 바꿈 → 배율은 손대지 않고 물리 간격만 되돌림
+        if (Time.unscaledTime >= until) { Time.timeScale = 1f; Release(); }
     }
 
-    // 씬이 바뀌어 사라질 때 우리 배율이 남아 있으면 되돌림
+    // 씬이 바뀌어 사라질 때 우리 배율이 남아 있으면 되돌림 (물리 간격은 언제나 되돌림)
     void OnDestroy()
     {
         if (Owns) Time.timeScale = 1f;
+        Release();
     }
 }

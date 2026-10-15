@@ -37,6 +37,7 @@ public class EndlessMode : MonoBehaviour
     bosss developer, mom;
     bool devSummoned, momSummoned, devDown, momDown;     // 1.0.4~
     public bool FinalPhase => finalStage > 0;
+    public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
     // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
     public bool NoMobs => devSummoned;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게

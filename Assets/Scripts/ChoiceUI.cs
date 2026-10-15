@@ -15,10 +15,19 @@ public class ChoiceUI : MonoBehaviour
         public string name, desc;       // 한국어 원문 (번역은 UIKit.Text)
         public Color color;
         public string icon;             // Icons/choice_<icon>
-        public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; }
+        public Sprite sprite;           // 1.1~ 그림을 직접 줄 때 (있으면 icon 대신 · 능력치 · 레벨업 카드 아이콘 등)
+        public Option(string name, string desc, Color color, string icon = null) { this.name = name; this.desc = desc; this.color = color; this.icon = icon; sprite = null; }
+        public Option(string name, string desc, Color color, Sprite sprite) { this.name = name; this.desc = desc; this.color = color; icon = null; this.sprite = sprite; }
     }
 
     public static bool Open { get; internal set; }      // 1.1~ internal: 전설 상자 룰렛(ChestRewards)도 켬
+
+    // 1.1~ 안전장치: 창이 열린 채 씬이 바뀌면 코루틴이 사라져 Open 이 true 로 남음 → 다음 판의 고르기 창 · ESC 메뉴가 모두 막힘
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Boot()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => Open = false;
+    }
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.93f, 0.9f, 0.84f);
@@ -119,7 +128,7 @@ public class ChoiceUI : MonoBehaviour
             b.onClick.AddListener(() => ui.Click(idx));
 
             // 그림 (뒤에 옅은 빛)
-            Sprite icon = string.IsNullOrEmpty(o.icon) ? null : Resources.Load<Sprite>("Icons/choice_" + o.icon);
+            Sprite icon = o.sprite != null ? o.sprite : string.IsNullOrEmpty(o.icon) ? null : Resources.Load<Sprite>("Icons/choice_" + o.icon);
             if (icon != null)
             {
                 RectTransform glow = UIKit.Rect("Glow", face, new Vector2(0f, 120f), new Vector2(210f, 210f));

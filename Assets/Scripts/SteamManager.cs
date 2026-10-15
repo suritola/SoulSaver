@@ -110,8 +110,10 @@ public class SteamManager : MonoBehaviour
 
     // ================================================================= 업적 조건
     // 여러 판에 걸친 누적 처치 수 (이 PC의 PlayerPrefs)
-    const string TotalKillsKey = "stats.totalKills";
-    const int TotalKillsGoal = 3000;
+    // 1.1~ public: 결과 화면 「다음 목표」(ResultScreen)가 같은 값을 씀 (한쪽만 바꿔 어긋나지 않게)
+    public const string TotalKillsKey = "stats.totalKills";
+    public const int TotalKillsGoal = 3000;
+    public const float EndlessGoal = 1200f;         // 업적 「무한 모드 20분」 (SteamAchievements.Endless20)
 
     int runKills, runEvolves, runUlts;
     EnemySpawner spawner;
@@ -204,7 +206,7 @@ public class SteamManager : MonoBehaviour
         {
             float s = GameMode.EndlessSeconds;
             if (s >= 600f) SteamAchievements.Unlock(SteamAchievements.Endless10);
-            if (s >= 1200f) SteamAchievements.Unlock(SteamAchievements.Endless20);
+            if (s >= EndlessGoal) SteamAchievements.Unlock(SteamAchievements.Endless20);
             if (EndlessMode.Instance != null && EndlessMode.Instance.BossesDefeated >= 5) SteamAchievements.Unlock(SteamAchievements.EndlessBosses);
             return;
         }

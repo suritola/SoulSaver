@@ -705,7 +705,7 @@ public partial class SpecialAbilities
 
     // 레벨업 카드 아이콘 (0 관통 · 1 코인 · 2 재활용 · 3 눈빛 · 4 경험치 · 5 자석 · 7 밀어내기 · 8 심장 · 10 샘 · 11 굶주림)
     static AbilityHUD abilityHud;
-    static Sprite LvIcon(int id)
+    public static Sprite LvIcon(int id)             // 1.1~ public: 초월 카드 「급소」 아이콘도 (LevelShop.Transcend)
     {
         if (abilityHud == null) abilityHud = FindFirstObjectByType<AbilityHUD>(FindObjectsInactive.Include);
         return abilityHud != null ? abilityHud.GetIcon(id) : null;

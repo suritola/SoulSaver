@@ -18,12 +18,20 @@ public class SwarmWave : MonoBehaviour
     readonly List<SwarmMote> pool = new List<SwarmMote>(PoolSize);
     float timer;
     int lastStage = int.MinValue;
-    bool announced;
+    // 「몰려온다!」 안내는 판에서 처음 한 번만: 씬을 다시 불러와도(이어하기) 남게 static
+    // 새 판이면 지움, 이어하기면 첫 무리 시각(1장 절반 시간)을 지난 저장일 때 이미 본 것으로
+    static bool announced;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
-        SceneManager.sceneLoaded += (s, m) => { if (s.name == "GameScene") new GameObject("SwarmWave").AddComponent<SwarmWave>(); };
+        SceneManager.sceneLoaded += (s, m) =>
+        {
+            if (s.name != "GameScene") return;
+            RunSave.Data resume = RunSave.Pending;
+            announced = resume != null && resume.seconds >= FirstChapterEvery * 0.5f;
+            new GameObject("SwarmWave").AddComponent<SwarmWave>();
+        };
     }
 
     // 지금 나와 있는 부스러기 수
@@ -85,13 +93,18 @@ public class SwarmWave : MonoBehaviour
             reach = Mathf.Sqrt(h * h + w * w) + 2f;
         }
         Vector2 me = p.transform.position;
+        // 8번 다 맵 밖이면 맵에 가장 가까운 출발점으로 (맵 밖을 오래 날다 수명이 끝나는 무리가 줄게)
+        // 벽 · 구조물은 그대로 통과 (영혼 부스러기라 일부러)
         Vector2 dir = Vector2.right, start = me - dir * reach;
+        float bestOut = float.MaxValue;
         for (int t = 0; t < 8; t++)
         {
-            dir = Random.insideUnitCircle.normalized;
-            if (dir.sqrMagnitude < 0.5f) dir = Vector2.right;
-            start = me - dir * reach + new Vector2(-dir.y, dir.x) * Random.Range(-3f, 3f);
-            if (Hostile.InArena(start)) break;
+            Vector2 d = Random.insideUnitCircle.normalized;
+            if (d.sqrMagnitude < 0.5f) d = Vector2.right;
+            Vector2 at = me - d * reach + new Vector2(-d.y, d.x) * Random.Range(-3f, 3f);
+            float outBy = ((Vector2)Hostile.ClampArena(at) - at).sqrMagnitude;
+            if (outBy < bestOut) { bestOut = outBy; dir = d; start = at; }
+            if (outBy < 0.0001f) break;
         }
 
         float exp = MoteExp(sp);
@@ -129,7 +142,7 @@ public class SwarmWave : MonoBehaviour
         return m;
     }
 
-    // 이 장에서 가장 약한 잡몹 경험치 × 장 보상 배율 × 난이도 보상 배율 × 0.2 (1장 약 4 · 처치 보상 배율과 같은 방식)
+    // 이 장에서 가장 약한 잡몹 경험치 × 장 보상 배율 × 잡몹 처치 보상 배율(GameMode.RewardMul, 보스까지 세는 잡몹과 같은 기준) × 0.2 (1장 보통 약 3)
     static float MoteExp(EnemySpawner sp)
     {
         int least = 0;
@@ -141,7 +154,7 @@ public class SwarmWave : MonoBehaviour
                 if (least == 0 || e.expReward < least) least = e.expReward;
             }
         if (least == 0) least = 20;
-        return Mathf.Max(1f, Mathf.Round(least * Chapters.RewardMul(Chapters.CurrentStage) * GameMode.FixedRewardMul * ExpShare));
+        return Mathf.Max(1f, Mathf.Round(least * Chapters.RewardMul(Chapters.CurrentStage) * GameMode.RewardMul * ExpShare));
     }
 
     // 이 장 잡몹과 같은 그림 층 (조금 위)
