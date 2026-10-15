@@ -29,8 +29,9 @@ public partial class CharacterKit
         if (big) clockTicks = 0;
         gearThrows++;
         float d = dmg * (form == SpecialAbilities.KitGrandfather ? 1.4f : 1f);
+        // 1.1.3: 이중 톱니 0.85 → 0.7 (두 톱니 합 1.7배 → 1.4배 — 괘종 1.4 · 분침과 곱으로 겹쳐 후반 단일 화력이 중앙값의 2배였음)
         foreach (Vector2 v in Spread(dir, shots + (augment == AugTwinGear ? 1 : 0), 10f))
-            Gear(start, v, d * (augment == AugTwinGear && shots > 0 ? 0.85f : 1f), card[0], big);
+            Gear(start, v, d * (augment == AugTwinGear && shots > 0 ? 0.7f : 1f), card[0], big);
         SignatureSkills.GearThrown(start, dir, d, big);
         if (card[2] > 0 && gearThrows % 5 == 0) StartCoroutine(Pendulum(dir));
         if (big)
@@ -310,7 +311,7 @@ public partial class CharacterKit
         transform.position = to;
         timeLog.Clear();            // 되감은 뒤엔 기록을 새로 (다음 되감기가 되감기 전 자리로 튀지 않게)
         lastLogPos = to;
-        float dmg = Damage * 4f * UltMul;
+        float dmg = Damage * 5f * UltMul;       // 1.1.3: 4 → 5 (되감기가 전체 피해의 4~10% 뿐 · 다른 영웅 궁극기 6~12배)
         // 지나온 길의 적
         Vector3 mid = (from + to) * 0.5f;
         List<Collider2D> caught = new List<Collider2D>();

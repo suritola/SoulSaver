@@ -26,7 +26,7 @@ public partial class CharacterKit
     float LetterSpeed => 24f * (1f + 0.2f * card[5]);
     float LetterTurn => 540f * (1f + 0.2f * card[5]);
     int StampMax => SignatureSkills.StampMax();
-    const float ExtraLetterRate = 0.4f;         // 1.0.6~ 다발 배송 · 총알 배송으로 덧붙은 편지 피해 50% → 40%
+    const float ExtraLetterRate = 0.55f;        // 1.0.6~ 다발 배송 · 총알 배송으로 덧붙은 편지 피해 50% → 40% · 1.1.3: 40% → 55% (무리 화력이 중앙값 −40~60%, 1.0.6 하향의 원인이던 파생 편지 보너스 무한 순환은 따로 막혀 있음)
     const float RegisteredRate = 0.65f;         // 1.0.6~ 등기 우편 다시 배달 피해 80% → 65% (3회면 한 통이 약 2.95배 → 2.35배)
     const int ReplyCap = 10;                    // 1.0.6~ 답장: 속달 한 번에 최대 10통 (예전엔 표식 수 × 답장 수, 최대 60통)
 

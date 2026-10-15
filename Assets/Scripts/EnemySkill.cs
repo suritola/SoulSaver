@@ -27,7 +27,10 @@ public class EnemySkill : MonoBehaviour
     bool Alive => enemy != null && !enemy.IsDead;
     // 중간 보스는 범위가 크고 더 자주 씀
     float Size => enemy.survivesContact ? 1.5f : 1f;
-    float Dmg => enemy.contactDamage;
+    // 1.1.3 밸런스 점검: 몸통 접촉은 contactDamage × 0.6 (EnermyController.ContactScale) 인데 스킬은 × 1 이라 스킬 한 방이 접촉의 1.7~2.7배,
+    //   4장 거상 균열은 보통 58 (보스 한 대 20 의 3배) → 스킬 기준을 0.8 로 (자폭은 제 몸을 버리는 공격이라 그대로), 균열은 따로 ×0.75 (Fissure)
+    const float SkillScale = 0.8f;
+    float Dmg => enemy.contactDamage * (type == EnemySkillType.SelfDestruct ? 1f : SkillScale);
 
     // 스킬이 만든 표시 (기 모으는 빛 · 머리 위 스킬 이름). 적이 지워져 스킬이 중간에 끊겨도 남지 않게 꺼질 때 지움
     readonly List<GameObject> owned = new List<GameObject>();
@@ -607,7 +610,7 @@ public class EnemySkill : MonoBehaviour
             {
                 Vector3 at = c + (Vector3)(dirs[k] * (1.5f + spacing * i));
                 Fx.Spawn("fx_spike", at + Vector3.up * 0.6f, 2.3f, new Color(0.6f, 0.9f, 1f), 18f);
-                if (!hit) hit = Hostile.HitCircle(at, 1f, Dmg);
+                if (!hit) hit = Hostile.HitCircle(at, 1f, Dmg * 0.75f);      // 1.1.3: 거상 접촉 30 이 가장 커서 균열만 더 낮춤 (보통 58 → 35)
             }
             Hostile.Play("crack", 0.3f, 0.9f + i * 0.05f);
             yield return new WaitForSeconds(0.08f);

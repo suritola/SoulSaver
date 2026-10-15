@@ -823,8 +823,8 @@ public partial class CharacterKit : MonoBehaviour
         CancelUltAim();
         if (sword)
         {
-            // 회전 베기: 누른 만큼 강해짐
-            float dmg = Damage * (3f + 5f * charge) * UltMul;
+            // 회전 베기: 누른 만큼 강해짐 (1.1.3: 3 + 5c → 2.5 + 4.5c, 밸런스 점검)
+            float dmg = Damage * (2.5f + 4.5f * charge) * UltMul;
             DamageCircle(transform.position, radius, dmg, 2.5f);
             PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.1)
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
@@ -1131,11 +1131,12 @@ public partial class CharacterKit : MonoBehaviour
             Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.15f + 0.15f * card[0]), 9999, 22f, 14f, "fx_swordwave", 3.4f, new Color(0.7f, 0.9f, 1f, 0.9f), false);
         }
         // 근접 특성: 휘두르는 동안 받는 피해 절반
-        swingGuardUntil = Time.time + 0.3f;
-        // 근접 특성: 벤 적(최대 3) 하나당 체력 0.3 회복, 흡혈 베기 카드가 레벨마다 +0.5
+        // 1.1.3: 0.3 → 0.2초 (후반 베기 간격이 0.5초 아래로 내려가면 절반 보호가 거의 늘 켜져 있었음 · 검사가 사망률 가장 낮은 영웅이라 근접 위험 보정이 겹침)
+        swingGuardUntil = Time.time + 0.2f;
+        // 근접 특성: 벤 적(최대 3) 하나당 체력 0.2 회복 (1.1.3: 0.3 → 0.2), 흡혈 베기 카드가 레벨마다 +0.5
         if (hits > 0 && player.PlayerHealth > 0f)
         {
-            float heal = Mathf.Min(hits, 3) * (0.3f + 0.5f * card[1]);      // 흡혈 베기: 0.8 / 1.3 / 1.8 (예전 1.3 / 2.3 / 3.3 은 너무 많이 회복)
+            float heal = Mathf.Min(hits, 3) * (0.2f + 0.5f * card[1]);      // 흡혈 베기: 0.7 / 1.2 / 1.7 (예전 1.3 / 2.3 / 3.3 은 너무 많이 회복)
             player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + heal);
             if (card[1] > 0) Fx.Spawn("fx_sparkle", transform.position, 1.2f, new Color(1f, 0.4f, 0.45f), 20f);
         }

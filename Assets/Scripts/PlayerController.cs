@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -193,6 +193,8 @@ public class PlayerController : MonoBehaviour
 
     private List<EnermyController> targets =
         new List<EnermyController>();
+    // 1.1.3: 조준한 보스 (예전엔 「enermy」 태그만 조준해 보스 단독 구간 — 1장 킹 슬라임 · 개발자 · 엄마 — 에서 기본 필살기가 아무것도 맞히지 못했음)
+    private readonly List<bosss> bossTargets = new List<bosss>();
 
     private List<GameObject> targetMarks =
         new List<GameObject>();
@@ -809,16 +811,26 @@ void Shoot()
     {
         // 한 번에 조준할 수 있는 적 수 (스킬 강화로 늘어남)
         int limit = special != null ? special.MaxTargets(maxTargets) : maxTargets;
-        if (targets.Count >= limit) return;
+        if (targets.Count + bossTargets.Count >= limit) return;
 
         List<Collider2D> enemies = Specials.Overlap(transform.position, targetRange, targetHits);
 
         EnermyController closestEnemy = null;
+        bosss closestBoss = null;
 
         float closestDistance = Mathf.Infinity;
 
         foreach (Collider2D enemyCollider in enemies)
         {
+            // 1.1.3: 보스도 한 칸을 차지하는 조준 대상 (보스 하나는 한 번만 · 부위 콜라이더는 몸통의 bosss 로)
+            if (enemyCollider.CompareTag("boss"))
+            {
+                bosss b = enemyCollider.GetComponentInParent<bosss>();
+                if (b == null || b.IsDead || bossTargets.Contains(b)) continue;
+                float bd = Vector2.Distance(transform.position, b.transform.position);
+                if (bd < closestDistance) { closestDistance = bd; closestBoss = b; closestEnemy = null; }
+                continue;
+            }
             if (!enemyCollider.CompareTag("enermy")) continue;
 
             EnermyController enemy = enemyCollider.GetComponent<EnermyController>();
@@ -831,24 +843,27 @@ void Shoot()
             {
                 closestDistance = distance;
                 closestEnemy = enemy;
+                closestBoss = null;
             }
         }
 
-        if (closestEnemy == null) return;
+        if (closestEnemy == null && closestBoss == null) return;
 
-        targets.Add(closestEnemy);
+        Transform picked;
+        if (closestEnemy != null) { targets.Add(closestEnemy); picked = closestEnemy.transform; }
+        else { bossTargets.Add(closestBoss); picked = closestBoss.transform; }
 
         // 진화한 무기의 필살기면 무기다운 표식 (범위형 무기는 표식 없음)
         if (special != null && special.UltReplaced)
         {
-            GameObject weaponMark = special.MarkTarget(closestEnemy.transform);
+            GameObject weaponMark = special.MarkTarget(picked);
             if (weaponMark != null) targetMarks.Add(weaponMark);
         }
         else if (targetMarkPrefab != null)
         {
-            GameObject mark = Instantiate(targetMarkPrefab, closestEnemy.transform.position, Quaternion.identity);
+            GameObject mark = Instantiate(targetMarkPrefab, picked.position, Quaternion.identity);
             TargetMark targetMark = mark.GetComponent<TargetMark>();
-            if (targetMark != null) targetMark.target = closestEnemy.transform;
+            if (targetMark != null) targetMark.target = picked;
             targetMarks.Add(mark);
             if (NowBullet < MaxBullet) NowBullet++;
         }
@@ -915,6 +930,7 @@ void Shoot()
 
         targetMarks.Clear();
         targets.Clear();
+        bossTargets.Clear();
         special?.EndAim();
 
         NowCharge = 0f;
@@ -940,6 +956,8 @@ void Shoot()
     }
 
     const float GunUltAddMul = 0.5f;     // CharacterKit.KitUltAddMul 과 같게
+    // 1.1.3: 보스에게 쏘는 필살기 총알의 피해 (잡몹은 대부분 첫 발에 죽어 남은 발이 버려지지만 보스는 모든 발이 다 박히므로 절반)
+    const float GunUltBossMul = 0.5f;
 
     IEnumerator ShootTargets()
     {
@@ -949,6 +967,7 @@ void Shoot()
         if (special != null && special.UltReplaced)
         {
             yield return StartCoroutine(special.WeaponVolley(targets, skillDamage, getHP));
+            yield return StartCoroutine(ShootBossTargets());
             targets.Clear();
             isVolleying = false;
             yield break;
@@ -1015,12 +1034,40 @@ void Shoot()
             }
         }
 
+        yield return StartCoroutine(ShootBossTargets());
+
         // 2.2.0: 나머지 진화 무기는 원래 조준 사격 뒤에 그 무기의 궁극기가 절반 세기로 덧붙음 (다른 캐릭터와 같게)
         foreach (int add in adds)
             yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(targets), skillDamage * GunUltAddMul, getHP, add));
 
         targets.Clear();
         isVolleying = false;
+    }
+
+    // 1.1.3: 조준한 보스에게 일제 사격 (몸 중심을 겨눠 ShotsPerTarget 발, 피해 GunUltBossMul 배 · 총알 카드 · 고유 스킬은 잡몹 사격과 같게)
+    IEnumerator ShootBossTargets()
+    {
+        foreach (bosss b in bossTargets)
+        {
+            if (b == null || b.IsDead) continue;
+            Collider2D body = b.GetComponent<Collider2D>();
+            for (int i = 0; i < ShotsPerTarget; i++)
+            {
+                if (b == null || b.IsDead) break;
+                Vector3 startPosition = transform.position + new Vector3(0, -0.5f, 0);
+                Vector3 aim = body != null && body.enabled ? body.bounds.center : b.transform.position;
+                FaceTowards(aim);
+                PlayerMotion.Of(this).Recoil(aim - startPosition, 0.6f);
+                if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
+                Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized,
+                    skillDamage * GunUltBossMul * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
+                SignatureSkills.UltShots = true;
+                special?.ApplyGunCards(shot, true, false);
+                SignatureSkills.UltShots = false;
+                yield return new WaitForSeconds(shootDelay);
+            }
+        }
+        bossTargets.Clear();
     }
 
     // =====================================
