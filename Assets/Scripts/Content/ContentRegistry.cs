@@ -173,13 +173,14 @@ public static partial class ContentRegistry
     // ================================================================= 부서지는 맵 물체 (1.2~, MapProps)
     // 스테이지 번호: 0 지하 묘역 · 1 불타는 지옥 · 2 초원 · 3 영혼의 심연
     public const string Sarcophagus = "sarcophagus";
+    // 1.1.2~ size = 몸통 크기 · 더 잘 보이게 키움 (항아리 · 나무통 1.9 → 2.2 · 화로 · 수정 2 → 2.3 · 석관 3.2 → 3.6, 그림은 둘레 테두리까지 40칸)
     public static readonly List<PropDef> Props = new List<PropDef>
     {
-        new PropDef { id = "urn",     saveCode = "u", since = "1.2", nameKey = "prop.urn.name",     icon = "prop_urn",     stage = 0, size = 1.9f, color = new Color(0.85f, 0.62f, 0.45f) },
-        new PropDef { id = "brazier", saveCode = "z", since = "1.2", nameKey = "prop.brazier.name", icon = "prop_brazier", stage = 1, size = 2f,   color = new Color(1f, 0.55f, 0.2f) },
-        new PropDef { id = "barrel",  saveCode = "b", since = "1.2", nameKey = "prop.barrel.name",  icon = "prop_barrel",  stage = 2, size = 1.9f, color = new Color(0.8f, 0.55f, 0.3f) },
-        new PropDef { id = "crystal", saveCode = "y", since = "1.2", nameKey = "prop.crystal.name", icon = "prop_crystal", stage = 3, size = 2f,   color = new Color(0.6f, 0.85f, 1f) },
-        new PropDef { id = Sarcophagus, saveCode = "S", since = "1.2", nameKey = "prop.sarco.name", icon = "prop_sarcophagus", sarcophagus = true, size = 3.2f, color = new Color(0.75f, 0.5f, 1f) },
+        new PropDef { id = "urn",     saveCode = "u", since = "1.2", nameKey = "prop.urn.name",     icon = "prop_urn",     stage = 0, size = 2.2f, color = new Color(0.85f, 0.62f, 0.45f) },
+        new PropDef { id = "brazier", saveCode = "z", since = "1.2", nameKey = "prop.brazier.name", icon = "prop_brazier", stage = 1, size = 2.3f, color = new Color(1f, 0.55f, 0.2f) },
+        new PropDef { id = "barrel",  saveCode = "b", since = "1.2", nameKey = "prop.barrel.name",  icon = "prop_barrel",  stage = 2, size = 2.2f, color = new Color(0.8f, 0.55f, 0.3f) },
+        new PropDef { id = "crystal", saveCode = "y", since = "1.2", nameKey = "prop.crystal.name", icon = "prop_crystal", stage = 3, size = 2.3f, color = new Color(0.6f, 0.85f, 1f) },
+        new PropDef { id = Sarcophagus, saveCode = "S", since = "1.2", nameKey = "prop.sarco.name", icon = "prop_sarcophagus", sarcophagus = true, size = 3.6f, color = new Color(0.75f, 0.5f, 1f) },
     };
 
     public static PropDef PropById(string id)
@@ -189,10 +190,11 @@ public static partial class ContentRegistry
     }
 
     // ================================================================= 맵 물체가 떨어뜨리는 것 (1.2~, MapProps)
+    // 1.1.2~ color = 바닥 빛 · 고리 색 (고기는 자석 빨강과 헷갈려서 회복 초록으로)
     public static readonly List<DropDef> Drops = new List<DropDef>
     {
         new DropDef { id = "coin",     saveCode = "co", since = "1.2", nameKey = "drop.coin.name",     weight = 34f, color = new Color(1f, 0.82f, 0.3f),  apply = MapProps.DropCoins },
-        new DropDef { id = "meat",     saveCode = "me", since = "1.2", nameKey = "drop.meat.name",     weight = 22f, heal = true, icon = "drop_meat", color = new Color(1f, 0.55f, 0.45f), apply = MapProps.DropMeat },
+        new DropDef { id = "meat",     saveCode = "me", since = "1.2", nameKey = "drop.meat.name",     weight = 22f, heal = true, icon = "drop_meat", color = new Color(0.5f, 1f, 0.55f), apply = MapProps.DropMeat },
         new DropDef { id = "gold",     saveCode = "go", since = "1.2", nameKey = "drop.gold.name",     weight = 14f, color = new Color(1f, 0.9f, 0.5f),   apply = MapProps.DropGold },
         new DropDef { id = "magnet",   saveCode = "mg", since = "1.2", nameKey = "drop.magnet.name",   weight = 12f, icon = "drop_magnet", color = new Color(1f, 0.45f, 0.45f), apply = MapProps.DropMagnet },
         new DropDef { id = "timestop", saveCode = "ts", since = "1.2", nameKey = "drop.timestop.name", weight = 9f,  icon = "drop_hourglass", color = new Color(0.6f, 0.85f, 1f), apply = MapProps.DropTimeStop },
