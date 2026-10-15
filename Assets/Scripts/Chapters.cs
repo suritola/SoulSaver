@@ -60,8 +60,9 @@ public static class Chapters
     // 1.0.1: 3장부터 보스가 약하게 느껴져서 확 올림 (1장 264 < 2장 2112 < 3장 4760 → 6843 < 4장 5040 → 6930)
     static readonly float[] EaseBoss = { 0.55f, 0.88f, 1.15f, 1.65f };
     static readonly float[] EaseReward = { 1.15f, 1.08f, 1f, 1f };       // 앞쪽 장은 레벨이 조금 빨리 오름
-    static readonly float[] EaseSpawn = { 1.9f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
-    static readonly float[] EaseAlive = { 0.5f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율
+    // 1.1~ 첫 3분이 비어 보여서 1장만 더 빽빽하게 (간격 1.9 → 1.3 · 최대 수 0.5 → 0.8, 적 체력 0.42배는 그대로 · 영혼 부스러기 무리는 SwarmWave)
+    static readonly float[] EaseSpawn = { 1.3f, 1.2f, 0.95f, 0.88f };     // 적이 나오는 간격 배율 (클수록 드묾)
+    static readonly float[] EaseAlive = { 0.8f, 0.8f, 1.05f, 1.12f };     // 한 화면 최대 적 수 배율
     static readonly float[] EaseSpeed = { 0.75f, 0.9f, 1f, 1.04f };
     static readonly float[] EaseSkill = { 1.8f, 1.2f, 0.95f, 0.88f };      // 적 · 보스 스킬 간격 배율 (클수록 드묾)
 

@@ -234,6 +234,8 @@ public static partial class LocTable
         { "판마다 한 번, 죽을 피해를 받으면\n체력 1로 버티고 3초 동안 무적이 됩니다.", L("Once per run, survive a lethal hit\nwith 1 HP and become invincible for 3s.", "1プレイに1回、致命ダメージを受けても\n体力1で耐え、3秒間無敵になります。", "每局一次，受到致命伤害时\n以1点生命存活并无敌3秒。") },
 
         // ================================================================= 보스 · 스테이지
+        // 1.1~ 영혼 부스러기 무리 (SwarmWave): 처음 몰려올 때 한 번
+        { "swarm.incoming", E("영혼 부스러기 무리가 몰려온다!", "A swarm of soul motes is rushing in!", "魂のかけらの群れが押し寄せる！", "灵魂碎屑群蜂拥而来！") },
         { "킹 슬라임이 둘로 갈라졌다!", L("The King Slime split in two!", "キングスライムが二つに分裂した！", "史莱姆王分裂成了两只！") },
         { "슬라임이 또 갈라진다!", L("The slimes split again!", "スライムがまた分裂する！", "史莱姆又分裂了！") },
         { "리치 왕이 망자의 의식을 시작한다!", L("The Lich King begins the Rite of the Dead!", "リッチ王が死者の儀式を始める！", "巫妖王开始了亡者仪式！") },
