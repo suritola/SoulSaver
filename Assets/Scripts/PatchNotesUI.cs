@@ -51,7 +51,7 @@ public static class PatchNotesUI
         view.gameObject.AddComponent<RectMask2D>();
         RectTransform content = UIKit.Rect("Content", view, Vector2.zero, new Vector2(1110f, 0f));
         content.anchorMin = content.anchorMax = content.pivot = new Vector2(0.5f, 1f);
-        content.anchoredPosition = new Vector2(0f, -16f);
+        content.anchoredPosition = Vector2.zero;
 
         TMP_Text body = UIKit.Text(content, "", 25f, Parch, Vector2.zero, new Vector2(1110f, 0f), TextAlignmentOptions.TopLeft);
         body.enableAutoSizing = false;
@@ -62,7 +62,7 @@ public static class PatchNotesUI
         br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 1f);
         br.anchoredPosition = Vector2.zero;
         body.text = Format(Localize(src.text));
-        content.gameObject.AddComponent<VerticalLayoutGroup>().childControlHeight = true;
+        Pad(content.gameObject.AddComponent<VerticalLayoutGroup>());
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         ScrollRect scroll = view.gameObject.AddComponent<ScrollRect>();
@@ -129,7 +129,7 @@ public static class PatchNotesUI
         view.gameObject.AddComponent<RectMask2D>();
         RectTransform content = UIKit.Rect("Content", view, Vector2.zero, new Vector2(1120f, 0f));
         content.anchorMin = content.anchorMax = content.pivot = new Vector2(0.5f, 1f);
-        content.anchoredPosition = new Vector2(0f, -16f);
+        content.anchoredPosition = Vector2.zero;
         TMP_Text body = UIKit.Text(content, "", 25f, Parch, Vector2.zero, new Vector2(1120f, 0f), TextAlignmentOptions.TopLeft);
         body.enableAutoSizing = false;
         body.fontSize = 25f;
@@ -138,7 +138,7 @@ public static class PatchNotesUI
         RectTransform br = body.rectTransform;
         br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 1f);
         br.anchoredPosition = Vector2.zero;
-        content.gameObject.AddComponent<VerticalLayoutGroup>().childControlHeight = true;
+        Pad(content.gameObject.AddComponent<VerticalLayoutGroup>());
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         ScrollRect scroll = view.gameObject.AddComponent<ScrollRect>();
         scroll.content = content;
@@ -153,7 +153,6 @@ public static class PatchNotesUI
             body.text = Format(Localize(notes[i].text));
             for (int k = 0; k < tabs.Count; k++) tabs[k].color = k == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
             scroll.verticalNormalizedPosition = 1f;
-            content.anchoredPosition = new Vector2(0f, -16f);
         }
         for (int i = 0; i < notes.Count; i++)
         {
@@ -168,6 +167,13 @@ public static class PatchNotesUI
         }
         Show(0);
         open.AddComponent<EscCloser>();
+    }
+
+    // 1.1~ 본문 위아래 여백은 레이아웃 안쪽 여백으로 (예전 content 를 -16 내리던 것은 Clamped 스크롤이 첫 프레임 뒤 되돌려 사라졌음)
+    static void Pad(VerticalLayoutGroup v)
+    {
+        v.childControlHeight = true;
+        v.padding = new RectOffset(0, 0, 16, 16);
     }
 
     public static void Close()
@@ -213,6 +219,8 @@ public static class PatchNotesUI
             if (t.StartsWith("### ")) sb.Append("<size=108%><color=#9FD8FF>").Append(t.Substring(4).Trim()).Append("</color></size>\n");    // 여러 버전을 합친 패치노트의 작은 제목
             else if (t.StartsWith("## ")) sb.Append("\n<size=120%><color=#C9A0FF>").Append(t.Substring(3).Trim()).Append("</color></size>\n");
             else if (t.StartsWith("# ")) sb.Append("<size=125%><color=#F5D478>").Append(t.Substring(2).Trim()).Append("</color></size>\n");
+            // 1.1~ 들여쓴 하위 목록 (  - …): 한 단계 더 들여 작은 점으로 (예전엔 TrimStart 뒤라 상위 항목과 똑같이 보였음)
+            else if (t.StartsWith("- ") && line.StartsWith("  ")) sb.Append("<indent=5%><color=#A89C86>·</color></indent><indent=8%>").Append(t.Substring(2)).Append("</indent>\n");
             else if (t.StartsWith("- ")) sb.Append("<indent=2%>•</indent><indent=5%>").Append(t.Substring(2)).Append("</indent>\n");
             else if (t.Length > 0 && line.StartsWith(" ")) sb.Append("<indent=5%><color=#A89C86>").Append(t).Append("</color></indent>\n");
             else if (t.Length > 0) sb.Append(t).Append('\n');

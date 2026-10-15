@@ -13,6 +13,10 @@ public static class CodexUI
     static ScrollRect scroll;
     static TMP_Text hint;
     static readonly List<Button> tabButtons = new List<Button>();
+    // 1.1~ 카드 높이: 캐릭터 탭은 본문(설명 + 기본 무기 + 필살기 + 전용 무기)이 길어 더 큼 (영어 11줄도 14px 로 들어가게)
+    static GridLayoutGroup gridLayout;
+    const float BaseCardH = 240f, HeroCardH = 300f;
+    static float CardH = BaseCardH;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
@@ -25,7 +29,7 @@ public static class CodexUI
         "스테이지마다 나오는 적과 스킬 · 붉은 경고가 보이면 피하세요",
         "각 스테이지의 마지막 적 · 체력이 절반 아래면 특수 스킬, 필살기 게이지가 차면 결계를 펼칩니다",
         "메인 메뉴의 캐릭터에서 고릅니다 · 잠긴 캐릭터는 포인트로 해금하면 정보가 보입니다",
-        "무기 진화로 얻는 무기 · 우클릭 필살기는 무기마다 다릅니다",
+        "무기 진화로 얻는 무기 · [{ULT}] 필살기는 무기마다 다릅니다",      // 1.1~ 바꾼 필살기 키 이름을 따름
         "영혼 트리의 운명 가지 · 모든 캐릭터 공통 · 다른 어디에도 없는 효과",
         "영혼 트리의 영혼 가지에서 배우면 항상 적용되는 능력",
         "영혼 트리({UPGRADE})에서 배운 능력의 다음 칸을 배우면 진화합니다",
@@ -86,9 +90,9 @@ public static class CodexUI
     static readonly string[] UltDesc =
     {
         "마우스 쪽으로 거대한 부채꼴 폭발을 3번 연달아 일으킵니다.",
-        "우클릭을 누른 채 방향을 정하면 충전 뒤 화면을 가로지르는 굵은 광선을 쏩니다. 광선 위의 적이 많을수록 강합니다.",
+        "[{ULT}]을 누른 채 방향을 정하면 충전 뒤 화면을 가로지르는 굵은 광선을 쏩니다. 광선 위의 적이 많을수록 강합니다.",
         "두 줄기 나선으로 사방에 총알을 난사합니다. 움직이며 쓸 수 있습니다.",
-        "우클릭을 누른 채 자리를 정하면 불기둥이 생겨 적을 빨아들이고 태웁니다.",
+        "[{ULT}]을 누른 채 자리를 정하면 불기둥이 생겨 적을 빨아들이고 태웁니다.",
         "영혼 구슬들이 주위를 돌다 조준한 적에게 번갈아 달려듭니다.",
         "먹구름이 따라다니며 조준한 적들에게 번개를 연달아 떨어뜨립니다.",
         "무적 상태로 조준한 적들 사이를 순간이동하며 벤 뒤 제자리로 돌아옵니다.",
@@ -99,7 +103,7 @@ public static class CodexUI
     static readonly (string name, string desc)[] LevelUps =
     {
         ("관통하는 총알", "총알이 적을 1마리 더 관통합니다."),
-        ("코인충", "적이 코인을 1개 더 떨어뜨립니다."),
+        ("코인충", "코인을 주울 때 더 많이 얻습니다."),      // 1.1~ 실제 카드 · 스킬 진화 툴팁과 같게 (코인 1개당 획득량)
         ("재활용 에너지", "필살기 게이지가 20% 줄어 필살기를 더 자주 씁니다."),
         ("노려보는 눈빛", "필살기를 조준하는 동안 타겟이 된 적이 20% 더 느려집니다."),
         ("더 많은 경험치", "처치 경험치가 10% 늘어납니다."),
@@ -115,7 +119,7 @@ public static class CodexUI
     static readonly (string icon, string name, string desc)[] Shops =
     {
         // 1.0.4~: 지금 상점에 없는 공격 속도 · 재장전 · 탄창 · 캐릭터 전용 강화를 소개하던 것을 실제 창에 맞춤
-        ("fx_prompt", "떠돌이 상점", "적을 처치하다 보면 나타나는 떠돌이 상점에서 코인으로 공격력 · 이동 속도를 올리고, 물약(회복 · 축소 · 신속 · 질풍)을 삽니다. 살수록 값이 오르고, 효과는 이번 판 동안만 남습니다."),
+        ("stall", "떠돌이 상점", "적을 처치하다 보면 나타나는 떠돌이 상점에서 코인으로 공격력 · 이동 속도를 올리고, 물약(회복 · 축소 · 신속 · 질풍)을 삽니다. 살수록 값이 오르고, 효과는 이번 판 동안만 남습니다."),
         ("fx_muzzle", "무기 진화", "모든 캐릭터. 스테이지 보스를 쓰러뜨릴 때마다 무기가 세 갈래 중 하나로 진화합니다. 거너는 무기가 바뀌고, 다른 캐릭터는 평타 자체가 바뀝니다. 되돌릴 수 없습니다."),
         ("fx_reticle", "영혼 트리", "모든 캐릭터. 영혼 조각으로 무기 · 필살기 · 운명 · 생존 · 영혼 · 재물 여섯 가지의 칸을 배웁니다. 캐릭터마다 칸이 다르고, 배운 칸 다음 칸만 보이며, 무기 가지는 진화해도 그대로 이어집니다."),
     };
@@ -139,6 +143,8 @@ public static class CodexUI
 
         BuildScroll(win);
         Show(0);
+        UIKit.EscCancel(open, Close);       // 1.1~ ESC · 패드 B 로도 닫힘
+        WindowFit.Attach(win, new Vector2(1660f, 980f));      // 1.1~ UI 크기 120% · 좁은 화면에서 창이 화면 밖으로 나가지 않게
     }
 
     static void BuildScroll(RectTransform win)
@@ -153,7 +159,8 @@ public static class CodexUI
         grid.pivot = new Vector2(0.5f, 1f);
         grid.anchoredPosition = Vector2.zero;
         GridLayoutGroup g = grid.gameObject.AddComponent<GridLayoutGroup>();
-        g.cellSize = new Vector2(756f, 240f);
+        gridLayout = g;
+        g.cellSize = new Vector2(756f, CardH);
         g.spacing = new Vector2(16f, 14f);
         g.padding = new RectOffset(6, 6, 10, 10);
         g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -180,6 +187,8 @@ public static class CodexUI
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
         hint.text = Loc.T(Hints[tab]);
+        CardH = tab == 2 ? HeroCardH : BaseCardH;
+        if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
 
         CodexData data = CodexData.Load();
         switch (tab)
@@ -193,7 +202,12 @@ public static class CodexUI
             case 6: Evolutions(data); break;
             case 7: LevelUpCards(data); break;
             case 8:
-                foreach (var s in Shops) Card(FxIcon(s.icon), Gold, Loc.T(s.name), "", Loc.T(s.desc));
+                // 1.1~ 떠돌이 상점은 게임 속 상인 제단 그림 그대로 (예전 fx_prompt 는 어두운 말풍선 막대라 빈칸처럼 보였음)
+                foreach (var s in Shops)
+                {
+                    bool stall = s.icon == "stall";
+                    Card(stall ? ShopStall.StallSprite : FxIcon(s.icon), stall ? Color.white : Gold, Loc.T(s.name), "", Loc.T(s.desc));
+                }
                 break;
         }
         scroll.verticalNormalizedPosition = 1f;
@@ -275,8 +289,10 @@ public static class CodexUI
             if (kind == SpecialKind.Weapon && id < UltDesc.Length)
             {
                 tag += "  ·  " + Loc.T("강화 특성") + ": " + SpecialAbilities.TraitName(id) + " (" + SpecialAbilities.TraitStep(id) + ")";
-                body += "\n" + Accent.Tag(Loc.T("필살기") + " · " + SpecialAbilities.UltName(id) + " (" + Loc.T("꾹 눌러 조준") + ")")
-                        + "  " + Loc.T(UltDesc[id]);
+                // 1.1~ 쌍권총만 필살기가 바뀌고 나머지는 원래 조준 사격 뒤에 덧붙음 (진화 탭 · SpecialAbilities.Evolution 과 같게)
+                string ultLabel = id == SpecialAbilities.DualId ? Loc.T("필살기") + " · " + SpecialAbilities.UltName(id) + " (" + Loc.T("꾹 눌러 조준") + ")"
+                                                                : Loc.T("필살기에 덧붙음") + " · " + SpecialAbilities.UltName(id);
+                body += "\n" + Accent.Tag(ultLabel) + "  " + Loc.T(UltDesc[id]);
             }
             tag += "  ·  " + Loc.T("거너");
             Card(d.icon, Color.white, Loc.T(d.name), tag, body);
@@ -341,8 +357,9 @@ public static class CodexUI
 
     static void LevelUpCards(CodexData data)
     {
-        Card(Resources.Load<Sprite>("Icons/ability_205"), Color.white, Loc.T("스킬 진화"), Loc.T("모든 캐릭터") + " · 37" + Loc.T("종"),
-             Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 100) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
+        // 1.1~ 종 수는 실제 진화 정의에서 셈 (예전 「37」 고정은 캐릭터 5명 시절 숫자) · 최대 레벨은 LevelShop.LevelCap 과 같은 80
+        Card(Resources.Load<Sprite>("Icons/ability_205"), Color.white, Loc.T("스킬 진화"), Loc.T("모든 캐릭터") + " · " + SkillEvoCount() + Loc.T("종"),
+             Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 80) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
         // 끝없는 성장 (1.0.4~, LevelShop.Growth)
         Card(Resources.Load<Sprite>("Icons/ability_85"), Color.white, Loc.T("성장 카드"), Loc.T("모든 캐릭터") + " · 4" + Loc.T("종"),
              Loc.T("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +3% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +2% · 발걸음: 이동 속도 +1%"));
@@ -358,6 +375,21 @@ public static class CodexUI
         foreach (CharacterId c in System.Linq.Enumerable.Prepend(UnlockedKits(), CharacterId.Gunner))
             foreach (var k in LevelShop.KitCardsFor(c))
                 Card(Resources.Load<Sprite>("Icons/ability_" + k.icon), Color.white, Loc.T(k.name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"), Loc.T(k.desc).Replace("\n", " "));
+    }
+
+    // 1.1~ 스킬 진화 종 수: 만들어진 캐릭터마다 전용 진화 + 모든 캐릭터 공통 진화 (공통은 한 번만)
+    static int SkillEvoCount()
+    {
+        int total = 0, common = 0;
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            if (!CharacterData.IsDeveloped((CharacterId)i)) continue;
+            int c = 0;
+            foreach (LevelShop.SkillEvo e in LevelShop.EvosFor((CharacterId)i))
+                if (e.key.StartsWith("ce.")) c++; else total++;
+            common = Mathf.Max(common, c);
+        }
+        return total + common;
     }
 
     // ================================================================= 캐릭터
@@ -432,12 +464,13 @@ public static class CodexUI
     // ================================================================= card
     static void Card(Sprite icon, Color tint, string title, string tag, string body)
     {
-        RectTransform card = UIKit.Rect("Card", grid, Vector2.zero, new Vector2(756f, 240f));
+        float extra = CardH - BaseCardH;        // 1.1~ 늘어난 높이: 제목 · 태그는 위쪽에 붙이고 본문 칸을 그만큼 키움
+        RectTransform card = UIKit.Rect("Card", grid, Vector2.zero, new Vector2(756f, CardH));
         Image bg = card.gameObject.AddComponent<Image>();
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
         bg.color = new Color(0.24f, 0.2f, 0.3f, 1f);
-        RectTransform inner = UIKit.Rect("Inner", card, Vector2.zero, new Vector2(740f, 224f));
+        RectTransform inner = UIKit.Rect("Inner", card, Vector2.zero, new Vector2(740f, CardH - 16f));
         inner.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.1f, 0.16f, 0.97f);
 
         // 아이콘 칸
@@ -453,12 +486,13 @@ public static class CodexUI
             img.raycastTarget = false;
         }
 
-        TMP_Text t = UIKit.Text(inner, "", 32f, Gold, new Vector2(90f, 80f), new Vector2(540f, 44f), TextAlignmentOptions.Left);
+        TMP_Text t = UIKit.Text(inner, "", 32f, Gold, new Vector2(90f, 80f + extra * 0.5f), new Vector2(540f, 44f), TextAlignmentOptions.Left);
         t.text = title;
-        TMP_Text g = UIKit.Text(inner, "", 20f, Dim, new Vector2(90f, 46f), new Vector2(540f, 28f), TextAlignmentOptions.Left);
+        TMP_Text g = UIKit.Text(inner, "", 20f, Dim, new Vector2(90f, 46f + extra * 0.5f), new Vector2(540f, 28f), TextAlignmentOptions.Left);
         g.text = tag;
-        TMP_Text b = UIKit.Text(inner, "", 22f, Parch, new Vector2(90f, -38f), new Vector2(540f, 136f), TextAlignmentOptions.TopLeft);
+        TMP_Text b = UIKit.Text(inner, "", 22f, Parch, new Vector2(90f, -38f), new Vector2(540f, 136f + extra), TextAlignmentOptions.TopLeft);
         b.fontSizeMin = 14f;
+        if (extra > 0f) b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표
         b.text = body;
     }
 
@@ -483,5 +517,32 @@ public static class CodexUI
     {
         if (open != null) Object.Destroy(open);
         open = null;
+    }
+}
+
+// 1.1~ 도감 · 스킬 진화 도감처럼 큰 창: 캔버스(UI 크기로 바뀜)보다 크면 창을 통째로 줄임
+//   inner 의 부모(창 테두리)를 줄임 · 화면 크기 · UI 크기가 바뀌어도 맞게 매 프레임 확인
+public class WindowFit : MonoBehaviour
+{
+    RectTransform window, area;
+    Vector2 need;
+
+    public static void Attach(RectTransform inner, Vector2 need)
+    {
+        if (inner == null || inner.parent == null || inner.parent.parent == null) return;
+        WindowFit f = inner.gameObject.AddComponent<WindowFit>();
+        f.window = (RectTransform)inner.parent;
+        f.area = (RectTransform)inner.parent.parent;        // 화면 전체를 덮는 판 (UIKit.Modal)
+        f.need = need;
+        f.LateUpdate();
+    }
+
+    void LateUpdate()
+    {
+        if (window == null || area == null) return;
+        Vector2 have = area.rect.size;
+        if (have.x <= 0f || have.y <= 0f) return;
+        float s = Mathf.Min(1f, have.x / need.x, have.y / need.y);
+        if (!Mathf.Approximately(window.localScale.x, s)) window.localScale = new Vector3(s, s, 1f);
     }
 }

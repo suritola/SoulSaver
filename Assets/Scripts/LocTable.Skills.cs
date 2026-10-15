@@ -66,10 +66,10 @@ public static partial class LocTable
           "每次攻击首领，血条下方的紫色槽就会积累。一次重击比多次弱攻击积累得多得多，一段时间不攻击会极其缓慢地下降。槽满时整张地图变暗，首领周围展开巨大结界，15秒内倾泻首领专属攻击。每次攻击位置都会先出现感叹号。");
         A("꾹 눌러 조준", "hold to aim", "長押しで狙う", "长按瞄准");
         A("종", "", "種", "种");
-        A("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 100) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
-          "Max out two or three specific level-up cards and they fuse into one with a new power. Levels cap at 50 (100 in Endless), so pick which evolutions to chase. You can skip unwanted cards, and you only level up when you take a card. See every recipe under Skill Evolution on the main menu.",
-          "決まった2〜3枚のレベルアップカードをすべて最大段階にすると一つに合わさり、新しい能力が生まれる。最大レベルは50（無限モード100）なので全部は上げられない。狙う進化を選ぼう。不要なカードはスキップでき、レベルはカードを選んだときだけ上がる。組み合わせはメインメニューの「スキル進化」で見られる。",
-          "将指定的两到三张升级卡全部升到满级后会合而为一，获得新能力。等级上限为50（无尽模式100），无法全部升满，请选择要追求的进化。不想要的卡牌可以跳过，只有选择卡牌时才会升级。组合可在主菜单的「技能进化」中查看。");
+        A("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 80) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
+          "Max out two or three specific level-up cards and they fuse into one with a new power. Levels cap at 50 (80 in Endless), so pick which evolutions to chase. You can skip unwanted cards, and you only level up when you take a card. See every recipe under Skill Evolution on the main menu.",
+          "決まった2〜3枚のレベルアップカードをすべて最大段階にすると一つに合わさり、新しい能力が生まれる。最大レベルは50（無限モード80）なので全部は上げられない。狙う進化を選ぼう。不要なカードはスキップでき、レベルはカードを選んだときだけ上がる。組み合わせはメインメニューの「スキル進化」で見られる。",
+          "将指定的两到三张升级卡全部升到满级后会合而为一，获得新能力。等级上限为50（无尽模式80），无法全部升满，请选择要追求的进化。不想要的卡牌可以跳过，只有选择卡牌时才会升级。组合可在主菜单的「技能进化」中查看。");
         A("무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
           "Dash toward the mouse while invincible, making every enemy you pass bleed (hold to see the path, release to dash). Learning Shadow Mastery in the Soul Tree adds speed, slows, chained dashes and more to the dash",
           "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（押している間は経路が見え、離すと突進）。魂のツリーで影の熟練を覚えると突進に移動速度・鈍化・連続突進などが付きます",
@@ -99,10 +99,10 @@ public static partial class LocTable
         A("호문쿨루스 필요", "Requires Homunculus", "ホムンクルスが必要", "需要侏儒助手");
         A("필요", "Requires", "必要", "需要");
         A("진화 조합", "Evolution recipes", "進化の組み合わせ", "进化组合");
-        A("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50 (무한 모드 100) 까지라 모두 올릴 수는 없습니다.",
-          "Max out two or three level-up cards and they merge into one, gaining a new power. Levels cap at 50 (100 in Endless), so you can't max everything.",
-          "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力が生まれます。レベルは50（無限モード100）までなので全部は上げられません。",
-          "将两到三张升级卡全部升到最高级后会合而为一，获得新能力。等级上限为50（无尽模式100），无法全部升满。");
+        A("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50 (무한 모드 80) 까지라 모두 올릴 수는 없습니다.",
+          "Max out two or three level-up cards and they merge into one, gaining a new power. Levels cap at 50 (80 in Endless), so you can't max everything.",
+          "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力が生まれます。レベルは50（無限モード80）までなので全部は上げられません。",
+          "将两到三张升级卡全部升到最高级后会合而为一，获得新能力。等级上限为50（无尽模式80），无法全部升满。");
         A("모든 캐릭터", "All heroes", "全キャラクター", "所有角色");
         A("잠긴 캐릭터", "Locked hero", "ロック中のキャラクター", "未解锁角色");
         A("포인트로 잠금을 풀면 이 캐릭터의 진화 조합을 볼 수 있습니다.", "Unlock this hero with points to see its evolution recipes.", "ポイントでロックを解除すると、このキャラクターの進化の組み合わせが見られます。", "用点数解锁该角色后即可查看其进化组合。");

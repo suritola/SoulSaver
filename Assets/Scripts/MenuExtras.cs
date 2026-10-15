@@ -182,10 +182,10 @@ public static class MenuExtras
             if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
         }
 
-        // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크
+        // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크 (1.1~ U+2714 는 Cafe24 글꼴에 없어 네모로 보여 √ 로)
         if (tutorial != null && TutorialRun.Done)
         {
-            TMP_Text mark = UIKit.Text(tutorial.transform, "✔", 30f, new Color(0.55f, 1f, 0.55f), new Vector2(66f, 40f), new Vector2(40f, 40f));
+            TMP_Text mark = UIKit.Text(tutorial.transform, "√", 30f, new Color(0.55f, 1f, 0.55f), new Vector2(66f, 40f), new Vector2(40f, 40f));
             UIKit.Forget(mark);
             mark.raycastTarget = false;
         }
