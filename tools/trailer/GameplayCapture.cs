@@ -65,6 +65,8 @@ public class GameplayCapture
         public int frames;
         // 하이라이트 영상 연출 (2.2.1~): 펀치 줌 · 화면 흔들림 · 흰 번쩍임 (찍을 때만 카메라에 얹고 바로 되돌림)
         public float baseZoom = 1f, punch, shake, flashAmt;
+        // 자동 조종이 적과 두는 거리 (잡몹 · 보스, 가까우면 물러나고 멀면 다가감)
+        public float nearMob = 3.5f, farMob = 7f, nearBoss = 6.5f, farBoss = 9f;
         public Image flash;
         public Canvas captionCanvas;
         public TextMeshProUGUI caption, logo, sub;
@@ -167,7 +169,7 @@ public class GameplayCapture
                 float d = to.magnitude;
                 Vector2 side = new Vector2(-to.y, to.x).normalized;
                 // 보스는 덩치가 커서 멀리서 싸움 (영웅이 보스 그림에 가려지지 않게)
-                float near = boss ? 6.5f : 3.5f, far = boss ? 9f : 7f;
+                float near = boss ? nearBoss : nearMob, far = boss ? farBoss : farMob;
                 In("AutoAim", target.Value);
                 In("AutoMove", side * 0.75f + (d < near ? -to.normalized * 1.2f : d > far ? to.normalized * 0.7f : Vector2.zero));
             }
@@ -198,6 +200,9 @@ public class GameplayCapture
                 Set(p, "PlayerHealth", Get(p, "PlayerMaxHealth"));
                 if (!levelUpAllowed) Set(p, "nowEXP", 0f);
             }
+            // 1.1~ 판 시작 카드 · 쌓인 레벨업 이어 고르기 창이 녹화 중에 화면을 덮지 않게 바로 확정
+            if (!levelUpAllowed && Find("LevelShop") is object shop && (bool)shop.GetType().GetProperty("IsOpen").GetValue(shop))
+                ConfirmCard(shop, 0);
             Capture();
         }
 
@@ -855,6 +860,139 @@ public class GameplayCapture
         }
         int tail = Fps * 2;
         for (int i = 0; i < tail; i++) { rec.musicVolume = 1f - i / (float)tail; yield return null; }
+
+        rec.End();
+        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
+        PlayerPrefs.Save();
+        Time.captureFramerate = 0;
+        Time.timeScale = 1f;
+        In("Auto", false);
+        Debug.Log("[CAP] done frames=" + rec.frames + " (" + (rec.frames / (float)Fps).ToString("0.0") + "s)");
+        yield return null;
+    }
+
+    // ================================================================= 레딧 홍보 영상 15초 (record.ps1 -Mode reddit)
+    // 트레일러처럼 적에게 딱 붙지 않고 실제 플레이처럼 거리를 두고 돌며 싸움 · 영웅 필살기 · 보스 궁극기(결계) · 거울의 흉내만 빠르게
+    static IEnumerator Clip(string hero, int who, int stage, int evolve, int swarm, float lead, float hold, float after, float zoom)
+    {
+        Debug.Log("[CAP] clip " + hero + " stage " + stage + " frames " + (rec != null ? rec.frames : 0));
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, stage);
+        Evolve(evolve);
+        Swarm(stage, swarm);
+        Swarm(stage, swarm / 2);
+        rec.autopilot = true;
+        yield return F(1.3f);                       // 적이 몰려오고 영웅이 거리를 벌릴 시간 (녹화 안 함)
+        rec.baseZoom = zoom;
+        rec.recording = true;
+        Hit(0.8f, 0.4f, 0.6f);
+        yield return F(lead);                       // 거리를 두고 돌며 쏘는 평소 전투
+        yield return Ult(hold);
+        Hit(1.1f, 1.2f, 0.4f);
+        rec.StartCoroutine(SlowMo(0.35f, 0.9f));
+        yield return F(after);
+    }
+
+    // 보스 궁극기: 결계 안에 쏟아지는 공격을 거리를 두고 피하며 버티다 필살기 → 보스가 쓰러지며 결계가 깨짐
+    static IEnumerator ClipBarrier(string hero, int who, int stage, int evolve)
+    {
+        Debug.Log("[CAP] clip barrier " + hero + " stage " + stage + " frames " + (rec != null ? rec.frames : 0));
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, stage);
+        Evolve(evolve);
+        object b = SpawnBoss(stage, 0.8f);
+        rec.autopilot = true;
+        yield return F(0.8f);
+        Component bc = (Component)b;
+        Component ult = bc.GetComponent(T("BossUltimate"));
+        if (ult == null) ult = bc.gameObject.AddComponent(T("BossUltimate"));
+        yield return null;
+        ((MonoBehaviour)ult).StartCoroutine((IEnumerator)Call(ult, "Run"));
+        yield return F(3.6f);                       // 외침 화면(글자)은 찍지 않음
+        rec.baseZoom = 1.05f;
+        rec.recording = true;
+        Hit(1f, 1f, 1f);
+        yield return F(2.0f);                       // 결계 안에서 쏟아지는 보스 공격
+        yield return Ult(0.3f);
+        yield return F(0.4f);
+        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);
+        Hit(1.5f, 2f, 1f);
+        rec.StartCoroutine(SlowMo(0.25f, 1.3f));
+        yield return F(1.5f);
+    }
+
+    // 거울의 군주가 영웅의 필살기를 그대로 흉내 냄 → 맞받아 필살기
+    static IEnumerator ClipMirror(string hero, int who)
+    {
+        Debug.Log("[CAP] clip mirror " + hero + " frames " + (rec != null ? rec.frames : 0));
+        rec.recording = false;
+        rec.autopilot = false;
+        WearLegend(who);
+        yield return Load(hero, 3);
+        Component b = (Component)SpawnBoss(3, 0.8f);
+        yield return null;
+        Component skills = b != null ? b.GetComponent(T("BossSkills")) : null;
+        if (skills != null) Set(skills, "next", Time.time + 999f);
+        rec.autopilot = true;
+        yield return F(1.0f);
+        rec.baseZoom = 1.05f;
+        rec.recording = true;
+        Hit(0.8f, 0.5f, 0.7f);
+        if (skills != null) ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+        yield return F(1.6f);                       // 보스가 내 필살기를 흉내
+        yield return Ult(0.4f);
+        Hit(1f, 1f, 0.3f);
+        yield return F(0.6f);
+    }
+
+    [UnityTest]
+    public IEnumerator RedditClip()
+    {
+        Debug.Log("[CAP] reddit start");
+        LogAssert.ignoreFailingMessages = true;
+        Directory.CreateDirectory(Out);
+        Time.captureFramerate = Fps;
+        In("Auto", true);
+        AudioListener.volume = 0f;
+        SetGameLanguage(Lang);
+        GameObject host = new GameObject("CaptureRec");
+        UnityEngine.Object.DontDestroyOnLoad(host);
+        rec = host.AddComponent<Rec>();
+        rec.musicPath = "TrailerMusic";
+        rec.musicVolume = 1f;
+        // 실제 플레이처럼 거리를 둠 (잡몹 5.5 ~ 8.5칸, 보스 7.5 ~ 10칸)
+        rec.nearMob = 5.5f; rec.farMob = 8.5f; rec.nearBoss = 7.5f; rec.farBoss = 10f;
+        BuildOverlay();
+        rec.sub.text = "";
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+
+        yield return Load("Gunner", 1);
+        rec.Begin(Path.Combine(Out, "SoulSaver_Reddit15.mp4"));
+
+        int dual = 2, grenade = 7;                  // SpecialAbilities: DualId · GrenadeId
+        yield return Clip("Gunner", 0, 1, dual, 34, 0.7f, 0.05f, 1.4f, 1.05f);                       // 약 2.2초: 쌍권총 총알 폭풍
+        yield return ClipBarrier("Archer", 3, 1, KitWeapon("Archer", 0));                           // 약 4초: 지옥의 군주 결계 → 파괴
+        yield return Clip("Swordsman", 1, 2, KitWeapon("Swordsman", 0), 30, 0.6f, 0.5f, 1.1f, 1.0f); // 약 2.2초
+        yield return ClipMirror("Rogue", 2);                                                       // 약 2.6초: 거울의 군주가 필살기 흉내
+        yield return Clip("Gunner", 0, 2, grenade, 40, 0.5f, 0.7f, 1.1f, 1.0f);                     // 약 2.3초: 융단폭격 마무리
+
+        // 로고 (약 1.3초)
+        rec.autopilot = false;
+        yield return Fade(0f, 1f, 0.2f);
+        Hit(0f, 0f, 1f);
+        int n = Fps * 2 / 3;
+        for (int i = 0; i <= n; i++)
+        {
+            float k = Mathf.SmoothStep(0f, 1f, i / (float)n);
+            rec.logo.alpha = k;
+            rec.logo.transform.localScale = Vector3.one * Mathf.Lerp(1.3f, 1f, k);
+            yield return null;
+        }
+        for (int i = 0; i < n; i++) { rec.musicVolume = 1f - i / (float)n; yield return null; }
 
         rec.End();
         foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);

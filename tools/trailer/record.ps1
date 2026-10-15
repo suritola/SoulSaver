@@ -5,9 +5,10 @@
 # 사용법: pwsh tools/trailer/record.ps1                            (영어 · 30fps · Medium 화질)
 #         pwsh tools/trailer/record.ps1 -Lang en,ko,ja,zh -Quality High   (언어마다 한 번씩, 게임 언어 · 자막이 바뀜)
 #         pwsh tools/trailer/record.ps1 -Mode highlight -Quality High     (2.2.1~ 자막 없는 하이라이트: 화려한 장면만 · 긴박한 음악 · 펀치 줌)
+#         pwsh tools/trailer/record.ps1 -Mode reddit -Quality High        (레딧 홍보 15초: 거리를 두고 싸우며 필살기 · 보스 궁극기만)
 # 결과:   %LOCALAPPDATA%\SoulSaverBuild\Capture\<언어>\SoulSaver_Trailer_<언어>.mp4 (하이라이트는 SoulSaver_Highlight.mp4), screenshots\*.png
 param(
-    [ValidateSet("trailer", "highlight")][string]$Mode = "trailer",
+    [ValidateSet("trailer", "highlight", "reddit")][string]$Mode = "trailer",
     [string[]]$Lang = @("en"),              # en · ko · ja · zh (쉼표로 여러 개)
     [int]$Fps = 30,
     [ValidateSet("Low", "Medium", "High")][string]$Quality = "Medium",
@@ -32,7 +33,7 @@ $capDir = Join-Path $CopyDir "Assets\Capture"
 New-Item -ItemType Directory -Force $capDir | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "GameplayCapture.cs"), (Join-Path $PSScriptRoot "GameplayCapture.asmdef") $capDir
 # 하이라이트 음악: 직접 합성한 웅장한 트레일러 음악 (make_trailer_music.py → Assets/Capture/Resources/TrailerMusic.wav, 복사본에만)
-if ($Mode -eq "highlight") {
+if ($Mode -ne "trailer") {
     $musicDir = Join-Path $capDir "Resources"
     New-Item -ItemType Directory -Force $musicDir | Out-Null
     & py -X utf8 (Join-Path $PSScriptRoot "make_trailer_music.py") (Join-Path $musicDir "TrailerMusic.wav")
@@ -53,11 +54,11 @@ foreach ($l in $Lang) {
     Write-Host "촬영 중: $l ($Fps fps · $Quality, 로그: $log)"
     $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
         "-batchmode", "-projectPath", "`"$CopyDir`"",
-        "-runTests", "-testPlatform", "PlayMode", "-testFilter", $(if ($Mode -eq "highlight") { "GameplayCapture.HighlightReel" } else { "GameplayCapture.Capture" }),
+        "-runTests", "-testPlatform", "PlayMode", "-testFilter", $(if ($Mode -eq "highlight") { "GameplayCapture.HighlightReel" } elseif ($Mode -eq "reddit") { "GameplayCapture.RedditClip" } else { "GameplayCapture.Capture" }),
         "-testResults", "`"$(Join-Path $Work 'capture-results.xml')`"",
         "-logFile", "`"$log`"")
     Select-String -Path $log -Pattern "\[CAP\] done" | ForEach-Object { $_.Line }
-    $mp4 = Join-Path $Out $(if ($Mode -eq "highlight") { "SoulSaver_Highlight.mp4" } else { "SoulSaver_Trailer_$l.mp4" })
+    $mp4 = Join-Path $Out $(if ($Mode -eq "highlight") { "SoulSaver_Highlight.mp4" } elseif ($Mode -eq "reddit") { "SoulSaver_Reddit15.mp4" } else { "SoulSaver_Trailer_$l.mp4" })
     if (-not (Test-Path $mp4)) { Get-Content $log -Tail 40; throw "$l 영상이 만들어지지 않았습니다 (Unity 종료 코드 $($p.ExitCode))" }
     Write-Host ("완료: {0} ({1:N1} MB), 스크린샷 {2}장" -f $mp4, ((Get-Item $mp4).Length / 1MB), (Get-ChildItem (Join-Path $Out "screenshots") -ErrorAction SilentlyContinue).Count)
 }
