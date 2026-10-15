@@ -283,10 +283,14 @@ public class EnemySkill : MonoBehaviour
         Hostile.Circle(transform.position, r, 0.9f, new Color(1f, 0.5f, 0.1f, 0.9f));
         Hostile.Play("crackle", 0.5f, 1.3f);
         Vector3 baseScale = transform.localScale;
+        // 1.1~: 위상을 누적해 점점 빨라지는 깜빡임 (Time.time × 배수는 판 후반에 프레임마다 흰색으로 튀었음), 번쩍임 끄면 흰색을 약하게
+        float phase = 0f;
+        float whiteMax = GameSettings.Flashes ? 1f : 0.4f;
         for (float t = 0f; t < 0.9f; t += Time.deltaTime)
         {
             if (!Alive) { transform.localScale = baseScale; yield break; }
-            sr.color = Color.Lerp(enemy.baseColor, Color.white, Mathf.PingPong(Time.time * (8f + t * 20f), 1f));
+            phase += Time.deltaTime * (8f + t * 20f);
+            sr.color = Color.Lerp(enemy.baseColor, Color.white, whiteMax * Mathf.PingPong(phase, 1f));
             transform.localScale = baseScale * (1f + 0.25f * t / 0.9f);
             yield return null;
         }
@@ -837,6 +841,7 @@ public class Telegraph : MonoBehaviour
 {
     float duration;
     float t;
+    float blinkPhase;       // 1.1~: 깜빡임 위상을 누적 (Time.time × 배수는 판 후반에 프레임마다 지글거렸음)
     Color color;
     bool circle;
     float radius;
@@ -923,7 +928,8 @@ public class Telegraph : MonoBehaviour
     {
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
-        float blink = 0.65f + 0.35f * Mathf.PingPong(Time.time * (4f + k * 14f), 1f);
+        blinkPhase += Time.deltaTime * (4f + k * 14f);
+        float blink = 0.65f + 0.35f * Mathf.PingPong(blinkPhase, 1f);
         Color c = new Color(color.r, color.g, color.b, color.a * blink);
 
         if (circle)

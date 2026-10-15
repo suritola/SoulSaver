@@ -285,7 +285,7 @@ public partial class SpecialAbilities
         if (firing && !flameWasFiring) fx.Play("ignite", 0.9f);
         if (firing) fx.StartLoop("flame", 0.95f, 0.9f + heat * 0.25f);
         if (firing && Time.time >= nextFlameLook) { nextFlameLook = Time.time + 0.07f; PlayerLook.Fired(FlameId); }
-        else fx.StopLoop();
+        if (!firing) fx.StopLoop();     // 1.1~: else 가 위 if 에 붙어 쏘는 중에도 매 프레임 끊기던 문제
         flameWasFiring = firing;
 
         // 총구 불빛

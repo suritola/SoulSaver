@@ -48,7 +48,9 @@ public class SpecialFeedback : MonoBehaviour
     public void Play(string name, float vol = 1f, float pitch = 1f)
     {
         SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
-        pitch *= 1f + Random.Range(-0.05f, 0.05f);                  // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
+        // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
+        // 1.1~: 5단계(±2.5% 간격)로만 흔들어 같은 음높이 소스를 함께 쓰게 함 (무작위 값마다 소스를 하나씩 차지해 긴 소리가 잘리던 문제)
+        pitch *= 1f + Random.Range(-2, 3) * 0.025f;
         PlayRaw(name, vol, pitch);
     }
 
@@ -56,48 +58,49 @@ public class SpecialFeedback : MonoBehaviour
     public void PlayRaw(string name, float vol = 1f, float pitch = 1f)
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
-        AudioSource s = PitchSource(pitch);
-        s.PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
-        // 이 소스에서 울리는 소리가 끝나는 때 (다 바쁠 때 곧 끝나는 소스를 고르려고)
-        int at = pitched.IndexOf(s);
-        if (at >= 0) pitchedUntil[at] = Mathf.Max(pitchedUntil[at], Time.unscaledTime + c.length / Mathf.Max(0.1f, Mathf.Abs(pitch)));
+        PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
     }
 
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
     // 기본 음높이는 한 소스에서, 음높이를 바꾼 소리는 돌려 쓰는 소스 묶음에서 냄
-    // 1.1~: 8개가 다 차면 차례대로 Stop() 해서 레벨업 · 결계 · 보스 소리 같은 긴 소리가 뚝 끊기며 딸깍 소리가 났음
-    //   → 소스를 20개로 늘리고, 다 바쁘면 끊지 않고 가장 먼저 끝나는 소스에 겹쳐 냄
-    const int PitchedCount = 20;
+    // 1.1~: 8 → 16개, 다 바쁘면 순번이 아니라 '가장 먼저 끝나는' 소스를 끊음 (방금 시작한 긴 소리가 잘리지 않게)
+    const int PitchedCount = 16;
     readonly List<AudioSource> pitched = new List<AudioSource>();
-    readonly List<float> pitchedUntil = new List<float>();
+    readonly List<float> pitchedEnd = new List<float>();     // 소스마다 마지막 소리가 끝나는 시각 (unscaledTime)
 
-    AudioSource PitchSource(float pitch)
+    AudioSource PitchSource(float pitch, float length)
     {
         if (Mathf.Approximately(pitch, 1f)) { oneShot.pitch = 1f; return oneShot; }
+        float end = Time.unscaledTime + length / Mathf.Max(0.05f, Mathf.Abs(pitch));
         // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 먼저 끝나는 소스
+        int pick = -1;
         for (int i = 0; i < pitched.Count; i++)
-            if (Mathf.Approximately(pitched[i].pitch, pitch)) return pitched[i];
-        AudioSource s = null;
-        for (int i = 0; i < pitched.Count; i++)
-            if (!pitched[i].isPlaying) { s = pitched[i]; break; }
-        if (s == null)
+            if (Mathf.Approximately(pitched[i].pitch, pitch)) { pick = i; break; }
+        if (pick < 0)
+            for (int i = 0; i < pitched.Count; i++)
+                if (!pitched[i].isPlaying) { pick = i; break; }
+        if (pick < 0)
         {
             if (pitched.Count < PitchedCount)
             {
-                s = gameObject.AddComponent<AudioSource>();
-                s.playOnAwake = false;
-                pitched.Add(s);
-                pitchedUntil.Add(0f);
+                AudioSource n = gameObject.AddComponent<AudioSource>();
+                n.playOnAwake = false;
+                pitched.Add(n);
+                pitchedEnd.Add(0f);
+                pick = pitched.Count - 1;
             }
             else
             {
-                int soonest = 0;
+                pick = 0;
                 for (int i = 1; i < pitched.Count; i++)
-                    if (pitchedUntil[i] < pitchedUntil[soonest]) soonest = i;
-                s = pitched[soonest];
+                    if (pitchedEnd[i] < pitchedEnd[pick]) pick = i;
+                pitched[pick].Stop();
+                pitchedEnd[pick] = 0f;
             }
         }
+        AudioSource s = pitched[pick];
         s.pitch = pitch;
+        pitchedEnd[pick] = Mathf.Max(pitchedEnd[pick], end);
         return s;
     }
 

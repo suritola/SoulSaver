@@ -661,7 +661,7 @@ public static class SettingsUI
         // 2.1.9: 「창이 비활성일 때 소리 끄기」 한 줄을 더 넣으려고 줄 간격 90
         SliderRow("전체 볼륨", 110f, GameSettings.Volume, v => GameSettings.Volume = v);
         SliderRow("음악", 20f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
-        SliderRow("효과음", -70f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v);
+        SliderRow("효과음", -70f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, true);
         SensitivityRow(-160f);
         ToggleRow("창이 비활성일 때 소리 끄기", -250f, () => GameSettings.MuteUnfocused, v => GameSettings.MuteUnfocused = v);
     }
@@ -695,7 +695,10 @@ public static class SettingsUI
     }
 
     // 0 ~ 100%
-    static void SliderRow(string ko, float y, float value, System.Action<float> set)
+    static float sfxPreviewAt;
+
+    // preview: 효과음 슬라이더는 움직일 때 새 크기로 짧은 소리를 들려줌 (1.1~, 0.15초 간격)
+    static void SliderRow(string ko, float y, float value, System.Action<float> set, bool preview = false)
     {
         RowLabel(ko, y);
         TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
@@ -706,6 +709,11 @@ public static class SettingsUI
         {
             set(v);
             percent.text = Mathf.RoundToInt(v * 100f) + "%";
+            if (preview && Time.unscaledTime >= sfxPreviewAt)
+            {
+                sfxPreviewAt = Time.unscaledTime + 0.15f;
+                UISound.Click();
+            }
         });
     }
 
