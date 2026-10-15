@@ -100,7 +100,9 @@ public class TreasureChest : MonoBehaviour
         bool inside = Mathf.Abs(d.x) < hw - 0.5f && Mathf.Abs(d.y) < hh - 0.5f;
         pointer.SetActive(!inside);
         if (inside) return;
-        float sx = (hw - 1.2f) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - 1.2f) / Mathf.Max(0.001f, Mathf.Abs(d.y));
+        // 1.1~ 가장자리 여백 1.2 → 화면 비율 (위 16% · 아래 14% · 옆 5%): 체력 패널 · 경험치 바 같은 HUD 밑에 숨지 않게
+        float mx = Mathf.Max(1.2f, hw * 2f * 0.05f), my = Mathf.Max(1.2f, hh * 2f * (d.y > 0f ? 0.16f : 0.14f));
+        float sx = (hw - mx) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - my) / Mathf.Max(0.001f, Mathf.Abs(d.y));
         Vector2 edge = d * Mathf.Min(sx, sy);
         pointer.transform.position = new Vector3(c.x + edge.x, c.y + edge.y, 0f);
         pointer.transform.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(t * 8f));

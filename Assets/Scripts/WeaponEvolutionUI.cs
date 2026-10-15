@@ -124,7 +124,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         Vector2[] goal = new Vector2[cards.Length];
         for (int i = 0; i < cards.Length; i++)
         {
-            goal[i] = new Vector2((i - (cards.Length - 1) / 2f) * 480f, -40f);
+            goal[i] = new Vector2((i - (cards.Length - 1) / 2f) * 480f, -50f);          // 1.1~ -40 → -50: 고른 카드(1.08배) 윗변이 부제 글자 밑(295)에 오게
             cards[i].gameObject.SetActive(true);
         }
         for (float t = 0f; t < 0.55f && !skipIntro; t += Time.unscaledDeltaTime)
@@ -182,8 +182,8 @@ public class WeaponEvolutionUI : MonoBehaviour
         for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime)
         {
             float k = EaseOut(t / 0.6f);
-            chosen.anchoredPosition = Vector2.Lerp(from, new Vector2(0f, -20f), k);
-            chosen.localScale = Vector3.one * Mathf.Lerp(1.08f, 1.25f, k);
+            chosen.anchoredPosition = Vector2.Lerp(from, new Vector2(0f, -70f), k);     // 1.1~ 결과 글자(제목 · 부제)를 가리지 않게 아래로 · 덜 키움 (윗변 298)
+            chosen.localScale = Vector3.one * Mathf.Lerp(1.08f, 1.15f, k);
             for (int i = 0; i < cards.Length; i++)
             {
                 if (i == selected) continue;
@@ -197,7 +197,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         }
         title.text = sp.EvolutionName(options[selected], tier);
         subtitle.text = Loc.T("무기가 진화했습니다! 이제 이 무기와 함께 싸웁니다");
-        for (int i = 0; i < 40; i++) Spark(new Vector2(0f, -20f), Random.insideUnitCircle.normalized * Random.Range(500f, 1300f), Random.Range(0.5f, 0.9f));
+        for (int i = 0; i < 40; i++) Spark(new Vector2(0f, -70f), Random.insideUnitCircle.normalized * Random.Range(500f, 1300f), Random.Range(0.5f, 0.9f));
         // 1.0.4~: 결과 화면 1.1초도 클릭 · [상호작용 키]로 넘김 (확정한 그 입력은 받지 않게 0.15초 뒤부터)
         float resultAt = Time.unscaledTime;
         while (Time.unscaledTime - resultAt < 1.1f && !SkipPressed(resultAt)) yield return null;
@@ -234,11 +234,11 @@ public class WeaponEvolutionUI : MonoBehaviour
         burst = Img("Burst", root, Vector2.zero, new Vector2(900f, 900f), sp.glowSprite, Color.clear);
         burst2 = Img("Burst2", root, new Vector2(0f, -40f), new Vector2(1700f, 700f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.08f));
 
-        title = UIKit.Text(root, "", 72f, Gold, new Vector2(0f, 380f), new Vector2(1500f, 100f));
+        title = UIKit.Text(root, "", 72f, Gold, new Vector2(0f, 395f), new Vector2(1500f, 100f));      // 1.1~ 380 → 395 (부제 · 카드와 띄움)
         title.text = tier >= 3 ? Loc.T("무기 각성") : tier >= 2 ? Loc.T("무기 최종 진화") : Loc.T("무기 진화");
         title.fontStyle = FontStyles.Bold;
         title.gameObject.SetActive(false);
-        subtitle = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, 305f), new Vector2(1500f, 50f));
+        subtitle = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, 320f), new Vector2(1500f, 50f));       // 1.1~ 305 → 320 (커진 카드에 안 가리게)
         subtitle.text = Loc.T("보스의 영혼이 무기에 스며든다. 한 갈래를 고르세요 (되돌릴 수 없음)");
         subtitle.gameObject.SetActive(false);
 
@@ -246,7 +246,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         cardFrames = new Image[options.Length];
         for (int i = 0; i < options.Length; i++) BuildCard(i);
 
-        confirmButton = UIKit.MakeButton(root, "", new Vector2(0f, -410f), new Vector2(560f, 76f), Confirm, 28f);
+        confirmButton = UIKit.MakeButton(root, "", new Vector2(0f, -440f), new Vector2(560f, 76f), Confirm, 28f);
         confirmText = confirmButton.GetComponentInChildren<TMP_Text>();
         confirmText.text = Loc.T("진화한다 [") + KeyBindings.Name(GameAction.Interact) + "]";
         confirmButton.gameObject.SetActive(false);

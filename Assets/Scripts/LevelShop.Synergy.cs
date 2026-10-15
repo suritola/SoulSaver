@@ -34,6 +34,8 @@ public partial class LevelShop
 
     readonly TMP_Text[] synergyTags = new TMP_Text[3];
     readonly string[] synergyPartners = new string[3];       // 1.0.4~ 배지 툴팁용
+    readonly float[] abilityBottom0 = new float[3];          // 1.1~ 카드 설명 칸 원래 아래 여백 (추천 + 시너지일 때만 올림)
+    readonly bool[] abilityBottomKnown = new bool[3];
 
     // 지금 영웅의 카드 번호 (번역된 이름으로 찾음, 없으면 -1)
     int CardIdByName(string ko)
@@ -83,11 +85,23 @@ public partial class LevelShop
             // 카드 아래 테두리에 걸침 (그 아래는 확정 안내 줄) · 추천 카드면 「★ 추천」 알약이 그 자리라 바로 위 카드 안쪽으로
             RectTransform tr = synergyTags[slot].transform.parent as RectTransform;
             tr.pivot = new Vector2(0.5f, slot == recommendedSlot ? 0f : 0.5f);
-            tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 0f);
+            tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 10f);
             string partner = ShowSynergyIntro ? SynergyPartner(ids[slot]) : null;
             synergyPartners[slot] = partner;
             synergyTags[slot].transform.parent.gameObject.SetActive(partner != null);
             if (partner != null) synergyTags[slot].text = "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
+            LiftAbilityAbove(slot, partner != null && slot == recommendedSlot);
         }
+    }
+
+    // 1.1~ 추천 카드의 시너지 배지는 카드 안쪽(아래에서 34~89)에 놓여 긴 설명의 마지막 줄(수치 · Lv)을 덮었음
+    //      → 그때만 설명 칸 아래끝을 58 올림 (설명은 자동 크기라 칸 안에서 줄어듦)
+    void LiftAbilityAbove(int slot, bool lift)
+    {
+        TextMeshProUGUI ab = slot == 0 ? FirstAbility : slot == 1 ? SecondAbility : ThirdAbility;
+        if (ab == null) return;
+        RectTransform r = ab.rectTransform;
+        if (!abilityBottomKnown[slot]) { abilityBottom0[slot] = r.offsetMin.y; abilityBottomKnown[slot] = true; }
+        r.offsetMin = new Vector2(r.offsetMin.x, abilityBottom0[slot] + (lift ? 58f : 0f));
     }
 }

@@ -71,7 +71,8 @@ public partial class LevelShop
             }
             string tag = left <= 0 ? "<color=#FFD966>" + Loc.T("바로 진화!") + "</color>" : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
             if (blockedAny && left > 0) tag = "<color=#A8A8A8>" + Loc.T("지금 무기로는 안 나옴") + "</color>";       // 1.0.4~
-            row.name.text = "<size=70%>" + Loc.T("진화") + " · " + tag + "</size>\n" + Loc.T(e.name);
+            // 1.1~ 앞의 「진화 · 」를 뺌 (칸이 150 이라 영어 · 일본어에서 글자가 9~11px 까지 작아졌음, 보라 띠 · ▶ 가 이미 진화를 뜻함)
+            row.name.text = "<size=70%>" + tag + "</size>\n" + Loc.T(e.name);
         }
         ShowEvoIntro(anyEvo);
         ShowRecommend(ids);
@@ -221,7 +222,7 @@ public partial class LevelShop
 
     // ================================================================= 건너뛰기
     // 원하는 빌드를 지키려고 이번 레벨업을 고르지 않고 넘김 (크게 · 눈에 띄게, 카드 아래 가운데)
-    const float SkipY = -478f;
+    const float SkipY = -486f;          // 1.1~ -478 → -486: 확정 안내 줄(-426)을 내린 만큼
     Button skipButton;
     TextMeshProUGUI skipText;
 

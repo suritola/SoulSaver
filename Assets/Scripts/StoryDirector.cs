@@ -460,9 +460,12 @@ public class StoryDirector : MonoBehaviour
         SpecialFeedback fx = SpecialAbilities.SharedFx;
         if (fx != null) fx.HoldCamera(boss.position);
 
-        // 이름표와 대사는 아래 띠 위에
-        title.rectTransform.anchoredPosition = new Vector2(0f, -300f);
-        body.rectTransform.anchoredPosition = new Vector2(0f, -385f);
+        // 이름표와 대사는 아래 띠 안에 — 1.1~ 화면 아래에 붙여 두고 띠를 150 → 210 으로 (대사가 띠 경계에 걸쳐 게임 화면 위에 떴고, 16:10 에선 띠 밖이었음)
+        //      대사 폭 1500 → 1200: 오른쪽 아래 건너뛰기 버튼 · 안내와 안 겹치게
+        foreach (TMP_Text tx in new[] { title, body }) tx.rectTransform.anchorMin = tx.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+        body.rectTransform.sizeDelta = new Vector2(1200f, 100f);
+        title.rectTransform.anchoredPosition = new Vector2(0f, 165f);
+        body.rectTransform.anchoredPosition = new Vector2(0f, 64f);
         body.fontSize = 34f;
         title.text = Loc.T(info.name) + "  <size=60%><color=#d8c8a8>" + Loc.T(info.title) + "</color></size>";
         SetAlpha(title, 0f);
@@ -470,11 +473,11 @@ public class StoryDirector : MonoBehaviour
         for (float t = 0f; t < 0.7f && !skip; t += Time.unscaledDeltaTime)
         {
             float k = Mathf.SmoothStep(0f, 1f, t / 0.7f);
-            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f * k);
+            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, BossBarH * k);
             if (fx != null && boss != null) fx.HoldCamera(boss.position);
             yield return null;
         }
-        top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f);
+        top.sizeDelta = bottom.sizeDelta = new Vector2(0f, BossBarH);
         Hostile.Play("roar", 0.8f, kind == 2 ? 1.4f : kind == 1 ? 0.7f : 1f);
         yield return Fade(title, 0f, 1f, 0.3f);
 
@@ -491,13 +494,15 @@ public class StoryDirector : MonoBehaviour
         for (float t = 0f; t < 0.4f; t += Time.unscaledDeltaTime)
         {
             float k = 1f - t / 0.4f;
-            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, 150f * k);
+            top.sizeDelta = bottom.sizeDelta = new Vector2(0f, BossBarH * k);
             yield return null;
         }
         Time.timeScale = before;        // 필살기 조준(느린 시간) 중이었으면 그대로
         Playing = false;
         Destroy(gameObject);
     }
+
+    const float BossBarH = 210f;       // 1.1~ 보스 등장 위아래 띠 높이 (150 → 210, 이름 · 대사가 띠 안에)
 
     RectTransform Bar(bool top)
     {

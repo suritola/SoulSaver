@@ -142,7 +142,8 @@ public partial class LevelShop : MonoBehaviour
 
     // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
     // 그 아래 가운데는 건너뛰기 버튼 (LevelShop.EvoUI), 다시 뽑기 안내는 그 왼쪽
-    const float SelectHintY = -410f, RerollHintY = SkipY, RerollHintX = -480f;
+    const float SelectHintY = -426f,     // 1.1~ -410 → -426: 고른 카드의 「★ 추천」 알약 · 시너지 배지(박동까지 -408)와 안 겹치게
+    RerollHintY = SkipY, RerollHintX = -480f;
 
     void UpdateReroll()
     {
@@ -197,7 +198,7 @@ public partial class LevelShop : MonoBehaviour
 
     void UpdatePendingBadge()
     {
-        bool show = PendingLevels > 0 && !IsOpen && !ESCmenu.IsOpen;
+        bool show = PendingLevels > 0 && !IsOpen && !ESCmenu.IsOpen && !StoryDirector.Playing;     // 1.1~ 보스 등장 연출 중엔 숨김 (대사 뒤에서 번쩍였음)
         if (!show)
         {
             if (pendingBadge != null && pendingBadge.activeSelf) pendingBadge.SetActive(false);

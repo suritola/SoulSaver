@@ -29,7 +29,7 @@ public class ESCmenu : MonoBehaviour
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
-        if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤
+        if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || SkillEvolutionUI.Open || ChoiceUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 밑에 열렸음)
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
         if (confirm != null) { CloseConfirm(); return; }
         // 1.0.1: 상점을 닫은 뒤 1초 카운트다운 동안은 ESC 를 받지 않음
