@@ -18,6 +18,8 @@ public class RunStats : MonoBehaviour
     public static int[] Branches = new int[6];
     public static int ShardsTotal, ShardsSpent;
     public static int Refines;              // 영혼 정련 횟수 (1.0.4~)
+    static int LogWeight;                   // 1.2~ 판 기록 칸: 영혼의 무게 · 각인 saveCode · 유물 saveCode (Capture 가 판 안에서 채움)
+    static string LogBrands = "", LogRelics = "";
     // 준 피해 · 받은 피해 (출처별 합), 마지막으로 맞은 공격과 그때의 장 (2.1.1~)
     public static readonly Dictionary<string, float> DamageDealt = new Dictionary<string, float>();
     public static readonly Dictionary<string, float> DamageTaken = new Dictionary<string, float>();
@@ -48,6 +50,8 @@ public class RunStats : MonoBehaviour
             Branches = new int[6];
             ShardsTotal = ShardsSpent = 0;
             Refines = 0;
+            LogWeight = 0;
+            LogBrands = LogRelics = "";
             Seconds = 0f;
             Kills = 0;
             Level = 1;
@@ -126,7 +130,7 @@ public class RunStats : MonoBehaviour
 
     void OnEnable() => EnermyController.Killed += OnKill;
     void OnDisable() => EnermyController.Killed -= OnKill;
-    static void OnKill(Vector3 pos) => Kills++;
+    static void OnKill(Vector3 pos) { if (EnermyController.KillCounts) Kills++; }     // 1.2~ 정화로 쓰러진 적 절반은 세지 않음
 
     void Update()
     {
@@ -144,7 +148,17 @@ public class RunStats : MonoBehaviour
     {
         CharacterDef d = CharacterData.Current;
         Character = Loc.T(d.name);
-        Difficulty = GameMode.Name(GameMode.Current) + SoulWeight.RunTag();      // 1.2~ 「· 무게 3 (최고 4)」
+        Difficulty = GameMode.Name(GameMode.Current) + SoulWeight.RunTag() + SoulBrand.RunTag();      // 1.2~ 「· 무게 3 (최고 4) · 각인 유리 대포, 철벽」
+        // 1.2~ 판 기록(balance_log)에 남길 무게 · 각인 · 유물 (기록은 씬이 바뀔 때 쓰므로 판 안에서 미리 잡아 둠 — 메인 메뉴로 나가면 각인 목록이 먼저 비워짐)
+        LogWeight = SoulWeight.Level;
+        LogBrands = SoulBrand.LogCodes();
+        SpecialAbilities rs = SpecialAbilities.SharedInstance;
+        if (rs != null)
+        {
+            List<string> relicCodes = new List<string>();
+            foreach (int id in rs.Relics) { RelicDef r = ContentRegistry.RelicByAbility(id); if (r != null) relicCodes.Add(r.saveCode); }
+            LogRelics = string.Join("|", relicCodes);
+        }
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
         if (StageManager.Instance != null) Stage = Chapters.Number(StageManager.Instance.CurrentStage);
@@ -166,7 +180,7 @@ public class RunStats : MonoBehaviour
             Abilities.Clear();
             foreach (int id in sp.EquippedIds)
                 if (id >= 0 && id < sp.abilities.Length && sp.abilities[id] != null)
-                    Abilities.Add(Loc.T(sp.abilities[id].name) + (sp.IsEvolved(id) ? "+" : ""));
+                    Abilities.Add(Loc.T(sp.abilities[id].name) + (sp.IsEvolved(id) ? "+" : "") + (sp.IsRelic(id) ? " <color=#C9A2FF>(" + Loc.T("유물") + ")</color>" : ""));     // 1.2~ 석관에서 얻은 유물 표시
         }
         if (shop == null) shop = FindFirstObjectByType<LevelShop>(FindObjectsInactive.Include);
         if (shop != null && shop.ability_level != null && shop.ability_name != null)
@@ -339,7 +353,7 @@ public class RunStats : MonoBehaviour
         try
         {
             string path = BalanceLogPath;
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs";
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics";     // 1.2~ 끝에 세 칸 (머리줄이 바뀌면 예전 기록은 따로 남김)
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
             if (System.IO.File.Exists(path))
             {
@@ -377,7 +391,8 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(Sum(DamageDealt).ToString("0")).Append(',').Append(By(DamageDealt))
              .Append(',').Append(Sum(DamageTaken).ToString("0")).Append(',').Append(By(DamageTaken))
              .Append(',').Append(result == "death" ? LastHurtBy : "")
-             .Append(',').Append(ChapterDurations()).AppendLine();       // 1.1~ 장별 소요 시간
+             .Append(',').Append(ChapterDurations())       // 1.1~ 장별 소요 시간
+             .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics).AppendLine();     // 1.2~ 무게 · 각인 · 유물
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
         }
         catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }

@@ -145,7 +145,7 @@ public class MapProps : MonoBehaviour
         if (def != null)
             for (int i = 0; i < count; i++)
             {
-                Vector3 at = Spot(sp, me, MinFromPlayer, taken);
+                Vector3 at = Spot(sp, me, MinFromPlayer, taken, def.size * 0.5f + 0.8f);
                 taken.Add(at);
                 props.Add(MapProp.Make(def, at));
             }
@@ -156,7 +156,7 @@ public class MapProps : MonoBehaviour
         bool room = sa != null && sa.Relics.Count < SpecialAbilities.MaxRelics && RelicCandidates(sa).Count > 0;
         if (sd != null && slot >= 1 && sarcoRoll && room && !Demo.On && sarcoOpened.IndexOf(SlotChar(slot)) < 0)
         {
-            Vector3 at = Spot(sp, me, SarcoFromPlayer, taken);
+            Vector3 at = Spot(sp, me, SarcoFromPlayer, taken, Mathf.Max(sd.size * 0.5f + 0.8f, 2f));      // 곁에 머물 자리까지 비게
             sarco = MapProp.Make(sd, at);
             props.Add(sarco);
             StartCoroutine(SarcoBanner());
@@ -176,23 +176,26 @@ public class MapProps : MonoBehaviour
         ShockRing.Spawn(sarco.Home, 0.5f, 5f, 0.8f, SarcoColor, 0.3f);
     }
 
-    // 맵 안 빈자리: 플레이어 · 다른 물체에서 떨어진 곳 (못 찾으면 가장 나은 곳)
-    static Vector3 Spot(EnemySpawner sp, Vector3 me, float minFromPlayer, List<Vector3> taken)
+    // 맵 안 빈자리: 벽 · 구조물 · 용암 호수(태그 Wall, 적 생성 · 이동과 같은 판정 Hostile.WallNear)를 피하고, 플레이어 · 다른 물체에서 떨어진 곳
+    //   못 찾으면 벽이 없는 자리 중 가장 나은 곳 · 그것도 없으면 (거의 없음) 거리만 맞춘 곳
+    static Vector3 Spot(EnemySpawner sp, Vector3 me, float minFromPlayer, List<Vector3> taken, float clear)
     {
         Vector2 lo = sp.spawnAreaMin + Vector2.one * 2f, hi = sp.spawnAreaMax - Vector2.one * 2f;
         if (hi.x < lo.x) hi.x = lo.x;
         if (hi.y < lo.y) hi.y = lo.y;
-        Vector3 best = Hostile.ClampArena(me + Vector3.right * minFromPlayer);
-        float bestScore = -1f;
-        for (int i = 0; i < 40; i++)
+        Vector3 best = Vector3.zero, anyBest = Hostile.ClampArena(me + Vector3.right * minFromPlayer);
+        float bestScore = -1f, anyScore = -1f;
+        for (int i = 0; i < 60; i++)
         {
             Vector3 at = new Vector3(Random.Range(lo.x, hi.x), Random.Range(lo.y, hi.y), 0f);
             float score = Mathf.Min(Vector2.Distance(at, me) / minFromPlayer, 2f);
             foreach (Vector3 t in taken) score = Mathf.Min(score, Vector2.Distance(at, t) / MinBetween);
+            if (score > anyScore) { anyScore = score; anyBest = at; }
+            if (Hostile.WallNear(at, clear)) continue;
             if (score >= 1f) return at;
             if (score > bestScore) { bestScore = score; best = at; }
         }
-        return best;
+        return bestScore >= 0f ? best : anyBest;
     }
 
     // ================================================================= 부서짐 (MapProp 이 부름)
@@ -399,7 +402,7 @@ public class MapProps : MonoBehaviour
     }
 
     // 정화: 둘레 잡몹을 모두 처치 (중간 보스 · 엘리트 · 황금 고블린 · 부스러기 · 보스는 빼고)
-    //   보스까지 처치 수(EnemySpawner.killedEnemy) · 이번 판 처치 수(RunStats.Kills)에는 0.5배만 셈 (처치 수는 적이 쓰러지는 연출 1초 뒤에 오르므로 미리 뺌)
+    //   보스까지 처치 수(EnemySpawner.killedEnemy) · 이번 판 처치 수(RunStats.Kills) · 처치 이정표에는 0.5배만 셈 (올림, EnermyController.skipKillCount)
     public static void DropPurify(DropCtx c)
     {
         if (c.player == null) return;
@@ -411,16 +414,15 @@ public class MapProps : MonoBehaviour
             if (((Vector2)(e.transform.position - me)).sqrMagnitude > PurifyRadius * PurifyRadius) continue;
             hit.Add(e);
         }
-        int notCounted = hit.Count - Mathf.CeilToInt(hit.Count * PurifyKillShare);
-        EnemySpawner sp = Cache<EnemySpawner>.Get;
-        if (sp != null && notCounted > 0) sp.killedEnemy -= notCounted;
+        int counted = Mathf.CeilToInt(hit.Count * PurifyKillShare);
         Color white = new Color(1f, 0.97f, 0.8f);
-        foreach (EnermyController e in hit)
+        for (int i = 0; i < hit.Count; i++)
         {
+            EnermyController e = hit[i];
             Fx.Spawn("fx_sparkle", e.transform.position, 1.6f, white, 20f);
+            e.skipKillCount = i >= counted;         // 세지 않을 몫은 처치할 때 아예 오르지 않게 (미리 빼면 1초 동안 처치 수가 줄어 보이고 이정표가 두 번 나올 수 있었음)
             e.KillBySkill();
         }
-        if (notCounted > 0) RunStats.Kills = Mathf.Max(0, RunStats.Kills - notCounted);
         ShockRing.Spawn(me, 0.5f, PurifyRadius, 0.6f, new Color(1f, 0.97f, 0.8f, 0.95f), 0.5f);
         Fx.Spawn("fx_shock", me, PurifyRadius * 2f, white, 12f);
         Fx.Spawn("fx_soulburst", me, 6f, white, 16f);
