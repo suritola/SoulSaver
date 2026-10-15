@@ -135,6 +135,8 @@ public static class CharacterUI
         {
             TMP_Text star = UIKit.Text(t, "", 20f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(0f, 142f), new Vector2(230f, 26f));
             star.text = Mastery.Label(id);
+            string weight = SoulWeight.CardTag(id);      // 1.2~ 이 영웅의 가장 무거운 클리어 (기록이 있을 때만)
+            if (weight.Length > 0) star.text += "  ·  <color=#C9A0FF>" + weight + "</color>";
         }
         if (!unlocked && developed)
         {
@@ -196,6 +198,13 @@ public static class CharacterUI
         {
             TMP_Text mastery = UIKit.Text(dr, "", 18f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(-470f, -160f), new Vector2(460f, 60f));
             mastery.text = Mastery.Label(id) + "\n" + Loc.T("마지막 보스를 쓰러뜨릴 때마다 +1 (무한 모드 제외) · 단계마다 시작 레벨업 카드 +1");
+            string weight = SoulWeight.DetailLine(id);       // 1.2~ 영혼의 무게 기록 (어려움을 클리어해 열렸을 때만)
+            if (weight.Length > 0)
+            {
+                mastery.text += "\n<color=#C9A0FF>" + weight + "</color>";
+                mastery.rectTransform.sizeDelta = new Vector2(460f, 90f);         // 한 줄 늘어난 만큼 아래로 (선택 버튼 위끝 -295 보다 위)
+                mastery.rectTransform.anchoredPosition = new Vector2(-470f, -175f);
+            }
             mastery.enableWordWrapping = true;
         }
 

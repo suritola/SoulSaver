@@ -72,7 +72,7 @@ public class BossUltimate : MonoBehaviour
         int k = Mathf.Clamp(b.bossKind, 0, 3);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         // 약한 공격도 피해 비율의 3.5배는 채움 (1.2제곱만이면 평타가 거의 안 차서 · 보스 체력 3% 이상의 센 한 방은 그대로)
-        float gain = Mathf.Max(7f * Mathf.Pow(f, 1.2f), 3.5f * f);
+        float gain = Mathf.Max(7f * Mathf.Pow(f, 1.2f), 3.5f * f) * SoulWeight.BarrierGaugeMul;     // 1.2~ 영혼의 무게 3: 더 빨리 참
         gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.5f, gain));
         lastHit[k] = Time.time;
     }

@@ -9,7 +9,7 @@ public static class LastStand
 
     static int used;
     public static int Extra;            // 영혼 트리 「불굴」 (장마다 +1회)
-    public static int Charges => 1 + Extra;
+    public static int Charges => SoulWeight.NoLastStand ? 0 : 1 + Extra;     // 1.2~ 영혼의 무게 6: 최후의 보루 없음
     // 이번 장에 남은 횟수 · 아직 남았는지 (체력바 숫자 옆 ◆ · 한 방 사망 막기, 1.0.4~)
     public static int Left => Mathf.Max(0, Charges - used);
     public static bool Ready => used < Charges;

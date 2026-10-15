@@ -15,6 +15,8 @@ public partial class Shop
         ("질풍 물약", "45초 동안 이동 속도 +25%", 12),
     };
     const float PotionPriceGrowth = 1.25f;
+    // 회복 물약이 채우는 비율 (1.2~ 영혼의 무게 4: 40% → 24%)
+    static float PotionHeal => 0.4f * SoulWeight.HealMul;
 
     readonly int[] potionPrice = new int[Potions.Length];
 
@@ -29,7 +31,7 @@ public partial class Shop
         switch (id)
         {
             case 0:
-                playerControllerd.PlayerHealth = Mathf.Min(playerControllerd.PlayerMaxHealth, playerControllerd.PlayerHealth + playerControllerd.PlayerMaxHealth * 0.4f);
+                playerControllerd.PlayerHealth = Mathf.Min(playerControllerd.PlayerMaxHealth, playerControllerd.PlayerHealth + playerControllerd.PlayerMaxHealth * PotionHeal);
                 break;
             case 1: buffs.Begin(PotionBuffs.Kind.Shrink, 45f); break;
             case 2: buffs.Begin(PotionBuffs.Kind.Haste, 45f); break;
@@ -63,7 +65,7 @@ public partial class Shop
             }
             potionButtons[i].interactable = !blocked;
             potionName[i].text = Loc.T(Potions[i].name);
-            potionDesc[i].text = Loc.T(Potions[i].desc);
+            potionDesc[i].text = i == 0 && SoulWeight.HealMul < 1f ? Loc.T("weight.potiondesc").Replace("{0}", Mathf.RoundToInt(PotionHeal * 100f).ToString()) : Loc.T(Potions[i].desc);
             potionCost[i].text = price;
         }
     }

@@ -144,7 +144,7 @@ public class RunStats : MonoBehaviour
     {
         CharacterDef d = CharacterData.Current;
         Character = Loc.T(d.name);
-        Difficulty = GameMode.Name(GameMode.Current);
+        Difficulty = GameMode.Name(GameMode.Current) + SoulWeight.RunTag();      // 1.2~ 「· 무게 3 (최고 4)」
         PlayerController p = Hostile.Player;
         if (p != null) Level = p.level;
         if (StageManager.Instance != null) Stage = Chapters.Number(StageManager.Instance.CurrentStage);
