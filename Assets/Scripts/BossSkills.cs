@@ -65,7 +65,7 @@ public partial class BossSkills : MonoBehaviour
             // 되비친 기억: 이번 판에 가장 많이 쓴 공격 (RunStats)
             string top = TopSource();
             if (StageManager.Instance != null)
-                StageManager.Instance.ShowBanner(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", RunStats.SourceName(top)), 2.2f);
+                Notice.Big(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", RunStats.SourceName(top)), NoticeIcon.Boss, 2.2f, NoticeLevel.Urgent);
             StartCoroutine(Run(ReflectedMemory(p, top)));
             return;
         }
@@ -372,7 +372,7 @@ public partial class BossSkills : MonoBehaviour
     IEnumerator MirrorUlt(bool strong, bool banner)
     {
         ultHits = 0;
-        if (banner && StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("거울의 군주가 필살기를 흉내 낸다!"), 1.8f);
+        if (banner) Notice.Big(Loc.T("거울의 군주가 필살기를 흉내 낸다!"), NoticeIcon.Boss, 1.8f, NoticeLevel.Urgent);
         Fx.Spawn("fx_soulburst", transform.position, 9f, Mirror, 16f);
         Hostile.Play("shimmer", 0.6f, 0.7f);
         yield return Windup(Mirror, 0.8f);
@@ -656,7 +656,7 @@ public partial class BossSkills : MonoBehaviour
         Mimic m = list.Find(x => top != null && x.key == top);
         if (m.name == null) m = Pick(list);
         if (banner && StageManager.Instance != null)
-            StageManager.Instance.ShowBanner(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", m.name), 1.6f);
+            Notice.Big(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", m.name), NoticeIcon.Boss, 2f, NoticeLevel.Urgent);
         ultHits = 0;
         Fx.Spawn("fx_sparkle", transform.position, 5f, Mirror, 20f);
         Hostile.Play("shimmer", 0.5f, 1.1f);

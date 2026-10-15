@@ -21,7 +21,7 @@ public partial class BossSkills
 
     static void Banner(string ko)
     {
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T(ko), 2.2f);
+        Notice.Big(Loc.T(ko), NoticeIcon.Boss, 2.2f, NoticeLevel.Urgent);
     }
 
     // 스킬을 쓰지 않는 동안에도 매 프레임 (슬라임 몸 크기)

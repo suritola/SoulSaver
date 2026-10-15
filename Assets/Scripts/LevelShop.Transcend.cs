@@ -95,7 +95,7 @@ public partial class LevelShop
         RunSave.Record("tr" + TranscendBarCode);
         Juice.LevelUp(bul.transform.position);
         StageManager sm = StageManager.Instance;
-        if (sm != null) sm.ShowBanner(Loc.T("초월 충전") + "  " + transcendBars + " / " + TranscendBarsPer, 1.5f);
+        if (sm != null) Notice.Toast(NoticeIcon.Up, Loc.T("초월 충전") + "  " + transcendBars + " / " + TranscendBarsPer, 3f);
     }
 
     IEnumerator TranscendPick()

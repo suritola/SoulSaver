@@ -448,18 +448,19 @@ public class RunStats : MonoBehaviour
 
 // 처음 한 번만 뜨는 짧은 도움말 (설정에서 끌 수 있음). 화면 아래 가운데, HUD 위
 // 1.0.4~: 도움말을 줄 세워 하나씩 차례로 보여 줌 (뒤에 온 것이 앞의 것을 덮지 않음)
-//   시간이 멈춘 동안(카드 · 보상 · 영혼 트리 · ESC 창)은 숨기고 남은 시간도 멈춤, 5초를 다 보여 준 뒤에만 '봤음'으로 저장
+//   시간이 멈춘 동안(카드 · 보상 · 영혼 트리 · ESC 창)은 숨기고 남은 시간도 멈춤, 다 보여 준 뒤(또는 닫은 뒤)에만 '봤음'으로 저장
 //   설정 「도움말 다시 보기」(ResetAll)로 처음부터 다시 볼 수 있음
+// 1.1.2~ 안내 메시지 개편 (Notice): 1040 폭 패널 · ? 아이콘 · 28pt 본문(키 · 숫자 색 강조) · 남은 시간 막대 · [Tab] 닫기 · 7초 · 아래에서 올라옴
 public static class Hints
 {
-    static GameObject box;
-    static TextMeshProUGUI text;
+    static Notice.TipPanel box;
     static float left;                  // 지금 도움말이 남은 시간 (시간이 흐를 때만 줄어듦)
+    static float shown;                 // 지금 도움말을 보여 준 시간 (나타나는 움직임)
     static string current;              // 지금 띄운 도움말 키 (null = 없음)
     static HintRunner runner;
     static int sceneHandle = -1;
     static readonly List<(string key, string ko)> queue = new List<(string key, string ko)>();
-    const float Duration = 5f;
+    const float Duration = 7f;
 
     // 설정 「도움말 다시 보기」가 지우는 키 (Hints.Show 를 부르는 곳의 키를 모두 적음)
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
@@ -478,7 +479,7 @@ public static class Hints
         if (Prefs.GetInt("hint." + key, 0) == 1) return;
         // 씬이 바뀌면 지난 씬에서 줄 선 도움말은 버림 (상자는 캔버스와 함께 사라짐)
         int scene = SceneManager.GetActiveScene().handle;
-        if (scene != sceneHandle) { sceneHandle = scene; queue.Clear(); current = null; }
+        if (scene != sceneHandle) { sceneHandle = scene; queue.Clear(); current = null; box = null; }
         if (current == key) return;
         foreach (var q in queue) if (q.key == key) return;
         if (UIKit.HudCanvas() == null) return;
@@ -488,49 +489,16 @@ public static class Hints
 
     static bool Build()
     {
-        if (box != null) return true;
-        Canvas canvas = UIKit.HudCanvas();
-        if (canvas == null) return false;
-        box = new GameObject("Hint", typeof(RectTransform), typeof(Image));
-        RectTransform r = box.GetComponent<RectTransform>();
-        r.SetParent(canvas.transform, false);
-        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
-        r.pivot = new Vector2(0.5f, 0f);
-        r.anchoredPosition = new Vector2(0f, 236f);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
-        r.sizeDelta = new Vector2(920f, 70f);      // 1.0.1: 720×56 → 920×70, 진한 바탕 + 하늘색 테두리 (반투명이라 묻혔음)
-        Image bg = box.GetComponent<Image>();
-        bg.color = new Color(0.05f, 0.05f, 0.1f, 0.94f);
-        bg.raycastTarget = false;
-        Outline edge = box.AddComponent<Outline>();
-        edge.effectColor = new Color(0.45f, 0.85f, 1f, 0.95f);
-        edge.effectDistance = new Vector2(3f, -3f);
-        GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform tr = tg.GetComponent<RectTransform>();
-        tr.SetParent(r, false);
-        tr.anchorMin = Vector2.zero;
-        tr.anchorMax = Vector2.one;
-        tr.offsetMin = new Vector2(16f, 4f);
-        tr.offsetMax = new Vector2(-16f, -4f);
-        text = tg.GetComponent<TextMeshProUGUI>();
-        UIKit.EnsureStyle();
-        if (UIKit.Font != null) text.font = UIKit.Font;
-        if (UIKit.FontMaterial != null) text.fontSharedMaterial = UIKit.FontMaterial;
-        text.enableAutoSizing = true;
-        text.fontSizeMin = 16f;
-        text.fontSizeMax = 30f;
-        text.fontStyle = FontStyles.Bold;
-        text.outlineWidth = 0.2f;
-        text.outlineColor = new Color32(0, 0, 0, 255);
-        text.color = Color.white;
-        text.alignment = TextAlignmentOptions.Center;
-        text.raycastTarget = false;
-        box.SetActive(false);
-        return true;
+        if (box != null && box.r != null) return true;
+        box = Notice.BuildTip();
+        return box != null;
     }
+
+    static string CloseText => GamePad.Active || !Notice.TipCloseKeyFree ? "" : Loc.T("notice.tip.close").Replace("{0}", "Tab");
 
     public static void Tick()
     {
-        bool paused = Time.timeScale == 0f;
+        bool paused = Notice.Held;
         if (current == null)
         {
             if (paused || queue.Count == 0 || !GameSettings.Hints) return;
@@ -539,18 +507,30 @@ public static class Hints
             queue.RemoveAt(0);
             if (Prefs.GetInt("hint." + next.key, 0) == 1) return;
             current = next.key;
-            text.text = "<color=#FFE066>" + Loc.T("도움말") + "</color>  " + Loc.T(next.ko);
+            Notice.FillTip(box, Loc.T("도움말"), Loc.T(next.ko), CloseText);
             left = Duration;
+            shown = 0f;
         }
-        if (box == null) { current = null; return; }
-        // 시간이 멈춘 동안은 숨기고 남은 시간도 그대로 (창 뒤에서 흘러가 버리지 않게)
-        if (box.activeSelf == paused) box.SetActive(!paused);
+        if (box == null || box.r == null) { current = null; return; }
+        // 시간이 멈춘 동안 · 창이 열린 동안은 숨기고 남은 시간도 그대로 (창 뒤에서 흘러가 버리지 않게)
+        if (box.r.gameObject.activeSelf == paused) box.r.gameObject.SetActive(!paused);
         if (paused) return;
-        left -= Time.unscaledDeltaTime;
-        if (left > 0f) return;
-        Prefs.SetInt("hint." + current, 1);         // 다 보여 준 뒤에 '봤음'
+        float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        shown += dt;
+        left -= dt;
+        // 아래에서 살짝 올라오며 나타남 · 처음 0.5초 테두리가 밝게
+        float k = Mathf.Clamp01(shown / 0.25f);
+        box.cg.alpha = k;
+        box.r.anchoredPosition = new Vector2(0f, 236f - 30f * (1f - k) * (1f - k));
+        float glow = GameSettings.Flashes ? Mathf.Clamp01(1f - shown / 0.5f) : 0f;
+        box.rim.color = Color.Lerp(new Color(Notice.Sky.r, Notice.Sky.g, Notice.Sky.b, 0.95f), Color.white, glow * 0.7f);
+        RectTransform bar = box.bar.rectTransform;
+        bar.localScale = new Vector3(Mathf.Clamp01(left / Duration), 1f, 1f);
+        bool close = CloseText.Length > 0 && Input.GetKeyDown(KeyCode.Tab);
+        if (left > 0f && !close) return;
+        Prefs.SetInt("hint." + current, 1);         // 다 보여 준 뒤(또는 닫은 뒤)에 '봤음'
         current = null;
-        box.SetActive(false);
+        box.r.gameObject.SetActive(false);
     }
 }
 

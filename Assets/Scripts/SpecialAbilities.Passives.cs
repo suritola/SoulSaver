@@ -79,7 +79,7 @@ public partial class SpecialAbilities
             fx.Play("chime", 1f, 0.9f);
             fx.Shake(0.4f, 0.3f);
             Flash(player.transform.position, 6f, new Color(0.6f, 0.95f, 1f, 0.8f), 0.6f);
-            if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("영혼이 되살아났다!"), 2f);
+            Notice.Big(Loc.T("영혼이 되살아났다!"), NoticeIcon.Revive, 2.2f, NoticeLevel.Urgent);
             return true;
         }
         undyingUses++;
@@ -87,7 +87,7 @@ public partial class SpecialAbilities
         fx.Play("chime", 1f, 0.7f);
         fx.Shake(0.4f, 0.3f);
         Flash(player.transform.position, 6f, new Color(1f, 0.9f, 0.5f, 0.8f), 0.6f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("불사의 맹세가 발동했다!"), 2f);
+        Notice.Big(Loc.T("불사의 맹세가 발동했다!"), NoticeIcon.Shield, 2.2f, NoticeLevel.Urgent);
         return true;
     }
 

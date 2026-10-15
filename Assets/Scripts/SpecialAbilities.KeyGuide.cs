@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -6,7 +5,7 @@ using UnityEngine.UI;
 
 // 키 안내 (1.1.2~): 특수 스킬(잠든 힘, 스킬 1~3 = E · F · C / 패드 RB · LB · L3)과 유물([Q] / 패드 Y)을 얻었을 때 어느 키로 쓰는지 한눈에
 //   · HUD 칸 아래 바깥의 키캡 배지 (SpecialAbilities.Hud) — 그림은 여기서 코드로 그림 (KeyCapSprite · ArrowSprite)
-//   · 얻는 순간 화면 가운데 위에 큰 키캡 「[E] 전투 함성 / E 키를 눌러 사용」 + 그 칸이 몇 초 반짝이고 화살표가 가리킴
+//   · 얻는 순간 화면 가운데 위에 큰 키캡 「[E] 전투 함성 / E 키를 눌러 사용」(Notice.BigKey) + 그 칸이 몇 초 반짝이고 화살표가 가리킴
 //   · 처음 그 키를 눌러 볼 때까지 칸의 키 배지가 은은히 맥동
 //   · 상자 「잠든 힘」 · 석관 유물 고르기 설명에 들어갈 칸 · 키를 미리 (DormantSlotNote · RelicSlotNote)
 //   키 이름은 늘 KeyBindings.Name — 패드를 쓰는 중이면 패드 버튼 이름, 키를 바꿨으면 바뀐 키
@@ -20,7 +19,6 @@ public partial class SpecialAbilities
 
     readonly Dictionary<int, float> newTileUntil = new Dictionary<int, float>();   // 반짝임 · 화살표가 끝나는 때 (unscaled)
     readonly HashSet<int> keyPending = new HashSet<int>();                         // 아직 한 번도 키를 눌러 보지 않은 칸
-    GameObject keyAnnounce;
 
     // ================================================================= 칸 · 키
     // 이 능력을 쓰는 동작 (스킬 1~3 · 유물), 없으면 null
@@ -74,108 +72,22 @@ public partial class SpecialAbilities
         newTileUntil[id] = Time.unscaledTime + NewTileSeconds;
         keyPending.Add(id);
         if (!relic && fx != null) { fx.Play("chime", 0.6f, 1.35f); fx.Play("shimmer", 0.4f, 1.4f); }
-        StartCoroutine(KeyAnnounce(id, relic));
+        KeyAnnounceNow(id, relic);
     }
 
-    IEnumerator KeyAnnounce(int id, bool relic)
+    // 1.1.2~ 안내 메시지 개편: 큰 알림(Notice.BigKey)으로 — 다른 큰 알림과 줄을 서고, 고르기 창 · 일시정지 중에는 기다렸다가 닫히면 뜸
+    void KeyAnnounceNow(int id, bool relic)
     {
-        Canvas canvas = UIKit.HudCanvas();
-        if (canvas == null) yield break;
-        UIKit.EnsureStyle();
-        if (keyAnnounce != null) Destroy(keyAnnounce);
-
         string key = SlotKeyName(id);
         bool none = key.Length == 0 || key == "-";
         GameAction act = SlotAction(id) ?? GameAction.Relic;
         KeyCode kc = KeyBindings.Get(act);
         bool button = GamePad.Active || (kc >= KeyCode.Mouse0 && kc <= KeyCode.Mouse6);
         string press = none ? Loc.T("keyguide.press.none")
-                     : Loc.T(button ? "keyguide.press.pad" : "keyguide.press.key").Replace("{0}", "<color=#FFE07A><b>" + key + "</b></color>");
-        if (relic && relics.Count > 1) press += "\n<size=80%>" + Loc.T("keyguide.relic.shared") + "</size>";
+                     : Loc.T(button ? "keyguide.press.pad" : "keyguide.press.key").Replace("{0}", "<color=#FFE07A>" + key + "</color>");
+        if (relic && relics.Count > 1) press += "\n" + Loc.T("keyguide.relic.shared");
         Color accent = relic ? new Color(0.8f, 0.6f, 1f) : KeyGold;
-
-        // 크기: 키캡은 글자 길이에 맞춰 넓어짐 (한글 · 가나 글자당 넓게)
-        float est = 0f;
-        foreach (char ch in none ? "?" : key) est += ch >= 0x2E80 ? 46f : 30f;
-        float capW = Mathf.Clamp(44f + est, 104f, 240f);
-        float w = Mathf.Max(660f, capW + 500f), h = 150f;
-
-        GameObject go = new GameObject("KeyAnnounce", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-        keyAnnounce = go;
-        RectTransform r = go.GetComponent<RectTransform>();
-        r.SetParent(canvas.transform, false);
-        // HUD 순서 안 (탄약 패널 바로 뒤): 일시정지 · 고르기 창 위에 뜨지 않게
-        Transform ammo = canvas.transform.Find("AmmoPanel");
-        if (ammo != null) r.SetSiblingIndex(ammo.GetSiblingIndex() + 1);
-        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
-        r.anchoredPosition = new Vector2(0f, 230f);         // 화면 가운데 위 (위쪽 알림 띠 · 가운데 플레이어와 겹치지 않게)
-        r.sizeDelta = new Vector2(w, h);
-        Image bg = go.GetComponent<Image>();
-        bg.sprite = UIKit.ButtonSprite;
-        bg.type = Image.Type.Sliced;
-        bg.color = Color.Lerp(new Color(0.12f, 0.1f, 0.16f, 0.94f), accent, 0.22f);
-        bg.raycastTarget = false;
-        Outline ol = go.AddComponent<Outline>();
-        ol.effectColor = new Color(accent.r, accent.g, accent.b, 0.85f);
-        ol.effectDistance = new Vector2(3f, -3f);
-        CanvasGroup cg = go.GetComponent<CanvasGroup>();
-        cg.blocksRaycasts = false;
-        cg.interactable = false;
-        cg.alpha = 0f;
-
-        // 큰 키캡
-        float left = -w * 0.5f + 30f;
-        RectTransform capR = UIKit.Rect("Cap", r, new Vector2(left + capW * 0.5f, 2f), new Vector2(capW, 104f));
-        Image capImg = capR.gameObject.AddComponent<Image>();
-        capImg.sprite = KeyCapSprite;
-        capImg.type = Image.Type.Sliced;
-        capImg.pixelsPerUnitMultiplier = 0.3f;              // 테두리 · 옆면을 굵게 (도트 3배쯤)
-        capImg.raycastTarget = false;
-        TMP_Text capText = UIKit.Text(capR, "", 54f, KeyCapInk, Vector2.zero, Vector2.zero);
-        RectTransform ctr = capText.rectTransform;
-        ctr.anchorMin = Vector2.zero; ctr.anchorMax = Vector2.one;
-        ctr.offsetMin = new Vector2(10f, 22f); ctr.offsetMax = new Vector2(-10f, -8f);
-        capText.fontStyle = FontStyles.Bold;
-        capText.enableWordWrapping = false;
-        capText.fontSizeMin = 18f;
-        capText.text = none ? "?" : key;
-
-        // 글자: 「새 스킬」 · 이름 · 「E 키를 눌러 사용」
-        float x0 = left + capW + 28f, tw = w * 0.5f - 24f - x0;
-        float cx = x0 + tw * 0.5f;
-        TMP_Text tag = UIKit.Text(r, "", 22f, accent, new Vector2(cx, 46f), new Vector2(tw, 30f), TextAlignmentOptions.Left);
-        tag.text = Loc.T(relic ? "keyguide.new.relic" : "keyguide.new.skill");
-        TMP_Text title = UIKit.Text(r, "", 42f, new Color(1f, 0.88f, 0.55f), new Vector2(cx, 10f), new Vector2(tw, 48f), TextAlignmentOptions.Left);
-        title.enableWordWrapping = false;
-        title.text = Loc.T(abilities[id].name);
-        TMP_Text sub = UIKit.Text(r, "", 27f, new Color(0.94f, 0.91f, 0.85f), new Vector2(cx, -42f), new Vector2(tw, 52f), TextAlignmentOptions.Left);
-        sub.text = press;
-
-        // 뜨고(살짝 튀어나옴) · 키캡이 0.9초마다 눌리는 시늉 · 4초 뒤 사라짐 (멈춘 동안에도 흐름)
-        const float life = 4.2f;
-        Vector2 capPos = capR.anchoredPosition;
-        float start = Time.unscaledTime;
-        while (go != null)
-        {
-            float t = Time.unscaledTime - start;
-            if (t >= life) break;
-            cg.alpha = t < 0.2f ? t / 0.2f : t > life - 0.5f ? (life - t) / 0.5f : 1f;
-            float pop = t < 0.3f ? Mathf.LerpUnclamped(0.7f, 1f, EaseOutBack(t / 0.3f)) : 1f;
-            r.localScale = Vector3.one * pop;
-            bool pressed = t > 0.5f && Mathf.Repeat(t - 0.5f, 0.9f) < 0.12f;
-            capR.anchoredPosition = capPos + (pressed ? new Vector2(0f, -6f) : Vector2.zero);
-            capImg.color = pressed ? new Color(0.84f, 0.84f, 0.84f) : Color.white;
-            yield return null;
-        }
-        if (go != null) Destroy(go);
-        if (keyAnnounce == go) keyAnnounce = null;
-    }
-
-    static float EaseOutBack(float x)
-    {
-        const float c1 = 1.70158f, c3 = c1 + 1f;
-        float k = x - 1f;
-        return 1f + c3 * k * k * k + c1 * k * k;
+        Notice.BigKey(none ? "?" : key, Loc.T(relic ? "keyguide.new.relic" : "keyguide.new.skill"), Loc.T(abilities[id].name), press, accent);
     }
 
     // ================================================================= HUD 칸 (매 프레임, UpdateHud)
@@ -242,7 +154,7 @@ public partial class SpecialAbilities
     static Sprite keyCapSprite, arrowSprite;
 
     // 키보드 키캡: 진한 테두리 · 밝은 윗면 · 아래쪽 옆면(그림자) · 윗줄 하이라이트 · 둥근 모서리 — 9칸 늘림(Sliced)
-    static Sprite KeyCapSprite
+    internal static Sprite KeyCapSprite
     {
         get
         {

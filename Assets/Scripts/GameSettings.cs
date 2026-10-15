@@ -23,6 +23,7 @@ public static class GameSettings
     const string MuteKey = "settings.muteUnfocused";
     const string UiScaleKey = "settings.uiScale";
     const string MouseSensKey = "settings.mouseSensitivity";
+    const string NoticeSizeKey = "settings.noticeSize";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     static bool loaded;
@@ -35,6 +36,7 @@ public static class GameSettings
     static int uiScale = 2;
     static int damageNumbers;
     static int myFxAlpha;
+    static int noticeSize = 1;
 
     public static Loc.Lang Language
     {
@@ -113,6 +115,14 @@ public static class GameSettings
         muteUnfocused = Prefs.GetInt(MuteKey, 1) == 1;
         uiScale = Mathf.Clamp(Prefs.GetInt(UiScaleKey, 2), 0, UiScales.Length - 1);
         mouseSens = Mathf.Clamp(Prefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
+        noticeSize = Mathf.Clamp(Prefs.GetInt(NoticeSizeKey, 1), 0, 2);
+    }
+
+    // 1.1.2~ 안내 메시지 크기 (게임 중 큰 알림 · 토스트 · 도움말 · 진행 줄): 0 보통 · 1 크게(기본) · 2 아주 크게 — Notice.Scale
+    public static int NoticeSize
+    {
+        get { Load(); return noticeSize; }
+        set { Load(); noticeSize = Mathf.Clamp(value, 0, 2); Prefs.SetInt(NoticeSizeKey, noticeSize); }
     }
 
     // 전투 중 마우스 감도 (1 = 윈도우 커서 그대로, 0.25 ~ 3) · 1.8.9~ (MouseSensitivity)
