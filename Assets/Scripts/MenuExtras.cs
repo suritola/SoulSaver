@@ -86,6 +86,15 @@ public static class MenuExtras
             line.text = t;
             line.baseText = text;
             line.daily = daily;
+            // 1.1.5~ 기록 글 오른쪽: 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
+            if (!Demo.On)
+            {
+                t.rectTransform.sizeDelta = new Vector2(880f, t.rectTransform.sizeDelta.y);       // 버튼 자리 (오른쪽 결과 판 아래끝 -260 보다 아래)
+                Transform root = canvas.transform;
+                Button view = UIKit.MakeButton(root, "lb.view", new Vector2(600f, r.anchoredPosition.y), new Vector2(240f, 72f),
+                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 26f);
+                view.name = "LeaderboardViewButton";
+            }
         }
         EndlessMode.LastSeconds = -1f;
     }
@@ -162,6 +171,7 @@ public static class MenuExtras
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
         SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
+        LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));

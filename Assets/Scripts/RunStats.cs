@@ -571,7 +571,7 @@ public class QuickRestart : MonoBehaviour
 
     void Update()
     {
-        if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초
+        if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen || LeaderboardUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초 · 1.1.5~ 순위 창이 떠 있으면 받지 않음
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameScene");
     }

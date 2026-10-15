@@ -127,8 +127,8 @@ public static class DailyChallenge
         string board = daily ? RunBoard : SteamLeaderboards.Endless;
         LastBoard = board;
         LastRank = LastTotal = 0;
-        // 자세한 값: 캐릭터 · 보스 처치 · 레벨 · 처치 수
-        int[] details = { (int)CharacterData.Selected, bosses, RunStats.Level, RunStats.Kills };
+        // 자세한 값: 캐릭터 · 보스 처치 · 레벨 · 처치 수 · 1.1.5~ 판 버전 (SteamLeaderboards.DetailCount · 순위 창 영웅 아이콘 · 보스 칸)
+        int[] details = { (int)CharacterData.Selected, bosses, RunStats.Level, RunStats.Kills, SteamLeaderboards.VersionCode() };
         SteamLeaderboards.Upload(board, Mathf.FloorToInt(seconds), details, (rank, total) =>
         {
             if (LastBoard != board) return;
@@ -147,7 +147,9 @@ public static class DailyChallenge
         void Update()
         {
             if (text == null || LastRank <= 0) return;
-            text.text = baseText + "   " + Loc.T(daily ? "오늘의 순위" : "무한 모드 순위") + " #" + LastRank + " <color=#A89C86>/ " + LastTotal + "</color>";
+            // 1.1.5~ 「내 순위 n위 / 전체」 (순위 창 LeaderboardUI 와 같은 말)
+            text.text = baseText + "   " + Loc.T(daily ? "오늘의 순위" : "무한 모드 순위") + " · " + Loc.T("lb.myrank").Replace("{0}", LastRank.ToString("N0"))
+                      + " <color=#A89C86>/ " + LastTotal.ToString("N0") + "</color>";
             enabled = false;
         }
     }
@@ -201,7 +203,7 @@ public static class DailyChallenge
         bg.color = new Color(0f, 0f, 0f, 0.18f);
         bg.raycastTarget = false;
         UIKit.Text(board, "오늘의 순위", 28f, Gold, new Vector2(0f, 280f), new Vector2(520f, 40f));
-        TMP_Text list = UIKit.Text(board, "", 22f, Parch, new Vector2(0f, -30f), new Vector2(520f, 540f), TextAlignmentOptions.TopLeft);
+        TMP_Text list = UIKit.Text(board, "", 22f, Parch, new Vector2(0f, -10f), new Vector2(520f, 500f), TextAlignmentOptions.TopLeft);      // 1.1.5~ 아래에 「전체 순위」 버튼 자리
         list.enableAutoSizing = false;
         list.fontSize = 22f;
         list.lineSpacing = 6f;
@@ -209,6 +211,13 @@ public static class DailyChallenge
         view.list = list;
         view.countdown = UIKit.Text(win, "", 20f, Dim, new Vector2(0f, 300f), new Vector2(900f, 30f));
         view.Load(SteamLeaderboards.Daily(Key(day)));
+        // 1.1.5~ 전체 순위 창 (무한 모드 순위와 같은 창 · 일일 도전 순위표로), 닫으면 이 창으로 돌아옴
+        if (!Demo.On)
+            UIKit.MakeButton(board, "lb.full", new Vector2(0f, -280f), new Vector2(300f, 50f), () =>
+            {
+                Close();
+                LeaderboardUI.Open(root, LeaderboardUI.Board.Daily, SteamLeaderboards.Scope.Global, () => Open(root));
+            }, 22f);
     }
 
     public static void Close()
@@ -241,7 +250,7 @@ public static class DailyChallenge
 
         void Update()
         {
-            if (GameInput.EscDown) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+            if (GameInput.EscDown && SettingsUI.EscHandledFrame != Time.frameCount) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }     // 1.1.5~ 같은 프레임에 다른 창이 쓴 ESC 는 넘김
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + 1f;
             TimeSpan left = Today.AddDays(1) - DateTime.UtcNow;
@@ -258,14 +267,9 @@ public static class DailyChallenge
             System.Text.StringBuilder b = new System.Text.StringBuilder();
             foreach (SteamLeaderboards.Entry e in entries)
             {
-                string name = SteamLeaderboards.NameOf(e.user);
+                // 1.1~ 글자 단위로 자르고 noparse 로 감쌈 (1.1.5~ 순위 창과 같은 SteamLeaderboards.DisplayName)
+                string name = SteamLeaderboards.DisplayName(e.user, 14);
                 if (string.IsNullOrEmpty(name)) name = "…";
-                // 1.1~ 글자 단위로 자르고(이모지 반쪽 방지), 이름 속 < > 가 서식 태그로 읽히지 않게 noparse 로 감쌈
-                System.Globalization.StringInfo si = new System.Globalization.StringInfo(name);
-                if (si.LengthInTextElements > 14) name = si.SubstringByTextElements(0, 14) + "…";
-                string was;
-                do { was = name; name = System.Text.RegularExpressions.Regex.Replace(name, "</?noparse>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase); } while (was != name);
-                name = "<noparse>" + name + "</noparse>";
                 string line = "#" + e.rank + "  " + name + "  <color=#A89C86>" + EndlessMode.Clock(e.score) + "</color>";
                 b.Append(e.me ? "<color=#F5D478>" + line + "</color>" : line).Append('\n');
             }
