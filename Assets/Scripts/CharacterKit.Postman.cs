@@ -73,7 +73,19 @@ public partial class CharacterKit
     IEnumerator LetterFlight(Vector3 from, Vector2 dir, Transform target, float dmg, bool pigeon, int depth)
     {
         bool parcel = form == SpecialAbilities.KitParcel;
-        FxAnim a = Fx.Play(pigeon ? "fx_falcon" : "fx_card", from, pigeon ? 1.4f : (parcel ? 1.1f : 0.9f), pigeon ? new Color(0.9f, 0.9f, 1f) : (parcel ? new Color(0.8f, 0.6f, 0.4f) : SkinFx.Tint(Letter)), 16f, 0f, 16, true, 3f);
+        // 1.1.2: 새 편지 그림(흰 종이 · 금빛 테 · 붉은 봉인 · 어두운 외곽선) + 금빛 빛 무리 · 잔상, 보이는 크기 2.4 → 2.7 → 3배 (닿는 판정은 그대로)
+        bool art = !pigeon && Fx.Frames("atk_letter").Length > 0;
+        float mul = AttackLook.BigMul(AttackLook.Tier);
+        FxAnim a = Fx.Play(pigeon ? "fx_falcon" : art ? "atk_letter" : "fx_card", from, (pigeon ? 1.4f : (parcel ? 1.1f : 0.9f)) * mul,
+                           pigeon ? new Color(0.9f, 0.9f, 1f) : (parcel ? new Color(0.85f, 0.65f, 0.45f) : SkinFx.Tint(Letter)), 16f, 0f, AttackLook.Order, true, 3f);
+        if (a != null)
+        {
+            BulletGlow glow = a.gameObject.AddComponent<BulletGlow>();
+            glow.styled = true;
+            glow.keepColor = true;          // 색까지 그린 그림: 빛 무리 · 잔상만 금빛
+            glow.frames = a.frames;
+            glow.haloMul = 1.2f;
+        }
         Vector3 p = from;
         Vector2 v = dir.sqrMagnitude > 0.01f ? dir.normalized : Vector2.right;
         float life = 1.6f;
@@ -95,7 +107,7 @@ public partial class CharacterKit
             if (a != null)
             {
                 a.transform.position = p;
-                a.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - 90f + Mathf.Sin(t * 30f) * 12f);
+                a.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - (art ? 0f : 90f) + Mathf.Sin(t * 30f) * 12f);      // 새 편지 그림은 가로로 누운 봉투
             }
             if (Hostile.IsWall(p)) break;
             // 받는 이 몸에 닿으면 배달 (예전엔 몸 크기와 상관없이 중심 0.74칸 안이어야 해서 큰 적 · 보스는 몸에 닿고도 지나쳤음)

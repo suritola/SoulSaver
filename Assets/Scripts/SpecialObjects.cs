@@ -595,7 +595,8 @@ public class FadeSprite : MonoBehaviour
     Color c;
     Vector3 s;
 
-    public static void Spawn(string name, Sprite sprite, Vector3 pos, float scale, Color color, string layer, int order, float duration)
+    // 돌려받은 것으로 회전 · 축마다 다른 크기를 줄 수 있음 (Shape, 평타 잔상)
+    public static FadeSprite Spawn(string name, Sprite sprite, Vector3 pos, float scale, Color color, string layer, int order, float duration)
     {
         FadeSprite f = null;
         while (pool.Count > 0 && f == null) f = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
@@ -621,6 +622,15 @@ public class FadeSprite : MonoBehaviour
         tr.localScale = f.s;
         f.spawnFrame = Time.frameCount;
         f.gameObject.SetActive(true);
+        return f;
+    }
+
+    // 1.1.2~ 평타 잔상: 몸 그림의 회전 · 크기 그대로 (Spawn 바로 뒤에)
+    public void Shape(Quaternion rotation, Vector3 scale)
+    {
+        s = scale;
+        transform.rotation = rotation;
+        transform.localScale = s;
     }
 
     int spawnFrame = -1;

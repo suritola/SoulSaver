@@ -683,7 +683,11 @@ void Shoot()
             bullet.damage = damage;
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
-            newBullet.AddComponent<BulletGlow>();
+            // 1.1.2: 납작한 흰 실선 대신 금빛 예광탄 (보이는 크기 3~4배, BulletGlow 예광탄 모드)
+            //   판정 길이 3.27 은 그대로, 두께만 0.022 → 0.3 (BulletGlow.InitTracer, 피해는 그대로)
+            BulletGlow glow = newBullet.AddComponent<BulletGlow>();
+            if (newBullet.TryGetComponent(out SpriteRenderer bodySr)) glow.tracerSprite = bodySr.sprite;
+            glow.tracerBaseScale = newBullet.transform.localScale;
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참
             bullet.skillCharge = knockBackRate * GaugeRate;
         }
