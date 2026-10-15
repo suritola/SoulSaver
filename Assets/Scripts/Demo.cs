@@ -58,7 +58,7 @@ public static class Demo
         UIKit.Text(win, "리치 왕을 쓰러뜨렸습니다! 고마워요.", 30f, parch, new Vector2(0f, 165f), new Vector2(980f, 50f));
         TMP_Text full = UIKit.Text(win,
             "정식판에서는 초원 · 불타는 지옥 · 영혼의 심연과 킹 슬라임 · 지옥의 군주 · 거울의 군주,\n" +
-            "영웅 9명 · 스킬 진화 · 보통 / 어려움 난이도 · 무한 모드 · 일일 도전이 기다립니다.",
+            "영웅 9명 · 스킬 진화 · 보통 / 어려움 난이도 · 영혼 각인 · 영혼의 무게 · 봉인된 석관과 유물 · 무한 모드 · 일일 도전이 기다립니다.",
             26f, parch, new Vector2(0f, 50f), new Vector2(1000f, 130f));
         full.enableAutoSizing = true;       // 1.0.3: 정식판 소개가 길어져 (영어는 더 긺) 창 안에 맞춤
         full.fontSizeMin = 16f;
