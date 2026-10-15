@@ -37,6 +37,6 @@ public static class Curse
         RunSave.Record("k" + stage);
         Hostile.Play("roar", 0.5f, 1.3f);
         Fx.Spawn("fx_soulburst", Hostile.Player != null ? Hostile.Player.transform.position : Vector3.zero, 6f, new Color(0.75f, 0.4f, 1f), 16f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("저주를 받았다!\n적 체력 +30% · 보상 +50%"), 2.5f);
+        Notice.Big(Loc.T("저주를 받았다!\n적 체력 +30% · 보상 +50%"), NoticeIcon.Curse, 3f, NoticeLevel.Normal);
     }
 }

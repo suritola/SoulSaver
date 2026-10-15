@@ -673,14 +673,16 @@ public class SpecialFeedback : MonoBehaviour
         go.transform.position = pos + new Vector3(0f, 3.2f, 0f);
         TextMeshPro tmp = go.AddComponent<TextMeshPro>();
         if (font != null) tmp.font = font;
-        if (fontMaterial != null) tmp.fontSharedMaterial = fontMaterial;
+        Material outlined = Notice.WorldMaterial(tmp.font);         // 1.1.2~ 진한 외곽선 (이펙트 · 금빛 물체 위에서도 읽히게)
+        if (outlined != null) tmp.fontSharedMaterial = outlined;
+        else if (fontMaterial != null) tmp.fontSharedMaterial = fontMaterial;
         tmp.text = text;
         tmp.fontSize = size * 1.6f;         // 화면(세로 40칸)에서 작아 잘 안 보였음 · 부르는 쪽 크기 비율은 그대로
         tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableWordWrapping = false;
         tmp.sortingLayerID = SortingLayer.NameToID("Effect");
-        tmp.sortingOrder = 30;
+        tmp.sortingOrder = 50;      // 1.1.2~ 30 -> 50: 피해 숫자(40 · 45) · 이펙트보다 위
         go.AddComponent<FloatUp>().duration = duration;     // 1.1~ 읽어야 하는 안내는 더 오래 남김
     }
 

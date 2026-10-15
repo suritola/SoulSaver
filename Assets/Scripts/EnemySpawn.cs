@@ -109,7 +109,8 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        if (spawnedEnemys >= MaxAlive) return;      // 1.0.7~ 개발자 · 엄마와 싸우는 동안에도 일반 적은 나옴 (습격 · 중간 보스 · 부하만 막음)
+        if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.FinalBossAlive) return;     // 1.1.2~ 개발자 · 엄마와 싸우는 동안엔 잡몹도 없음
+        if (spawnedEnemys >= MaxAlive) return;      // 1.0.7~ 한 화면 최대 수 (1.1.2~ 개발자 · 엄마전 중엔 위에서 잡몹까지 막음)
         if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
 
         spawnedEnemys++;

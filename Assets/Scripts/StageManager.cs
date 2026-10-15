@@ -140,8 +140,7 @@ public class StageManager : MonoBehaviour
         DimMeadow();
         if (portal != null) portal.SetActive(false);
         if (specialPanel != null) specialPanel.SetActive(false);
-        if (banner != null) banner.SetActive(false);
-        CompactBanner();
+        if (banner != null) banner.SetActive(false);         // 1.1.2~ 옛 알림판은 쓰지 않음 (Notice)
         SetFade(0f);
 
         BuildUpgradeButton();
@@ -179,7 +178,7 @@ public class StageManager : MonoBehaviour
             if (spawner != null) spawner.spawningEnabled = true;
             started = true;
             RunClock.Create(RestoredClock);
-            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), resumeNote != null ? 3f : 2.5f);     // 1.2~ 무게를 진 판이면 한 줄 더
+            Notice.Big(Loc.T("이어하기"), Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), NoticeIcon.Soul, resumeNote != null ? 3.2f : 2.8f);     // 1.2~ 무게를 진 판이면 한 줄 더
             resumeNote = null;
             yield break;
         }
@@ -221,7 +220,7 @@ public class StageManager : MonoBehaviour
         // 1.0.4~: 장 제목 · 이동 도움말은 시작 카드 창을 닫고 시간이 흐를 때 띄움 (멈춘 카드 창 뒤에서 흘러가 버렸음)
         LevelShop cards = FindFirstObjectByType<LevelShop>();
         while ((cards != null && cards.IsOpen) || Time.timeScale == 0f) yield return null;
-        ShowBanner(openBanner, openTime);
+        Notice.Big(openBanner, endless ? NoticeIcon.Boss : NoticeIcon.Star, openTime + 0.3f);
         Hints.Show("move", GamePad.Active ? "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · [RT] 공격"      // 1.0.5~ 패드 안내
                                           : "{MOVE} 이동 · 마우스 조준 · [{ATTACK}] 공격");      // 1.0.4~ 바꾼 공격 키를 따름
     }
@@ -335,10 +334,10 @@ public class StageManager : MonoBehaviour
         if (n == null)
         {
             SpecialAbilities.SharedFx?.Play("buzz", 0.5f);
-            ShowBanner(Loc.T("지금 배울 수 있는 칸이 없습니다"), 1.2f);
+            Notice.Toast(NoticeIcon.Tree, Loc.T("지금 배울 수 있는 칸이 없습니다"), 2.5f);
             return;
         }
-        ShowBanner(Loc.T("영혼 트리") + "  ·  " + n.name, 1.6f);
+        Notice.Toast(NoticeIcon.Tree, Loc.T("영혼 트리") + "  ·  " + n.name, 3f);
     }
 
     // 조각이 들어오면 버튼 왼쪽에 "+N" 이 잠깐 떴다가 사라짐 (0.4초 안에 들어온 양은 합쳐서)
@@ -420,7 +419,7 @@ public class StageManager : MonoBehaviour
         if (CurrentStage != fromStage) yield break;
         yield return SoulBrand.CatchUp(Chapters.Next(fromStage));      // 1.2~ 2장 · 3장 보스: 영혼 각인 한 장 더
         if (CurrentStage != fromStage) yield break;
-        ShowBanner(banner, time);
+        Notice.Big(banner, NoticeIcon.Star, time, NoticeLevel.Important);
         StartCoroutine(PortalCountdown(fromStage));
     }
 
@@ -436,7 +435,7 @@ public class StageManager : MonoBehaviour
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("전설의 힘", "공격력 +10% (이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
+            new ChoiceUI.Option("전설의 힘", "공격력 +10% (기본 공격력 기준, 이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
             new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "shards"),
             new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"),
         };
@@ -447,8 +446,7 @@ public class StageManager : MonoBehaviour
         if (p == null) yield break;
         if (pick == 0)
         {
-            p.damage *= 1.1f;
-            RunSave.Record("a10");
+            RunSave.AddBaseAttack(p, 10f);         // 1.1.2~ 평타 고점 하향: 지금 공격력 ×1.1 → 기본 공격력의 +10% (영혼 트리 「무기 화력」과 같은 기준, 곱으로 쌓이지 않게)
         }
         else if (pick == 1) SoulShards.Add(shards, p.transform.position, false);
         else
@@ -462,20 +460,20 @@ public class StageManager : MonoBehaviour
     // ================================================================= 특수 능력 포인트
     void OnMidBossSpawned()
     {
-        if (Evo) { ShowBanner(Loc.T("중간 보스 등장!\n쓰러뜨리면 영혼 조각을 많이 줍니다"), 3f); return; }
-        ShowBanner(Loc.T("중간 보스 등장!\n쓰러뜨리면 특수 능력 포인트 +1"), 3f);
+        if (Evo) { Notice.Big(Loc.T("중간 보스 등장!\n쓰러뜨리면 영혼 조각을 많이 줍니다"), NoticeIcon.Boss, 3f, NoticeLevel.Urgent); return; }
+        Notice.Big(Loc.T("중간 보스 등장!\n쓰러뜨리면 특수 능력 포인트 +1"), NoticeIcon.Boss, 3f, NoticeLevel.Urgent);
     }
 
     void OnMidBossDefeated()
     {
         if (Evo)
         {
-            ShowBanner(Loc.T("영혼 조각을 모았다!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 영혼 트리"), 3f);
+            Notice.Toast(NoticeIcon.Shards, Loc.T("영혼 조각을 모았다!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 영혼 트리"), 4f);
             return;
         }
         specialPoints++;
         Hints.Show("upgrade", "특수 능력 포인트는 [{UPGRADE}]를 눌러 새 능력을 배우거나 가진 능력을 진화하는 데 씁니다.");
-        ShowBanner(Loc.T("특수 능력 포인트 +1!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 또는 아래 버튼으로 강화"), 3f);
+        Notice.Toast(NoticeIcon.Up, Loc.T("특수 능력 포인트 +1!\n[") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("] 또는 아래 버튼으로 강화"), 4.5f);
     }
 
     public void OpenUpgrade()
@@ -649,7 +647,7 @@ public class StageManager : MonoBehaviour
         }
         else
         {
-            ShowBanner(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), 6f, true);     // 1.0.4~ 뒤 알림(숙련도 · 해금)에 덮이지 않게
+            Notice.Big(Loc.T("거울의 군주를 쓰러뜨렸다!\n모든 스테이지 클리어!"), NoticeIcon.Star, 6f, NoticeLevel.Important);     // 1.0.4~ 뒤 알림(숙련도 · 해금)에 덮이지 않게
             // 클리어 기록 · 난이도 잠금 해제는 바로 저장하고, 잠시 뒤 엔딩
             Difficulty cleared = GameMode.Current;
             if (cleared == Difficulty.Easy && RunStats.Seconds <= 1200f) CharacterData.Achieve(CharUnlock.EasyFast);     // 새 캐릭터 해제 조건 (1.0.2, 1.0.4~ 15분 → 20분)
@@ -658,10 +656,10 @@ public class StageManager : MonoBehaviour
             string opened = GameMode.OnCleared(cleared);
             Cleared?.Invoke(cleared);
             if (Mastery.OnCleared(CharacterData.Selected))
-                ShowBanner(Loc.T("영웅 숙련도가 올랐다!") + "  " + Mastery.Label(CharacterData.Selected), 4f);
+                Notice.Toast(NoticeIcon.Up, Loc.T("영웅 숙련도가 올랐다!") + "  " + Mastery.Label(CharacterData.Selected), 5f);
             // 1.2~ 영혼의 무게: 처음 어려움을 깨면 열림 · 무게를 진 판이면 이 영웅의 가장 무거운 클리어를 새로 적고 다음 무게를 엶
             string weight = SoulWeight.OnCleared(CharacterData.Selected, cleared, weightWasOpen);
-            if (weight != null) ShowBanner(weight, 4f);
+            if (weight != null) Notice.Big(weight, NoticeIcon.Weight, 4f, NoticeLevel.Important);
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }
@@ -680,7 +678,7 @@ public class StageManager : MonoBehaviour
     IEnumerator DemoFinish()
     {
         if (spawner != null) spawner.spawningEnabled = false;
-        ShowBanner(Loc.T("리치 왕을 쓰러뜨렸다!"), 3f);
+        Notice.Big(Loc.T("리치 왕을 쓰러뜨렸다!"), NoticeIcon.Star, 3f, NoticeLevel.Important);
         if (Evo) yield return Evolution(true);
         yield return new WaitForSecondsRealtime(3f);
         while (Time.timeScale == 0f) yield return null;     // 레벨업 · 상점 창이 열려 있으면 닫을 때까지
@@ -760,7 +758,7 @@ public class StageManager : MonoBehaviour
 
         Time.timeScale = 1f;
         yield return Fade(1f, 0f, 0.8f);
-        ShowBanner(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), 3f);
+        Notice.Big(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), NoticeIcon.Star, 3f);
         transitioning = false;
         StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (1.0.1)
         StartCoroutine(SoulBrand.CatchUp(stage));       // 1.2~ 보스 각인을 고르기 전에 문에 들어왔으면 지금 (이미 골랐으면 그냥 끝남)
@@ -881,180 +879,13 @@ public class StageManager : MonoBehaviour
         pendingPicks = ids;
     }
 
-    // 1.0.4~: 알림판 줄 세우기 — 예전엔 새 알림이 앞 알림을 바로 지워서 해금 달성 · 모든 스테이지 클리어 알림이 보스 처치 · 숙련도 · 재촉 알림에 덮였음
-    //   떠 있는 동안 새 알림이 오면 뒤에 줄을 서고, 줄이 있으면 지금 알림은 최소 MinBannerShow 초만 보인 뒤 다음으로 넘어감
-    //   keep = 해금 · 클리어처럼 꼭 봐야 하는 알림 (기다리는 알림이 있어도 끝까지 보임)
-    const float MinBannerShow = 1.2f;
-    const int MaxBannerQueue = 4;
-    readonly List<(string text, float seconds, bool keep)> bannerQueue = new List<(string text, float seconds, bool keep)>();
-    string bannerShowing;
-    bool bannerKeep;
-    float bannerTick = -1f;
-
-    // 알림판이 떠 있으면 true (재촉 알림처럼 급하지 않은 것은 이때 건너뜀)
-    public bool BannerBusy => bannerRoutine != null && Time.unscaledTime - bannerTick < 3f;
+    // 1.1.2~ 안내 메시지 개편: 옛 알림판(화면 위 640×72 반투명 띠 · 14~26pt)은 Notice 로 — 짧은 한 줄은 오른쪽 위 토스트, 나머지는 화면 가운데 위 큰 알림
+    //   대기열 · 우선순위 · 창이 열린 동안 붙잡기(옛 BannerHeld)는 Notice 가 맡음. 새로 쓰는 곳은 Notice.Big · Notice.Toast 를 바로 부를 것
+    public bool BannerBusy => Notice.Busy;
 
     public void ShowBanner(string text, float seconds) => ShowBanner(text, seconds, false);
 
-    public void ShowBanner(string text, float seconds, bool keep)
-    {
-        if (banner == null) return;
-        // 코루틴이 (오브젝트가 꺼지는 등으로) 멈췄으면 줄을 비우고 새로 시작
-        if (bannerRoutine != null && Time.unscaledTime - bannerTick >= 3f) { StopCoroutine(bannerRoutine); bannerRoutine = null; bannerQueue.Clear(); }
-        if (bannerRoutine == null)
-        {
-            bannerTick = Time.unscaledTime;
-            bannerRoutine = StartCoroutine(BannerRoutine(text, seconds, keep));
-            return;
-        }
-        // 같은 글이 떠 있거나 이미 줄에 있으면 또 넣지 않음
-        if (text == bannerShowing) return;
-        foreach (var q in bannerQueue) if (q.text == text) return;
-        if (bannerQueue.Count >= MaxBannerQueue)
-        {
-            int drop = bannerQueue.FindIndex(q => !q.keep);
-            if (drop < 0) { if (!keep) return; drop = 0; }
-            bannerQueue.RemoveAt(drop);
-        }
-        bannerQueue.Add((text, seconds, keep));
-    }
-
-    Coroutine bannerRoutine;
-
-    // 알림판을 화면 위쪽의 작은 띠로 (시야를 가리지 않게)
-    CanvasGroup bannerGroup;
-
-    void CompactBanner()
-    {
-        if (banner == null) return;
-        RectTransform r = banner.GetComponent<RectTransform>();
-        if (r != null)
-        {
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
-            r.pivot = new Vector2(0.5f, 1f);
-            r.anchoredPosition = new Vector2(0f, -64f);       // 플레이 시간 바로 아래
-            r.sizeDelta = new Vector2(640f, 72f);             // 왼쪽 위 체력 패널(x 620까지)에 닿지 않는 폭
-        }
-        Image bg = banner.GetComponent<Image>();
-        if (bg != null) bg.color = new Color(bg.color.r, bg.color.g, bg.color.b, 0.72f);
-        if (bannerText != null)
-        {
-            RectTransform tr = bannerText.rectTransform;
-            tr.anchorMin = Vector2.zero;
-            tr.anchorMax = Vector2.one;
-            tr.offsetMin = new Vector2(20f, 6f);
-            tr.offsetMax = new Vector2(-20f, -6f);
-            bannerText.enableAutoSizing = true;
-            bannerText.fontSizeMin = 14f;
-            bannerText.fontSizeMax = 26f;
-            bannerText.raycastTarget = false;
-        }
-        // ?? 는 유니티의 "없음"(가짜 null)을 못 알아보므로 직접 확인
-        bannerGroup = banner.GetComponent<CanvasGroup>();
-        if (bannerGroup == null) bannerGroup = banner.AddComponent<CanvasGroup>();
-        bannerGroup.blocksRaycasts = false;
-        bannerGroup.interactable = false;
-    }
-
-    // 알림판 높이: 평소엔 플레이 시간 바로 아래, 보스 체력바가 떠 있으면 그 아래 (체력바를 가리지 않게)
-    readonly Vector3[] bossBarCorners = new Vector3[4];
-    float BannerY()
-    {
-        const float Normal = -64f;
-        if (bossBar == null || !bossBar.bossSpawn || bossBar.backBar == null || !bossBar.backBar.activeInHierarchy) return Normal;
-        RectTransform bb = bossBar.LowestBar;      // 분열한 슬라임 체력바가 여럿이면 맨 아래 것 기준
-        RectTransform parent = banner.transform.parent as RectTransform;
-        if (bb == null || parent == null) return Normal;
-        bb.GetWorldCorners(bossBarCorners);
-        float bottom = parent.InverseTransformPoint(bossBarCorners[0]).y - parent.rect.yMax;     // 부모 위쪽 기준
-        return Mathf.Min(Normal, bottom - 12f);
-    }
-
-    // 1.1~ 레벨업 창이 열린 동안은 알림판을 숨기고 시간을 세지 않음 (창 위쪽 「레벨업 카드 3/5」 · 진화 안내 줄을 알림판이 덮었음) → 창을 닫으면 이어서 보임
-    LevelShop bannerShop;
-    float bannerShopFindAt;
-    bool BannerHeld()
-    {
-        if (bannerShop == null && Time.unscaledTime >= bannerShopFindAt)
-        {
-            bannerShopFindAt = Time.unscaledTime + 1f;
-            bannerShop = FindFirstObjectByType<LevelShop>();
-        }
-        return bannerShop != null && bannerShop.IsOpen;
-    }
-
-    // 1.1~ 글이 길면(이벤트 예고 2~3줄 등) 알림판을 아래로 늘림: 20pt 로 들어가는 높이 (72 ~ 140) · 600×60 칸에서 16pt 까지 줄던 문제
-    void FitBanner(RectTransform r, string text)
-    {
-        if (r == null || bannerText == null || r.anchorMin.y < 1f) return;     // CompactBanner 를 거친 작은 띠일 때만
-        const float Read = 20f;
-        float w = r.sizeDelta.x - 40f;
-        bool auto = bannerText.enableAutoSizing;
-        float size = bannerText.fontSize;
-        bannerText.enableAutoSizing = false;
-        bannerText.fontSize = Read;
-        float h = bannerText.GetPreferredValues(text, w, 0f).y;
-        bannerText.enableAutoSizing = auto;
-        bannerText.fontSize = size;
-        r.sizeDelta = new Vector2(r.sizeDelta.x, Mathf.Clamp(h + 14f, 72f, 140f));
-    }
-
-    IEnumerator BannerRoutine(string text, float seconds, bool keep)
-    {
-        // 1.0.4~: 한 알림이 끝나면 줄 선 다음 알림을 이어서 보임
-        RectTransform r = banner.GetComponent<RectTransform>();
-        while (true)
-        {
-            bannerShowing = text;
-            bannerKeep = keep;
-            bannerText.text = text;
-            FitBanner(r, text);
-            banner.SetActive(true);
-            if (bannerGroup != null) bannerGroup.alpha = 0f;
-            while (BannerHeld()) { bannerTick = Time.unscaledTime; yield return null; }
-            // 살짝 내려오며 나타났다가 서서히 사라짐
-            for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
-            {
-                bannerTick = Time.unscaledTime;
-                float k = t / 0.2f;
-                float y = BannerY();
-                if (bannerGroup != null) bannerGroup.alpha = BannerHeld() ? 0f : k;
-                if (r != null) r.anchoredPosition = new Vector2(0f, Mathf.Lerp(y + 20f, y, k));
-                yield return null;
-            }
-            if (bannerGroup != null && !BannerHeld()) bannerGroup.alpha = 1f;
-            // 떠 있는 동안 보스 체력바가 나타나거나 사라지면 따라 움직임 (기다리는 알림이 있으면, 꼭 봐야 하는 알림이 아닌 한 짧게)
-            for (float t = 0f; t < Mathf.Max(0.3f, seconds - 0.5f); t += Time.unscaledDeltaTime)
-            {
-                bannerTick = Time.unscaledTime;
-                if (BannerHeld())
-                {
-                    // 레벨업 창이 열린 동안: 숨기고 시간을 멈춤 (닫히면 다시 나타남)
-                    if (bannerGroup != null) bannerGroup.alpha = 0f;
-                    t -= Time.unscaledDeltaTime;
-                    yield return null;
-                    continue;
-                }
-                if (bannerGroup != null && bannerGroup.alpha < 1f) bannerGroup.alpha = Mathf.Min(1f, bannerGroup.alpha + Time.unscaledDeltaTime * 6f);
-                if (!bannerKeep && bannerQueue.Count > 0 && t >= MinBannerShow) break;
-                if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
-                yield return null;
-            }
-            for (float t = 0f; t < 0.3f; t += Time.unscaledDeltaTime)
-            {
-                bannerTick = Time.unscaledTime;
-                if (bannerGroup != null) bannerGroup.alpha = BannerHeld() ? 0f : 1f - t / 0.3f;
-                if (r != null) r.anchoredPosition = new Vector2(0f, BannerY());
-                yield return null;
-            }
-            if (bannerQueue.Count == 0) break;
-            (text, seconds, keep) = bannerQueue[0];
-            bannerQueue.RemoveAt(0);
-        }
-        banner.SetActive(false);
-        bannerShowing = null;
-        bannerRoutine = null;
-    }
+    public void ShowBanner(string text, float seconds, bool keep) => Notice.Legacy(text, seconds, keep);
 
     IEnumerator Fade(float from, float to, float duration)
     {

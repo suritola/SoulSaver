@@ -62,9 +62,11 @@ public class EndlessMode : MonoBehaviour
     public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
     // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
     public bool NoMobs => devSummoned;
-    // 1.1.2~ 개발자가 나온 뒤로는 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (엄마까지 잡몹 3000마리를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
+    // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹이 3배로)
+    public bool FinalBossAlive => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead) || FinalBossIncoming);
+    // 1.1.2~ 개발자를 쓰러뜨린 뒤 엄마가 오기 전까지 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (영혼 3000개를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
     public const float AfterDevSpawnMul = 3f;
-    public static float MobSpawnBoost => Instance != null && Instance.devSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
+    public static float MobSpawnBoost => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
     public int BossesDefeated { get; private set; }
@@ -147,7 +149,7 @@ public class EndlessMode : MonoBehaviour
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         Instantiate(prefab, spawner.bossSpawnPoint, Quaternion.identity);
         Hostile.Play("roar", 1f, 0.9f);
-        stages.ShowBanner(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), 2.5f);
+        Notice.Big(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), NoticeIcon.Boss, 2.5f, NoticeLevel.Urgent);
     }
 
     // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
@@ -169,7 +171,7 @@ public class EndlessMode : MonoBehaviour
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         Hostile.Play("roar", 1f, 0.6f);
         Hostile.Shake(0.4f);
-        stages.ShowBanner(Loc.T("15분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), 4f);
+        Notice.Big(Loc.T("15분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
     }
 
     // 모든 보스를 쓰러뜨리면 최종 보스 「개발자」 (거울의 군주 몸을 빌려 모든 캐릭터의 최종 진화 필살기를 돌려 씀 · BossSkills.Developer)
@@ -182,10 +184,15 @@ public class EndlessMode : MonoBehaviour
         if (finalStage < 2) finalStage = 2;
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
+<<<<<<< HEAD
         yield return new WaitForSeconds(0.5f);
         finalMusic = Mathf.Max(finalMusic, 1);      // 1.1.2~ 배너 1초 전: 보스 곡이 끊기고 무음 → 배너와 함께 개발자 곡 첫 타격 (MusicManager)
         yield return new WaitForSeconds(1.0f);
         stages.ShowBanner((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), 3.5f);
+=======
+        yield return new WaitForSeconds(1.5f);
+        Notice.Big((allDown ? Loc.T("모든 보스가 쓰러졌다…") + "\n" : "") + Loc.T("최종 보스 「개발자」가 강림한다!"), NoticeIcon.Boss, 3.5f, NoticeLevel.Urgent);
+>>>>>>> main
         Hostile.Play("roar", 1f, 0.45f);
         Hostile.Shake(0.5f);
         yield return new WaitForSeconds(2.5f);
@@ -202,10 +209,15 @@ public class EndlessMode : MonoBehaviour
         if (together) StartCoroutine(SummonDeveloper());
         while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
         spawner.ClearMobs();
+<<<<<<< HEAD
         yield return new WaitForSeconds(together ? 3.5f : 0f);      // 함께면 개발자가 먼저 내려온 뒤
         finalMusic = 2;                                              // 1.1.2~ 배너 1초 전: 엄마 곡 (MusicManager)
         yield return new WaitForSeconds(1f);
         stages.ShowBanner(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), 4f);
+=======
+        yield return new WaitForSeconds(together ? 4.5f : 1f);      // 함께면 개발자가 먼저 내려온 뒤
+        Notice.Big(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
+>>>>>>> main
         Hostile.Play("roar", 1f, 0.35f);
         Hostile.Shake(0.7f);
         yield return new WaitForSeconds(2.5f);
@@ -269,7 +281,7 @@ public class EndlessMode : MonoBehaviour
     {
         yield return new WaitForSeconds(3.5f);
         while (PlayerController.Cinematic || Time.timeScale == 0f || stages.IsMenuOpen) yield return null;
-        if (!momSummoned && finalStage < 3) stages.ShowBanner(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("영혼 3000개를 거두면 그녀가 강림한다…"), 4f);
+        if (!momSummoned && finalStage < 3) Notice.Big(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("영혼 3000개를 거두면 그녀가 강림한다…"), NoticeIcon.Star, 4f, NoticeLevel.Normal);
     }
 
     // 개발자와 개발자 엄마를 모두 쓰러뜨림 (1.0.4~ 개발자만으로는 끝나지 않음): 무한 모드 클리어 (기록 저장 → 엔딩 → 메인 메뉴)
@@ -282,7 +294,7 @@ public class EndlessMode : MonoBehaviour
         Prefs.Save();
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);
-        stages.ShowBanner(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), 6f, true);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
+        Notice.Big(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds), NoticeIcon.Star, 6f, NoticeLevel.Important);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
         Hostile.Play("chime", 1f, 1f);
         yield return new WaitForSecondsRealtime(5f);
         if (StoryDirector.ShouldSkipAll) yield break;
@@ -318,15 +330,15 @@ public class EndlessMode : MonoBehaviour
             if (sp != null && (sp.NextEvolutionOptions() == null || stages.IsEvolving))
             {
                 string loot = sp.BossTrophy(++trophies);
-                stages.ShowBanner(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, 3f);
+                Notice.Big(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, NoticeIcon.Star, 3f, NoticeLevel.Normal);
                 return;
             }
-            stages.ShowBanner(Loc.T("보스 처치!"), 2.5f);
+            Notice.Big(Loc.T("보스 처치!"), NoticeIcon.Star, 2.5f, NoticeLevel.Normal);
             stages.StartCoroutine(stages.Evolution(true));
             return;
         }
         stages.specialPoints++;
-        stages.ShowBanner(Loc.T("보스 처치!  특수 능력 포인트 +1"), 3f);
+        Notice.Big(Loc.T("보스 처치!  특수 능력 포인트 +1"), NoticeIcon.Star, 3f, NoticeLevel.Normal);
     }
 
     void OnDestroy()

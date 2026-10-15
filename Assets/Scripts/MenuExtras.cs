@@ -764,8 +764,9 @@ public static class SettingsUI
         highlightMode(Screen.fullScreenMode != FullScreenMode.Windowed);
 
         // 해상도: < 1920 × 1080 >
-        RowLabel("해상도", 110f);
-        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 110f), new Vector2(320f, 50f));
+        // 1.1.2~ 「안내 메시지 크기」 한 줄을 더 넣으려고 줄 간격 90 → 75
+        RowLabel("해상도", 125f);
+        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 125f), new Vector2(320f, 50f));
         res.text = Screen.width + " × " + Screen.height;
         System.Action<int> step = d =>
         {
@@ -783,13 +784,15 @@ public static class SettingsUI
             res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
             Deselect();
         };
-        UIKit.MakeButton(page, "<", new Vector2(-110f, 110f), new Vector2(80f, 64f), () => step(-1), 30f);
-        UIKit.MakeButton(page, ">", new Vector2(300f, 110f), new Vector2(80f, 64f), () => step(1), 30f);
+        UIKit.MakeButton(page, "<", new Vector2(-110f, 125f), new Vector2(80f, 64f), () => step(-1), 30f);
+        UIKit.MakeButton(page, ">", new Vector2(300f, 125f), new Vector2(80f, 64f), () => step(1), 30f);
 
         // 2.1.9: UI 크기 (모든 화면 글자 · 버튼 · HUD), 한 줄 더 넣으려고 줄 간격 90
-        CycleRow("UI 크기", 20f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
-        ToggleRow("수직 동기화", -70f, () => GameSettings.VSync, v => GameSettings.VSync = v);
-        ToggleRow("화면 흔들림", -160f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
+        CycleRow("UI 크기", 50f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
+        CycleRow("안내 메시지 크기", -25f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
+                 "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다.");
+        ToggleRow("수직 동기화", -100f, () => GameSettings.VSync, v => GameSettings.VSync = v);
+        ToggleRow("화면 흔들림", -175f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
         ToggleRow("번쩍임 효과", -250f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
     }
 

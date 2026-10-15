@@ -38,7 +38,7 @@ public partial class BossSkills
         if (StageManager.Instance != null && Time.time >= devBannerAt)
         {
             devBannerAt = Time.time + 1.8f;
-            StageManager.Instance.ShowBanner(Loc.T(boss.developerMom ? "개발자 엄마가 「{0}」의 최종 진화 필살기를 쓴다!" : "개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), 1.8f);
+            Notice.Big(Loc.T(boss.developerMom ? "개발자 엄마가 「{0}」의 최종 진화 필살기를 쓴다!" : "개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), NoticeIcon.Boss, 1.8f, NoticeLevel.Urgent);
         }
         StartCoroutine(DevRun(DeveloperUlt((CharacterId)who, boss.Enraged)));
     }

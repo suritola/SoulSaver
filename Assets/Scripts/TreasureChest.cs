@@ -35,7 +35,7 @@ public class TreasureChest : MonoBehaviour
     {
         TreasureChest c = Make(at, elite ? EliteTint : Gold, Loc.T(elite ? "chest.elite.title" : "보물 상자"));
         c.elite = elite;
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T(elite ? "chest.elite.appear" : "보물 상자가 나타났다!"), 2f);
+        Notice.Toast(NoticeIcon.Chest, Loc.T(elite ? "chest.elite.appear" : "보물 상자가 나타났다!"), 4f);
         return c;
     }
 

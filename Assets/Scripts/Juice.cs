@@ -40,6 +40,7 @@ public static class Juice
     {
         Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), SkinFx.EffectSkin != null ? 1.1f : 0.8f, SkinFx.CoinColor(new Color(1f, 0.88f, 0.4f)), 16f, 0f, 20);
         if (sound) Hostile.Play("sparkle", 0.2f, Random.Range(0.95f, 1.15f));
+        TranscendRules.Coin(pos);       // 1.2~ 초월 카드 「연금 손」
     }
 
     // ================================================================= 1.1~ 손맛 묶음 (로드맵 1-1)
@@ -153,7 +154,7 @@ public static class Juice
             Coin coin = Cache<Coin>.Get;
             if (coin != null) coin.AddCoin(MilestoneCoins[i]);
             if (StageManager.Instance != null)
-                StageManager.Instance.ShowBanner(Loc.T("juice.milestone").Replace("{0}", kills.ToString()).Replace("{1}", MilestoneCoins[i].ToString()), 2.2f);
+                Notice.Toast(NoticeIcon.Coin, Loc.T("juice.milestone").Replace("{0}", kills.ToString()).Replace("{1}", MilestoneCoins[i].ToString()), 4f);
             Hostile.Play("chime", 0.7f);
             return;
         }

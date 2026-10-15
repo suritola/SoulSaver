@@ -183,7 +183,7 @@ public class ChapterEvents : MonoBehaviour
     bool cursedOpened;
     float cursedUntil;
     GameObject altar;
-    LineRenderer altarRing, arrow;
+    LineRenderer altarRing, arrow, arrowShade;     // arrowShade: 1.1.2~ 화살표 뒤 진한 그림자 (금빛 물체 · 이펙트 위에서도 보이게)
     float altarProgress, altarUntil, altarWaveAt;
     int altarWaves;
 
@@ -209,6 +209,7 @@ public class ChapterEvents : MonoBehaviour
         if (sp != null) sp.onMidBossDefeated -= OnMidBossDefeated;
         Finish();
         if (arrow != null) Destroy(arrow.gameObject);
+        if (arrowShade != null) Destroy(arrowShade.gameObject);
     }
 
     // 1.1~ 중간 보스 · 엘리트 상자는 정예 상자 (전설 15%)
@@ -220,28 +221,8 @@ public class ChapterEvents : MonoBehaviour
     }
 
     // 1.0.4~ 습격 중 화면 위에 「남은 적 n · 남은 시간」 (알림판 아래) · 1.1~ 모든 이벤트 진행 표시
-    TMPro.TMP_Text ambushLabel;
-
-    void UpdateLabel(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            if (ambushLabel != null && ambushLabel.gameObject.activeSelf) ambushLabel.gameObject.SetActive(false);
-            return;
-        }
-        if (ambushLabel == null)
-        {
-            Canvas canvas = UIKit.HudCanvas();
-            if (canvas == null) return;
-            UIKit.EnsureStyle();
-            ambushLabel = UIKit.Text(canvas.transform, "", 24f, new Color(1f, 0.82f, 0.55f), Vector2.zero, new Vector2(520f, 34f));
-            ambushLabel.outlineWidth = 0.2f;
-            ambushLabel.outlineColor = new Color32(0, 0, 0, 255);
-            UIKit.Pin(ambushLabel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -158f));
-        }
-        if (!ambushLabel.gameObject.activeSelf) ambushLabel.gameObject.SetActive(true);
-        if (ambushLabel.text != text) ambushLabel.text = text;
-    }
+    // 1.1.2~ 안내 메시지 개편: 맨 글자 24pt → 어두운 알약 바탕 · 강조색 막대 · 28pt · 숫자 색 강조 (Notice.Objective, 창이 열리면 숨김)
+    void UpdateLabel(string text) => Notice.Objective(text, current != null && !started ? WarnColor : Notice.Gold);
 
     void OnDisable()
     {
@@ -364,8 +345,8 @@ public class ChapterEvents : MonoBehaviour
             case ContentRegistry.Pack: where = AwayPoint(me, 15f, 18f); hasWhere = true; break;
             default: where = me; hasWhere = false; break;
         }
-        // 1.1~ keep: 줄 선 다른 알림 때문에 1.2초 만에 넘어가지 않게 (예고 3초는 끝까지) · 긴 설명은 알림판이 아래로 늘어남 (StageManager.FitBanner)
-        sm.ShowBanner(Loc.T("event.soon").Replace("{0}", current.def.Name).Replace("{1}", current.def.Desc), WarnSeconds, true);
+        // 1.1.2~ 급한 큰 알림(Urgent): 줄 맨 앞 · 끝까지 보임 (예고 3초) · 긴 설명은 띠가 아래로 늘어남 (Notice)
+        Notice.Big(Loc.T("event.soon").Replace("{0}", current.def.Name).Replace("{1}", current.def.Desc), NoticeIcon.Warn, WarnSeconds, NoticeLevel.Urgent);
         Hostile.Play("pulse", 0.6f, 0.8f);
     }
 
@@ -414,7 +395,7 @@ public class ChapterEvents : MonoBehaviour
             case ContentRegistry.Raid:
                 ambush = sp.SpawnAmbush(me, 14 + 3 * slot, AmbushRadius);
                 ambushUntil = Time.time + AmbushTimeout;
-                sm.ShowBanner(Loc.T("습격!\n모두 쓰러뜨리면 보물 상자가 나타납니다"), 3f);
+                Notice.Big(Loc.T("습격!\n모두 쓰러뜨리면 보물 상자가 나타납니다"), NoticeIcon.Warn, 3f, NoticeLevel.Urgent);
                 Hostile.Play("roar", 0.6f, 1.1f);
                 break;
             case ContentRegistry.Elite:
@@ -443,7 +424,7 @@ public class ChapterEvents : MonoBehaviour
                     goblin.transform.localScale *= 1.3f;
                     goblin.AddComponent<GoldenGoblin>();
                     MidBossMark.Attach(goblin, Loc.T("event.goblin.name"), false);     // 1.1~ 「중간 보스 · 」 없이 이름만
-                    sm.ShowBanner(Loc.T("event.goblin.start"), 2.5f);
+                    Notice.Big(Loc.T("event.goblin.start"), NoticeIcon.Coin, 2.5f, NoticeLevel.Urgent);
                     Hostile.Play("chime", 0.8f, 1.5f);
                     break;
                 }
@@ -451,7 +432,7 @@ public class ChapterEvents : MonoBehaviour
                 cursedOpened = false;
                 cursedUntil = Time.time + CursedWaitSeconds;
                 cursedChest = TreasureChest.SpawnCursed(where, () => OnCursedOpen(slot));
-                sm.ShowBanner(Loc.T("event.cursed.appear"), 2.5f);
+                Notice.Big(Loc.T("event.cursed.appear"), NoticeIcon.Curse, 2.5f, NoticeLevel.Urgent);
                 break;
             case ContentRegistry.Altar:
                 altarProgress = 0f;
@@ -463,7 +444,7 @@ public class ChapterEvents : MonoBehaviour
                 altarRing.loop = true;
                 Hostile.SetArc(altarRing, where, AltarRadius, 0f, 360f);
                 Fx.Spawn("fx_soulburst", where, 4f, AltarColor, 18f);
-                sm.ShowBanner(Loc.T("event.altar.start"), 2.5f);
+                Notice.Big(Loc.T("event.altar.start"), NoticeIcon.Soul, 2.5f, NoticeLevel.Urgent);
                 Hostile.Play("shimmer", 0.7f, 1f);
                 break;
             case ContentRegistry.Pack:
@@ -472,7 +453,7 @@ public class ChapterEvents : MonoBehaviour
                     group = sp.SpawnAmbush(where, n, 2.5f);
                     foreach (GameObject g in group) Buff(g, 3f, 1.35f, PackColor, Loc.T("event.pack.tag"));
                     groupUntil = Time.time + PackSeconds;
-                    sm.ShowBanner(Loc.T("event.pack.start"), 2.5f);
+                    Notice.Big(Loc.T("event.pack.start"), NoticeIcon.Warn, 2.5f, NoticeLevel.Urgent);
                     Hostile.Play("roar", 0.6f, 0.9f);
                     break;
                 }
@@ -508,7 +489,7 @@ public class ChapterEvents : MonoBehaviour
         else if (Time.time > ambushUntil)
         {
             ambush = null;        // 너무 오래 걸리면 (멀리 도망친 적) 상자 없이 끝
-            sm.ShowBanner(Loc.T("습격 실패\n시간 안에 모두 쓰러뜨리지 못해 보물 상자가 없습니다"), 2.5f);     // 1.0.4~ 조용히 끝나지 않게
+            Notice.Toast(NoticeIcon.Warn, Loc.T("습격 실패\n시간 안에 모두 쓰러뜨리지 못해 보물 상자가 없습니다"), 4.5f);     // 1.0.4~ 조용히 끝나지 않게
             Finish();
         }
     }
@@ -523,7 +504,7 @@ public class ChapterEvents : MonoBehaviour
             SoulShards.Add(10 + 5 * slot, goblinAt, true);
             for (int i = 0; i < 6; i++) Fx.Spawn("fx_sparkle", goblinAt + (Vector3)(Random.insideUnitCircle * 1.5f), 1.4f, new Color(1f, 0.85f, 0.3f), 20f);
             Hostile.Play("chime", 0.9f, 1.6f);
-            sm.ShowBanner(Loc.T("event.goblin.caught").Replace("{0}", coins.ToString()), 2.5f);
+            Notice.Toast(NoticeIcon.Coin, Loc.T("event.goblin.caught").Replace("{0}", coins.ToString()), 4f);
             goblin = null;
             Finish();
             return;
@@ -535,7 +516,7 @@ public class ChapterEvents : MonoBehaviour
         {
             if (goblin.TryGetComponent(out EnermyController e)) e.Purge();
             goblin = null;
-            sm.ShowBanner(Loc.T("event.goblin.escaped"), 2.5f);
+            Notice.Toast(NoticeIcon.Warn, Loc.T("event.goblin.escaped"), 4f);
             Finish();
         }
     }
@@ -551,7 +532,7 @@ public class ChapterEvents : MonoBehaviour
             {
                 Destroy(cursedChest.gameObject);
                 cursedChest = null;
-                sm.ShowBanner(Loc.T("event.cursed.gone"), 2f);
+                Notice.Toast(NoticeIcon.Curse, Loc.T("event.cursed.gone"), 4f);
                 Finish();
             }
             return;
@@ -568,7 +549,7 @@ public class ChapterEvents : MonoBehaviour
         groupUntil = Time.time + CursedSeconds;
         Fx.Spawn("fx_soulburst", where, 5f, CursedColor, 16f);
         ShockRing.Spawn(where, 0.5f, 9f, 0.6f, CursedColor, 0.3f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("event.cursed.open"), 2.5f);
+        Notice.Big(Loc.T("event.cursed.open"), NoticeIcon.Curse, 2.5f, NoticeLevel.Urgent);
     }
 
     // 무리를 모두 쓰러뜨리면 정예 상자 (정예 무리 · 저주받은 상자)
@@ -594,7 +575,7 @@ public class ChapterEvents : MonoBehaviour
         ShowArrow(best > 12f * 12f, me, near, color);
         if (Time.time > groupUntil)
         {
-            sm.ShowBanner(Loc.T(failKey), 2.5f);
+            Notice.Toast(NoticeIcon.Warn, Loc.T(failKey), 4f);
             Finish();
         }
     }
@@ -627,12 +608,12 @@ public class ChapterEvents : MonoBehaviour
             SoulShards.Add(shards, where, true);
             chests.Add(TreasureChest.Spawn(where));
             Fx.Spawn("fx_soulburst", where, 6f, AltarColor, 16f);
-            sm.ShowBanner(Loc.T("event.altar.done").Replace("{0}", shards.ToString()), 2.5f);
+            Notice.Toast(NoticeIcon.Shards, Loc.T("event.altar.done").Replace("{0}", shards.ToString()), 4f);
             Finish();
         }
         else if (Time.time > altarUntil)
         {
-            sm.ShowBanner(Loc.T("event.altar.fail"), 2.5f);
+            Notice.Toast(NoticeIcon.Warn, Loc.T("event.altar.fail"), 4f);
             Finish();
         }
     }
@@ -667,11 +648,14 @@ public class ChapterEvents : MonoBehaviour
         if (!show || d.sqrMagnitude < 16f)
         {
             if (arrow != null && arrow.enabled) arrow.enabled = false;
+            if (arrowShade != null && arrowShade.enabled) arrowShade.enabled = false;
             return;
         }
         if (arrow == null)
         {
-            arrow = Hostile.NewLine("EventArrow", color, 0.2f, 41);
+            arrow = Hostile.NewLine("EventArrow", color, 0.26f, 41);
+            arrowShade = Hostile.NewLine("EventArrowShade", new Color(0.05f, 0.03f, 0.06f, 0.75f), 0.46f, 40);
+            arrowShade.positionCount = 3;
             arrow.positionCount = 3;
         }
         arrow.enabled = true;
@@ -681,6 +665,8 @@ public class ChapterEvents : MonoBehaviour
         arrow.SetPosition(0, tip - dir * 0.75f + side * 0.6f);
         arrow.SetPosition(1, tip);
         arrow.SetPosition(2, tip - dir * 0.75f - side * 0.6f);
+        arrowShade.enabled = true;
+        for (int i = 0; i < 3; i++) arrowShade.SetPosition(i, arrow.GetPosition(i));
         arrow.startColor = arrow.endColor = new Color(color.r, color.g, color.b, 0.75f + 0.25f * Mathf.Sin(Time.time * 8f));
     }
 }

@@ -683,7 +683,11 @@ void Shoot()
             bullet.damage = damage;
             bullet.isSkill = isSkill;
             bullet.knockBack = knockBack * knockBackRate;
-            newBullet.AddComponent<BulletGlow>();
+            // 1.1.2: 납작한 흰 실선 대신 금빛 예광탄 (보이는 크기 3~4배, BulletGlow 예광탄 모드)
+            //   판정 길이 3.27 은 그대로, 두께만 0.022 → 0.3 (BulletGlow.InitTracer, 피해는 그대로)
+            BulletGlow glow = newBullet.AddComponent<BulletGlow>();
+            if (newBullet.TryGetComponent(out SpriteRenderer bodySr)) glow.tracerSprite = bodySr.sprite;
+            glow.tracerBaseScale = newBullet.transform.localScale;
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참
             bullet.skillCharge = knockBackRate * GaugeRate;
         }
@@ -1235,6 +1239,8 @@ void Shoot()
         if (IsInvincible) return false;
         // 영혼 트리 보호막: 공격 한 번을 막음
         if (special != null && special.ConsumeBarrier()) { invincibleUntil = Time.time + 0.3f; return false; }
+        // 1.2~ 초월 카드 「영혼 보호막」: 한동안 맞지 않았으면 한 번 막음
+        if (TranscendRules.WardBlocks()) { invincibleUntil = Time.time + 0.5f; return false; }
         // 도적 회피 본능: 확률로 공격을 피함
         if (special != null && special.KitDodge()) return false;
 

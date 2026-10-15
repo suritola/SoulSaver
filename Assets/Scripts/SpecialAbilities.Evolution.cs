@@ -26,21 +26,24 @@ public partial class SpecialAbilities
     public static readonly string[] AwakenNames = { "파괴의 각성", "질풍의 각성", "영혼의 각성" };
     public static readonly string[] AwakenDescs =
     {
-        "모든 공격 피해 +50% (기본 공격력 기준)",
-        "모든 공격 · 발사 간격 -30%",
-        "치명타 확률 +20%, 치명타 피해 +80%",
+        "모든 공격 피해 +35% (기본 공격력 기준)",           // 1.1.2~ 평타 고점 하향: +50% → +35%
+        "모든 공격 · 발사 간격 -25%",                       // -30% → -25%
+        "치명타 확률 +15%, 치명타 피해 +60%",               // +20% · +80% → +15% · +60%
     };
     public static bool IsAwaken(int id) => id >= AwakenFirst && id < AwakenFirst + AwakenOptions.Length;
     // 1.1~: 이야기 모드도 3장 보스를 쓰러뜨리면 각성 (3장부터 · 이어하기로 4장에서 고르는 경우 포함, 4장 보스는 마지막이라 진화 없음)
     public static bool AwakenOpen => GameMode.IsEndless || Chapters.SlotOf(Chapters.CurrentStage) >= 2;
 
+    // 1.1.2~ 평타 고점 하향 (각성은 판 끝까지 곱으로 쌓여 고점을 크게 키웠음): 파괴 +50% → +35% · 질풍 간격 ×0.7 → ×0.75 · 영혼 치명타 +20% / +80% → +15% / +60%
+    const float AwakenAttack = 0.35f, AwakenRate = 0.75f, AwakenCrit = 0.15f, AwakenCritDamage = 0.6f;
+
     void ApplyAwaken(int id)
     {
         switch (id - AwakenFirst)
         {
-            case 0: AddAttack(0.5f); break;
-            case 1: AddRate(0.7f); break;
-            default: TreeCrit += 0.2f; TreeCritDamage += 0.8f; break;
+            case 0: AddAttack(AwakenAttack); break;
+            case 1: AddRate(AwakenRate); break;
+            default: TreeCrit += AwakenCrit; TreeCritDamage += AwakenCritDamage; break;
         }
     }
 
@@ -251,9 +254,12 @@ public partial class SpecialAbilities
 
         // ---------------- 0 무기: 모든 무기에 공통 (진화해도 이어짐)
         t.Add(Node("w.dmg1", null, 0, "무기 화력", "모든 무기 피해 +10%", 6, atk, () => AddAttack(0.1f)));
-        Chain(t, "w.dmg", 2, 5, "w.dmg1", 0, "무기 화력", "모든 무기 피해 +10%", new[] { 14, 26, 42, 64 }, atk, () => AddAttack(0.1f));
+        // 1.1.2~ 평타 고점 하향: 초반 두 칸(I · II)은 +10% 그대로, III ~ V 는 +10% → +6%
+        Chain(t, "w.dmg", 2, 2, "w.dmg1", 0, "무기 화력", "모든 무기 피해 +10%", new[] { 14 }, atk, () => AddAttack(0.1f));
+        Chain(t, "w.dmg", 3, 5, "w.dmg2", 0, "무기 화력", "모든 무기 피해 +6%", new[] { 26, 42, 64 }, atk, () => AddAttack(0.06f));
         t.Add(Node("w.rate1", "w.dmg1", 0, "연사 강화", "모든 무기 발사 간격 -8%", 10, spd, () => AddRate(0.92f)));
-        Chain(t, "w.rate", 2, 4, "w.rate1", 0, "연사 강화", "모든 무기 발사 간격 -8%", new[] { 22, 38, 60 }, spd, () => AddRate(0.92f));
+        // 1.1.2~ 평타 고점 하향: 첫 칸은 -8% 그대로, II ~ IV 는 -8% → -5% (발사 간격은 곱으로 쌓여 고점이 컸음)
+        Chain(t, "w.rate", 2, 4, "w.rate1", 0, "연사 강화", "모든 무기 발사 간격 -5%", new[] { 22, 38, 60 }, spd, () => AddRate(0.95f));
         bool ammo = Gunner || (Kit != null && Kit.UsesAmmo);
         t.Add(Node("w.mag1", "w.rate1", 0, "큰 탄창", "모든 무기 탄창 +20%", 12, rel, () => AddMag(0.2f)));
         Chain(t, "w.mag", 2, 3, "w.mag1", 0, "큰 탄창", "모든 무기 탄창 +20%", new[] { 26, 44 }, rel, () => AddMag(0.2f));
@@ -261,7 +267,7 @@ public partial class SpecialAbilities
         Chain(t, "w.reload", 2, 3, "w.reload1", 0, "재빠른 장전", "모든 무기 장전 시간 -12%", new[] { 28, 46 }, rel, () => AddReload(0.88f));
         t.Add(Node("w.crit1", "w.dmg1", 0, "급소 사격", "치명타 확률 +8% (치명타는 피해 2배)", 16, LvIcon(3), () => TreeCrit += 0.08f));
         Chain(t, "w.crit", 2, 3, "w.crit1", 0, "급소 사격", "치명타 확률 +8%", new[] { 30, 50 }, LvIcon(3), () => TreeCrit += 0.08f);
-        t.Add(Node("w.critdmg", "w.crit3", 0, "처참한 일격", "치명타 피해 2배 → 2.6배", 60, LvIcon(3), () => TreeCritDamage += 0.6f));     // 1.1~ 더하기로 (각성 · 초월 카드의 치명타 피해가 덮이지 않게)
+        t.Add(Node("w.critdmg", "w.crit3", 0, "처참한 일격", "치명타 피해 2배 → 2.4배", 60, LvIcon(3), () => TreeCritDamage += 0.4f));     // 1.1.2~ 평타 고점 하향: 2.6배 → 2.4배     // 1.1~ 더하기로 (각성 · 초월 카드의 치명타 피해가 덮이지 않게)
         bool pierces = Gunner || CharacterData.Selected == CharacterId.Rogue || CharacterData.Selected == CharacterId.Archer;
         t.Add(Node("w.pene1", "w.crit1", 0, "철갑탄", "모든 총알 관통 +1", 24, LvIcon(0), () => AddPene()));
         t.Add(Node("w.pene2", "w.pene1", 0, "철갑탄 II", "모든 총알 관통 +1", 48, LvIcon(0), () => AddPene()));
@@ -521,10 +527,10 @@ public partial class SpecialAbilities
         if (!Gunner)
         {
             // 다른 캐릭터의 형태: 그 형태로 치는 평타 피해 세 단계 + 이어지는 보너스 (모든 무기 피해)
-            System.Action power = () => { if (Kit != null) Kit.formPower += 0.12f; };
-            t.Add(RawNode(k + ".t1", k, 0, wname + " " + Loc.T("단련"), Loc.T("평타 피해 +12%"), 18, icon, power));
-            t.Add(RawNode(k + ".t2", k + ".t1", 0, wname + " " + Loc.T("단련") + " II", Loc.T("평타 피해 +12%"), 34, icon, power));
-            t.Add(RawNode(k + ".t3", k + ".t2", 0, wname + " " + Loc.T("단련") + " III", Loc.T("평타 피해 +12%"), 56, icon, power));
+            System.Action power = () => { if (Kit != null) Kit.formPower += 0.05f; };       // 1.1.2~ 평타 고점 하향: 단계마다 +12% → +5% (투사체 판정 ×1.3 반영)
+            t.Add(RawNode(k + ".t1", k, 0, wname + " " + Loc.T("단련"), Loc.T("평타 피해 +5%"), 18, icon, power));
+            t.Add(RawNode(k + ".t2", k + ".t1", 0, wname + " " + Loc.T("단련") + " II", Loc.T("평타 피해 +5%"), 34, icon, power));
+            t.Add(RawNode(k + ".t3", k + ".t2", 0, wname + " " + Loc.T("단련") + " III", Loc.T("평타 피해 +5%"), 56, icon, power));
             t.Add(RawNode(k + ".x", k, 0, Loc.T("기억: ") + wname, Loc.T("모든 무기 피해 +8%"), 30, icon, () => AddAttack(0.08f)));
             return;
         }
@@ -540,7 +546,7 @@ public partial class SpecialAbilities
     {
         FlameId or GrenadeId or ShotgunId => Loc.T("모든 무기 피해 +8%"),
         SniperId or SeekerId => Loc.T("치명타 확률 +8%"),
-        DualId or ScytheId => Loc.T("모든 무기 발사 간격 -8%"),
+        DualId or ScytheId => Loc.T("모든 무기 발사 간격 -5%"),
         _ => Loc.T("모든 총알 관통 +1"),
     };
 
@@ -550,7 +556,7 @@ public partial class SpecialAbilities
         {
             case FlameId: case GrenadeId: case ShotgunId: AddAttack(0.08f); break;
             case SniperId: case SeekerId: TreeCrit += 0.08f; break;
-            case DualId: case ScytheId: AddRate(0.92f); break;
+            case DualId: case ScytheId: AddRate(0.95f); break;      // 1.1.2~ 평타 고점 하향: -8% → -5%
             default: AddPene(); break;
         }
     }
@@ -752,10 +758,10 @@ public partial class SpecialAbilities
 
     // ================================================================= 영혼 정련 (1.0.4~)
     // 영혼 트리를 모두 배운 뒤 남는 조각을 쓰는 곳: 할 때마다 모든 무기 피해 +2% (기본 공격력 기준) · 최대 체력 +4, 끝없이
-    // 비용은 40에서 시작해 할 때마다 ×1.4 (5 단위로 반올림). 이어하기 기록은 r (RunSave)
-    // 1.1.2~: 예전엔 +10 씩만 올라 조각이 쌓이면 끝없이 눌러 공격력이 지나치게 커졌음 → 40 · 55 · 80 · 110 · 155 · 215 · 300 …
+    // 비용은 40에서 시작해 할 때마다 ×5 (5 단위로 반올림). 이어하기 기록은 r (RunSave)
+    // 1.1.2~: 예전엔 +10 씩만 올라 조각이 쌓이면 끝없이 눌러 공격력이 지나치게 커졌음 → ×1.4 → 다시 상승률 10배(+40% → +400%) ×5: 40 · 200 · 1000 · 5000 …
     public const int RefineBaseCost = 40;
-    const float RefineCostGrowth = 1.4f;
+    const float RefineCostGrowth = 5f;
     const float RefineAttack = 0.02f, RefineHp = 4f;
     public int Refines { get; private set; }
     public int RefineCost

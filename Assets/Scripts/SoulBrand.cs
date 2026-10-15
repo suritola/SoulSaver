@@ -172,7 +172,7 @@ public static class SoulBrand
         }
         Hostile.Play("roar", 0.4f, 1.4f);
         if (p != null) Fx.Spawn("fx_soulburst", p.transform.position, 5f, b.color, 14f);
-        if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("brand.got").Replace("{0}", b.Name) + "\n<size=70%>" + b.Desc.Replace("\n", " · ") + "</size>", 3f);
+        Notice.Big(Loc.T("brand.got").Replace("{0}", b.Name), b.Desc.Replace("\n", " · "), NoticeIcon.Soul, 3.5f, NoticeLevel.Important, b.color, Notice.IconFile("choice_" + b.Icon));
         Hud.Dirty = true;
     }
 

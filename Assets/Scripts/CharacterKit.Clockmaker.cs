@@ -105,7 +105,7 @@ public partial class CharacterKit
         float r = 5f + card[2];
         Vector3 o = transform.position;
         float a0 = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        Fx.Spawn("fx_swordswing", o, r * 2f, new Color(1f, 0.85f, 0.45f, 0.9f), 22f, a0, 15);
+        Fx.Spawn("fx_swordswing", o, r * 2f, new Color(1f, 0.95f, 0.8f, 0.9f), 22f, a0, AttackLook.AreaOrder - 1);      // 1.1.2: 색까지 그린 베기 그림이라 곱하는 색은 옅게
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(o, r, clockHits)))
         {
             if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;

@@ -13,7 +13,7 @@ using UnityEngine;
 //     codex.reward   받은 수집 보상 (25 · 50 · 75 · 100)
 //     codex.showAll  설정 「도감 모두 보기」(스포일러 허용, 수집률에는 들어가지 않음)
 //     codex.migrated 기존 기록(클리어 · 해금 조건)으로 채운 것을 NEW 없이 넣었는지
-//   판 안에서 처음 얻으면 알림판(StageManager.ShowBanner)에 짧게 · 수집률이 25 · 50 · 75 · 100% 를 넘으면 한 번 더
+//   판 안에서 처음 얻으면 오른쪽 위 토스트(Notice.Toast)에 짧게 · 수집률이 25 · 50 · 75 · 100% 를 넘으면 한 번 더
 //   체험판: 체험판에 없는 항목(2장 이후 · 체험판 밖 영웅 · 각인 · 유물 · 무한 모드)은 「정식판에서 만날 수 있습니다」이고 수집률에서 빠짐
 public static class CodexSeen
 {
@@ -253,11 +253,11 @@ public static class CodexSeen
         if (sm == null) return;
         // 진화 · 유물 · 각인은 얻을 때 자기 알림이 따로 떠서, 도감 알림은 비밀 항목에만 (수집 보상 알림은 늘)
         if (key.StartsWith("sec."))
-            sm.ShowBanner(Loc.T("codex.toast").Replace("{0}", name) + "\n<size=70%>" + Loc.T("codex.toast.rate").Replace("{0}", after.ToString()) + "</size>", 2.2f);
+            Notice.Toast(NoticeIcon.Codex, Loc.T("codex.toast").Replace("{0}", name) + "\n" + Loc.T("codex.toast.rate").Replace("{0}", after.ToString()), 4f);
         foreach (var r in Rewards)
             if (before < r.pct && after >= r.pct)
             {
-                sm.ShowBanner(Loc.T("codex.milestone").Replace("{0}", r.pct.ToString()) + "\n<size=70%>" + Loc.T("codex.milestone.sub") + "</size>", 3.5f, true);
+                Notice.Big(Loc.T("codex.milestone").Replace("{0}", r.pct.ToString()), Loc.T("codex.milestone.sub"), NoticeIcon.Codex, 3.5f, NoticeLevel.Important);
                 Hostile.Play("chime", 0.8f, 1.2f);
             }
     }

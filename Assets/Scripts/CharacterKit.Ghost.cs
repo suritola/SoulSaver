@@ -81,8 +81,11 @@ public partial class CharacterKit
             }
             first = false;
         }
-        Fx.Beam(start, end, main ? 1f : 0.7f, SkinFx.Tint(new Color(0.55f, 0.85f, 1f, 0.75f)), 0.18f);
-        Fx.Spawn("fx_bonehand", end, 1.6f, Wraith, 22f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f);
+        // 1.1.2: 손길을 한눈에 — 판정 폭(반폭 0.9 = 폭 1.8 + 적 몸)까지 굵게 (예전 1칸), 흰 심 줄 · 뼈 손 2배 가까이, 적 · 맵 물체 위 순서
+        float band = AttackLook.BandMul(AttackLook.Tier);
+        Fx.Beam(start, end, (main ? 1.8f : 1.3f) * band, SkinFx.Tint(new Color(0.4f, 0.8f, 1f, 0.85f)), 0.2f, AttackLook.AreaOrder - 1);
+        Fx.Beam(start, end, (main ? 0.55f : 0.4f) * band, new Color(1f, 1f, 1f, 0.95f), 0.14f, AttackLook.AreaOrder);
+        Fx.Spawn("fx_bonehand", end, (main ? 2f : 1.6f) * band, Wraith, 22f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f, AttackLook.AreaOrder + 1);
         if (SignatureSkills.HandTrail()) StartCoroutine(FrostTrail(start, end));
     }
 

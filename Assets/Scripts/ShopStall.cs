@@ -73,9 +73,28 @@ public class ShopStall : MonoBehaviour
     // 1.0.1: 지속되는 필살기(일제 사격 · 총알 폭풍 · 화염 회오리 …) 중엔 상호작용 키가 무시돼 상점이 안 열렸음
     // → 날아가는 중에도 열림 (상점이 시간을 멈추고, 닫으면 이어서). 시간을 늦춘 조준 중에 누르면 기억했다가 끝나는 순간 엶
     bool pendingOpen;
+    // 1.1.2~ 제단이 여러 개 겹쳐 있을 때 한 번 누름에 모든 제단이 「열기 대기」를 켜서, 상점을 닫자마자 다른 제단이 상점을 또 열던 것
+    // → 대기는 한 번에 한 제단만 (가장 가까운 것) · 시간이 멈춘 동안(상점 · 창)과 다시 흐른 직후 0.35초는 누름을 받지 않음 · 한 제단이 열면 다른 대기는 지움
+    static ShopStall pendingOwner;
+    static float lastPausedAt = -10f;
+    const float ResumeGuard = 0.35f;
+
+    static ShopStall Nearest(Vector3 from)
+    {
+        ShopStall best = null;
+        float bestD = float.MaxValue;
+        foreach (ShopStall s in FindObjectsByType<ShopStall>(FindObjectsSortMode.None))
+        {
+            float d = Vector2.Distance(from, s.transform.position);
+            if (d < s.openDistance && d < bestD) { best = s; bestD = d; }
+        }
+        return best;
+    }
 
     void Update()
     {
+        if (Time.timeScale == 0f) lastPausedAt = Time.unscaledTime;
+        if (pendingOwner != this) pendingOpen = false;
         age += Time.deltaTime;
         if (pendingOpen) age = Mathf.Min(age, lifetime - 1f);      // 기다리는 동안 사라지지 않게
         float left = lifetime - age;
@@ -96,13 +115,19 @@ public class ShopStall : MonoBehaviour
         bool near = p != null && Vector2.Distance(p.transform.position, transform.position) < openDistance;
         PlayerNear = near;
         UpdatePrompt(near);
-        if (near && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Interact)) pendingOpen = true;
-        if (pendingOpen && (p == null || Vector2.Distance(p.transform.position, transform.position) > openDistance * 1.6f)) pendingOpen = false;
+        bool canPress = Time.timeScale > 0f && Time.unscaledTime - lastPausedAt > ResumeGuard;
+        if (near && canPress && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Interact) && pendingOwner == null && Nearest(p.transform.position) == this)
+        {
+            pendingOwner = this;
+            pendingOpen = true;
+        }
+        if (pendingOpen && (p == null || Vector2.Distance(p.transform.position, transform.position) > openDistance * 1.6f)) { pendingOpen = false; pendingOwner = null; }
         if (pendingOpen && Time.timeScale == 1f && !p.IsAiming)
         {
             if (shop.OpenFromStall())
             {
                 pendingOpen = false;
+                pendingOwner = null;
                 PlayerNear = false;
                 Destroy(gameObject);
                 return;
@@ -119,6 +144,7 @@ public class ShopStall : MonoBehaviour
 
     void OnDestroy()
     {
+        if (pendingOwner == this) pendingOwner = null;
         PlayerNear = false;
     }
 
