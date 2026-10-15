@@ -1,6 +1,6 @@
 # 1.1.2 업데이트
 
-- **평타가 한눈에!** 모든 영웅의 평타가 3~4배 크고 또렷하게 (영웅색 테두리 · 빛 · 잔상)
+- **평타가 한눈에!** 모든 영웅의 평타가 또렷하게 (영웅색 테두리 · 빛 · 잔상), 판정은 보이는 크기 그대로
 - **안내 메시지 새 단장**: 큰 알림 · 오른쪽 위 알림 · 도움말로 정리, 설정에서 크기 조절
 - **스킬 · 유물 키 표시**: 얻는 순간 어느 키인지 크게 알려 주고 칸 아래에 키캡 표시
 - **단계 표시**: 숫자 대신 칸이 차오르는 모양으로
@@ -28,7 +28,7 @@
 === en
 # 1.1.2 Update
 
-- **See your attacks at a glance!** Every hero's basic attack is 3–4× bigger and clearer (hero-colored outline · glow · trail)
+- **See your attacks at a glance!** Every hero's basic attack is much clearer (hero-colored outline · glow · trail), and hitboxes match what you see
 - **Notifications redesigned**: big alerts · top-right toasts · tips, with an adjustable size in Settings
 - **Skill · relic keys**: when you get one, a big keycap shows which key to press, plus keycaps under the slots
 - **Level display**: filling pips instead of numbers
@@ -56,7 +56,7 @@
 === ja
 # 1.1.2 アップデート
 
-- **通常攻撃がひと目でわかる！** 全英雄の通常攻撃が3〜4倍大きく、くっきり（英雄色の縁取り・光・残像）
+- **通常攻撃がひと目でわかる！** 全英雄の通常攻撃がくっきり（英雄色の縁取り・光・残像）、当たり判定は見た目どおり
 - **案内メッセージを一新**：大きな通知・右上の通知・ヒントに整理、設定でサイズ調整
 - **スキル・遺物のキー表示**：手に入れた瞬間どのキーか大きく表示、スロットの下にキーキャップ
 - **段階表示**：数字ではなくマスが埋まっていく形に
@@ -84,7 +84,7 @@
 === zh
 # 1.1.2 更新
 
-- **普通攻击一目了然！** 所有英雄的普通攻击变大3~4倍、更清晰（英雄色描边 · 光晕 · 残影）
+- **普通攻击一目了然！** 所有英雄的普通攻击更清晰（英雄色描边 · 光晕 · 残影），判定与外观一致
 - **提示信息全面翻新**：分为大提示 · 右上角通知 · 帮助，可在设置中调整大小
 - **技能 · 遗物按键显示**：获得的瞬间用大键帽显示按键，技能栏下方也有键帽
 - **等级显示**：用格子填充代替数字
