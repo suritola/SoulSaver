@@ -73,7 +73,7 @@ public class SkillGauge : MonoBehaviour
         glow.sprite = SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : gaugeImage.sprite;
         glow.raycastTarget = false;
         glow.color = new Color(1f, 0.85f, 0.35f, 0f);
-        frameScale = src.parent.localScale;
+        frameScale = gaugeImage.transform.parent.localScale;     // 준비됐을 때 키웠다 줄이는 기준 크기 (Update 가 같은 부모를 키움)
     }
 
     IEnumerator ReadyJingle()
