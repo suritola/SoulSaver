@@ -56,19 +56,25 @@ public class SpecialFeedback : MonoBehaviour
     public void PlayRaw(string name, float vol = 1f, float pitch = 1f)
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
-        PitchSource(pitch).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        AudioSource s = PitchSource(pitch);
+        s.PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        // 이 소스에서 울리는 소리가 끝나는 때 (다 바쁠 때 곧 끝나는 소스를 고르려고)
+        int at = pitched.IndexOf(s);
+        if (at >= 0) pitchedUntil[at] = Mathf.Max(pitchedUntil[at], Time.unscaledTime + c.length / Mathf.Max(0.1f, Mathf.Abs(pitch)));
     }
 
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
     // 기본 음높이는 한 소스에서, 음높이를 바꾼 소리는 돌려 쓰는 소스 묶음에서 냄
-    const int PitchedCount = 8;
+    // 1.1~: 8개가 다 차면 차례대로 Stop() 해서 레벨업 · 결계 · 보스 소리 같은 긴 소리가 뚝 끊기며 딸깍 소리가 났음
+    //   → 소스를 20개로 늘리고, 다 바쁘면 끊지 않고 가장 먼저 끝나는 소스에 겹쳐 냄
+    const int PitchedCount = 20;
     readonly List<AudioSource> pitched = new List<AudioSource>();
-    int pitchedNext;
+    readonly List<float> pitchedUntil = new List<float>();
 
     AudioSource PitchSource(float pitch)
     {
         if (Mathf.Approximately(pitch, 1f)) { oneShot.pitch = 1f; return oneShot; }
-        // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 오래된 소스
+        // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 먼저 끝나는 소스
         for (int i = 0; i < pitched.Count; i++)
             if (Mathf.Approximately(pitched[i].pitch, pitch)) return pitched[i];
         AudioSource s = null;
@@ -81,12 +87,14 @@ public class SpecialFeedback : MonoBehaviour
                 s = gameObject.AddComponent<AudioSource>();
                 s.playOnAwake = false;
                 pitched.Add(s);
+                pitchedUntil.Add(0f);
             }
             else
             {
-                s = pitched[pitchedNext];
-                pitchedNext = (pitchedNext + 1) % PitchedCount;
-                s.Stop();
+                int soonest = 0;
+                for (int i = 1; i < pitched.Count; i++)
+                    if (pitchedUntil[i] < pitchedUntil[soonest]) soonest = i;
+                s = pitched[soonest];
             }
         }
         s.pitch = pitch;

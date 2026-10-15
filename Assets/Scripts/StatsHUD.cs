@@ -34,10 +34,13 @@ public class StatsHUD : MonoBehaviour
                                         "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생", "행운", "성장" };     // 1.0.4~ 성장 (성장 카드 · 영혼 정련 횟수)
     // 6번째 줄부터는 레벨업 카드 아이콘을 빌려 씀 (강철같은 심장 · 노려보는 눈빛 · 관통하는 총알 · 생명의 샘)
     // 1.0.4~: 마지막 줄 「행운」도 아이콘 (영혼 트리 행운 칸과 같은 4번 카드 아이콘, 예전엔 빈칸)
-    static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10, 4 };
+    // 1.1~: 마지막 줄 「성장」도 아이콘 (레벨업 · 경험치 4번 카드 아이콘, 예전엔 배열이 모자라 빈칸)
+    static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10, 4, 4 };
 
     PlayerController player;
     TextMeshProUGUI[] values;
+    TextMeshProUGUI[] labels;
+    float[] labelRight;
     float baseSpeed;
     float timer;
 
@@ -47,6 +50,8 @@ public class StatsHUD : MonoBehaviour
         if (player != null) baseSpeed = player.speed;
 
         values = new TextMeshProUGUI[Labels.Length];
+        labels = new TextMeshProUGUI[Labels.Length];
+        labelRight = new float[Labels.Length];
         for (int i = 0; i < Labels.Length; i++) BuildRow(i);
 
         panelRect = GetComponent<RectTransform>();
@@ -134,8 +139,13 @@ public class StatsHUD : MonoBehaviour
         icon.preserveAspect = true;
         icon.raycastTarget = false;
 
-        MakeText("Label", Loc.T(Labels[i]), new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.Left,
+        labels[i] = MakeText("Label", Loc.T(Labels[i]), new Color(0.92f, 0.88f, 0.80f), TextAlignmentOptions.Left,
                  padding + rowHeight + 8f, y);
+        // 1.1~: 긴 이름(「クリティカルダメージ」 · 「Damage Multiplier」)이 값 · 창 밖까지 넘쳤음 → 값 왼쪽까지만, 넘치면 글자를 줄임
+        labels[i].enableAutoSizing = true;
+        labels[i].fontSizeMax = 24f;
+        labels[i].fontSizeMin = 13f;
+        labels[i].overflowMode = TextOverflowModes.Ellipsis;
         values[i] = MakeText("Value", "", new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.Right,
                              padding, y);
     }
@@ -229,16 +239,35 @@ public class StatsHUD : MonoBehaviour
         values[8].text = (player.damageMultiplier * 100f).ToString("0") + "%";
 
         // 관통: 뚫고 지나가는 적 수
-        values[9].text = Mathf.Max(0, player.pene - 1) + Loc.T("마리");
+        int pierce = Mathf.Max(0, player.pene - 1);
+        values[9].text = pierce + Loc.T(pierce == 1 ? "마리 (한 마리)" : "마리");      // 1.1~ 영어 「1 enemy」 (예전엔 「1 enemies」)
 
         // 체력 재생: 초당 · 처치 시
         // 행운 (1.0.2): 지금 키우는 카드가 나올 확률 (행운 1마다 +40%, LevelShop.DrawWeight)
         int luck = sp != null ? sp.Luck : 0;
         values[11].text = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
-        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? "  +" + player.healOnKill.ToString("0.#") + Loc.T("/처치") : "");
+        // 1.1~: 처치 회복이 붙으면 값이 길어져 이름 위로 겹쳤음 → 처치 회복은 작게
+        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? " <size=65%>+" + player.healOnKill.ToString("0.#") + Loc.T("/처치") + "</size>" : "");
         // 성장 (1.0.4~): 만렙 뒤 고른 성장 카드 수 · 영혼 정련 횟수
         LevelShop shop = Cache<LevelShop>.Get;
         int grown = shop != null ? shop.GrowthPicks : 0, refines = sp != null ? sp.Refines : 0;
         values[12].text = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
+        FitLabels();
+    }
+
+    // 1.1~: 줄마다 이름 칸 오른쪽 끝을 값 글자 왼쪽(+8)까지로 (값이 길면 이름이 자동으로 작아짐)
+    void FitLabels()
+    {
+        if (labels == null) return;
+        for (int i = 0; i < labels.Length; i++)
+        {
+            if (labels[i] == null || values[i] == null) continue;
+            float w = values[i].GetPreferredValues(values[i].text).x;
+            float right = -padding - Mathf.Ceil(w) - 8f;
+            if (Mathf.Approximately(labelRight[i], right)) continue;
+            labelRight[i] = right;
+            RectTransform r = labels[i].rectTransform;
+            r.offsetMax = new Vector2(right, r.offsetMax.y);
+        }
     }
 }

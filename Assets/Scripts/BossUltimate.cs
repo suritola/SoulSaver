@@ -201,8 +201,8 @@ public class BossUltimate : MonoBehaviour
         name.outlineWidth = 0.25f;
         name.outlineColor = new Color32(0, 0, 0, 255);
         TMP_Text say = UIKit.Text(root, line, 44f, new Color(0.95f, 0.92f, 0.88f), new Vector2(0f, -105f), new Vector2(1600f, 70f));
-        // 1.0.4~ 건너뛰기 안내 (화면 아래)
-        TMP_Text skip = UIKit.Text(root, "클릭 · Space: 건너뛰기", 24f, new Color(0.75f, 0.72f, 0.8f), new Vector2(0f, -330f), new Vector2(900f, 36f));
+        // 1.0.4~ 건너뛰기 안내 (화면 아래) · 1.1~ 패드면 [A] (예전엔 패드여도 「클릭 · Space」)
+        TMP_Text skip = UIKit.Text(root, GamePad.Active ? "[A]: 건너뛰기" : "클릭 · Space: 건너뛰기", 24f, new Color(0.75f, 0.72f, 0.8f), new Vector2(0f, -330f), new Vector2(900f, 36f));
         skip.alpha = 0f;
         tag.alpha = name.alpha = say.alpha = 0f;
 

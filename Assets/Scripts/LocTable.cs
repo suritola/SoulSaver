@@ -247,6 +247,7 @@ public static partial class LocTable
         { "지옥이 무너진다! 가장자리가 용암으로 차오른다!", L("Hell is collapsing! Lava rises from the edges!", "地獄が崩れる！外周から溶岩が迫る！", "地狱正在崩塌！熔岩从边缘涌来！") },
         // 1.0.4 묶음 3 (전투 공정성 · 연출: 결계 컷신 건너뛰기 · 지옥의 군주 마지막 단계 · 습격 남은 수 · 실패)
         { "클릭 · Space: 건너뛰기", L("Click · Space: Skip", "クリック・Space：スキップ", "点击 · Space：跳过") },
+        { "[A]: 건너뛰기", L("[A]: Skip", "[A]：スキップ", "[A]：跳过") },      // 1.1~ 보스 결계 컷신 패드 안내
         { "지옥의 군주가 분노한다! 공격이 빨라진다!", L("The Hell Lord is enraged! Its attacks grow faster!", "地獄の君主が怒り狂う！攻撃が速くなる！", "地狱领主暴怒了！攻击变得更快！") },
         { "습격 · 남은 적 {0} · {1}초", L("Ambush · {0} enemies left · {1}s", "襲撃・残りの敵 {0}・{1}秒", "伏击 · 剩余敌人 {0} · {1}秒") },
         { "습격 실패\n시간 안에 모두 쓰러뜨리지 못해 보물 상자가 없습니다", L("Ambush failed\nYou didn't defeat them all in time, so no treasure chest", "襲撃失敗\n時間内に全滅できなかったため、宝箱はありません", "伏击失败\n未能在时限内全部击败，没有宝箱") },
@@ -375,6 +376,7 @@ public static partial class LocTable
         { "총알이 적을 뚫고 지나갑니다.", L("Bullets pass through enemies.", "弾が敵を貫通します。", "子弹会穿透敌人。") },
         { "관통: 적 ", L("Pierce: ", "貫通: 敵 ", "穿透: ") },
         { "마리", L(" enemies", "体", "个敌人") },
+        { "마리 (한 마리)", E("마리", " enemy", "体", "个敌人") },      // 1.1~ 능력치 창 관통 1마리 (영어 단수)
         { "코인을 주울 때 더 많이 얻습니다.", L("Get more from each coin you pick up.", "コインを拾うとより多く手に入ります。", "拾取金币时获得更多。") },
         { "코인 1개당 획득량: ", L("Per coin: ", "コイン1枚あたり: ", "每枚金币获得: ") },
         { "필살기 게이지가 더 빨리 가득 찹니다. (적을 처치하면 잠깐 더 빨라짐)", L("The ultimate gauge fills faster. (Even faster for a moment after kills)", "必殺技ゲージが早く溜まります。(敵を倒すと少しの間さらに速い)", "必杀技槽积累更快。(击杀后短时间更快)") },
@@ -605,6 +607,7 @@ public static partial class LocTable
         { "경고 표시", L("Warnings", "警告表示", "警告标记") },
         { "붉은 원 · 선 · 머리 위 ! 가 보이면 그 자리를 피하세요", L("Red circles, lines and a ! above heads mean: get out of the way", "赤い円・線・頭上の！が見えたらその場から離れましょう", "看到红圈、红线或头顶的！就快躲开") },
         { "중간 보스", L("Mid-bosses", "中ボス", "中头目") },
+        { "중간 보스 이름표", E("중간 보스", "Mid-boss", "中ボス", "中头目") },      // 1.1~ 머리 위 이름표 (한 마리라 단수)
         { "2장부터 단계가 오를 때마다 등장 · 특수 능력 포인트를 줌", L("From chapter 2, one appears each time the phase rises · gives a special point", "第2章から段階が上がるたびに出現・特殊能力ポイントをくれる", "从第2章起每次阶段提升时出现 · 给予特殊能力点数") },
         { "보스", L("Bosses", "ボス", "首领") },
         { "리치 왕 → 지옥의 군주 → 킹 슬라임", L("Lich King → Demon Lord → King Slime", "リッチ王 → 地獄の君主 → キングスライム", "巫妖王 → 地狱领主 → 史莱姆王") },
