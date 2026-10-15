@@ -1014,6 +1014,7 @@ public partial class SpecialAbilities : MonoBehaviour
         }
 
         for (int i = 0; i < skills.Count && i < SkillKeys.Length; i++) HandleSkillKey(skills[i], SkillKeys[i]);
+        HandleRelicKey();                                   // 1.2~ [Q] 유물 칸 (SpecialAbilities.Relics)
         if (aimingSkill >= 0) ShowSkillPreview(aimingSkill);
 
         if (Has(OrbsId)) using (DamageSource.As(SourceOf(OrbsId))) UpdateOrbs();

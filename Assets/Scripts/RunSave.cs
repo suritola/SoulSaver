@@ -46,6 +46,11 @@ public static class RunSave
         public int eventSeed, eventStage, eventActive, chestLegends, chestCatalysts;
         public List<string> eventPlan = new List<string>();
         public List<string> eventUsed = new List<string>();
+        // 1.2~ 맵 물체 · 유물 (MapProps): 장착한 유물(RelicDef.saveCode, 장착 순서) · 맵 물체 시드(0 = 옛 저장 → 새로 뽑음)
+        //   이번 장에 부순 물체 수(propStage = 그 장 스테이지 번호 + 1, 0 = 없음) · 석관을 이미 연 장(Chapters 자리 번호 글자, 예 "13")
+        public List<string> relics = new List<string>();
+        public int propSeed, propStage, propsBroken;
+        public string sarcoOpened = "";
         // 1.2~ 영혼의 무게 (SoulWeight, 0 = 무게 없음 · 옛 저장에는 없어 0)
         public int weight;
     }

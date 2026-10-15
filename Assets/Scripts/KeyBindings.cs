@@ -2,7 +2,7 @@ using System.Text;
 using UnityEngine;
 
 // 바꿀 수 있는 키 (설정 → 조작)
-public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade, Reroll, Attack, Ultimate }     // Reroll: 레벨업 카드 다시 뽑기 (2.1.8~, 저장 번호가 밀리지 않게 맨 뒤) · Attack · Ultimate: 공격 · 필살기 (1.0.4~, 마우스 버튼도 지정 가능)
+public enum GameAction { Up, Down, Left, Right, Reload, Swap, Skill1, Skill2, Skill3, Interact, Upgrade, Reroll, Attack, Ultimate, Relic }     // Reroll: 레벨업 카드 다시 뽑기 (2.1.8~, 저장 번호가 밀리지 않게 맨 뒤) · Attack · Ultimate: 공격 · 필살기 (1.0.4~, 마우스 버튼도 지정 가능)
 
 // 키 설정: PlayerPrefs에 저장. 이동은 방향키도 항상 같이 됨
 // 화면 글자의 {SKILL1} 같은 표시는 Loc.T가 지금 키 이름으로 바꿔 줌
@@ -11,14 +11,17 @@ public static class KeyBindings
     public static readonly GameAction[] All = (GameAction[])System.Enum.GetValues(typeof(GameAction));
 
     // 스킬 3번은 상점 · 레벨업 확정(Space)과 겹치지 않게 C
+    // 1.2~ 유물(Relic) = Q · 무기 교체(Swap)는 진화 방식이 된 뒤 쓰지 않아(SpecialAbilities.UsesEvolution) 기본 키를 비움 (Q 를 유물에 줌)
+    //   영웅마다 쓰는 키: 공격 좌클릭 · 필살기 우클릭 · 재장전 R · 상호작용 Space · 영혼 트리 T · 잠든 힘 스킬 E F C — Q 는 어느 영웅도 쓰지 않음
     static readonly KeyCode[] Defaults =
     {
         KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D,
-        KeyCode.R, KeyCode.Q,
+        KeyCode.R, KeyCode.None,
         KeyCode.E, KeyCode.F, KeyCode.C,
         KeyCode.Space, KeyCode.T,
         KeyCode.R,          // 다시 뽑기는 레벨업 창(멈춘 동안)에서만 써서 재장전과 같은 R 이어도 겹치지 않음
         KeyCode.Mouse0, KeyCode.Mouse1,     // 1.0.4~ 공격 · 필살기 (좌 · 우클릭)
+        KeyCode.Q,                          // 1.2~ 유물
     };
 
     static readonly KeyCode[] Arrows = { KeyCode.UpArrow, KeyCode.DownArrow, KeyCode.LeftArrow, KeyCode.RightArrow };
@@ -31,6 +34,16 @@ public static class KeyBindings
         keys = (KeyCode[])Defaults.Clone();
         for (int i = 0; i < keys.Length; i++)
             keys[i] = (KeyCode)Prefs.GetInt("keys." + (GameAction)i, (int)Defaults[i]);
+        // 1.2~ 유물 키를 아직 정하지 않았는데 다른 동작이 이미 Q 를 쓰면 (예전에 스킬 · 재장전을 Q 로 바꿨음) 비어 있는 키로
+        int relic = (int)GameAction.Relic;
+        if (!Prefs.HasKey("keys." + GameAction.Relic))
+            for (int i = 0; i < keys.Length; i++)
+                if (i != relic && i != (int)GameAction.Swap && keys[i] == keys[relic] && !Separate(GameAction.Relic, (GameAction)i))
+                {
+                    keys[relic] = FreeKey(GameAction.Relic, keys[relic]);
+                    if (keys[relic] == Defaults[relic]) keys[relic] = KeyCode.None;
+                    break;
+                }
     }
 
     public static KeyCode Get(GameAction a) { Load(); return keys[(int)a]; }
@@ -70,7 +83,7 @@ public static class KeyBindings
         {
             if (k == key || !CanBind(a, k)) continue;
             bool used = false;
-            for (int j = 0; j < keys.Length; j++) if (keys[j] == k && !Separate(a, (GameAction)j)) { used = true; break; }
+            for (int j = 0; j < keys.Length; j++) if (j != (int)a && keys[j] == k && !Separate(a, (GameAction)j)) { used = true; break; }
             if (!used) return k;
         }
         return key;
@@ -168,6 +181,7 @@ public static class KeyBindings
         b.Replace("{REROLL}", Name(GameAction.Reroll));       // 1.0.4~
         b.Replace("{ATTACK}", Name(GameAction.Attack));
         b.Replace("{ULT}", Name(GameAction.Ultimate));
+        b.Replace("{RELIC}", Name(GameAction.Relic));         // 1.2~
         return b.ToString();
     }
 }

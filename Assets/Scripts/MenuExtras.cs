@@ -898,10 +898,13 @@ public static class SettingsUI
         "위로 이동", "아래로 이동", "왼쪽 이동", "오른쪽 이동", "재장전", "무기 교체",
         "스킬 1", "스킬 2", "스킬 3", "상호작용 (상점 · 확정)", "영혼 트리", "카드 다시 뽑기",
         "공격", "필살기",           // 1.0.4~ 좌 · 우클릭도 바꿀 수 있음
+        "유물",                     // 1.2~ [Q] 유물 칸 (봉인된 석관)
     };
     // 설정에 보이는 키 (무기 교체 · 스킬 1~3은 이제 쓰지 않음), 1.0.4~ 공격 · 필살기를 넣어 두 줄 × 5칸
-    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 12, 13, 9, 10, 11 };
-    const string PadLayoutKo = "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · RT 공격 · LT 필살기 · A 상호작용 · 확정 · B 취소 · X 재장전 · Y 무기 교체\nRB · LB · L3 스킬 1 · 2 · 3 · View 영혼 트리 · Menu 일시정지 · 메뉴에서는 왼쪽 스틱 · 십자키로 커서, A 클릭, 오른쪽 스틱 스크롤";
+    // 1.2~ 유물(14)을 넣어 두 줄 × 6칸 (줄 간격 78 → 63 · 버튼 높이 60 → 56, 아래 게임패드 안내와 겹치지 않게)
+    static readonly int[] ShownActions = { 0, 1, 2, 3, 4, 14, 12, 13, 9, 10, 11 };
+    const int RowsPerColumn = 6;
+    const string PadLayoutKo = "왼쪽 스틱 이동 · 오른쪽 스틱 조준(기울이면 자동 공격) · RT 공격 · LT 필살기 · A 상호작용 · 확정 · B 취소 · X 재장전 · Y 유물\nRB · LB · L3 스킬 1 · 2 · 3 · View 영혼 트리 · Menu 일시정지 · 메뉴에서는 왼쪽 스틱 · 십자키로 커서, A 클릭, 오른쪽 스틱 스크롤";
 
     static void BuildControls()
     {
@@ -909,11 +912,11 @@ public static class SettingsUI
         {
             int i = ShownActions[j];
             int index = i;
-            int col = j < 5 ? 0 : 1;
-            float y = 220f - 78f * (j % 5);
+            int col = j < RowsPerColumn ? 0 : 1;
+            float y = 222f - 63f * (j % RowsPerColumn);
             float x = col == 0 ? -540f : 20f;
             UIKit.Text(page, ActionNames[i], 26f, Parch, new Vector2(x + 170f, y), new Vector2(340f, 50f), TextAlignmentOptions.Left);
-            Button b = UIKit.MakeButton(page, "", new Vector2(x + 430f, y), new Vector2(170f, 60f), () =>
+            Button b = UIKit.MakeButton(page, "", new Vector2(x + 430f, y), new Vector2(170f, 56f), () =>
             {
                 capturing = index;
                 Deselect();                 // Space · Enter가 버튼을 다시 누르지 않게

@@ -448,7 +448,8 @@ public static class Hints
 
     // 설정 「도움말 다시 보기」가 지우는 키 (Hints.Show 를 부르는 곳의 키를 모두 적음)
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
-                                             "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend" };     // 1.1~ 빠져 있던 키
+                                             "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
+                                             "relic", "mapprop" };       // 1.2~ 유물 · 맵 물체
 
     public static void ResetAll()
     {

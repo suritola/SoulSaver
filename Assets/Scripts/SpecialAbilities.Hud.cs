@@ -25,7 +25,7 @@ public partial class SpecialAbilities
         public readonly List<HudTile> list = new List<HudTile>();
     }
 
-    HudGroup weaponGroup, skillGroup, passiveGroup;
+    HudGroup weaponGroup, skillGroup, passiveGroup, relicGroup;     // 1.2~ 유물 칸 (스킬 칸 위)
     const int PistolRow = -1;
     const int EvoRow = -2;      // 1.0.1: 진화한 무기 칸 (마우스를 올리면 진화 능력 · 덧붙은 궁극기 설명)
     const float TileSize = 58f, TileGap = 6f, HeaderHeight = 26f, GroupGap = 8f;
@@ -40,6 +40,7 @@ public partial class SpecialAbilities
         weaponGroup = NewGroup(canvas, "WeaponSlot", UsesEvolution ? Loc.T("무기") : Loc.T("무기") + " [" + KeyBindings.Name(GameAction.Swap) + "]", "hud.fold.weapon");
         skillGroup = NewGroup(canvas, "SkillSlot", Loc.T("스킬"), "hud.fold.skill");
         passiveGroup = NewGroup(canvas, "PassiveSlot", Loc.T("패시브"), "hud.fold.passive");
+        relicGroup = NewGroup(canvas, "RelicSlot", Loc.T("유물"), "hud.fold.relic");
     }
 
     HudGroup NewGroup(Canvas canvas, string name, string title, string prefKey)
@@ -123,18 +124,20 @@ public partial class SpecialAbilities
     void RebuildHudRows()
     {
         if (weaponGroup == null) return;
-        List<int> w = new List<int>(), s = new List<int>(), p = new List<int>();
+        List<int> w = new List<int>(), s = new List<int>(), p = new List<int>(), r = new List<int>();
         if (weapons.Count > 0 && !UsesEvolution) w.Add(PistolRow);    // 진화 방식은 권총으로 돌아가지 않음
         if (UsesEvolution && EvolutionTier > 0) w.Insert(0, EvoRow);  // 지금 진화한 무기가 어떤 능력인지 볼 수 있게 (1.0.1)
         foreach (int id in equipped)
         {
-            if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
+            if (relics.Contains(id)) r.Add(id);
+            else if (abilities[id].kind == SpecialKind.Weapon) w.Add(id);
             else if (abilities[id].kind == SpecialKind.Skill) s.Add(id);
             else p.Add(id);
         }
         FillGroup(weaponGroup, w);
         FillGroup(skillGroup, s);
         FillGroup(passiveGroup, p);
+        if (relicGroup != null) FillGroup(relicGroup, r);
         LayoutGroups();
     }
 
@@ -232,7 +235,7 @@ public partial class SpecialAbilities
     void LayoutGroups()
     {
         float y = 100f;
-        foreach (HudGroup g in new[] { weaponGroup, skillGroup, passiveGroup })
+        foreach (HudGroup g in new[] { weaponGroup, skillGroup, relicGroup, passiveGroup })
         {
             if (g == null) continue;
             bool any = g.list.Count > 0;
@@ -256,7 +259,7 @@ public partial class SpecialAbilities
     void UpdateHud()
     {
         if (weaponGroup == null) return;
-        if (hudGroups == null) hudGroups = new[] { weaponGroup, skillGroup, passiveGroup };
+        if (hudGroups == null) hudGroups = relicGroup != null ? new[] { weaponGroup, skillGroup, relicGroup, passiveGroup } : new[] { weaponGroup, skillGroup, passiveGroup };
         bool full = Time.unscaledTime >= nextHudText;
         if (full) nextHudText = Time.unscaledTime + 0.1f;
         foreach (HudGroup g in hudGroups)
@@ -351,7 +354,7 @@ public partial class SpecialAbilities
         else if (abilities[id].kind == SpecialKind.Skill)
         {
             int slot = skills.IndexOf(id);
-            key = slot >= 0 && slot < SkillKeys.Length ? KeyBindings.Name(SkillKeys[slot]) : "";
+            key = relics.Contains(id) ? KeyBindings.Name(GameAction.Relic) : slot >= 0 && slot < SkillKeys.Length ? KeyBindings.Name(SkillKeys[slot]) : "";
             float left = CooldownUntil(id) - Time.time;
             float length = cooldownLength.TryGetValue(id, out float l) ? l : 1f;
             cool = left > 0f ? Mathf.Clamp01(left / length) : 0f;
@@ -478,6 +481,7 @@ public partial class SpecialAbilities
             {
                 float left = CooldownUntil(id) - Time.time;
                 state = left > 0f ? Loc.T("쿨타임 ") + left.ToString("0.0") + Loc.T("초") : Loc.T("사용 가능");
+                if (relics.Contains(id)) state = Loc.T("relic.tag") + " · " + state;     // 1.2~ 유물 칸 [Q] · 쿨타임 1.5배
                 if (id == SoulBurstId) state += Loc.T(" · 영혼 ") + souls;
             }
             else state = PassiveState(id, true);
