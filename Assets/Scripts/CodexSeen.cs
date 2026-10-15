@@ -251,7 +251,9 @@ public static class CodexSeen
         int after = Pct(f, t), before = Pct(f - 1, t);
         StageManager sm = StageManager.Instance;
         if (sm == null) return;
-        sm.ShowBanner(Loc.T("codex.toast").Replace("{0}", name) + "\n<size=70%>" + Loc.T("codex.toast.rate").Replace("{0}", after.ToString()) + "</size>", 2.2f);
+        // 진화 · 유물 · 각인은 얻을 때 자기 알림이 따로 떠서, 도감 알림은 비밀 항목에만 (수집 보상 알림은 늘)
+        if (key.StartsWith("sec."))
+            sm.ShowBanner(Loc.T("codex.toast").Replace("{0}", name) + "\n<size=70%>" + Loc.T("codex.toast.rate").Replace("{0}", after.ToString()) + "</size>", 2.2f);
         foreach (var r in Rewards)
             if (before < r.pct && after >= r.pct)
             {
