@@ -1005,6 +1005,7 @@ public static partial class LocTable
         { "불러오는 중…", L("Loading…", "読み込み中…", "加载中…") },
         { "다음 도전까지", L("Next challenge in", "次の挑戦まで", "距下次挑战") },
         { "아직 기록이 없습니다. 첫 번째 도전자가 되어 보세요!", L("No records yet. Be the first challenger!", "まだ記録がありません。最初の挑戦者になろう！", "还没有记录。成为第一个挑战者吧！") },
+        { "순위를 불러오지 못했습니다. 창을 다시 열어 보세요.", L("Couldn't load the rankings. Try reopening this window.", "ランキングを読み込めませんでした。画面を開き直してください。", "无法加载排名。请重新打开此窗口。") },     // 1.1~
         { "참가자 ", L("Players ", "参加者 ", "参与者 ") },
         { "몰려드는 무리", L("Swarming Horde", "押し寄せる群れ", "蜂拥兽群") },
         { "적이 더 자주 몰려옵니다 (생성 간격 -30%). 대신 경험치 · 코인 +30%", L("Enemies arrive more often (spawn interval -30%). In return, EXP · coins +30%", "敵がより頻繁に押し寄せます(出現間隔-30%)。代わりに経験値・コイン+30%", "敌人来得更频繁（生成间隔-30%）。作为补偿，经验 · 金币+30%") },

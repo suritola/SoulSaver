@@ -35,18 +35,20 @@ public static class KeyBindings
 
     public static KeyCode Get(GameAction a) { Load(); return keys[(int)a]; }
 
-    // 다른 동작이 이미 쓰는 키면 서로 맞바꿈
-    public static void Set(GameAction a, KeyCode key)
+    // 다른 동작이 이미 쓰는 키면 서로 맞바꿈. 바꾸지 못하면 false (1.1~ 설정 칸에 「사용 중」 안내)
+    public static bool Set(GameAction a, KeyCode key)
     {
         Load();
-        if (!CanBind(a, key)) return;
+        if (!CanBind(a, key)) return false;
         KeyCode old = keys[(int)a];
         // 1.0.4~ 맞바꿀 키(좌클릭)를 받을 수 없는 동작은 그 동작의 기본 키로 (기본 키도 겹치면 바꾸지 않음)
+        // 1.1~ 설정에 안 보이는 동작(무기 교체 · 스킬 1~3, 지금은 쓰지 않음)은 막지 않고 키를 그대로 둠
         for (int i = 0; i < keys.Length; i++)
-            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i) && Swapped(i, old) == key) return;
+            if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i) && Swapped(i, old) == key && !Hidden(i)) return false;
         for (int i = 0; i < keys.Length; i++)
             if (i != (int)a && keys[i] == key && !Separate(a, (GameAction)i))
             {
+                if (Swapped(i, old) == key) continue;       // 1.1~ 안 보이는 동작: 맞바꿀 수 없으면 그대로
                 KeyCode give = Swapped(i, old);
                 keys[i] = give;
                 Prefs.SetInt("keys." + (GameAction)i, (int)give);
@@ -54,7 +56,10 @@ public static class KeyBindings
         keys[(int)a] = key;
         Prefs.SetInt("keys." + a, (int)key);
         Loc.RaiseChanged();
+        return true;
     }
+
+    static bool Hidden(int i) => i == (int)GameAction.Swap || (i >= (int)GameAction.Skill1 && i <= (int)GameAction.Skill3);
 
     static KeyCode Swapped(int i, KeyCode old) => CanBind((GameAction)i, old) ? old : Defaults[i];
 
@@ -126,10 +131,14 @@ public static class KeyBindings
     }
 
     // 글자 속 {MOVE} {RELOAD} {SWAP} {SKILL1~3} {INTERACT} {UPGRADE} {REROLL} {ATTACK} {ULT} 를 지금 키 이름으로
+    // 1.1~ 패드를 쓰는 중이면 「[ESC]」 · 「ESC: 취소」도 B 로 (GameInput.EscDown = Menu · B)
     public static string Apply(string s)
     {
-        if (s == null || s.IndexOf('{') < 0) return s;
+        if (s == null) return s;
+        bool pad = GamePad.Active && s.IndexOf("ESC", System.StringComparison.Ordinal) >= 0;
+        if (s.IndexOf('{') < 0 && !pad) return s;
         StringBuilder b = new StringBuilder(s);
+        if (pad) b.Replace("[ESC]", "[B]").Replace("ESC:", "B:").Replace("ESC：", "B：");
         b.Replace("{MOVE}", GamePad.Active ? GamePad.ButtonName(GameAction.Up)
                             : Name(GameAction.Up) + " " + Name(GameAction.Left) + " " + Name(GameAction.Down) + " " + Name(GameAction.Right));
         b.Replace("{RELOAD}", Name(GameAction.Reload));

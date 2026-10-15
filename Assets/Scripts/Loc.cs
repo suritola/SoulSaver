@@ -60,6 +60,17 @@ public static class Loc
         }
     }
 
+    // 1.1~ 스팀 이름처럼 언어와 상관없는 글: 한자가 □ 로 보이지 않게 Noto 를 전역 보조 폰트 맨 뒤에 붙임 (붙였으면 다시 그림)
+    public static void EnsureCjkFallback(TMP_Text t)
+    {
+        List<TMP_FontAsset> fallback = TMP_Settings.fallbackFontAssets;
+        if (fallback == null) return;
+        bool added = false;
+        foreach (TMP_FontAsset f in new[] { NativeFont(Lang.Chinese), NativeFont(Lang.Japanese) })
+            if (f != null && !fallback.Contains(f)) { fallback.Add(f); added = true; }
+        if (added && t != null) t.havePropertiesChanged = true;
+    }
+
     // 설정 창의 언어 이름처럼 현재 언어와 상관없이 그 언어 글자로 보여야 할 때 (한국어 · 영어는 null = 기본 폰트)
     public static TMP_FontAsset NativeFont(Lang lang)
     {

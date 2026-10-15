@@ -186,6 +186,12 @@ public static class DailyChallenge
         if (!Unlocked)
         {
             start.GetComponent<Image>().color = new Color(0.25f, 0.24f, 0.28f, 0.8f);
+            // 1.1~ 잠긴 버튼: 판이 기본 disabledColor 와 곱해져 사라지지 않게 하고, 글자도 흐리게 (누를 수 있어 보이지 않게)
+            ColorBlock cb = start.colors;
+            cb.disabledColor = Color.white;
+            start.colors = cb;
+            TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
+            if (startLabel != null) startLabel.color = Dim;
             UIKit.Text(win, Demo.On ? "정식판에서 만날 수 있습니다" : "어려움을 클리어하면 일일 도전이 열립니다", 20f, Dim, new Vector2(-300f, -330f), new Vector2(560f, 30f));
         }
 
@@ -218,6 +224,8 @@ public static class DailyChallenge
         List<SteamLeaderboards.Entry> entries;
         int total;
         float next;
+        float giveUp;           // 1.1~ 이때까지 답이 없으면 실패 안내
+        bool failed;
 
         public void Load(string boardName)
         {
@@ -227,7 +235,8 @@ public static class DailyChallenge
                 return;
             }
             list.text = "<color=#A89C86>" + Loc.T("불러오는 중…") + "</color>";
-            SteamLeaderboards.Top(boardName, 10, (e, t) => { entries = e; total = t; next = 0f; });
+            giveUp = Time.unscaledTime + 15f;
+            SteamLeaderboards.Top(boardName, 10, (e, t) => { if (this == null) return; entries = e; total = t; failed = e == null; next = 0f; });
         }
 
         void Update()
@@ -237,14 +246,26 @@ public static class DailyChallenge
             next = Time.unscaledTime + 1f;
             TimeSpan left = Today.AddDays(1) - DateTime.UtcNow;
             countdown.text = Loc.T("다음 도전까지") + " " + ((int)left.TotalHours).ToString("00") + ":" + left.Minutes.ToString("00");
-            if (entries == null) return;
+            if (entries == null)
+            {
+                // 1.1~ 순위표를 못 받았거나 너무 오래 걸리면 「불러오는 중…」에 멈추지 않고 안내
+                if (failed || (SteamLeaderboards.Available && Time.unscaledTime > giveUp))
+                    list.text = "<color=#A89C86>" + Loc.T("순위를 불러오지 못했습니다. 창을 다시 열어 보세요.") + "</color>";
+                return;
+            }
+            Loc.EnsureCjkFallback(list);       // 1.1~ 한국어 · 영어에서도 한자 이름이 □ 로 안 보이게
             if (entries.Count == 0) { list.text = "<color=#A89C86>" + Loc.T("아직 기록이 없습니다. 첫 번째 도전자가 되어 보세요!") + "</color>"; return; }
             System.Text.StringBuilder b = new System.Text.StringBuilder();
             foreach (SteamLeaderboards.Entry e in entries)
             {
                 string name = SteamLeaderboards.NameOf(e.user);
                 if (string.IsNullOrEmpty(name)) name = "…";
-                if (name.Length > 14) name = name.Substring(0, 14) + "…";
+                // 1.1~ 글자 단위로 자르고(이모지 반쪽 방지), 이름 속 < > 가 서식 태그로 읽히지 않게 noparse 로 감쌈
+                System.Globalization.StringInfo si = new System.Globalization.StringInfo(name);
+                if (si.LengthInTextElements > 14) name = si.SubstringByTextElements(0, 14) + "…";
+                string was;
+                do { was = name; name = System.Text.RegularExpressions.Regex.Replace(name, "</?noparse>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase); } while (was != name);
+                name = "<noparse>" + name + "</noparse>";
                 string line = "#" + e.rank + "  " + name + "  <color=#A89C86>" + EndlessMode.Clock(e.score) + "</color>";
                 b.Append(e.me ? "<color=#F5D478>" + line + "</color>" : line).Append('\n');
             }
