@@ -48,7 +48,9 @@ public class SpecialFeedback : MonoBehaviour
     public void Play(string name, float vol = 1f, float pitch = 1f)
     {
         SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
-        pitch *= 1f + Random.Range(-0.05f, 0.05f);                  // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
+        // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
+        // 1.1~: 5단계(±2.5% 간격)로만 흔들어 같은 음높이 소스를 함께 쓰게 함 (무작위 값마다 소스를 하나씩 차지해 긴 소리가 잘리던 문제)
+        pitch *= 1f + Random.Range(-2, 3) * 0.025f;
         PlayRaw(name, vol, pitch);
     }
 
@@ -56,40 +58,49 @@ public class SpecialFeedback : MonoBehaviour
     public void PlayRaw(string name, float vol = 1f, float pitch = 1f)
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
-        PitchSource(pitch).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
     }
 
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
     // 기본 음높이는 한 소스에서, 음높이를 바꾼 소리는 돌려 쓰는 소스 묶음에서 냄
-    const int PitchedCount = 8;
+    // 1.1~: 8 → 16개, 다 바쁘면 순번이 아니라 '가장 먼저 끝나는' 소스를 끊음 (방금 시작한 긴 소리가 잘리지 않게)
+    const int PitchedCount = 16;
     readonly List<AudioSource> pitched = new List<AudioSource>();
-    int pitchedNext;
+    readonly List<float> pitchedEnd = new List<float>();     // 소스마다 마지막 소리가 끝나는 시각 (unscaledTime)
 
-    AudioSource PitchSource(float pitch)
+    AudioSource PitchSource(float pitch, float length)
     {
         if (Mathf.Approximately(pitch, 1f)) { oneShot.pitch = 1f; return oneShot; }
-        // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 오래된 소스
+        float end = Time.unscaledTime + length / Mathf.Max(0.05f, Mathf.Abs(pitch));
+        // 같은 음높이로 울리는 소스가 있으면 함께, 아니면 쉬고 있는 소스, 다 바쁘면 가장 먼저 끝나는 소스
+        int pick = -1;
         for (int i = 0; i < pitched.Count; i++)
-            if (Mathf.Approximately(pitched[i].pitch, pitch)) return pitched[i];
-        AudioSource s = null;
-        for (int i = 0; i < pitched.Count; i++)
-            if (!pitched[i].isPlaying) { s = pitched[i]; break; }
-        if (s == null)
+            if (Mathf.Approximately(pitched[i].pitch, pitch)) { pick = i; break; }
+        if (pick < 0)
+            for (int i = 0; i < pitched.Count; i++)
+                if (!pitched[i].isPlaying) { pick = i; break; }
+        if (pick < 0)
         {
             if (pitched.Count < PitchedCount)
             {
-                s = gameObject.AddComponent<AudioSource>();
-                s.playOnAwake = false;
-                pitched.Add(s);
+                AudioSource n = gameObject.AddComponent<AudioSource>();
+                n.playOnAwake = false;
+                pitched.Add(n);
+                pitchedEnd.Add(0f);
+                pick = pitched.Count - 1;
             }
             else
             {
-                s = pitched[pitchedNext];
-                pitchedNext = (pitchedNext + 1) % PitchedCount;
-                s.Stop();
+                pick = 0;
+                for (int i = 1; i < pitched.Count; i++)
+                    if (pitchedEnd[i] < pitchedEnd[pick]) pick = i;
+                pitched[pick].Stop();
+                pitchedEnd[pick] = 0f;
             }
         }
+        AudioSource s = pitched[pick];
         s.pitch = pitch;
+        pitchedEnd[pick] = Mathf.Max(pitchedEnd[pick], end);
         return s;
     }
 

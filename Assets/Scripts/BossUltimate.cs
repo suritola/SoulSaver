@@ -847,7 +847,9 @@ public class BossUltimate : MonoBehaviour
             sfx = go.AddComponent<AudioSource>();
             sfx.playOnAwake = false;
             sfx.spatialBlend = 0f;
-            sfx.ignoreListenerPause = true;
+            // 1.1~: ignoreListenerPause 를 빼서 「창이 비활성일 때 소리 끄기」를 따름 (컷신의 timeScale=0 은 AudioListener.pause 와 무관)
+            // 장면이 바뀌면 (결계 중 사망 · 메뉴로 나감) 남은 결계 소리를 멈춤
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => { if (sfx != null) sfx.Stop(); };
         }
         sfx.PlayOneShot(clip, vol * GameSettings.SfxVolume);
     }
