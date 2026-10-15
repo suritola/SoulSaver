@@ -170,66 +170,103 @@ public static class ResultScreen
     }
 
     // ================================================================= 다시 하기 버튼
-    // 씬의 「다시 하기」(ReStart) 자리에 기본 버튼 「같은 설정으로 다시」(금빛, 넓게) + 옆에 「캐릭터 바꿔 다시」
-    // 원래 버튼은 숨김 (씬 글자 번역 SceneLocalizer 가 원래 글자로 되돌리지 않게 복제해서 씀) · 패드는 가상 커서가 기본 버튼 위로
+    // 1.1.2~ 가운데 한 줄로 세로 정렬: 「같은 설정으로 다시」(기본, 금빛, 가장 큼) → 「캐릭터 바꿔 다시」 → 「메인 메뉴로」
+    //   예전엔 위 줄(같은 설정 424 + 캐릭터 300, 가운데 x +7 · 높이 128) 아래에 씬의 메인 메뉴(540 × 112, 가운데 x 0)가 그대로 남아
+    //   양 끝이 -362 / 376 과 -270 / 270 으로 엇갈리고, 글자도 43 · 30 · 50pt 로 제각각(기본 버튼보다 메인 메뉴 글자가 컸음)
+    // 씬의 원래 버튼(ReStart · MainMenu)은 숨기고 복제해서 씀 (SceneLocalizer 가 원래 글자로 되돌리지 않게 · 1초 입력 보호를 메인 메뉴에도)
+    // 패드 십자키 · 키보드 방향키 위아래 순서 = 화면 위아래 순서, 패드는 가상 커서가 기본 버튼 위로
+    // 캔버스는 1920×1080 Expand 라 16:10 · 4:3 에서도 폭이 1920 아래로 줄지 않음 → 가운데 열(왼쪽 결과 글 x -420 · 오른쪽 피해 패널 x 420 사이)이 늘 같음
+    const float ColW = 560f, MainH = 120f, SubH = 88f, Gap = 16f, MainY = 0f;
+    const float MainFont = 52f, SubFont = 40f;
+
     public static void BuildRetry()
     {
         GameObject restart = GameObject.Find("ReStart");
         if (restart == null) return;
-        RectTransform rr = (RectTransform)restart.transform;
-        Vector2 at = rr.anchoredPosition;
-        float h = rr.sizeDelta.y;
+        GameObject menu = GameObject.Find("MainMenu");
         // 1.1~ [R] 다시 시작(QuickRestart)처럼 결과 화면이 뜨고 1초 동안은 받지 않음 (죽을 때 패드 A 를 연타하던 중이면 결과를 보기도 전에 새 판이 시작됐음)
         float readyAt = Time.unscaledTime + 1f;
+        List<GameObject> col = new List<GameObject>();
         GameObject same = UIKit.CloneButton(restart, "RetrySameButton", "result.retry.same", () =>
         {
             if (Time.unscaledTime < readyAt) return;
             Time.timeScale = 1f;
             SceneManager.LoadScene("GameScene");
         });
-        restart.SetActive(false);
-        // 일일 도전(캐릭터 고정 · 메인 메뉴로 가면 도전이 끝남) · 튜토리얼 판은 「캐릭터 바꿔 다시」 없이 원래 자리 · 폭으로
-        if (DailyChallenge.Active || TutorialRun.Active)
-            Place(same, at, new Vector2(540f, h));
-        else
-        {
-            GameObject hero = UIKit.CloneButton(restart, "RetryHeroButton", "result.retry.hero", () =>
+        col.Add(same);
+        // 일일 도전(캐릭터 고정 · 메인 메뉴로 가면 도전이 끝남) · 튜토리얼 판은 「캐릭터 바꿔 다시」 없이
+        if (!DailyChallenge.Active && !TutorialRun.Active)
+            col.Add(UIKit.CloneButton(restart, "RetryHeroButton", "result.retry.hero", () =>
             {
                 if (Time.unscaledTime < readyAt) return;
                 openHeroPick = true;
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
-            });
-            // 둘이 합쳐 폭 740 (16:9 에서 오른쪽 피해 패널 x 420 ~ 과 안 겹치게)
-            // 1.1~ 16:10 · 4:3 처럼 화면이 좁으면 왼쪽 결과 글 · 오른쪽 피해 패널(각각 가장자리 60 + 폭 480) 사이 폭에 맞춰 줄임
-            const float Gap = 14f, SameW = 424f, HeroW = 300f;
-            float total = SameW + Gap + HeroW;
-            Canvas cv = restart.GetComponentInParent<Canvas>();
-            if (cv != null && cv.rootCanvas.scaleFactor > 0f)
-                total = Mathf.Min(total, Screen.width / cv.rootCanvas.scaleFactor - 2f * (60f + 480f) - 2f * 12f);
-            total = Mathf.Max(total, 440f);
-            float k = (total - Gap) / (SameW + HeroW);
-            float sw = SameW * k, hw = HeroW * k;
-            float mid = at.x + 7f * k;          // 원래 배치(-362 ~ 376)의 가운데
-            Place(same, new Vector2(mid - total * 0.5f + sw * 0.5f, at.y), new Vector2(sw, h));
-            Place(hero, new Vector2(mid + total * 0.5f - hw * 0.5f, at.y), new Vector2(hw, h));
+            }));
+        if (menu != null)
+        {
+            col.Add(UIKit.CloneButton(menu, "ResultMenuButton", "메인 메뉴로", () =>
+            {
+                if (Time.unscaledTime < readyAt) return;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            }));
+            menu.SetActive(false);
+        }
+        restart.SetActive(false);
+
+        // 위에서부터: 기본 버튼 가운데 y 0 (위끝 60 · 제목 글 아래끝 75 과 안 겹침), 그 아래 16 간격으로 88 높이
+        //   세 개면 아래끝 -268 → 무한 모드 · 일일 도전 기록 글(위끝 -275) 위
+        float top = MainY + MainH * 0.5f;
+        for (int i = 0; i < col.Count; i++)
+        {
+            float h = i == 0 ? MainH : SubH;
+            Place(col[i], new Vector2(0f, top - h * 0.5f), new Vector2(ColW, h), i == 0 ? MainFont : SubFont);
+            top -= h + Gap;
+        }
+        // 마우스로 누른 뒤 방향키를 써도 화면 순서대로 (자동 탐색은 숨긴 원래 버튼 · 다른 UI 로 샐 수 있음)
+        for (int i = 0; i < col.Count; i++)
+        {
+            Button b = col[i].GetComponent<Button>();
+            if (b == null) continue;
+            Navigation nav = new Navigation { mode = Navigation.Mode.Explicit };
+            if (i > 0) nav.selectOnUp = col[i - 1].GetComponent<Button>();
+            if (i < col.Count - 1) nav.selectOnDown = col[i + 1].GetComponent<Button>();
+            b.navigation = nav;
         }
         Image img = same.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
         same.AddComponent<ResultPadFocus>();
     }
 
-    static void Place(GameObject button, Vector2 pos, Vector2 size)
+    // 씬 제목(「사망하셨습니다...」 · 「<난이도> 클리어!」)을 가운데 열 폭으로 — 원래 1500 폭이라 긴 글(영어 · 일본어 클리어 문구)이
+    // 왼쪽 결과 글(x -900 ~ -420) · 오른쪽 피해 패널(x 420 ~ 900) 위까지 번졌음
+    public static void FitTitle()
+    {
+        GameObject msg = GameObject.Find("GameOverMessage");
+        if (msg == null) return;
+        RectTransform r = (RectTransform)msg.transform;
+        r.sizeDelta = new Vector2(800f, r.sizeDelta.y);
+        TMP_Text t = msg.GetComponentInChildren<TMP_Text>(true);
+        if (t == null) return;
+        t.enableAutoSizing = true;
+        t.fontSizeMin = 40f;
+    }
+
+    static void Place(GameObject button, Vector2 pos, Vector2 size, float font)
     {
         RectTransform r = (RectTransform)button.transform;
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
         r.anchoredPosition = pos;
         r.sizeDelta = size;
         TMP_Text t = button.GetComponentInChildren<TMP_Text>(true);
         if (t == null) return;
-        float max = t.fontSize;
+        // 한 줄로, 넘치면 줄여서 (가장 긴 「キャラを変えて再挑戦」 10자도 글자 칸 528 에 40pt 로 들어감)
+        t.enableWordWrapping = false;
         t.enableAutoSizing = true;
-        t.fontSizeMin = 16f;
-        t.fontSizeMax = max;
+        t.fontSizeMin = 18f;
+        t.fontSizeMax = font;
+        t.fontSize = font;
     }
 }
 

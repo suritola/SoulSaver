@@ -27,8 +27,9 @@ public partial class SpecialAbilities
 
     bool HasAug(int id) => gunEvo1 == id || gunEvo2 == id;
     bool AugMaxed(int id) => gunEvo1 == id && gunEvo2 == id;      // 2차에서 같은 계열 = 극대화
-    // 영혼 트리 숙련 특성 (단계마다 +25%)
-    float AugPower(int id) => 1f + 0.25f * Trait(id);
+    // 영혼 트리 숙련 특성 (단계마다 +25%, 쌍발 총구만 +15% — 1.1.2 거너 하향: 거의 늘 쌍발 총구를 골라 숙련까지 다 찍으면 덤 총알이 원래 총알만큼 셌음)
+    static float AugStep(int id) => id == DualId ? 0.15f : 0.25f;
+    float AugPower(int id) => 1f + AugStep(id) * Trait(id);
 
     // ---------------- 이름 · 설명 (한국어 원문, 쓸 때 번역)
     public static string GunAugName(int id, bool maxed) => id switch
@@ -49,7 +50,7 @@ public partial class SpecialAbilities
         // 레벨업 카드(소각탄 · 폭발 탄두 · 유도 탄두 · 전기탄)와 영혼 트리(철갑탄 · 고속탄 · 급소 사격)와 겹치지 않게
         FlameId => maxed ? "불길이 더 길고 넓어지며 (사거리 6.5칸, 피해 65%) 맞은 적이 불탑니다." : "쏠 때마다 총구에서 짧은 불길이 뿜어져 앞쪽 적을 태웁니다. (사거리 5칸, 피해 45%)",
         SniperId => maxed ? "충전이 더 빨리 되고, 충전탄 피해 450%." : "사격을 잠깐 멈췄다 쏘면 첫 발이 충전탄이 되어 모든 적을 꿰뚫고 피해 300%.",
-        DualId => maxed ? "쏠 때마다 총알 두 발이 더 나갑니다. (피해 60%)" : "쏠 때마다 총알 한 발이 더 나갑니다. (피해 60%)",
+        DualId => maxed ? "쏠 때마다 총알 두 발이 더 나갑니다. (피해 50%)" : "쏠 때마다 총알 한 발이 더 나갑니다. (피해 50%)",
         GrenadeId => "총알에 맞은 적에게 폭탄이 붙어 1.5초 뒤 터집니다. (범위 2.5칸, 피해 110%)",
         ShotgunId => "쏠 때마다 짧게 날아가는 산탄 네 발이 함께 퍼집니다. (발당 피해 55%)",
         SeekerId => "적을 처치하면 영혼탄 세 발이 튀어나와 가까운 적을 쫓아갑니다. (피해 60%)",
@@ -74,7 +75,7 @@ public partial class SpecialAbilities
 
     // 영혼 트리 숙련 가지의 특성 칸 (예전 무기 특성 대신 능력을 강화)
     static string AugTraitName(int id) => Loc.T(GunAugName(id, false)) + " " + Loc.T("강화");
-    static string AugTraitStep() => Loc.T("능력 효과 +25%");
+    static string AugTraitStep(int id) => Loc.T(id == DualId ? "능력 효과 +15%" : "능력 효과 +25%");
 
     // ---------------- 총알에 붙는 능력 (ApplyGunCards 에서, 권총 총알마다). main = 쏠 때 나가는 첫 발 (쌍발 · 산탄 덤 총알이 아님)
     float lastMainShot = -99f;
@@ -199,6 +200,7 @@ public partial class SpecialAbilities
     }
 
     // ---------------- 쏠 때 더 나가는 총알 (PlayerController.Shoot)
+    const float DualShotRate = 0.5f;
     public void EvoExtraShots(Vector3 start, Vector2 dir, float dmg)
     {
         if (!Gunner || gunEvo1 < 0) return;
@@ -221,11 +223,12 @@ public partial class SpecialAbilities
         }
         if (HasAug(DualId))
         {
+            // 덤 총알 피해: 60% → 50% (1.1.2 거너 하향)
             int extra = AugMaxed(DualId) ? 2 : 1;
             for (int i = 0; i < extra; i++)
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i == 0 ? 4f : -4f) * dir;
-                Bullet b = player.CreateBullet(start + (Vector3)(new Vector2(-d.y, d.x) * (i == 0 ? 0.25f : -0.25f)), d, dmg * 0.6f * AugPower(DualId), player.pene, 0, false, 0.5f);
+                Bullet b = player.CreateBullet(start + (Vector3)(new Vector2(-d.y, d.x) * (i == 0 ? 0.25f : -0.25f)), d, dmg * DualShotRate * AugPower(DualId), player.pene, 0, false, 0.5f);
                 ApplyGunCards(b, false, false);
             }
         }
