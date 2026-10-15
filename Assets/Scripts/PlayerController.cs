@@ -1239,6 +1239,8 @@ void Shoot()
         if (IsInvincible) return false;
         // 영혼 트리 보호막: 공격 한 번을 막음
         if (special != null && special.ConsumeBarrier()) { invincibleUntil = Time.time + 0.3f; return false; }
+        // 1.2~ 초월 카드 「영혼 보호막」: 한동안 맞지 않았으면 한 번 막음
+        if (TranscendRules.WardBlocks()) { invincibleUntil = Time.time + 0.5f; return false; }
         // 도적 회피 본능: 확률로 공격을 피함
         if (special != null && special.KitDodge()) return false;
 
