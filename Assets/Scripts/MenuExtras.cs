@@ -159,6 +159,7 @@ public static class MenuExtras
         nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
         nr.anchoredPosition = new Vector2(-30f, -102f);
         notes.name = "PatchNotesButton";
+        SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
