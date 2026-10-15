@@ -283,9 +283,7 @@ public partial class LevelShop
         KitCard c = KitCardOf(who, id);
         if (c != null)
         {
-            string[] v = new string[c.max];
-            for (int i = 0; i < c.max; i++) v[i] = Val(c.values[i]);
-            return Loc.T(c.desc) + "\n<color=#F5D478>" + Loc.T(c.stat) + "  " + string.Join(" / ", v) + "</color>";
+            return Loc.T(c.desc) + "\n" + StepValues(c);
         }
         string d = id switch
         {

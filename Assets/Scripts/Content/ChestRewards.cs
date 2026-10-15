@@ -139,6 +139,9 @@ public static class ChestRewards
             string desc = r.describe != null ? r.describe(c) : "";
             if (r.rarity == RewardRarity.Rare) desc = "<color=#7FD3FF>" + Loc.T("chest.rare") + "</color>\n" + desc;
             options[i] = new ChoiceUI.Option(r.nameKey, desc, r.color, r.icon);
+            // 1.1.2~ 「숙련」(카드 +1단계): 그 카드의 단계 칸 — 찬 칸 + 이번에 차오를 칸 맥동
+            if (r.nameKey == "chest.card.name" && c.shop != null && c.cardId >= 0)
+                options[i] = options[i].WithPips(c.shop.LevelOf(c.cardId), LevelShop.MaxLevelOf(CharacterData.Selected, c.cardId));
         }
         int pick = 0;
         yield return ChoiceUI.Run(elite ? "chest.elite.title" : "chest.title", "chest.pick", options, i => pick = i);

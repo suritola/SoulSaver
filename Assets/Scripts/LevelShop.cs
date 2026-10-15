@@ -626,8 +626,17 @@ public partial class LevelShop : MonoBehaviour
         if (lv == null) lv = FindFirstObjectByType<Level>();
         if (skill == null) skill = FindFirstObjectByType<SkillGauge>();
         if (bul == null) return "";
-        if (KitTooltip(id, out string kitTip)) return kitTip;
-        return SharedCardText(id);
+        // 1.1.2~ 카드 · 진화 재료 칸은 단계를 칸(LevelPips)으로만 보여 주므로 정확한 숫자는 마우스를 올린 설명에만
+        string lvLine = HudView ? "" : StepTip(id);
+        if (KitTooltip(id, out string kitTip)) return kitTip + lvLine;
+        return SharedCardText(id) + lvLine;
+    }
+
+    // 「Lv 2 · 최대 3」 (최대 단계가 없는 카드는 빈 줄)
+    string StepTip(int id)
+    {
+        int max = MaxLevelOf(CharacterData.Selected, id);
+        return max > 0 ? "\n<color=#A89C86>Lv " + LevelOf(id) + "  ·  " + Loc.T("최대") + " " + max + "</color>" : "";
     }
 
     // 공용 카드 설명: 한 문장 + 금색 "수치  지금 → 다음" + Lv
