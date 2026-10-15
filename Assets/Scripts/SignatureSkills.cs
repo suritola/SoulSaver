@@ -53,13 +53,23 @@ public partial class SignatureSkills : MonoBehaviour
         shop = s;
         lv.Clear();
         evolvedKeys.Clear();
+        evoPow.Clear();
         foreach (LevelShop.SkillEvo e in s.MyEvos)
             if (s.IsEvolved(e.key))
+            {
                 foreach (int p in e.parts)
                 {
                     string k = LevelShop.SigKey(who, p);
                     if (k != null) evolvedKeys.Add(k);
                 }
+                // 1.1.2~ 진화 강화: 재료 고유 스킬 피해 배율 (LevelShop.EvoPowTable)
+                float mul = LevelShop.EvoPowMul(e);
+                foreach (int p in LevelShop.EvoPowParts(e))
+                {
+                    string k = LevelShop.SigKey(who, p);
+                    if (k != null) evoPow[k] = Mathf.Max(mul, evoPow.TryGetValue(k, out float had) ? had : 1f);
+                }
+            }
         for (int id = LevelShop.SigFirstId; id < LevelShop.SigFirstId + LevelShop.SigCount; id++)
         {
             string key = LevelShop.SigKey(who, id);
@@ -68,6 +78,12 @@ public partial class SignatureSkills : MonoBehaviour
     }
 
     int L(string key) => lv.TryGetValue(key, out int v) ? v : 0;
+
+    // 1.1.2~ 진화 강화: 이 고유 스킬이 진화 재료가 되어 받는 피해 배율 (진화 전 · 배율 없는 진화는 1)
+    readonly Dictionary<string, float> evoPow = new Dictionary<string, float>();
+    float P(string key) => evoPow.TryGetValue(key, out float m) ? m : 1f;
+    // 진화한 스킬이 만드는 이펙트는 가장 화려한 단계(_t3) 그림으로 (using (EvoFx("g.mine")) { ... })
+    Fx.TierScope EvoFx(string key) => Fx.Tier(Big(key) ? 3 : 0);
 
     // ---------------- 진화한 스킬의 이펙트: 가장 크고 화려하게
     // 진화의 재료가 된 고유 스킬 (그 스킬로 생기는 이펙트를 키우고 그 스킬의 색으로 장식을 덧붙임)
@@ -104,6 +120,7 @@ public partial class SignatureSkills : MonoBehaviour
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
+        using var tier = Fx.Tier(3);       // 1.1.2~ 진화 장식은 늘 가장 화려한 단계 그림으로
         if (Time.time >= flairSoundAt) { flairSoundAt = Time.time + 0.15f; Hostile.Play("evoflair", 0.5f, Random.Range(0.9f, 1.2f)); }      // 1.0.2
         Color v = Vivid(c, 0.95f), comp = Complement(v, 0.9f);
         Color gold = new Color(EvoGold.r, EvoGold.g, EvoGold.b, 0.95f);
@@ -286,6 +303,35 @@ public partial class SignatureSkills : MonoBehaviour
         return null;
     }
 
+    // ================================================================= 진화하는 순간 (1.1.2~)
+    // 진화 화면(SkillEvolutionUI)을 닫은 뒤 게임 안에서: 짧은 슬로모션 · 몸 둘레 큰 진화 장식 · 화면 번쩍임(설정 「번쩍임 효과」) · 「진화!」 글자
+    public static void EvolvedMoment(LevelShop.SkillEvo e)
+    {
+        if (Instance == null || e == null || !Instance.Alive) return;
+        Instance.StartCoroutine(Instance.EvolvedRoutine(e));
+    }
+
+    IEnumerator EvolvedRoutine(LevelShop.SkillEvo e)
+    {
+        // 다른 창이 시간을 멈춰 두었으면 (레벨업이 줄줄이 · 일시정지) 풀릴 때까지 기다림 — 기다리는 동안 실제 시간
+        float waitUntil = Time.unscaledTime + 8f;
+        while (Time.timeScale == 0f && Time.unscaledTime < waitUntil) yield return null;
+        if (!Alive || Time.timeScale == 0f) yield break;
+        Vector3 p = transform.position;
+        Color c = new Color(0.79f, 0.63f, 1f);
+        using (DamageSource.As(DamageSource.Signature))
+        {
+            Flair(null, p, 9f, c);
+            ShockRing.Spawn(p, 0.5f, 11f, 0.6f, new Color(1f, 0.85f, 0.4f, 0.9f), 0.4f);
+            using (Fx.Tier(3)) Fx.Spawn("fx_soulburst", p, 10f, new Color(0.85f, 0.7f, 1f, 0.95f), 16f);
+        }
+        if (GameSettings.Flashes && Hostile.Glow != null) FadeSprite.Spawn("EvoFlash", Hostile.Glow, p, 4f, new Color(1f, 0.95f, 1f, 0.8f), "Effect", 60, 0.3f);
+        SpecialAbilities.SharedFx?.FloatText(p + Vector3.up * 2f, Loc.T("진화!") + " " + Loc.T(e.name), new Color(1f, 0.85f, 0.45f), 6f, 0f);
+        Hostile.Play("evolve", 0.7f, 1.3f);
+        Hostile.Shake(0.25f);
+        Juice.Evolve();         // 슬로모션 · 번쩍임 (다른 창이 시간을 바꾸면 JuiceRunner 가 손을 뗌)
+    }
+
     // ================================================================= 공통 진화 (공용 카드끼리)
     // 황금 시대: 코인을 주울 때 경험치 · 40개마다 황금 파동 / 불멸의 육체: 체력이 가득하면 3초마다 심장 파동
     int goldCount;
@@ -300,6 +346,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (goldCount < 40) return;
         goldCount = 0;
         Vector3 p = transform.position;
+        using var tier = Fx.Tier(3);
         Circle(p, 7f, Atk * 3f, 2f);
         Fx.Spawn("fx_shock", p, 20f, new Color(1f, 0.85f, 0.3f, 0.9f), 18f);
         Fx.Spawn("fx_soulburst", p, 9f, new Color(1f, 0.9f, 0.4f), 18f);
@@ -315,6 +362,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (Time.time < heartAt) return;
         heartAt = Time.time + 3f;
         Vector3 p = transform.position;
+        using var tier = Fx.Tier(3);
         Circle(p, 5f, player.PlayerMaxHealth * 0.25f, 3f);
         ShockRing.Spawn(p, 0.4f, 6f, 0.4f, new Color(1f, 0.35f, 0.4f, 0.9f), 0.3f);
         Fx.Spawn("fx_shock", p, 16f, new Color(1f, 0.4f, 0.45f, 0.8f), 20f);

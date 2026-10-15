@@ -55,6 +55,7 @@ public partial class SignatureSkills
         {
             if (Inside(zone).Count == 0) return;
             Vector3 p = zone.transform.position;
+            using var tier = EvoFx("g.mine");       // 1.1.2~ 진화한 지뢰는 가장 화려한 폭발 그림
             Circle(p, 2f * (Big("g.mine") ? 1.7f : 1f), Atk * 0.8f, 1f);      // 판정 범위는 이펙트 배율(Fs)과 따로 (2.1.8)
             Fx.Spawn("fx_explosion", p, 3.6f * Fs("g.mine"), Color.white, 20f);
             Flair("g.mine", p, 3f, Brass);
@@ -72,6 +73,7 @@ public partial class SignatureSkills
         int f = L("g.flash");
         if (f > 0)
         {
+            using var tier = EvoFx("g.flash");
             Circle(p, 5f, 0f, 0f, c => Stun(c.gameObject, V(f, 0.6f, 0.3f)));
             Fx.Spawn("fx_shock", p, 10f * Fs("g.flash"), new Color(1f, 1f, 0.85f, 0.9f), 24f);
             Fx.Spawn("fx_sparkle", p, 4f * Fs("g.flash"), Color.white, 20f);
@@ -80,6 +82,7 @@ public partial class SignatureSkills
         }
         if (E("ge.thunder"))
         {
+            using var tier = Fx.Tier(3);
             foreach (Transform t in Nearest(p, 9f, 6))
             {
                 Fx.Bolt(t.position + new Vector3(Random.Range(-1.5f, 1.5f), 14f), t.position, 2.4f, SoulBlue, 0.3f);
@@ -118,6 +121,7 @@ public partial class SignatureSkills
             b.onHitEnemy += (bullet, col) =>
             {
                 Vector3 p = col.transform.position;
+                using var tier = Fx.Tier(3);
                 Circle(p, 1.7f, Atk * 0.5f, 0.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));
                 Fx.Spawn("fx_explosion", p, 5.2f, new Color(1f, 0.6f, 0.3f), 22f);
                 Fx.Spawn("fx_firepillar", p + Vector3.up * 1f, 3f, Color.white, 22f);
@@ -139,7 +143,8 @@ public partial class SignatureSkills
                     List<Transform> near = Nearest(col.transform.position, 10f, 1, col.gameObject);
                     if (near.Count == 0) return;
                     Vector2 d = ((Vector2)(near[0].position - col.transform.position)).normalized;
-                    Bullet orb = Shot(col.transform.position, d, Atk * 0.6f, 1, 22f, 12f, "fx_orb", 1.5f, SoulBlue);
+                    using var tier = Fx.Tier(3);
+                    Bullet orb = Shot(col.transform.position, d, Atk * 0.75f, 1, 22f, 12f, "fx_orb", 1.8f, SoulBlue);       // 1.1.2~ 60 → 75% (거너는 조금만) · 구슬 더 크게
                     if (orb != null) orb.gameObject.AddComponent<Homing>().turnSpeed = 720f;
                 };
             }
@@ -192,6 +197,7 @@ public partial class SignatureSkills
         }
         if (E("ge.thunderback"))
         {
+            using var tier = Fx.Tier(3);
             Circle(p, 6f, Atk * 2f, 2f, col => Stun(col.gameObject, 0.8f));
             for (int i = 0; i < 10; i++)
             {
@@ -215,6 +221,7 @@ public partial class SignatureSkills
             n = Mathf.Min(n, fragBudget);
             fragBudget -= n;
             float off = Random.Range(0f, 360f);
+            using var tier = EvoFx("g.shrapnel");
             Flair("g.shrapnel", pos, 2.4f, Brass);
             for (int i = 0; i < n; i++)
             {

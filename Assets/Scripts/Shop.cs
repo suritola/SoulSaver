@@ -95,6 +95,8 @@ public partial class Shop : MonoBehaviour
 
     void OnEnemyKilled(Vector3 pos)
     {
+        // 1.1.2~ 무한 모드에서 개발자가 나온 뒤로는 떠돌이 상점이 나오지 않음
+        if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.NoMobs) return;
         // 보스 전에는 처치 수가 늘어난 만큼 천천히 셈 (한 판에 나오는 상점 수 · 코인과 맞춤)
         EnemySpawner sp = Cache<EnemySpawner>.Get;
         killsForStall += sp != null && !sp.bossSpawned && !sp.bossCleared ? 1f / GameMode.KillStretch : 1f;

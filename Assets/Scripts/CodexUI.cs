@@ -316,7 +316,7 @@ public static class CodexUI
         Sprite dev = AbyssStage.Frames("developer")[0];
         Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
              Loc.T("15분에 깨어난 보스를 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번, 체력이 닳을수록 점점 빨라져 1초까지. 싸우는 동안에도 잡몹이 계속 몰려옵니다."));
-        Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("무한 모드 30분") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
+        Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 3000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
              Loc.T("30분에 나타납니다. 개발자보다 체력 3배 · 피해 · 이동 속도 2배, 필살기는 처음엔 5초에 한 번, 체력이 닳을수록 1초까지. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어."));
     }
 
@@ -525,7 +525,7 @@ public static class CodexUI
         else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
                   Loc.T("15분에 깨어난 보스를 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번, 체력이 닳을수록 점점 빨라져 1초까지. 싸우는 동안에도 잡몹이 계속 몰려옵니다."), Fresh("sec.dev"));
         if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
-        else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 30분"),
+        else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("개발자 처치 후 영혼 3000"),
                   Loc.T("30분에 나타납니다. 개발자보다 체력 3배 · 피해 · 이동 속도 2배, 필살기는 처음엔 5초에 한 번, 체력이 닳을수록 1초까지. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어."), Fresh("sec.mom"));
         Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
         if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));

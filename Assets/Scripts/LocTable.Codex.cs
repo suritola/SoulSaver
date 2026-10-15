@@ -92,10 +92,10 @@ public static partial class LocTable
           "At 15 minutes in Endless, defeat every awakened boss and someone descends.",
           "エンドレス15分、目覚めたボスをすべて倒すと誰かが降りてきます。",
           "无尽模式15分钟时，击败所有苏醒的首领，就会有人降临。");
-        C("codex.hint.mom", "무한 모드 30분, 개발자보다 더 무서운 누군가가 기다립니다.",
-          "At 30 minutes in Endless, someone scarier than the Developer awaits.",
-          "エンドレス30分、開発者よりも恐ろしい誰かが待っています。",
-          "无尽模式30分钟时，有比开发者更可怕的人在等待。");
+        C("codex.hint.mom", "개발자를 쓰러뜨린 뒤 영혼 3000개를 거두면, 개발자보다 더 무서운 누군가가 강림합니다.",
+          "Reap 3,000 souls after defeating the Developer, and someone scarier descends.",
+          "開発者を倒した後に魂を3000個集めると、開発者よりも恐ろしい誰かが降臨します。",
+          "击败开发者后收割3000个灵魂，比开发者更可怕的人便会降临。");
         C("codex.hint.jackpot", "보물 상자를 열다 보면 아주 드물게 특별한 일이 일어납니다.",
           "Open enough treasure chests and, very rarely, something special happens.",
           "宝箱を開けていると、ごくまれに特別なことが起こります。",

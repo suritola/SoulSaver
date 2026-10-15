@@ -152,7 +152,7 @@ public static class GameMode
     public static float WindupMul => Windup[I];
     public static float ProjectileSpeedMul => ProjectileSpeed[I];
     public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, MobRamp, 0.3f) * D(DailyStat.EnemySkill);
-    public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, MobRamp, 0.4f) / Surge * D(DailyStat.Spawn);
+    public static float SpawnIntervalMul => SpawnInterval[I] * Tempo[I] / Mathf.Lerp(1f, MobRamp, 0.4f) / Surge * D(DailyStat.Spawn) / (IsEndless ? EndlessMode.MobSpawnBoost : 1f);
     // 보스 · 페이즈까지 필요한 처치 수 배율
     public static float KillsMul => Kills[I];
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
