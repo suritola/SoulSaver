@@ -115,6 +115,7 @@ public class Bullet : MonoBehaviour
                 DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
+                Juice.BulletHit();          // 1.1~ 명중음 (간격 0.03초 · 동시 최대 4개)
 
 
                 // =========================
@@ -150,6 +151,7 @@ public class Bullet : MonoBehaviour
                 DamagePopup.NextCrit = false;
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
+                Juice.BulletHit();          // 1.1~ 명중음 (간격 0.03초 · 동시 최대 4개)
 
 
                 // =========================

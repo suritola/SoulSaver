@@ -329,14 +329,55 @@ public class EnermyController : MonoBehaviour
         Die(0);
     }
 
+    // 1.1~ 손맛: 맞으면 0.05초 하얗게 번쩍이고 (SpriteOutline 셰이더 _Flash) 그 뒤 0.05초는 예전처럼 빨갛게
+    // 몸은 가로로 찌그러졌다(1.15 / 0.85) 0.08초에 돌아옴 — 그리는 동안만 크기를 바꾸고 프레임 끝에 되돌림 (다른 코드가 읽는 크기는 그대로)
+    const float WhiteFor = 0.05f, RedFor = 0.1f, SquashFor = 0.08f;
+    float hitAt = -9f;
+    bool hitFxRunning;
+    Vector3 squashRestore;
+
     IEnumerator HitEffect()
     {
-        spriteRenderer.color = Color.red;
-
-        yield return new WaitForSeconds(0.1f);
+        hitAt = Time.time;
+        if (hitFxRunning) yield break;          // 이미 돌고 있으면 시간만 새로 (맞을 때마다 코루틴이 쌓이지 않게)
+        hitFxRunning = true;
+        bool white = false;
+        while (!isDead && Time.time - hitAt < RedFor)
+        {
+            bool w = Time.time - hitAt < WhiteFor;
+            if (w != white) { white = w; Juice.SetFlash(spriteRenderer, w); }
+            spriteRenderer.color = w ? baseColor : Color.red;
+            yield return null;
+        }
+        if (white) Juice.SetFlash(spriteRenderer, false);
 
         // 죽지 않았을 때만 원래 색으로
         if (!isDead) spriteRenderer.color = baseColor;
+        hitFxRunning = false;
+    }
+
+    // 오브젝트가 꺼지면 코루틴이 멈추므로 번쩍임을 거둠
+    void OnDisable()
+    {
+        if (!hitFxRunning) return;
+        hitFxRunning = false;
+        Juice.SetFlash(spriteRenderer, false);
+    }
+
+    void LateUpdate()
+    {
+        if (isDead || Time.time - hitAt >= SquashFor) return;
+        float k = 1f - (Time.time - hitAt) / SquashFor;
+        Vector3 s = transform.localScale;
+        squashRestore = s;
+        transform.localScale = new Vector3(s.x * Mathf.Lerp(1f, 1.15f, k), s.y * Mathf.Lerp(1f, 0.85f, k), s.z);
+        StartCoroutine(Unsquash());
+    }
+
+    IEnumerator Unsquash()
+    {
+        yield return Juice.EndOfFrame;
+        transform.localScale = squashRestore;
     }
     PlayerController playerC;
     
@@ -350,6 +391,7 @@ public class EnermyController : MonoBehaviour
         if (a == 1) Killed?.Invoke(transform.position);
         if (a == 1) onKilled?.Invoke();
         if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
+        if (a == 1 && GetComponent<MidBossMark>() != null) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
         spriteRenderer.color = baseColor;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음

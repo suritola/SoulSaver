@@ -1122,10 +1122,31 @@ void Shoot()
         if (sound)
         {
             lastCoinSound = now;
-            float vol = Mathf.Max(0.4f, 1f / (1f + 0.15f * coinStreak));
-            if (audioSource != null && getCoin != null) audioSource.PlayOneShot(getCoin, GameSettings.SfxVolume * vol);
+            // 1.1~: 0.6초 안에 이어 주울수록 작게 하던 것 → 반음씩 높게 (최대 12단계 = 한 옥타브)
+            AudioSource src = CoinSource();
+            if (src != null && getCoin != null)
+            {
+                src.pitch = Mathf.Pow(2f, Mathf.Min(coinStreak, 12) / 12f);
+                src.PlayOneShot(getCoin, GameSettings.SfxVolume * 0.85f);
+            }
         }
         return sound;
+    }
+
+    // 1.1~ 코인 소리 전용 소스 (음높이를 바꿔도 총소리 · 재장전 소리에 걸리지 않게)
+    AudioSource coinSource;
+    AudioSource CoinSource()
+    {
+        if (coinSource == null && audioSource != null)
+        {
+            coinSource = gameObject.AddComponent<AudioSource>();
+            coinSource.playOnAwake = false;
+            coinSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+            coinSource.spatialBlend = audioSource.spatialBlend;
+            coinSource.volume = audioSource.volume;
+            coinSource.priority = audioSource.priority;
+        }
+        return coinSource;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

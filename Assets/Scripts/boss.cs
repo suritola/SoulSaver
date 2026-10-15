@@ -291,6 +291,8 @@ public class bosss : MonoBehaviour
         }
 
         if (animator != null) animator.SetTrigger("death");
+        // 1.1~ 손맛: 보스전을 끝내는 마지막 한 마리는 0.35초 슬로모션 + 흰 번쩍임, 슬라임 분열체 등은 0.06초 멈춤
+        if (a == 1) { if (lastOne) Juice.BossDown(); else Juice.HitStop(); }
 
         StartCoroutine(Death(a));
     }

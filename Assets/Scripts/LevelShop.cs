@@ -126,12 +126,15 @@ public partial class LevelShop : MonoBehaviour
         else if (selectReady && pendingSlot >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy && KeyBindings.Down(GameAction.Interact))
             ConfirmSlot(pendingSlot);
         // 쌓인 레벨업: [Space]로 하나씩 고름 (상점 가판대 옆이면 상점이 먼저) · 설정 「레벨업 바로 열기」면 바로 엶 (2.1.8)
-        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopStall.PlayerNear && !ShopOpen
-                 && (KeyBindings.Down(GameAction.Interact) || (GameSettings.AutoLevelUp && !GameInput.Auto && !ESCmenu.IsOpen)))
+        // 1.1~: 판 3번 미만이면 저절로 엶 · 이어 고르는 중이면 다음 창을 바로 (LevelShop.Chain)
+        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopOpen
+                 && ((!ShopStall.PlayerNear && (KeyBindings.Down(GameAction.Interact) || AutoOpenLevelUp)) || ChainNext))
         {
             PendingLevels--;
+            chainIndex++;
             openLevelShop();
         }
+        UpdateChain();
         UpdatePendingBadge();
     }
 
