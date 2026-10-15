@@ -22,7 +22,7 @@ public static class WindowTitle
     {
         labels.RemoveAll(t => t == null);
         foreach (TMPro.TMP_Text t in Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
-            if (System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^v\d+(\.\d+)+$") && !labels.Contains(t)) labels.Add(t);
+            if (t.text != null && System.Text.RegularExpressions.Regex.IsMatch(t.text,@"^v\d+(\.\d+)+$") && !labels.Contains(t)) labels.Add(t);
         Relabel();
     }
 
