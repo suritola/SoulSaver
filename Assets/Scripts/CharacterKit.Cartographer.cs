@@ -106,9 +106,12 @@ public partial class CharacterKit
             Fx.Spawn("fx_spark", c.transform.position, 0.8f, Ink, 26f);
             n++;
         }
-        Fx.Beam(a, b, width * 1.2f, SkinFx.Tint(Ink), 0.45f);
-        Fx.Beam(a, b, width * 0.45f, new Color(0.75f, 0.85f, 1f, 0.9f), 0.25f, 15);
-        Fx.Spawn("fx_trail_dot", b, 0.9f, Ink, 20f);
+        // 1.1.2: 획을 한눈에 — 판정 폭(반폭 width = 폭 2 × width + 적 몸)까지 굵게 (예전 1.2 × width), 밝은 잉크 테 + 흰 심 줄
+        //   짙은 남색 잉크는 어두운 묘역 · 심연 바닥에 묻혀서 테두리 색을 밝게, 적 · 맵 물체 위 순서
+        float band = AttackLook.BandMul(AttackLook.Tier);
+        Fx.Beam(a, b, width * 2f * band, SkinFx.Tint(new Color(0.35f, 0.55f, 1f, 0.95f)), 0.45f, AttackLook.AreaOrder - 1);
+        Fx.Beam(a, b, width * 0.8f * band, new Color(0.92f, 0.96f, 1f, 1f), 0.25f, AttackLook.AreaOrder);
+        Fx.Spawn("fx_trail_dot", b, 1.8f * band, new Color(0.55f, 0.75f, 1f), 20f, 0f, AttackLook.AreaOrder + 1);
         return n;
     }
     static readonly List<Collider2D> mapHits = new List<Collider2D>(64);

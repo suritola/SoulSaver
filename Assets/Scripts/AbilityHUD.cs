@@ -23,6 +23,7 @@ public class AbilityHUD : MonoBehaviour
         public TextMeshProUGUI label;
         public int level;
         public int id;
+        public LevelPips pips;             // 1.1.2~ 최대 단계가 있는 스킬은 「Lv.2」 대신 단계 칸 (칸 아래끝)
         public TextMeshProUGUI badge;      // 쌓이는 스킬의 지금 상태 (검무 x3 · 총열 과열 +30% …)
         public string shown;
     }
@@ -130,6 +131,20 @@ public class AbilityHUD : MonoBehaviour
 
         slot.level = level;
         slot.label.text = "Lv." + level;
+        // 1.1.2~ 최대 단계가 있으면 단계 칸 (몇 단계 중 몇인지 한눈에, 최대면 금빛 + MAX) · 없으면 예전처럼 「Lv.n」
+        int max = LevelShop.MaxLevelOf(CharacterData.Selected, id);
+        if (max > 0)
+        {
+            if (slot.pips == null)
+            {
+                slot.pips = LevelPips.Create(slot.rect, Vector2.zero, new Vector2(slotSize.x - 14f, 9f), "Pips");
+                RectTransform pr = (RectTransform)slot.pips.transform;
+                pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
+                pr.anchoredPosition = new Vector2(0f, 8f);
+            }
+            slot.pips.Set(level, max);
+        }
+        slot.label.gameObject.SetActive(max <= 0);
 
         // 레벨이 오른 칸을 잠깐 키웠다가 되돌림
         slot.rect.localScale = Vector3.one * 1.25f;

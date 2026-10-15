@@ -9,6 +9,8 @@ public static class LastStand
 
     static int used;
     public static int Extra;            // 영혼 트리 「불굴」 (장마다 +1회)
+    // 1.2~ 발동한 순간 (초월 카드 「역전」, TranscendRules)
+    public static System.Action<PlayerController, Vector3> Fired;
     public static int Charges => SoulWeight.NoLastStand ? 0 : 1 + Extra;     // 1.2~ 영혼의 무게 6: 최후의 보루 없음
     // 이번 장에 남은 횟수 · 아직 남았는지 (체력바 숫자 옆 ◆ · 한 방 사망 막기, 1.0.4~)
     public static int Left => Mathf.Max(0, Charges - used);
@@ -52,6 +54,7 @@ public static class LastStand
         Hostile.Play("chime", 0.8f, 0.8f);
         Hostile.Play("pulse", 0.7f, 0.7f);
         Notice.Big(Loc.T("최후의 보루!"), Loc.T("notice.laststand.sub"), NoticeIcon.Shield, 2f, NoticeLevel.Urgent);     // 1.1.2~ 머리 위 글자 -> 큰 알림
+        Fired?.Invoke(p, c);
         Hints.Show("laststand", "체력이 30% 아래로 떨어지면 장마다 한 번 「최후의 보루」가 발동해 2초 동안 무적이 되고 둘레의 적을 밀쳐 냅니다.");
     }
 }

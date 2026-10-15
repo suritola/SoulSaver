@@ -10,7 +10,7 @@ public partial class LevelShop
     static readonly Color EvoDone = new Color(0.55f, 1f, 0.55f);
 
     // ================================================================= 진화 미리보기 (카드 바로 위 띠)
-    // [재료 아이콘 + Lv] [재료] (→) [진화 아이콘] 진화 이름 — 최대 단계인 재료는 초록, 이 카드는 금빛 테두리
+    // [재료 아이콘 + 단계 칸] [재료] (→) [진화 아이콘] 진화 이름 — 최대 단계인 재료는 초록, 이 카드는 금빛 테두리
     // 아이콘에 마우스를 올리면 설명 (재료: 그 스킬 카드 글 · 진화: 새 능력과 재료)
     class EvoRow
     {
@@ -18,10 +18,12 @@ public partial class LevelShop
         public Image[] parts = new Image[3];
         public Image[] frames = new Image[3];
         public int[] ids = new int[3];
-        public TextMeshProUGUI[] levels = new TextMeshProUGUI[3];
+        public LevelPips[] levels = new LevelPips[3];       // 1.1.2~ 「0→1/5」 글자 대신 재료 아이콘 아래 단계 칸
         public Image evoIcon;
         public SkillEvo evo;
         public TextMeshProUGUI name;
+        public bool near;           // 1.1.2~ 이 카드를 고르면 진화하거나 한 단계만 남음 → 띠가 숨 쉬듯 빛남 (EvoRowPulse)
+        public Image bg;
     }
     readonly EvoRow[] evoRows = new EvoRow[3];
 
@@ -56,9 +58,10 @@ public partial class LevelShop
                 blockedAny |= blocked;
                 row.frames[i].color = me ? new Color(0.96f, 0.83f, 0.47f) : done ? EvoDone : blocked ? new Color(0.22f, 0.22f, 0.24f) : new Color(0.35f, 0.3f, 0.45f);
                 row.parts[i].color = blocked ? new Color(0.45f, 0.45f, 0.45f, 0.6f) : Color.white;
-                // 1.0.4~: 이 카드는 「지금→고른 뒤/최대」로 (예전엔 고른 뒤 값만 나와 지금 단계로 오해)
-                row.levels[i].text = me ? lv + "→" + (lv + 1) + "/" + max : lv + "/" + max;
-                row.levels[i].color = done ? EvoDone : blocked ? new Color(0.6f, 0.6f, 0.6f) : Color.white;
+                // 1.1.2~: 「지금→고른 뒤/최대」 숫자(「0→1/5」) 대신 단계 칸 — 찬 칸 · 이 카드면 차오를 칸이 금빛으로 맥동 · 최대면 전부 금빛
+                //         정확한 숫자는 아이콘에 마우스를 올린 설명 끝 줄(「Lv 2 · 최대 3」, GetAbilityTooltip)
+                row.levels[i].Set(lv, max, me ? 1 : 0);
+                row.levels[i].Dim(blocked);
             }
             row.evo = e;
             row.evoIcon.sprite = Resources.Load<Sprite>("Icons/ability_" + e.icon);
@@ -69,14 +72,19 @@ public partial class LevelShop
                 int max = MaxLevelOf(CharacterData.Selected, p);
                 left += Mathf.Max(0, max - LevelOf(p) - (p == ids[slot] ? 1 : 0));
             }
-            string tag = left <= 0 ? "<color=#FFD966>" + Loc.T("바로 진화!") + "</color>" : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
+            // 1.1.2~ 하나 남으면 「진화까지 1단계!」를 금빛으로 (기대감) · 바로 진화는 더 크게
+            string tag = left <= 0 ? "<size=125%><color=#FFD966>" + Loc.T("바로 진화!") + "</color></size>"
+                       : left == 1 ? "<color=#FFE08A>" + Loc.T("진화까지 1단계!") + "</color>"
+                       : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
             if (blockedAny && left > 0) tag = "<color=#A8A8A8>" + Loc.T("지금 무기로는 안 나옴") + "</color>";       // 1.0.4~
             // 1.1~ 앞의 「진화 · 」를 뺌 (칸이 150 이라 영어 · 일본어에서 글자가 9~11px 까지 작아졌음, 보라 띠 · ▶ 가 이미 진화를 뜻함)
             row.name.text = "<size=70%>" + tag + "</size>\n" + Loc.T(e.name);
+            row.near = !blockedAny && left <= 1;
         }
         ShowEvoIntro(anyEvo);
         ShowRecommend(ids);
         ShowSynergyTags(ids);         // 1.0.1: 가진 카드와 어울리는 카드에 「시너지」
+        ShowCardPips(ids);            // 1.1.2~: 카드 맨 위 단계 칸 (LevelShop.Pips)
     }
 
     // ================================================================= 스킬 진화 첫 안내 (1.0.4~)
@@ -146,6 +154,7 @@ public partial class LevelShop
         bg.color = new Color(0.32f, 0.2f, 0.48f, 0.95f);
         bg.raycastTarget = false;
         row.root = r;
+        row.bg = bg;
 
         float x = -175f;
         for (int i = 0; i < 3; i++)
@@ -162,10 +171,8 @@ public partial class LevelShop
             tip.bodyProvider = () => GetAbilityTooltip(row.ids[idx]);
             row.parts[i] = Box(frame.rectTransform, Vector2.zero, new Vector2(40f, 40f), Color.white);
             row.parts[i].preserveAspect = true;
-            row.levels[i] = Label(frame.rectTransform, new Vector2(0f, -30f), new Vector2(60f, 22f), 17f);
-            row.levels[i].enableAutoSizing = true;          // 1.0.4~: 「2→3/3」도 칸 안에
-            row.levels[i].fontSizeMin = 11f;
-            row.levels[i].fontSizeMax = 17f;
+            // 아이콘 바로 아래 단계 칸 (띠 아래끝 안쪽, 폭 = 아이콘 칸)
+            row.levels[i] = LevelPips.Create(frame.rectTransform, new Vector2(0f, -31f), new Vector2(48f, 9f), "Pips");
         }
         TextMeshProUGUI arrow = Label(r, new Vector2(-4f, 4f), new Vector2(30f, 40f), 30f);
         arrow.text = "▶";
@@ -184,6 +191,19 @@ public partial class LevelShop
         row.name.fontSizeMin = 13f;
         row.name.fontSizeMax = 21f;
         return row;
+    }
+
+    // 1.1.2~ 진화가 가까운 카드의 띠: 보라 ↔ 금빛으로 숨 쉬고 진화 아이콘이 살짝 커졌다 작아짐 (게임이 멈춰 있어 실제 시간)
+    void EvoRowPulse()
+    {
+        float k = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+        foreach (EvoRow row in evoRows)
+        {
+            if (row == null || row.root == null || !row.root.gameObject.activeSelf) continue;
+            row.bg.color = row.near ? Color.Lerp(new Color(0.32f, 0.2f, 0.48f, 0.95f), new Color(0.62f, 0.45f, 0.18f, 0.98f), k)
+                                    : new Color(0.32f, 0.2f, 0.48f, 0.95f);
+            row.evoIcon.rectTransform.localScale = Vector3.one * (row.near ? 1f + 0.12f * k : 1f);
+        }
     }
 
     static Image Box(RectTransform parent, Vector2 pos, Vector2 size, Color c)
@@ -258,6 +278,7 @@ public partial class LevelShop
 
     void UpdateSkipButton()
     {
+        if (IsOpen) EvoRowPulse();
         if (skipButton == null) return;
         bool show = IsOpen && !freePick;            // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드)
         if (skipButton.gameObject.activeSelf != show) skipButton.gameObject.SetActive(show);

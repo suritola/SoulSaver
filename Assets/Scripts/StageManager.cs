@@ -435,7 +435,7 @@ public class StageManager : MonoBehaviour
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
         ChoiceUI.Option[] options =
         {
-            new ChoiceUI.Option("전설의 힘", "공격력 +10% (이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
+            new ChoiceUI.Option("전설의 힘", "공격력 +10% (기본 공격력 기준, 이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
             new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "shards"),
             new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"),
         };
@@ -446,8 +446,7 @@ public class StageManager : MonoBehaviour
         if (p == null) yield break;
         if (pick == 0)
         {
-            p.damage *= 1.1f;
-            RunSave.Record("a10");
+            RunSave.AddBaseAttack(p, 10f);         // 1.1.2~ 평타 고점 하향: 지금 공격력 ×1.1 → 기본 공격력의 +10% (영혼 트리 「무기 화력」과 같은 기준, 곱으로 쌓이지 않게)
         }
         else if (pick == 1) SoulShards.Add(shards, p.transform.position, false);
         else

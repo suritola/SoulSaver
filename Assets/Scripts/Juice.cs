@@ -40,6 +40,7 @@ public static class Juice
     {
         Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), SkinFx.EffectSkin != null ? 1.1f : 0.8f, SkinFx.CoinColor(new Color(1f, 0.88f, 0.4f)), 16f, 0f, 20);
         if (sound) Hostile.Play("sparkle", 0.2f, Random.Range(0.95f, 1.15f));
+        TranscendRules.Coin(pos);       // 1.2~ 초월 카드 「연금 손」
     }
 
     // ================================================================= 1.1~ 손맛 묶음 (로드맵 1-1)
@@ -76,6 +77,16 @@ public static class Juice
         if (!CanStop()) return;
         lastStopAt = Time.unscaledTime;
         Runner.Hold(SlowScale, 0.35f);
+    }
+
+    // 1.1.2~ 스킬 진화 순간 (SignatureSkills.EvolvedMoment): 0.5초 슬로모션(0.3배) + 옅은 번쩍임 (번쩍임 효과를 끄면 슬로모션만)
+    public static void Evolve()
+    {
+        if (Application.isBatchMode) return;
+        if (GameSettings.Flashes) Runner.Flash(0.35f);
+        if (!CanStop()) return;
+        lastStopAt = Time.unscaledTime;
+        Runner.Hold(0.3f, 0.5f);
     }
 
     static JuiceRunner runner;

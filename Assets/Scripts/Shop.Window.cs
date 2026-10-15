@@ -194,9 +194,18 @@ public partial class Shop
     void Polish(TextMeshProUGUI stat, TextMeshProUGUI price, Button b)
     {
         if (stat == null) return;
-        string t = stat.text.Replace(" -> ", "  →  ").Replace("-> ", "→ ");
+        // 1.1.2~ 레벨업 카드와 같은 모양: 「지금 ▶ 다음」, 화살표 하나면 다음 값을 금빛 굵게
+        string t = stat.text;
         int nl = t.IndexOf('\n');
-        if (nl > 0 && !t.StartsWith("<color")) t = "<color=#F5D478>" + t.Substring(0, nl) + "</color>\n<size=115%>" + t.Substring(nl + 1) + "</size>";
+        if (nl > 0 && !t.StartsWith("<color"))
+        {
+            string body = t.Substring(nl + 1);
+            int a = body.IndexOf("->");
+            if (a >= 0 && body.IndexOf("->", a + 2) < 0)
+                body = body.Substring(0, a).TrimEnd() + " <color=#A89C86>▶</color> <b><color=#FFD34D>" + body.Substring(a + 2).TrimStart() + "</color></b>";
+            t = "<color=#F5D478>" + t.Substring(0, nl) + "</color>\n<size=115%>" + body + "</size>";
+        }
+        t = t.Replace(" -> ", " <color=#A89C86>▶</color> ").Replace("-> ", "▶ ");
         stat.text = t;
         if (price != null && b != null)
         {
