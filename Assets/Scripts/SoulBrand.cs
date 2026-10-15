@@ -86,10 +86,15 @@ public static class SoulBrand
         GameObject cards = shop != null ? shop.LvshopPanel : null;
         bool cardsWere = cards != null && cards.activeSelf;
         if (cards != null) cards.SetActive(false);          // 첫 카드 창은 각인을 고른 뒤에
-        float timeWas = Time.timeScale;                     // 첫 카드 창이 멈춰 둔 시간 (ChoiceUI 는 멈춤이었으면 1 로 되돌리므로 다시 맞춤)
+        float timeWas = Time.timeScale;                     // ChoiceUI 는 멈춤(0)이었으면 1 로 되돌리므로 닫은 뒤 다시 맞춤
         yield return Pick("brand.pick.start");
-        Time.timeScale = timeWas;
-        if (cards != null && cardsWere) cards.SetActive(true);
+        // 첫 카드 창을 다시 띄우면 창이 멈춰 둔 그대로 (0) · 카드 창이 없었으면 멈춘 채 굳지 않게 흐르는 시간으로
+        if (cards != null && cardsWere)
+        {
+            cards.SetActive(true);
+            Time.timeScale = 0f;
+        }
+        else Time.timeScale = timeWas > 0f ? timeWas : 1f;
     }
 
     // 보스를 쓰러뜨린 뒤 (StageManager.EvolutionThenPortal, 다음 장 번호) · 장에 들어갈 때 · 이어할 때: 모자란 각인을 고름
@@ -103,7 +108,8 @@ public static class SoulBrand
             if (p == null || p.IsDying || p.PlayerHealth <= 0f || RunSave.FinalBossDown) yield break;
             StageManager sm = StageManager.Instance;
             // 다른 창(진화 · 보스 보상 · 저주 제단 · 장 넘어가기 · ESC · 연출)이 닫힐 때까지
-            if (picking || Time.timeScale == 0f || ChoiceUI.Open || ESCmenu.IsOpen || StoryDirector.Playing || (sm != null && sm.IsMenuOpen))
+            //   이어하기 복원(RunSave.Restore: 진화 → 보스 보상 → 문)이 끝나기 전에도 기다림 — 보스 보상이 0.5초 뒤에 뜨는 사이에 각인이 먼저 끼어들지 않게
+            if (picking || Time.timeScale == 0f || ChoiceUI.Open || ESCmenu.IsOpen || StoryDirector.Playing || (sm != null && (sm.IsMenuOpen || !sm.Started)))
             {
                 if (picking) yield break;                   // 다른 곳에서 이미 고르는 중
                 yield return null;
@@ -168,6 +174,23 @@ public static class SoulBrand
         if (p != null) Fx.Spawn("fx_soulburst", p.transform.position, 5f, b.color, 14f);
         if (StageManager.Instance != null) StageManager.Instance.ShowBanner(Loc.T("brand.got").Replace("{0}", b.Name) + "\n<size=70%>" + b.Desc.Replace("\n", " · ") + "</size>", 3f);
         Hud.Dirty = true;
+    }
+
+    // 결과 화면 · ESC 요약 줄의 「영웅 · 난이도 · 무게」 뒤에 붙는 글 (각인이 없으면 빈 글, SoulWeight.RunTag 와 같은 자리)
+    public static string RunTag()
+    {
+        if (run.Count == 0) return "";
+        List<string> names = new List<string>();
+        foreach (SoulBrandDef b in run) names.Add(b.Name);
+        return "  ·  " + Loc.T("brand.tag").Replace("{0}", string.Join(", ", names));
+    }
+
+    // 판 기록(balance_log) 칸: saveCode 를 | 로 (없으면 빈 글)
+    public static string LogCodes()
+    {
+        List<string> codes = new List<string>();
+        foreach (SoulBrandDef b in run) codes.Add(b.saveCode);
+        return string.Join("|", codes);
     }
 
     // ================================================================= 이어하기 (RunContent)

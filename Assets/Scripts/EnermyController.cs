@@ -73,6 +73,10 @@ public class EnermyController : MonoBehaviour
     public static Transform Decoy;
     // 적이 처치됐을 때 (영혼 모으기 등)
     public static System.Action<Vector3> Killed;
+    // 1.2~ 지금 알리는 처치가 처치 수에 들어가는지 (RunStats.Kills · Juice 처치 이정표가 봄) — 맵 물체 「정화」로 쓰러진 적 중 절반은 false
+    public static bool KillCounts { get; private set; } = true;
+    // 1.2~ 이 적은 처치 수(보스까지 처치 수 · 이번 판 처치 수 · 이정표)에 넣지 않음 (MapProps.DropPurify 가 정함, 경험치 · 코인 · 포인트는 그대로)
+    [HideInInspector] public bool skipKillCount;
     // 받는 피해를 바꾸는 능력 (약점 간파 · 급소 노리기 · 사냥감 표식)
     public static System.Func<EnermyController, float, float> DamageHook;
 
@@ -251,6 +255,7 @@ public class EnermyController : MonoBehaviour
     public void ReviveForPool()
     {
         isDead = false;
+        skipKillCount = false;
         EnemyHealth = setEnemyHP;
         if (bodyCollider != null) bodyCollider.enabled = true;
     }
@@ -423,9 +428,14 @@ public class EnermyController : MonoBehaviour
         if (swarm != null) { swarm.Died(a == 1); return; }      // 1.1~ 부스러기: 경험치 · 처치 알림 · 풀로 돌려놓기는 SwarmMote (스포너 수 · 코인 · 포인트 없음)
         // 영혼 트리 '저주 전이': 걸려 있던 화상 · 독 · 출혈을 가까운 적에게 (상태 이상이 아직 붙어 있을 때)
         if (a == 1 && SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.FateOnEnemyDie(this);
-        if (a == 1) Killed?.Invoke(transform.position);
-        if (a == 1) onKilled?.Invoke();
-        if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
+        KillCounts = !skipKillCount;
+        try
+        {
+            if (a == 1) Killed?.Invoke(transform.position);
+            if (a == 1) onKilled?.Invoke();
+            if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
+        }
+        finally { KillCounts = true; }
         if (a == 1 && IsMidBoss) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
         spriteRenderer.color = baseColor;
 
@@ -473,7 +483,7 @@ public class EnermyController : MonoBehaviour
         {
             
 
-            enemySpawner.killedEnemy++;
+            if (!skipKillCount) enemySpawner.killedEnemy++;       // 1.2~ 정화로 쓰러진 적 절반은 보스까지 처치 수에 넣지 않음
             if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
             // 1.0.4~: 많이 떨어뜨리면(엘리트 등) 값이 큰 코인 몇 개로 나눔 · 풀에서 꺼내 씀 (줍는 양은 그대로)
             CoinTag.Drop(coin, transform.position, coinDrop, new Vector2(1.5f, 1.5f), true, CoinTag.EnemyPieces);

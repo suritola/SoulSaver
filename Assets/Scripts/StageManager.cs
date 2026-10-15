@@ -179,7 +179,7 @@ public class StageManager : MonoBehaviour
             if (spawner != null) spawner.spawningEnabled = true;
             started = true;
             RunClock.Create(RestoredClock);
-            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : ""), resumeNote != null ? 3f : 2.5f);
+            ShowBanner(Loc.T("이어하기") + "\n" + Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), resumeNote != null ? 3f : 2.5f);     // 1.2~ 무게를 진 판이면 한 줄 더
             resumeNote = null;
             yield break;
         }
@@ -215,6 +215,9 @@ public class StageManager : MonoBehaviour
                 openTime = 3f;
             }
         }
+        // 1.2~ 영혼의 무게를 진 판이면 장 제목 아래 「영혼의 무게 N · 포인트 +x%」 (무한 모드 · 무게 없는 판은 빈 글)
+        string weightLine = SoulWeight.BannerLine();
+        if (weightLine.Length > 0) { openBanner += weightLine; openTime = Mathf.Max(openTime, 3f); }
         // 1.0.4~: 장 제목 · 이동 도움말은 시작 카드 창을 닫고 시간이 흐를 때 띄움 (멈춘 카드 창 뒤에서 흘러가 버렸음)
         LevelShop cards = FindFirstObjectByType<LevelShop>();
         while ((cards != null && cards.IsOpen) || Time.timeScale == 0f) yield return null;

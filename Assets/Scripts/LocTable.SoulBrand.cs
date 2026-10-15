@@ -16,6 +16,7 @@ public static partial class LocTable
         C("brand.pick.boss", "보스를 쓰러뜨렸다! 각인을 하나 더 새깁니다 ({0})", "Boss defeated! Carve one more brand ({0})", "ボスを倒した！刻印をもう1つ刻みます（{0}）", "击败了首领！再刻下一个烙印（{0}）");
         C("brand.points", "포인트 ×{0}", "Points ×{0}", "ポイント ×{0}", "点数 ×{0}");
         C("brand.got", "영혼 각인: {0}", "Soul Brand: {0}", "魂の刻印：{0}", "灵魂烙印：{0}");
+        C("brand.tag", "각인 {0}", "Brands {0}", "刻印 {0}", "烙印 {0}");      // 결과 화면 · ESC 요약 줄 (RunStats.Summary)
         C("brand.esc", "이번 판 각인", "This Run's Brands", "このランの刻印", "本局烙印");
         C("brand.esc.total", "포인트 배율 ×{0}", "Point multiplier ×{0}", "ポイント倍率 ×{0}", "点数倍率 ×{0}");
         C("brand.menu.how",
