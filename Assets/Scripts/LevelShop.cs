@@ -607,6 +607,10 @@ public partial class LevelShop : MonoBehaviour
             return id;
         }
 
+        // 2026-10-16: 카드 설명을 완결 문장으로 다듬어 영어 · 일본어가 길어짐 — 씬의 최소 18pt 로는 칸 밖으로 넘칠 수 있어 15pt 까지 줄어들게
+        foreach (TextMeshProUGUI ab in new[] { FirstAbility, SecondAbility, ThirdAbility })
+            if (ab != null && ab.fontSizeMin > 15f) ab.fontSizeMin = 15f;
+
         //첫번째 능력 선택
         first = Draw();
 

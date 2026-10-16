@@ -216,7 +216,7 @@ public static class CharacterUI
             TMP_Text cond = UIKit.Text(dr, "", 22f, met ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.45f), new Vector2(-470f, -180f), new Vector2(460f, 110f));
             cond.enableWordWrapping = true;
             cond.fontSizeMin = 15f;
-            cond.text = Loc.T("해제 조건") + " : " + CharacterData.ConditionText(d.condition) + "  " + (met ? Loc.T("(달성)") : Loc.T("(미달성)"));
+            cond.text = Loc.T("해제 조건") + ": " + CharacterData.ConditionText(d.condition) + "  " + (met ? Loc.T("(달성)") : Loc.T("(미달성)"));
         }
 
         if (!developed)

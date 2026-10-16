@@ -178,7 +178,8 @@ public static class CodexUI
             tabBadges.Add(CatOf(i).HasValue ? Badge(b.transform, new Vector2(-24f, -6f)) : null);
         }
         RefreshHeader();
-        hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 287f), new Vector2(1500f, 36f));
+        hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 278f), new Vector2(1500f, 56f));      // 2026-10-16: 두 줄까지 (탭 아래끝 313 · 목록 위끝 238 사이) — 문장으로 다듬어 길어진 안내가 작아지지 않게
+        hint.fontSizeMin = 16f;
 
         BuildScroll(win);
         Show(0);
@@ -736,7 +737,12 @@ public static class CodexUI
             if (owner == null || !CharacterData.IsUnlocked(owner.Value)) continue;
             string tag = (kind == SpecialKind.Weapon ? Loc.T("특수 무기") : kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브"))
                          + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + " " + Loc.T("전용");
-            string body = Loc.T(SpecialAbilities.KitDesc(id)).Replace("\n", " ");
+            string desc = Loc.T(SpecialAbilities.KitDesc(id));
+            // 새 영웅 진화 무기는 설명 마지막 줄이 「필살기에 덧붙음: X」 — 아래 태그 줄과 겹치므로 뺌
+            int last = desc.LastIndexOf('\n');
+            if (kind == SpecialKind.Weapon && last >= 0 && desc.Substring(last + 1).StartsWith(Loc.T("필살기에 덧붙음")))
+                desc = desc.Substring(0, last);
+            string body = desc.Replace("\n", " ");
             if (kind == SpecialKind.Weapon)
                 body += "\n" + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + Loc.T(SpecialAbilities.KitUltName(id))) + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
             Card(Resources.Load<Sprite>("Icons/ability_" + id), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
