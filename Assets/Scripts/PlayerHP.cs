@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerHP : MonoBehaviour
 {
@@ -16,12 +17,66 @@ public class PlayerHP : MonoBehaviour
     int shownHp = -1, shownMax = -1, shownGuard = -1;
     bool guardHintTried;
 
+    // 타격감 (HealthBarFeel): 앞 막대는 실제 체력 · 잃은 양은 뒤에 주황 조각(HPghost)으로 잠깐 남았다 따라 내려옴
+    readonly HealthBarFeel feel = new HealthBarFeel(HealthBarFeel.Kind.Player);
+    RectTransform ghost;
+    Image ghostImg, gaugeImg;
+    Color gaugeColor;
+    RectTransform self;
+    Vector2 restPos;                 // 흔들림 기준 (HPbackground 자기 위치)
+    float lastHp = -1f, shownFront = -1f, shownGhost = -1f;
+    bool damagedThisFrame;
+    float hpTextPop;                 // 치명 등급 피해 때 체력 숫자가 잠깐 튐
+    bool hpTextPopped;
+
     // Start is called before the first frame update
     void Start()
     {
         HPmaxWidth = GetComponent<RectTransform>().sizeDelta.x;
         playerHP = FindFirstObjectByType<PlayerController>().PlayerHealth;
         playerMaxHP = FindFirstObjectByType<PlayerController>().PlayerMaxHealth;
+
+        HealthBarFeel.ResetStatics();       // 씬이 바뀌면 흔들리는 적 바 집계를 새로
+        self = GetComponent<RectTransform>();
+        restPos = self.anchoredPosition;
+        gauge = HPgauge.GetComponent<RectTransform>();
+        gaugeImg = HPgauge.GetComponent<Image>();
+        if (gaugeImg != null) gaugeColor = gaugeImg.color;
+        // 조각: HPgauge 를 복제해 바로 뒤(형제 순서 한 칸 앞)에 — 같은 앵커 · 피벗 · 위치라 길이만 다르게 하면 됨
+        GameObject g = Instantiate(HPgauge, HPgauge.transform.parent);
+        g.name = "HPghost";
+        g.transform.SetSiblingIndex(HPgauge.transform.GetSiblingIndex());
+        ghost = g.GetComponent<RectTransform>();
+        ghostImg = g.GetComponent<Image>();
+        if (ghostImg != null) { ghostImg.raycastTarget = false; ghostImg.color = HealthBarFeel.GhostColor(0f); ghostImg.enabled = false; }
+        foreach (Transform c in g.transform) Destroy(c.gameObject);     // 복제된 자식(있다면)은 지움
+        feel.Reset(playerHP);
+        lastHp = playerHP;
+    }
+
+    // 이어하기 (RunSave.Restore 가 체력을 정한 뒤): 조각 · 누적을 지금 체력에 붙임 (가득 → 저장 체력으로 떨어지는 조각이 나오지 않게)
+    public void ResetFeel()
+    {
+        PlayerController p = FindFirstObjectByType<PlayerController>();
+        if (p == null) return;
+        playerHP = p.PlayerHealth;
+        feel.Reset(playerHP);
+        lastHp = playerHP;
+        damagedThisFrame = false;
+    }
+
+    void OnEnable() { PlayerController.Damaged += OnDamaged; }
+    void OnDisable() { PlayerController.Damaged -= OnDamaged; feel.Cancel(); }
+
+    // 실제로 체력이 깎였을 때 (PlayerController.TryHit) — 등급을 매기고 받은 피해 숫자를 합산해 띄움
+    void OnDamaged(float taken, float before)
+    {
+        PlayerController p = Cache<PlayerController>.Get;
+        if (p == null) return;
+        damagedThisFrame = true;
+        HealthBarFeel.Tier tier = feel.OnDamaged(taken, before, p.PlayerMaxHealth);
+        DamagePopup.ShowHurt(p.transform, taken, tier);
+        if (tier == HealthBarFeel.Tier.Deadly) hpTextPop = 0.12f;
     }
 
     // Update is called once per frame
@@ -31,7 +86,35 @@ public class PlayerHP : MonoBehaviour
         playerHP = player.PlayerHealth;
         playerMaxHP = player.PlayerMaxHealth;
         if (gauge == null) gauge = HPgauge.GetComponent<RectTransform>();
-        gauge.sizeDelta = new Vector2(playerHP > 0 ? playerHP / playerMaxHP * HPmaxWidth : 0, gauge.sizeDelta.y);
+
+        // TryHit 밖에서 체력이 내려간 경우 (자가 소모 · 되감기): 조각만 (등급 효과 없음)
+        if (!damagedThisFrame && lastHp >= 0f && playerHP < lastHp - 0.01f) feel.OnDamaged(lastHp - playerHP, lastHp, playerMaxHP, visible: false);
+        damagedThisFrame = false;
+        lastHp = playerHP;
+
+        feel.Tick(playerHP, playerMaxHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
+        // 값이 같으면 안 씀 (예전엔 매 프레임 sizeDelta 를 썼음)
+        if (f.front != shownFront) { shownFront = f.front; gauge.sizeDelta = new Vector2(f.front * HPmaxWidth, gauge.sizeDelta.y); }
+        if (ghostImg != null && f.ghost != shownGhost)
+        {
+            shownGhost = f.ghost;
+            ghostImg.enabled = f.ghostShown;
+            if (f.ghostShown) ghost.sizeDelta = new Vector2(f.ghost * HPmaxWidth, gauge.sizeDelta.y);
+        }
+        if (self != null)
+        {
+            float h = gauge.sizeDelta.y;                                   // 20px → Big 5px · Deadly 10px
+            Vector2 pos = restPos + new Vector2(f.shakeX * h, f.shakeY * h);
+            if (pos != self.anchoredPosition) self.anchoredPosition = pos;
+        }
+        if (gaugeImg != null) gaugeImg.color = f.flash > 0f ? Color.Lerp(gaugeColor, Color.white, f.flash) : gaugeColor;
+        if (ghostImg != null && ghostImg.enabled) ghostImg.color = HealthBarFeel.GhostColor(f.flash);
+        if (hpText != null && (hpTextPop > 0f || hpTextPopped))
+        {
+            hpTextPop -= Time.unscaledDeltaTime;
+            hpTextPopped = hpTextPop > 0f;
+            hpText.transform.localScale = Vector3.one * (hpTextPopped ? 1.2f : 1f);
+        }
 
         // 숫자가 바뀔 때만 글자를 새로 (매 프레임 문자열을 만들지 않게)
         int hp = Mathf.CeilToInt(Mathf.Max(playerHP, 0)), max = Mathf.CeilToInt(playerMaxHP);

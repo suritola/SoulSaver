@@ -43,6 +43,66 @@ public class bossbar : MonoBehaviour
         RectTransform barRect = bar.GetComponent<RectTransform>();
         MaxBarX = barRect.sizeDelta.x;
         BarY = barRect.sizeDelta.y;
+
+        HealthBarFeel.ResetStatics();
+        // 조각: 채움 막대를 복제해 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제에도 함께 따라감
+        GameObject g = Instantiate(bar, bar.transform.parent);
+        g.name = GhostName;
+        g.transform.SetSiblingIndex(bar.transform.GetSiblingIndex());
+        foreach (Transform c in g.transform) Destroy(c.gameObject);     // 복제된 자식(있다면)은 지움
+        Image gi = g.GetComponent<Image>();
+        if (gi != null) { gi.color = HealthBarFeel.GhostColor(0f); gi.raycastTarget = false; gi.enabled = false; }
+        main = MakeRow(backBar, barRect, g.GetComponent<RectTransform>());
+    }
+
+    // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 조각 · 흔들림 · 번쩍임
+    const string GhostName = "BossGhost";
+
+    sealed class Row
+    {
+        public RectTransform fill, ghost, root;
+        public Image fillImg, ghostImg, backImg;
+        public Vector2 rest;
+        public Color fillColor, backColor;
+        public float shownFront = -1f, shownGhost = -1f;
+    }
+    Row main;
+    readonly List<Row> extraRows = new List<Row>();
+
+    static Row MakeRow(GameObject back, RectTransform fill, RectTransform ghost)
+    {
+        Row r = new Row();
+        r.root = back.GetComponent<RectTransform>();
+        r.rest = r.root.anchoredPosition;
+        r.backImg = back.GetComponent<Image>();
+        if (r.backImg != null) r.backColor = r.backImg.color;
+        r.fill = fill;
+        r.fillImg = fill != null ? fill.GetComponent<Image>() : null;
+        if (r.fillImg != null) r.fillColor = r.fillImg.color;
+        r.ghost = ghost;
+        r.ghostImg = ghost != null ? ghost.GetComponent<Image>() : null;
+        return r;
+    }
+
+    // 줄 하나 그리기: 앞 막대 · 조각 · 흔들림 · 번쩍임 (값이 같으면 크기는 다시 쓰지 않음)
+    void Draw(Row r, bosss s)
+    {
+        if (r == null || s == null) return;
+        s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
+        if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
+        if (r.ghostImg != null && f.ghost != r.shownGhost)
+        {
+            r.shownGhost = f.ghost;
+            r.ghostImg.enabled = f.ghostShown;
+            if (f.ghostShown) r.ghost.sizeDelta = new Vector2(f.ghost * MaxBarX, BarY);
+        }
+        // BarY 119 라 높이 비율 그대로면 30~60px 로 과함 → ×0.25 (Big 약 7px · Deadly 15px)
+        Vector2 pos = r.rest + new Vector2(f.shakeX, f.shakeY) * BarY * 0.25f;
+        if (r.root != null && pos != r.root.anchoredPosition) r.root.anchoredPosition = pos;
+        if (r.fillImg != null) r.fillImg.color = f.flash > 0f ? Color.Lerp(r.fillColor, Color.white, f.flash) : r.fillColor;
+        if (r.ghostImg != null && r.ghostImg.enabled) r.ghostImg.color = HealthBarFeel.GhostColor(f.flash);
+        // Deadly: 배경까지 번쩍임
+        if (r.backImg != null) r.backImg.color = f.flashFull ? Color.Lerp(r.backColor, new Color(1f, 0.85f, 0.8f), 0.5f) : r.backColor;
     }
 
     // Update is called once per frame
@@ -67,9 +127,10 @@ public class bossbar : MonoBehaviour
             if (split && liveSlimes.Count > 0)
             {
                 // 슬라임마다 자기 체력 (각자 따로 깎이고, 이름 번호는 그 개체에 고정)
-                SetBar(barRect, nameText, liveSlimes[0]);
+                SetBar(nameText, liveSlimes[0]);
+                Draw(main, liveSlimes[0]);
                 ShowExtraBars(liveSlimes.Count - 1);
-                for (int i = 1; i < liveSlimes.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveSlimes[i]);
+                for (int i = 1; i < liveSlimes.Count; i++) { SetBar(extraNames[i - 1], liveSlimes[i]); Draw(extraRows[i - 1], liveSlimes[i]); }
                 wasMulti = true;
                 return;
             }
@@ -79,9 +140,10 @@ public class bossbar : MonoBehaviour
         {
             liveBosses.Clear();
             liveBosses.AddRange(bosss.Live);
-            SetBar(barRect, nameText, liveBosses[0]);
+            SetBar(nameText, liveBosses[0]);
+            Draw(main, liveBosses[0]);
             ShowExtraBars(liveBosses.Count - 1);
-            for (int i = 1; i < liveBosses.Count; i++) SetBar(extraFills[i - 1], extraNames[i - 1], liveBosses[i]);
+            for (int i = 1; i < liveBosses.Count; i++) { SetBar(extraNames[i - 1], liveBosses[i]); Draw(extraRows[i - 1], liveBosses[i]); }
             wasMulti = true;
             return;
         }
@@ -91,7 +153,18 @@ public class bossbar : MonoBehaviour
         WriteSingleName();
         if (MaxHealth <= 0) return;
         BarX = Mathf.Clamp01((float)NowHealth / (float)MaxHealth) * MaxBarX;
-        barRect.sizeDelta = new Vector2(BarX, BarY);
+        if (bosss.Primary != null) Draw(main, bosss.Primary);
+        else
+        {
+            // 보스 본체 없이 바만 켠 경우 (예전 방식 · 조각 · 흔들림 없음)
+            barRect.sizeDelta = new Vector2(BarX, BarY);
+            if (main != null)
+            {
+                main.shownFront = main.shownGhost = -1f;
+                if (main.ghostImg != null) main.ghostImg.enabled = false;
+                if (main.root != null) main.root.anchoredPosition = main.rest;
+            }
+        }
     }
 
     // ================================================================= 분열한 킹 슬라임: 슬라임마다 보스 체력바
@@ -101,13 +174,11 @@ public class bossbar : MonoBehaviour
     readonly List<bosss> liveSlimes = new List<bosss>();
     readonly List<bosss> liveBosses = new List<bosss>();
     readonly List<GameObject> extraBars = new List<GameObject>();
-    readonly List<RectTransform> extraFills = new List<RectTransform>();
     readonly List<TMP_Text> extraNames = new List<TMP_Text>();
 
-    void SetBar(RectTransform fill, TMP_Text label, bosss s)
+    // 줄 이름 글자 (막대 길이는 Draw 가 그림)
+    void SetBar(TMP_Text label, bosss s)
     {
-        float ratio = s.setEnemyHP > 0 ? Mathf.Clamp01(s.EnemyHealth / s.setEnemyHP) : 0f;
-        if (fill != null) fill.sizeDelta = new Vector2(ratio * MaxBarX, BarY);
         string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(s.developerMom ? DeveloperMomKind : DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
         if (label != null && label.text != n) label.text = n;
     }
@@ -123,23 +194,28 @@ public class bossbar : MonoBehaviour
             clone.transform.SetSiblingIndex(backBar.transform.GetSiblingIndex() + 1 + extraBars.Count);
             Transform cg = clone.transform.Find("UltGauge");        // 필살기 게이지는 맨 위 줄에만
             if (cg != null) Destroy(cg.gameObject);
-            RectTransform main = backBar.GetComponent<RectTransform>();
             RectTransform r = clone.GetComponent<RectTransform>();
             // 바 위의 이름 글자 · 왼쪽 해골 아이콘까지 포함한 높이로 쌓음
             // (예전엔 바 높이만큼만 내려서, 아래 체력바의 이름이 윗 체력바를 덮었음)
             Bounds b = RectTransformUtility.CalculateRelativeRectTransformBounds(backBar.transform);
-            float prevBottom = extraBars.Count == 0
-                ? main.anchoredPosition.y + b.min.y
-                : ((RectTransform)extraBars[extraBars.Count - 1].transform).anchoredPosition.y + b.min.y * ExtraScale;
+            // 흔들리는 중이어도 제자리(rest) 기준으로 쌓음
+            Vector2 mainPos = main != null ? main.rest : backBar.GetComponent<RectTransform>().anchoredPosition;
+            float prevBottom = extraRows.Count == 0
+                ? mainPos.y + b.min.y
+                : extraRows[extraRows.Count - 1].rest.y + b.min.y * ExtraScale;
             r.localScale = Vector3.one * ExtraScale;
-            r.anchoredPosition = new Vector2(main.anchoredPosition.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
+            r.anchoredPosition = new Vector2(mainPos.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
             Transform fill = clone.transform.Find(bar.name);
+            Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 조각도 함께 복제됨
             TMP_Text label = null;
             foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))
                 if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; FitName(t); }    // 원래 이름 글자 찾기와 헷갈리지 않게
             extraBars.Add(clone);
-            extraFills.Add(fill as RectTransform);
             extraNames.Add(label);
+            Row row = MakeRow(clone, fill as RectTransform, ghost as RectTransform);
+            // 복제 순간 원래 줄이 번쩍이는 중이었을 수 있으니 색은 원래 줄의 기본색으로
+            if (main != null) { row.fillColor = main.fillColor; row.backColor = main.backColor; }
+            extraRows.Add(row);
         }
         for (int i = 0; i < extraBars.Count; i++)
             if (extraBars[i] != null && extraBars[i].activeSelf != (i < count)) extraBars[i].SetActive(i < count);

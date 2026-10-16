@@ -21,6 +21,27 @@ public class EnemyHealthBar : MonoBehaviour
     SpriteRenderer backRenderer;
     float shownRatio = -1f;
 
+    // 타격감 (HealthBarFeel): 잃은 양 조각 · 큰 피해에 흔들림 · 번쩍임
+    readonly HealthBarFeel feel = new HealthBarFeel(HealthBarFeel.Kind.Enemy);
+    SpriteRenderer ghostRenderer;    // 처음 조각이 필요할 때 만들고(보이는 적만) 조각이 없을 땐 꺼 둠
+    Transform ghost;
+    Vector3 rest;
+    float shownGhost = -1f;
+    Color fillColor = FullColor;
+    Color shownFill = FullColor;     // 지금 칠해 둔 색 (바뀔 때만 다시 씀)
+    float shownGhostFlash = -1f;
+
+    public HealthBarFeel.Tier OnDamaged(float amount, float before)
+    {
+        bool visible = fillRenderer != null && fillRenderer.enabled && fillRenderer.isVisible;
+        HealthBarFeel.Tier tier = feel.OnDamaged(amount, before, enemy != null ? enemy.setEnemyHP : 0f, visible);
+        // 화면 밖: 조각을 지금 체력에 바로 붙임 (Active 가 켜지지 않게 → 예전처럼 체력이 바뀔 때만 다시 그림)
+        if (!visible) feel.Reset(before - amount);
+        return tier;
+    }
+    public void ResetFeel(float hp) { feel.Reset(hp); shownRatio = -1f; shownGhost = -1f; }
+    void OnDisable() => feel.Cancel();
+
     public static EnemyHealthBar Attach(EnermyController enemy, SpriteRenderer body)
     {
         GameObject root = new GameObject("HealthBar");
@@ -80,28 +101,71 @@ public class EnemyHealthBar : MonoBehaviour
     {
         backRenderer = MakePart("Back", new Color(0.05f, 0.04f, 0.06f, 0.9f), 0,
             -Width / 2f - Border, Width + Border * 2f, Height + Border * 2f);
-        fillRenderer = MakePart("Fill", FullColor, 1, -Width / 2f, Width, Height);
+        fillRenderer = MakePart("Fill", FullColor, 2, -Width / 2f, Width, Height);     // Back 0 · Ghost 1 · Fill 2
         fill = fillRenderer.transform;
+        rest = transform.localPosition;
     }
 
     void LateUpdate()
     {
         if (enemy == null) return;
 
-        float ratio = enemy.setEnemyHP > 0 ? Mathf.Clamp01((float)enemy.EnemyHealth / enemy.setEnemyHP) : 0f;
-        // 체력이 그대로면 다시 그리지 않음 (적마다 매 프레임 하던 크기 · 색 갱신 생략)
-        if (ratio == shownRatio) return;
-        shownRatio = ratio;
+        float hp = enemy.EnemyHealth, max = enemy.setEnemyHP;
+        float ratio = max > 0 ? Mathf.Clamp01(hp / max) : 0f;
+        // 체력이 그대로고 효과도 없으면 다시 그리지 않음 (수백 마리 대부분이 여기서 끝)
+        if (ratio == shownRatio && !feel.Active) return;
+        feel.Tick(hp, max, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
 
-        // 죽으면 숨김
         bool alive = ratio > 0f;
-        backRenderer.enabled = alive;
-        fillRenderer.enabled = alive;
-        if (!alive) return;
+        if (ratio != shownRatio)
+        {
+            shownRatio = ratio;
+            // 죽으면 숨김
+            backRenderer.enabled = alive;
+            fillRenderer.enabled = alive;
+            if (alive)
+            {
+                fill.localScale = new Vector3(Width * ratio, Height, 1f);
+                fillColor = ratio > 0.5f
+                    ? Color.Lerp(HalfColor, FullColor, (ratio - 0.5f) * 2f)
+                    : Color.Lerp(LowColor, HalfColor, ratio * 2f);
+            }
+        }
+        if (!alive)
+        {
+            if (ghostRenderer != null) ghostRenderer.enabled = false;
+            shownGhost = -1f;
+            if (transform.localPosition != rest) transform.localPosition = rest;
+            return;
+        }
 
-        fill.localScale = new Vector3(Width * ratio, Height, 1f);
-        fillRenderer.color = ratio > 0.5f
-            ? Color.Lerp(HalfColor, FullColor, (ratio - 0.5f) * 2f)
-            : Color.Lerp(LowColor, HalfColor, ratio * 2f);
+        if (f.ghost != shownGhost)
+        {
+            // 화면 밖 적은 조각 렌더러를 만들지 않음 (보일 때 다시 시도)
+            if (f.ghostShown && ghostRenderer == null && fillRenderer.isVisible)
+            {
+                ghostRenderer = MakePart("Ghost", HealthBarFeel.GhostColor(0f), 1, -Width / 2f, Width, Height);
+                ghost = ghostRenderer.transform;
+            }
+            if (ghostRenderer != null)
+            {
+                shownGhost = f.ghost;
+                ghostRenderer.enabled = f.ghostShown;
+                if (f.ghostShown) ghost.localScale = new Vector3(Width * f.ghost, Height, 1f);
+            }
+        }
+        // 흔들림: Big 0.065 · Deadly 0.13 (월드 단위 · 머리 위에서 살짝)
+        // localPosition 은 부모(적) 스케일만큼 커지므로 바 자신의 보정 스케일(1/lossyScale)을 곱함 (중간 보스 1.8배여도 같은 폭)
+        Vector3 sc = transform.localScale;
+        Vector3 pos = rest + new Vector3(f.shakeX * sc.x, f.shakeY * sc.y, 0f) * Height;
+        if (transform.localPosition != pos) transform.localPosition = pos;
+        // 색은 바뀔 때만 씀
+        Color fc = f.flash > 0f ? Color.Lerp(fillColor, Color.white, f.flash) : fillColor;
+        if (fc != shownFill) { shownFill = fc; fillRenderer.color = fc; }
+        if (ghostRenderer != null && ghostRenderer.enabled)
+        {
+            if (f.flash != shownGhostFlash) { shownGhostFlash = f.flash; ghostRenderer.color = HealthBarFeel.GhostColor(f.flash); }
+        }
+        else shownGhostFlash = -1f;
     }
 }

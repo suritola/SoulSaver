@@ -1263,18 +1263,17 @@ void Shoot()
 
     public bool IsInvincible => Time.time < invincibleUntil;
 
-    // 피격 연출: 화면 가장자리 붉은 번쩍임, 흔들림, 머리 위 피해 숫자
+    // 피격 연출: 화면 가장자리 붉은 번쩍임, 흔들림
+    // 받은 피해 숫자는 PlayerHP 가 Damaged 를 받아 DamagePopup.ShowHurt 로 띄움 (짧은 사이 피해를 숫자 하나로 합침 · 등급별 크기)
     void ShowHurt(float taken)
     {
         DamageFlash.Show(0.45f + taken / Mathf.Max(1f, PlayerMaxHealth) * 2.5f);
         if (SpecialAbilities.SharedFx != null)
-        {
             SpecialAbilities.SharedFx.Shake(0.2f + Mathf.Min(0.3f, taken / 60f), 0.15f);
-            // 1.0.4~: 설정 「피해 숫자 끄기」면 받은 피해 숫자도 띄우지 않음 (예전엔 준 피해만 꺼졌음)
-            if (GameSettings.DamageNumbers != 2 && taken > 0f)
-                SpecialAbilities.SharedFx.FloatText(transform.position, "-" + Mathf.CeilToInt(taken), new Color(1f, 0.3f, 0.28f), 5f, 0f);
-        }
     }
+
+    // 실제로 체력이 깎였을 때 (taken, 깎기 전 체력) — HUD 체력바 · 받은 피해 숫자가 구독
+    public static System.Action<float, float> Damaged;
 
     // 실제로 피해를 받은 횟수 (보스 결계를 맞지 않고 버텼는지 · 업적)
     public static int HurtCount;
@@ -1319,8 +1318,10 @@ void Shoot()
         }
 
         RunStats.Hurt(Mathf.Min(taken, Mathf.Max(0f, PlayerHealth)), from);
+        float before = PlayerHealth;
         PlayerHealth -= taken;
         HurtCount++;
+        Damaged?.Invoke(taken, before);
         ShowHurt(taken);
         special?.OnPlayerHurt();
         SignatureSkills.Hurt(taken);

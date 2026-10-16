@@ -94,6 +94,9 @@ public class bosss : MonoBehaviour
     public static readonly List<bosss> Live = new List<bosss>();
     public static int LiveCount { get { Live.RemoveAll(b => b == null || b.isDead); return Live.Count; } }
     public static bool KindAlive(int kind) { foreach (bosss b in Live) if (b != null && !b.isDead && b.bossKind == kind) return true; return false; }
+    // 체력바 타격감 (위쪽 HUD 줄이 이 보스를 그릴 때 씀 · 보스마다 따로)
+    public readonly HealthBarFeel BarFeel = new HealthBarFeel(HealthBarFeel.Kind.Boss);
+    public static bosss Primary;      // 지금 위쪽 한 줄이 그리는 보스 (IsPrimary 가 Update 에서 세움)
     bool IsPrimary { get { foreach (bosss b in Live) if (b != null && !b.isDead) return b == this; return true; } }
     void OnEnable() { if (!Live.Contains(this)) Live.Add(this); }
     void OnDestroy() => Live.Remove(this);
@@ -124,6 +127,7 @@ public class bosss : MonoBehaviour
             coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul * rw);
         }
         EnemyHealth = setEnemyHP;
+        BarFeel.Reset(EnemyHealth);
 
         // 플레이어 찾기
         player = FindFirstObjectByType<PlayerController>().transform;
@@ -161,6 +165,7 @@ public class bosss : MonoBehaviour
             // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
             bossbar.MaxHealth = setEnemyHP;
             bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
+            Primary = this;
         }
 
         if (player == null) return;
@@ -212,10 +217,12 @@ public class bosss : MonoBehaviour
 
         // 체력 감소
         RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)
+        float before = EnemyHealth;
         EnemyHealth -= damage;
+        HealthBarFeel.Tier tier = BarFeel.OnDamaged(damage, before, setEnemyHP);     // HUD 바는 늘 보임
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         if (EnemyHealth > 0) BossUltimate.OnBossHit(this, damage);       // 필살기 게이지 (센 한 방일수록 많이)
-        DamagePopup.Show(transform, damage, spriteRenderer, true);
+        DamagePopup.Show(transform, damage, spriteRenderer, true, tier);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 
         transform.position += dir * knockBack * knockBackTaken;

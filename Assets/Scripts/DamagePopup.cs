@@ -4,12 +4,16 @@ using UnityEngine;
 
 // 적 · 보스가 피해를 입으면 머리 위로 떠올랐다 사라지는 피해 숫자
 // 같은 적에게 짧은 사이에 연달아 들어온 피해(도트 · 연사)는 숫자 하나로 합침
+// 합산 창은 체력바 타격감(HealthBarFeel)과 같은 값 — 숫자에 보이는 수 = 등급을 매긴 수 · 플레이어가 받은 피해도 여기서 (ShowHurt)
 public class DamagePopup : MonoBehaviour
 {
-    const float Life = 0.75f, Merge = 0.15f, Rise = 1.3f;
+    const float Life = 0.75f, Rise = 1.3f;
     // 2.2.0: 보스 피해가 거의 안 보였음 (큰 몸 꼭대기 위 · 화면 밖에 작게 떴다 금방 사라짐)
     // → 몸 위쪽 안에서, 화면 안으로 맞춰, 1.8배 크게 · 주황 금색 · 두꺼운 테두리 · 더 오래, 연타는 더 길게 모아 큰 숫자로
-    const float BossLife = 1.15f, BossMerge = 0.35f, BossRise = 1.8f, BossSize = 1.8f;
+    const float BossLife = 1.15f, BossRise = 1.8f, BossSize = 1.8f;
+    // 플레이어가 받은 피해: 빨강 "-N" · 머리 위 조금 낮게 (체력바 조각과 눈이 같이 가게) · 적 숫자 위에
+    const float HurtLife = 1.0f, HurtSize = 1.3f, HurtHeight = 1.6f;
+    const int HurtOrder = 50;
     const int MaxActive = 80;
 
     static TMP_FontAsset font;
@@ -22,14 +26,15 @@ public class DamagePopup : MonoBehaviour
 
     TextMeshPro text;
     int key;
-    bool crit, boss;
-    float amount, t, lastAdd, size = 1f;
+    bool crit, boss, hurt;
+    int tierMax;                 // 합친 피해 중 가장 높은 등급 (올라만 감)
+    float amount, t, lastAdd, firstAdd, size = 1f;     // firstAdd: 첫 합산 시각 (HealthBarFeel.WindowMax 가 지나면 새 숫자)
     // 1.1~: 합칠 때마다 t 를 0 으로 되돌려 떠오르던 숫자가 처음 자리로 툭 떨어지며 덜덜 떨렸음
     //   → 떠오르기(riseT)는 이어서, 수명(t)만 늘림 · 합칠 때 튀는 크기는 작게
     float riseT, popT, popAmp;
     Vector3 start;
 
-    public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false)
+    public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false, HealthBarFeel.Tier tier = HealthBarFeel.Tier.Small)
     {
         bool isCrit = NextCrit;
         NextCrit = false;
@@ -37,9 +42,9 @@ public class DamagePopup : MonoBehaviour
         int k = target.GetInstanceID();
         bool isBoss = fromBoss;      // 보스 본체만 (같은 "boss" 태그인 등불 · 묘비는 일반 숫자)
         // 치명타는 다른 숫자와 합치지 않고 따로 크게
-        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && Time.time - p.lastAdd < (isBoss ? BossMerge : Merge))
+        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && !p.hurt && Time.time - p.lastAdd < (isBoss ? HealthBarFeel.WindowBoss : HealthBarFeel.WindowEnemy) && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
         {
-            p.Add(damage);
+            p.Add(damage, tier);
             return;
         }
         if (active >= MaxActive || !EnsureFont()) return;
@@ -68,7 +73,35 @@ public class DamagePopup : MonoBehaviour
             at += new Vector3(Random.Range(-0.25f, 0.25f), 0.3f, 0f);
             Fx.Spawn("fx_sparkle", at, 1.4f, new Color(1f, 0.85f, 0.3f), 24f);
         }
-        p = null;
+        p = Take(k, at, isBoss ? 45 : 40, isBoss && bossMaterial != null ? bossMaterial : material);
+        p.crit = isCrit;
+        p.boss = isBoss;
+        if (!isCrit) byTarget[k] = p;
+        p.Add(damage, tier);
+    }
+
+    // 플레이어가 받은 피해: 짧은 사이 피해를 한 숫자로 합침 (WindowPlayer) · 빨강 · "-N" · 등급별 크기
+    public static void ShowHurt(Transform player, float taken, HealthBarFeel.Tier tier)
+    {
+        if (player == null || taken <= 0f || GameSettings.DamageNumbers == 2) return;
+        int k = player.GetInstanceID();
+        if (byTarget.TryGetValue(k, out DamagePopup p) && p != null && p.hurt && Time.time - p.lastAdd < HealthBarFeel.WindowPlayer && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
+        {
+            p.Add(taken, tier);
+            return;
+        }
+        if (active >= MaxActive || !EnsureFont()) return;
+        Vector3 at = new Vector3(player.position.x, player.position.y + HurtHeight, 0f);
+        p = Take(k, at, HurtOrder, material);
+        p.hurt = true;
+        byTarget[k] = p;
+        p.Add(taken, tier);
+    }
+
+    // 다 떠오른 숫자를 꺼내 처음 상태로 (풀이 비면 새로 만듦)
+    static DamagePopup Take(int k, Vector3 at, int order, Material mat)
+    {
+        DamagePopup p = null;
         while (pool.Count > 0 && p == null) p = pool.Pop();
         if (p == null)
         {
@@ -84,8 +117,8 @@ public class DamagePopup : MonoBehaviour
             mr.sortingLayerName = "Effect";
             mr.sortingOrder = 40;
         }
-        p.GetComponent<MeshRenderer>().sortingOrder = isBoss ? 45 : 40;
-        p.text.fontSharedMaterial = isBoss && bossMaterial != null ? bossMaterial : material;
+        p.GetComponent<MeshRenderer>().sortingOrder = order;
+        p.text.fontSharedMaterial = mat;
         p.transform.position = at;
         p.transform.localScale = Vector3.one;
         p.text.fontSize = GameSettings.DamageNumbers == 1 ? 15f : 11f;
@@ -94,13 +127,14 @@ public class DamagePopup : MonoBehaviour
         p.amount = 0f;
         p.t = 0f;
         p.size = 1f;
-        p.crit = isCrit;
-        p.boss = isBoss;
+        p.tierMax = 0;
+        p.crit = false;
+        p.boss = false;
+        p.hurt = false;
         p.live = true;
         p.gameObject.SetActive(true);
-        if (!isCrit) byTarget[k] = p;
         active++;
-        p.Add(damage);
+        return p;
     }
 
     // 다 쓴 숫자 (다시 쓸 때까지 꺼 둠)
@@ -142,15 +176,26 @@ public class DamagePopup : MonoBehaviour
         return true;
     }
 
-    void Add(float damage)
+    void Add(float damage, HealthBarFeel.Tier tier)
     {
         bool first = amount <= 0f;
         amount += damage;
+        if ((int)tier > tierMax) tierMax = (int)tier;
         lastAdd = Time.time;
+        if (first) firstAdd = lastAdd;
         t = 0f;
         popT = 0f;
         if (first) { riseT = 0f; popAmp = crit ? 0.3f : 0.35f; }       // 1.1~: 치명타 처음 튐 1.8배 → 1.3배
-        else popAmp = 0.08f;
+        else popAmp = 0.08f + 0.06f * tierMax;                          // 큰 누적일수록 합칠 때 더 튐 (Deadly 0.26)
+        float scale = HealthBarFeel.PopupScale[tierMax];
+        // 플레이어가 받은 피해: 빨강 (치명 등급은 더 진하게) · 등급별 크기
+        if (hurt)
+        {
+            text.text = "-" + Mathf.CeilToInt(amount);
+            text.color = tierMax >= (int)HealthBarFeel.Tier.Deadly ? new Color(1f, 0.15f, 0.15f) : new Color(1f, 0.3f, 0.28f);
+            size = HurtSize * scale;
+            return;
+        }
         text.text = (amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString()) + (crit ? "!" : "");
         // 큰 피해일수록 크고 붉은 금색
         PlayerController pl = Hostile.Player;
@@ -170,8 +215,11 @@ public class DamagePopup : MonoBehaviour
         {
             if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.6f, 0.15f), k);     // 1.0.4~: 끝 색 (1, 0.4, 0.15) → (1, 0.6, 0.15), 붉은빛을 덜어 받은 피해와 구분
             // 1.1~: 치명타 1.9~2.3 × 1.8 = 최대 4.1배라 보스 패턴 시작점 · 적 탄을 덮었음 → 보스 치명타는 1.3배까지 · 최대 2.8
-            size = crit ? Mathf.Min(size * 1.3f, 2.8f) : size * BossSize;
+            size = crit ? Mathf.Min(size * 1.3f * scale, 2.8f) : size * BossSize * scale;
         }
+        else size *= scale;      // 누적 등급별 크기 (1 / 1.2 / 1.55 / 2)
+        // 치명 등급 누적 (치명타 아님): 더 진한 금빛
+        if (!crit && tierMax >= (int)HealthBarFeel.Tier.Deadly) text.color = new Color(1f, 0.7f, 0.2f);
     }
 
     void Update()
@@ -179,7 +227,7 @@ public class DamagePopup : MonoBehaviour
         t += Time.deltaTime;
         riseT += Time.deltaTime;
         popT += Time.deltaTime;
-        float life = boss ? BossLife : Life;
+        float life = hurt ? HurtLife : boss ? BossLife : Life;
         float k = t / life;
         if (k >= 1f) { Release(); return; }
         float kr = Mathf.Clamp01(riseT / life);

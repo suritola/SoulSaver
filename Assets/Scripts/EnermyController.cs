@@ -155,7 +155,7 @@ public class EnermyController : MonoBehaviour
         spriteRenderer.color = baseColor;
 
         // 머리 위 체력바
-        if (swarm == null) EnemyHealthBar.Attach(this, spriteRenderer);       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
+        if (swarm == null) healthBar = EnemyHealthBar.Attach(this, spriteRenderer);       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
 
         if (skill != EnemySkillType.None)
         {
@@ -252,11 +252,14 @@ public class EnermyController : MonoBehaviour
     }
 
     // 1.1~ 영혼 부스러기 풀 (SwarmMote): 다시 꺼낼 때 죽은 표시를 풀고 체력을 채움 · 풀로 돌아갈 때 죽은 것으로 (꺼진 채 남은 참조가 때리지 않게)
+    EnemyHealthBar healthBar;       // 머리 위 체력바 (타격감 · 부스러기는 없음)
+
     public void ReviveForPool()
     {
         isDead = false;
         skipKillCount = false;
         EnemyHealth = setEnemyHP;
+        if (healthBar != null) healthBar.ResetFeel(EnemyHealth);
         if (bodyCollider != null) bodyCollider.enabled = true;
     }
     public void PoolDead() => isDead = true;
@@ -320,9 +323,11 @@ public class EnermyController : MonoBehaviour
 
         // 체력 감소
         RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)
+        float before = EnemyHealth;
         EnemyHealth -= damage;
+        HealthBarFeel.Tier tier = healthBar != null ? healthBar.OnDamaged(damage, before) : HealthBarFeel.Tier.Small;
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
-        DamagePopup.Show(transform, damage, spriteRenderer);
+        DamagePopup.Show(transform, damage, spriteRenderer, false, tier);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 
         transform.position += dir * knockBack * knockBackTaken;

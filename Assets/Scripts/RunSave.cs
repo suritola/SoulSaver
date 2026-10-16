@@ -371,6 +371,8 @@ public static class RunSave
         // 저장할 때의 값 (선택을 다시 적용해서 바뀐 최대 체력 · 탄창 등은 그대로 두고 지금 값만)
         p.level = d.level;
         p.PlayerHealth = Mathf.Clamp(d.hp, 1f, p.PlayerMaxHealth);
+        PlayerHP hpBar = Object.FindFirstObjectByType<PlayerHP>();
+        if (hpBar != null) hpBar.ResetFeel();      // 체력바 조각을 복원한 체력에 붙임
         shop.RestoreLevels(d.earned, d.pending, d.nowExp, d.needExp);
         Coin coin = Object.FindFirstObjectByType<Coin>();
         if (coin != null) { coin.coins = 0; coin.AddCoin(d.coins); }
