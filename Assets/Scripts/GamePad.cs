@@ -391,6 +391,36 @@ public class GamePad : MonoBehaviour
     {
         Poll();
         Hook();
+        ScanPads();
+    }
+
+    // 1.1.9~ 패드가 빠지면 축이 0 으로 읽혀 캐릭터가 선 채 맞았음 → 1초마다(실제 시간) 연결된 패드 수를 세어
+    // 쓰던 패드가 빠지면 키보드 · 마우스로 돌리고 게임 중이면 일시정지 + 안내, 다시 꽂으면 안내만
+    static int padCount = -1;
+    static float nextPadScan;
+
+    static void ScanPads()
+    {
+        if (GameInput.Auto || Application.isBatchMode || Time.unscaledTime < nextPadScan) return;
+        nextPadScan = Time.unscaledTime + 1f;
+        int n = 0;
+        foreach (string s in Input.GetJoystickNames()) if (!string.IsNullOrEmpty(s)) n++;
+        if (padCount < 0) { padCount = n; return; }         // 처음 한 번은 기준만
+        bool inGame = SceneManager.GetActiveScene().name == "GameScene";
+        if (padCount > 0 && n == 0)
+        {
+            bool wasActive = Active;
+            Clear();
+            SetActive(false);                               // 안내 글자 · 커서를 키보드로
+            if (wasActive && inGame)
+            {
+                // 일시정지 메뉴를 열었으면 그 위에 이유를 한 줄 (토스트는 멈춘 동안 숨겨짐) · 이미 멈춘 창 위면 토스트로 (창을 닫으면 보임)
+                if (!ESCmenu.RequestPause("게임패드 연결이 끊어졌습니다"))
+                    Notice.Toast(NoticeIcon.Warn, Loc.T("게임패드 연결이 끊어졌습니다"), 4f);
+            }
+        }
+        else if (padCount == 0 && n > 0 && inGame) Notice.Toast(NoticeIcon.Info, Loc.T("게임패드가 연결되었습니다"), 3f);
+        padCount = n;
     }
 
     void LateUpdate()

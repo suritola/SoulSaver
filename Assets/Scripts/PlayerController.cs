@@ -1339,7 +1339,7 @@ void Shoot()
     {
         if (IsDying) yield break;
         IsDying = true;
-        RunSave.Delete();           // 죽으면 이어할 판은 지움 (2.1.9)
+        RunSave.Abandon();          // 죽으면 이어할 판은 지움 (2.1.9) · 1.1.9~ 무한 모드 · 일일 도전 · 튜토리얼에서 죽어도 이야기 판 저장은 남김
         invincibleUntil = float.MaxValue;
         CancelSkill();
         move = Vector3.zero;

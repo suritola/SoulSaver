@@ -199,7 +199,8 @@ public class HintBadge : MonoBehaviour
     Color rimColor;
     float phase;
 
-    public static TMP_Text Make(Transform parent, string name, Vector2 pos, Vector2 size, Color fill, Color rimColor, float fontSize)
+    // clickable (1.1.9~): 배지를 누를 수 있게 Button 을 붙임 — 꺼낼 때는 t.transform.parent.GetComponent<Button>()
+    public static TMP_Text Make(Transform parent, string name, Vector2 pos, Vector2 size, Color fill, Color rimColor, float fontSize, bool clickable = false)
     {
         UIKit.EnsureStyle();
         RectTransform r = UIKit.Rect(name, parent, pos, size);
@@ -228,6 +229,18 @@ public class HintBadge : MonoBehaviour
         t.outlineWidth = 0.25f;
         t.outlineColor = new Color32(0, 0, 0, 255);
         t.enableWordWrapping = false;
+        if (clickable)
+        {
+            hb.rim.raycastTarget = true;
+            Button b = r.gameObject.AddComponent<Button>();
+            b.targetGraphic = hb.rim;
+            ColorBlock cb = b.colors;
+            cb.highlightedColor = new Color(1f, 0.95f, 0.8f);
+            cb.pressedColor = new Color(0.85f, 0.75f, 0.55f);
+            cb.selectedColor = Color.white;           // 누른 뒤 선택된 채 어둡게 남지 않게
+            b.colors = cb;
+            Navigation nav = b.navigation; nav.mode = Navigation.Mode.None; b.navigation = nav;
+        }
         return t;
     }
 

@@ -58,8 +58,31 @@ public class CursorSkin : MonoBehaviour
         return tex;
     }
 
+    // 1.1.9~ 설정 「커서를 창 안에 가두기」: 전투 중(시간이 흐르는 게임 씬)에만 Confined — 창 밖 클릭으로 포커스를 잃어 갑자기 멈추거나 옆 모니터로 넘어가지 않게
+    // 멈춘 화면 · 메뉴 · 연출 · 패드 사용 중 · 창이 비활성이면 풀어 둠 (macOS 는 Confined 를 지원하지 않아 None 과 같음)
+    static CursorLockMode applied = CursorLockMode.None;
+
+    static void UpdateConfine()
+    {
+        bool want = GameSettings.ConfineCursor && Application.isFocused && Time.timeScale > 0f
+                    && SceneManager.GetActiveScene().name == "GameScene"
+                    && !ESCmenu.IsOpen && !SettingsUI.IsOpen && !GamePad.Active && !StoryDirector.Playing && !BossUltimate.CutscenePlaying;
+        CursorLockMode m = want ? CursorLockMode.Confined : CursorLockMode.None;
+        if (m == applied) return;
+        applied = m;
+        Cursor.lockState = m;
+    }
+
+    void OnApplicationFocus(bool focus)
+    {
+        if (focus || applied == CursorLockMode.None) return;
+        applied = CursorLockMode.None;          // 알트탭 뒤 커서가 자유롭게
+        Cursor.lockState = CursorLockMode.None;
+    }
+
     void Update()
     {
+        UpdateConfine();
         if (!GameSettings.GameCursor)
         {
             if (shown != null) { Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); shown = null; }

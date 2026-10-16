@@ -34,6 +34,8 @@ public class RunStats : MonoBehaviour
     // 이번 판을 끝까지 깼는지 (결과 화면이 「클리어!」로 · 1.0.4~ 엔딩 뒤에도 결과 화면을 거침)
     public static bool Cleared => cleared;
     public static void MarkCleared() => cleared = true;
+    // 1.1.9~ 무한 모드 · 일일 도전에서 「포기하고 결과 보기」로 끝냄 (결과 화면이 「여기까지!」, 쓰러진 곳 줄 없음)
+    public static bool GaveUp;
 
     float refresh;
 
@@ -44,10 +46,13 @@ public class RunStats : MonoBehaviour
         SceneManager.sceneLoaded += (s, m) =>
         {
             // 게임 씬을 떠날 때 (게임 오버 · 메인 메뉴 · 다시 시작) 이번 판을 밸런스 기록에 한 줄
-            if (runActive) { runActive = false; WriteBalanceLog(cleared ? "clear" : s.name == "GameOver" ? "death" : "quit"); }
+            if (runActive) { runActive = false; WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : s.name == "GameOver" ? "death" : "quit"); }
+            // 1.1.9~ 무한 모드를 메인 메뉴 · 다시 시작으로 나가면 지난 기록이 남아 다음 이야기 모드 결과 화면에 섞여 나왔음
+            if (s.name != "GameOver") EndlessMode.LastSeconds = -1f;
             if (s.name != "GameScene") return;
             runActive = true;
             cleared = false;
+            GaveUp = false;
             Evolutions.Clear();
             SkillEvos.Clear();
             LogSkillEvos = "";
@@ -268,7 +273,7 @@ public class RunStats : MonoBehaviour
         y = Section(box, y, Loc.T("준 피해"), Top(DamageDealt, 6), new Color(0.96f, 0.72f, 0.3f));
         y = Section(box, y - 20f, Loc.T("받은 피해"), Top(DamageTaken, 4), new Color(0.92f, 0.32f, 0.3f));
         // 쓰러졌으면 마지막으로 맞은 공격과 장
-        if (!cleared && !string.IsNullOrEmpty(LastHurtBy) && SceneManager.GetActiveScene().name == "GameOver")
+        if (!cleared && !GaveUp && !string.IsNullOrEmpty(LastHurtBy) && SceneManager.GetActiveScene().name == "GameOver")
         {
             string where = GameMode.IsEndless ? Loc.T("무한 모드") + "  ·  " : LastHurtStage > 0 ? Loc.T("{0}장").Replace("{0}", LastHurtStage.ToString()) + "  ·  " : "";
             TMP_Text t = Line(box, y - 14f, "<color=#F5D478>" + Loc.T("쓰러진 곳") + "</color>  " + where + SourceName(LastHurtBy), 22f);

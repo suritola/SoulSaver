@@ -109,22 +109,15 @@ public class TreasureChest : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // 화면 밖이면 화면 가장자리(안쪽으로 조금)에 상자 그림이 상자 쪽을 가리킴
+    // 화면 밖이면 화면 가장자리(안쪽으로 조금)에 상자 그림이 상자 쪽을 가리킴 (1.1.9~ 계산은 EdgePointer, 떠돌이 상점 제단도 같이 씀)
     void UpdatePointer(float t)
     {
-        Camera cam = Camera.main;
-        if (pointer == null || cam == null || !cam.orthographic) return;
-        Vector3 c = cam.transform.position;
-        float hh = cam.orthographicSize, hw = hh * cam.aspect;
-        Vector2 d = home - c;
-        bool inside = Mathf.Abs(d.x) < hw - 0.5f && Mathf.Abs(d.y) < hh - 0.5f;
-        pointer.SetActive(!inside);
-        if (inside) return;
-        // 1.1~ 가장자리 여백 1.2 → 화면 비율 (위 16% · 아래 14% · 옆 5%): 체력 패널 · 경험치 바 같은 HUD 밑에 숨지 않게
-        float mx = Mathf.Max(1.2f, hw * 2f * 0.05f), my = Mathf.Max(1.2f, hh * 2f * (d.y > 0f ? 0.16f : 0.14f));
-        float sx = (hw - mx) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - my) / Mathf.Max(0.001f, Mathf.Abs(d.y));
-        Vector2 edge = d * Mathf.Min(sx, sy);
-        pointer.transform.position = new Vector3(c.x + edge.x, c.y + edge.y, 0f);
+        if (pointer == null) return;
+        if (Camera.main == null || !Camera.main.orthographic) return;
+        bool outside = EdgePointer.EdgePoint(home, out Vector3 at);
+        pointer.SetActive(outside);
+        if (!outside) return;
+        pointer.transform.position = at;
         pointer.transform.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(t * 8f));
     }
 
@@ -134,5 +127,26 @@ public class TreasureChest : MonoBehaviour
         if (halo != null) Destroy(halo);
         if (pillar != null) Destroy(pillar);
         if (pointer != null) Destroy(pointer);
+    }
+}
+
+// 1.1.9~ 화면 밖 대상을 가리키는 가장자리 표시의 자리 (보물 상자 · 떠돌이 상점 제단)
+public static class EdgePointer
+{
+    // 카메라 안이면 false. 밖이면 화면 가장자리 안쪽 — 위 16% · 아래 14% · 옆 5% (최소 1.2칸), 체력 패널 · 경험치 바 같은 HUD 밑에 숨지 않게
+    public static bool EdgePoint(Vector3 target, out Vector3 at)
+    {
+        at = target;
+        Camera cam = Camera.main;
+        if (cam == null || !cam.orthographic) return false;
+        Vector3 c = cam.transform.position;
+        float hh = cam.orthographicSize, hw = hh * cam.aspect;
+        Vector2 d = (Vector2)(target - c);
+        if (Mathf.Abs(d.x) < hw - 0.5f && Mathf.Abs(d.y) < hh - 0.5f) return false;
+        float mx = Mathf.Max(1.2f, hw * 2f * 0.05f), my = Mathf.Max(1.2f, hh * 2f * (d.y > 0f ? 0.16f : 0.14f));
+        float sx = (hw - mx) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - my) / Mathf.Max(0.001f, Mathf.Abs(d.y));
+        Vector2 edge = d * Mathf.Min(sx, sy);
+        at = new Vector3(c.x + edge.x, c.y + edge.y, 0f);
+        return true;
     }
 }

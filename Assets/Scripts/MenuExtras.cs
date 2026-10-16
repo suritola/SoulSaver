@@ -22,13 +22,15 @@ public static class MenuExtras
     {
         Canvas canvas = UIKit.HudCanvas();
         // 1.0.4~: 끝까지 깨고 엔딩을 본 뒤에도 이 결과 화면을 거침 — 「사망하셨습니다...」 대신 「<난이도> 클리어!」, 해골은 숨김
-        if (RunStats.Cleared)
+        // 1.1.9~ 무한 모드 · 일일 도전을 「포기하고 결과 보기」로 끝냈으면 「여기까지!」 (쓰러진 게 아니므로 해골도 숨김)
+        if (RunStats.Cleared || RunStats.GaveUp)
         {
             GameObject msg = GameObject.Find("GameOverMessage");
             TMP_Text title = msg != null ? msg.GetComponentInChildren<TMP_Text>(true) : null;
             if (title != null)
             {
-                title.text = GameMode.Name(GameMode.Current) + " " + Loc.T("클리어!");
+                if (RunStats.Cleared) title.text = GameMode.Name(GameMode.Current) + " " + Loc.T("클리어!");
+                else { title.text = Loc.T("여기까지!"); UIKit.Remember(title, "여기까지!"); }
                 title.color = new Color(0.96f, 0.83f, 0.47f);
             }
             GameObject skull = GameObject.Find("Skull");
@@ -630,12 +632,65 @@ public static class SettingsUI
         page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
 
         UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 76f), Close, 30f);
+        // 1.1.9~ 탭마다 「이 탭 기본값으로」 (예전엔 조작 탭에만 「기본값으로」) · 실수 방지로 두 번 누르기
+        resetButton = UIKit.MakeButton(win, "이 탭 기본값으로", new Vector2(330f, -364f), new Vector2(280f, 64f), ResetTab, 24f);
+        TMP_Text resetLabel = resetButton.GetComponentInChildren<TMP_Text>();
+        if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 14f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
+        resetArmedAt = resetDoneAt = -99f;
+        RowTip(resetLabel, "이 탭 기본값으로", "이 탭의 설정만 처음 값으로 되돌립니다(조작 탭은 모든 키 배치). 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.");
         ShowTab(tab);
+    }
+
+    static Button resetButton;
+    static float resetArmedAt = -99f;
+    static Color resetLabelColor = Color.white;
+    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 9줄이라 54)
+
+    static float resetDoneAt = -99f;
+    static bool ResetArmed => resetArmedAt > -99f;
+
+    // 2초 안에 다시 누르지 않으면 · 「되돌렸습니다」를 1.5초 보인 뒤 원래 글자로
+    static void DisarmReset()
+    {
+        if (!ResetArmed && resetDoneAt <= -99f) return;
+        resetArmedAt = resetDoneAt = -99f;
+        if (resetButton != null) SetResetLabel(resetButton.GetComponentInChildren<TMP_Text>(), "이 탭 기본값으로", resetLabelColor);
+    }
+
+    static void ResetTab()
+    {
+        TMP_Text t = resetButton != null ? resetButton.GetComponentInChildren<TMP_Text>() : null;
+        Deselect();
+        if (!ResetArmed || Time.unscaledTime - resetArmedAt >= 2f)
+        {
+            resetArmedAt = Time.unscaledTime;
+            resetDoneAt = -99f;
+            SetResetLabel(t, "한 번 더 누르면 되돌립니다", new Color(1f, 0.55f, 0.45f));
+            return;
+        }
+        if (tab == 0) GameSettings.ResetGeneral();
+        else if (tab == 1) GameSettings.ResetDisplay();
+        else if (tab == 2) { capturing = -1; KeyBindings.ResetAll(); }
+        else GameSettings.ResetGameplay();
+        ShowTab(tab);                                   // 줄을 다시 그려 새 값이 보이게 (무장 해제)
+        // 되돌렸다는 표시는 버튼 글자로 잠깐 (토스트는 설정 창 뒤에 가려 보이지 않음)
+        SetResetLabel(t, "되돌렸습니다", new Color(0.6f, 0.95f, 0.6f));
+        resetDoneAt = Time.unscaledTime;
+    }
+
+    static void SetResetLabel(TMP_Text t, string ko, Color color)
+    {
+        if (t == null) return;
+        t.text = Loc.T(ko);
+        t.color = color;
+        UIKit.Remember(t, ko);
     }
 
     static void ShowTab(int t)
     {
         tab = t;
+        DisarmReset();                                  // 다른 탭으로 옮기면 무장 해제
+        rowH = tab == 3 ? 54f : 64f;
         capturing = -1;
         blocked = -1;
         keyLabels.Clear();
@@ -826,11 +881,14 @@ public static class SettingsUI
     {
         // 2.1.8: 「레벨업 바로 열기」 한 줄을 더 넣으려고 줄 간격 110 → 90, 1.0.2: 「내 이펙트 투명도」 넣으려고 90 → 75
         // 1.0.4~ 줄마다 마우스를 올리면 한 줄 설명, 거의 효과가 없던 「키 아이콘」은 뺌 (줄 간격 75 → 80), 「투명도」 → 「불투명도」
-        ToggleRow("도움말 안내", 200f, () => GameSettings.Hints, v => GameSettings.Hints = v,
+        // 1.1.9~ 「커서를 창 안에 가두기」 · 「카드 한 번 클릭으로 확정」 두 줄을 더 넣어 9줄: 줄 간격 75 → 60, 버튼 높이 64 → 54 (rowH)
+        //        위 끝 = 탭 버튼 아래(창 240) 밑, 아래 끝 = 「닫기」 위(창 -326) 위 (page 가운데가 창 -30)
+        float[] y = { 235f, 175f, 115f, 55f, -5f, -65f, -125f, -185f, -245f };
+        ToggleRow("도움말 안내", y[0], () => GameSettings.Hints, v => GameSettings.Hints = v,
                   "처음 보는 기능마다 짧은 도움말을 한 번씩 띄웁니다.");
         // 1.0.4~: 본 도움말을 처음부터 다시 볼 수 있게 (켜기 · 끄기 옆)
         Button again = null;
-        again = UIKit.MakeButton(page, "도움말 다시 보기", new Vector2(370f, 200f), new Vector2(230f, 64f), () =>
+        again = UIKit.MakeButton(page, "도움말 다시 보기", new Vector2(370f, y[0]), new Vector2(230f, rowH), () =>
         {
             Hints.ResetAll();
             Deselect();
@@ -839,18 +897,22 @@ public static class SettingsUI
         }, 22f);
         TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
         if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
-        CycleRow("피해 숫자", 125f, GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
+        CycleRow("피해 숫자", y[1], GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
                  "적에게 준 피해를 숫자로 띄웁니다. 끄면 화면이 깔끔해집니다.");
-        CycleRow("내 이펙트 불투명도", 50f, GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
+        CycleRow("내 이펙트 불투명도", y[2], GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
                  "내 공격 · 스킬 · 필살기 이펙트의 진하기입니다. 낮추면 캐릭터와 적의 공격이 잘 보입니다. (적 공격은 그대로)");
-        ToggleRow("색각 이상 모드", -25f, () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
+        ToggleRow("색각 이상 모드", y[3], () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
                   "경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로 그립니다.");
-        ToggleRow("게임 커서", -100f, () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
+        ToggleRow("게임 커서", y[4], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
-        ToggleRow("레벨업 바로 열기", -175f, () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
+        ToggleRow("커서를 창 안에 가두기", y[5], () => GameSettings.ConfineCursor, v => GameSettings.ConfineCursor = v,
+                  "전투 중 마우스가 창 밖으로 나가지 않게 합니다. 멈춘 화면 · 메뉴 · 패드를 쓸 때는 풀립니다. 창 모드나 모니터가 두 대일 때 유용합니다.");
+        ToggleRow("레벨업 바로 열기", y[6], () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
                   "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
+        ToggleRow("카드 한 번 클릭으로 확정", y[7], () => GameSettings.OneClickPick, v => GameSettings.OneClickPick = v,
+                  "켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 무기 진화는 늘 두 번 확인합니다.");
         // 1.2~ 발견형 도감의 스포일러 허용 (줄 간격 80 → 75 로 한 줄 더)
-        ToggleRow("도감 모두 보기", -250f, () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
+        ToggleRow("도감 모두 보기", y[8], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
                   "켜면 도감의 진화 · 유물 · 각인 · 비밀 탭에서 아직 못 얻은 것도 모두 보입니다 (스포일러). 수집률과 보상에는 들어가지 않습니다.");
     }
 
@@ -877,7 +939,7 @@ public static class SettingsUI
             UIKit.Remember(label, text);
             b.GetComponent<Image>().color = Gold;
         };
-        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
             set((get() + 1) % names.Length);
             Deselect();
@@ -900,7 +962,7 @@ public static class SettingsUI
             UIKit.Remember(label, text);
             b.GetComponent<Image>().color = on ? Gold : Off;
         };
-        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
             set(!get());
             Deselect();
@@ -946,14 +1008,8 @@ public static class SettingsUI
         // 1.1~ 두 줄이 폭을 넘어 4줄로 접히며 약 14pt 까지 줄었음 → 위 키 칸(아래 끝 -122) · 아래 안내(위 끝 -233) 사이를 꽉 채움
         UIKit.Text(page, "게임패드", 24f, Gold, new Vector2(-470f, -172f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
         UIKit.Text(page, PadLayoutKo, 19f, Parch, new Vector2(80f, -173f), new Vector2(940f, 98f), TextAlignmentOptions.Left);
+        // 1.1.9~ 「기본값으로」 버튼은 창 아래 「이 탭 기본값으로」가 대신함
         UIKit.Text(page, "버튼을 누른 뒤 바꿀 키나 마우스 버튼을 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
-        UIKit.MakeButton(page, "기본값으로", new Vector2(390f, -255f), new Vector2(260f, 60f), () =>
-        {
-            capturing = -1;
-            KeyBindings.ResetAll();
-            Deselect();
-            RefreshKeys();
-        }, 24f);
         RefreshKeys();
     }
 
@@ -984,6 +1040,7 @@ public static class SettingsUI
     // 창이 열려 있는 동안 매 프레임 (SettingsInput): 키 입력 받기 · ESC
     internal static void Tick()
     {
+        if ((ResetArmed && Time.unscaledTime - resetArmedAt >= 2f) || (resetDoneAt > -99f && Time.unscaledTime - resetDoneAt >= 1.5f)) DisarmReset();
         if (GameInput.EscDown)
         {
             EscHandledFrame = Time.frameCount;
@@ -1069,6 +1126,8 @@ public static class SettingsUI
     public static void Close()
     {
         capturing = -1;
+        resetArmedAt = resetDoneAt = -99f;
+        resetButton = null;
         GameSettings.Save();
         if (open != null) Object.Destroy(open);
         open = null;

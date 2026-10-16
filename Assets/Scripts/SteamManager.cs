@@ -50,6 +50,10 @@ public class SteamManager : MonoBehaviour
         go.AddComponent<SteamManager>();
     }
 
+#if STEAM
+    static Callback<GameOverlayActivated_t> overlayHook;
+#endif
+
     void Awake()
     {
         Instance = this;
@@ -68,6 +72,8 @@ public class SteamManager : MonoBehaviour
         try { Initialized = SteamAPI.Init(); }
         catch (System.DllNotFoundException e) { Debug.LogWarning("[Steam] steam_api 라이브러리를 찾지 못했습니다: " + e.Message); }
         if (!Initialized) Debug.LogWarning("[Steam] 초기화 실패 - 스팀이 켜져 있는지, steam_appid.txt가 있는지 확인하세요");
+        // 1.1.9~ 스팀 오버레이(Shift+Tab · 패드 가이드 버튼)는 창 포커스를 뺏지 않아 덮인 채 게임이 계속 돌았음 → 열릴 때 일시정지 (닫을 때는 그대로, ESC 로 직접 재개)
+        if (Initialized) overlayHook = Callback<GameOverlayActivated_t>.Create(e => { if (e.m_bActive != 0) ESCmenu.RequestPause(); });
 #endif
         SceneManager.sceneLoaded += OnSceneLoaded;
         EnermyController.Killed += OnEnemyKilled;
@@ -125,7 +131,7 @@ public class SteamManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "GameOver" && !RunStats.Cleared) SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
+        if (scene.name == "GameOver" && !RunStats.Cleared && !RunStats.GaveUp)SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
         CheckOwnedSkins();
         if (scene.name != "GameScene") return;
         runKills = runEvolves = runUlts = 0;

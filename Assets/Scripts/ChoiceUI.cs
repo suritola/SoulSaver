@@ -46,9 +46,13 @@ public class ChoiceUI : MonoBehaviour
     RectTransform[] cards;
     Image[] frames;
 
+    // 1.1.9~ 설정 「카드 한 번 클릭으로 확정」 (튜토리얼은 두 단계 그대로)
+    static bool OneClick => GameSettings.OneClickPick && !TutorialRun.Active;
+
     void Click(int i)
     {
         if (!ready) return;
+        if (OneClick) { Select(i); confirmed = i; return; }
         float now = Time.unscaledTime;
         if (lastClick == i && now - lastClickAt <= DoubleClick) { confirmed = i; return; }
         if (GamePad.PadClickNow && selected == i) { confirmed = i; return; }        // 1.0.5~ 패드: 고른 카드를 A 로 한 번 더 누르면 확정
@@ -97,7 +101,7 @@ public class ChoiceUI : MonoBehaviour
 
         UIKit.Text(r, title, 54f, Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
         if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, 28f, Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
-        UIKit.Text(r, GamePad.Active ? "십자키 ← → 로 고르고 [A]로 확정" : "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
+        UIKit.Text(r, GamePad.Active ? "십자키 ← → 로 고르고 [A]로 확정" : OneClick ? "카드를 누르면 바로 확정됩니다" : "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
 
         const float w = 400f, h = 500f, gap = 44f;
         int n = options.Length;
@@ -184,6 +188,7 @@ public class ChoiceUI : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
                 {
                     if (ui.selected == i) ui.confirmed = i;         // 1.0.4~ 같은 숫자 한 번 더 → 확정
+                    else if (OneClick) { ui.Select(i); ui.confirmed = i; }
                     else ui.Select(i);
                 }
             // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)

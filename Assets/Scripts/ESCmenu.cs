@@ -17,6 +17,21 @@ public class ESCmenu : MonoBehaviour
     void Start()
     {
         shop = FindFirstObjectByType<Shop>();
+        // 1.1.9~ 무한 모드 · 일일 도전: 「메인 메뉴로」 → 「포기하고 결과 보기」 (씬 버튼 글자를 덮어씀 · 언어를 바꿔도 이 글자로)
+        if (GiveUpMode && escMenu != null)
+            foreach (UnityEngine.UI.Button b in escMenu.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                bool mainMenu = false;
+                for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+                    if (b.onClick.GetPersistentMethodName(i) == nameof(onPressMainMenu)) mainMenu = true;
+                TMPro.TMP_Text t = mainMenu ? b.GetComponentInChildren<TMPro.TMP_Text>(true) : null;
+                if (t == null) continue;
+                UIKit.Remember(t, "포기하고 결과 보기");
+                t.text = Loc.T("포기하고 결과 보기");
+                t.enableAutoSizing = true;          // 영어 · 일본어는 「메인 메뉴로」보다 길어 버튼을 넘지 않게
+                t.fontSizeMax = t.fontSize;
+                t.fontSizeMin = Mathf.Min(t.fontSize, 18f);
+            }
     }
 
     // Update is called once per frame
@@ -45,11 +60,53 @@ public class ESCmenu : MonoBehaviour
     }
 
     // 창이 포커스를 잃으면 (Alt+Tab 등) 일시정지 메뉴를 열어 둠
-    void OnApplicationFocus(bool focus)
+    void OnApplicationFocus(bool focus) { if (!focus) PauseFromOutside(); }
+
+    // 1.1.9~ 바깥 요인(포커스 잃음 · 스팀 오버레이 · 게임패드 분리)으로 멈춰야 할 때 — 이미 멈춘 화면 · 연출 중이면 그대로
+    public void PauseFromOutside()
     {
-        if (focus || isEscOpen || GameInput.Auto || Application.isBatchMode || StoryDirector.Playing) return;
-        if (Time.timeScale == 0f || (shop != null && shop.isShopOpen)) return;
+        if (isEscOpen || GameInput.Auto || Application.isBatchMode || StoryDirector.Playing) return;
+        if (Time.timeScale == 0f || (shop != null && (shop.isShopOpen || shop.isPause))) return;
+        if (Hostile.Player != null && Hostile.Player.IsDying) return;      // 쓰러지는 연출 중엔 결과 화면으로 그대로
         ToggleEsc();
+    }
+
+    // 게임 씬이 아니면 (메인 메뉴 · 결과 화면) ESCmenu 가 없어 아무 일 없음
+    public static void RequestPause() => RequestPause(null);
+
+    // reasonKo: 왜 멈췄는지 일시정지 화면 위에 한 줄 (토스트는 멈춘 동안 숨겨져 보이지 않음) · 메뉴를 열었으면 true
+    public static bool RequestPause(string reasonKo)
+    {
+        ESCmenu m = FindFirstObjectByType<ESCmenu>();
+        if (m == null) return false;
+        m.PauseFromOutside();
+        if (!m.isEscOpen) return false;
+        if (!string.IsNullOrEmpty(reasonKo)) m.ShowReason(reasonKo);
+        return true;
+    }
+
+    // 1.1.9~ 바깥 요인으로 멈춘 이유 (화면 위 가운데 띠 · 메뉴를 닫으면 사라짐)
+    GameObject reasonBanner;
+
+    void ShowReason(string ko)
+    {
+        HideReason();
+        Transform root = escMenu != null ? escMenu.transform.root : transform.root;
+        RectTransform r = UIKit.Rect("PauseReason", root, Vector2.zero, new Vector2(760f, 60f));
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 1f);
+        r.anchoredPosition = new Vector2(0f, -120f);
+        SoulTreeUI.OnTop(r.gameObject, 610);              // 일시정지 메뉴 위 · 확인 창(620) 아래
+        UnityEngine.UI.Image bg = r.gameObject.AddComponent<UnityEngine.UI.Image>();
+        bg.color = new Color(0.25f, 0.1f, 0.05f, 0.92f);
+        bg.raycastTarget = false;
+        UIKit.Text(r, ko, 30f, new Color(1f, 0.75f, 0.45f), Vector2.zero, new Vector2(720f, 52f));
+        reasonBanner = r.gameObject;
+    }
+
+    void HideReason()
+    {
+        if (reasonBanner != null) Destroy(reasonBanner);
+        reasonBanner = null;
     }
 
     void OnDestroy() => IsOpen = false;
@@ -64,6 +121,12 @@ public class ESCmenu : MonoBehaviour
 
     public void onPressMainMenu()
     {
+        // 1.1.9~ 무한 모드 · 일일 도전: 메인 메뉴로 바로 가면 결과 화면(생존 시간 · 순위 · 획득 포인트)을 못 봤음 → 포기하고 결과 화면으로
+        if (GiveUpMode)
+        {
+            Confirm("ConfirmGiveUp", "여기서 포기하고 결과를 볼까요?", "지금까지의 생존 시간 · 보스 처치 수가 기록되고 순위표에 올라갑니다.", "포기하고 결과 보기", GiveUp);
+            return;
+        }
         // 2.1.9: 판이 저장되어 메인 메뉴 「이어하기」로 계속할 수 있음 (저장하지 않는 판은 예전 안내)
         Confirm("ConfirmMainMenu", "정말로 메인 메뉴로 가시겠습니까?", SaveNote(), "메인 메뉴로", GoMainMenu);
     }
@@ -96,7 +159,8 @@ public class ESCmenu : MonoBehaviour
         RectTransform win = UIKit.Modal(root, name, new Vector2(780f, 340f), out confirm);
         SoulTreeUI.OnTop(confirm, 620);
         UIKit.Text(win, question, 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
-        UIKit.Text(win, note, 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(720f, 40f));
+        // 안내는 두 줄까지 (포기 안내처럼 긴 영어 · 일본어 문구가 한 줄 높이에 맞추느라 아주 작아지지 않게) — 제목(48~) · 버튼(~-52) 사이
+        UIKit.Text(win, note, 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 14f), new Vector2(720f, 66f));
         UIKit.MakeButton(win, okLabel, new Vector2(-150f, -90f), new Vector2(260f, 76f), ok, 28f);
         UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
     }
@@ -113,6 +177,19 @@ public class ESCmenu : MonoBehaviour
         RunSave.Save();             // 판 중간 저장 (2.1.9)
         SceneManager.LoadScene("MainMenu");
         Time.timeScale = 1f;
+    }
+
+    static bool GiveUpMode => GameMode.IsEndless || DailyChallenge.Active;
+
+    // 결과 화면으로 (EndlessMode.OnDestroy 가 생존 시간 · 최고 기록 · 순위표 제출, 결과 화면이 그대로 보여 줌)
+    void GiveUp()
+    {
+        CloseConfirm();
+        RunStats.GaveUp = true;
+        RunSave.Abandon();          // 무한 모드 · 일일 도전은 저장하지 않으므로 따로 남은 이야기 판 저장(「이어하기」)은 지우지 않음
+        Time.timeScale = 1f;
+        IsOpen = false;
+        SceneManager.LoadScene("GameOver");
     }
 
     void Restart()
@@ -138,6 +215,7 @@ public class ESCmenu : MonoBehaviour
     void ToggleEsc()
     {
         CloseConfirm();
+        HideReason();
         isEscOpen = !isEscOpen;
         IsOpen = isEscOpen;
 

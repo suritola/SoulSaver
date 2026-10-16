@@ -23,6 +23,10 @@ public class ShopStall : MonoBehaviour
     TextMeshPro promptText;
     LineRenderer nearRing;
     float promptShow;
+    // 1.1.9~ 화면 밖이면 가장자리에 제단 그림 + 남은 초 (보물 상자와 같은 EdgePointer) — 무리를 끌고 달리다 어디 있는지 몰라 놓쳤음
+    GameObject pointer;
+    SpriteRenderer pointerSr;
+    TextMeshPro pointerText;
 
     static Sprite stallSprite;
 
@@ -65,6 +69,7 @@ public class ShopStall : MonoBehaviour
         label.rectTransform.sizeDelta = new Vector2(10f, 2f);
 
         BuildPrompt();
+        BuildPointer();
 
         ShockRing.Spawn(transform.position, 0.3f, 3f, 0.4f, new Color(1f, 0.85f, 0.4f, 0.9f), 0.25f);
         if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("chime", 0.8f, 1.2f);
@@ -109,6 +114,7 @@ public class ShopStall : MonoBehaviour
         }
         if (glow != null) glow.transform.localScale = Vector3.one * (0.45f + Mathf.Sin(Time.time * 4f) * 0.05f);
         label.text = Loc.T("상점  ") + Mathf.CeilToInt(left);
+        UpdatePointer(left);
 
         // 가까이 오면 안내가 나타나고, 상호작용 키로 상점 열기
         PlayerController p = Hostile.Player;
@@ -144,8 +150,46 @@ public class ShopStall : MonoBehaviour
 
     void OnDestroy()
     {
+        if (pointer != null) Destroy(pointer);
         if (pendingOwner == this) pendingOwner = null;
         PlayerNear = false;
+    }
+
+    void BuildPointer()
+    {
+        pointer = SpecialAbilities.MakeSprite("StallPointer", StallSprite, transform.position, 0.8f, Color.white, "Effect", 40);
+        pointerSr = pointer.GetComponent<SpriteRenderer>();
+        GameObject pg = SpecialAbilities.MakeSprite("StallPointerGlow", Hostile.Glow, transform.position, 0.3f, new Color(1f, 0.85f, 0.4f, 0.75f), "Effect", 39);
+        pg.transform.SetParent(pointer.transform, true);
+        GameObject t = new GameObject("StallPointerText", typeof(TextMeshPro));
+        t.transform.SetParent(pointer.transform, false);
+        t.transform.localPosition = new Vector3(0f, -1.1f, 0f);
+        pointerText = t.GetComponent<TextMeshPro>();
+        if (label != null)
+        {
+            pointerText.font = label.font;
+            pointerText.fontSharedMaterial = label.fontSharedMaterial;
+        }
+        pointerText.fontSize = 5f;
+        pointerText.fontStyle = FontStyles.Bold;
+        pointerText.color = new Color(1f, 0.9f, 0.55f);
+        pointerText.alignment = TextAlignmentOptions.Center;
+        pointerText.sortingLayerID = SortingLayer.NameToID("Effect");
+        pointerText.sortingOrder = 41;
+        pointerText.rectTransform.sizeDelta = new Vector2(4f, 1.4f);
+        pointer.SetActive(false);
+    }
+
+    void UpdatePointer(float left)
+    {
+        if (pointer == null) return;
+        bool outside = EdgePointer.EdgePoint(transform.position, out Vector3 at);
+        if (pointer.activeSelf != outside) pointer.SetActive(outside);
+        if (!outside) return;
+        pointer.transform.position = at;
+        pointer.transform.localScale = Vector3.one * (0.8f + 0.1f * Mathf.Sin(Time.time * 8f));
+        pointerText.text = Mathf.CeilToInt(Mathf.Max(0f, left)).ToString();
+        pointerSr.color = left < 3f && Mathf.PingPong(Time.time * 6f, 1f) < 0.5f ? new Color(1f, 1f, 1f, 0.4f) : Color.white;     // 몸통과 같은 깜빡임
     }
 
     void BuildPrompt()

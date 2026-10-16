@@ -115,7 +115,7 @@ public partial class LevelShop : MonoBehaviour
         int quick = QuickPickKey();
         if (selectReady && quick >= 0 && LvshopPanel != null && LvshopPanel.activeInHierarchy)
         {
-            if (quick == pendingSlot) ConfirmSlot(quick);
+            if (quick == pendingSlot || OneClick) ConfirmSlot(quick);     // 1.1.9~ 설정 「카드 한 번 클릭으로 확정」이면 숫자 한 번에
             else
             {
                 pendingSlot = quick;
@@ -128,13 +128,8 @@ public partial class LevelShop : MonoBehaviour
             ConfirmSlot(pendingSlot);
         // 쌓인 레벨업: [Space]로 하나씩 고름 (상점 가판대 옆이면 상점이 먼저) · 설정 「레벨업 바로 열기」면 바로 엶 (2.1.8)
         // 1.1~: 판 3번 미만이면 저절로 엶 · 이어 고르는 중이면 다음 창을 바로 (LevelShop.Chain)
-        else if (PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopOpen
-                 && ((!ShopStall.PlayerNear && (KeyBindings.Down(GameAction.Interact) || AutoOpenLevelUp)) || ChainNext))
-        {
-            PendingLevels--;
-            chainIndex++;
-            openLevelShop();
-        }
+        else if (CanOpenPending && ((!ShopStall.PlayerNear && (KeyBindings.Down(GameAction.Interact) || AutoOpenLevelUp)) || ChainNext))
+            OpenPending();
         UpdateChain();
         UpdatePendingBadge();
     }
@@ -155,12 +150,8 @@ public partial class LevelShop : MonoBehaviour
         int n = sp != null ? sp.Rerolls : 0;
         bool open = IsOpen && n > 0 && ShowRerollIntro;
         // 1.0.4~: 열린 직후 0.6초 잠금(selectReady) 동안은 받지 않음 — 재장전하던 [R]에 다시 뽑기가 써지던 문제
-        if (open && selectReady && KeyBindings.Down(GameAction.Reroll) && sp.TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
+        if (open && selectReady && KeyBindings.Down(GameAction.Reroll) && TryReroll())     // 키 설정에서 바꿀 수 있음 (2.1.8)
         {
-            UpdateLvShopContent(true);      // 1.0.4~: 방금 본 세 장은 빼고 뽑음
-            pendingSlot = -1;
-            RefreshCards();
-            PlayRerollFx();             // 1.0.1: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
             n = sp.Rerolls;
             open = n > 0;
         }
@@ -168,8 +159,11 @@ public partial class LevelShop : MonoBehaviour
         {
             if (!open || LvshopPanel == null) return;
             // 1.0.1: 작은 보라 글씨라 잘 안 보였음 → 테두리 있는 배지 + 노란 키 + 두근거림
+            // 1.1.9~ 배지를 눌러도 다시 뽑기 (마우스로 카드를 고르는 창에서 다시 뽑기만 키였음)
             rerollText = HintBadge.Make(LvshopPanel.transform, "RerollHint", new Vector2(RerollHintX, RerollHintY), new Vector2(400f, 58f),
-                new Color(0.2f, 0.1f, 0.34f, 0.96f), new Color(0.82f, 0.62f, 1f), 30f);
+                new Color(0.2f, 0.1f, 0.34f, 0.96f), new Color(0.82f, 0.62f, 1f), 30f, clickable: true);
+            Button rb = rerollText.transform.parent.GetComponent<Button>();
+            if (rb != null) rb.onClick.AddListener(() => TryReroll());
         }
         GameObject badge = rerollText.transform.parent.gameObject;
         if (badge.activeSelf != open) badge.SetActive(open);
@@ -179,6 +173,18 @@ public partial class LevelShop : MonoBehaviour
             shownRerollPad = GamePad.Active;
             rerollText.text = "<color=#FFE066>[" + KeyBindings.Name(GameAction.Reroll) + "]</color> " + Loc.T("카드 다시 뽑기") + "  <color=#FFE066>(" + n + ")</color>";
         }
+    }
+
+    // 키 · 배지 클릭이 같이 씀 (0.6초 잠금 동안은 받지 않음)
+    bool TryReroll()
+    {
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        if (sp == null || !IsOpen || !selectReady || sp.Rerolls <= 0 || !ShowRerollIntro || !sp.TryReroll()) return false;
+        UpdateLvShopContent(true);      // 1.0.4~: 방금 본 세 장은 빼고 뽑음
+        pendingSlot = -1;
+        RefreshCards();
+        PlayRerollFx();             // 1.0.1: 반짝이며 터지고 뒤집히듯 바뀌는 연출 (LevelShop.RerollFx)
+        return true;
     }
 
     // ================================================================= 쌓인 레벨업
@@ -195,10 +201,27 @@ public partial class LevelShop : MonoBehaviour
     }
 
     GameObject pendingBadge;
+    BadgeClick pendingClick;
     public GameObject PendingBadge => pendingBadge;        // 1.0.4~: 튜토리얼이 레벨업 배지를 짚어 줌
     TextMeshProUGUI pendingText;
     int shownPending = -1;
     bool shownTree;
+
+    bool CanOpenPending => PendingLevels > 0 && !IsOpen && Time.timeScale == 1f && !ShopOpen;
+
+    void OpenPending()
+    {
+        PendingLevels--;
+        chainIndex++;
+        openLevelShop();
+    }
+
+    // 1.1.9~ 「레벨업!」 배지를 눌러도 카드 창이 열림 (예전엔 키로만 열려 마우스로 눌러 보고 고장인 줄 알았음)
+    void TryOpenPending()
+    {
+        if (!CanOpenPending || ESCmenu.IsOpen || StoryDirector.Playing) return;
+        OpenPending();
+    }
 
     void UpdatePendingBadge()
     {
@@ -222,7 +245,14 @@ public partial class LevelShop : MonoBehaviour
             r.sizeDelta = new Vector2(900f, 62f);       // 1.0.1: 780 × 48 → 900 × 62 (눈에 잘 띄게)
             Image bg = pendingBadge.GetComponent<Image>();
             bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
-            bg.raycastTarget = false;
+            bg.raycastTarget = true;
+            // Button 이 아니라 클릭만 받음: 전투 중 조준이 지나갈 때마다 버튼 소리(UISoundHook)가 나지 않게 · Space 가 다시 누르지 않게
+            pendingClick = pendingBadge.AddComponent<BadgeClick>();
+            pendingClick.click = TryOpenPending;
+            TooltipTrigger tip = pendingBadge.AddComponent<TooltipTrigger>();
+            tip.hud = true;                                 // HUD 칸처럼: 이 위를 조준해도 평타를 막지 않음 (PlayerController.PointerOverUI)
+            tip.titleProvider = () => Loc.T("레벨업 카드");
+            tip.bodyProvider = () => Loc.T("눌러서 카드를 고릅니다. 모아 두고 나중에 골라도 됩니다.");
             GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
             RectTransform tr = tg.GetComponent<RectTransform>();
             tr.SetParent(r, false);
@@ -246,8 +276,10 @@ public partial class LevelShop : MonoBehaviour
         ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
-        pendingBadge.GetComponent<Image>().color = Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
-        pendingBadge.transform.localScale = Vector3.one * (1f + 0.04f * pulse);
+        bool hover = pendingClick != null && pendingClick.Hover;       // 마우스를 올리면 밝고 크게 (누를 수 있음을 보여 줌)
+        pendingBadge.GetComponent<Image>().color = hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
+                                                         : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
+        pendingBadge.transform.localScale = Vector3.one * (hover ? 1.06f : 1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)
         {
@@ -271,9 +303,13 @@ public partial class LevelShop : MonoBehaviour
         return b != null ? b.transform : title.transform.parent;
     }
 
+    // 1.1.9~ 설정 「카드 한 번 클릭으로 확정」 (튜토리얼은 「클릭 → [Space]」를 가르치므로 두 단계 그대로)
+    static bool OneClick => GameSettings.OneClickPick && !TutorialRun.Active;
+
     void PickCard(int slot)
     {
         if (!selectReady) return;
+        if (OneClick) { pendingSlot = slot; RefreshCards(); ConfirmSlot(slot); return; }
         // 같은 카드를 0.4초 안에 두 번 누르면 바로 확정 (더블클릭, 2.1.8)
         // 1.0.5~ 패드: 고른 카드를 A 로 한 번 더 누르면 확정
         if (slot == pendingSlot && (Time.unscaledTime - lastPickAt < 0.4f || GamePad.PadClickNow)) { ConfirmSlot(slot); return; }
@@ -344,6 +380,7 @@ public partial class LevelShop : MonoBehaviour
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
             selectHint.color = picked != null ? new Color(1f, 0.86f, 0.4f) : Color.white;
             selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked
+                            : OneClick ? Loc.T("카드를 클릭하면 바로 확정됩니다")
                                              : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#C9BCA4>" + Loc.T("더블클릭 · 같은 숫자 두 번으로 바로") + "</color>";     // 1.0.4~ 숫자 키 방식 통일
         }
     }
@@ -876,4 +913,22 @@ public partial class LevelShop : MonoBehaviour
     
 
 
+}
+
+// 1.1.9~ HUD 배지(「레벨업!」)를 마우스로 누를 수 있게: 왼쪽 클릭만 받고, 올려 둔 동안 Hover
+public class BadgeClick : MonoBehaviour, UnityEngine.EventSystems.IPointerClickHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IPointerExitHandler
+{
+    public System.Action click;
+    public bool Hover { get; private set; }
+
+    public void OnPointerClick(UnityEngine.EventSystems.PointerEventData e)
+    {
+        if (e.button != UnityEngine.EventSystems.PointerEventData.InputButton.Left || GameInput.Auto) return;
+        UISound.Click();
+        click?.Invoke();
+    }
+
+    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData e) => Hover = true;
+    public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) => Hover = false;
+    void OnDisable() => Hover = false;
 }

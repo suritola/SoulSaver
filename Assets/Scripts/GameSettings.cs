@@ -24,7 +24,15 @@ public static class GameSettings
     const string UiScaleKey = "settings.uiScale";
     const string MouseSensKey = "settings.mouseSensitivity";
     const string NoticeSizeKey = "settings.noticeSize";
+    const string ConfineKey = "settings.confineCursor";
+    const string OneClickKey = "settings.oneClickPick";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
+
+    // 1.1.9~ 기본값 (처음 불러올 때 · 설정 「이 탭 기본값으로」가 같이 써서 어긋나지 않게)
+    const float DefVolume = 0.5f, DefMusic = 1f, DefSfx = 1f, DefMouseSens = 1f;
+    const bool DefMute = true, DefVSync = true, DefShake = true, DefFlash = true;
+    const int DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
+    const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false;
 
     static bool loaded;
     static float mouseSens = 1f;
@@ -37,6 +45,7 @@ public static class GameSettings
     static int damageNumbers;
     static int myFxAlpha;
     static int noticeSize = 1;
+    static bool confineCursor = DefConfine, oneClickPick = DefOneClick;
 
     public static Loc.Lang Language
     {
@@ -99,23 +108,61 @@ public static class GameSettings
         loaded = true;
         // 1.0.4~: 아직 언어를 고른 적이 없으면 OS 언어로 (스팀 언어는 스팀이 켜진 뒤 Boot 에서 다시 봄 · 예전엔 무조건 한국어)
         language = LanguageChosen ? (Loc.Lang)Mathf.Clamp(Prefs.GetInt(LangKey, 0), 0, 3) : DetectLanguage(false);
-        volume = Prefs.GetFloat(VolumeKey, 0.5f);
-        music = Prefs.GetFloat(MusicKey, 1f);
-        sfx = Prefs.GetFloat(SfxKey, 1f);
-        shake = Prefs.GetInt(ShakeKey, 1) == 1;
-        flash = Prefs.GetInt(FlashKey, 1) == 1;
-        vsync = Prefs.GetInt(VSyncKey, 1) == 1;
-        hints = Prefs.GetInt(HintsKey, 1) == 1;
-        damageNumbers = Mathf.Clamp(Prefs.GetInt(DamageNumKey, 0), 0, 2);
-        myFxAlpha = Mathf.Clamp(Prefs.GetInt(FxAlphaKey, 0), 0, MyFxAlphas.Length - 1);
-        colorBlind = Prefs.GetInt(ColorBlindKey, 0) == 1;
+        volume = Prefs.GetFloat(VolumeKey, DefVolume);
+        music = Prefs.GetFloat(MusicKey, DefMusic);
+        sfx = Prefs.GetFloat(SfxKey, DefSfx);
+        shake = Prefs.GetInt(ShakeKey, B(DefShake)) == 1;
+        flash = Prefs.GetInt(FlashKey, B(DefFlash)) == 1;
+        vsync = Prefs.GetInt(VSyncKey, B(DefVSync)) == 1;
+        hints = Prefs.GetInt(HintsKey, B(DefHints)) == 1;
+        damageNumbers = Mathf.Clamp(Prefs.GetInt(DamageNumKey, DefDamageNumbers), 0, 2);
+        myFxAlpha = Mathf.Clamp(Prefs.GetInt(FxAlphaKey, DefMyFxAlpha), 0, MyFxAlphas.Length - 1);
+        colorBlind = Prefs.GetInt(ColorBlindKey, B(DefColorBlind)) == 1;
         keyIcons = Prefs.GetInt(KeyIconKey, 1) == 1;
-        gameCursor = Prefs.GetInt(CursorKey, 1) == 1;
-        autoLevelUp = Prefs.GetInt(AutoLevelKey, 0) == 1;
-        muteUnfocused = Prefs.GetInt(MuteKey, 1) == 1;
-        uiScale = Mathf.Clamp(Prefs.GetInt(UiScaleKey, 2), 0, UiScales.Length - 1);
-        mouseSens = Mathf.Clamp(Prefs.GetFloat(MouseSensKey, 1f), MouseSensMin, MouseSensMax);
-        noticeSize = Mathf.Clamp(Prefs.GetInt(NoticeSizeKey, 1), 0, 2);
+        gameCursor = Prefs.GetInt(CursorKey, B(DefGameCursor)) == 1;
+        autoLevelUp = Prefs.GetInt(AutoLevelKey, B(DefAutoLevelUp)) == 1;
+        muteUnfocused = Prefs.GetInt(MuteKey, B(DefMute)) == 1;
+        uiScale = Mathf.Clamp(Prefs.GetInt(UiScaleKey, DefUiScale), 0, UiScales.Length - 1);
+        mouseSens = Mathf.Clamp(Prefs.GetFloat(MouseSensKey, DefMouseSens), MouseSensMin, MouseSensMax);
+        noticeSize = Mathf.Clamp(Prefs.GetInt(NoticeSizeKey, DefNoticeSize), 0, 2);
+        confineCursor = Prefs.GetInt(ConfineKey, B(DefConfine)) == 1;
+        oneClickPick = Prefs.GetInt(OneClickKey, B(DefOneClick)) == 1;
+    }
+
+    static int B(bool v) => v ? 1 : 0;
+
+    // 1.1.9~ 전투 중 마우스 커서를 창 안에 가둠 (멈춘 화면 · 메뉴 · 패드 중엔 풀림, CursorSkin 이 적용)
+    public static bool ConfineCursor
+    {
+        get { Load(); return confineCursor; }
+        set { Load(); confineCursor = value; Prefs.SetInt(ConfineKey, B(value)); }
+    }
+
+    // 1.1.9~ 레벨업 · 보물 상자 · 보스 보상 카드를 한 번 클릭으로 확정 (무기 진화는 늘 두 번 · 튜토리얼은 두 단계 그대로)
+    public static bool OneClickPick
+    {
+        get { Load(); return oneClickPick; }
+        set { Load(); oneClickPick = value; Prefs.SetInt(OneClickKey, B(value)); }
+    }
+
+    // 1.1.9~ 설정 「이 탭 기본값으로」: 속성을 거쳐 되돌려 부수 효과(볼륨 · UI 크기 · 커서 · 수직 동기화)가 그대로 따라옴
+    public static void ResetGeneral()           // 언어는 그대로
+    {
+        Volume = DefVolume; MusicVolume = DefMusic; SfxVolume = DefSfx; MouseSensitivity = DefMouseSens; MuteUnfocused = DefMute;
+        Save();
+    }
+
+    public static void ResetDisplay()           // 화면 모드 · 해상도는 그대로
+    {
+        UiScaleIndex = DefUiScale; NoticeSize = DefNoticeSize; VSync = DefVSync; ScreenShake = DefShake; Flashes = DefFlash;
+        Save();
+    }
+
+    public static void ResetGameplay()
+    {
+        Hints = DefHints; DamageNumbers = DefDamageNumbers; MyFxAlphaIndex = DefMyFxAlpha; ColorBlind = DefColorBlind; GameCursor = DefGameCursor;
+        AutoLevelUp = DefAutoLevelUp; ConfineCursor = DefConfine; OneClickPick = DefOneClick; CodexSeen.ShowAll = false;
+        Save();
     }
 
     // 1.1.2~ 안내 메시지 크기 (게임 중 큰 알림 · 토스트 · 도움말 · 진행 줄): 0 보통 · 1 크게(기본) · 2 아주 크게 — Notice.Scale
