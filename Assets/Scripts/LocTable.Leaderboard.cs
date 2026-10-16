@@ -12,7 +12,7 @@ public static partial class LocTable
 
         C("lb.button", "순위표", "Leaderboard", "ランキング", "排行榜");
         C("lb.full", "전체 순위 보기", "Full Leaderboard", "全ランキングを見る", "查看完整排名");
-        C("lb.view", "순위 보기", "View Ranking", "ランキングを見る", "查看排名");
+        C("lb.view", "순위 보기", "View Leaderboard", "ランキングを見る", "查看排名");
         C("lb.tab.global", "전체 상위", "Top 100", "上位100", "前100名");
         C("lb.tab.around", "내 주변", "Around Me", "自分の周辺", "我的附近");
         C("lb.tab.friends", "친구", "Friends", "フレンド", "好友");

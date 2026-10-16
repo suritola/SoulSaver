@@ -29,7 +29,7 @@ public static partial class LocTable
           "最後のスキル枠です。埋まると「眠れる力」は出なくなります。", "这是最后一个技能栏。栏满后不再出现「沉睡之力」。");
         C("keyguide.relic.slot", "{0} 유물 칸에 들어갑니다. (유물 {1}/{2})", "Goes into the {0} relic slot. (Relic {1}/{2})",
           "{0} の遺物枠に入ります。（遺物 {1}/{2}）", "放入 {0} 遗物栏。（遗物 {1}/{2}）");
-        C("keyguide.relic.share", "이미 가진 「{0}」 유물과 같은 키를 씁니다. 준비된 것부터 나갑니다.", "Shares a key with your \"{0}\". Whichever is ready fires first.",
+        C("keyguide.relic.share", "이미 가진 「{0}」 유물과 같은 키를 씁니다. 준비된 것부터 나갑니다.", "Shares a key with your {0} relic. Whichever is ready fires first.",
           "持っている「{0}」と同じキーを使います。準備できた方から発動します。", "与已有的「{0}」共用按键。先就绪的先发动。");
         C("keyguide.relic.last", "마지막 유물 칸입니다. 다 차면 석관은 코인을 줍니다.", "This is the last relic slot. Once it is full, sarcophagi give coins instead.",
           "最後の遺物枠です。埋まると石棺はコインをくれます。", "这是最后一个遗物栏。栏满后石棺改为给金币。");

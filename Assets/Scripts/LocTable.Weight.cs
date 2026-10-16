@@ -33,13 +33,13 @@ public static partial class LocTable
         A("weight.fx.barrier", "결계 게이지 +{0}%", "Barrier gauge +{0}%", "結界ゲージ+{0}%", "结界槽+{0}%");
         A("weight.fx.heal", "회복 -{0}%", "Healing -{0}%", "回復-{0}%", "回复-{0}%");
         A("weight.unlocked", "새 도전 해금: 영혼의 무게!\n메인 메뉴에서 어려움을 고르면 무게를 질 수 있습니다.",
-          "New challenge unlocked: Soul Weight!\nPick Hard in the main menu to take on weight.",
+          "New challenge unlocked: Soul Weight!\nPick Hard in the main menu to take on Soul Weight.",
           "新たな挑戦解放：魂の重み！\nメインメニューでハードを選ぶと重みを背負えます。",
           "新挑战解锁：灵魂之重！\n在主菜单选择困难即可背负重量。");
         A("weight.cleared", "영혼의 무게 {0} 클리어!", "Soul Weight {0} cleared!", "魂の重み{0}クリア！", "灵魂之重{0}通关！");
         A("weight.next", "무게 {0} 해금", "Weight {0} unlocked", "重み{0}解放", "重量{0}已解锁");
         A("weight.detail", "영혼의 무게: 가장 무거운 클리어 {0} · 무게 {1}까지 고를 수 있습니다.",
-          "Soul Weight: heaviest clear {0} · you can pick up to Weight {1}.",
+          "Soul Weight: Heaviest clear {0} · Up to Weight {1} available.",
           "魂の重み：最重クリア{0}・重み{1}まで選べます。",
           "灵魂之重：最高通关{0} · 最高可选择重量{1}。");
         A("weight.detail.none", "영혼의 무게: 아직 클리어 기록이 없습니다. (어려움에서 무게 1부터)",

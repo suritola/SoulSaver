@@ -36,7 +36,7 @@ public static partial class LocTable
 
         // 메아리
         K("필살기를 쓰고 나면 잠시 뒤 그 자리에 영혼 메아리가 울려 둘레 적을 휩쓸고 적 탄을 지웁니다",
-          "필살기를 쓰고 나면 잠시 뒤 그 자리에 영혼 메아리가 울려 둘레 적을 휩쓸고 적 탄을 지웁니다.",
+          "필살기를 쓰고 나면 잠시 뒤 그 자리에 영혼 메아리가 울려 둘레의 적을 휩쓸고 적 탄을 지웁니다.",
           "Shortly after your Ultimate, a soul echo rings out where you stand, sweeping nearby enemies and erasing enemy shots.",
           "必殺技を使った少し後、その場に魂の残響が響き、周りの敵をなぎ払って敵の弾を消します。",
           "使用必杀技后不久，原地会响起灵魂回响，横扫周围敌人并消除敌方子弹。");
@@ -97,10 +97,10 @@ public static partial class LocTable
           "Broken map objects reappear elsewhere after 18s, and explode when you break them.",
           "壊したマップの物体が18秒後に別の場所に再び現れ、壊すと爆発します。",
           "被打碎的地图物体会在18秒后于别处重新出现，打碎时还会爆炸。");
-        K("맵 물체가 10초 만에 다시 생기고 폭발이 커집니다", "맵 물체가 10초 만에 다시 생기고 폭발이 커집니다.", "Map objects reappear in 10s and explode bigger.", "マップの物体が10秒で再び現れ、爆発が大きくなります。", "地图物体10秒后重新出现，爆炸范围更大。");
+        K("맵 물체가 10초 만에 다시 생기고 폭발이 커집니다", "맵 물체가 10초 만에 다시 생기고 폭발이 커집니다.", "Map objects reappear in 10s with bigger explosions.", "マップの物体が10秒で再び現れ、爆発が大きくなります。", "地图物体10秒后重新出现，爆炸范围更大。");
         // 연쇄 붕괴
         K("쓰러진 적이 12% 확률로 터져 둘레 적에게 번집니다 (터진 적도 다시 터짐)",
-          "쓰러진 적이 12% 확률로 터져 둘레 적에게 번집니다. (터진 적도 다시 터짐)",
+          "쓰러진 적이 12% 확률로 터져 둘레의 적에게 번집니다. (터진 적도 다시 터짐)",
           "Slain enemies have a 12% chance to burst and spread to those nearby. (Bursts can chain)",
           "倒した敵が12%の確率で破裂し、周りの敵に広がります。（破裂で倒れた敵も再び破裂）",
           "被击败的敌人有12%概率爆裂并波及周围敌人。（爆裂击败的敌人也会再次爆裂）");
@@ -113,7 +113,7 @@ public static partial class LocTable
           "8秒間攻撃を受けなければ、攻撃を1回防ぐ魂の障壁が生まれます。",
           "8秒内未受攻击，就会生成可抵挡一次攻击的灵魂护盾。");
         K("보호막이 5초 만에 다시 생깁니다", "보호막이 5초 만에 다시 생깁니다.", "The ward returns in 5s.", "障壁が5秒で再び生まれます。", "护盾5秒即可重新生成。");
-        K("보호막이 깨질 때 둘레 적을 밀쳐 내고 얼립니다", "보호막이 깨질 때 둘레 적을 밀어내고 얼립니다.", "When the ward breaks, it pushes back and freezes nearby enemies.", "障壁が割れるとき、周りの敵を押しのけて凍らせます。", "护盾破碎时击退并冻结周围敌人。");
+        K("보호막이 깨질 때 둘레 적을 밀쳐 내고 얼립니다", "보호막이 깨질 때 둘레의 적을 밀어내고 얼립니다.", "When the ward breaks, it pushes back and freezes nearby enemies.", "障壁が割れるとき、周りの敵を押しのけて凍らせます。", "护盾破碎时击退并冻结周围敌人。");
         // 영혼불 발자국
         K("움직이면 지나간 자리에 영혼불이 남아 밟은 적을 태웁니다",
           "움직이면 지나간 자리에 영혼불이 남아 밟은 적을 태웁니다.",
@@ -143,14 +143,15 @@ public static partial class LocTable
           "レベルアップごとに3枚から1枚を選ぶか、スキップします。最大レベルは50（エンドレス80）で、その後は経験値バーを3回満タンにするたびに超越カードを選びます。素材をすべて上げるとスキルが進化します。",
           "每次升级可从三张卡中选一张或跳过。等级上限为50（无尽模式80），之后每填满经验条三次可选择一张超越卡。素材全部升满即可进化技能。");
         // 도감 초월 카드 설명 (1.2~ 새 규칙 열한 장 — 키는 CodexUI 의 문장과 글자까지 같아야 함)
-        A("최대 레벨(50 · 무한 모드 80)에 닿은 뒤 경험치 막대를 세 번 채울 때마다 (레벨은 오르지 않음) 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 같은 카드를 다시 고르면 다음 단계가 됩니다 (최대 3단계 · 맵 지배는 2단계). 메아리: 필살기 뒤 영혼 메아리 · 영혼 수확: 처치 수마다 영혼 파동 · 시간의 틈: 위기에 세상이 멈춤 · 연금 손: 코인이 경험치로 연성 · 그림자 분신: 따라오며 쏘는 분신 · 중력장: 멈춰 서면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체가 다시 생김 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터져 번짐 · 영혼 보호막: 맞지 않으면 한 번 막음 · 영혼불 발자국: 지나간 자리가 불탐",
+        K("최대 레벨(50 · 무한 모드 80)에 닿은 뒤 경험치 막대를 세 번 채울 때마다 (레벨은 오르지 않음) 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 같은 카드를 다시 고르면 다음 단계가 됩니다 (최대 3단계 · 맵 지배는 2단계). 메아리: 필살기 뒤 영혼 메아리 · 영혼 수확: 처치 수마다 영혼 파동 · 시간의 틈: 위기에 세상이 멈춤 · 연금 손: 코인이 경험치로 연성 · 그림자 분신: 따라오며 쏘는 분신 · 중력장: 멈춰 서면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체가 다시 생김 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터져 번짐 · 영혼 보호막: 맞지 않으면 한 번 막음 · 영혼불 발자국: 지나간 자리가 불탐",
+          "최대 레벨(50 · 무한 모드 80)에 닿은 뒤 경험치 막대를 세 번 채울 때마다 (레벨은 오르지 않음) 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 같은 카드를 다시 고르면 다음 단계가 됩니다. (최대 3단계 · 맵 지배는 2단계) 메아리: 필살기 뒤 영혼 메아리 · 영혼 수확: 처치 수마다 영혼 파동 · 시간의 틈: 위기에 세상이 멈춤 · 연금 손: 코인이 경험치로 연성 · 그림자 분신: 따라오며 쏘는 분신 · 중력장: 멈춰 서면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체가 다시 생김 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터져 번짐 · 영혼 보호막: 맞지 않으면 한 번 막음 · 영혼불 발자국: 지나간 자리가 불탐",
           "After reaching max level (50 · Endless 80), every third time your EXP bar fills (your level doesn't rise) you pick one of three gold-framed Transcendence cards to change a rule of the run. Picking the same card again advances it to the next stage (up to stage 3 · Dominion up to stage 2). Echo: a soul echo after your Ultimate · Reaping: a soul wave every so many kills · Time Rift: the world stops when you're in danger · Alchemist's Touch: coins transmute into EXP · Shadow Clones: clones that follow you and shoot · Gravity Well: stand still to pull things in · Reversal: a huge explosion on Last Stand · Dominion: map objects reappear (Story mode) · Cascade: slain enemies burst and spread · Soul Ward: blocks one hit if you avoid damage · Soulfire Steps: your trail burns",
           "最大レベル（50・エンドレス80）に達した後、経験値バーを3回満タンにするたびに（レベルは上がりません）金枠の超越カード3枚から1枚を選んでこのプレイのルールを変えます。同じカードをもう一度選ぶと次の段階になります（最大3段階・地の支配は2段階）。残響：必殺技の後に魂の残響・魂の収穫：撃破数ごとに魂の波動・時の裂け目：危機に世界が止まる・錬金の手：コインが経験値に錬成・影分身：ついて来て撃つ分身・重力場：立ち止まると引き寄せる・逆転：最後の砦で大爆発・地の支配：マップの物体が再び現れる（ストーリーモード）・連鎖崩壊：倒れた敵が破裂して広がる・魂の障壁：被弾しなければ1回防ぐ・魂火の足跡：通った跡が燃える",
           "达到等级上限（50 · 无尽80）后，每填满经验条三次（等级不会提升），就从三张金框超越卡中选择一张，改变本局的规则。再次选择同一张卡会进入下一阶段（最多3阶段 · 地图支配最多2阶段）。回响：必杀技后的灵魂回响 · 灵魂收割：每击败一定数量敌人触发灵魂波动 · 时间裂隙：危急时世界静止 · 炼金之手：金币炼成经验 · 影分身：跟随并射击的分身 · 重力场：静止时吸引周围 · 逆转：最后的堡垒触发大爆炸 · 地图支配：地图物体重新出现（故事模式） · 连锁崩坏：被击败的敌人爆裂扩散 · 灵魂护盾：未受攻击时抵挡一次 · 魂火足迹：走过的地方燃烧");
         K("모든 캐릭터. 이야기 모드에서 3장 보스를, 무한 모드에서 세 번째 보스를 쓰러뜨리면 2차까지 진화한 무기가 각성합니다. 파괴(모든 공격 피해 +35%) · 질풍(공격 · 발사 간격 -25%) · 영혼(치명타 확률 +15%, 치명타 피해 +60%) 가운데 하나를 고릅니다.",
           "이야기 모드에서 3장 보스를, 무한 모드에서 세 번째 보스를 쓰러뜨리면 2차까지 진화한 무기가 각성합니다. 모든 영웅에게 해당하며, 파괴(모든 공격 피해 +35%) · 질풍(공격 · 발사 간격 -25%) · 영혼(치명타 확률 +15%, 치명타 피해 +60%) 가운데 하나를 고릅니다.",
-          "Defeat the Chapter 3 boss in Story mode, or the third boss in Endless mode, and your twice-evolved weapon awakens. This applies to every hero: choose one of Ruin (all attack damage +35%) · Gale (attack / fire interval -25%) · Soul (crit chance +15%, crit damage +60%).",
-          "ストーリーモードで3章のボスを、エンドレスモードで3体目のボスを倒すと、第二進化まで終えた武器が覚醒します。すべての英雄に共通で、破壊（すべての攻撃ダメージ +35%）・疾風（攻撃・発射間隔 -25%）・魂（会心率 +15%、会心ダメージ +60%）から1つを選びます。",
+          "Defeat the Chapter 3 boss in Story mode, or the third boss in Endless mode, and your twice-evolved weapon awakens. This applies to every hero: choose one of Ruin (all attack damage +35%) · Gale (attack · fire interval -25%) · Soul (crit chance +15%, crit damage +60%).",
+          "ストーリーモードで3章のボスを、エンドレスモードで3体目のボスを倒すと、第二進化まで終えた武器が覚醒します。すべての英雄に共通で、破壊（すべての攻撃ダメージ +35%）・疾風（攻撃・発射間隔 -25%）・魂（クリティカル率 +15%、クリティカルダメージ +60%）から1つを選びます。",
           "在故事模式击败第3章首领，或在无尽模式击败第三个首领后，完成二次进化的武器将会觉醒。所有英雄通用，可从毁灭（所有攻击伤害 +35%）· 疾风（攻击 · 射击间隔 -25%）· 灵魂（暴击率 +15%，暴击伤害 +60%）中选择一个。");
         A("보스를 쓰러뜨리면 무기가 진화합니다. 세 갈래 중 하나를 고르세요. (보통 판에서는 두 번 · 3장 보스는 각성, 되돌릴 수 없음)",
           "Defeating a boss evolves your weapon. Choose one of three paths. (Twice in a normal run · the Chapter 3 boss awakens it, cannot be undone)",

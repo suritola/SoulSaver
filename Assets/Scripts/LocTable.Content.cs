@@ -33,7 +33,7 @@ public static partial class LocTable
           "打开后被诅咒的敌人将会苏醒。全部击败即可获得精英宝箱。");
         C("event.altar.name", "영혼 제단 지키기", "Guard the Soul Altar", "魂の祭壇を守れ", "守护灵魂祭坛");
         C("event.altar.desc", "제단 둘레에 머물러 영혼을 모으세요. 다 모으면 보물 상자와 영혼 조각을 얻습니다.",
-          "Stay within the altar's circle to gather souls. Fill it for a treasure chest and Soul Shards.",
+          "Stay within the altar's circle to gather souls. Gather them all for a treasure chest and Soul Shards.",
           "祭壇の輪の中にとどまって魂を集めましょう。集めきると宝箱と魂のかけらが手に入ります。",
           "停留在祭坛圈内收集灵魂。收集完成即可获得宝箱与灵魂碎片。");
         C("event.pack.name", "정예 무리", "Elite Pack", "精鋭の群れ", "精英群");
@@ -46,19 +46,19 @@ public static partial class LocTable
         // 예고 (3초 전) · 진행 표시 · 결과
         C("event.soon", "3초 뒤: {0}!\n{1}", "In 3s: {0}!\n{1}", "3秒後：{0}！\n{1}", "3秒后：{0}！\n{1}");
         C("event.soon.label", "{0} · {1}초 뒤 시작", "{0} · starts in {1}s", "{0}・{1}秒後に開始", "{0} · {1}秒后开始");
-        C("event.goblin.start", "황금 고블린이 달아난다!\n20초 안에 잡으세요.", "The Golden Goblin is running!\nCatch it within 20s.", "黄金ゴブリンが逃げ出した！\n20秒以内に捕まえましょう。", "黄金哥布林逃跑了！\n请在20秒内抓住它。");
+        C("event.goblin.start", "황금 고블린이 달아난다!\n20초 안에 잡으세요.", "The Golden Goblin is getting away!\nCatch it within 20s.", "黄金ゴブリンが逃げ出した！\n20秒以内に捕まえましょう。", "黄金哥布林逃跑了！\n请在20秒内抓住它。");
         C("event.goblin.label", "황금 고블린 · {0}초", "Golden Goblin · {0}s", "黄金ゴブリン・{0}秒", "黄金哥布林 · {0}秒");
         C("event.goblin.caught", "황금 고블린을 잡았다!\n코인 +{0}", "Golden Goblin caught!\nCoins +{0}", "黄金ゴブリンを捕まえた！\nコイン +{0}", "抓住了黄金哥布林！\n金币 +{0}");
         C("event.goblin.escaped", "황금 고블린이 달아났다…", "The Golden Goblin got away...", "黄金ゴブリンに逃げられた……", "黄金哥布林逃走了……");
-        C("event.cursed.appear", "저주받은 상자가 나타났다!\n열면 저주받은 적이 깨어납니다.", "A Cursed Chest appeared!\nOpening it awakens cursed foes.", "呪われた箱が現れた！\n開けると呪われた敵が目覚めます。", "被诅咒的宝箱出现了！\n打开后被诅咒的敌人将会苏醒。");
+        C("event.cursed.appear", "저주받은 상자가 나타났다!\n열면 저주받은 적이 깨어납니다.", "A Cursed Chest appears!\nOpening it awakens cursed foes.", "呪われた箱が現れた！\n開けると呪われた敵が目覚めます。", "被诅咒的宝箱出现了！\n打开后被诅咒的敌人将会苏醒。");
         C("event.cursed.wait", "저주받은 상자 · {0}초 뒤 사라짐", "Cursed Chest · vanishes in {0}s", "呪われた箱・{0}秒後に消える", "被诅咒的宝箱 · {0}秒后消失");
         C("event.cursed.gone", "저주받은 상자가 사라졌다.", "The Cursed Chest vanished.", "呪われた箱が消えた。", "被诅咒的宝箱消失了。");
-        C("event.cursed.open", "저주가 깨어났다!\n모두 쓰러뜨리면 정예 보물 상자를 얻습니다.", "The curse awakens!\nDefeat them all for an elite treasure chest.", "呪いが目覚めた！\n全滅させると精鋭の宝箱が手に入ります。", "诅咒苏醒了！\n全部击败即可获得精英宝箱。");
+        C("event.cursed.open", "저주가 깨어났다!\n모두 쓰러뜨리면 정예 보물 상자를 얻습니다.", "The curse awakens!\nDefeat the cursed foes for an elite treasure chest.", "呪いが目覚めた！\n全滅させると精鋭の宝箱が手に入ります。", "诅咒苏醒了！\n全部击败即可获得精英宝箱。");
         C("event.cursed.label", "저주받은 적 · 남은 적 {0} · {1}초", "Cursed foes · {0} left · {1}s", "呪われた敵・残り {0}・{1}秒", "被诅咒的敌人 · 剩余 {0} · {1}秒");
         C("event.cursed.fail", "저주를 이겨 내지 못했다\n시간 안에 모두 쓰러뜨리지 못했습니다.", "The curse prevails\nYou didn't defeat them all in time.", "呪いに打ち勝てなかった\n時間内に全滅できませんでした。", "未能战胜诅咒\n未能在时限内全部击败。");
         C("event.altar.start", "영혼 제단!\n둘레에 머물러 영혼을 모으세요.", "Soul Altar!\nStay in the circle to gather souls.", "魂の祭壇！\n輪の中にとどまって魂を集めましょう。", "灵魂祭坛！\n请停留在圈内收集灵魂。");
         C("event.altar.label", "영혼 제단 · {0}% · {1}초", "Soul Altar · {0}% · {1}s", "魂の祭壇・{0}%・{1}秒", "灵魂祭坛 · {0}% · {1}秒");
-        C("event.altar.done", "영혼 제단을 지켰다!\n영혼 조각 +{0}", "Soul Altar guarded!\nSoul Shards +{0}", "魂の祭壇を守った！\n魂のかけら +{0}", "守住了灵魂祭坛！\n灵魂碎片 +{0}");
+        C("event.altar.done", "영혼 제단을 지켰다!\n영혼 조각 +{0}", "Soul Altar defended!\nSoul Shards +{0}", "魂の祭壇を守った！\n魂のかけら +{0}", "守住了灵魂祭坛！\n灵魂碎片 +{0}");
         C("event.altar.fail", "영혼 제단이 꺼졌다\n시간 안에 영혼을 다 모으지 못했습니다.", "The Soul Altar went dark\nYou didn't gather enough souls in time.", "魂の祭壇が消えた\n時間内に魂を集めきれませんでした。", "灵魂祭坛熄灭了\n未能在时限内收集足够的灵魂。");
         C("event.pack.start", "정예 무리!\n모두 쓰러뜨리면 정예 보물 상자를 얻습니다.", "Elite Pack!\nDefeat them all for an elite treasure chest.", "精鋭の群れ！\n全滅させると精鋭の宝箱が手に入ります。", "精英群！\n全部击败即可获得精英宝箱。");
         C("event.pack.label", "정예 무리 · 남은 적 {0} · {1}초", "Elite Pack · {0} left · {1}s", "精鋭の群れ・残り {0}・{1}秒", "精英群 · 剩余 {0} · {1}秒");

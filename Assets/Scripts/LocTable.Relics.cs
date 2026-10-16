@@ -13,7 +13,7 @@ public static partial class LocTable
         C("유물", "유물", "Relic", "遺物", "遗物");
         C("relic.title", "봉인된 석관 · 유물 고르기", "Sealed Sarcophagus · Choose a Relic", "封印された石棺・遺物を選ぶ", "封印的石棺 · 选择遗物");
         C("relic.pick", "[{RELIC}] 유물 칸에 장착합니다. 쿨타임은 1.5배이고 한 판에 최대 2개입니다.",
-          "Equips to the [{RELIC}] relic slot. Its cooldown is 1.5×, and you can hold up to 2 per run.",
+          "Equips to the [{RELIC}] relic slot. Relic cooldowns are 1.5× longer, and you can hold up to 2 per run.",
           "[{RELIC}] 遺物スロットに装備します。クールタイムは1.5倍で、1回のプレイで最大2個です。",
           "装备到 [{RELIC}] 遗物栏。冷却时间为1.5倍，每局最多2个。");
         C("relic.tag", "유물 [{RELIC}] · 쿨타임 1.5배", "Relic [{RELIC}] · 1.5× cooldown", "遺物 [{RELIC}]・クールタイム1.5倍", "遗物 [{RELIC}] · 冷却时间1.5倍");
@@ -31,7 +31,7 @@ public static partial class LocTable
         C("prop.crystal.name", "영혼 수정", "Soul Crystal", "魂の水晶", "灵魂水晶");
         C("prop.sarco.name", "봉인된 석관", "Sealed Sarcophagus", "封印された石棺", "封印的石棺");
         C("prop.sarco.appear", "봉인된 석관이 나타났다!\n화살표를 따라가 곁에 머무르며 봉인을 부수면 유물을 얻습니다.",
-          "A Sealed Sarcophagus appeared!\nFollow the arrow and stay beside it to break the seal for a relic.",
+          "A Sealed Sarcophagus appears!\nFollow the arrow and stay beside it to break the seal for a relic.",
           "封印された石棺が現れた！\n矢印をたどり、そばにとどまって封印を破ると遺物が手に入ります。",
           "封印的石棺出现了！\n跟随箭头，停留在旁边破除封印即可获得遗物。");
         C("prop.sarco.empty", "석관은 비어 있었다…\n코인 +{0}", "The sarcophagus was empty...\nCoins +{0}", "石棺は空っぽだった……\nコイン +{0}", "石棺里空空如也……\n金币 +{0}");

@@ -12,17 +12,17 @@ public static partial class LocTable
 
         // ================================================================= 창 · 안내
         C("brand.title", "영혼 각인", "Soul Brand", "魂の刻印", "灵魂烙印");
-        C("brand.pick.start", "이번 판에 새길 각인을 하나 고르세요.", "Choose a brand to carve into this run.", "このランに刻む刻印を1つ選んでください。", "请选择一个要刻入本局的烙印。");
+        C("brand.pick.start", "이번 판에 새길 각인을 하나 고르세요.", "Choose a brand to carve into this run.", "このプレイに刻む刻印を1つ選んでください。", "请选择一个要刻入本局的烙印。");
         C("brand.pick.boss", "보스를 쓰러뜨렸다! 각인을 하나 더 새깁니다. ({0})", "Boss defeated! Carve one more brand. ({0})", "ボスを倒した！刻印をもう1つ刻みます。（{0}）", "击败了首领！再刻下一个烙印。（{0}）");
         C("brand.points", "포인트 ×{0}", "Points ×{0}", "ポイント ×{0}", "点数 ×{0}");
         C("brand.got", "영혼 각인: {0}", "Soul Brand: {0}", "魂の刻印：{0}", "灵魂烙印：{0}");
         C("brand.tag", "각인 {0}", "Brands {0}", "刻印 {0}", "烙印 {0}");      // 결과 화면 · ESC 요약 줄 (RunStats.Summary)
-        C("brand.esc", "이번 판 각인", "This Run's Brands", "このランの刻印", "本局烙印");
+        C("brand.esc", "이번 판 각인", "This Run's Brands", "このプレイの刻印", "本局烙印");
         C("brand.esc.total", "포인트 배율 ×{0}", "Point multiplier ×{0}", "ポイント倍率 ×{0}", "点数倍率 ×{0}");
         C("brand.menu.how",
           "이야기 모드 판을 시작할 때 각인 하나를 고르고, 2장 · 3장 보스를 쓰러뜨릴 때마다 하나씩 더 새겨 한 판에 최대 3개까지 지닙니다. 각인마다 장점과 단점이 함께 있고, 어려운 각인일수록 포인트를 더 법니다.",
           "Choose a brand when you start a Story run, and carve one more each time you defeat the Chapter 2 and 3 bosses (up to 3 per run). Every brand has an upside and a downside, and harder brands earn more points.",
-          "ストーリーモードのラン開始時に刻印を1つ選び、2章・3章のボスを倒すたびにもう1つずつ刻みます（1ランに最大3つ）。刻印には長所と短所があり、厳しい刻印ほどポイントを多く稼げます。",
+          "ストーリーモードのプレイ開始時に刻印を1つ選び、2章・3章のボスを倒すたびにもう1つずつ刻みます（1回のプレイで最大3つ）。刻印には長所と短所があり、厳しい刻印ほどポイントを多く稼げます。",
           "开始故事模式时选择一个烙印，每击败第2章 · 第3章首领时再刻下一个（每局最多3个）。每个烙印都有利有弊，越难的烙印获得的点数越多。");
         C("brand.menu.locked", "이야기 모드 「쉬움」을 클리어하면 영혼 각인이 열립니다.", "Clear Easy in Story mode to unlock Soul Brands.", "ストーリーモードの「イージー」をクリアすると魂の刻印が解放されます。", "通关故事模式「简单」难度即可解锁灵魂烙印。");
         C("brand.menu.count", "열린 각인 {0} / {1}", "Brands unlocked {0} / {1}", "解放した刻印 {0} / {1}", "已解锁烙印 {0} / {1}");

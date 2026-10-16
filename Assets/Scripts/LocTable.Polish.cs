@@ -10,7 +10,7 @@ public static partial class LocTable
         void C(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
 
         // 보스를 쓰러뜨려 다음 장 문이 열릴 때 큰 알림 둘째 줄 (StageManager.Gate) — 같은 배열의 다른 세 줄(LocTable.cs)과 같은 모양
-        C("성문 너머로 초원이 보인다", "성문 너머로 초원이 보인다",
-          "A meadow lies beyond the gate", "城門の向こうに草原が見える", "城门外是一片草原");
+        C("성문 너머로 초원이 보인다", "성문 너머로 초원이 보인다.",
+          "A meadow lies beyond the gate.", "城門の向こうに草原が見える。", "城门外是一片草原。");
     }
 }
