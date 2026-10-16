@@ -10,14 +10,14 @@ public static partial class LocTable
         void C(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
 
         // ================================================================= 스팀 오버레이 · 게임패드 분리
-        C("게임패드 연결이 끊어졌습니다", "게임패드 연결이 끊어졌습니다", "Gamepad disconnected", "ゲームパッドの接続が切れました", "手柄已断开连接");
-        C("게임패드가 연결되었습니다", "게임패드가 연결되었습니다", "Gamepad connected", "ゲームパッドを接続しました", "手柄已连接");
+        C("게임패드 연결이 끊어졌습니다", "게임패드 연결이 끊어졌습니다.", "The gamepad was disconnected.", "ゲームパッドの接続が切れました。", "手柄已断开连接。");
+        C("게임패드가 연결되었습니다", "게임패드가 연결되었습니다.", "A gamepad was connected.", "ゲームパッドが接続されました。", "手柄已连接。");
 
         // ================================================================= 설정 「게임」: 커서 가두기 · 한 번 클릭 확정
         C("커서를 창 안에 가두기", "커서를 창 안에 가두기", "Keep Cursor in Window", "カーソルをウィンドウ内に固定", "将光标限制在窗口内");
         C("전투 중 마우스가 창 밖으로 나가지 않게 합니다. 멈춘 화면 · 메뉴 · 패드를 쓸 때는 풀립니다. 창 모드나 모니터가 두 대일 때 유용합니다.",
           "전투 중 마우스가 창 밖으로 나가지 않게 합니다. 멈춘 화면 · 메뉴 · 패드를 쓸 때는 풀립니다. 창 모드나 모니터가 두 대일 때 유용합니다.",
-          "Keeps the mouse inside the window during combat. Released on paused screens, menus and while using a gamepad. Useful in windowed mode or with two monitors.",
+          "Keeps the mouse inside the window during combat. It is released on paused screens and menus, and while using a gamepad. This is useful in windowed mode or with two monitors.",
           "戦闘中にマウスがウィンドウの外へ出ないようにします。停止画面・メニュー・パッド使用中は解除されます。ウィンドウモードやモニター2台のときに便利です。",
           "战斗中防止鼠标移出窗口。暂停画面、菜单和使用手柄时会解除。窗口模式或双显示器时很有用。");
         C("카드 한 번 클릭으로 확정", "카드 한 번 클릭으로 확정", "One-Click Card Confirm", "カードをワンクリックで確定", "单击即确认卡牌");
@@ -26,18 +26,18 @@ public static partial class LocTable
           "On: level-up, chest and boss-reward cards are confirmed with a single click. Off: click, then confirm with [{INTERACT}] or a double-click. Weapon evolution always asks twice.",
           "オン：レベルアップ・宝箱・ボス報酬のカードを1回押すだけで確定します。オフ：押してから [{INTERACT}]・ダブルクリックで確定します。武器進化は常に2回確認します。",
           "开启：升级、宝箱、首领奖励卡牌单击即确认。关闭：点击后用 [{INTERACT}] 或双击确认。武器进化始终二次确认。");
-        C("카드를 클릭하면 바로 확정됩니다", "카드를 클릭하면 바로 확정됩니다", "Click a card to confirm it right away", "カードをクリックするとすぐ確定します", "点击卡牌即立即确认");
-        C("카드를 누르면 바로 확정됩니다", "카드를 누르면 바로 확정됩니다", "Click a card to confirm", "カードを押すとすぐ確定します", "点击卡牌即确认");
+        C("카드를 클릭하면 바로 확정됩니다", "카드를 클릭하면 바로 확정됩니다.", "Click a card to confirm it right away.", "カードをクリックするとすぐ確定します。", "点击卡牌即可立即确认。");
+        C("카드를 누르면 바로 확정됩니다", "카드를 누르면 바로 확정됩니다.", "Click a card to confirm it right away.", "カードを押すとすぐ確定します。", "点击卡牌即可立即确认。");
 
         // ================================================================= 설정: 이 탭 기본값으로
         C("이 탭 기본값으로", "이 탭 기본값으로", "Reset This Tab", "このタブを初期値に", "重置此页");
-        C("한 번 더 누르면 되돌립니다", "한 번 더 누르면 되돌립니다", "Press again to reset", "もう一度押すと戻します", "再按一次即可重置");
-        C("되돌렸습니다", "되돌렸습니다", "Reset to defaults", "初期値に戻しました", "已恢复默认");
+        C("한 번 더 누르면 되돌립니다", "한 번 더 누르면 되돌립니다", "Press Again to Reset", "もう一度押すと戻します", "再按一次即可重置");
+        C("되돌렸습니다", "되돌렸습니다", "Defaults Restored", "初期値に戻しました", "已恢复默认");
         C("이 탭의 설정만 처음 값으로 되돌립니다(조작 탭은 모든 키 배치). 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.",
-          "이 탭의 설정만 처음 값으로 되돌립니다(조작 탭은 모든 키 배치). 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.",
-          "Resets only this tab to its defaults (on the Controls tab, all key bindings). Other tabs, language, display mode and resolution are kept.",
-          "このタブの設定だけを初期値に戻します（操作タブではすべてのキー配置）。他のタブと言語・画面モード・解像度はそのままです。",
-          "仅将此页的设置恢复为默认值（操作页为全部按键设置）。其他页面以及语言、显示模式、分辨率保持不变。");
+          "이 탭의 설정만 처음 값으로 되돌립니다. 조작 탭에서는 모든 키 배치를 되돌립니다. 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.",
+          "Resets only this tab's settings to their defaults. On the Controls tab, all key bindings are reset. Other tabs, language, display mode and resolution are kept.",
+          "このタブの設定だけを初期値に戻します。操作タブではすべてのキー配置を戻します。他のタブと言語・画面モード・解像度はそのままです。",
+          "仅将此页的设置恢复为默认值。在操作页会恢复全部按键设置。其他页面以及语言、显示模式、分辨率保持不变。");
 
         // ================================================================= 무한 모드 · 일일 도전: 포기하고 결과 보기
         C("포기하고 결과 보기", "포기하고 결과 보기", "Give Up & See Results", "ギブアップして結果を見る", "放弃并查看结果");

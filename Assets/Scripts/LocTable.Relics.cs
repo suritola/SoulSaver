@@ -12,10 +12,10 @@ public static partial class LocTable
         // ================================================================= 유물 칸 · 설정
         C("유물", "유물", "Relic", "遺物", "遗物");
         C("relic.title", "봉인된 석관 · 유물 고르기", "Sealed Sarcophagus · Choose a Relic", "封印された石棺・遺物を選ぶ", "封印的石棺 · 选择遗物");
-        C("relic.pick", "[{RELIC}] 유물 칸에 장착합니다 · 쿨타임 1.5배 · 한 판에 최대 2개",
-          "Equips to the [{RELIC}] relic slot · 1.5× cooldown · Up to 2 per run",
-          "[{RELIC}] 遺物スロットに装備・クールタイム1.5倍・1回のプレイで最大2個",
-          "装备到 [{RELIC}] 遗物栏 · 冷却时间1.5倍 · 每局最多2个");
+        C("relic.pick", "[{RELIC}] 유물 칸에 장착합니다. 쿨타임은 1.5배이고 한 판에 최대 2개입니다.",
+          "Equips to the [{RELIC}] relic slot. Its cooldown is 1.5×, and you can hold up to 2 per run.",
+          "[{RELIC}] 遺物スロットに装備します。クールタイムは1.5倍で、1回のプレイで最大2個です。",
+          "装备到 [{RELIC}] 遗物栏。冷却时间为1.5倍，每局最多2个。");
         C("relic.tag", "유물 [{RELIC}] · 쿨타임 1.5배", "Relic [{RELIC}] · 1.5× cooldown", "遺物 [{RELIC}]・クールタイム1.5倍", "遗物 [{RELIC}] · 冷却时间1.5倍");
         C("relic.equip", "유물 장착: {0}", "Relic equipped: {0}", "遺物を装備：{0}", "已装备遗物：{0}");
         C("유물은 [{RELIC}]로 씁니다. 두 개를 가지면 준비된 것부터 나갑니다. 쿨타임은 1.5배입니다.",
@@ -30,11 +30,11 @@ public static partial class LocTable
         C("prop.barrel.name", "나무통", "Wooden Barrel", "木の樽", "木桶");
         C("prop.crystal.name", "영혼 수정", "Soul Crystal", "魂の水晶", "灵魂水晶");
         C("prop.sarco.name", "봉인된 석관", "Sealed Sarcophagus", "封印された石棺", "封印的石棺");
-        C("prop.sarco.appear", "봉인된 석관이 나타났다!\n화살표를 따라가 곁에 머물러 봉인을 부수면 유물을 얻습니다",
-          "A Sealed Sarcophagus appeared!\nFollow the arrow and stay beside it to break the seal for a relic",
-          "封印された石棺が現れた！\n矢印をたどり、そばにとどまって封印を破ると遺物が手に入ります",
-          "封印的石棺出现了！\n跟随箭头，停留在旁边破除封印即可获得遗物");
-        C("prop.sarco.empty", "석관은 비어 있었다...\n코인 +{0}", "The sarcophagus was empty...\nCoins +{0}", "石棺は空っぽだった……\nコイン +{0}", "石棺里空空如也……\n金币 +{0}");
+        C("prop.sarco.appear", "봉인된 석관이 나타났다!\n화살표를 따라가 곁에 머무르며 봉인을 부수면 유물을 얻습니다.",
+          "A Sealed Sarcophagus appeared!\nFollow the arrow and stay beside it to break the seal for a relic.",
+          "封印された石棺が現れた！\n矢印をたどり、そばにとどまって封印を破ると遺物が手に入ります。",
+          "封印的石棺出现了！\n跟随箭头，停留在旁边破除封印即可获得遗物。");
+        C("prop.sarco.empty", "석관은 비어 있었다…\n코인 +{0}", "The sarcophagus was empty...\nCoins +{0}", "石棺は空っぽだった……\nコイン +{0}", "石棺里空空如也……\n金币 +{0}");
         C("맵 곳곳의 물체에 부딪치면 부서지며 코인 · 고기 · 자석 같은 것이 나옵니다.",
           "맵 곳곳의 물체에 부딪치면 부서지며 코인 · 고기 · 자석 같은 것이 나옵니다.",
           "Bump into objects around the map to break them and find coins, meat, magnets and more.",
@@ -49,7 +49,7 @@ public static partial class LocTable
         C("drop.timestop.name", "시간 정지", "Time Stop", "時間停止", "时间停止");
         C("drop.purify.name", "정화", "Purify", "浄化", "净化");
         C("drop.meat.text", "체력 +{0}", "HP +{0}", "体力 +{0}", "生命 +{0}");
-        C("drop.magnet.text", "자석! 코인이 모두 날아온다", "Magnet! All coins fly to you", "磁石！コインが全部飛んでくる", "磁铁！金币全部飞过来");
+        C("drop.magnet.text", "자석! 코인이 모두 날아온다!", "Magnet! All coins fly to you!", "磁石！コインが全部飛んでくる！", "磁铁！金币全部飞过来！");
         C("drop.timestop.text", "시간 정지!", "Time Stop!", "時間停止！", "时间停止！");
         C("drop.purify.text", "정화! 적 {0}마리", "Purify! {0} foes", "浄化！敵 {0}体", "净化！敌人 {0} 名");
 

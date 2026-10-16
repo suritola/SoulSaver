@@ -5,6 +5,8 @@ public static partial class LocTable
     static void AddHeroes()
     {
         void A(string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(ko)) Entries[ko] = L(en, ja, zh); }
+        // 1.1.9 문구 다듬기: 키(코드 속 한국어)는 그대로 두고 보이는 한국어만 바꿀 때
+        void K(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
 
         // ================================================================= 지도 제작자
         A("지도 제작자", "Cartographer", "地図職人", "制图师");
@@ -14,19 +16,21 @@ public static partial class LocTable
           "羽ペンで世界を描く測量士。引いた線で敵を斬り、3本ごとに自動で描かれる図形で内側をまとめて押し潰します。",
           "用羽毛笔描绘世界的测量师。画出的线斩击敌人，每三笔自动画出的图形将内部一并碾碎。");
         A("깃펜", "Quill", "羽ペン", "羽毛笔");
-        A("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
-          "Draw an ink stroke toward the cursor, cutting enemies it touches. Every third stroke closes a triangle around its end, dealing heavy damage to enemies inside",
-          "マウスの方へインクの線を引き、触れた敵を斬ります。3本目の線ごとに線の端を囲む三角形が自動で閉じ、内側の敵に大ダメージ",
-          "向鼠标方向画出墨线斩击触碰的敌人。每第三笔会自动在笔画末端闭合一个三角形，内部敌人受到重创");
+        K("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
+          "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다.",
+          "Draw an ink stroke toward the cursor, cutting enemies it touches. Every third stroke closes a triangle around its end, dealing heavy damage to enemies inside.",
+          "マウスの方へインクの線を引き、触れた敵を斬ります。3本目の線ごとに線の端を囲む三角形が自動で閉じ、内側の敵に大ダメージを与えます。",
+          "向鼠标方向画出墨线斩击触碰的敌人。每第三笔会自动在笔画末端闭合一个三角形，内部敌人受到重创。");
         A("지도 접기", "Fold the Map", "地図折り", "折叠地图");
-        A("누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
-          "Hold to show the fold line; release to drag enemies on both sides onto the line and crush them. Hold longer for a wider fold",
-          "押している間は折り目が見え、離すと線の両側の敵を線の上へ引き寄せて押し潰します。長く押すほど広く折れます",
-          "按住显示折线，松开后将折线两侧的敌人拉到线上碾碎。按得越久折得越宽");
+        K("누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
+          "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다.",
+          "Hold to show the fold line; release to drag enemies on both sides onto the line and crush them. Hold longer for a wider fold.",
+          "押している間は折り目が見え、離すと線の両側の敵を線の上へ引き寄せて押し潰します。長く押すほど広く折れます。",
+          "按住显示折线，松开后将折线两侧的敌人拉到线上碾碎。按得越久折得越宽。");
         A("측량 완료!", "Surveyed!", "測量完了！", "测量完成！");
         A("깃펜 공격력", "Quill Damage", "羽ペン攻撃力", "羽毛笔攻击力");
-        A("깃펜 공격력 · 이동 속도", "Quill Damage · Move Speed", "羽ペン攻撃力 · 移動速度", "羽毛笔攻击力 · 移动速度");
-        A("무한 모드 클리어 (개발자 엄마 처치)", "Clear Endless (defeat the Developer's Mom)", "エンドレスをクリア（開発者のママを撃破）", "通关无尽模式（击败开发者的妈妈）");     // 1.0.4~ 클리어 = 엄마 처치
+        A("깃펜 공격력 · 이동 속도", "Quill Damage · Move Speed", "羽ペン攻撃力・移動速度", "羽毛笔攻击力 · 移动速度");
+        K("무한 모드 클리어 (개발자 엄마 처치)", "무한 모드 클리어하기 (개발자 엄마 처치)", "Clear Endless (defeat the Developer's Mom)", "エンドレスをクリア（開発者のママを撃破）", "通关无尽模式（击败开发者的妈妈）");     // 1.0.4~ 클리어 = 엄마 처치
 
         // ---------------- 전용 레벨업 카드
         A("번지는 잉크", "Spreading Ink", "にじむインク", "晕染墨迹");
@@ -40,7 +44,7 @@ public static partial class LocTable
         A("바늘 수", "Needles", "針の数", "指针数");
         A("접힌 자국", "Crease", "折り目", "折痕");
         A("지도 접기 뒤 접힌 선에 자국이 남아 닿는 적을 0.3초마다 벱니다. (공격력 40%)", "After Fold the Map, the crease remains and cuts enemies on it every 0.3s. (40% attack)", "地図折りの後、折り目が残り触れた敵を0.3秒ごとに斬ります。（攻撃力40%）", "折叠地图后留下折痕，每0.3秒斩击其上的敌人。（攻击力40%）");
-        A("자국 지속", "Crease duration", "折り目の持続", "折痕持续");
+        A("접힌 자국 지속", "Crease duration", "折り目の持続", "折痕持续");
         A("측량 표식", "Survey Mark", "測量標識", "测量标记");
         A("획에 맞은 적에게 5초 동안 표식을 남깁니다. 표식이 붙은 적은 닫힌 도형 안에서 피해를 더 받습니다.", "Strokes mark enemies for 5s. Marked enemies take more damage inside closed shapes.", "線に当たった敵に5秒間標識を残します。標識の付いた敵は閉じた図形の中で多くダメージを受けます。", "被笔画击中的敌人留下5秒标记。被标记的敌人在闭合图形内受到更多伤害。");
         A("도형 피해", "Shape damage", "図形ダメージ", "图形伤害");
@@ -52,7 +56,7 @@ public static partial class LocTable
         A("범례", "Legend", "凡例", "图例");
         A("도형을 닫을 때마다 4초 동안 주는 모든 피해가 늘어납니다. (최대 3중첩)", "Each closed shape raises all damage you deal for 4s. (Up to 3 stacks)", "図形を閉じるたびに4秒間与えるすべてのダメージが増えます。（最大3重）", "每闭合一个图形，4秒内造成的所有伤害提升。（最多3层）");
         A("등고선", "Contour Lines", "等高線", "等高线");
-        A("도형을 닫으면 둘레에서 고리 파동이 한 번 더 퍼집니다.", "Closing a shape sends a ring wave out from its edge.", "図形を閉じると周りから輪の波動がもう一度広がります。", "闭合图形时，从边缘再扩散一圈环形波动。");
+        A("도형을 닫으면 둘레에서 고리 파동이 한 번 더 퍼집니다.", "Closing a shape sends one more ring wave out from its edge.", "図形を閉じると周りから輪の波動がもう一度広がります。", "闭合图形时，从边缘再扩散一圈环形波动。");
         A("파동 피해", "Wave damage", "波動ダメージ", "波动伤害");
         A("축척", "Scale", "縮尺", "比例尺");
         A("획이 길수록 피해가 늘어나고, 단계마다 획 사거리가 15% 늘어납니다. (사거리 끝까지 그으면 최대)", "Longer strokes deal more damage, and each level extends stroke range by 15%. (Max at full range)", "線が長いほどダメージが増え、段階ごとに線の射程が15%伸びます。（射程いっぱいで最大）", "笔画越长伤害越高，且每级笔画射程增加15%。（画满射程时最大）");
@@ -74,12 +78,12 @@ public static partial class LocTable
         A("도형을 닫은 자리에 나침도가 그려져 3초 동안 안의 적을 느리게 합니다.", "Closed shapes draw a compass rose that slows enemies inside for 3s.", "図形を閉じた場所に羅針図が描かれ、3秒間中の敵を遅くします。", "闭合图形处绘出罗盘玫瑰，3秒内减速其中的敌人。");
         A("느려짐", "Slow", "鈍化", "减速");
         A("잉크 폭풍", "Ink Storm", "インクの嵐", "墨之风暴");
-        A("지도 접기로 쓰러진 적에게서 잉크가 튀어 주변 적에게 피해를 줍니다.", "Enemies killed by Fold the Map splash ink that damages nearby foes.", "地図折りで倒れた敵からインクが飛び散り、周りの敵にダメージを与えます。", "被折叠地图击败的敌人溅出墨汁，伤害周围敌人。");
+        K("지도 접기로 쓰러진 적에게서 잉크가 튀어 주변 적에게 피해를 줍니다.", "지도 접기로 쓰러진 적에게서 잉크가 튀어 둘레의 적에게 피해를 줍니다.", "Enemies killed by Fold the Map splash ink that damages nearby foes.", "地図折りで倒れた敵からインクが飛び散り、周りの敵にダメージを与えます。", "被折叠地图击败的敌人溅出墨汁，伤害周围敌人。");
         A("잉크 피해", "Ink damage", "インクダメージ", "墨汁伤害");
 
         // ---------------- 스킬 진화
         A("세계 지도", "World Map", "世界地図", "世界地图");
-        A("도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", "Shape damage x1.5; enemies inside are struck twice more and nearby foes are marked (+20% damage taken).", "図形ダメージが1.5倍になり、閉じた後に内側の敵がさらに2回傷つき、周りの敵に標識（被ダメージ+20%）が広がります。", "图形伤害变为1.5倍，闭合后内部敌人再受两次伤害，周围敌人被标记（受到伤害+20%）。");
+        A("도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", "Shape damage becomes 1.5×; once closed, enemies inside are struck twice more and a mark (+20% damage taken) spreads to nearby foes.", "図形ダメージが1.5倍になり、閉じた後に内側の敵がさらに2回傷つき、周りの敵に標識（被ダメージ+20%）が広がります。", "图形伤害变为1.5倍，闭合后内部敌人再受两次伤害，周围敌人被标记（受到伤害+20%）。");
         A("입체 지도", "Relief Map", "立体地図", "立体地图");
         A("등고선 파동이 세 겹으로 퍼집니다.", "Contour waves ripple out three times.", "等高線の波動が三重に広がります。", "等高线波动扩散三层。");
         A("직행로", "Express Route", "直行路", "直达路线");
@@ -96,13 +100,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 (형태 · 궁극기 · 강화) · 패시브
         A("측량 사슬", "Survey Chain", "測量の鎖", "测量锁链");
         A("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）");
-        A("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)\nEvolved Ultimate: Triangulation", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）\n究極技：三角測量", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）\n究极技：三角测量");
+        K("획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n궁극기: 삼각 측량", "획 끝에서 가장 가까운 적에게 측량 사슬이 튑니다. (피해 50%)\n필살기에 덧붙음: 삼각 측량", "A survey chain jumps from each stroke's end to the nearest enemy. (50% damage)\nAdded to your Ultimate: Triangulation", "線の端から最も近い敵へ測量の鎖が飛びます。（ダメージ50%）\n必殺技に上乗せ：三角測量", "测量锁链从笔画末端弹向最近的敌人。（伤害50%）\n附加于必杀技：三角测量");
         A("잉크병", "Inkpot", "インク瓶", "墨水瓶");
         A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)", "An inkpot shatters at each stroke's end in a small burst. (60% damage)", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）");
-        A("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nEvolved Ultimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n究極技：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n究极技：墨潮");
+        K("획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n궁극기: 먹물 해일", "획 끝에서 잉크병이 깨져 작게 터집니다. (피해 60%)\n필살기에 덧붙음: 먹물 해일", "An inkpot shatters at each stroke's end in a small burst. (60% damage)\nAdded to your Ultimate: Ink Tide", "線の端でインク瓶が割れて小さく爆発します。（ダメージ60%）\n必殺技に上乗せ：墨の津波", "墨水瓶在笔画末端碎裂小范围爆炸。（伤害60%）\n附加于必杀技：墨潮");
         A("지구본", "Globe", "地球儀", "地球仪");
-        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。");
-        A("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "Shapes are 1.5x larger; closing pulls enemies to the center and shape damage +30%.\nEvolved Ultimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり図形ダメージ+30%。\n究極技：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害+30%。\n究极技：自转");
+        K("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해가 30% 늘어납니다.", "Shapes grow 1.5× larger; closing one pulls enemies to the center and raises shape damage by 30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり、図形ダメージが30%増えます。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害提升30%。");
+        K("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해가 30% 늘어납니다.\n필살기에 덧붙음: 자전", "Shapes grow 1.5× larger; closing one pulls enemies to the center and raises shape damage by 30%.\nAdded to your Ultimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり、図形ダメージが30%増えます。\n必殺技に上乗せ：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害提升30%。\n附加于必杀技：自转");
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
         A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");
         A("먹물 해일", "Ink Tide", "墨の津波", "墨潮");
@@ -134,7 +138,7 @@ public static partial class LocTable
         A("측량사는 마지막 빈칸에 「심연」이라고 적고 지도를 접었다.", "The surveyor wrote \"Abyss\" in the last blank square and folded the map.", "測量士は最後の空欄に「深淵」と書き込み、地図を畳んだ。", "测量师在最后一格空白处写下「深渊」，折起了地图。");
         A("세상에서 가장 정확한 지도가 완성된 날이었다.", "It was the day the most accurate map in the world was finished.", "世界で最も正確な地図が完成した日だった。", "那是世界上最精确的地图完成的日子。");
         A("“이제 길을 잃는 사람은 없겠지.”", "\"No one will lose their way now.\"", "「これでもう、道に迷う人はいないだろう。」", "“这下，再也不会有人迷路了吧。”");
-        A("하지만 지도 끝 붉게 칠해진 사막에, 아직 그리지 못한 무언가가 꿈틀거리고 있었다...", "But in the red desert at the map's edge, something not yet drawn was stirring...", "しかし地図の端、赤く塗られた砂漠で、まだ描かれていない何かがうごめいていた…", "然而在地图边缘那片涂红的沙漠里，某个尚未画下的东西正在蠢动……");
+        K("하지만 지도 끝 붉게 칠해진 사막에, 아직 그리지 못한 무언가가 꿈틀거리고 있었다...", "하지만 지도 끝 붉게 칠해진 사막에, 아직 그리지 못한 무언가가 꿈틀거리고 있었다…", "But in the red desert at the map's edge, something not yet drawn was stirring...", "しかし地図の端、赤く塗られた砂漠で、まだ描かれていない何かがうごめいていた……", "然而在地图边缘那片涂红的沙漠里，某个尚未画下的东西正在蠢动……");
 
         // ================================================================= 시계공
         A("시계공", "Clockmaker", "時計職人", "钟表匠");
@@ -144,19 +148,21 @@ public static partial class LocTable
           "歯車とゼンマイで時を操る職人。当てるほど時計の目盛りがたまり正時の大歯車を投げ、ピンチには3秒前へ巻き戻ります。",
           "以齿轮与发条操纵时间的工匠。命中越多钟表刻度越满，便会掷出整点大齿轮；危急时倒回3秒前。");
         A("톱니바퀴", "Gears", "歯車", "齿轮");
-        A("회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
-          "Throw spinning gears. Each hit fills the clock ring at your feet; when full, your next gear becomes an O'Clock gear that pierces everything and explodes",
-          "回転する歯車を投げます。当てるたびに足元の時計の目盛りがたまり、満タンになると次の歯車がすべての敵を貫いて爆発する「正時」の歯車になります",
-          "掷出旋转齿轮。每次命中都会填满脚下的钟表刻度，填满后下一枚齿轮变为贯穿所有敌人并爆炸的「整点」齿轮");
+        K("회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
+          "회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다.",
+          "Throw spinning gears. Each hit fills the clock ring at your feet; when full, your next gear becomes an O'Clock gear that pierces everything and explodes.",
+          "回転する歯車を投げます。当てるたびに足元の時計の目盛りがたまり、満タンになると次の歯車がすべての敵を貫いて爆発する「正時」の歯車になります。",
+          "掷出旋转齿轮。每次命中都会填满脚下的钟表刻度，填满后下一枚齿轮变为贯穿所有敌人并爆炸的「整点」齿轮。");
         A("되감기", "Rewind", "巻き戻し", "倒带");
-        A("누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
-          "Hold to see yourself from 3 seconds ago; release to return there. Cut enemies along the way, recover half the health lost, and repay three times that loss to nearby foes",
-          "押している間は3秒前の自分が見え、離すとその場所へ戻ります。通った道の敵を斬り、その間に失った体力の半分を取り戻し、失った体力の3倍を周りの敵に返します",
-          "按住可看到3秒前的自己，松开回到那里。斩击途经的敌人，夺回期间失去生命的一半，并将失去生命的三倍回敬给周围敌人");
+        K("누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
+          "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다.",
+          "Hold to see yourself from 3 seconds ago; release to return there. Cut enemies along the way, recover half the health lost, and repay three times that loss to nearby foes.",
+          "押している間は3秒前の自分が見え、離すとその場所へ戻ります。通った道の敵を斬り、その間に失った体力の半分を取り戻し、失った体力の3倍を周りの敵に返します。",
+          "按住可看到3秒前的自己，松开回到那里。斩击途经的敌人，夺回期间失去生命的一半，并将失去生命的三倍回敬给周围敌人。");
         A("정각!", "O'Clock!", "正時！", "整点！");
         A("시간 정지!", "Time Stop!", "時間停止！", "时间停止！");
         A("톱니 공격력", "Gear Damage", "歯車攻撃力", "齿轮攻击力");
-        A("톱니 공격력 · 이동 속도", "Gear Damage · Move Speed", "歯車攻撃力 · 移動速度", "齿轮攻击力 · 移动速度");
+        A("톱니 공격력 · 이동 속도", "Gear Damage · Move Speed", "歯車攻撃力・移動速度", "齿轮攻击力 · 移动速度");
 
         // ---------------- 전용 레벨업 카드
         A("튕기는 톱니", "Ricochet Gear", "跳ねる歯車", "弹跳齿轮");
@@ -172,7 +178,7 @@ public static partial class LocTable
         A("되감기로 떠난 자리에 시계가 남아 0.5초마다 둘레를 벱니다. (공격력 60%)", "A clock remains where you rewound from, cutting around it every 0.5s. (60% attack)", "巻き戻しで去った場所に時計が残り、0.5秒ごとに周りを斬ります。（攻撃力60%）", "倒带离开处留下时钟，每0.5秒斩击周围。（攻击力60%）");
         A("시계 지속", "Clock duration", "時計の持続", "时钟持续");
         A("정각의 종", "O'Clock Bell", "正時の鐘", "整点之钟");
-        A("정각 톱니가 터지면 종소리가 퍼져 주변 적을 잠깐 멈춥니다.", "When an O'Clock gear bursts, a bell toll briefly freezes nearby enemies.", "正時の歯車が爆発すると鐘の音が広がり、周りの敵を少し止めます。", "整点齿轮爆炸时钟声扩散，使周围敌人短暂停住。");
+        K("정각 톱니가 터지면 종소리가 퍼져 주변 적을 잠깐 멈춥니다.", "정각 톱니가 터지면 종소리가 퍼져 둘레의 적을 잠깐 멈춥니다.", "When an O'Clock gear bursts, a bell toll briefly freezes nearby enemies.", "正時の歯車が爆発すると鐘の音が広がり、周りの敵を少し止めます。", "整点齿轮爆炸时钟声扩散，使周围敌人短暂停住。");
         A("멈추는 시간", "Freeze time", "止める時間", "停止时间");
         A("녹슨 톱니", "Rusty Gear", "錆びた歯車", "锈蚀齿轮");
         A("톱니에 맞은 적이 2초 동안 느려집니다.", "Enemies hit by gears are slowed for 2s.", "歯車に当たった敵が2秒間遅くなります。", "被齿轮击中的敌人减速2秒。");
@@ -200,7 +206,7 @@ public static partial class LocTable
         A("시간 고리", "Time Loop", "時の輪", "时间之环");
         A("되감기로 돌아간 자리에 4초 동안 고리가 생겨 안의 적이 느려집니다.", "Rewinding leaves a 4s loop at your destination that slows enemies inside.", "巻き戻しで戻った場所に4秒間輪ができ、中の敵が遅くなります。", "倒带返回处生成持续4秒的环，减速其中的敌人。");
         A("빌린 시간", "Borrowed Time", "借りた時間", "借来的时间");
-        A("적을 처치할 때마다 필살기 게이지가 찹니다.", "Each kill fills your Ultimate gauge.", "敵を倒すたびに必殺技ゲージがたまります。", "每击杀一名敌人都会充能必杀技。");
+        K("적을 처치할 때마다 필살기 게이지가 찹니다.", "적을 쓰러뜨릴 때마다 필살기 게이지가 찹니다.", "Each kill fills your Ultimate gauge.", "敵を倒すたびに必殺技ゲージがたまります。", "每击杀一名敌人都会充能必杀技。");
         A("처치당 게이지", "Gauge per kill", "撃破ごとのゲージ", "每次击杀充能");
         A("스톱워치", "Stopwatch", "ストップウォッチ", "秒表");
         A("되감을 때 지난 3초 동안 준 피해의 일부가 가까운 적들에게 한 번 더 들어갑니다.", "When you rewind, part of the damage you dealt in the last 3s strikes nearby enemies again.", "巻き戻す時、直前3秒間に与えたダメージの一部が近くの敵にもう一度入ります。", "倒带时，过去3秒造成伤害的一部分再次作用于附近敌人。");
@@ -220,22 +226,22 @@ public static partial class LocTable
         A("무한 반향", "Endless Echo", "無限の反響", "无尽回响");
         A("잔상 톱니가 두 번 날아갑니다.", "Afterimage gears fly twice.", "残像の歯車が2回飛びます。", "残影齿轮飞出两次。");
         A("시간 빚", "Time Debt", "時の借り", "时间之债");
-        A("스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", "Stopwatch replays twice as much, and each rewind refunds 30% of your Ultimate gauge.", "ストップウォッチが2倍入り、巻き戻すたびに必殺技ゲージを30%取り戻します。", "秒表效果翻倍，每次倒带返还30%必杀技充能。");
+        A("스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", "Stopwatch replays twice as much, and each rewind refunds 30% of your Ultimate gauge.", "ストップウォッチのダメージが2倍になり、巻き戻すたびに必殺技ゲージを30%取り戻します。", "秒表效果翻倍，每次倒带返还30%必杀技充能。");
 
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("뻐꾸기 시계", "Cuckoo Clock", "鳩時計", "布谷鸟钟");
         A("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다. (공격력 100%씩)", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies. (100% attack each)", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。（攻撃力100%ずつ）", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。（每只攻击力100%）");
-        A("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n궁극기: 뻐꾸기 떼", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies.\nEvolved Ultimate: Cuckoo Flock", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。\n究極技：鳩の群れ", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。\n究极技：布谷鸟群");
+        K("정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n궁극기: 뻐꾸기 떼", "정각 톱니가 터질 때마다 뻐꾸기 셋이 튀어나와 가까운 적을 쪼습니다.\n필살기에 덧붙음: 뻐꾸기 떼", "Each O'Clock gear burst releases three cuckoos that peck nearby enemies.\nAdded to your Ultimate: Cuckoo Flock", "正時の歯車が爆発するたびに鳩が3羽飛び出して近くの敵をつつきます。\n必殺技に上乗せ：鳩の群れ", "每次整点齿轮爆炸都会弹出三只布谷鸟啄击附近敌人。\n附加于必杀技：布谷鸟群");
         A("모래시계", "Hourglass", "砂時計", "沙漏");
         A("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.", "Enemies hit by gears are buried in sand, moving at half speed for 1s.", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。");
-        A("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n궁극기: 모래 폭풍", "Enemies hit by gears are buried in sand, moving at half speed for 1s.\nEvolved Ultimate: Sandstorm", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。\n究極技：砂嵐", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。\n究极技：沙暴");
+        K("톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n궁극기: 모래 폭풍", "톱니에 맞은 적이 모래에 묻혀 1초 동안 절반 속도로 느려집니다.\n필살기에 덧붙음: 모래 폭풍", "Enemies hit by gears are buried in sand, moving at half speed for 1s.\nAdded to your Ultimate: Sandstorm", "歯車に当たった敵が砂に埋もれ、1秒間半分の速さに遅くなります。\n必殺技に上乗せ：砂嵐", "被齿轮击中的敌人被沙子掩埋，1秒内速度减半。\n附加于必杀技：沙暴");
         A("괘종시계", "Grandfather Clock", "柱時計", "落地钟");
         A("톱니가 크고 느려지지만 피해가 40% 늘어납니다.", "Gears grow larger and slower but deal 40% more damage.", "歯車が大きく遅くなりますが、ダメージが40%増えます。", "齿轮变大变慢，但伤害提升40%。");
-        A("톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n궁극기: 열두 번의 종", "Gears grow larger and slower but deal 40% more damage.\nEvolved Ultimate: Twelve Tolls", "歯車が大きく遅くなりますが、ダメージが40%増えます。\n究極技：十二の鐘", "齿轮变大变慢，但伤害提升40%。\n究极技：十二响钟");
+        K("톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n궁극기: 열두 번의 종", "톱니가 크고 느려지지만 피해가 40% 늘어납니다.\n필살기에 덧붙음: 열두 번의 종", "Gears grow larger and slower but deal 40% more damage.\nAdded to your Ultimate: Twelve Tolls", "歯車が大きく遅くなりますが、ダメージが40%増えます。\n必殺技に上乗せ：十二の鐘", "齿轮变大变慢，但伤害提升40%。\n附加于必杀技：十二响钟");
         A("뻐꾸기 떼", "Cuckoo Flock", "鳩の群れ", "布谷鸟群");
         A("뻐꾸기 열두 마리가 가까운 적들을 차례로 덮칩니다. (공격력 150%씩)", "Twelve cuckoos swoop on nearby enemies in turn. (150% attack each)", "鳩12羽が近くの敵へ次々と襲いかかります。（攻撃力150%ずつ）", "十二只布谷鸟依次扑向附近敌人。（每只攻击力150%）");
         A("모래 폭풍", "Sandstorm", "砂嵐", "沙暴");
-        A("마우스 자리에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "A sand whirlwind forms at the cursor for 4s, pulling enemies in and cutting every 0.3s. (60% attack)", "マウスの位置に4秒間砂の竜巻が生まれ、敵を引き寄せて0.3秒ごとに斬ります。（攻撃力60%）", "在鼠标处生成持续4秒的沙之旋风，吸引敌人并每0.3秒斩击。（攻击力60%）");
+        K("마우스 자리에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "마우스 위치에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "A sand whirlwind forms at the cursor for 4s, pulling enemies in and cutting every 0.3s. (60% attack)", "マウスの位置に4秒間砂の竜巻が生まれ、敵を引き寄せて0.3秒ごとに斬ります。（攻撃力60%）", "在鼠标处生成持续4秒的沙之旋风，吸引敌人并每0.3秒斩击。（攻击力60%）");
         A("열두 번의 종", "Twelve Tolls", "十二の鐘", "十二响钟");
         A("내 둘레로 종소리 고리가 열두 번 퍼집니다. (공격력 80%씩)", "Twelve rings of bell tolls spread around you. (80% attack each)", "自分の周りに鐘の音の輪が12回広がります。（攻撃力80%ずつ）", "钟声之环在身边扩散十二次。（每次攻击力80%）");
         A("정밀 톱니", "Precision Gear", "精密な歯車", "精密齿轮");
@@ -249,7 +255,7 @@ public static partial class LocTable
         A("예측", "Foresight", "予測", "预判");
         A("체력이 절반 이상일 때 받는 피해가 12% 줄어듭니다.\n진화: 20%", "Take 12% less damage while above half health.\nEvolved: 20%", "体力が半分以上のとき受けるダメージが12%減ります。\n進化：20%", "生命高于一半时受到的伤害减少12%。\n进化：20%");
         A("부품 수집", "Spare Parts", "部品集め", "零件收集");
-        A("적을 처치하면 8% 확률로 다음 톱니가 정각 톱니가 됩니다.\n진화: 15%", "Kills have an 8% chance to make your next gear an O'Clock gear.\nEvolved: 15%", "敵を倒すと8%の確率で次の歯車が正時の歯車になります。\n進化：15%", "击杀敌人时有8%几率使下一枚齿轮成为整点齿轮。\n进化：15%");
+        K("적을 처치하면 8% 확률로 다음 톱니가 정각 톱니가 됩니다.\n진화: 15%", "적을 쓰러뜨리면 8% 확률로 다음 톱니가 정각 톱니가 됩니다.\n진화: 15%", "Kills have an 8% chance to make your next gear an O'Clock gear.\nEvolved: 15%", "敵を倒すと8%の確率で次の歯車が正時の歯車になります。\n進化：15%", "击杀敌人时有8%几率使下一枚齿轮成为整点齿轮。\n进化：15%");
         A("시간 여유", "Spare Time", "時間の余裕", "时间余裕");
         A("필살기 게이지가 10% 더 빨리 찹니다.\n진화: 18%", "Your Ultimate gauge fills 10% faster.\nEvolved: 18%", "必殺技ゲージが10%速くたまります。\n進化：18%", "必杀技充能速度提升10%。\n进化：18%");
 
@@ -268,13 +274,14 @@ public static partial class LocTable
         A("저승 배달부", "Courier of the Dead", "冥府の配達人", "冥府信使");
         A("편지", "Letters", "手紙", "信件");
         A("속달", "Express Delivery", "速達", "特快专递");
-        A("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
-          "While held, letter marks attach to nearby enemies one by one (more the longer you hold); release and all marks burst together 1s later",
-          "押している間、周りの敵に手紙の印が順に付き（長く押すほど多く）、離すと1秒後に印がすべて一斉に弾けます",
-          "按住时依次在周围敌人身上贴上信件标记（按得越久越多），松开1秒后所有标记同时爆炸");
+        K("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
+          "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고(오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다.",
+          "While held, letter marks attach to nearby enemies one by one (more the longer you hold); release and all marks burst together 1s later.",
+          "押している間、周りの敵に手紙の印が順に付き（長く押すほど多く）、離すと1秒後に印がすべて一斉に弾けます。",
+          "按住时依次在周围敌人身上贴上信件标记（按得越久越多），松开1秒后所有标记同时爆炸。");
         A("배달 완료!", "Delivered!", "配達完了！", "送达！");
         A("편지 공격력", "Letter Damage", "手紙攻撃力", "信件攻击力");
-        A("편지 공격력 · 이동 속도", "Letter Damage · Move Speed", "手紙攻撃力 · 移動速度", "信件攻击力 · 移动速度");
+        A("편지 공격력 · 이동 속도", "Letter Damage · Move Speed", "手紙攻撃力・移動速度", "信件攻击力 · 移动速度");
         A("통", "", "通", "封");
 
         // ---------------- 전용 레벨업 카드
@@ -334,13 +341,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("비둘기 우편", "Pigeon Post", "鳩便", "信鸽");
         A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다. (피해 50%씩)", "A pigeon carries your first letter and pecks the addressee twice more. (50% damage each)", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。（ダメージ50%ずつ）", "第一封信由信鸽衔去，再啄收件人两次。（每次伤害50%）");
-        A("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼", "A pigeon carries your first letter and pecks the addressee twice more.\nEvolved Ultimate: Pigeon Flock", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。\n究極技：鳩の群れ", "第一封信由信鸽衔去，再啄收件人两次。\n究极技：鸽群");
+        K("첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n궁극기: 비둘기 떼", "첫 편지는 비둘기가 물고 가 받는 이를 두 번 더 쪼습니다.\n필살기에 덧붙음: 비둘기 떼", "A pigeon carries your first letter and pecks the addressee twice more.\nAdded to your Ultimate: Pigeon Flock", "最初の手紙は鳩がくわえて運び、宛先をさらに2回つつきます。\n必殺技に上乗せ：鳩の群れ", "第一封信由信鸽衔去，再啄收件人两次。\n附加于必杀技：鸽群");
         A("소포 상자", "Parcel Box", "小包箱", "包裹箱");
         A("편지가 소포 상자가 되어 맞은 자리에서 터집니다. (피해 60%)", "Letters become parcel boxes that burst on arrival. (60% damage)", "手紙が小包箱になり、届いた場所で爆発します。（ダメージ60%）", "信件变为包裹箱，送达处爆炸。（伤害60%）");
-        A("편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격", "Letters become parcel boxes that burst on arrival.\nEvolved Ultimate: Parcel Barrage", "手紙が小包箱になり、届いた場所で爆発します。\n究極技：宅配爆撃", "信件变为包裹箱，送达处爆炸。\n究极技：快递轰炸");
+        K("편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n궁극기: 택배 폭격", "편지가 소포 상자가 되어 맞은 자리에서 터집니다.\n필살기에 덧붙음: 택배 폭격", "Letters become parcel boxes that burst on arrival.\nAdded to your Ultimate: Parcel Barrage", "手紙が小包箱になり、届いた場所で爆発します。\n必殺技に上乗せ：宅配爆撃", "信件变为包裹箱，送达处爆炸。\n附加于必杀技：快递轰炸");
         A("우체통", "Postbox", "郵便ポスト", "邮筒");
         A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。");
-        A("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.\nEvolved Ultimate: Postbox Parade", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。\n究極技：ポストの行列", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。\n究极技：邮筒行列");
+        K("3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n궁극기: 우체통 행렬", "3초마다 발밑에 우체통이 서서 4초 동안 가까운 적에게 편지를 던집니다.\n필살기에 덧붙음: 우체통 행렬", "Every 3s a postbox appears at your feet and throws letters at nearby enemies for 4s.\nAdded to your Ultimate: Postbox Parade", "3秒ごとに足元に郵便ポストが立ち、4秒間近くの敵へ手紙を投げます。\n必殺技に上乗せ：ポストの行列", "每3秒脚下立起一个邮筒，4秒内向附近敌人投掷信件。\n附加于必杀技：邮筒行列");
         A("비둘기 떼", "Pigeon Flock", "鳩の群れ", "鸽群");
         A("비둘기 스무 마리가 마우스 쪽으로 날아가며 닿는 적을 쪼습니다. (공격력 90%씩)", "Twenty pigeons fly toward the cursor, pecking enemies they touch. (90% attack each)", "鳩20羽がマウスの方へ飛び、触れた敵をつつきます。（攻撃力90%ずつ）", "二十只鸽子飞向鼠标方向，啄击触碰的敌人。（每只攻击力90%）");
         A("택배 폭격", "Parcel Barrage", "宅配爆撃", "快递轰炸");
@@ -348,14 +355,14 @@ public static partial class LocTable
         A("우체통 행렬", "Postbox Parade", "ポストの行列", "邮筒行列");
         A("내 둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Five postboxes rise around you and throw letters at nearby enemies for 4s.", "自分の周りに郵便ポスト5つが立ち、4秒間近くの敵へ手紙を投げます。", "身边立起五个邮筒，4秒内向附近敌人投掷信件。");
         A("두꺼운 봉투", "Thick Envelope", "分厚い封筒", "厚信封");
-        A("편지 피해가 25% 늘어납니다.", "Letter damage +25%.", "手紙のダメージが25%増えます。", "信件伤害提升25%。");
+        A("편지 피해가 25% 늘어납니다.", "Letter damage increases by 25%.", "手紙のダメージが25%増えます。", "信件伤害提升25%。");
         A("다발 배송", "Bundle Delivery", "まとめ配送", "批量投递");
         A("등기 표식", "Registered Marks", "書留の印", "挂号标记");
         A("속달 표식이 50% 더 많이 붙습니다.", "Express Delivery places 50% more marks.", "速達の印が50%多く付きます。", "特快标记数量增加50%。");
         A("튼튼한 다리", "Sturdy Legs", "丈夫な脚", "强健双腿");
-        A("이동 속도가 8% 빨라집니다.\n진화: 14%", "Move speed +8%.\nEvolved: 14%", "移動速度が8%速くなります。\n進化：14%", "移动速度提升8%。\n进化：14%");
+        A("이동 속도가 8% 빨라집니다.\n진화: 14%", "Move speed increases by 8%.\nEvolved: 14%", "移動速度が8%速くなります。\n進化：14%", "移动速度提升8%。\n进化：14%");
         A("단골 손님", "Regular Customer", "常連さん", "老主顾");
-        A("보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%", "Deal 15% more damage to bosses and mini-bosses.\nEvolved: +25%", "ボス・中ボスへのダメージが15%増えます。\n進化：+25%", "对首领与精英造成的伤害提升15%。\n进化：+25%");
+        A("보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%", "Deal 15% more damage to bosses and mid-bosses.\nEvolved: +25%", "ボス・中ボスへのダメージが15%増えます。\n進化：+25%", "对首领与中头目造成的伤害提升15%。\n进化：+25%");
         A("우편 요금", "Postage", "郵便料金", "邮资");
         A("배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%", "Each delivery has a 5% chance to earn 1 coin.\nEvolved: 10%", "配達を終えるたびに5%の確率でコイン1枚をもらいます。\n進化：10%", "每次投递有5%几率获得1枚金币。\n进化：10%");
         A("개 조심", "Beware of Dog", "猛犬注意", "当心恶犬");
@@ -366,30 +373,31 @@ public static partial class LocTable
           "A courier who delivers to the living and the dead alike. Letters seek out the farthest foe first, and one Express Delivery bursts letters on many nearby enemies at once.",
           "生者にも死者にも手紙を届ける配達人。手紙は最も遠い敵から探しに行き、速達ひとつで周りの多くの敵に手紙が一斉に弾けます。",
           "无论生者死者都会送达信件的邮差。信件先寻找最远的敌人，一次特快便能让周围众多敌人身上的信件同时爆开。");
-        A("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
-          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries of letters you sent yourself earn coins and Ultimate gauge",
-          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、自分で送った手紙を10回配達するたびにコインと必殺技ゲージがもらえます",
-          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，亲手寄出的信件每送达10次获得金币与必杀技充能");
+        K("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
+          "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다.",
+          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries of letters you sent yourself earn coins and Ultimate gauge.",
+          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、自分で送った手紙を10回配達するたびにコインと必殺技ゲージがもらえます。",
+          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，亲手寄出的信件每送达10次获得金币与必杀技充能。");
         A("편지가 받는 이에게 닿으면 가까운 다른 적에게 다시 배달됩니다. (피해 65%)", "After reaching its addressee, a letter is redelivered to another nearby enemy. (65% damage)", "手紙が宛先に届くと、近くの別の敵へもう一度配達されます。（ダメージ65%）", "信件送达收件人后，再投递给附近另一名敌人。（伤害65%）");
         A("배달할 때마다 다음 편지의 피해가 늘어납니다. (최대 10중첩 · 맞으면 절반이 떨어짐)", "Each delivery strengthens your next letters. (Up to 10 stacks · getting hit loses half)", "配達するたびに次の手紙のダメージが増えます。（最大10重・被弾すると半分なくなる）", "每次送达都会强化之后的信件。（最多10层 · 受击时失去一半）");
         A("속달 표식이 터진 자리에서 작은 편지가 가까운 적에게 날아갑니다. (공격력 60% · 속달 한 번에 최대 10통)", "Where Express marks burst, small letters fly to nearby enemies. (60% attack · up to 10 per Express Delivery)", "速達の印が弾けた場所から小さな手紙が近くの敵へ飛びます。（攻撃力60%・速達1回につき最大10通）", "特快标记爆炸处飞出小信件射向附近敌人。（攻击力60% · 每次特快最多10封）");
         A("직접 보낸 편지를 열 번 배달할 때마다 필살기 게이지가 더 찹니다.", "Every 10 deliveries of letters you sent yourself fill extra Ultimate gauge.", "自分で送った手紙を10回配達するたびに必殺技ゲージがさらにたまります。", "亲手寄出的信件每送达10次额外充能必杀技。");
         A("배달을 마칠 때마다 체력을 회복합니다. (0.3초에 한 번)", "Heal each time you complete a delivery. (Once per 0.3s)", "配達を終えるたびに体力を回復します。（0.3秒に1回）", "每完成一次投递恢复生命。（每0.3秒一次）");
-        A("우표가 15중첩까지 쌓이고, 특급 게이지가 1.5배가 됩니다.", "Stamps stack up to 15, and Priority Mail grants 1.5x gauge.", "切手が15重まで重なり、特急のゲージが1.5倍になります。", "邮票可叠加至15层，特急充能变为1.5倍。");
+        A("우표가 15중첩까지 쌓이고, 특급 게이지가 1.5배가 됩니다.", "Stamps stack up to 15, and Priority Mail grants 1.5× gauge.", "切手が15重まで重なり、特急のゲージが1.5倍になります。", "邮票可叠加至15层，特急充能变为1.5倍。");
         A("반송된 편지가 최대 두 번까지 계속 이어집니다.", "Returned letters keep going up to two times.", "返送された手紙が最大2回まで続きます。", "退回的信件最多可连续两次。");
         A("편지를 두 통 더 보냅니다. (피해 55%)", "Send two more letters. (55% damage)", "手紙をさらに2通送ります。（ダメージ55%）", "多寄出两封信。（伤害55%）");
 
         // ---------------- 이야기
-        A("저승 배달부의 가방에 수취인이 「킹 슬라임」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"King Slime.\"", "冥府の配達人のかばんに、宛先が「キングスライム」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「史莱姆王」的信。");
+        A("저승 배달부의 가방에 수취인이 「킹 슬라임」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"King Slime\".", "冥府の配達人のかばんに、宛先が「キングスライム」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「史莱姆王」的信。");
         A("보낸 이는 초원에서 녹아 사라진 사람들. 내용은 짧았다. 「돌려줘.」", "It came from everyone dissolved in the meadow. It was short: \"Give us back.\"", "差出人は草原で溶けて消えた人々。中身は短かった。「返して。」", "寄信人是在草原上被溶化消失的人们。内容很短：「还给我们。」");
         A("배달부는 모자를 고쳐 쓰고 초원으로 걸어 나갔다. 편지는 반드시 전해진다.", "The courier straightened his cap and walked into the meadow. Every letter gets delivered.", "配達人は帽子をかぶり直して草原へ歩き出した。手紙は必ず届けられる。", "信使正了正帽子，走向草原。信件一定会送达。");
-        A("저승 배달부의 가방에 수취인이 「리치 왕」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"the Lich King.\"", "冥府の配達人のかばんに、宛先が「リッチキング」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「巫妖王」的信。");
+        A("저승 배달부의 가방에 수취인이 「리치 왕」인 편지가 한 통 들어 있었다.", "In the courier's bag was a single letter addressed to \"the Lich King\".", "冥府の配達人のかばんに、宛先が「リッチ王」の手紙が1通入っていた。", "冥府信使的包里，有一封收件人写着「巫妖王」的信。");
         A("보낸 이는 묘역에 잠들어 있던 모든 영혼. 내용은 짧았다. 「이제 그만 재워 줘.」", "It came from every soul that slept in the catacombs. It was short: \"Let us rest now.\"", "差出人は墓所で眠っていたすべての魂。中身は短かった。「もう眠らせて。」", "寄信人是长眠在墓地的所有灵魂。内容很短：「让我们安息吧。」");
         A("배달부는 모자를 고쳐 쓰고 신전의 구멍으로 내려갔다. 편지는 반드시 전해진다.", "The courier straightened his cap and climbed down into the temple's hole. Every letter gets delivered.", "配達人は帽子をかぶり直して神殿の穴へ降りていった。手紙は必ず届けられる。", "信使正了正帽子，下到神殿的洞里。信件一定会送达。");
         A("배달부의 가방이 텅 비었다. 모든 편지가 제 주인에게 닿았다.", "The courier's bag was empty. Every letter had reached its owner.", "配達人のかばんが空になった。すべての手紙が持ち主に届いた。", "信使的包空了。所有信件都已送到主人手中。");
         A("떠오르는 영혼들이 하나씩 배달부에게 손을 흔들었다. 답장 대신이었다.", "One by one, the rising souls waved to the courier. That was their reply.", "昇っていく魂たちが一人ずつ配達人に手を振った。返事の代わりだった。", "升起的灵魂一个个向信使挥手。那就是它们的回信。");
         A("“배달 완료.”", "\"Delivered.\"", "「配達完了。」", "“送达。”");
-        A("하지만 가방 바닥에서, 붉은 사막의 소인이 찍힌 편지 한 통이 바스락거렸다...", "But at the bottom of the bag, a letter postmarked from the red desert rustled...", "しかしかばんの底で、赤い砂漠の消印が押された手紙が1通かさかさと音を立てた…", "然而包底，一封盖着红色沙漠邮戳的信沙沙作响……");
+        K("하지만 가방 바닥에서, 붉은 사막의 소인이 찍힌 편지 한 통이 바스락거렸다...", "하지만 가방 바닥에서, 붉은 사막의 소인이 찍힌 편지 한 통이 바스락거렸다…", "But at the bottom of the bag, a letter postmarked from the red desert rustled...", "しかしかばんの底で、赤い砂漠の消印が押された手紙が1通かさかさと音を立てた……", "然而包底，一封盖着红色沙漠邮戳的信沙沙作响……");
 
         // ================================================================= 유령
         A("유령", "Ghost", "幽霊", "幽灵");
@@ -399,19 +407,21 @@ public static partial class LocTable
           "この世を去れない魂。冷たい手で敵を凍らせ、倒した敵の魂を周りにまとってダメージを肩代わりさせ、敵の体に憑依して内側から破裂させます。",
           "无法离开人世的灵魂。以冰冷之手冻结敌人，让被击败敌人的灵魂环绕身边代为承受伤害，并附身于敌人体内将其从内部引爆。");
         A("차가운 손길", "Cold Touch", "冷たい手", "冰冷之手");
-        A("앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
-          "A short reaching hand pierces a line of enemies and builds chill (five stacks freeze them). Kills may spawn souls that orbit you; when hit, a soul vanishes instead of your health",
-          "前へ短く伸びる手が一列の敵をすべて貫き冷気をためます（5回たまると凍結）。敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が消えてダメージを防ぎます",
-          "向前短伸的手贯穿一整列敌人并累积寒气（叠满五层即冻结）。击败敌人时有几率生成环绕身边的灵魂，受击时由灵魂代替生命消散以抵挡伤害");
+        K("앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
+          "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다. 냉기가 다섯 번 쌓이면 얼어붙습니다. 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다.",
+          "A short reaching hand pierces a line of enemies and builds chill. Five stacks freeze them. Kills may spawn souls that orbit you; when you're hit, a soul vanishes instead of your health.",
+          "前へ短く伸びる手が一列の敵をすべて貫き、冷気をためます。5回たまると凍結します。敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が消えてダメージを防ぎます。",
+          "向前短伸的手贯穿一整列敌人并累积寒气。叠满五层即会冻结。击败敌人时有几率生成环绕身边的灵魂，受击时由灵魂代替生命消散以抵挡伤害。");
         A("빙의", "Possession", "憑依", "附身");
         // 1.0.4 요청 ghost (빙의 1초 → 3초 · 들어간 동안 그 적의 이동 속도로 조종)
-        A("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
-          "Hold to mark the enemy nearest the cursor; release to slip into its body, steer it around at its own move speed for 3s, then burst it from within. You're invulnerable inside, and nearby enemies take damage and chill too",
-          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り、3秒間その敵の移動速度で体を操って動き回った後、内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます",
-          "按住标记鼠标附近的敌人，松开后潜入其体内，以该敌人的移动速度操控其身体行动3秒，随后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气");
+        K("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
+          "누르고 있으면 마우스에 가까운 적에게 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다.",
+          "Hold to mark the enemy nearest the cursor; release to slip into its body, steer it around at its own move speed for 3s, then burst it from within. You're invulnerable inside, and nearby enemies take damage and chill too.",
+          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り、3秒間その敵の移動速度で体を操って動き回った後、内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます。",
+          "按住标记鼠标附近的敌人，松开后潜入其体内，以该敌人的移动速度操控其身体行动3秒，随后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气。");
         A("명계의 문!", "Gate of the Dead!", "冥界の門！", "冥界之门！");
         A("손길 공격력", "Touch Damage", "手の攻撃力", "冰手攻击力");
-        A("손길 공격력 · 이동 속도", "Touch Damage · Move Speed", "手の攻撃力 · 移動速度", "冰手攻击力 · 移动速度");
+        A("손길 공격력 · 이동 속도", "Touch Damage · Move Speed", "手の攻撃力・移動速度", "冰手攻击力 · 移动速度");
 
         // ---------------- 전용 레벨업 카드
         A("꿰뚫는 냉기", "Piercing Chill", "貫く冷気", "穿透寒气");
@@ -480,13 +490,13 @@ public static partial class LocTable
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("사슬 망령", "Chained Wraith", "鎖の亡霊", "锁链亡灵");
         A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다. (피해 40%)", "A soul chain leaps from the first enemy you touch to the nearest other. (40% damage)", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。（ダメージ40%）", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。（伤害40%）");
-        A("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬", "A soul chain leaps from the first enemy you touch to the nearest other.\nEvolved Ultimate: Soul Chains", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。\n究極技：魂の鎖", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。\n究极技：灵魂锁链");
+        K("손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n궁극기: 영혼 사슬", "손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다.\n필살기에 덧붙음: 영혼 사슬", "A soul chain leaps from the first enemy you touch to the nearest other.\nAdded to your Ultimate: Soul Chains", "手に最初に当たった敵から魂の鎖が最も近い敵へ飛びます。\n必殺技に上乗せ：魂の鎖", "灵魂锁链从冰手首个击中的敌人弹向最近的敌人。\n附加于必杀技：灵魂锁链");
         A("얼음 유령", "Frost Wraith", "氷の幽霊", "冰霜幽灵");
         A("냉기가 두 배로 쌓입니다.", "Chill builds twice as fast.", "冷気が2倍たまります。", "寒气累积速度翻倍。");
-        A("냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도", "Chill builds twice as fast.\nEvolved Ultimate: Absolute Zero", "冷気が2倍たまります。\n究極技：絶対零度", "寒气累积速度翻倍。\n究极技：绝对零度");
+        K("냉기가 두 배로 쌓입니다.\n궁극기: 절대 영도", "냉기가 두 배로 쌓입니다.\n필살기에 덧붙음: 절대 영도", "Chill builds twice as fast.\nAdded to your Ultimate: Absolute Zero", "冷気が2倍たまります。\n必殺技に上乗せ：絶対零度", "寒气累积速度翻倍。\n附加于必杀技：绝对零度");
         A("그림자 유령", "Shadow Wraith", "影の幽霊", "暗影幽灵");
         A("손길이 0.15초 뒤 한 번 더 뻗습니다. (피해 50%)", "Your touch reaches again 0.15s later. (50% damage)", "手が0.15秒後にもう一度伸びます。（ダメージ50%）", "冰手在0.15秒后再伸出一次。（伤害50%）");
-        A("손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단", "Your touch reaches again 0.15s later.\nEvolved Ultimate: Shadow Legion", "手が0.15秒後にもう一度伸びます。\n究極技：影の軍団", "冰手在0.15秒后再伸出一次。\n究极技：暗影军团");
+        K("손길이 0.15초 뒤 한 번 더 뻗습니다.\n궁극기: 그림자 군단", "손길이 0.15초 뒤 한 번 더 뻗습니다.\n필살기에 덧붙음: 그림자 군단", "Your touch reaches again 0.15s later.\nAdded to your Ultimate: Shadow Legion", "手が0.15秒後にもう一度伸びます。\n必殺技に上乗せ：影の軍団", "冰手在0.15秒后再伸出一次。\n附加于必杀技：暗影军团");
         A("영혼 사슬", "Soul Chains", "魂の鎖", "灵魂锁链");
         A("둘레의 적을 모두 영혼 사슬로 묶어 3초 동안 0.5초마다 벱니다. (공격력 70%)", "Bind all nearby enemies with soul chains, cutting them every 0.5s for 3s. (70% attack)", "周りの敵をすべて魂の鎖で縛り、3秒間0.5秒ごとに斬ります。（攻撃力70%）", "以灵魂锁链束缚周围所有敌人，3秒内每0.5秒斩击。（攻击力70%）");
         A("절대 영도", "Absolute Zero", "絶対零度", "绝对零度");
@@ -494,7 +504,7 @@ public static partial class LocTable
         A("그림자 군단", "Shadow Legion", "影の軍団", "暗影军团");
         A("그림자 넷이 3초 동안 둘레의 적에게 손길을 뻗습니다. (공격력 80%씩)", "Four shadows reach for nearby enemies for 3s. (80% attack each)", "影4体が3秒間周りの敵へ手を伸ばします。（攻撃力80%ずつ）", "四道暗影在3秒内向周围敌人伸出冰手。（每次攻击力80%）");
         A("깊은 냉기", "Deep Chill", "深い冷気", "深寒");
-        A("얼어붙는 시간이 50% 늘어납니다.", "Freeze duration +50%.", "凍結時間が50%延びます。", "冻结时间延长50%。");
+        A("얼어붙는 시간이 50% 늘어납니다.", "Freeze duration increases by 50%.", "凍結時間が50%延びます。", "冻结时间延长50%。");
         A("두 손", "Two Hands", "両手", "双手");
         A("손길이 양옆으로 두 갈래 더 뻗습니다. (피해 70%)", "Your touch splits into two more reaches to either side. (70% damage)", "手が左右にさらに2本伸びます。（ダメージ70%）", "冰手向两侧再伸出两道。（伤害70%）");
         A("영혼 폭발", "Soul Burst", "魂の爆発", "灵魂爆发");
@@ -502,7 +512,7 @@ public static partial class LocTable
         A("서늘한 기운", "Chill Aura", "冷ややかな気配", "寒气萦绕");
         A("둘레 2.5칸의 적이 15% 느려집니다.\n진화: 25%", "Enemies within 2.5 tiles are slowed 15%.\nEvolved: 25%", "周囲2.5マスの敵が15%遅くなります。\n進化：25%", "周围2.5格内的敌人减速15%。\n进化：25%");
         A("떠도는 혼", "Wandering Soul", "さまよう魂", "游荡之魂");
-        A("이동 속도가 6% 빨라집니다.\n진화: 12%", "Move speed +6%.\nEvolved: 12%", "移動速度が6%速くなります。\n進化：12%", "移动速度提升6%。\n进化：12%");
+        A("이동 속도가 6% 빨라집니다.\n진화: 12%", "Move speed increases by 6%.\nEvolved: 12%", "移動速度が6%速くなります。\n進化：12%", "移动速度提升6%。\n进化：12%");
         A("영혼 수확", "Soul Harvest", "魂の収穫", "灵魂收割");
         A("적을 쓰러뜨릴 때 영혼이 생길 확률이 20% 오릅니다.\n진화: 35%", "Kills are 20% more likely to spawn a soul.\nEvolved: 35%", "敵を倒したときに魂が生まれる確率が20%上がります。\n進化：35%", "击败敌人时生成灵魂的几率提升20%。\n进化：35%");
         A("체력이 20% 아래로 떨어질 피해를 받으면 3초 동안 무적이 됩니다. (60초에 한 번)\n진화: 40초", "A hit that would drop you below 20% health grants 3s of invulnerability instead. (Once per 60s)\nEvolved: 40s", "体力が20%を下回るダメージを受けると3秒間無敵になります。（60秒に1回）\n進化：40秒", "受到会使生命低于20%的伤害时改为无敌3秒。（每60秒一次）\n进化：40秒");
@@ -512,23 +522,25 @@ public static partial class LocTable
         A("오래전 이 초원에서 죽은 유령은 아직 떠나지 못하고 있었다.", "A ghost who died in this meadow long ago had still not departed.", "ずっと昔この草原で死んだ幽霊は、まだ旅立てずにいた。", "很久以前死在这片草原上的幽灵，至今仍未离去。");
         A("떠나지 못한 이유를 이제야 알았다. 지켜야 할 것이 남아 있었다.", "Now it finally knew why. There was still something to protect.", "旅立てなかった理由が今ようやく分かった。守るべきものが残っていたのだ。", "如今终于明白无法离去的理由。还有要守护的东西。");
         A("유령은 차가운 손을 쥐었다 폈다. 이번에는 끝까지 지켜 낼 것이다.", "The ghost clenched and opened its cold hand. This time, it would protect to the end.", "幽霊は冷たい手を握っては開いた。今度こそ最後まで守り抜く。", "幽灵握紧又张开冰冷的手。这一次，要守护到最后。");
-        A("그중 하나는 리치 왕의 부름을 거역했다. 묘역에서 가장 오래된 유령이었다.", "One of them defied the Lich King's call. It was the oldest ghost in the catacombs.", "その中の一体はリッチキングの呼び声に逆らった。墓所で最も古い幽霊だった。", "其中一个违抗了巫妖王的召唤。那是墓地中最古老的幽灵。");
+        A("그중 하나는 리치 왕의 부름을 거역했다. 묘역에서 가장 오래된 유령이었다.", "One of them defied the Lich King's call. It was the oldest ghost in the catacombs.", "その中の一体はリッチ王の呼び声に逆らった。墓所で最も古い幽霊だった。", "其中一个违抗了巫妖王的召唤。那是墓地中最古老的幽灵。");
         A("죽은 자를 깨우는 왕이라면, 죽은 자가 재워야 한다.", "If a king wakes the dead, the dead must put him to sleep.", "死者を起こす王ならば、死者が眠らせねばならない。", "唤醒死者的王，就该由死者让他安眠。");
         A("유령은 소리 없이 신전의 구멍으로 스며들었다.", "The ghost seeped silently into the temple's hole.", "幽霊は音もなく神殿の穴へ染み込んでいった。", "幽灵悄无声息地渗入神殿的洞里。");
         A("떠오르는 영혼들 사이에서, 유령의 몸도 조금씩 빛으로 풀려 갔다.", "Among the rising souls, the ghost's body too began to unravel into light.", "昇っていく魂たちの間で、幽霊の体も少しずつ光へとほどけていった。", "在升起的灵魂之间，幽灵的身体也一点点化作光芒。");
         A("지켜야 할 것을 끝까지 지켰다. 이제 떠나도 된다.", "It had protected what it had to, to the very end. Now it could leave.", "守るべきものを最後まで守った。もう旅立ってもいい。", "要守护的东西已守护到最后。现在可以离开了。");
-        A("“…고마웠어.”", "\"...Thank you.\"", "「…ありがとう。」", "“……谢谢你。”");
-        A("하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다...", "But before the last light faded, a familiar chill blew in from the red desert...", "しかし最後の光が消える前、赤い砂漠の方から見覚えのある冷気が吹いてきた…", "然而在最后的光芒消失之前，一股熟悉的寒气从红色沙漠吹来……");
+        A("“…고마웠어.”", "\"...Thank you.\"", "「……ありがとう。」", "“……谢谢你。”");
+        K("하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다...", "하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다…", "But before the last light faded, a familiar chill blew in from the red desert...", "しかし最後の光が消える前、赤い砂漠の方から見覚えのある冷気が吹いてきた……", "然而在最后的光芒消失之前，一股熟悉的寒气从红色沙漠吹来……");
 
         // ================================================================= 고유 규칙 (궁수 숨 고르기 · 연금술사 불안정도)
-        A("누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
-          "Hold to draw the bowstring, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. You move slower while drawing. Breath: drawing uses up breath; run out and your bow shakes at half power · Perfect shots restore breath",
-          "押し続けて弦を引き、離して発射。満タンの瞬間(チン!)に離すと「パーフェクト!」の矢、握りすぎると弱まる。引いている間は遅くなる。息継ぎ：引いている間は息が減り、尽きると弓が震えて威力半分・「パーフェクト!」で息が戻る",
-          "按住拉弓，松开发射。拉满的瞬间(叮!)松开即为「完美!」之箭，握太久会变弱。拉弓时移动变慢。调息：拉弓时消耗气息，耗尽后弓会颤抖、威力减半 · 「完美!」会恢复气息");
-        A("화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
-          "Flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask blows up big. Instability: each throw raises it and makes blasts bigger, but at full it explodes at your feet (the Grand Flask pours it all out)",
-          "火炎・氷結・酸の試薬を交互に詰めたフラスコ。時々、不安定なフラスコが大爆発。不安定度：投げるほど上がり爆発が大きくなるが、満タンになると足元で自爆（大爆発フラスコがすべて吐き出す）",
-          "轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸。不稳定度：投掷越多越高、爆炸越大，但满了会在脚下自爆（大爆炸烧瓶会将其全部倾泻）");
+        K("누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
+          "누르고 있으면 시위를 당기고, 떼면 쏩니다. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살이 나가고, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 위력이 절반이 됩니다. 「완벽!」은 숨을 되돌려 줍니다.",
+          "Hold to draw the bowstring, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. You move slower while drawing. Breath: drawing uses up breath; run out and your bow shakes, halving its power. Perfect shots restore breath.",
+          "押し続けて弦を引き、離すと発射します。満タンの瞬間（チン！）に離すと「パーフェクト！」の矢になり、握りすぎると弱まります。引いている間は遅くなります。息継ぎ：引いている間は息が減り、尽きると弓が震えて威力が半分になります。「パーフェクト！」で息が戻ります。",
+          "按住拉弓，松开发射。拉满的瞬间（叮！）松开即为「完美！」之箭，握太久会变弱。拉弓时移动变慢。调息：拉弓时消耗气息，耗尽后弓会颤抖，威力减半。「完美！」会恢复气息。");
+        K("화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
+          "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크를 던집니다. 가끔 불안정한 플라스크가 크게 폭발합니다. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다. (대폭발 플라스크는 불안정도를 모두 쏟아 냄)",
+          "Throw flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask blows up big. Instability: each throw raises it and makes blasts bigger, but at full it explodes at your feet. (The Great Blast Flask pours all Instability out)",
+          "火炎・氷結・酸の試薬を交互に詰めたフラスコを投げます。時々、不安定なフラスコが大爆発します。不安定度：投げるほど上がり爆発が大きくなりますが、満タンになると足元で自爆します。（大爆発フラスコは不安定度をすべて吐き出す）",
+          "掷出轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸。不稳定度：投掷越多越高、爆炸越大，但满了会在脚下自爆。（大爆炸烧瓶会将不稳定度全部倾泻）");
         A("숨이 차다!", "Out of breath!", "息切れ！", "喘不过气！");
         A("폭주!", "Overload!", "暴走！", "失控！");
     }
