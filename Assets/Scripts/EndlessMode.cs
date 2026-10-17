@@ -46,17 +46,18 @@ public class EndlessMode : MonoBehaviour
     // → 1.0.4~ 30분이 되면 「개발자 엄마」(개발자의 모든 능력치 2배: 체력 60만 · 공격 주기 ÷20 · 피해 · 이동 속도 2배)
     //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 900f;
-    // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 3000마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/3000」)
-    public const int MomSouls = 3000;
-    public const int DeveloperHp = 200000;      // 1.1.2~ 10만 → 20만 (1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
-    public const int MomHp = 400000;            // 1.1.2~ 30만 → 40만
+    // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 n마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/1000」)
+    //   1.2.5~ 3000 → 1000 (3000마리를 모으는 동안 잡몹이 너무 많아 렉) — 3000 기준 저장은 이미 잡은 수를 그대로 빼서 남은 수가 0 ~ 1000 (다 찼으면 이어하자마자 강림)
+    public const int MomSouls = 1000;
+    public const int DeveloperHp = 100000;      // 1.2.5~ 20만 → 10만 (1.1.2~ 10만 → 20만 · 1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
+    public const int MomHp = 200000;            // 1.2.5~ 40만 → 20만 (1.1.2~ 30만 → 40만)
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
     int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 (· 엄마) · 3 클리어 · 4 클리어 뒤 한계 돌파 (1.1.4~ 엔딩 없이 죽을 때까지)
     bosss developer, mom;
     bool devSummoned, momSummoned, devDown, momDown;     // 1.0.4~
     int momKillBase = -1;       // 1.1.2~ 개발자를 쓰러뜨린 순간의 처치 수 (RunStats.Kills) — 여기서 MomSouls 만큼 더 잡으면 엄마
-    public int MomSoulsLeft => momKillBase < 0 ? MomSouls : Mathf.Max(0, MomSouls - (RunStats.Kills - momKillBase));
+    public int MomSoulsLeft => momKillBase < 0 ? MomSouls : Mathf.Clamp(MomSouls - (RunStats.Kills - momKillBase), 0, MomSouls);
     public bool FinalPhase => finalStage > 0;
     // 최종 보스(개발자 · 엄마)를 부르기 시작했지만 아직 나오지 않음 — 등장 연출 동안에도 보스 곡을 유지 (MusicManager)
     public bool FinalBossIncoming => finalStage < 3 && ((devSummoned && developer == null && !devDown) || (momSummoned && mom == null && !momDown));
@@ -84,13 +85,19 @@ public class EndlessMode : MonoBehaviour
     public bool NoMobs => devSummoned && finalStage != 4;
     // 1.1.4~ 클리어 뒤 「한계 돌파」: 잡몹 · 습격 · 중간 보스 · 보스가 다시 나오고 시간이 갈수록 계속 강해짐 (기록은 죽을 때까지 늘어남)
     public bool Beyond => finalStage == 4;
-    // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹이 3배로)
+    // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹 · 1.2.5~ 3배 부스트 없이 상한 AfterDevMaxAlive)
     public bool FinalBossAlive => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead) || FinalBossIncoming);
     // 1.2.3~ 규칙 E: 개발자 · 엄마가 실제로 서서 싸우는 중 (등장 연출 FinalBossIncoming 은 빼고 — 그 사이 ClearMobs 가 흩는 중) → 약한 잡몹만 조금씩
     public bool FinalBossFighting => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead));
-    // 1.1.2~ 개발자를 쓰러뜨린 뒤 엄마가 오기 전까지 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (영혼 3000개를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
-    public const float AfterDevSpawnMul = 3f;
-    public static float MobSpawnBoost => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
+    // 1.1.2~ 개발자를 쓰러뜨린 뒤 엄마가 오기 전까지 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (영혼을 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
+    //   1.2.5~ 3배 → 1배 (Surge ×16 · 한 화면 +90 에 3배까지 겹쳐 120마리 넘게 떠 렉) — 이 국면은 아래 고정 간격 · 상한으로
+    public const float AfterDevSpawnMul = 1f;
+    // 1.2.5~ 영혼을 모으는 국면 (개발자 처치 뒤 ~ 엄마 강림 전): 한 화면 최대 AfterDevMaxAlive · 생성은 Surge · 강도와 상관없이 AfterDevSpawnEvery 초마다 한 마리
+    //   최대 초당 약 6.7마리 → 1000마리를 쉬지 않고 잡으면 약 2분 30초 (실제로는 2분 30초 ~ 3분)
+    public const int AfterDevMaxAlive = 55;
+    public const float AfterDevSpawnEvery = 0.15f;
+    public static bool GatheringSouls => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3;
+    public static float MobSpawnBoost => GatheringSouls ? AfterDevSpawnMul : 1f;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
     public int BossesDefeated { get; private set; }
@@ -168,6 +175,7 @@ public class EndlessMode : MonoBehaviour
             return;
         }
         // 1.1.2~ 개발자를 쓰러뜨린 뒤 잡몹 MomSouls 마리: 개발자 엄마
+        if (devDown && !momSummoned && momKillBase < 0 && finalStage < 3) momKillBase = RunStats.Kills;      // 1.2.5~ 처치 기준이 빠진 저장 · 이어하기에서도 엄마가 끝내 안 오지 않게 지금부터 셈
         if (finalStage >= 2 && finalStage < 3 && devDown && !momSummoned && momKillBase >= 0 && souls <= 0 && free) { StartCoroutine(SummonMom()); return; }
         // 1.2.3~ 보스가 살아 있어도 nextBoss(등장 3분 뒤)가 되면 다음 보스가 함께 (동시 MaxLiveBosses · 쓰러지는 연출 중인 보스가 있으면 처치 처리가 nextBoss 를 다시 정할 때까지 기다림)
         if ((finalStage == 0 || finalStage == 4) && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen && bosss.Dying == 0 && bosss.LiveCount < MaxLiveBosses) SpawnBoss();
@@ -294,7 +302,7 @@ public class EndlessMode : MonoBehaviour
         yield return new WaitForSeconds(together ? 3.5f : 0f);      // 함께면 개발자가 먼저 내려온 뒤
         finalMusic = 2;                                              // 1.1.2~ 배너 1초 전: 엄마 곡 (MusicManager)
         yield return new WaitForSeconds(1f);
-        Notice.Big(Loc.T("영혼 3000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
+        Notice.Big(Loc.T("영혼 1000개가 모였다…") + "\n" + Loc.T("최종 보스 「개발자 엄마」가 나타났다!") + "\n" + Loc.T("「우리 아들 괴롭힌 게 너니?」"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
         Hostile.Play("roar", 1f, 0.35f);
         Hostile.Shake(0.7f);
         yield return new WaitForSeconds(2.5f);
@@ -358,7 +366,7 @@ public class EndlessMode : MonoBehaviour
     {
         yield return new WaitForSeconds(3.5f);
         while (PlayerController.Cinematic || Time.timeScale == 0f || stages.IsMenuOpen) yield return null;
-        if (!momSummoned && finalStage < 3) Notice.Big(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("영혼 3000개를 거두면 그녀가 강림한다…"), NoticeIcon.Star, 4f, NoticeLevel.Normal);
+        if (!momSummoned && finalStage < 3) Notice.Big(Loc.T("개발자를 쓰러뜨렸다!") + "\n" + Loc.T("영혼 1000개를 거두면 그녀가 강림한다…"), NoticeIcon.Star, 4f, NoticeLevel.Normal);
     }
 
     // 개발자와 개발자 엄마를 모두 쓰러뜨림 (1.0.4~ 개발자만으로는 끝나지 않음): 무한 모드 클리어

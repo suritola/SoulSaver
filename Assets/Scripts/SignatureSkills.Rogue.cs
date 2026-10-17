@@ -98,12 +98,12 @@ public partial class SignatureSkills
 
     void RogueAttack(Vector3 start, Vector2 dir)
     {
-        // 회전 표창: 방금 던진 그 평타 표창이 RogueRange × 0.8 만큼 날아가(또는 관통 수가 다하거나 벽에 닿으면 그 자리에서) 꺾여 돌아옴
+        // 회전 표창: 방금 던진 그 평타 표창이 화면 끝(최소 RogueRange × 0.8 · 최대 × FarMul)까지 날아가(또는 관통 수가 다하거나 벽에 닿으면 그 자리에서) 꺾여 돌아옴
         //   예전엔 0.35초 뒤 그 자리에 새 표창을 만들어 날려 엉뚱한 데서 나타나 보였음
         Bullet thrown = Kit != null ? Kit.TakeRogueThrow() : null;
         int b = L("r.boomerang");
         if (b > 0 && thrown != null && thrown.isActiveAndEnabled && Alive)      // 풀로 돌아간 표창(꺼짐)에는 붙이지 않음 (다시 쓰일 때 남지 않게)
-            thrown.gameObject.AddComponent<ReturningShuriken>().Throw(thrown, transform, start, RogueRange * 0.8f, Atk * V(b, 0.4f, 0.15f), E("re.return"));
+            thrown.gameObject.AddComponent<ReturningShuriken>().Throw(thrown, transform, start, RogueRange * 0.8f, RogueRange * ReturningShuriken.FarMul, Atk * V(b, 0.4f, 0.15f), E("re.return"));
         // 처형자의 길: 급습 시간 동안 꿰뚫는 그림자 표창이 함께
         if (E("re.executioner") && Time.time < ambushUntil)
         {
@@ -256,7 +256,9 @@ public partial class SignatureSkills
 }
 
 // 회전 표창: 던진 평타 표창에 붙어, 날아가다 꺾여 주인에게 그대로 돌아옴 (SignatureSkills.RogueAttack)
-//   가는 길: 평타 그대로 (피해 · 관통 · 카드 효과). RogueRange × 0.8 을 날았거나 · 관통 수가 다했거나 · 벽에 닿으면 그 자리에서 꺾임
+//   가는 길: 평타 그대로 (피해 · 관통 · 카드 효과). 멀리 날았거나(화면 끝에 닿음 · 아니면 RogueRange × FarMul) · 관통 수가 다했거나 · 벽에 닿으면 그 자리에서 꺾임
+//            예전엔 RogueRange × 0.8 (도적 기본 12 → 9.6칸, 0.2초)만 날면 꺾여, 화면(가로 반 폭 약 27칸) 한가운데 빈 곳에서 아무것도 안 맞고 돌아오는 것처럼 보였음
+//            → 9.6칸은 「이보다 일찍은 안 꺾임」 최소로만 남기고, 화면 안에서는 끝까지 날아간 뒤 꺾임
 //   오는 길: 예전 회전 표창 그대로 — 고유 스킬 피해(Atk × V(b, 0.4, 0.15)) · 관통 2 · 속도 26 · 같은 적은 한 번만(가는 길에 벤 적도 다시) · 카드 효과 없음
 //            벽은 지나침, 매 프레임 주인 쪽으로 방향을 틂(트는 빠르기가 점점 빨라져 주인 둘레를 맴돌지 않음), 주인에게 닿으면 사라짐
 //   귀환하는 칼날(re.return): 꺾이는 순간 하나 더 갈라져 둘이 양쪽으로 휘어 돌아옴, 처음 표창이 끝나면 탄창에 한 발 (평타 한 번에 한 발 — 예전과 같음)
@@ -265,21 +267,26 @@ public class ReturningShuriken : MonoBehaviour
 {
     const float BackSpeed = 26f, CatchDist = 1.2f, MaxBack = 3f, BaseTurn = 540f, TurnGrow = 1440f, Split = 40f, Curl = 20f;
     const int BackPene = 2;
+    // 가는 길 최대 거리 (RogueRange 배율 — 화면 끝을 못 찾거나 아주 넓은 화면이어도 여기서는 꺾임)
+    public const float FarMul = 1.8f;
+    const float EdgeInset = 0.03f;          // 화면 가장자리 안쪽 여유 (보이는 동안 꺾이게)
     static readonly System.Action PassWall = () => { };
+    static Camera cam;
 
     Bullet bullet;
     Transform owner;
     Vector3 origin;
-    float outDistSq, backDmg, backAge;
+    float minDistSq, outDistSq, backDmg, backAge;
     bool returning, twin, refund;
 
-    // 던진 평타 표창에 (가는 길부터)
-    public void Throw(Bullet b, Transform owner, Vector3 from, float outDist, float dmg, bool twin)
+    // 던진 평타 표창에 (가는 길부터) — minDist 보다 일찍은 안 꺾이고, 화면 끝에 닿거나 maxDist 를 날면 꺾임
+    public void Throw(Bullet b, Transform owner, Vector3 from, float minDist, float maxDist, float dmg, bool twin)
     {
         bullet = b;
         this.owner = owner;
         origin = from;
-        outDistSq = outDist * outDist;
+        minDistSq = minDist * minDist;
+        outDistSq = maxDist * maxDist;
         backDmg = dmg;
         this.twin = twin;
         refund = twin;
@@ -339,7 +346,9 @@ public class ReturningShuriken : MonoBehaviour
         if (bullet == null) return;
         if (!returning)
         {
-            if ((transform.position - origin).sqrMagnitude >= outDistSq) TurnBack();
+            Vector3 p = transform.position;
+            float d = (p - origin).sqrMagnitude;
+            if (d >= outDistSq || (d >= minDistSq && OffScreen(p))) TurnBack();
             return;
         }
         backAge += Time.deltaTime;
@@ -349,6 +358,15 @@ public class ReturningShuriken : MonoBehaviour
         float max = (BaseTurn + TurnGrow * backAge) * Time.deltaTime;
         float a = Mathf.Clamp(Vector2.SignedAngle(bullet.Direction, to), -max, max);
         bullet.Steer(Quaternion.Euler(0f, 0f, a) * bullet.Direction);
+    }
+
+    // 화면 끝에 닿았는지 (가장자리 조금 안쪽) — 카메라를 못 찾으면 거리(outDistSq)로만
+    static bool OffScreen(Vector3 p)
+    {
+        if (cam == null) cam = Camera.main;
+        if (cam == null) return false;
+        Vector3 v = cam.WorldToViewportPoint(p);
+        return v.x < EdgeInset || v.x > 1f - EdgeInset || v.y < EdgeInset || v.y > 1f - EdgeInset;
     }
 
     void Finish(bool caught)
