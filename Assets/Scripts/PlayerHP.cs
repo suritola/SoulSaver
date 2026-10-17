@@ -55,16 +55,18 @@ public class PlayerHP : MonoBehaviour
         }
         gaugeImg = HPgauge.GetComponent<Image>();
         if (gaugeImg != null) gaugeColor = gaugeImg.color;
-        // 1.2.1~ 체력 숫자(100 / 100)가 막대 한가운데를 덮어 흰 지연 게이지가 잘 안 보였음 → 막대 틀(HPbackground) 오른쪽 바깥으로 (세로 가운데 · 왼쪽 정렬)
+        // 1.2.2~ 체력 숫자(100 / 100)가 막대 한가운데를 덮어 흰 지연 게이지가 잘 안 보였음 → 틀 안 왼쪽 끝에 작게 (왼쪽 정렬 · 22pt)
+        //   잃은 체력(흰 게이지)은 막대 오른쪽부터 생기므로 왼쪽 숫자와 겹치지 않음. (1.2.1 의 틀 바깥 배치는 UI 밖으로 삐져나와 버그처럼 보여 되돌림)
         if (hpText != null)
         {
             RectTransform t = hpText.rectTransform;
-            t.anchorMin = new Vector2(1f, 0f); t.anchorMax = new Vector2(1f, 1f);
+            t.anchorMin = Vector2.zero; t.anchorMax = Vector2.one;
             t.pivot = new Vector2(0f, 0.5f);
-            t.anchoredPosition = new Vector2(12f, 0f);
-            t.sizeDelta = new Vector2(220f, 0f);
+            t.offsetMin = new Vector2(22f, 0f); t.offsetMax = new Vector2(-12f, 0f);
             hpText.horizontalAlignment = HorizontalAlignmentOptions.Left;
             hpText.enableWordWrapping = false;
+            hpText.enableAutoSizing = false;
+            hpText.fontSize = 22f;
         }
         // 조각: 채움 막대(HPgauge)와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 길이만 다르게 하면 됨
         // 1.2.0: Instantiate(HPgauge) 로 복제하던 것을 바꿈 — 씬에서 PlayerHP 가 HPgauge 자신에 붙어 있어 복제본의 PlayerHP.Start 가 또 복제하는 연쇄로
