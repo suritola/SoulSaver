@@ -29,7 +29,7 @@ public class MenuManager : MonoBehaviour
             SceneFlow.Go("GameScene");
         }, 28f);
         UnityEngine.UI.Button cancel = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
-        UIKit.ConfirmKeys(win, ok, cancel, -143f);
+        UIKit.ConfirmKeys(win, ok, cancel, -143f, false);        // 저장된 판이 지워지므로 Enter 한 번에 확정되지 않게 기본 선택은 하지 않음 (게임 종료와 같게)
     }
 
     // 1.0.4~: 튜토리얼 기록이 없고 한 판도 해 본 적 없으면 (체험판 포함) · 한 번 고르면 다시 묻지 않음

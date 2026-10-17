@@ -223,7 +223,7 @@ public static class CodexUI
             TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
             if (bt != null) { bt.enableAutoSizing = true; bt.fontSizeMin = 14f; bt.fontSizeMax = 26f; }
             tabButtons.Add(b);
-            tabBadges.Add(CatOf(i).HasValue ? Badge(b.transform, new Vector2(-24f, -6f)) : null);
+            tabBadges.Add(CatOf(i).HasValue || i == TabMemory ? Badge(b.transform, new Vector2(-24f, -6f)) : null);      // 1.2~ 기억 탭은 안 읽은 조각
         }
         RefreshHeader();
         hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 278f), new Vector2(1500f, 56f));      // 2026-10-16: 두 줄까지 (탭 아래끝 313 · 목록 위끝 238 사이) — 문장으로 다듬어 길어진 안내가 작아지지 않게
@@ -236,6 +236,7 @@ public static class CodexUI
         UIKit.EscCancel(open, () =>
         {
             if (SkillEvoCodexUI.IsOpen) { SkillEvoCodexUI.Close(); return; }
+            if (MemoryShards.ReaderOpen) { MemoryShards.CloseReader(); return; }      // 기억 읽기 창도 위 창이 먼저
             if (search != null && search.text.Length > 0) { ClearSearch(); Show(tab); }
             else Close();
         });
@@ -753,6 +754,7 @@ public static class CodexUI
         {
             CodexSeen.Cat? c = CatOf(i);
             if (tabBadges[i] != null && c.HasValue) tabBadges[i].SetActive(i != tab && CodexSeen.TabNew(c.Value));
+            else if (tabBadges[i] != null && i == TabMemory) tabBadges[i].SetActive(i != tab && MemoryShards.HasNew);
         }
         if (rewardButton != null)
         {
@@ -1016,6 +1018,7 @@ public static class CodexUI
     public static void Close()
     {
         CloseRewards();
+        MemoryShards.CloseReader();         // 도감 위에 뜬 기억 읽기 창도 함께
         if (open != null) Object.Destroy(open);
         open = null;
         search = null;
@@ -1024,7 +1027,7 @@ public static class CodexUI
         GameObject button = GameObject.Find("CodexButton");
         if (button == null) return;
         NewGlow glow = button.GetComponent<NewGlow>();
-        bool want = CodexSeen.HasNew;
+        bool want = CodexSeen.HasNew || MemoryShards.HasNew;      // 메뉴 도감 버튼과 같은 기준 (MenuExtras)
         if (glow != null && !want) glow.Remove();
         else if (glow == null && want) button.AddComponent<NewGlow>();
     }

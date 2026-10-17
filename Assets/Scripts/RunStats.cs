@@ -189,7 +189,13 @@ public class RunStats : MonoBehaviour
 
     void OnEnable() => EnermyController.Killed += OnKill;
     void OnDisable() => EnermyController.Killed -= OnKill;
-    static void OnKill(Vector3 pos) { if (EnermyController.KillCounts) { Kills++; killTimes.Enqueue(Time.time); } }     // 1.2~ 정화로 쓰러진 적 절반은 세지 않음
+    static void OnKill(Vector3 pos)
+    {
+        if (!EnermyController.KillCounts) return;
+        Kills++;
+        while (killTimes.Count > 0 && Time.time - killTimes.Peek() > 60f) killTimes.Dequeue();      // 전투 통계를 꺼도 큐가 판 내내 커지지 않게
+        killTimes.Enqueue(Time.time);
+    }     // 1.2~ 정화로 쓰러진 적 절반은 세지 않음
 
     void Update()
     {
@@ -653,7 +659,7 @@ public class QuickRestart : MonoBehaviour
 
     void Update()
     {
-        if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen || LeaderboardUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초 · 1.1.5~ 순위 창이 떠 있으면 받지 않음
+        if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen || LeaderboardUI.IsOpen || BuildView.IsOpen || RunHistoryUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초 · 1.1.5~ 순위 창이 떠 있으면 받지 않음
         RunLog.NextKind = "quick";          // 1.2~ 판 기록 retry_kind
         SceneFlow.Go("GameScene");
     }

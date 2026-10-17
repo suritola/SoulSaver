@@ -20,6 +20,8 @@ public class CombatStatsHUD : MonoBehaviour
     float nextTick, goldUntil;
     readonly Queue<float> recent = new Queue<float>();     // 0.25초마다 DPS (지난 10초 평균과 비교)
     int size = -1;
+    string endlessMeasured;
+    float endlessHalf = 75f;
 
     static readonly Color Bg = new Color(0.05f, 0.04f, 0.07f, 0.7f);
     static readonly Color Text = new Color(1f, 0.92f, 0.75f);
@@ -38,6 +40,7 @@ public class CombatStatsHUD : MonoBehaviour
         if (ammo != null) r.SetSiblingIndex(ammo.GetSiblingIndex() + 1);       // HUD 순서 안 (일시정지 · 보상 창 아래)
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
         r.pivot = new Vector2(1f, 0.5f);
+        UiScaler.Isolate(go);           // 0.25초마다 글자 · 위치가 바뀌므로 하위 캔버스로 (HUD 전체를 다시 묶지 않게 · 1.1.9 HUD 나눔과 같게)
         Image bg = go.GetComponent<Image>();
         bg.color = Bg;
         bg.raycastTarget = false;
@@ -140,7 +143,11 @@ public class CombatStatsHUD : MonoBehaviour
         float half = 75f;
         if (clock == null && endlessText == null) FindAnchor();
         if (clock == null && endlessText != null && endlessText.gameObject.activeInHierarchy)
-            half = Mathf.Max(75f, endlessText.GetPreferredValues(endlessText.text).x * 0.5f);
+        {
+            string et = endlessText.text;
+            if (!ReferenceEquals(et, endlessMeasured)) { endlessMeasured = et; endlessHalf = Mathf.Max(75f, endlessText.GetPreferredValues(et).x * 0.5f); }      // 글자가 바뀔 때만 다시 잼
+            half = endlessHalf;
+        }
         box.anchoredPosition = new Vector2(-(half + 12f), -32f);
         if (Time.timeScale <= 0f && !force) return;
         float dps = RunStats.Dps;

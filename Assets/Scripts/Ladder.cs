@@ -45,7 +45,9 @@ public static class EndlessMilestones
     // 이번 판에 처음 넘긴 이정표 (판 기록 milestones 칸 · RunLog 가 판마다 비움)
     static readonly List<string> run = new List<string>();
     public static string RunCodes => string.Join("|", run);
-    public static void ResetRun() => run.Clear();
+    public static void ResetRun() { run.Clear(); System.Array.Clear(checkedRun, 0, checkedRun.Length); }
+    // 이번 판에 이미 확인한 시간 이정표 (EndlessMode.Update 가 프레임마다 부르므로 넘긴 뒤로는 저장을 다시 읽지 않음)
+    static readonly bool[] checkedRun = new bool[All.Length];
 
     public static string Label(int i)
     {
@@ -58,7 +60,7 @@ public static class EndlessMilestones
     public static void CheckTime(float s)
     {
         for (int i = Min5; i <= Min20; i++)
-            if (s >= All[i].seconds) Reach(i);
+            if (!checkedRun[i] && s >= All[i].seconds) { checkedRun[i] = true; Reach(i); }
     }
 
     public static void Reach(int i)
@@ -361,6 +363,7 @@ public static class ClaimRewards
         bool more = claims.Count > rows;
         float h = 190f + NoteH * pendingNotes.Count + (claims.Count > 0 ? 60f + RowH * rows + (more ? 34f : 0f) : 0f) + 110f;
         RectTransform win = UIKit.Modal(root, "ClaimRewards", new Vector2(W, h), out window);
+        WindowFit.Attach(win, new Vector2(W + 20f, h + 20f));      // 알림 · 받을 것이 몰리면 1000 을 넘음 → UI 크기 110 · 120% 에서 화면 밖으로 나가지 않게
         GameObject blocker = window;
         float y = h * 0.5f - 60f;
 

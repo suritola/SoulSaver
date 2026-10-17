@@ -32,7 +32,10 @@ public class EdgeMarker : MonoBehaviour
     static int rankedFrame = -1;
 
     Transform target;
-    System.Func<string> label;
+    System.Func<int> label;             // 남은 초 (값이 바뀔 때만 글자를 다시 만듦)
+    int shownLabel = int.MinValue;
+    static readonly List<EdgeMarker> live = new List<EdgeMarker>();       // Rank 가 프레임마다 다시 씀 (새로 만들지 않게)
+    static readonly System.Comparison<EdgeMarker> ByDist = (a, b) => a.dist.CompareTo(b.dist);
     System.Func<bool> blink, alive;
     SpriteRenderer icon;
     TextMeshPro text;
@@ -44,7 +47,7 @@ public class EdgeMarker : MonoBehaviour
 
     // icon · iconColor · scale: 표식 그림 (대상 그림을 그대로) · glow: 뒤 빛 크기 · 색 · pulse: 맥동 폭 (움직임 줄이기면 0)
     public static EdgeMarker Attach(Transform target, Sprite iconSprite, Color iconColor, float scale, float glowSize, Color glowColor, float pulse,
-                                    System.Func<string> label = null, System.Func<bool> blink = null, System.Func<bool> alive = null, TMP_FontAsset font = null, Material fontMat = null)
+                                    System.Func<int> label = null, System.Func<bool> blink = null, System.Func<bool> alive = null, TMP_FontAsset font = null, Material fontMat = null)
     {
         if (target == null) return null;
         GameObject go = SpecialAbilities.MakeSprite("EdgeMarker", iconSprite != null ? iconSprite : Hostile.Glow, target.position, scale, iconColor, "Effect", 40);
@@ -97,7 +100,7 @@ public class EdgeMarker : MonoBehaviour
         rankedFrame = Time.frameCount;
         Camera cam = Camera.main;
         Vector3 c = cam != null ? cam.transform.position : Vector3.zero;
-        List<EdgeMarker> live = new List<EdgeMarker>();
+        live.Clear();
         foreach (EdgeMarker m in all)
         {
             if (m == null || m.target == null) continue;
@@ -106,8 +109,9 @@ public class EdgeMarker : MonoBehaviour
             m.allowed = false;
             if (m.outside) live.Add(m);
         }
-        live.Sort((a, b) => a.dist.CompareTo(b.dist));
+        live.Sort(ByDist);
         for (int i = 0; i < live.Count && i < MaxShown; i++) live[i].allowed = true;
+        live.Clear();
     }
 
     void LateUpdate()
@@ -121,7 +125,11 @@ public class EdgeMarker : MonoBehaviour
         transform.localScale = Vector3.one * (baseScale + pulseAmp * Mathf.Sin(Time.time * 8f) * GameSettings.Motion);
         bool dim = blink != null && blink() && Mathf.PingPong(Time.time * 6f, 1f) < 0.5f;
         icon.color = dim ? new Color(iconColor.r, iconColor.g, iconColor.b, iconColor.a * 0.4f) : iconColor;
-        if (text != null && label != null) text.text = label();
+        if (text != null && label != null)
+        {
+            int v = label();
+            if (v != shownLabel) { shownLabel = v; text.text = v.ToString(); }
+        }
     }
 
     // 대상이 사라질 때 같이 (상자 · 상점처럼 대상이 직접 지울 때)

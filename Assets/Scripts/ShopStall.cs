@@ -160,7 +160,7 @@ public class ShopStall : MonoBehaviour
     {
         leftNow = lifetime;
         pointer = EdgeMarker.Attach(transform, StallSprite, Color.white, 0.8f, 0.3f, new Color(1f, 0.85f, 0.4f, 0.75f), 0.1f,
-                                    () => Mathf.CeilToInt(Mathf.Max(0f, leftNow)).ToString(), () => leftNow < 3f, null,
+                                    () => Mathf.CeilToInt(Mathf.Max(0f, leftNow)), () => leftNow < 3f, null,
                                     label != null ? label.font : null, label != null ? label.fontSharedMaterial : null);
     }
 

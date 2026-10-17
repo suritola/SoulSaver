@@ -160,7 +160,9 @@ public static class DailyRewards
                 if (Time.unscaledTime < readyAt) return;
                 close();
                 RunStats.GaveUp = true;
+                RunStats.CaptureForResult();        // 결과 화면 「빌드 자세히 보기」 스냅샷 (ESC 포기와 같게)
                 RunSave.Abandon();
+                if (Herald.Enabled) { Herald.RunThen(true, () => SceneFlow.Go("GameOver")); return; }      // 망자의 전령 한 줄 뒤 결과 (ESC 포기와 같게)
                 SceneFlow.Go("GameOver");           // 1.1.9~ 로딩 막 · 공격 고정 풀기 (다른 씬 전환과 같게)
             }, 28f);
             keep.gameObject.AddComponent<ResultPadFocus>();

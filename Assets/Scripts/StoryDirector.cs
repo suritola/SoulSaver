@@ -455,13 +455,13 @@ public class StoryDirector : MonoBehaviour
     };
 
     // 1.2~ 보스 재회 한 줄 (설계 3-2 ③): 이 보스를 전에 만났으면 등장 대사 뒤에 「또 너냐」류 한 줄 · 5번 넘게 쓰러뜨렸으면 다른 한 줄
-    //   만난 적 = boss.intro.seen.<종류> (등장 연출을 본 뒤) · 쓰러뜨린 수 = boss.down.<종류> (RunCountersHost) · 글 LocTable.Herald 의 boss.again(5).<보스>
-    const string SeenKey = "boss.intro.seen.";
+    //   만난 적 = boss.met.<종류> (등장 연출이 한 번이라도 나온 뒤 · 건너뛰어도) — 「처음만」 설정의 boss.intro.seen.<종류>(대사를 끝까지 봄)과 따로 · 쓰러뜨린 수 = boss.down.<종류> (RunCountersHost) · 글 LocTable.Herald 의 boss.again(5).<보스>
+    const string MetKey = "boss.met.";
     static readonly string[] ReunionIds = { "lich", "demon", "slime", "mirror" };
 
     static string[] ReunionLines(int kind, string[] lines)
     {
-        if (kind < 0 || kind >= ReunionIds.Length || Prefs.GetInt(SeenKey + kind, 0) != 1) return lines;
+        if (kind < 0 || kind >= ReunionIds.Length || (Prefs.GetInt(MetKey + kind, 0) != 1 && Prefs.GetInt(BossSeenKey(kind), 0) != 1)) return lines;
         string key = (Prefs.GetInt("boss.down." + kind, 0) >= 5 ? "boss.again5." : "boss.again.") + ReunionIds[kind];
         if (!Loc.Has(key)) return lines;
         string[] all = new string[lines.Length + 1];
@@ -543,7 +543,7 @@ public class StoryDirector : MonoBehaviour
         voicePitch = info.pitch;
         if (brief)
         {
-            // 1.2~ 이미 본 보스: 이름표만 잠깐 · 다시 만난 보스면 재회 한 줄만 (보스 재회)
+            // 1.2~ 이미 본 보스: 이름표 + 재회 한 줄만 짧게 (보스 재회 · 재회 글이 없으면 이름표만)
             string[] reunion = ReunionLines(kind, new string[0]);
             if (reunion.Length > 0) { if (!skip) yield return Lines(reunion); }
             else for (float t = 0f; t < 0.9f && !skip; t += Time.unscaledDeltaTime) yield return null;
@@ -554,7 +554,7 @@ public class StoryDirector : MonoBehaviour
             if (!skip) { Prefs.SetInt(seenKey, 1); Prefs.Save(); }      // 건너뛴 사람은 다음에 다시 봄 (시작 이야기와 같은 규칙)
         }
         voice = null;
-        Prefs.SetInt(SeenKey + kind, 1);
+        Prefs.SetInt(MetKey + kind, 1);      // 재회용 「만난 적」만 · 대사 본 기록(seenKey)은 끝까지 봤을 때만 위에서
 
         // 돌아오기
         if (fx != null) fx.ReleaseCamera();

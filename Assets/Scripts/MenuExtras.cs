@@ -1160,7 +1160,7 @@ public static class SettingsUI
         CycleRow("대사 속도", y[3], GameSettings.DialogueSpeedNames, () => GameSettings.DialogueSpeed, v => GameSettings.DialogueSpeed = v,
                  "이야기 · 보스 대사 글자가 나타나는 속도입니다. 「즉시」는 한 줄이 한 번에 다 나옵니다.");
         CycleRow("보스 등장 대사", y[4], GameSettings.BossIntroNames, () => GameSettings.BossIntroAlways ? 1 : 0, v => GameSettings.BossIntroAlways = v == 1,
-                 "보스가 처음 나올 때는 늘 대사를 봅니다. 「처음만」이면 다음 판부터 이름만 짧게 보여 주고 바로 싸웁니다.");
+                 "보스가 처음 나올 때는 늘 대사를 봅니다. 「처음만」이면 다음 판부터 이름과 다시 만난 한마디만 짧게 보여 주고 바로 싸웁니다.");
         ToggleRow("움직임 줄이기", y[5], () => GameSettings.ReduceMotion, v => GameSettings.ReduceMotion = v,
                   "버튼 · 배지의 맥동, 카드 뒤집기, 체력바 흔들림, 알림이 들어오는 움직임을 없애고 제자리에서 바로 보여 줍니다. 켜면 화면 흔들림도 함께 꺼집니다. 조준 줌과 진화 연출은 그대로입니다.");
         ToggleRow("빠른 연출", y[6], () => GameSettings.FastFx, v => GameSettings.FastFx = v,

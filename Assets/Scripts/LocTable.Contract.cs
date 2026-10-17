@@ -253,7 +253,7 @@ public static partial class LocTable
         A("board.row.4", "성장", "Growth", "成長", "成长");
         A("board.row.5", "무한", "Endless", "エンドレス", "无尽");
         A("board.row.6", "이야기", "Story", "物語", "故事");
-        A("board.row.7", "공용", "Shared", "共通", "共通");
+        A("board.row.7", "공용", "Shared", "共通", "通用");
         A("board.col.locked", "이 영웅을 열면 시작합니다.", "Begins when you unlock this hero.", "この英雄を解放すると始まります。", "解锁这位英雄后开始。");
         A("board.cell.hidden", "???", "???", "???", "???");
         A("board.cell.hidden.how", "위나 왼쪽의 칸을 채우면 드러납니다.", "Revealed when you fill the cell above or to the left.", "上か左のマスを埋めると現れます。", "填满上方或左侧的格子后显现。");

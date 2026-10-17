@@ -39,16 +39,16 @@ public static partial class LocTable
         S("치명타가 났을 때의 피해 배율입니다.", "Damage multiplier on a critical hit.", "クリティカル時のダメージ倍率です。", "暴击时的伤害倍率。");
         S("버프 · 특수 능력으로 모든 피해에 곱해지는 값입니다.", "Multiplier applied to all your damage by buffs and special abilities.", "バフ・特殊能力によって全てのダメージに掛かる倍率です。", "增益与特殊能力对所有伤害的乘数。");
         S("총알 하나가 뚫고 지나가는 적의 수입니다.", "Number of enemies one bullet passes through.", "弾1発が貫通する敵の数です。", "一发子弹可穿透的敌人数量。");
-        S("초당 회복하는 체력입니다. 적을 쓰러뜨릴 때 회복하는 양은 작게 붙습니다.", "HP recovered per second. HP recovered per kill is shown smaller.", "1秒あたりに回復する体力です。敵を倒したときの回復量は小さく表示されます。", "每秒恢复的生命值。击倒敌人时恢复的量以小字显示。");
+        S("초당 회복하는 체력입니다. 적을 쓰러뜨릴 때 회복하는 양은 작게 붙습니다.", "HP recovered per second. HP recovered per kill is shown smaller.", "1秒あたりに回復する体力です。敵を倒したときの回復量は小さく表示されます。", "每秒恢复的生命值。击败敌人时恢复的量以小字显示。");
         S("지금 키우는 카드가 레벨업 카드에 나올 확률을 올립니다. 1마다 40%씩 더 자주 나옵니다.", "Makes the cards you are already leveling appear more often. Each point is +40%.", "育てているカードがレベルアップカードに出る確率を上げます。1につき40%多く出ます。", "提高正在培养的卡牌出现在升级卡牌中的概率。每点 +40%。");
         S("최대 레벨 뒤에 고른 성장 카드 수와 영혼 정련 횟수입니다.", "Growth cards picked after max level and Soul Refinements done.", "最大レベル後に選んだ成長カードの数と魂の精錬の回数です。", "达到最高等级后选取的成长卡牌数与灵魂精炼次数。");
         S("경험치", "EXP", "経験値", "经验值");
         S("다음 레벨까지의 경험치입니다. 가득 차면 레벨업 카드를 고를 수 있습니다.", "Experience toward the next level. When full, you can pick a level-up card.", "次のレベルまでの経験値です。満タンになるとレベルアップカードを選べます。", "距离下一级的经验值。满后可选择升级卡牌。");
         S("필살기 게이지", "Ultimate Gauge", "必殺技ゲージ", "必杀技能量");
-        S("적을 쓰러뜨리면 차고, 가득 차면 [{ULT}]로 필살기를 씁니다.", "Fills as you defeat enemies. When full, press [{ULT}] to use your Ultimate.", "敵を倒すと溜まり、満タンになると [{ULT}] で必殺技を使えます。", "击倒敌人时积累，满后按 [{ULT}] 使用必杀技。");
+        S("적을 쓰러뜨리면 차고, 가득 차면 [{ULT}]로 필살기를 씁니다.", "Fills as you defeat enemies. When full, press [{ULT}] to use your Ultimate.", "敵を倒すとたまり、満タンになると [{ULT}] で必殺技を使えます。", "击败敌人时积累，满后按 [{ULT}] 使用必杀技。");
         S("남은 탄과 탄창 크기입니다. [{RELOAD}]로 재장전하고, 다 쓰면 저절로 재장전합니다.", "Rounds left and magazine size. Press [{RELOAD}] to reload; it reloads automatically when empty.", "残弾と弾倉の大きさです。[{RELOAD}] でリロードし、撃ち切ると自動でリロードします。", "剩余子弹与弹匣容量。按 [{RELOAD}] 装填，打空时会自动装填。");
         S("이번 판에 모은 코인입니다. 떠돌이 상점에서 쓰고, 판이 끝나면 사라집니다.", "Coins collected this run. Spend them at the wandering shop; they are gone when the run ends.", "今回のランで集めたコインです。さすらいの商店で使い、ランが終わると消えます。", "本局收集的金币。在流浪商店使用，对局结束后消失。");
-        S("영혼 트리에서 칸을 배우는 데 씁니다. 적을 쓰러뜨리면 떨어집니다.", "Spent on Soul Tree nodes. Dropped by defeated enemies.", "魂のツリーの枝を習得するのに使います。敵を倒すと落ちます。", "用于学习灵魂树的节点。击倒敌人时掉落。");
+        S("영혼 트리에서 칸을 배우는 데 씁니다. 적을 쓰러뜨리면 떨어집니다.", "Spent on Soul Tree nodes. Dropped by defeated enemies.", "魂のツリーの枝を習得するのに使います。敵を倒すと落ちます。", "用于学习灵魂树的节点。击败敌人时掉落。");
         S("이번 판의 플레이 시간입니다. 멈춘 시간은 빼고 셉니다.", "Play time this run. Paused time is not counted.", "今回のランのプレイ時間です。停止中の時間は数えません。", "本局的游戏时间。不计算暂停时间。");
         S("[{UPGRADE}]로 영혼 트리를 엽니다. 배울 수 있는 칸이 있으면 버튼이 빛납니다.", "Press [{UPGRADE}] to open the Soul Tree. The button glows when a node can be learned.", "[{UPGRADE}] で魂のツリーを開きます。習得できる枝があるとボタンが光ります。", "按 [{UPGRADE}] 打开灵魂树。有可学习的节点时按钮会发光。");
         // ================================================================= 2. 메뉴 영웅 패널 · 선택하고 시작
@@ -64,7 +64,7 @@ public static partial class LocTable
         S("숨 — 활을 당기는 동안 줄고, 바닥나면 활이 떨려 위력이 절반이 됩니다. 「완벽!」 발사가 숨을 되돌립니다.", "Breath — drains while drawing the bow; when empty the bow shakes and deals half damage. A Perfect shot restores it.", "息 — 弓を引いている間に減り、尽きると弓が震えて威力が半分になります。「パーフェクト！」の一撃で回復します。", "呼吸 — 拉弓时消耗，耗尽后弓会颤抖、威力减半。「完美！」射击可将其恢复。");
         S("불안정 — 던질수록 올라 폭발이 커지고, 가득 차면 발밑에서 자폭합니다.", "Instability — rises with every throw and makes explosions bigger; when full, it blows up at your feet.", "不安定 — 投げるほど上がり爆発が大きくなり、満タンになると足元で自爆します。", "不稳定 — 每次投掷都会上升、爆炸更大；满了会在脚下自爆。");
         S("다음 획 — 세 번째 획마다 삼각형이 닫혀 안쪽 적이 크게 다칩니다.", "Next Stroke — every third stroke closes a triangle that heavily damages enemies inside.", "次の一画 — 3画目ごとに三角形が閉じ、内側の敵に大ダメージを与えます。", "下一笔 — 每第三笔会闭合三角形，重创其中的敌人。");
-        S("눈금 — 맞힐 때마다 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫는 「정각」 톱니가 됩니다.", "Ticks — fill with every hit; when full, the next gear becomes an O'Clock gear that pierces everything.", "目盛り — 命中ごとに溜まり、満タンになると次の歯車が全てを貫く「正時」の歯車になります。", "刻度 — 每次命中积累，满后下一枚齿轮成为贯穿一切的「整点」齿轮。");
+        S("눈금 — 맞힐 때마다 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫는 「정각」 톱니가 됩니다.", "Ticks — fill with every hit; when full, the next gear becomes an O'Clock gear that pierces everything.", "目盛り — 命中ごとにたまり、満タンになると次の歯車が全てを貫く「正時」の歯車になります。", "刻度 — 每次命中积累，满后下一枚齿轮成为贯穿一切的「整点」齿轮。");
         S("배달 — 직접 보낸 편지를 열 번 배달하면 코인과 필살기 게이지를 받습니다. 표식 — 속달을 누르고 있는 동안 붙는 편지 수입니다.", "Deliveries — every 10 letters delivered grant coins and Ultimate gauge. Marks — the number of letters attached while holding Express.", "配達 — 自分で送った手紙を10回届けるとコインと必殺ゲージを得ます。印 — 速達を押している間に付く手紙の数です。", "投递 — 亲自送达10封信可获得金币与必杀能量。标记 — 按住速递时附着的信件数量。");
         S("영혼 — 쓰러뜨린 적에서 생겨 몸 둘레를 돌며, 맞을 때 체력 대신 하나씩 사라집니다.", "Wisps — rise from slain enemies and circle you; each one absorbs a hit instead of your HP.", "魂 — 倒した敵から生まれて周囲を回り、被弾時にHPの代わりに1つ消えます。", "魂灵 — 从倒下的敌人中产生并环绕你，受击时代替生命值逐个消失。");
 
@@ -77,7 +77,7 @@ public static partial class LocTable
         S("보스 등장 대사", "Boss Entrance Lines", "ボス登場セリフ", "首领登场对白");
         S("처음만", "First Time Only", "初回のみ", "仅首次");
         S("항상", "Always", "常に", "总是");
-        S("보스가 처음 나올 때는 늘 대사를 봅니다. 「처음만」이면 다음 판부터 이름만 짧게 보여 주고 바로 싸웁니다.", "You always see the lines the first time a boss appears. With First Time Only, later runs show just the name card briefly and start the fight.", "ボスの初登場時は必ずセリフを見ます。「初回のみ」なら次の周から名前だけを短く見せてすぐ戦闘に入ります。", "首领首次出现时总会显示对白。选择「仅首次」后，之后的局只短暂显示名字即开战。");
+        S("보스가 처음 나올 때는 늘 대사를 봅니다. 「처음만」이면 다음 판부터 이름과 다시 만난 한마디만 짧게 보여 주고 바로 싸웁니다.", "You always see the lines the first time a boss appears. With First Time Only, later runs show just the name card and a short reunion line, then start the fight.", "ボスの初登場時は必ずセリフを見ます。「初回のみ」なら次の周から名前と再会のひと言だけを短く見せてすぐ戦闘に入ります。", "首领首次出现时总会显示对白。选择「仅首次」后，之后的局只短暂显示名字和一句重逢台词即开战。");
 
         // ================================================================= 6. 도감 이야기 탭
         S("이야기", "Story", "物語", "故事");

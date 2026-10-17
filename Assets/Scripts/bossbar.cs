@@ -77,7 +77,8 @@ public class bossbar : MonoBehaviour
     }
 
     static readonly float[] HalfTick = { 0.5f }, HellTicks = { 0.66f, 0.33f };
-    static float[] TicksOf(int kind) => kind >= DeveloperKind ? new float[0] : kind == 1 ? HellTicks : HalfTick;
+    static readonly float[] NoTicks = new float[0];
+    static float[] TicksOf(int kind) => kind >= DeveloperKind ? NoTicks : kind == 1 ? HellTicks : HalfTick;      // 프레임마다 불려서 빈 배열도 하나만
     static readonly Color TickColor = new Color(1f, 0.9f, 0.7f, 0.75f), TickPassed = new Color(1f, 0.4f, 0.35f, 0.9f);
     static readonly Color EnragedBack = new Color(0.35f, 0.08f, 0.08f, 1f);
 

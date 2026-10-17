@@ -22,6 +22,7 @@ public sealed class BoardCell
     public CharUnlock route = CharUnlock.None;      // 이 영웅 해제 조건을 채움
     public CharacterId routeHero;
     public bool onerun;                 // 「한 판 안에」
+    internal string grantKey;           // board.grant.<key> (ContractBoard.GrantKey 가 한 번만 만듦)
     public string Name => Loc.T("board." + key + ".name");
     public string Desc => Loc.T("board." + key + ".desc");
     public string Cond => Loc.T("board." + key + ".cond");
@@ -72,7 +73,7 @@ public static class ContractBoard
         // ---------------- 공용 둘째 줄
         S("daily7", 0, 4, 7, () => Mathf.Max(L("daily.streak.best"), DailyRewards.Streak), 2000);
         S("relics8", 1, 4, 8, () => CountFound("relic.", new List<string>(OriginalRelics)), 3000);
-        S("endless5", 2, 4, 1, () => CharacterData.ConditionMet(CharUnlock.EndlessBosses5) ? 1 : 0, 2000);
+        S("endless5", 2, 4, 1, () => UnlockRoutes.MainRouteMet(CharUnlock.EndlessBosses5) ? 1 : 0, 2000);      // 시계공 대체 루트(quick4)로 켠 플래그는 빼고
         S("codex50", 3, 4, 50, () => CodexSeen.Percent(), 2000);
         S("codex100", 4, 4, 100, () => CodexSeen.Percent(), 5000);
         S("endlessclear", 5, 4, 1, () => EndlessMode.EverCleared ? 1 : 0, 5000, title: true);
@@ -111,15 +112,30 @@ public static class ContractBoard
 
     // ================================================================= 상태
     const string DoneKey = "board.done", ClaimKey = "board.claimed", GrantPrefix = "board.grant.", MigratedKey = "board.migrated";
-    static HashSet<string> Set(string key) => new HashSet<string>(Prefs.GetString(key, "").Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries));
-    static void SaveSet(string key, HashSet<string> s) => Prefs.SetString(key, string.Join(",", s));
+    // 저장 글이 그대로면 지난번 집합을 다시 씀 (판 안 2초마다 Refresh 가 Split · 새 집합을 만들지 않게) — 받은 쪽이 고치면 곧 SaveSet 으로 저장
+    static readonly Dictionary<string, (string raw, HashSet<string> set)> setCache = new Dictionary<string, (string, HashSet<string>)>();
+    static HashSet<string> Set(string key)
+    {
+        string raw = Prefs.GetString(key, "");
+        if (setCache.TryGetValue(key, out var c) && string.Equals(c.raw, raw)) return c.set;
+        HashSet<string> set = new HashSet<string>(raw.Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries));
+        setCache[key] = (raw, set);
+        return set;
+    }
+    static void SaveSet(string key, HashSet<string> s)
+    {
+        string raw = string.Join(",", s);
+        Prefs.SetString(key, raw);
+        setCache[key] = (raw, s);
+    }
+    static string GrantKey(BoardCell c) => c.grantKey ?? (c.grantKey = GrantPrefix + c.key);
 
-    static bool IsDoneNow(BoardCell c) => Prefs.GetInt(GrantPrefix + c.key, 0) == 1 || (c.value != null && c.value() >= c.target);
+    static bool IsDoneNow(BoardCell c) => Prefs.GetInt(GrantKey(c), 0) == 1 || (c.value != null && c.value() >= c.target);
     public static bool IsDone(string key) => Set(DoneKey).Contains(key);
     public static bool IsClaimed(string key) => Set(ClaimKey).Contains(key);
     public static bool Available => !Demo.On;
 
-    public static int Progress(BoardCell c) => Prefs.GetInt(GrantPrefix + c.key, 0) == 1 ? c.target : Mathf.Clamp(c.value != null ? c.value() : 0, 0, c.target);
+    public static int Progress(BoardCell c) => Prefs.GetInt(GrantKey(c), 0) == 1 ? c.target : Mathf.Clamp(c.value != null ? c.value() : 0, 0, c.target);
 
     // 칸이 보이는지: 공용 줄 · 맨 위 줄 · 채운 칸은 늘, 영웅 줄은 위나 왼쪽 칸을 채웠을 때
     public static bool Visible(BoardCell c, HashSet<string> done)
@@ -229,7 +245,7 @@ public static class ContractBoard
         {
             BoardCell c = At((int)id, r);
             if (c == null || IsDoneNow(c)) continue;
-            Prefs.SetInt(GrantPrefix + c.key, 1);
+            Prefs.SetInt(GrantKey(c), 1);
             Refresh(false);
             return true;
         }

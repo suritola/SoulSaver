@@ -84,6 +84,13 @@ public partial class SpecialAbilities
     {
         Vector3 muzzle = player.MuzzlePosition;
         Vector3 mouse = MouseWorld();
+        // 1.2~ 공격 고정 설정: 누름 · 뗌은 고정을 걸고 푸는 데 쓰이므로 무시 (걸 때 · 풀 때 덜 찬 약한 한 발이 나가지 않게)
+        //   고정 중에는 완충 자동 발사만 · 풀려서 누르고 있지 않으면 충전을 거둠
+        if (GameSettings.AttackLock && !GamePad.Active && !TutorialRun.Active && !GameInput.Auto)
+        {
+            down = up = false;
+            if (!held && sniperCharge >= 0f) CancelSniperCharge();
+        }
 
         if ((down || (held && sniperCharge < 0f)) && Ready())
         {

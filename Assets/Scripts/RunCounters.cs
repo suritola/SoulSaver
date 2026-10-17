@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 //   누적 (Life · AddLife): 판을 넘어 쌓임 · Prefs "life.<열쇠>" (영웅마다 따로 세는 것은 Hero(열쇠) = 열쇠@영웅 번호)
 //     처치 · 배달처럼 자주 오르는 수는 메모리에 모았다가 씬이 바뀔 때 · 판이 끝날 때 한꺼번에 저장 (Prefs.Save 를 매번 부르지 않게)
 //   세지 않는 판: 튜토리얼 · 자동 플레이 · 촬영 · 배치 실행 · 체험판의 누적(보드는 정식판에서만 — 판 안 수는 셈)
-//   이어하기: 계약 진행은 RunSave.Data.contracts 가 따로 남기고(Contracts), 여기 판 안 수는 이어한 뒤부터 다시 셈
+//   이어하기: 계약 목록은 RunSave.Data.contracts(Contracts), 여기 판 안 수는 RunSave.Data.counters(Serialize · Restore)가 남김
 public static class RunCounters
 {
     static readonly Dictionary<string, int> run = new Dictionary<string, int>();
@@ -16,7 +16,27 @@ public static class RunCounters
     public const string LifePrefix = "life.";
 
     // 지금 판의 수를 세는지 (게임 씬 · 진짜 플레이)
-    public static bool Counting => SceneManager.GetActiveScene().name == "GameScene" && !Off;
+    //   씬 이름(.name)은 읽을 때마다 새 문자열이라 씬 핸들이 바뀔 때만 다시 읽음 (처치마다 GC 없게)
+    public static bool Counting => InGameScene && !Off;
+    static int sceneHandle = -1;
+    static bool inGameScene;
+    static bool InGameScene
+    {
+        get
+        {
+            Scene sc = SceneManager.GetActiveScene();
+            if (sc.handle != sceneHandle) { sceneHandle = sc.handle; inGameScene = sc.name == "GameScene"; }
+            return inGameScene;
+        }
+    }
+
+    // 처치 출처 열쇠 「kill.<출처>」를 한 번만 만들어 다시 씀
+    static readonly Dictionary<string, string> killKeys = new Dictionary<string, string>();
+    public static string KillKey(string src)
+    {
+        if (!killKeys.TryGetValue(src, out string k)) { k = "kill." + src; killKeys[src] = k; }
+        return k;
+    }
     public static bool Off => TutorialRun.Active || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode;
     // 누적(보드 · 기억)은 정식판에서만
     public static bool LifeCounting => Counting && !Demo.On;
@@ -58,6 +78,40 @@ public static class RunCounters
     // 지금 영웅을 붙인 열쇠 (누적 · 판 안 모두)
     public static string Hero(string key) => key + "@" + (int)CharacterData.Selected;
     public static string Hero(string key, CharacterId id) => key + "@" + (int)id;
+
+    // 이어하기 저장: "열쇠=값|…" + 본 것은 "~열쇠" (열쇠는 영문 · 숫자 · . · @ 뿐)
+    public static string Serialize()
+    {
+        if (run.Count == 0 && runSet.Count == 0) return "";
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        foreach (KeyValuePair<string, int> kv in run)
+        {
+            if (sb.Length > 0) sb.Append('|');
+            sb.Append(kv.Key).Append('=').Append(kv.Value);
+        }
+        foreach (string k in runSet)
+        {
+            if (sb.Length > 0) sb.Append('|');
+            sb.Append('~').Append(k);
+        }
+        return sb.ToString();
+    }
+
+    // 이어하기 복원 (기록을 다시 적용한 뒤 · 저장된 값으로 덮어씀)
+    public static void Restore(string saved)
+    {
+        if (string.IsNullOrEmpty(saved)) return;
+        run.Clear();
+        runSet.Clear();
+        foreach (string part in saved.Split('|'))
+        {
+            if (part.Length == 0) continue;
+            if (part[0] == '~') { runSet.Add(part.Substring(1)); continue; }
+            int eq = part.LastIndexOf('=');
+            if (eq > 0 && int.TryParse(part.Substring(eq + 1), out int v)) run[part.Substring(0, eq)] = v;
+        }
+        Changed?.Invoke();
+    }
 
     // ================================================================= 누적
     public static int Life(string key) => Prefs.GetInt(LifePrefix + key, 0) + (lifePending.TryGetValue(key, out int p) ? p : 0);
@@ -172,9 +226,9 @@ public class RunCountersHost : MonoBehaviour
     {
         if (!EnermyController.KillCounts) return;
         string src = DamageSource.Current ?? DamageSource.Other;
-        RunCounters.Add("kill." + src);
+        RunCounters.Add(RunCounters.KillKey(src));
         if (src != DamageSource.Basic && src != DamageSource.Ult && src != DamageSource.Signature && src != DamageSource.Tree && src != DamageSource.Other && src != DamageSource.Special)
-            RunCounters.Add("kill." + DamageSource.Special);
+            RunCounters.Add(RunCounters.KillKey(DamageSource.Special));
         if (src == DamageSource.Ult)
         {
             ultWaveKills++;

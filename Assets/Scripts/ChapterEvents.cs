@@ -444,7 +444,7 @@ public class ChapterEvents : MonoBehaviour
                         SpriteRenderer gsr = gob.GetComponentInChildren<SpriteRenderer>();
                         EnermyController ge = gob.GetComponent<EnermyController>();
                         EdgeMarker.Attach(gob.transform, gsr != null ? gsr.sprite : null, new Color(1f, 0.85f, 0.25f), 0.9f, 0.35f, new Color(1f, 0.85f, 0.3f, 0.8f), 0.1f,
-                                          () => SecondsLeft(goblinUntil).ToString(), () => goblinUntil - Time.time < 3f,
+                                          () => SecondsLeft(goblinUntil), () => goblinUntil - Time.time < 3f,
                                           () => gob != null && goblin == gob && (ge == null || !ge.IsDead));
                     }
                     Notice.Big(Loc.T("event.goblin.start"), NoticeIcon.Coin, 2.5f, NoticeLevel.Urgent);

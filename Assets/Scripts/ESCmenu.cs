@@ -51,7 +51,7 @@ public class ESCmenu : MonoBehaviour
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing || Herald.Playing) return;
         // 1.1.9~ 일시정지 위에 연 도감 · 스킬 진화 · 빌드 자세히 보기 · 영웅 안내: 그 창이 ESC 로 닫힘 (같은 프레임에 일시정지까지 풀리지 않게)
-        if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || BuildView.IsOpen || HeroGuide.IsOpen) return;
+        if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || MemoryShards.ReaderOpen || BuildView.IsOpen || HeroGuide.IsOpen) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
@@ -143,7 +143,7 @@ public class ESCmenu : MonoBehaviour
     // 1.0.4~: 「다시 시작」 — 지금 판을 버리고 같은 캐릭터 · 난이도로 새 판 (튜토리얼이면 튜토리얼을 처음부터)
     public void onPressRestart()
     {
-        Confirm("ConfirmRestart", "정말로 다시 시작하시겠습니까?", "지금 판을 버리고 같은 캐릭터 · 난이도로 새로 시작합니다.", "다시 시작", Restart);
+        Confirm("ConfirmRestart", "정말로 다시 시작하시겠습니까?", "지금 판을 버리고 같은 캐릭터 · 난이도로 새로 시작합니다.", "다시 시작", Restart, null, false);     // 지금 판을 버리므로 기본 버튼 없음
     }
 
     // 1.0.4~: 「게임 종료」 — 저장되는 판이면 저장하고 끔

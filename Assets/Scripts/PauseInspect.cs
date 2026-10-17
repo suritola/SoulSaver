@@ -75,11 +75,15 @@ public class PauseInspect : MonoBehaviour
     void Update()
     {
         if (hintLine != null && hintLine.gameObject.activeInHierarchy && hintPad != GamePad.Active) WriteHint();     // 장치가 바뀌면 다시 씀
-        bool on = ESCmenu.IsOpen && !ESCmenu.ConfirmOpen && !SettingsUI.IsOpen && !CodexUI.IsOpen && !SkillEvoCodexUI.IsOpen && !BuildView.IsOpen && Time.timeScale <= 0f;
+        bool on = ESCmenu.IsOpen && !ESCmenu.ConfirmOpen && !SettingsUI.IsOpen && !CodexUI.IsOpen && !SkillEvoCodexUI.IsOpen && !MemoryShards.ReaderOpen && !BuildView.IsOpen && Time.timeScale <= 0f;
         if (!on) { HideMine(); return; }
         EventSystem es = EventSystem.current;
         if (es == null) { HideMine(); return; }
         Vector2 at = GameInput.PointerPosition;      // 패드 가상 커서도 같은 자리 (TooltipUI.Follow 와 같은 기준)
+        // 포인터가 그대로면 0.25초마다만 다시 봄 (멈춘 동안 프레임마다 레이캐스트 · 툴팁 글 만들기를 하지 않게)
+        if (at == lastAt && Time.unscaledTime < nextLook) return;
+        lastAt = at;
+        nextLook = Time.unscaledTime + 0.25f;
         if (ped == null || pedEs != es) { ped = new PointerEventData(es); pedEs = es; }
         ped.position = at;
         hits.Clear();
@@ -102,6 +106,9 @@ public class PauseInspect : MonoBehaviour
         if (w.HasValue) { ShowMine(w.Value.title, w.Value.body); return; }
         HideMine();
     }
+
+    Vector2 lastAt = new Vector2(float.NaN, float.NaN);
+    float nextLook;
 
     void ShowMine(string title, string body)
     {

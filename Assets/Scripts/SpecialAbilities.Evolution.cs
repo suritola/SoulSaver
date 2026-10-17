@@ -761,17 +761,22 @@ public partial class SpecialAbilities
     // 비용은 40에서 시작해 할 때마다 ×5 (5 단위로 반올림). 이어하기 기록은 r (RunSave)
     // 1.1.2~: 예전엔 +10 씩만 올라 조각이 쌓이면 끝없이 눌러 공격력이 지나치게 커졌음 → ×1.4 → 다시 상승률 10배(+40% → +400%) ×5: 40 · 200 · 1000 · 5000 …
     // 1.2~ (밸런스 결정 묶음) 40 × 5ⁿ → 60 × 3ⁿ: 60 · 180 · 540 · 1,620 · 4,860 — 한 판 안에서 남는 조각이 끝까지 쓸모 있게 (이야기 모드 정련 2 → 3~4번)
+    //   무한 모드 · 일일 도전은 옛 40 × 5ⁿ 그대로 (초월 막대처럼 순위표 기록이 1.2 앞뒤로 갈리지 않게)
     public const int RefineBaseCost = 60;
     const float RefineCostGrowth = 3f;
+    const int EndlessRefineBaseCost = 40;
+    const float EndlessRefineCostGrowth = 5f;
+    static bool RefineOldCurve => GameMode.IsEndless || DailyChallenge.Active;
     const float RefineAttack = 0.02f, RefineHp = 4f;
     public int Refines { get; private set; }
     public int RefineCost
     {
         get
         {
-            double c = RefineBaseCost * System.Math.Pow(RefineCostGrowth, Refines);
+            int baseCost = RefineOldCurve ? EndlessRefineBaseCost : RefineBaseCost;
+            double c = baseCost * System.Math.Pow(RefineOldCurve ? EndlessRefineCostGrowth : RefineCostGrowth, Refines);
             if (c >= int.MaxValue / 2) return int.MaxValue / 2;
-            return Mathf.Max(RefineBaseCost, (int)System.Math.Round(c / 5.0) * 5);
+            return Mathf.Max(baseCost, (int)System.Math.Round(c / 5.0) * 5);
         }
     }
 

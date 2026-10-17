@@ -278,6 +278,7 @@ public static class Contracts
         RunOn = !Off;
         runStory = !GameMode.IsEndless && !DailyChallenge.Active;
         if (!RunOn) return;
+        runStartedAt = Time.realtimeSinceStartup;
         run.AddRange(Preview(GameMode.IsEndless, DailyChallenge.Active, CharacterData.Selected));
         Prefs.Save();
         Snapshot();
@@ -320,6 +321,7 @@ public static class Contracts
         foreach (Active o in run) if (o.def != null) taken.Add(o.def.id);
         SetSlot(a.def.kind, CharacterData.Selected, Draw(a.def.kind, CharacterData.Selected, taken), false);
         Prefs.Save();
+        RunSave.MarkDirty();                // 이야기 판 저장에도 「!」(이룸)를 곧 남김 (강제 종료 뒤 이어해서 두 번 받지 않게)
         Notice.Toast(NoticeIcon.Star, Loc.T("contract.done.toast").Replace("{0}", a.def.Name).Replace("{1}", a.def.Reward.ToString("N0")), 4f, new Color(0.96f, 0.83f, 0.47f));
         Hostile.Play("chime", 0.7f, 1.35f);
         Hud.Dirty = true;
@@ -327,11 +329,17 @@ public static class Contracts
 
     // 판이 끝남 (쓰러짐 · 클리어 · 포기 · 다시 시작 · 메인 메뉴): 못 이룬 계약을 다음 판으로 이음 / 접음
     //   saved = 이어하기로 남긴 판을 두고 나감 → 칸을 바꾸지 않음 (이어하면 RunSave 가 되살림)
+    //   짧은 판(ShortRunSec 미만 · 「다시 시작」 연타)도 칸을 바꾸지 않음 → 다시 시작 두 번으로 계약을 접고 새로 뽑는 길을 막음 (다시 뽑기는 하루 3번)
+    const float ShortRunSec = 60f;
+    static float runStartedAt;
+    static bool lastShort;
     static void EndRun(bool saved)
     {
         if (!RunOn) return;
         RunOn = false;
         Tick();
+        lastShort = Time.realtimeSinceStartup - runStartedAt < ShortRunSec;
+        if (lastShort) saved = true;
         CodexSeen.Count(out int codexNow, out int _);
         CodexGained = Mathf.Max(0, codexNow - codexAtStart);
         MemoryGained = Mathf.Max(0, MemoryShards.Count - memoryAtStart);
@@ -353,7 +361,7 @@ public static class Contracts
     public static void EnsureEnded() { if (RunOn && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "GameScene") EndFor(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name); }
 
     // 결과 화면 줄: 이 계약은 다음 판에 이어지는지 (이미 이어진 것이었으면 접힘)
-    public static bool WillCarry(Active a) => !a.done && !a.carried;
+    public static bool WillCarry(Active a) => !a.done && (!a.carried || lastShort);       // 짧은 판은 이어진 계약도 접지 않음
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
@@ -376,6 +384,7 @@ public static class Contracts
     // ================================================================= 이어하기 (RunContent)
     public static void SaveRun(RunSave.Data d)
     {
+        d.counters = RunCounters.Serialize();        // 판 안 수 (이어해도 상자 · 상점 · 영웅 계약 진행이 남게)
         if (!RunOn) { d.contracts = ""; return; }
         List<string> parts = new List<string>();
         foreach (Active a in run) if (a.def != null) parts.Add(a.def.id + (a.carried ? "*" : "") + (a.done ? "!" : ""));
@@ -385,9 +394,11 @@ public static class Contracts
     public static void RestoreRun(RunSave.Data d)
     {
         run.Clear();
+        RunCounters.Restore(d.counters);        // 옛 저장(빈 글)은 0부터
         RunOn = !Off && !string.IsNullOrEmpty(d.contracts);
         if (!RunOn) return;
         runStory = true;                // 이어하기는 이야기 모드 판뿐
+        runStartedAt = Time.realtimeSinceStartup - ShortRunSec;     // 이어한 판은 짧은 판으로 치지 않음
         DoneThisRun = PointsThisRun = 0;
         foreach (string raw in d.contracts.Split(','))
         {
@@ -397,7 +408,7 @@ public static class Contracts
             bool carried = s.EndsWith("*");
             if (carried) s = s.Substring(0, s.Length - 1);
             ContractDef def = ById(s);
-            if (def != null) run.Add(new Active { def = def, done = done, carried = carried, best = done ? def.target : 0 });
+            if (def != null) run.Add(new Active { def = def, done = done, carried = carried, best = done ? def.target : def.Now });
         }
         Snapshot();
         Hud.Dirty = true;
@@ -526,7 +537,7 @@ public static class Contracts
             r.sizeDelta = new Vector2(W, h);
             Image bg = panel.GetComponent<Image>();
             bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
-            bg.raycastTarget = false;
+            bg.raycastTarget = true;        // 일시정지 HUD 툴팁(PauseInspect)이 패널 밑 HUD 칸 · 적을 보지 않게 (RunStats 요약 판과 같게)
             UIKit.Text(r, "contract.run.title", 24f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, h / 2f - 26f), new Vector2(W - 30f, 34f));
             for (int i = 0; i < run.Count; i++)
             {

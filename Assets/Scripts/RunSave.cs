@@ -59,6 +59,8 @@ public static class RunSave
         public int baseMag;
         // 1.2~ 영혼 계약 (Contracts): 이번 판 계약 열쇠 · 뒤에 * 이어진 계약 · ! 이룸 (옛 저장은 빈 글 = 계약 없는 판)
         public string contracts = "";
+        // 1.2~ 판 안 수 (RunCounters: 상자 · 상점 · 처치 출처 · 영웅 고유 동작 · 본 것) — 이어해도 계약 진행이 남게 (옛 저장은 빈 글 = 0부터)
+        public string counters = "";
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -479,6 +481,7 @@ public static class RunSave
                 RectTransform r = badge.rectTransform;
                 r.pivot = new Vector2(1f, 0.5f);
                 UIKit.Pin(r, new Vector2(1f, 1f), new Vector2(-30f, -198f));
+                UiScaler.Isolate(badge.gameObject);         // 저장마다 2초 동안 알파가 바뀌므로 하위 캔버스로 (HUD 루트를 다시 묶지 않게)
                 badge.alpha = 0f;
             }
             shownAt = Time.unscaledTime;
@@ -489,7 +492,8 @@ public static class RunSave
             if (badge == null) return;
             float t = Time.unscaledTime - shownAt;
             float a = t < 0.15f ? t / 0.15f : t < 1.35f ? 1f : 1f - (t - 1.35f) / 0.5f;
-            badge.alpha = Mathf.Clamp01(a) * 0.9f;
+            a = Mathf.Clamp01(a) * 0.9f;
+            if (badge.alpha != a) badge.alpha = a;
         }
 
         void Update()

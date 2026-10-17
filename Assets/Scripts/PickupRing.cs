@@ -10,6 +10,7 @@ public class PickupRing : MonoBehaviour
     PlayerController player;
     LineRenderer ring;
     float flashAt = -99f, fromRadius, toRadius;
+    float shownRadius = -1f, shownAlpha = -1f;
     const float FlashLen = 2.5f, GrowLen = 0.4f;
     static readonly Color Tint = new Color(1f, 0.85f, 0.4f);
 
@@ -70,9 +71,12 @@ public class PickupRing : MonoBehaviour
         {
             ring = Hostile.NewLine("PickupRing", Tint, 0.06f, 5);      // 「Effect」 순서 5 = 바닥 빛 위 · 적 아래
             ring.loop = true;
+            ring.useWorldSpace = false;     // 점은 고리 원점 기준 · 위치만 플레이어를 따라감 (줄 메시를 프레임마다 다시 만들지 않게)
+            shownRadius = shownAlpha = -1f;
         }
         ring.enabled = true;
-        ring.startColor = ring.endColor = new Color(Tint.r, Tint.g, Tint.b, a);
-        Hostile.SetArc(ring, player.transform.position, radius, 0f, 360f);
+        ring.transform.position = player.transform.position;
+        if (!Mathf.Approximately(a, shownAlpha)) { shownAlpha = a; ring.startColor = ring.endColor = new Color(Tint.r, Tint.g, Tint.b, a); }
+        if (!Mathf.Approximately(radius, shownRadius)) { shownRadius = radius; Hostile.SetArc(ring, Vector3.zero, radius, 0f, 360f); }
     }
 }

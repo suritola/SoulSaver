@@ -104,12 +104,23 @@ public static class Prefs
         catch (System.Exception e) { Debug.LogWarning("[Prefs] 깨진 저장 파일을 옮기지 못함: " + e.Message); }
     }
 
+    // 1.2~ 옛 레지스트리에 없다고 한 번 확인한 열쇠 (없는 열쇠를 자주 읽는 곳 — 보드 칸 · 계약 — 이 매번 레지스트리를 조회하지 않게)
+    //   레지스트리는 옛 저장을 옮겨 올 때만 읽으므로 새로 생기지 않음 · 파일 쪽 값은 data 가 먼저 봄
+    static readonly HashSet<string> notInRegistry = new HashSet<string>();
+    static bool NotInRegistry(string key)
+    {
+        if (notInRegistry.Contains(key)) return true;
+        if (PlayerPrefs.HasKey(key)) return false;
+        notInRegistry.Add(key);
+        return true;
+    }
+
     // ---------------- 읽기 (파일에 없으면 옛 레지스트리 값을 옮겨 옴)
     public static int GetInt(string key, int def = 0)
     {
         Load();
         if (data.TryGetValue(key, out var e)) return int.TryParse(e.value, NumberStyles.Integer, Inv, out int v) ? v : def;
-        if (!PlayerPrefs.HasKey(key)) return def;
+        if (NotInRegistry(key)) return def;
         int old = PlayerPrefs.GetInt(key, def);
         data[key] = ('i', old.ToString(Inv));
         dirty = true;
@@ -120,7 +131,7 @@ public static class Prefs
     {
         Load();
         if (data.TryGetValue(key, out var e)) return float.TryParse(e.value, NumberStyles.Float, Inv, out float v) ? v : def;
-        if (!PlayerPrefs.HasKey(key)) return def;
+        if (NotInRegistry(key)) return def;
         float old = PlayerPrefs.GetFloat(key, def);
         data[key] = ('f', old.ToString("R", Inv));
         dirty = true;
@@ -131,7 +142,7 @@ public static class Prefs
     {
         Load();
         if (data.TryGetValue(key, out var e)) return e.value ?? def;
-        if (!PlayerPrefs.HasKey(key)) return def;
+        if (NotInRegistry(key)) return def;
         string old = PlayerPrefs.GetString(key, def);
         data[key] = ('s', old);
         dirty = true;

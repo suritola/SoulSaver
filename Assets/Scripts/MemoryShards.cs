@@ -164,6 +164,15 @@ public static class MemoryShards
     }
 
     // ================================================================= 읽기 창 (한 줄씩 타자 효과 · 클릭 · [상호작용]으로 넘김 · 판을 멈추지 않음 — 메뉴에서만)
+    // 읽기 창이 열려 있는지 · 닫기 (도감 ESC 가 읽기 창부터 닫게 · ESC 메뉴 · 일시정지 툴팁이 열린 창으로 셈)
+    static GameObject readerOpen;
+    public static bool ReaderOpen => readerOpen != null;
+    public static void CloseReader()
+    {
+        if (readerOpen != null) Object.Destroy(readerOpen);
+        readerOpen = null;
+    }
+
     class Reader : MonoBehaviour
     {
         TMP_Text body;
@@ -173,7 +182,9 @@ public static class MemoryShards
 
         public static void Open(Transform root, CharacterId h, int n)
         {
+            CloseReader();
             RectTransform win = UIKit.Modal(root, "MemoryReader", new Vector2(1240f, 760f), out GameObject blocker);
+            readerOpen = blocker;
             UIKit.Text(win, "", 40f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 320f), new Vector2(1100f, 56f)).text = Title(h, n);
             TMP_Text sub = UIKit.Text(win, "", 20f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, 272f), new Vector2(1100f, 30f));
             sub.text = Loc.T(CharacterData.Def(h).name) + "  ·  " + Loc.T("memory.section") + " " + n + " / " + PerHero;
@@ -186,8 +197,8 @@ public static class MemoryShards
             r.body.lineSpacing = 14f;
             UIKit.Forget(r.body);
             r.lines = Text(h, n).Split('\n');
-            UIKit.MakeButton(win, "닫기", new Vector2(0f, -320f), new Vector2(220f, 60f), () => Object.Destroy(blocker), 24f);
-            UIKit.EscCancel(blocker, () => Object.Destroy(blocker));
+            UIKit.MakeButton(win, "닫기", new Vector2(0f, -320f), new Vector2(220f, 60f), CloseReader, 24f);
+            UIKit.EscCancel(blocker, CloseReader);
             r.StartCoroutine(r.Play());
         }
 

@@ -91,7 +91,9 @@ public static class DailyChallenge
     // 1.2~ 난이도 사다리: 쉬움 클리어로 열림 (예전 어려움 클리어 = 무한 모드) — 저장값이 아니라 클리어 기록으로 계산하므로 기존 저장은 저절로 소급
     //   무한 모드가 아직 잠겨 있어도 일일 도전은 GameMode.Override 로 무한 규칙을 씀 (빌려 주는 영웅 · 시드 · 순위표 규칙은 그대로)
     public static bool Unlocked => !Demo.On && GameMode.HasCleared(Difficulty.Easy);
-    public static string RunBoard => SteamLeaderboards.Daily(Key(runDay));
+    public static string RunBoard => BoardOf(runDay);
+    // 그날의 순위표 이름: 14종 규칙으로 뽑는 날(RulesFrom~)은 「_r2」를 붙여 1.1.9 이하(7종으로 뽑아 규칙이 다름)의 기록과 섞이지 않게
+    public static string BoardOf(DateTime day) => SteamLeaderboards.Daily(Key(day) + (day >= RulesFrom ? "_r2" : ""));
     public static string RunDayKey => Key(runDay);      // 1.2~ 일일 보상 (DailyRewards: 자정을 넘겨도 시작한 날)
     public static string RunRuleName => runRule.name ?? "";
 
@@ -249,7 +251,7 @@ public static class DailyChallenge
         BoardView view = open.AddComponent<BoardView>();
         view.list = list;
         view.countdown = UIKit.Text(win, "", 20f, Dim, new Vector2(0f, 300f), new Vector2(900f, 30f));
-        view.Load(SteamLeaderboards.Daily(Key(day)));
+        view.Load(BoardOf(day));
         // 1.1.5~ 전체 순위 창 (무한 모드 순위와 같은 창 · 일일 도전 순위표로), 닫으면 이 창으로 돌아옴
         if (!Demo.On)
             UIKit.MakeButton(board, "lb.full", new Vector2(0f, -280f), new Vector2(300f, 50f), () =>

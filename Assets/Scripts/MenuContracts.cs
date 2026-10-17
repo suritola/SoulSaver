@@ -44,6 +44,8 @@ public class MenuContracts : MonoBehaviour
         UIKit.Forget(m.badge);
         if (ContractBoard.Claimable > 0) m.board.gameObject.AddComponent<NewGlow>();
         ContractBoard.Changed += m.Write;
+        m.box = box;
+        m.Fit();
         m.Write();
         box.gameObject.AddComponent<LocRefresh>().refresh = m.Write;
     }
@@ -66,7 +68,19 @@ public class MenuContracts : MonoBehaviour
         check -= Time.unscaledDeltaTime;
         if (check > 0f) return;
         check = 0.5f;
+        Fit();
         if (Key() != shownFor) Write();
+    }
+
+    // UI 크기 110 · 120% 처럼 캔버스가 좁으면 상자를 줄여 아이콘 칸(가운데 기준 오른쪽 끝 x 370)과 겹치지 않게 (오른쪽 끝 기준으로 줄어듦)
+    RectTransform box;
+    const float GridRight = 370f, GridGap = 20f, RightMargin = 30f, BoxW = 470f;
+    void Fit()
+    {
+        if (box == null || !(box.parent is RectTransform p)) return;
+        float room = p.rect.width * 0.5f - RightMargin - GridRight - GridGap;
+        float k = Mathf.Clamp(room / BoxW, 0.6f, 1f);
+        if (!Mathf.Approximately(box.localScale.x, k)) box.localScale = new Vector3(k, k, 1f);
     }
 
     string Key() => (int)GameMode.Current + "|" + (int)CharacterData.Selected;

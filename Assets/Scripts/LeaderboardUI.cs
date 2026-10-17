@@ -205,6 +205,7 @@ public static class LeaderboardUI
             if (DailyChallenge.Active && DailyChallenge.LastBoard == DailyChallenge.RunBoard)
             {
                 string key = DailyChallenge.RunBoard.Substring(SteamLeaderboards.Daily("").Length);
+                if (key.Length > 8) key = key.Substring(0, 8);         // 「_r2」 같은 규칙 표시 떼고 날짜만
                 if (DateTime.TryParseExact(key, "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d)) return d;
             }
             return DailyChallenge.Today;
@@ -220,7 +221,7 @@ public static class LeaderboardUI
             waitUpload = false;
             timedOut = false;
             DateTime day = Day();
-            boardName = board == Board.Endless ? SteamLeaderboards.Endless : SteamLeaderboards.Daily(DailyChallenge.Key(day));
+            boardName = board == Board.Endless ? SteamLeaderboards.Endless : DailyChallenge.BoardOf(day);
             localBest = board == Board.Endless ? EndlessMode.BestSeconds : DailyChallenge.Best(day);
             RefreshChrome();
             content.anchoredPosition = Vector2.zero;
