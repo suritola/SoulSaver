@@ -63,10 +63,15 @@ public class EnemyHealthBar : MonoBehaviour
     {
         if (body == null || body.sprite == null) return 1f;
 
+        // 1.1.9: sprite.vertices 는 부를 때마다 새 배열을 만듦 (적이 스폰될 때마다) → 스프라이트마다 한 번만 계산해 둠
+        Sprite sp = body.sprite;
+        if (headTops.TryGetValue(sp, out float cached)) return cached;
         float top = float.MinValue;
-        foreach (Vector2 v in body.sprite.vertices) top = Mathf.Max(top, v.y);
+        foreach (Vector2 v in sp.vertices) top = Mathf.Max(top, v.y);
+        headTops[sp] = top;
         return top;
     }
+    static readonly System.Collections.Generic.Dictionary<Sprite, float> headTops = new System.Collections.Generic.Dictionary<Sprite, float>();
 
     static Sprite Pixel()
     {

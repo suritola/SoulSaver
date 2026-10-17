@@ -289,6 +289,7 @@ public class StageManager : MonoBehaviour
     }
 
     // ================================================================= 거너: 영혼 트리 버튼 · 무기 진화
+    bool glowWritten = true;     // 1.1.9: 꺼진 모습을 아직 안 썼으면 true
     void UpdateSoulTreeButton()
     {
         bool show = started && !transitioning && !upgradeOpen && !evolving && !GameInput.TrailerRunning;
@@ -297,7 +298,9 @@ public class StageManager : MonoBehaviour
         if (!show) return;
         // 살 수 있는 칸이 있을 때만 반짝임. 트리를 새로 만들어 확인하므로 자주 하지 않음:
         // 조각 수가 바뀌었으면 0.5초 뒤에 한 번, 아니면 2초마다
-        if (shownShards != SoulShards.Amount && affordCheckAt > Time.unscaledTime + 0.5f) affordCheckAt = Time.unscaledTime + 0.5f;
+        // 1.1.9: 이미 살 수 있으면 조각이 늘어도 결과가 같으므로 앞당기지 않음 (처치마다 트리를 새로 만들던 비용 · 무한 모드에서 큼)
+        if (!affordable && shownShards < SoulShards.Amount && affordCheckAt > Time.unscaledTime + 0.5f) affordCheckAt = Time.unscaledTime + 0.5f;
+        else if (shownShards > SoulShards.Amount && affordCheckAt > Time.unscaledTime + 0.5f) affordCheckAt = Time.unscaledTime + 0.5f;
         if (Time.unscaledTime >= affordCheckAt)
         {
             affordCheckAt = Time.unscaledTime + 2f;
@@ -305,10 +308,15 @@ public class StageManager : MonoBehaviour
             if (affordable) Hints.Show("soultree_buy", "영혼 조각으로 배울 수 있는 칸이 생겼습니다. [{UPGRADE}]로 영혼 트리를 여세요.");
         }
         UpdateShardGain();
-        float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
-        upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
-        upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
-        upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
+        // 1.1.9: 반짝이지 않을 때는 한 번만 씀 (매 프레임 TMP 색 · 크기 쓰기가 캔버스를 다시 묶었음)
+        if (affordable || glowWritten)
+        {
+            float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
+            upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
+            upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
+            upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
+            glowWritten = affordable;
+        }
         // 키 코드 · 언어로 비교 (키 이름 글자를 매 프레임 만들지 않게)
         KeyCode key = GamePad.Active ? KeyCode.JoystickButton6 : KeyBindings.Get(GameAction.Upgrade);      // 1.0.5~ 패드면 View 버튼
         if (shownShards != SoulShards.Amount || shownKey != key || shownLang != Loc.Current)
@@ -341,6 +349,8 @@ public class StageManager : MonoBehaviour
     }
 
     // 조각이 들어오면 버튼 왼쪽에 "+N" 이 잠깐 떴다가 사라짐 (0.4초 안에 들어온 양은 합쳐서)
+    int gainShown = -1;
+    float gainShownAt = -1f;
     void UpdateShardGain()
     {
         int now = SoulShards.Amount;
@@ -353,12 +363,18 @@ public class StageManager : MonoBehaviour
             {
                 gainText = UIKit.Text(upgradeButton.transform, "", 22f, new Color(0.8f, 0.7f, 1f), new Vector2(-185f, 0f), new Vector2(120f, 36f), TextAlignmentOptions.Right);
             }
+        }
+        // 1.1.9: 글자는 0.25초에 한 번만 다시 만듦 (처치마다 TMP 메시 재생성)
+        if (gainText != null && gainShown != gainAmount && Time.unscaledTime - gainShownAt >= 0.25f)
+        {
+            gainShown = gainAmount;
+            gainShownAt = Time.unscaledTime;
             gainText.text = "+" + gainAmount;
         }
         gainFrom = now;
         if (gainText == null) return;
         float left = gainUntil - Time.unscaledTime;
-        gainText.gameObject.SetActive(left > 0f);
+        if (gainText.gameObject.activeSelf != left > 0f) gainText.gameObject.SetActive(left > 0f);
         if (left > 0f)
         {
             float k = 1f - left;                                    // 0 → 1
@@ -554,6 +570,7 @@ public class StageManager : MonoBehaviour
         root.anchorMin = root.anchorMax = new Vector2(0.5f, 0f);
         root.sizeDelta = new Vector2(400f, 64f);
         root.anchoredPosition = new Vector2(70f, 128f);
+        UiScaler.Isolate(upgradeButton);                // 1.1.9: 매 프레임 반짝임이 HUD 전체를 다시 묶지 않게
 
         GameObject glow = new GameObject("Glow", typeof(RectTransform), typeof(Image));
         upgradeGlow = glow.GetComponent<RectTransform>();

@@ -59,6 +59,7 @@ public class AbilityHUD : MonoBehaviour
     void Start()
     {
         open = Prefs.GetInt(OpenKey, 1) == 1;
+        UiScaler.Isolate(gameObject);                   // 1.1.9: 칸 크기 · 스택 배지 변경이 HUD 전체를 다시 묶지 않게
         BuildToggle();
     }
 
@@ -154,7 +155,9 @@ public class AbilityHUD : MonoBehaviour
     {
         foreach (Slot slot in slots.Values)
         {
-            slot.rect.localScale = Vector3.MoveTowards(slot.rect.localScale, Vector3.one, Time.unscaledDeltaTime * 2f);
+            // 1.1.9: 이미 1이면 쓰지 않음 (Transform 쓰기만 해도 캔버스를 다시 묶음)
+            if (slot.rect.localScale != Vector3.one)
+                slot.rect.localScale = Vector3.MoveTowards(slot.rect.localScale, Vector3.one, Time.unscaledDeltaTime * 2f);
             UpdateBadge(slot);
         }
     }

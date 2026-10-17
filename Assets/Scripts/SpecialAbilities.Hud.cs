@@ -80,6 +80,7 @@ public partial class SpecialAbilities
         g.tiles = tiles.GetComponent<RectTransform>();
         g.tiles.SetParent(g.root, false);
         g.tiles.anchorMin = g.tiles.anchorMax = g.tiles.pivot = Vector2.zero;
+        UiScaler.Isolate(tiles);                        // 1.1.9: 쿨타임 원 · 키 배지 맥동이 HUD 전체를 다시 묶지 않게
 
         g.collapsed = Prefs.GetInt(prefKey, 0) == 1;
         go.SetActive(false);
@@ -260,6 +261,9 @@ public partial class SpecialAbilities
     HudGroup[] hudGroups;
     float nextHudText;
 
+    // 1.1.9: 쿨타임 원은 1/120 단위로만 고침 (매 프레임 조금씩 바뀌면 HUD 캔버스를 매 프레임 다시 빌드함 · 눈에는 같음)
+    static float CoolStep(float v) => v <= 0f ? 0f : v >= 1f ? 1f : Mathf.Ceil(v * 120f) / 120f;
+
     void UpdateHud()
     {
         if (weaponGroup == null) return;
@@ -272,7 +276,7 @@ public partial class SpecialAbilities
             foreach (HudTile t in g.list)
             {
                 if (full) UpdateTile(t);
-                else t.cooldown.fillAmount = TileCool(t.id);
+                else t.cooldown.fillAmount = CoolStep(TileCool(t.id));
                 if (g == skillGroup || g == relicGroup) AnimateKeyGuide(t);     // 1.1.2~ 새로 얻은 칸 반짝임 · 화살표 · 키 배지 맥동
             }
         }
@@ -373,7 +377,7 @@ public partial class SpecialAbilities
 
         bool flash = rowFlashUntil.TryGetValue(id, out float until) && Time.time < until;
         t.border.color = flash ? Color.white : active ? TileActive : TileBorder;
-        t.cooldown.fillAmount = cool;
+        t.cooldown.fillAmount = CoolStep(cool);
         if (t.label.text != label) t.label.text = label;
         // 키 배지 (1.1.2~ 칸 아래 바깥의 키캡): 설정 「키 아이콘」이면 밝은 키캡 + 진한 글자, 끄면 어두운 키캡 + 금빛 글자
         //   쿨타임 중에도 배지는 가리지 않고 면만 조금 어둡게 (글자는 그대로 진함)

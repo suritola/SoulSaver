@@ -10,7 +10,7 @@ public class HPpack : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        playerC = FindFirstObjectByType<PlayerController>();
+        playerC = Hostile.Player;           // 1.1.9: 생성마다 씬 전체 검색 대신 캐시
         PickupGlow.Add(pack != null ? pack : gameObject, new Color(1f, 0.35f, 0.4f), 1.4f);      // 1.0.2: 스킬 이펙트에 묻히지 않게
     }
 

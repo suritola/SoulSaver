@@ -223,12 +223,14 @@ public class EnermyController : MonoBehaviour
     }
 
     static readonly Collider2D[] wallHits = new Collider2D[8];
+    static ContactFilter2D solidOnly = new ContactFilter2D { useTriggers = false };
 
     bool Blocked(Vector3 pos)
     {
         float r = bodyCollider != null ? BodyRadius(bodyCollider) * 0.8f : 0.5f;
         Vector2 center = (Vector2)pos + (bodyCollider != null ? bodyCollider.offset * (Vector2)transform.lossyScale : Vector2.zero);
-        int n = Physics2D.OverlapCircleNonAlloc(center, r, wallHits);
+        // 1.1.9: 트리거(주변 적 · 탄 · 코인)는 처음부터 빼고 검색 — 벽은 트리거가 아니라 결과 같음 · 뭉친 무리에서 8칸이 적으로 차 벽을 놓치던 것도 없어짐
+        int n = Physics2D.OverlapCircle(center, r, solidOnly, wallHits);
         for (int i = 0; i < n; i++)
             if (!wallHits[i].isTrigger && wallHits[i].CompareTag("Wall")) return true;
         return false;
@@ -336,7 +338,7 @@ public class EnermyController : MonoBehaviour
         //animator.SetTrigger("hit");
 
         // 피격 색상 효과
-        StartCoroutine(HitEffect());
+        StartHitEffect();
 
 
         // 체력이 0 이하이면 사망
@@ -361,11 +363,17 @@ public class EnermyController : MonoBehaviour
     bool hitFxRunning;
     Vector3 squashRestore;
 
-    IEnumerator HitEffect()
+    // 1.1.9: 이미 돌고 있으면 코루틴을 만들기 전에 시간만 새로 (예전엔 맞을 때마다 코루틴 객체를 만들고 바로 끝내서 GC 가 쌓였음)
+    void StartHitEffect()
     {
         if (Time.time - hitAt >= WhiteGap && GameSettings.Flashes) whiteAt = Time.time;
         hitAt = Time.time;
-        if (hitFxRunning) yield break;          // 이미 돌고 있으면 시간만 새로 (맞을 때마다 코루틴이 쌓이지 않게)
+        if (hitFxRunning) return;
+        StartCoroutine(HitEffect());
+    }
+
+    IEnumerator HitEffect()
+    {
         hitFxRunning = true;
         bool white = false;
         while (!isDead && Time.time - hitAt < RedFor)

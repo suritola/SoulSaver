@@ -588,7 +588,7 @@ public static class UIKit
 }
 
 // ===================================================================== settings
-// 탭 3개: 일반(언어 · 볼륨) / 화면(모드 · 해상도 · 수직 동기화 · 흔들림 · 번쩍임) / 조작(키 바꾸기)
+// 탭: 일반(언어 · 볼륨) / 화면(모드 · 해상도 · 최대 프레임 · 수직 동기화 · 프레임 표시 · 흔들림 · 번쩍임) / 조작(키 바꾸기) / 게임
 public static class SettingsUI
 {
     static GameObject open;
@@ -645,11 +645,15 @@ public static class SettingsUI
             tabButtons[i].GetComponent<Image>().color = i == tab ? Gold : Off;
             tabButtons[i].transform.localScale = Vector3.one * (i == tab ? 1.06f : 1f);
         }
+        rowH = 64f;
         if (tab == 0) BuildGeneral();
         else if (tab == 1) BuildDisplay();
         else if (tab == 2) BuildControls();
         else BuildGameplay();
     }
+
+    // 줄 버튼 높이 (화면 탭은 줄이 많아 낮춤 · 1.1.9~)
+    static float rowH = 64f;
 
     static TMP_Text RowLabel(string ko, float y) =>
         UIKit.Text(page, ko, 30f, Parch, new Vector2(-400f, y), new Vector2(280f, 50f), TextAlignmentOptions.Left);
@@ -737,7 +741,9 @@ public static class SettingsUI
     // ================================================================= 화면
     static void BuildDisplay()
     {
-        RowLabel("화면 모드", 200f);
+        // 1.1.9~ 「최대 프레임」 · 「프레임 표시」 두 줄을 더 넣으려고 줄 간격 75 → 56 · 버튼 높이 64 → 52 (9줄, y 216 ~ -232)
+        rowH = 52f;
+        RowLabel("화면 모드", 216f);
         Button full = null, windowed = null;
         TMP_Text res = null;
         // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
@@ -748,7 +754,7 @@ public static class SettingsUI
             full.transform.localScale = Vector3.one * (isFull ? 1.06f : 1f);
             windowed.transform.localScale = Vector3.one * (isFull ? 1f : 1.06f);
         };
-        full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, 200f), new Vector2(250f, 64f), () =>
+        full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, 216f), new Vector2(250f, rowH), () =>
         {
             int w = Display.main.systemWidth, h = Display.main.systemHeight;
             Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
@@ -756,7 +762,7 @@ public static class SettingsUI
             Deselect();
             highlightMode(true);
         }, 26f);
-        windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, 200f), new Vector2(250f, 64f), () =>
+        windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, 216f), new Vector2(250f, rowH), () =>
         {
             // 화면을 꽉 채우는 크기면 창 테두리가 화면 밖으로 나가므로 한 단계 작은 해상도로
             Vector2Int r = new Vector2Int(Screen.width, Screen.height);
@@ -775,8 +781,8 @@ public static class SettingsUI
 
         // 해상도: < 1920 × 1080 >
         // 1.1.2~ 「안내 메시지 크기」 한 줄을 더 넣으려고 줄 간격 90 → 75
-        RowLabel("해상도", 125f);
-        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 125f), new Vector2(320f, 50f));
+        RowLabel("해상도", 160f);
+        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 160f), new Vector2(320f, 50f));
         res.text = Screen.width + " × " + Screen.height;
         System.Action<int> step = d =>
         {
@@ -794,16 +800,21 @@ public static class SettingsUI
             res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
             Deselect();
         };
-        UIKit.MakeButton(page, "<", new Vector2(-110f, 125f), new Vector2(80f, 64f), () => step(-1), 30f);
-        UIKit.MakeButton(page, ">", new Vector2(300f, 125f), new Vector2(80f, 64f), () => step(1), 30f);
+        UIKit.MakeButton(page, "<", new Vector2(-110f, 160f), new Vector2(80f, rowH), () => step(-1), 30f);
+        UIKit.MakeButton(page, ">", new Vector2(300f, 160f), new Vector2(80f, rowH), () => step(1), 30f);
 
         // 2.1.9: UI 크기 (모든 화면 글자 · 버튼 · HUD), 한 줄 더 넣으려고 줄 간격 90
-        CycleRow("UI 크기", 50f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
-        CycleRow("안내 메시지 크기", -25f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
+        CycleRow("UI 크기", 104f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
+        CycleRow("안내 메시지 크기", 48f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
                  "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다.");
-        ToggleRow("수직 동기화", -100f, () => GameSettings.VSync, v => GameSettings.VSync = v);
-        ToggleRow("화면 흔들림", -175f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
-        ToggleRow("번쩍임 효과", -250f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
+        CycleRow("최대 프레임", -8f, GameSettings.MaxFpsNames, () => GameSettings.MaxFpsIndex, v => GameSettings.MaxFpsIndex = v,
+                 "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
+        ToggleRow("수직 동기화", -64f, () => GameSettings.VSync, v => GameSettings.VSync = v,
+                  "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다.");
+        ToggleRow("프레임 표시", -120f, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
+                  "화면 오른쪽 위 구석에 초당 프레임 수(FPS)를 작게 표시합니다.");
+        ToggleRow("화면 흔들림", -176f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
+        ToggleRow("번쩍임 효과", -232f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
     }
 
     // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)
@@ -877,7 +888,7 @@ public static class SettingsUI
             UIKit.Remember(label, text);
             b.GetComponent<Image>().color = Gold;
         };
-        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
             set((get() + 1) % names.Length);
             Deselect();
@@ -900,7 +911,7 @@ public static class SettingsUI
             UIKit.Remember(label, text);
             b.GetComponent<Image>().color = on ? Gold : Off;
         };
-        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, 64f), () =>
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
             set(!get());
             Deselect();

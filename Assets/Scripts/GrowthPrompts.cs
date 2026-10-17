@@ -15,6 +15,13 @@ public class GrowthPrompts : MonoBehaviour
     LevelShop shop;
     float levelSince = -1f, treeSince = -1f, nextLevelNag, nextTreeNag;
     string shownText;
+    // 1.1.9: 머리 위 글자도 매 프레임 새로 이어 붙이던 것 → 상태가 바뀔 때 · 0.5초마다만 (키 · 언어 변경도 곧 반영)
+    int shownKey = -1;
+    float nextTextAt;
+    static readonly System.Func<string> LevelBanner = () =>
+        Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "\n[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기");
+    static readonly System.Func<string> TreeBanner = () =>
+        Loc.T("영혼 트리에서 배울 칸이 있습니다!") + "\n[" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("영혼 트리");
 
     void Start() => shop = FindFirstObjectByType<LevelShop>();
 
@@ -28,10 +35,9 @@ public class GrowthPrompts : MonoBehaviour
         bool tree = can && sm.TreeAffordable;
 
         float now = Time.unscaledTime;
-        Nag(level, ref levelSince, ref nextLevelNag, ref levelNags, LevelNagAfter, LevelNagEvery, now, sm,
-            Loc.T("레벨업 카드를 아직 고르지 않았습니다!") + "\n[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기"));     // 1.0.4~: 용어 통일
-        Nag(tree, ref treeSince, ref nextTreeNag, ref treeNags, TreeNagAfter, TreeNagEvery, now, sm,
-            Loc.T("영혼 트리에서 배울 칸이 있습니다!") + "\n[" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("영혼 트리"));
+        // 1.1.9: 배너 문자열은 실제로 띄울 때만 만듦 (예전엔 매 프레임 두 줄을 새로 이어 붙였음)
+        Nag(level, ref levelSince, ref nextLevelNag, ref levelNags, LevelNagAfter, LevelNagEvery, now, sm, LevelBanner);     // 1.0.4~: 용어 통일
+        Nag(tree, ref treeSince, ref nextTreeNag, ref treeNags, TreeNagAfter, TreeNagEvery, now, sm, TreeBanner);
 
         if (!level && !tree)
         {
@@ -41,12 +47,18 @@ public class GrowthPrompts : MonoBehaviour
         if (tag == null) Build();
         if (!tag.gameObject.activeSelf) tag.gameObject.SetActive(true);
 
+        int key = (level ? 1 : 0) | (tree ? 2 : 0) | ((level ? shop.PendingLevels : 0) << 2);
+        if (key != shownKey || now >= nextTextAt)
+        {
+        shownKey = key;
+        nextTextAt = now + 0.5f;
         string text = "";
         if (level)
             text += "<color=#FFD966>" + Loc.T("레벨업!") + " [" + KeyBindings.Name(GameAction.Interact) + "]" + (shop.PendingLevels > 1 ? " x" + shop.PendingLevels : "") + "</color>";
         if (tree)
             text += (text.Length > 0 ? "\n" : "") + "<color=#C9A0FF>" + Loc.T("영혼 트리") + " [" + KeyBindings.Name(GameAction.Upgrade) + "]</color>";
         if (text != shownText) { tag.text = text; shownText = text; }
+        }
 
         // 머리 위에서 통통 튀며 숨 쉬듯 커졌다 작아짐
         float bounce = Mathf.Abs(Mathf.Sin(now * 4f));
@@ -59,7 +71,7 @@ public class GrowthPrompts : MonoBehaviour
 
     // 오래 놓아두면 소리와 배너로 한 번 더
     // 1.0.4~: 최대 MaxNags 번 · 다른 알림(보스 · 상점 · 해금)이 떠 있으면 덮지 않고 잠시 미룸 · 보스전에는 종소리 없이
-    static void Nag(bool on, ref float since, ref float next, ref int count, float after, float every, float now, StageManager sm, string banner)
+    static void Nag(bool on, ref float since, ref float next, ref int count, float after, float every, float now, StageManager sm, System.Func<string> banner)
     {
         if (!on) { since = -1f; count = 0; return; }
         if (since < 0f) { since = now; next = now + after; return; }
@@ -67,7 +79,7 @@ public class GrowthPrompts : MonoBehaviour
         if (sm != null && sm.BannerBusy) { next = now + 3f; return; }
         next = now + every;
         count++;
-        if (sm != null) Notice.Toast(NoticeIcon.Up, banner, 4.5f);
+        if (sm != null) Notice.Toast(NoticeIcon.Up, banner(), 4.5f);
         if (bosss.LiveCount == 0) Hostile.Play("chime", 0.8f, 1.2f);
     }
 

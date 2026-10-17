@@ -811,18 +811,25 @@ public static class Hostile
     }
 
     // 반지름 안에 벽(구조물)이 있는지
+    // 1.1.9: 예전엔 OverlapCircleAll · OverlapPointAll 로 부를 때마다 배열을 새로 만듦(적 탄은 매 프레임 탄마다 → GC 끊김)
+    //   → 트리거를 빼는 필터 + 공용 버퍼 (벽은 트리거가 아니므로 결과 같음 · 적 · 탄 · 코인 같은 트리거로 버퍼가 차지 않음)
+    static readonly Collider2D[] wallBuf = new Collider2D[16];
+    static ContactFilter2D solidFilter = new ContactFilter2D { useTriggers = false };
+
     public static bool WallNear(Vector3 pos, float radius)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, radius))
-            if (!c.isTrigger && c.CompareTag("Wall")) return true;
+        int n = Physics2D.OverlapCircle(pos, radius, solidFilter, wallBuf);
+        for (int i = 0; i < n; i++)
+            if (!wallBuf[i].isTrigger && wallBuf[i].CompareTag("Wall")) return true;
         return false;
     }
 
     // 벽(맵 테두리, 구조물)인지
     public static bool IsWall(Vector3 pos)
     {
-        foreach (Collider2D c in Physics2D.OverlapPointAll(pos))
-            if (!c.isTrigger && c.CompareTag("Wall")) return true;
+        int n = Physics2D.OverlapPoint(pos, solidFilter, wallBuf);
+        for (int i = 0; i < n; i++)
+            if (!wallBuf[i].isTrigger && wallBuf[i].CompareTag("Wall")) return true;
         return false;
     }
 
