@@ -143,8 +143,9 @@ public class RunStats : MonoBehaviour
         string file = System.IO.Path.GetFileNameWithoutExtension(callerFile ?? "");
         // 1.0.4~ BossSkills.Reborn · BossSkills.Developer 처럼 나눈 파일도 보스 스킬로 (리치 왕 영혼구 · 뼈 감옥이 「기타」로 나왔음)
         if (file.StartsWith("BossSkills")) file = "BossSkills";
+        if (file.StartsWith("BossUltimate")) file = "BossUltimate";      // 1.2.5~ BossUltimate.Domain · BossUltimate.Developer 도 보스 결계
         // 1.0.1: 보스 · 적 스킬은 스킬 이름까지 (AttackLabel) — 예전엔 공용 판정을 거치면 보스 공격도 모두 「적 스킬」
-        string named = file == "EnemySkill" || file == "BossSkills" || file == "BossUltimate"
+        string named = file == "EnemySkill" || file == "BossSkills" || file == "BossUltimate" || file == "SpaceErosion"
             ? (AttackLabel.Pending ?? AttackLabel.FromStack()) : null;
         string key = named ?? file switch
         {
@@ -152,6 +153,7 @@ public class RunStats : MonoBehaviour
             "EnemySkill" => "적 스킬",
             "BossSkills" => "보스 스킬",
             "BossUltimate" => "보스 결계",
+            "SpaceErosion" => "공간 침식",
             "PlayerController" => "보스와 부딪힘",
             "EndlessTerrain" => AttackLabel.Pending ?? "용암 웅덩이",      // 1.2.3~ 무한 지형
             _ => DamageSource.Other,
@@ -574,7 +576,8 @@ public static class Hints
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
                                              "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
                                              "relic", "mapprop",         // 1.2~ 유물 · 맵 물체
-                                             "terrain", "endless.bossqueue" };   // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
+                                             "terrain", "endless.bossqueue",     // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
+                                             "bossult.shared" };                 // 1.2.5~ 통합 결계 게이지 · 공간 침식
 
     public static void ResetAll()
     {

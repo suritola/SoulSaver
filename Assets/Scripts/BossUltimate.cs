@@ -9,21 +9,29 @@ using UnityEngine.UI;
 // → 맵 전체가 어두워지고 보스 둘레에 둥근 결계가 펼쳐져 플레이어가 그 안에 갇힘 → 9초 동안 보스마다 다른 공격이 쏟아짐
 // (모두 경고를 먼저 보여 줘서 피할 수는 있음) → 결계가 깨지며 끝
 // 킹 슬라임은 갈라져도 게이지를 함께 씀 (한 번에 하나만)
-public class BossUltimate : MonoBehaviour
+public partial class BossUltimate : MonoBehaviour
 {
     public static bool Active { get; private set; }
     // 결계 이름 · 대사 연출 중 (게임이 멈춰 있음) — 일시정지 메뉴를 닫을 때 다시 흐르게 하지 않도록 (ESCmenu)
     public static bool CutscenePlaying { get; private set; }
 
-    // 보스 종류마다 게이지 (0 ~ 1)
-    static readonly float[] gauge = new float[4];
-    static readonly float[] refHp = new float[4];
+    // 게이지 칸 (0 ~ 1): 0 ~ 3 보스 종류 · 4 개발자 · 5 개발자 엄마
+    // (개발자 · 엄마는 bossKind 가 거울의 군주와 같은 3이라, 종류 번호 그대로 쓰면 거울의 군주 칸 · 「거울의 군주를 결계 전에」 업적이 오염됨)
+    public const int Slots = 6, DevSlot = 4, MomSlot = 5;
+    static readonly float[] gauge = new float[Slots];
+    static readonly float[] refHp = new float[Slots];
     // 마지막으로 맞은 때 (3초 동안 안 맞으면 게이지가 아주 서서히 줄어듦) · 이번 보스전에 결계를 펼쳤는지
-    static readonly float[] lastHit = new float[4];
-    static readonly bool[] usedThisFight = new bool[4];
-    static int decayFrame = -1;
-    public static float Gauge(int kind) => kind >= 0 && kind < gauge.Length ? gauge[kind] : 0f;
-    // 이번 보스전에 결계를 펼쳤는지 (업적: 거울의 군주를 결계 전에)
+    static readonly float[] lastHit = new float[Slots];
+    static readonly bool[] usedThisFight = new bool[Slots];
+    static readonly int[] decayFrame = { -1, -1, -1, -1, -1, -1 };      // 칸마다 (보스가 둘이면 한 칸만 줄던 것)
+    public static int SlotOf(bosss b) => b == null ? 0 : b.developer ? (b.developerMom ? MomSlot : DevSlot) : Mathf.Clamp(b.bossKind, 0, 3);
+    // 보스바 종류 번호(0 ~ 3 · 개발자 9 · 엄마 10)로 그 칸의 게이지
+    public static float Gauge(int kind)
+    {
+        int s = kind == bossbar.DeveloperKind ? DevSlot : kind == bossbar.DeveloperMomKind ? MomSlot : kind;
+        return s >= 0 && s < gauge.Length ? gauge[s] : 0f;
+    }
+    // 이번 보스전에 결계를 펼쳤는지 (업적: 거울의 군주를 결계 전에 · 칸 번호, 0 ~ 3 은 보스 종류와 같음)
     public static bool UsedThisFight(int kind) => kind >= 0 && kind < usedThisFight.Length && usedThisFight[kind];
 
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
@@ -37,6 +45,8 @@ public class BossUltimate : MonoBehaviour
         ("연옥 낙화", "하늘이 무너져 내린다.", new Color(1f, 0.45f, 0.12f)),
         ("산성 범람", "전부, 녹아내려라.", new Color(0.55f, 1f, 0.35f)),
         ("거울의 방", "네가 쌓아 온 모든 것을, 그대로 돌려주마.", new Color(0.78f, 0.9f, 1f)),
+        ("디버그 모드", "이 세계의 규칙은, 내가 쓴다.", new Color(1f, 0.85f, 0.35f)),                 // 개발자 (BossUltimate.Developer.cs)
+        ("엄마의 대청소", "다 치울 때까지, 아무 데도 못 나가.", new Color(1f, 0.6f, 0.78f)),          // 개발자 엄마 (EndlessMode.MomTint)
     };
 
     bosss boss;
@@ -47,7 +57,7 @@ public class BossUltimate : MonoBehaviour
     void Start()
     {
         boss = GetComponent<bosss>();
-        kind = boss != null ? Mathf.Clamp(boss.bossKind, 0, 3) : 0;
+        kind = SlotOf(boss);
         spawnedAt = Time.time;
         // 새 보스 (킹 슬라임은 첫 덩어리)가 나오면 게이지를 비우고 기준 체력을 정함
         if (boss != null && (kind != 2 || boss.slimeGen == 1))
@@ -62,51 +72,66 @@ public class BossUltimate : MonoBehaviour
 
     void OnDestroy()
     {
-        if (running) { CutscenePlaying = false; EndNow(); }
+        if (running)
+        {
+            // 컷신 도중 장면이 바뀌면 (ESC 「메인 메뉴로」 등) 멈춘 시간을 되돌림
+            if (CutscenePlaying) Time.timeScale = 1f;
+            CutscenePlaying = false;
+            EndNow();
+        }
+        DevHoldRelease(true);
     }
 
     // 보스가 맞을 때 (bosss.TakeDamage): 피해 비율의 1.2제곱 → 약한 공격 여러 번보다 강한 한 방이 더 많이 채움
     // (예전 5 · 1.3제곱은 너무 늦게 차서, 한 판에 약한 공격만으로도 두세 번 · 센 공격 위주면 네댓 번 차게)
     public static void OnBossHit(bosss b, float damage)
     {
-        if (b == null || Active || b.IsDead || b.developer || damage <= 0f) return;     // 개발자는 결계 대신 필살기만
-        int k = Mathf.Clamp(b.bossKind, 0, 3);
+        if (b == null || Active || b.IsDead || damage <= 0f) return;     // 개발자 · 엄마도 자기 칸(4 · 5)에 참 (체력 비율 기준이라 체력이 커도 같은 비율로)
+        int k = SlotOf(b);
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         // 약한 공격도 피해 비율의 3.5배는 채움 (1.2제곱만이면 평타가 거의 안 차서 · 보스 체력 3% 이상의 센 한 방은 그대로)
         float gain = Mathf.Max(7f * Mathf.Pow(f, 1.2f), 3.5f * f) * SoulWeight.BarrierGaugeMul;     // 1.2~ 영혼의 무게 3: 더 빨리 참
+        if (shared) { SharedHit(b, k, Mathf.Min(0.5f, gain)); return; }      // 1.2.5~ 보스가 둘 이상이면 통합 게이지 (BossUltimate.Erosion.cs)
         gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.5f, gain));
         lastHit[k] = Time.time;
     }
 
     void Update()
     {
+        // 1.2.5~ 통합 게이지 (한 프레임 한 번) · 통합 모드면 개별 줄어듦 · 40% · 발동은 통합 게이지가 맡음 (BossUltimate.Erosion.cs)
+        SharedTick();
+        if (shared) { if (kind >= DevSlot) DevHoldRelease(true); return; }
         if (!Active && boss != null && !boss.IsDead)
         {
             // 3초 동안 안 맞으면 게이지가 아주 서서히 (초당 0.4%) 줄어듦 · 갈라진 슬라임은 한 번만 줄게
-            if (decayFrame != Time.frameCount && Time.time - lastHit[kind] > 3f && gauge[kind] < 1f)
+            if (decayFrame[kind] != Time.frameCount && Time.time - lastHit[kind] > 3f && gauge[kind] < 1f)
             {
-                decayFrame = Time.frameCount;
+                decayFrame[kind] = Time.frameCount;
                 gauge[kind] = Mathf.Max(0f, gauge[kind] - 0.004f * Time.deltaTime);
             }
             // 보스전마다 적어도 한 번: 아직 펼치지 않았는데 체력이 40% 아래로 내려가면 게이지가 가득 참
             if (!usedThisFight[kind] && boss.setEnemyHP > 0 && boss.EnemyHealth < boss.setEnemyHP * 0.4f)
                 gauge[kind] = 1f;
         }
-        if (Active || boss == null || boss.IsDead || boss.developer || gauge[kind] < 1f) return;
-        if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || boss.casting) return;
+        if (kind >= DevSlot) DevHoldRelease();      // 개발자 · 엄마 대기가 풀릴 일 (쓰러짐 · 다른 결계) — BossUltimate.Developer.cs
+        if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
+        // 개발자 · 엄마는 겹쳐 쓰는 영웅 필살기로 casting 이 늘 켜져 있어 아래 DevReady 가 따로 기다림 (최대 3초)
+        if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || (boss.casting && kind < DevSlot)) return;
         if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ChoiceUI.Open || ESCmenu.IsOpen) return;
         // 킹 슬라임: 살아 있는 덩어리 중 체력이 가장 많은 하나만 씀
         if (kind == 2 && !IsStrongestSlime()) return;
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying) return;
+        if (kind >= DevSlot && !DevReady()) return;
         StartCoroutine(Run());
     }
 
+    static readonly List<bosss> slimeBuf = new List<bosss>(4);      // 1.2.5: 부를 때마다 new List 를 만들었음 → 하나를 비워 다시 씀
+
     bool IsStrongestSlime()
     {
-        List<bosss> live = new List<bosss>();
-        bosss.CollectLiveSlimes(live);
-        foreach (bosss s in live) if (s != boss && s.EnemyHealth > boss.EnemyHealth) return false;
+        bosss.CollectLiveSlimes(slimeBuf);
+        foreach (bosss s in slimeBuf) if (s != boss && s.EnemyHealth > boss.EnemyHealth) return false;
         return true;
     }
 
@@ -124,6 +149,7 @@ public class BossUltimate : MonoBehaviour
     {
         running = true;
         Active = true;
+        SetWindowPending();         // 컷신 · 펼침 동안 보스바는 가득 (BossUltimate.Erosion.cs)
         gauge[kind] = 0f;
         usedThisFight[kind] = true;
         boss.casting = true;
@@ -138,18 +164,30 @@ public class BossUltimate : MonoBehaviour
         if (player != null) player.GrantInvincibility(2f);
         HideWalls(true);
         yield return Expand(info.color);
-        float until = Time.time + (kind == 2 ? SlimeDuration : Duration);
+        float until = Time.time + (kind == 2 ? SlimeDuration : kind == DevSlot ? DevDuration : kind == MomSlot ? MomDuration : Duration);
+        SetActiveWindow(Time.time, until);      // 1.2.5~ 보스바가 결계 중 남은 시간을 그림 (BossUltimate.Erosion.cs)
         int hurtBefore = PlayerController.HurtCount;
-        IEnumerator attack = kind == 0 ? LichBarrage(until) : kind == 1 ? HellBarrage(until) : kind == 2 ? SlimeBarrage(until) : MirrorBarrage(until);
+        IEnumerator attack;
+        if (kind >= DevSlot) attack = DevDomainAttack(until);
+        else
+        {
+            // 1.2.5~ 결계 공격은 맥락(DomainCtx) 기반 static (공간 침식과 같은 코드 · 개별은 tempo 1 이라 예전과 같음)
+            soloCtx.Reset(kind, boss, this, center, Radius, until, false, info.color, domainRoot.transform);
+            attack = BarrageFor(soloCtx);
+            soloCtx.routine = attack;
+        }
         StartCoroutine(attack);
         while (Time.time < until && boss != null && !boss.IsDead && player != null && !player.IsDying)
         {
-            Confine(player);
-            RepelMobs(Radius);
-            Animate(info.color);
+            // 엄마 「통금 시간」이 결계 반지름 · 고리 색을 바꿈 (다른 결계는 늘 Radius · 결계 색)
+            radiusNow = kind >= DevSlot ? devCtx.radius : Radius;
+            Confine(player, radiusNow);
+            RepelMobs(radiusNow);
+            Animate(kind >= DevSlot ? devCtx.ringTint : info.color);
             yield return null;
         }
         StopCoroutine(attack);
+        DevDomainStop();
         FadeLichBeams();
         // 업적: 결계 중 보스를 쓰러뜨림 · 끝까지 버팀 · 한 번도 맞지 않음
         if (boss == null || boss.IsDead) SteamAchievements.Unlock(SteamAchievements.BarrierBreak);
@@ -168,11 +206,14 @@ public class BossUltimate : MonoBehaviour
     void EndNow()
     {
         FadeLichBeams();
+        soloCtx.running = false;        // 남은 불씨 운석 등 같이 멈춤 (이미 예고된 땅 타격은 끝까지 떨어짐)
+        DevDomainStop();
         HideWalls(false);
         restUntil = Time.time + 15f;
         if (domainRoot != null) Destroy(domainRoot);
         if (aura != null) Destroy(aura);
         if (boss != null) boss.casting = false;
+        radiusNow = Radius;
         Active = false;
         running = false;
     }
@@ -230,7 +271,7 @@ public class BossUltimate : MonoBehaviour
 
         // 쾅! 이름이 내려꽂히며 흔들림 + 외침
         PlaySfx("domain_shout", 1f);
-        Hostile.Play("roar", 1f, kind == 3 ? 0.5f : kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
+        Hostile.Play("roar", 1f, kind == MomSlot ? 1.15f : kind == DevSlot ? 0.95f : kind == 3 ? 0.5f : kind == 2 ? 0.75f : kind == 1 ? 0.6f : 0.8f);
         fx?.Shake(0.9f, 0.6f);
         for (float t = 0f; t < hold && !skipped; t += CutDt(canvas))
         {
@@ -269,7 +310,7 @@ public class BossUltimate : MonoBehaviour
     }
 
     // 1.0.4~ 보스 종류마다 결계 컷신을 이번 실행에서 본 적 있는지 (두 번째부터 짧게)
-    static readonly bool[] cutSeen = new bool[4];
+    static readonly bool[] cutSeen = new bool[Slots];
 
     // 1.0.4~ 컷신 건너뛰기: 클릭 · Space · Enter (일시정지 메뉴가 열려 있을 때 · 트레일러 자동 조종 중엔 아님)
     static bool SkipPressed()
@@ -295,7 +336,7 @@ public class BossUltimate : MonoBehaviour
         PlaySfx("domain_open", 1f);
         Hostile.Shake(0.5f);
 
-        MeshRenderer dark = DarkMesh(domainRoot.transform, color);
+        MeshRenderer dark = DarkMesh(domainRoot.transform, DarkTintOf(kind, color));     // 개발자는 터미널 초록 · 엄마는 집 불빛으로 안쪽이 물듦
         ring = Hostile.NewLine("DomainRing", color, 0.9f, 40);
         ring.loop = true;
         ring.transform.SetParent(domainRoot.transform, true);
@@ -345,11 +386,19 @@ public class BossUltimate : MonoBehaviour
         if (ring != null)
         {
             // 1.2.4: 중심 · 반지름이 결계 내내 그대로라 처음 한 번만 그림 (폭 · 색만 맥동)
-            if (ringDrawn != ring) { Hostile.SetArc(ring, center, Radius, 0f, 360f); ringDrawn = ring; }
+            // 엄마 「통금 시간」에는 반지름이 바뀌는 동안만 다시 그림 · 어둠 메시도 크기만 같이 (새 메시 없음)
+            if (ringDrawn != ring || ringDrawnR != radiusNow)
+            {
+                Hostile.SetArc(ring, center, radiusNow, 0f, 360f);
+                ringDrawn = ring;
+                ringDrawnR = radiusNow;
+                Transform dk = domainRoot != null ? domainRoot.transform.Find("DomainDark") : null;     // DarkMesh 가 만든 자식
+                if (dk != null) dk.localScale = Vector3.one * (radiusNow / Radius);
+            }
             ring.startWidth = ring.endWidth = 0.8f + 0.25f * pulse;
             ring.startColor = ring.endColor = Color.Lerp(color, Color.white, 0.25f * pulse);
         }
-        if (ring2 != null) Hostile.SetArc(ring2, center, Radius - 0.4f, Time.time * 40f, Time.time * 40f + 360f);
+        if (ring2 != null) Hostile.SetArc(ring2, center, radiusNow - 0.4f, Time.time * 40f, Time.time * 40f + 360f);
         PlayerController pl = Hostile.Player;
         if (pl != null)
         {
@@ -374,26 +423,22 @@ public class BossUltimate : MonoBehaviour
         if (Random.value < 0.4f)
         {
             float a = Random.Range(0f, Mathf.PI * 2f);
-            Fx.Spawn("fx_spark", center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Radius, 2f, color, 18f);
+            Fx.Spawn("fx_spark", center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radiusNow, 2f, color, 18f);
         }
     }
 
-    // 결계 안의 잡몹은 가장자리 밖으로 튕겨 나가고, 바깥 잡몹은 벽에 막혀 들어오지 못함 (보스와 1:1)
-    EnermyController[] mobs = new EnermyController[0];
-    float mobsAt;
+    float radiusNow = Radius, ringDrawnR = -1f;     // 지금 결계 반지름 (엄마 「통금 시간」만 바꿈)
 
+    // 결계 안의 잡몹은 가장자리 밖으로 튕겨 나가고, 바깥 잡몹은 벽에 막혀 들어오지 못함 (보스와 1:1)
+    // 1.2.5~ 켜진 잡몹 전부 = EnermyController.Live (예전 0.2초마다 FindObjectsByType 과 같은 대상 · 장면 검색 · 배열 할당 없음 · 새로 들어온 잡몹도 바로)
     void RepelMobs(float r)
     {
-        if (Time.time > mobsAt)
-        {
-            mobsAt = Time.time + 0.2f;
-            // 1.2.4: 같은 대상(켜진 잡몹 전부) · 번호순 정렬만 뺌 (반지름 질의로 바꾸면 0.2초 사이 들어온 잡몹을 놓쳐 결과가 달라짐)
-            mobs = FindObjectsByType<EnermyController>(FindObjectsSortMode.None);
-        }
+        List<EnermyController> mobs = EnermyController.Live;
         float edge = r + 0.9f;
         int sparks = 0;
-        foreach (EnermyController e in mobs)
+        for (int m = mobs.Count - 1; m >= 0; m--)
         {
+            EnermyController e = mobs[m];
             if (e == null) continue;
             Vector3 pos = e.transform.position;
             Vector3 d = pos - center;
@@ -510,8 +555,10 @@ public class BossUltimate : MonoBehaviour
         for (int i = 0; i < 36; i++)
         {
             float a = i * 10f * Mathf.Deg2Rad;
-            Vector3 at = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Radius;
-            Fx.Spawn("fx_spark", at, 2.6f, Color.Lerp(color, Color.white, 0.5f), 16f);
+            Vector3 at = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radiusNow;
+            // 개발자 「디버그 모드」는 초록 · 흰색이 번갈아 튀는 글리치 불꽃
+            Color sc = kind == DevSlot ? (i % 2 == 0 ? DevTerminal : Color.white) : Color.Lerp(color, Color.white, 0.5f);
+            Fx.Spawn("fx_spark", at, 2.6f, sc, 16f);
         }
         Fx.Spawn("fx_shock", center, Radius * 2.4f, Color.white, 14f);
         MeshRenderer dark = domainRoot != null ? domainRoot.GetComponentInChildren<MeshRenderer>() : null;
@@ -526,320 +573,24 @@ public class BossUltimate : MonoBehaviour
     }
 
     // ================================================================= 보스마다 다른 공격
-    // 망자의 묘역 (리치 왕): 회전하는 영혼 광선 넷 + 틈이 있는 영혼 고리 + 발밑 뼈 가시
-    IEnumerator LichBarrage(float until)
-    {
-        Color soul = Info[0].color, curse = new Color(0.75f, 0.4f, 1f);
-        float angle = Random.Range(0f, 90f), spin = Random.value < 0.5f ? 22f : -22f;
-        float nextRing = Time.time + 0.6f, nextSpike = Time.time;
-        LineRenderer[] warn = new LineRenderer[4];
-        for (int i = 0; i < 4; i++) { warn[i] = Hostile.NewLine("LichBeamWarn", new Color(soul.r, soul.g, soul.b, 0.3f), 0.18f, 30); warn[i].transform.SetParent(domainRoot.transform, true); }
-        float live = Time.time + 1.4f, beamHit = 0f;
-        for (int i = 0; i < 4; i++)
-        {
-            float a0 = (angle + i * 90f) * Mathf.Deg2Rad;
-            Warn((boss != null ? boss.transform.position : center) + new Vector3(Mathf.Cos(a0), Mathf.Sin(a0)) * 7f, 1.4f, 1.6f);
-        }
-        FxAnim[] beams = lichBeams;
-        Color[] beamColors = new Color[4];
-        while (Time.time < until)
-        {
-            angle += spin * Time.deltaTime;
-            Vector3 c = boss != null ? boss.transform.position : center;
-            bool on = Time.time > live;
-            for (int i = 0; i < 4; i++)
-            {
-                float a = (angle + i * 90f) * Mathf.Deg2Rad;
-                Vector3 end = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Radius * 2f;
-                warn[i].positionCount = 2;
-                warn[i].SetPosition(0, c);
-                warn[i].SetPosition(1, end);
-                if (on)
-                {
-                    // 1.2.4: 빔 넷을 매 프레임 지우고 새로 만들던 것 → 처음 한 번 만들고 매 프레임 자리 · 각도 · 길이만 옮기고 새것처럼 다시 시작
-                    //   (보이는 것: 늘 첫 그림 · 원래 색 그대로 = 매 프레임 새로 만든 빔과 같음, 공격이 멈추면 원래처럼 0.08초 뒤 스스로 사라짐)
-                    if (beams[i] == null)
-                    {
-                        beams[i] = Fx.Beam(c, end, 1.4f, soul, -1f, 22);      // 수명은 직접 (멈추면 FadeLichBeams 가 원래 수명 0.08 을 줌)
-                        if (beams[i] != null) beamColors[i] = beams[i].sr.color;
-                    }
-                    else PlaceBeam(beams[i], c, end, beamColors[i]);
-                }
-            }
-            PlayerController p = Hostile.Player;
-            if (on && p != null && (beamHit -= Time.deltaTime) <= 0f)
-                for (int i = 0; i < 4; i++)
-                {
-                    float a = (angle + i * 90f) * Mathf.Deg2Rad;
-                    Vector3 end = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Radius * 2f;
-                    if (Hostile.DistanceToSegment(p.transform.position, c, end) < 0.85f) { p.TryHit(16f * Power); beamHit = 0.4f; break; }
-                }
-            if (Time.time >= nextRing)
-            {
-                nextRing = Time.time + 1.75f;       // 1.0.1: 2장 결계 살짝 완화 (1.5 → 1.75)
-                int n = 26, gap = Random.Range(0, n);
-                for (int i = 0; i < n; i++)
-                {
-                    if (Mathf.Abs(i - gap) <= 2 || Mathf.Abs(i - gap) >= n - 2) continue;     // 다섯 칸짜리 틈
-                    float a = i * Mathf.PI * 2f / n;
-                    Hostile.Shoot(c, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 6.5f, 14f * Power, 0.5f, curse, 1.6f, 3f);
-                }
-                Hostile.Play("shimmer", 0.5f, 0.6f);
-            }
-            if (Time.time >= nextSpike && p != null)
-            {
-                nextSpike = Time.time + 0.68f;      // 1.0.1: 0.55 → 0.68 · 예고 0.75 → 0.85
-                Vector3 at = p.transform.position + (Vector3)(Random.insideUnitCircle * 1.5f);
-                StartCoroutine(Spike(at, 1.7f, 0.85f, soul, 18f * Power, "fx_spike"));
-            }
-            yield return null;
-        }
-        for (int i = 0; i < beams.Length; i++) { if (beams[i] != null) Destroy(beams[i].gameObject); beams[i] = null; }
-    }
-
-    readonly FxAnim[] lichBeams = new FxAnim[4];
+    // 1.2.5~ 네 결계 공격은 BossUltimate.Domain.cs (DomainCtx 기반 static · 공간 침식과 같은 코드)
+    readonly DomainCtx soloCtx = new DomainCtx();      // 개별 결계 맥락 (결계마다 Reset 해서 다시 씀)
 
     // 공격이 도중에 멈추면 (결계 끝 · 보스 사라짐): 매 프레임 새로 만들던 때처럼 마지막 빔이 0.08초 동안 흐려지며 스스로 사라짐
-    void FadeLichBeams()
-    {
-        for (int i = 0; i < lichBeams.Length; i++)
-        {
-            FxAnim b = lichBeams[i];
-            lichBeams[i] = null;
-            if (b == null) continue;
-            b.life = 0.08f;
-            b.Restart();
-        }
-    }
-
-    // Fx.Beam 과 같은 계산으로 이미 있는 빔을 옮김 (두께 · 그림 · 색은 만들 때 그대로, 수명 · 프레임은 처음부터)
-    static void PlaceBeam(FxAnim a, Vector3 from, Vector3 to, Color color)
-    {
-        Vector3 d = to - from;
-        float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
-        Vector3 mid = (from + to) * 0.5f;
-        Transform tr = a.transform;
-        tr.position = new Vector3(mid.x, mid.y, 0f);
-        tr.rotation = Quaternion.Euler(0f, 0f, angle);
-        if (a.frames != null && a.frames.Length > 0) a.sr.sprite = a.frames[0];
-        float unit = a.sr.sprite.bounds.size.x;
-        Vector3 s = tr.localScale;
-        tr.localScale = new Vector3(d.magnitude / unit, s.y, 1f);
-        a.sr.color = color;
-        a.Restart();
-    }
-
-    // 연옥 낙화 (지옥의 군주) — 1.0.1 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
-    // 불을 빼고 운석만 세 박자로 번갈아: ① 곳곳에 한꺼번에 떨어지는 운석 비 → ② 내 자리의 거대 운석 → ③ 틈이 있는 운석 행진
-    // 1.0.1: 너무 쉬웠음 → 운석 비가 더 많고 일부는 나를 노림 · 거대 운석은 둘레를 막고 한 번 더 · 행진이 빨라짐,
-    //        그리고 내내 내 발밑으로 작은 불씨 운석이 떨어져 가만히 서 있을 수 없음 (예고는 모두 0.9초 이상)
-    IEnumerator HellBarrage(float until)
-    {
-        Color fire = Info[1].color;
-        StartCoroutine(HellEmbers(until, fire));
-        int beat = 0;
-        while (Time.time < until)
-        {
-            PlayerController p = Hostile.Player;
-            Vector3 me = p != null ? p.transform.position : center;
-            switch (beat++ % 3)
-            {
-                case 0:     // 운석 비: 결계 곳곳 12개 + 내 둘레 5개 (내 발밑 바로는 아님)
-                    for (int i = 0; i < 12; i++)
-                    {
-                        Vector3 at = center + (Vector3)(Random.insideUnitCircle * (Radius - 2f));
-                        StartCoroutine(Spike(at, 2.6f, 1.05f, fire, 22f * Power, "fx_meteor"));
-                    }
-                    for (int i = 0; i < 5; i++)
-                    {
-                        float a = (i * 72f + Random.Range(0f, 72f)) * Mathf.Deg2Rad;
-                        StartCoroutine(Spike(me + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3f, 6f), 2.4f, 1.05f, fire, 22f * Power, "fx_meteor"));
-                    }
-                    Hostile.Play("whoosh", 0.6f, 0.7f);
-                    yield return new WaitForSeconds(1.7f);
-                    break;
-                case 1:     // 거대 운석: 지금 내 자리 (반지름 6, 예고 1.3초) + 둘레 여섯 곳 → 피한 자리로 한 번 더
-                {
-                    StartCoroutine(Spike(me, 6f, 1.3f, fire, 30f * Power, "fx_meteor"));
-                    float off = Random.Range(0f, 60f);
-                    for (int i = 0; i < 6; i++)
-                    {
-                        float a = (off + i * 60f) * Mathf.Deg2Rad;
-                        StartCoroutine(Spike(me + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 9.5f, 2.2f, 1.3f, fire, 22f * Power, "fx_meteor"));
-                    }
-                    Hostile.Play("whoosh", 0.8f, 0.5f);
-                    yield return new WaitForSeconds(1.4f);
-                    p = Hostile.Player;
-                    if (p != null) StartCoroutine(Spike(p.transform.position, 4.5f, 1.1f, fire, 26f * Power, "fx_meteor"));
-                    Hostile.Play("whoosh", 0.8f, 0.6f);
-                    yield return new WaitForSeconds(1.3f);
-                    break;
-                }
-                default:    // 운석 행진: 한쪽에서 반대쪽으로 줄지어 떨어짐, 줄 가운데 한 칸은 비움
-                {
-                    float ang = Random.Range(0f, Mathf.PI * 2f);
-                    Vector3 dir = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang));
-                    Vector3 side = new Vector3(-dir.y, dir.x);
-                    int gap = Random.Range(-2, 3);
-                    for (int row = -6; row <= 6; row++)
-                    {
-                        Vector3 rowAt = me + dir * (row * 4f);
-                        for (int k = -4; k <= 4; k++)
-                        {
-                            if (k == gap) continue;                 // 피할 틈
-                            StartCoroutine(Spike(rowAt + side * (k * 4f), 2f, 1f, fire, 22f * Power, "fx_meteor"));
-                        }
-                        yield return new WaitForSeconds(0.16f);
-                    }
-                    yield return new WaitForSeconds(0.8f);
-                    break;
-                }
-            }
-        }
-    }
-
-    // 연옥 낙화 내내: 0.9초마다 내 자리에 작은 불씨 운석 (멈춰 있으면 맞음)
-    IEnumerator HellEmbers(float until, Color fire)
-    {
-        yield return new WaitForSeconds(1.2f);
-        while (Time.time < until && running)        // 결계가 일찍 끝나면 (보스 처치 · 쓰러짐) 같이 멈춤
-        {
-            PlayerController p = Hostile.Player;
-            if (p != null) StartCoroutine(Spike(p.transform.position, 1.6f, 0.9f, fire, 16f * Power, "fx_meteor"));
-            yield return new WaitForSeconds(0.9f);
-        }
-    }
-
-    // 거울의 방 (거울의 군주 · 2.1.1): 결계 둘레의 거울 여덟 개가 차례로 플레이어를 노려 광선을 되쏘고,
-    // 깨진 거울 조각이 발밑에 쏟아지며, 가끔 보스에게서 반사 조각 고리가 퍼짐
-    IEnumerator MirrorBarrage(float until)
-    {
-        Color glass = Info[3].color;
-        const int count = 8;
-        Vector3[] mirrors = new Vector3[count];
-        for (int i = 0; i < count; i++)
-        {
-            float a = (i * 360f / count + 22.5f) * Mathf.Deg2Rad;
-            mirrors[i] = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (Radius - 2f);
-            FxAnim m = Fx.Play("fx_rune", mirrors[i], 4f, new Color(glass.r, glass.g, glass.b, 0.85f), 1f, 0f, 20, true, until - Time.time);
-            if (m != null) { m.spin = 60f; m.transform.SetParent(domainRoot.transform, true); }
-        }
-        float nextBeam = Time.time + 0.6f, nextShard = Time.time, nextRing = Time.time + 2.5f;
-        int turn = 0;
-        while (Time.time < until)
-        {
-            PlayerController p = Hostile.Player;
-            if (Time.time >= nextBeam && p != null)
-            {
-                nextBeam = Time.time + 1.25f;
-                // 마주 보는 거울 둘이 동시에 (사이로 빠져나갈 수 있게 한 쌍씩)
-                StartCoroutine(MirrorBeam(mirrors[turn % count], p.transform.position, glass));
-                StartCoroutine(MirrorBeam(mirrors[(turn + count / 2 + 1) % count], p.transform.position, glass));
-                turn += 3;
-            }
-            if (Time.time >= nextShard && p != null)
-            {
-                nextShard = Time.time + 0.45f;
-                Vector3 at = Random.value < 0.6f ? p.transform.position + (Vector3)(Random.insideUnitCircle * 3f) : center + (Vector3)(Random.insideUnitCircle * (Radius - 1f));
-                StartCoroutine(Spike(at, 1.8f, 1f, glass, 18f * Power, "fx_spike"));
-            }
-            if (Time.time >= nextRing && boss != null)
-            {
-                nextRing = Time.time + 3.6f;
-                const int n = 18;
-                float off = Random.Range(0f, 360f);
-                for (int i = 0; i < n; i++)
-                {
-                    float a = (off + i * 360f / n) * Mathf.Deg2Rad;
-                    Hostile.Shoot(boss.transform.position, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), 6.5f, 14f * Power, 0.5f, glass, 1.6f, 5f);
-                }
-                Hostile.Play("shimmer", 0.5f, 1.2f);
-            }
-            yield return null;
-        }
-    }
-
-    IEnumerator MirrorBeam(Vector3 from, Vector3 aim, Color glass)
-    {
-        Vector3 dir = (aim - from).normalized;
-        Vector3 to = from + dir * Radius * 2.1f;
-        Hostile.Line(from, to, 2f, 1.15f, Bright(glass));
-        Warn(Vector3.Lerp(from, aim, 0.5f), 1.15f, 1.6f);
-        yield return new WaitForSeconds(1.15f);
-        Fx.Beam(from, to, 1.8f, new Color(0.85f, 0.95f, 1f), 0.35f);
-        PlayerController p = Hostile.Player;
-        if (p != null && Hostile.DistanceToSegment(p.transform.position, from, to) < 1.1f) p.TryHit(22f * Power);
-        Hostile.Play("zap", 0.6f, 0.9f);
-    }
-
-    // 산성 범람 (킹 슬라임): 결계 벽에 튕기는 슬라임 덩어리 + 쏟아지는 산성 비 (2.2.1~ 9초 · 덩어리 최대 3 · 줄무늬 간헐천 없음)
-    IEnumerator SlimeBarrage(float until)
-    {
-        Color acid = Info[2].color;
-        float nextBall = Time.time, nextRain = Time.time + 0.3f;
-        List<GameObject> balls = new List<GameObject>();
-        while (Time.time < until)
-        {
-            PlayerController p = Hostile.Player;
-            // 피하기 쉽게: 튕기는 산성 덩어리 1.4초마다 (최대 3), 산성 비 1.3초마다 3곳 · 예고 1.3초
-            if (Time.time >= nextBall && balls.Count < 3)
-            {
-                nextBall = Time.time + 1.4f;
-                balls.Add(Bouncer(boss != null ? boss.transform.position : center, acid, until - Time.time));
-            }
-            if (Time.time >= nextRain && p != null)
-            {
-                nextRain = Time.time + 1.3f;
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector3 at = i == 0 ? p.transform.position : p.transform.position + (Vector3)(Random.insideUnitCircle * 5f);
-                    StartCoroutine(Spike(at, 1.8f, 1.3f, acid, 16f * Power, "fx_geyser"));
-                }
-            }
-            balls.RemoveAll(g => g == null);
-            yield return null;
-        }
-        foreach (GameObject g in balls) if (g != null) Destroy(g);
-    }
-
-    GameObject Bouncer(Vector3 from, Color acid, float life)
-    {
-        if (Hostile.Glow == null) return null;
-        GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
-        HostileProjectile.Dress(g, acid, 1.6f * HostileProjectile.LookMul);       // 1.0.1: 다른 적 탄처럼 테두리 구슬로 또렷하게 (1.1.9: 그림만 1.2배, 닿는 거리 1.1 그대로)
-        DomainBall b = g.AddComponent<DomainBall>();
-        b.center = center;
-        b.radius = Radius - 0.6f;
-        b.velocity = Random.insideUnitCircle.normalized * 5.5f;
-        b.damage = 15f * Power;
-        b.life = Mathf.Max(1f, life);
-        return g;
-    }
-
-    // 경고 원 → 위에서 떨어져(또는 솟아) 터짐
-    IEnumerator Spike(Vector3 at, float r, float warn, Color color, float damage, string fx)
-    {
-        if ((at - center).magnitude > Radius - 0.5f) at = center + (at - center).normalized * (Radius - 0.5f);
-        Hostile.Circle(at, r, warn, Bright(color));
-        Hostile.Circle(at, r * 0.55f, warn, new Color(1f, 1f, 1f, 0.75f));
-        Warn(at, warn, r);
-        yield return new WaitForSeconds(warn);
-        Fx.Spawn(fx, at + Vector3.up * (fx == "fx_meteor" ? 0.5f : 1.2f), r * 2.2f, Color.white, 18f, 0f, 14);
-        Fx.Spawn("fx_explosion", at, r * 1.8f, color, 20f);
-        Hostile.HitCircle(at, r, damage);
-    }
+    void FadeLichBeams() => soloCtx.FadeBeams();
+    // 튕기는 덩어리 · 땅 타격(예전 Spike 코루틴)은 BossUltimate.Domain.cs 의 Bouncer · DomainStrikes (타격마다 코루틴을 만들지 않음)
 
     // ================================================================= 도우미
     // 결계 공격 예고: 크게 흔들리는 느낌표 + 번쩍이는 원 (어두운 결계 안에서도 바로 보이게)
-    static void Warn(Vector3 at, float duration, float size)
+    // 1.2.5: 예고마다 Fx.Play(새 오브젝트) + AddComponent<WarnPop> 이던 것 → 풀(Fx.SpawnPop · FxAnim.pop)로 (공간 침식은 초당 5 ~ 8개)
+    internal static void Warn(Vector3 at, float duration, float size)
     {
-        FxAnim a = Fx.Play("fx_warn", at + Vector3.up * 0.3f, Mathf.Clamp(size * 0.9f, 1.3f, 2.4f), Color.white, 6f, 0f, 45, true, duration);
-        if (a != null) a.gameObject.AddComponent<WarnPop>();
+        Fx.SpawnPop("fx_warn", at + Vector3.up * 0.3f, Mathf.Clamp(size * 0.9f, 1.3f, 2.4f), Color.white, 6f, 45, duration);
         Fx.Spawn("fx_shock", at, Mathf.Max(2f, size * 2.2f), new Color(1f, 0.3f, 0.25f, 0.85f), 22f);
     }
 
     // 예고 색을 더 진하고 밝게
-    static Color Bright(Color c) => new Color(Mathf.Min(1f, c.r * 1.15f + 0.1f), Mathf.Min(1f, c.g * 1.15f + 0.05f), Mathf.Min(1f, c.b * 1.15f + 0.05f), 0.95f);
+    internal static Color Bright(Color c) => new Color(Mathf.Min(1f, c.r * 1.15f + 0.1f), Mathf.Min(1f, c.g * 1.15f + 0.05f), Mathf.Min(1f, c.b * 1.15f + 0.05f), 0.95f);
 
     // 결계 밖을 덮는 어둠 (둥근 구멍이 뚫린 큰 고리 메시): 안쪽은 보스 색으로 살짝 물듦
     MeshRenderer DarkMesh(Transform parent, Color color)
@@ -971,12 +722,31 @@ public class DomainBall : MonoBehaviour
     public Vector3 center;
     public float radius, damage, life;
     public Vector2 velocity;
+    // 1.2.5~ 공간 침식 · 개발자 버그가 같이 씀: 맥락(있으면 중심 · 반지름을 매 프레임 여기서 · 엄마 통금), 닿는 거리, 자국 색 · 그림, 받은 피해 이름
+    public DomainCtx ctx;
+    public float hitRadius = 1.1f;
+    public Color trailColor = new Color(0.55f, 1f, 0.35f, 0.6f);
+    public string trailFx = "fx_puddle";
+    public string label;
     float age, trail;
+
+    // 결계 전체에서 튕기는 것 (침식 최대 4 · 개별 3) — 켜질 때 넣고 꺼질 때 빼서 쌓이지 않음
+    public static readonly List<DomainBall> Live = new List<DomainBall>(8);
+    void OnEnable() => Live.Add(this);
+    void OnDisable() => Live.Remove(this);
+
+    // 이 맥락이 만든 것만 지움 (공격이 끝날 때)
+    public static void DestroyOf(DomainCtx d)
+    {
+        for (int i = Live.Count - 1; i >= 0; i--)
+            if (Live[i] != null && Live[i].ctx == d) Destroy(Live[i].gameObject);
+    }
 
     void Update()
     {
         age += Time.deltaTime;
         if (age >= life || !BossUltimate.Active) { Destroy(gameObject); return; }
+        if (ctx != null) { center = ctx.center; radius = ctx.radius - 0.6f; }
         transform.position += (Vector3)(velocity * Time.deltaTime);
         Vector3 d = transform.position - center;
         if (d.magnitude > radius)
@@ -987,24 +757,15 @@ public class DomainBall : MonoBehaviour
         }
         transform.localScale = Vector3.one * ((0.46f + 0.04f * Mathf.Sin(age * 12f)) * HostileProjectile.LookMul);     // HostileProjectile.Dress 의 빛 크기 (지름 1.6 × 1.2 × 2.3 ÷ 8)
         trail += Time.deltaTime;
-        if (trail > 0.12f) { trail = 0f; Fx.Spawn("fx_puddle", transform.position, 1.2f, new Color(0.55f, 1f, 0.35f, 0.6f), 14f); }
+        if (trail > 0.12f) { trail = 0f; Fx.Spawn(trailFx, transform.position, 1.2f, trailColor, 14f); }
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(p.transform.position, transform.position) < 1.1f) p.TryHit(damage);
+        if (p != null && Vector2.Distance(p.transform.position, transform.position) < hitRadius)
+        {
+            AttackLabel.Pending = label;
+            p.TryHit(damage);
+            AttackLabel.Pending = null;
+        }
     }
 }
 
-// 결계 공격 예고 느낌표: 튀어나왔다가 두근거림
-public class WarnPop : MonoBehaviour
-{
-    Vector3 baseScale;
-    float t;
-
-    void Start() => baseScale = transform.localScale;
-
-    void Update()
-    {
-        t += Time.deltaTime;
-        float pop = t < 0.15f ? Mathf.Lerp(1.8f, 1f, t / 0.15f) : 1f + 0.12f * Mathf.Sin(t * 18f);
-        transform.localScale = baseScale * pop;
-    }
-}
+// 결계 공격 예고 느낌표의 튀어나왔다가 두근거림은 1.2.5~ 풀 이펙트의 FxAnim.pop (Fx.SpawnPop) — 예전 WarnPop 컴포넌트는 예고마다 새 오브젝트에 붙었음

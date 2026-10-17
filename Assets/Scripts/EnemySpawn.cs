@@ -75,7 +75,14 @@ public class EnemySpawner : MonoBehaviour
     // 화면에 남은 잡몹을 가까운 것부터 영혼으로 흩음 (개발자 · 개발자 엄마가 나올 때)
     public void ClearMobs() => StartCoroutine(PurgeAll());
     // 앞쪽 장은 한 화면 최대 수를 줄임 (Chapters · 2.1.5)
-    int MaxAlive => Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+    // 1.2.5~ 무한 모드 영혼을 모으는 국면(개발자 처치 뒤 ~ 엄마 강림 전)은 Surge 로 불어난 수와 상관없이 EndlessMode.AfterDevMaxAlive 까지
+    int MaxAlive => GameMode.IsEndless && EndlessMode.GatheringSouls
+        ? Mathf.Min(EndlessMode.AfterDevMaxAlive, AliveLimit + GameMode.ExtraAliveCount)
+        : Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+    // 1.2.5~ 같은 국면의 생성 간격은 고정 (Surge ×16 · 강도 · 3배 부스트가 겹쳐 매 프레임 나오던 것을)
+    float NextSpawnDelay => GameMode.IsEndless && EndlessMode.GatheringSouls
+        ? EndlessMode.AfterDevSpawnEvery
+        : Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);     // 앞쪽 장은 드물게 (2.1.5)
 
     void Start()
     {
@@ -114,13 +121,13 @@ public class EnemySpawner : MonoBehaviour
     IEnumerator SpawnLoop()
     {
         // 간격이 매번 달라 WaitForSeconds 를 캐시할 수 없어 직접 시간을 잼 (스폰마다 할당 없음 · 프레임 단위로 깨는 것은 같음)
-        float next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);     // 앞쪽 장은 드물게 (2.1.5)
+        float next = Time.time + NextSpawnDelay;
         while (true)
         {
             yield return null;
             if (Time.time < next) continue;
             if (spawningEnabled) SpawnEnemy(false, transform.position);
-            next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);
+            next = Time.time + NextSpawnDelay;
         }
     }
 

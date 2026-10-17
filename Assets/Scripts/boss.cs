@@ -45,6 +45,8 @@ public class bosss : MonoBehaviour
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주
     // 스킬 시전 중에는 걸어서 움직이지 않음
     [HideInInspector] public bool casting;
+    // 1.2.5~ 공간 침식 동안 제자리에 섬 (casting 과 따로 · 개발자 필살기가 casting 을 꺼도 걷지 않게, SpaceErosion)
+    [System.NonSerialized] public bool domainHold;
 
     float summonTimer;
     EnemySpawner spawner;
@@ -86,7 +88,7 @@ public class bosss : MonoBehaviour
     static bool slimeBossCleared;    // 보스 처치는 한 번만
     // 난이도 배율을 이미 적용했는지
     [HideInInspector] public bool difficultyApplied;
-    // 무한 모드 최종 보스 「개발자」 (1.0.2 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)만 다르고 결계는 쓰지 않음
+    // 무한 모드 최종 보스 「개발자」 (1.0.2 · EndlessMode 가 Start 전에 정함): 이름 · 스킬(BossSkills.Developer)이 다르고, 결계는 「디버그 모드」 · 「엄마의 대청소」(BossUltimate.Developer)
     [HideInInspector] public bool developer;
     // 1.0.4~ 30분의 「개발자 엄마」 (developer 도 함께 켜짐): 개발자의 모든 능력치 2배 · 몸 색 (피격 번쩍임 · 스킬 예고가 끝나면 이 색으로 돌아감)
     [HideInInspector] public bool developerMom;
@@ -228,7 +230,7 @@ public class bosss : MonoBehaviour
     void FixedUpdate()
     {
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null && !casting) transform.Translate(move * speed * EnermyController.GlobalSpeedMultiplier * Time.fixedDeltaTime);
+        if (!isDead && player != null && !casting && !domainHold) transform.Translate(move * speed * EnermyController.GlobalSpeedMultiplier * Time.fixedDeltaTime);
     }
 
     public void TakeDamage(float damage, float knockBack, Vector3 dir)

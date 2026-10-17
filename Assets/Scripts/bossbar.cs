@@ -46,6 +46,7 @@ public class bossbar : MonoBehaviour
         BarY = barRect.sizeDelta.y;
 
         HealthBarFeel.ResetStatics();
+        BossUltimate.ResetStatics();       // 1.2.5~ 통합 결계 게이지 · 공간 침식 대기 · 쉬는 시간 · 땅 타격 대기열 (장면마다)
         // 조각: 채움 막대와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제(backBar 복제)에도 함께 따라감
         // 1.2.0: Instantiate(bar) 복제 대신 (PlayerHP 의 자기 복제 연쇄와 같은 일이 생기지 않게 · HealthBarFeel.MakeGhost 는 스크립트 · 자식을 복제하지 않음)
         Image gi = HealthBarFeel.MakeGhost(bar.GetComponent<Image>(), GhostName);
@@ -525,18 +526,31 @@ public class bossbar : MonoBehaviour
             ultFillImg = fill.GetComponent<Image>();
             ultFillImg.raycastTarget = false;
         }
-        // 1.1~: 개발자 · 개발자 엄마는 결계를 쓰지 않음 → 늘 비어 있는 게이지(엄마는 「결계」 글자까지)가 보였음, 게이지째 숨김
-        bool hasUlt = bossKind < DeveloperKind;
+        // 1.2.5~ 개발자 · 개발자 엄마도 결계(디버그 모드 · 엄마의 대청소)를 씀 → 게이지가 보임 (칸 4 · 5, BossUltimate.Gauge 가 9 · 10 을 바꿔 읽음)
         GameObject gaugeObj = ultFill.parent.gameObject;
-        if (gaugeObj.activeSelf != hasUlt) gaugeObj.SetActive(hasUlt);
-        if (!hasUlt) return;
-        float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
+        if (!gaugeObj.activeSelf) gaugeObj.SetActive(true);
+        // 1.2.5~ 보스가 둘 이상이면 통합 게이지 하나 (맨 위 줄에만 · 「공간 침식 ×n」) · 결계 · 침식 중에는 남은 시간 (1 → 0)
+        bool shared = BossUltimate.Shared || BossUltimate.ErosionActive;
+        float g = BossUltimate.Active ? BossUltimate.RemainingFrac : shared ? BossUltimate.SharedGauge : BossUltimate.Gauge(bossKind);
         // 최적화: 1/300 단위로 맞춰 바뀔 때만 크기를 씀 (예전엔 매 프레임 같은 값을 썼음)
         float gq = Mathf.Round(g * 300f) / 300f;
         if (gq != shownUlt) { shownUlt = gq; ultFill.sizeDelta = new Vector2(UltWidth * gq, 10f); }
-        UltLabel(g);
-        float pulse = g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
-        Color uc = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        UltLabel(BossUltimate.Active ? 0f : g, shared);
+        Color uc;
+        if (BossUltimate.ErosionPending || (shared && !BossUltimate.Active && g >= 1f))
+            uc = Mathf.Repeat(Time.unscaledTime * 6f, 1f) < 0.5f ? new Color(1f, 0.25f, 0.3f) : Color.white;       // 가득 참 · 대기: 빨강 · 흰색 빠른 깜빡임
+        else if (shared)
+        {
+            // 진보라 → 핏빛 (값에 따라) · 85%부터 깜빡임
+            Color baseC = Color.Lerp(new Color(0.54f, 0.17f, 0.89f), new Color(0.88f, 0.19f, 0.29f), g);
+            float pulse = !BossUltimate.Active && g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
+            uc = Color.Lerp(baseC, Color.white, 0.35f * pulse);
+        }
+        else
+        {
+            float pulse = !BossUltimate.Active && g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
+            uc = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        }
         if (ultFillImg.color != uc) ultFillImg.color = uc;
     }
 
@@ -545,7 +559,9 @@ public class bossbar : MonoBehaviour
     Loc.Lang ultLabelLang;
     bool ultHintTried;
 
-    void UltLabel(float g)
+    int ultLabelCount = -1;     // 1.2.5~ 「공간 침식 ×n」의 n (n · 언어가 바뀔 때만 글자를 새로 씀)
+
+    void UltLabel(float g, bool shared)
     {
         if (ultLabel == null)
         {
@@ -555,12 +571,15 @@ public class bossbar : MonoBehaviour
             r.SetParent(ultFill.parent, false);                  // 게이지 배경 안 (아래로 쌓는 체력바 복제에는 들어가지 않음)
             r.anchorMin = r.anchorMax = new Vector2(1f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
-            r.sizeDelta = new Vector2(120f, 22f);
+            r.sizeDelta = new Vector2(260f, 22f);         // 1.2.5: 「공간 침식 ×n」 (120 → 260 · 자동 크기)
             r.anchoredPosition = new Vector2(6f, 0f);
             TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
             t.font = nameText.font;
             t.fontSharedMaterial = nameText.fontSharedMaterial;
             t.fontSize = 18f;
+            t.enableAutoSizing = true;
+            t.fontSizeMin = 14f;
+            t.fontSizeMax = 18f;
             t.color = new Color(0.82f, 0.6f, 1f);
             t.alignment = TextAlignmentOptions.MidlineLeft;
             t.enableWordWrapping = false;
@@ -568,9 +587,15 @@ public class bossbar : MonoBehaviour
             ultLabel = t;
             ultLabelLang = (Loc.Lang)(-1);
         }
-        if (ultLabelLang != Loc.Current) { ultLabelLang = Loc.Current; ultLabel.text = Loc.T("결계"); }
-        bool hasUlt = bossKind < DeveloperKind;                   // 개발자 · 개발자 엄마는 결계 대신 필살기만
-        if (ultLabel.enabled != hasUlt) ultLabel.enabled = hasUlt;
+        int n = shared ? Mathf.Max(2, BossUltimate.SharedCount) : 0;
+        if (ultLabelLang != Loc.Current || ultLabelCount != n)
+        {
+            ultLabelLang = Loc.Current;
+            ultLabelCount = n;
+            ultLabel.text = n > 0 ? Loc.T("공간 침식 ×{0}").Replace("{0}", n.ToString()) : Loc.T("결계");
+            ultLabel.color = n > 0 ? new Color(1f, 0.55f, 0.65f) : new Color(0.82f, 0.6f, 1f);
+        }
+        if (!ultLabel.enabled) ultLabel.enabled = true;            // 1.2.5~ 개발자 · 엄마도 결계를 씀
         if (!ultHintTried && g >= 0.15f)
         {
             ultHintTried = true;

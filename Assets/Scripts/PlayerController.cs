@@ -223,6 +223,7 @@ public class PlayerController : MonoBehaviour
     // 후반 도적이 주체할 수 없이 빨라졌음 → 기본 속도의 1.3배까지는 그대로, 넘는 몫은 40%만, 최대 1.7배 (둔화는 그대로 적용)
     const float SpeedSoftCap = 1.3f, SpeedOverRate = 0.4f, SpeedHardCap = 1.7f;
     float baseMoveSpeed = -1f;
+    public float BaseMoveSpeed => baseMoveSpeed > 0f ? baseMoveSpeed : speed;     // 엄마 결계 「청소기」 끄는 힘의 기준 (걸어서 빠져나갈 수 있게)
     float CappedSpeed(float raw)
     {
         if (baseMoveSpeed <= 0f) return raw;
@@ -1312,7 +1313,7 @@ void Shoot()
         // 도적 회피 본능: 확률로 공격을 피함
         if (special != null && special.KitDodge()) return false;
 
-        invincibleUntil = Time.time + hurtInvincibleTime;
+        invincibleUntil = Time.time + hurtInvincibleTime + BossUltimate.DevHurtGraceBonus + BossUltimate.ErosionHurtGrace;     // 개발자 · 엄마 결계 중 +0.2초 (한 패턴에 연달아 맞지 않게)
 
         if (!SkinAudio.PlayHurt() && audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);      // 캐릭터 스킨 피격 소리
 

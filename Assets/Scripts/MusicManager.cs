@@ -85,7 +85,7 @@ public class MusicManager : MonoBehaviour
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         Hook(spawner);
         // 1.1.2~ 무한 모드 최종 보스 (개발자 · 엄마) 전용 곡 — 등장 배너 1초 전부터 쓰러질 때까지 (EndlessMode.FinalBossMusic · 둘이 함께면 엄마 곡)
-        // 결계 곡보다 앞에 둠: 개발자 · 엄마는 결계를 쓰지 않고(BossUltimate 가 developer 를 거름) 다른 보스는 모두 쓰러진 뒤라 결계가 켜질 일이 없지만,
+        // 결계 곡보다 앞에 둠: 1.2.5~ 개발자 · 엄마도 결계(디버그 모드 · 엄마의 대청소)를 쓰지만 결계 동안에도 전용 곡을 그대로 둠,
         // 혹시 켜지더라도 24초짜리 결계 곡이 1분 넘게 고조되는 최종 곡을 끊지 않게. 보스 곡 붙잡아 두기(BossFight)는 이 아래에서만 평가되므로 서로 건드리지 않음
         if (GameMode.IsEndless && EndlessMode.Instance != null)
         {
@@ -98,10 +98,17 @@ public class MusicManager : MonoBehaviour
         // 1.1.2~: 예전엔 무한 모드 보스전에서 보스 곡 4바퀴(102.4초)마다 4장 곡(bgm_abyss)과 번갈아 틀어서,
         //         보스와 싸우는 중에 「갑자기 일반 배경음으로 바뀌는」 것처럼 들렸음 → 보스전 내내 보스 곡
         if (BossFight) return "bgm_boss";
-        // 1.1~: 무한 모드는 같은 짧은 곡만 수십 분 반복되지 않게 시간에 따라 돌려 씀 (보스가 없을 때만)
-        float played = Time.timeSinceLevelLoad;
+        // 1.1~: 무한 모드는 같은 짧은 곡만 수십 분 반복되지 않게 돌려 씀 (보스가 없을 때만)
+        // 1.2.5~ 무한 모드는 「보스를 쓰러뜨릴 때마다」 다음 곡으로 (사막 → 동굴 → 지옥 → 초원 → 심연 → …)
+        //   예전엔 판 시간 128초마다 바꿔서, 첫 보스(4분)가 나오기도 전인 2분 8초쯤 아무 일도 없는데 사막 곡이 곡 중간에서 1.2초 만에 동굴 곡으로 바뀌었음
+        //   (판 시간은 레벨업 · 상점 · 일시정지 창에서 멈추지만 음악은 계속 흘러 곡 끝과도 맞지 않았음). 이제 곡은 보스 곡을 사이에 두고만 바뀌고,
+        //   처치 수는 이어하기에 저장되므로 이어해도 같은 곡. 일일 도전도 같음
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
-        if (GameMode.IsEndless) return EndlessTracks[((int)(played / 128f)) % EndlessTracks.Length];
+        if (GameMode.IsEndless)
+        {
+            if (EndlessMode.Instance == null) return EndlessTracks[0];      // 일일 도전도 같은 규칙 (예전 128초 시간 순환은 곡 중간에 갑자기 바뀌었음)
+            return EndlessTracks[EndlessMode.Instance.BossesDefeated % EndlessTracks.Length];
+        }
         return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_abyss";
     }
 

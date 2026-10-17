@@ -29,7 +29,9 @@ public static class AttackLabel
     public static string FromCaller(string file, string member)
     {
         string f = System.IO.Path.GetFileNameWithoutExtension(file ?? "");
-        if (f == "BossUltimate") return "보스 결계";
+        // 1.2.5~ 나눈 파일(BossUltimate.Domain · BossUltimate.Developer)도 「보스 결계」, 공간 침식은 「공간 침식」 (예전엔 이름이 정확히 같을 때만이라 「적 탄환」으로 나왔음)
+        if (f.StartsWith("BossUltimate")) return "보스 결계";
+        if (f == "SpaceErosion") return "공간 침식";
         if (f.StartsWith("BossSkills") && member != null && BossSkill.TryGetValue(member, out string boss)) return boss;
         if (f == "EnemySkill" && System.Enum.TryParse(member, out EnemySkillType type) && type != EnemySkillType.None) return EnemySkill.SkillName(type);
         return null;
@@ -55,6 +57,7 @@ public static class AttackLabel
                     t = t.DeclaringType;
                 }
                 if (t == typeof(BossUltimate)) return "보스 결계";
+                if (t == typeof(SpaceErosion)) return "공간 침식";
                 if (t == typeof(BossSkills) && BossSkill.TryGetValue(method, out string boss)) return boss;
                 if (t == typeof(EnemySkill) && System.Enum.TryParse(method, out EnemySkillType type) && type != EnemySkillType.None)
                     return EnemySkill.SkillName(type);
