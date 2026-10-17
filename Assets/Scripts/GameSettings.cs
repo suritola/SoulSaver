@@ -26,12 +26,14 @@ public static class GameSettings
     const string NoticeSizeKey = "settings.noticeSize";
     const string ConfineKey = "settings.confineCursor";
     const string OneClickKey = "settings.oneClickPick";
+    const string MaxFpsKey = "settings.maxFps";
+    const string ShowFpsKey = "settings.showFps";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     // 1.1.9~ 기본값 (처음 불러올 때 · 설정 「이 탭 기본값으로」가 같이 써서 어긋나지 않게)
     const float DefVolume = 0.5f, DefMusic = 1f, DefSfx = 1f, DefMouseSens = 1f;
-    const bool DefMute = true, DefVSync = true, DefShake = true, DefFlash = true;
-    const int DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
+    const bool DefMute = true, DefVSync = false, DefShowFps = false, DefShake = true, DefFlash = true;
+    const int DefMaxFps = 1, DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
     const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false;
 
     static bool loaded;
@@ -39,13 +41,15 @@ public static class GameSettings
     static Loc.Lang language = Loc.Lang.Korean;
     static float volume = 0.5f;
     static float music = 1f, sfx = 1f;
-    static bool shake = true, flash = true, vsync = true;
+    static bool shake = true, flash = true, vsync;
     static bool hints = true, colorBlind = false, keyIcons = true, gameCursor = true, autoLevelUp, muteUnfocused = true;
     static int uiScale = 2;
     static int damageNumbers;
     static int myFxAlpha;
     static int noticeSize = 1;
     static bool confineCursor = DefConfine, oneClickPick = DefOneClick;
+    static int maxFps = DefMaxFps;
+    static bool showFps;
 
     public static Loc.Lang Language
     {
@@ -113,7 +117,9 @@ public static class GameSettings
         sfx = Prefs.GetFloat(SfxKey, DefSfx);
         shake = Prefs.GetInt(ShakeKey, B(DefShake)) == 1;
         flash = Prefs.GetInt(FlashKey, B(DefFlash)) == 1;
-        vsync = Prefs.GetInt(VSyncKey, B(DefVSync)) == 1;
+        vsync = Prefs.GetInt(VSyncKey, B(DefVSync)) == 1;            // 1.1.9~ 기본 끔 (최대 프레임으로 제한)
+        maxFps = Mathf.Clamp(Prefs.GetInt(MaxFpsKey, DefMaxFps), 0, MaxFpsValues.Length - 1);
+        showFps = Prefs.GetInt(ShowFpsKey, B(DefShowFps)) == 1;
         hints = Prefs.GetInt(HintsKey, B(DefHints)) == 1;
         damageNumbers = Mathf.Clamp(Prefs.GetInt(DamageNumKey, DefDamageNumbers), 0, 2);
         myFxAlpha = Mathf.Clamp(Prefs.GetInt(FxAlphaKey, DefMyFxAlpha), 0, MyFxAlphas.Length - 1);
@@ -154,7 +160,7 @@ public static class GameSettings
 
     public static void ResetDisplay()           // 화면 모드 · 해상도는 그대로
     {
-        UiScaleIndex = DefUiScale; NoticeSize = DefNoticeSize; VSync = DefVSync; ScreenShake = DefShake; Flashes = DefFlash;
+        UiScaleIndex = DefUiScale; NoticeSize = DefNoticeSize; VSync = DefVSync; MaxFpsIndex = DefMaxFps; ShowFps = DefShowFps; ScreenShake = DefShake; Flashes = DefFlash;
         Save();
     }
 
@@ -279,13 +285,31 @@ public static class GameSettings
     public static bool VSync
     {
         get { Load(); return vsync; }
-        set { Load(); vsync = value; Prefs.SetInt(VSyncKey, value ? 1 : 0); ApplyVSync(); }
+        set { Load(); vsync = value; Prefs.SetInt(VSyncKey, value ? 1 : 0); ApplyFrameRate(); }
     }
 
-    static void ApplyVSync()
+    // 1.1.9~ 최대 프레임: 30 · 60(기본) · 120 · 144 · 제한 없음 (수직 동기화를 켜면 모니터 주사율이 우선)
+    public static readonly int[] MaxFpsValues = { 30, 60, 120, 144, -1 };
+    public static readonly string[] MaxFpsNames = { "30", "60", "120", "144", "제한 없음" };
+    public static int MaxFpsIndex
     {
+        get { Load(); return maxFps; }
+        set { Load(); maxFps = Mathf.Clamp(value, 0, MaxFpsValues.Length - 1); Prefs.SetInt(MaxFpsKey, maxFps); ApplyFrameRate(); }
+    }
+
+    // 1.1.9~ 화면 구석 FPS 숫자 (FpsCounter)
+    public static bool ShowFps
+    {
+        get { Load(); return showFps; }
+        set { Load(); showFps = value; Prefs.SetInt(ShowFpsKey, value ? 1 : 0); FpsCounter.Refresh(); }
+    }
+
+    // 프레임 설정은 여기 한 곳에서만 (targetFrameRate · vSyncCount)
+    static void ApplyFrameRate()
+    {
+        if (Application.isBatchMode) return;
         QualitySettings.vSyncCount = vsync ? 1 : 0;
-        Application.targetFrameRate = -1;
+        Application.targetFrameRate = vsync ? -1 : MaxFpsValues[maxFps];
     }
 
     // 설정 창을 닫을 때 디스크에 바로 기록 (비정상 종료에도 남도록)
@@ -303,7 +327,8 @@ public static class GameSettings
             if (detected != language) { language = detected; Loc.RaiseChanged(); }
         }
         AudioListener.volume = volume;
-        if (!Application.isBatchMode) ApplyVSync();
+        ApplyFrameRate();
+        FpsCounter.Refresh();
         Loc.ApplyFonts();
         SceneLocalizer.RefreshAll();
         SceneManager.sceneLoaded += (s, m) =>

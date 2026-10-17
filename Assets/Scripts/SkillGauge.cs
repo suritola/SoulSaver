@@ -121,8 +121,17 @@ public class SkillGauge : MonoBehaviour
         }
         // 게이지 틀이 튀어 오름 (가득 찬 순간 크게, 그 뒤 작게)
         float pop = full && flashes ? 0.22f * Mathf.Sin(Mathf.Clamp01(since / 0.35f) * Mathf.PI) : 0f;
-        if (gaugeImage != null && gaugeImage.transform.parent != null && gaugeImage.transform.parent.GetComponent<Canvas>() == null)
+        if (gaugeImage != null && gaugeImage.transform.parent != null && !ParentIsCanvas(gaugeImage.transform.parent))
             gaugeImage.transform.parent.localScale = frameScale * (1f + pop + 0.05f * tick);
+    }
+
+    // 1.1.9: 매 프레임 GetComponent<Canvas>() 대신 부모가 바뀔 때만 찾음
+    Transform canvasCheckParent;
+    bool canvasCheckResult;
+    bool ParentIsCanvas(Transform parent)
+    {
+        if (parent != canvasCheckParent) { canvasCheckParent = parent; canvasCheckResult = parent.GetComponent<Canvas>() != null; }
+        return canvasCheckResult;
     }
 
     void Update()
@@ -146,6 +155,9 @@ public class SkillGauge : MonoBehaviour
         }
         if (gaugeImage != null) baseColor = gaugeImage.color;
         MakeGlow();
+        // 1.1.9: 차오르는 게이지 · 후광 색이 매 프레임 바뀌어도 HUD 전체(루트 캔버스)를 다시 묶지 않게 하위 캔버스로
+        if (gaugeImage != null) UiScaler.Isolate(gaugeImage.gameObject);
+        if (glow != null) UiScaler.Isolate(glow.gameObject);
 
         UpdateGauge();
     }
@@ -191,7 +203,8 @@ public class SkillGauge : MonoBehaviour
 
         float value = (float)SkillPoint / MaxSkillPoint;
 
-        gaugeImage.fillAmount = value;
+        // 1.1.9: 차는 중엔 1/300 단위로만 고침 (매 프레임 fillAmount 가 바뀌면 HUD 캔버스 전체를 매 프레임 다시 빌드함 · 눈에는 같음)
+        gaugeImage.fillAmount = value >= 1f ? 1f : Mathf.Floor(value * 300f) / 300f;
 
 
         // 충전 중에는 청록색, 가득 차면 금색

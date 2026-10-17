@@ -20,6 +20,7 @@ public class Level : MonoBehaviour
     void Start()
     {
         EXPmaxWidth = GetComponent<RectTransform>().sizeDelta.x;
+        UiScaler.Isolate(EXPgauge);                     // 1.1.9: 경험치 막대가 처치마다 바뀌어도 HUD 전체를 다시 묶지 않게
         playerEXP = FindFirstObjectByType<PlayerController>().nowEXP;
         playerMaxEXP = FindFirstObjectByType<PlayerController>().needEXP;
         playerLevel = FindFirstObjectByType<PlayerController>().level;
@@ -44,6 +45,8 @@ public class Level : MonoBehaviour
         playerEXP = player.nowEXP;
         playerMaxEXP = player.needEXP;
         if (gauge == null) gauge = EXPgauge.GetComponent<RectTransform>();
-        gauge.sizeDelta = new Vector2(playerEXP > 0 ? playerEXP / playerMaxEXP * EXPmaxWidth : 0, gauge.sizeDelta.y);
+        // 1.1.9: 값이 바뀔 때만 씀 (캔버스 다시 묶기 줄임)
+        float w = playerEXP > 0 ? playerEXP / playerMaxEXP * EXPmaxWidth : 0;
+        if (Mathf.Abs(gauge.sizeDelta.x - w) > 0.01f) gauge.sizeDelta = new Vector2(w, gauge.sizeDelta.y);
     }
 }

@@ -179,6 +179,7 @@ public class DamagePopup : MonoBehaviour
     void Add(float damage, HealthBarFeel.Tier tier)
     {
         bool first = amount <= 0f;
+        SetMeshAlpha(1f);      // 사라지던 숫자에 합치거나 다시 쓸 때 정점 알파를 되돌림
         amount += damage;
         if ((int)tier > tierMax) tierMax = (int)tier;
         lastAdd = Time.time;
@@ -235,9 +236,27 @@ public class DamagePopup : MonoBehaviour
         float pop = popT < 0.08f ? 1f + popAmp * (1f - popT / 0.08f) : 1f;
         transform.position = start + new Vector3(0f, (boss ? BossRise : Rise) * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
-        Color c = text.color;
-        c.a = k < 0.6f ? 1f : 1f - (k - 0.6f) / 0.4f;
-        text.color = c;
+        // 1.1.9: 사라지는 알파를 text.color 로 바꾸면 TMP 가 매 프레임 글자 메시를 통째로 다시 만들었음 (최대 80개)
+        //   → 이미 만든 메시의 정점 알파만 바꿈 (같은 모습 · 메시 재생성 없음)
+        SetMeshAlpha(k < 0.6f ? 1f : 1f - (k - 0.6f) / 0.4f);
+    }
+
+    byte meshAlpha = 255;
+    void SetMeshAlpha(float a)
+    {
+        byte b = (byte)Mathf.RoundToInt(Mathf.Clamp01(a) * 255f);
+        if (b == meshAlpha) return;
+        meshAlpha = b;
+        TMP_TextInfo info = text.textInfo;
+        if (info == null || info.meshInfo == null) return;
+        for (int i = 0; i < info.meshInfo.Length; i++)
+        {
+            Color32[] cols = info.meshInfo[i].colors32;
+            if (cols == null) continue;
+            int n = Mathf.Min(info.meshInfo[i].vertexCount, cols.Length);
+            for (int j = 0; j < n; j++) cols[j].a = b;
+        }
+        text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
 
     // 장면이 바뀌어 지워질 때 (살아 있던 것만 셈에서 뺌)

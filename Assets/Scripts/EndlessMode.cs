@@ -555,15 +555,19 @@ public class FireFlicker : MonoBehaviour
 {
     Vector3 baseScale;
     float seed, nextSpark;
+    SpriteRenderer sr;
 
     void Start()
     {
         baseScale = transform.localScale;
         seed = Random.Range(0f, 10f);
+        sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
+        // 1.1.9: 화면 밖 화로 · 불기둥은 흔들림 · 불티를 건너뜀 (안 보이므로 겉모습 같음)
+        if (sr != null && !sr.isVisible) return;
         float t = Time.time * 7f + seed;
         transform.localScale = new Vector3(baseScale.x * (1f + 0.03f * Mathf.Sin(t * 1.3f)), baseScale.y * (1f + 0.07f * Mathf.Sin(t)), 1f);
         if (Time.time >= nextSpark)

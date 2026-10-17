@@ -4,6 +4,8 @@ using UnityEngine;
 public static class Juice
 {
     static float lastPop;
+    static float burstWindow = -9f;
+    static int burstCount, shockCount;
 
     // 스테이지마다 영혼 색이 다름 (1장 청록 · 2장 불꽃 · 3장 풀빛 · 4장 보랏빛 · 무한 금빛)
     static Color StageColor()
@@ -16,8 +18,11 @@ public static class Juice
     public static void EnemyDied(Vector3 pos, float size)
     {
         Color c = SkinFx.KillColor(StageColor());       // 이펙트 스킨이 있으면 스킨 색
-        Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f);
-        if (size > 1.2f) Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f);
+        // 1.1.9: 한꺼번에 많이 죽을 때(무한 모드 초반 · 범위 스킬) 처치 연출이 화면을 덮어 내장 그래픽에서 프레임이 무너졌음
+        //   → 0.05초 동안 처치 폭발 8개 · 충격파 3개까지 (평소 처치 속도에서는 그대로 다 나옴)
+        if (Time.time - burstWindow >= 0.05f) { burstWindow = Time.time; burstCount = 0; shockCount = 0; }
+        if (burstCount < 8 || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f); }
+        if (size > 1.2f && shockCount < 3) { shockCount++; Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f); }
         // 한꺼번에 많이 죽어도 소리가 뭉개지지 않게
         if (Time.time - lastPop > 0.045f)
         {
@@ -101,17 +106,37 @@ public static class Juice
 
     // ---------------- 적 피격 흰 번쩍임 (SpriteOutline 셰이더의 _Flash, 렌더러마다)
     public static readonly int FlashId = Shader.PropertyToID("_Flash");
-    static MaterialPropertyBlock flashBlock;
     public static readonly WaitForEndOfFrame EndOfFrame = new WaitForEndOfFrame();
+
+    // 1.1.9: 예전엔 MaterialPropertyBlock 으로 _Flash 를 넣고 끌 때도 블록을 남겨 둬서(1.1.1 _MainTex 문제 회피),
+    //   한 번 맞은 적은 판 끝까지 배칭에서 빠져 적마다 드로우콜이 따로 생겼음(내장 그래픽에서 큰 렉)
+    //   → 번쩍이는 동안만 _Flash=1 인 공유 재질로 바꿨다가 원래 재질로 되돌림 (블록을 아예 쓰지 않음 · 겉모습 같음)
+    static readonly System.Collections.Generic.Dictionary<Material, Material> flashOf = new System.Collections.Generic.Dictionary<Material, Material>();
+    static readonly System.Collections.Generic.Dictionary<Material, Material> originalOf = new System.Collections.Generic.Dictionary<Material, Material>();
 
     public static void SetFlash(SpriteRenderer sr, bool on)
     {
         if (sr == null) return;
-        // 1.1.1: 끌 때 SetPropertyBlock(null) 로 블록을 통째로 지우면 스프라이트 그림(_MainTex)까지 지워져 적이 하얗게 남았음 → 값만 0 으로
-        if (flashBlock == null) flashBlock = new MaterialPropertyBlock();
-        sr.GetPropertyBlock(flashBlock);
-        flashBlock.SetFloat(FlashId, on ? 1f : 0f);
-        sr.SetPropertyBlock(flashBlock);
+        Material cur = sr.sharedMaterial;
+        if (cur == null) return;
+        if (on)
+        {
+            if (originalOf.ContainsKey(cur)) return;        // 이미 번쩍이는 중
+            // 처음이거나, 만들어 둔 번쩍임 재질이 사라졌으면(에셋 정리) 다시 만듦
+            if (!flashOf.TryGetValue(cur, out Material f) || (f == null && !ReferenceEquals(f, null)))
+            {
+                f = null;
+                if (cur.HasProperty(FlashId))
+                {
+                    f = new Material(cur) { name = cur.name + "_Flash" };
+                    f.SetFloat(FlashId, 1f);
+                    originalOf[f] = cur;
+                }
+                flashOf[cur] = f;
+            }
+            if (f != null) sr.sharedMaterial = f;
+        }
+        else if (originalOf.TryGetValue(cur, out Material orig) && orig != null) sr.sharedMaterial = orig;
     }
 
     // ---------------- 총알 명중음: 0.03초 간격, 동시에 최대 4개
