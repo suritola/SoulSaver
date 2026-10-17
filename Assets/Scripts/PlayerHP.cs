@@ -42,14 +42,11 @@ public class PlayerHP : MonoBehaviour
         gauge = HPgauge.GetComponent<RectTransform>();
         gaugeImg = HPgauge.GetComponent<Image>();
         if (gaugeImg != null) gaugeColor = gaugeImg.color;
-        // 조각: HPgauge 를 복제해 바로 뒤(형제 순서 한 칸 앞)에 — 같은 앵커 · 피벗 · 위치라 길이만 다르게 하면 됨
-        GameObject g = Instantiate(HPgauge, HPgauge.transform.parent);
-        g.name = "HPghost";
-        g.transform.SetSiblingIndex(HPgauge.transform.GetSiblingIndex());
-        ghost = g.GetComponent<RectTransform>();
-        ghostImg = g.GetComponent<Image>();
-        if (ghostImg != null) { ghostImg.raycastTarget = false; ghostImg.color = HealthBarFeel.GhostColor(0f); ghostImg.enabled = false; }
-        foreach (Transform c in g.transform) Destroy(c.gameObject);     // 복제된 자식(있다면)은 지움
+        // 조각: 채움 막대(HPgauge)와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 길이만 다르게 하면 됨
+        // 1.2.0: Instantiate(HPgauge) 로 복제하던 것을 바꿈 — 씬에서 PlayerHP 가 HPgauge 자신에 붙어 있어 복제본의 PlayerHP.Start 가 또 복제하는 연쇄로
+        //   프레임마다 HPghost 가 하나씩 늘었음 (판이 갈수록 · 일시정지에도 렉) → HealthBarFeel.MakeGhost 는 스크립트를 복제하지 않음
+        ghostImg = HealthBarFeel.MakeGhost(gaugeImg, "HPghost");
+        ghost = ghostImg != null ? ghostImg.rectTransform : null;
         feel.Reset(playerHP);
         lastHp = playerHP;
     }

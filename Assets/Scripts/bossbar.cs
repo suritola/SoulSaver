@@ -45,14 +45,10 @@ public class bossbar : MonoBehaviour
         BarY = barRect.sizeDelta.y;
 
         HealthBarFeel.ResetStatics();
-        // 조각: 채움 막대를 복제해 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제에도 함께 따라감
-        GameObject g = Instantiate(bar, bar.transform.parent);
-        g.name = GhostName;
-        g.transform.SetSiblingIndex(bar.transform.GetSiblingIndex());
-        foreach (Transform c in g.transform) Destroy(c.gameObject);     // 복제된 자식(있다면)은 지움
-        Image gi = g.GetComponent<Image>();
-        if (gi != null) { gi.color = HealthBarFeel.GhostColor(0f); gi.raycastTarget = false; gi.enabled = false; }
-        main = MakeRow(backBar, barRect, g.GetComponent<RectTransform>());
+        // 조각: 채움 막대와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제(backBar 복제)에도 함께 따라감
+        // 1.2.0: Instantiate(bar) 복제 대신 (PlayerHP 의 자기 복제 연쇄와 같은 일이 생기지 않게 · HealthBarFeel.MakeGhost 는 스크립트 · 자식을 복제하지 않음)
+        Image gi = HealthBarFeel.MakeGhost(bar.GetComponent<Image>(), GhostName);
+        main = MakeRow(backBar, barRect, gi != null ? gi.rectTransform : null);
     }
 
     // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 조각 · 흔들림 · 번쩍임

@@ -33,25 +33,15 @@ public class EnemyHealthBar : MonoBehaviour
 
     public HealthBarFeel.Tier OnDamaged(float amount, float before)
     {
-        // 1.2.0~ 체력바 애니메이션(조각 · 흔들림 · 번쩍임)은 이야기 모드 중간 보스만 — 나머지는 1.1.7 처럼 체력이 바뀔 때만 다시 그림 (렉 줄이기)
-        bool visible = Animated && fillRenderer != null && fillRenderer.enabled && fillRenderer.isVisible;
+        // 1.2.0: 1.2.0 에서 「이야기 모드 중간 보스만 애니메이션」으로 막았던 것을 되돌림 (모든 적 · 무한 모드도 1.1.8 처럼)
+        //   — 렉의 원인은 체력바 애니메이션이 아니라 PlayerHP 의 자기 복제 연쇄였음 (HealthBarFeel.MakeGhost 참고)
+        bool visible = fillRenderer != null && fillRenderer.enabled && fillRenderer.isVisible;
         HealthBarFeel.Tier tier = feel.OnDamaged(amount, before, enemy != null ? enemy.setEnemyHP : 0f, visible);
-        // 화면 밖 · 애니메이션 없는 적: 조각을 지금 체력에 바로 붙임 (Active 가 켜지지 않게) — 등급은 피해 숫자 크기에만 씀
+        // 화면 밖: 조각을 지금 체력에 바로 붙임 (Active 가 켜지지 않게 → 예전처럼 체력이 바뀔 때만 다시 그림)
         if (!visible) feel.Reset(before - amount);
         return tier;
     }
-    public void ResetFeel(float hp) { feel.Reset(hp); shownRatio = -1f; shownGhost = -1f; animated = -1; }
-
-    // 중간 보스(MidBossMark · 황금 고블린 제외)만, 무한 모드 · 일일 도전에서는 중간 보스도 빼고 — 처음 맞을 때 한 번만 확인해 둠 (풀에서 되살아나면 ResetFeel 이 지움)
-    int animated = -1;
-    bool Animated
-    {
-        get
-        {
-            if (animated < 0) animated = enemy != null && !GameMode.IsEndless && enemy.IsMidBoss ? 1 : 0;
-            return animated == 1;
-        }
-    }
+    public void ResetFeel(float hp) { feel.Reset(hp); shownRatio = -1f; shownGhost = -1f; }
     void OnDisable() => feel.Cancel();
 
     public static EnemyHealthBar Attach(EnermyController enemy, SpriteRenderer body)

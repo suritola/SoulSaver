@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 // 체력바 타격감 공용: 두 겹 막대(잃은 양 조각) · 피해 누적 등급 · 흔들림 · 번쩍임 시간표
 // 플레이어 HUD(PlayerHP) · 보스 HUD(bossbar) · 적 머리 위(EnemyHealthBar) 가 하나씩 들고 씀. MonoBehaviour 아님 · Tick 에 할당 없음
@@ -52,6 +53,32 @@ public sealed class HealthBarFeel
 
     // 씬이 바뀔 때 한 번 (지난 씬에서 집계가 남지 않게)
     public static void ResetStatics() => enemyShaking = 0;
+
+    // 조각(잃은 양) 막대 만들기: 채움 막대와 같은 자리 · 크기 · 그림의 Image 하나만 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 둠. 스크립트 · 자식은 전혀 복제하지 않음
+    // 1.2.0: 1.1.8~1.2.0 은 채움 막대 오브젝트를 Instantiate 로 복제했는데, 게임 씬에서 PlayerHP 가 HPgauge 자신에 붙어 있어(HPgauge 필드 = 자기 오브젝트)
+    //   복제본에도 PlayerHP 가 따라붙고 그 Start 가 또 자신을 복제… → 프레임마다 HPghost 가 하나씩 늘어(1분에 약 3600개) Update · Damaged 구독이 쌓여
+    //   판이 갈수록 · 일시정지 중에도 프레임이 떨어졌음 (메인 메뉴엔 PlayerHP 가 없어 멀쩡). 복제 대신 Image 만 손으로 만들어 재발 경로를 없앰
+    public static Image MakeGhost(Image fill, string name)
+    {
+        if (fill == null) return null;
+        RectTransform src = fill.rectTransform;
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform r = go.GetComponent<RectTransform>();
+        r.SetParent(src.parent, false);
+        r.SetSiblingIndex(src.GetSiblingIndex());        // 채움 막대 한 칸 앞 = 바로 뒤에 그려짐
+        r.anchorMin = src.anchorMin; r.anchorMax = src.anchorMax; r.pivot = src.pivot;
+        r.anchoredPosition = src.anchoredPosition; r.sizeDelta = src.sizeDelta;
+        r.localScale = src.localScale; r.localRotation = src.localRotation;
+        Image img = go.GetComponent<Image>();
+        img.sprite = fill.sprite; img.type = fill.type; img.preserveAspect = fill.preserveAspect; img.fillCenter = fill.fillCenter;
+        img.fillMethod = fill.fillMethod; img.fillOrigin = fill.fillOrigin; img.fillClockwise = fill.fillClockwise;
+        img.pixelsPerUnitMultiplier = fill.pixelsPerUnitMultiplier; img.maskable = fill.maskable;
+        if (fill.material != fill.defaultMaterial) img.material = fill.material;
+        img.raycastTarget = false;
+        img.color = GhostColor(0f);
+        img.enabled = false;
+        return img;
+    }
 
     // 그리는 쪽이 「변화 없음 → 갱신 생략」 판단에 씀
     public bool Active => ghostHp > 0f && (holdUntil > 0f || shakeT < shakeLen || flashT < FlashTime);
