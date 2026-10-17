@@ -55,6 +55,17 @@ public class PlayerHP : MonoBehaviour
         }
         gaugeImg = HPgauge.GetComponent<Image>();
         if (gaugeImg != null) gaugeColor = gaugeImg.color;
+        // 1.2.1~ 체력 숫자(100 / 100)가 막대 한가운데를 덮어 흰 지연 게이지가 잘 안 보였음 → 막대 틀(HPbackground) 오른쪽 바깥으로 (세로 가운데 · 왼쪽 정렬)
+        if (hpText != null)
+        {
+            RectTransform t = hpText.rectTransform;
+            t.anchorMin = new Vector2(1f, 0f); t.anchorMax = new Vector2(1f, 1f);
+            t.pivot = new Vector2(0f, 0.5f);
+            t.anchoredPosition = new Vector2(12f, 0f);
+            t.sizeDelta = new Vector2(220f, 0f);
+            hpText.horizontalAlignment = HorizontalAlignmentOptions.Left;
+            hpText.enableWordWrapping = false;
+        }
         // 조각: 채움 막대(HPgauge)와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 길이만 다르게 하면 됨
         // 1.2.0: Instantiate(HPgauge) 로 복제하던 것을 바꿈 — 씬에서 PlayerHP 가 HPgauge 자신에 붙어 있어 복제본의 PlayerHP.Start 가 또 복제하는 연쇄로
         //   프레임마다 HPghost 가 하나씩 늘었음 (판이 갈수록 · 일시정지에도 렉) → HealthBarFeel.MakeGhost 는 스크립트를 복제하지 않음
