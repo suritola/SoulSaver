@@ -45,7 +45,7 @@ public sealed class HealthBarFeel
     public const int EnemyShakeMax = 4;     // 적 「큰 피해 묶음」(테두리 · 흔들림 · 펀치) 동시 상한 (보스 · 플레이어는 제한 없음)
 
     // 등급 → 피해 숫자 크기 배율 (DamagePopup 이 씀)
-    public static readonly float[] PopupScale = { 1f, 1.2f, 1.55f, 2f };
+    public static readonly float[] PopupScale = { 0.9f, 1f, 1.1f, 1.25f };     // 1.2.2~ 피해 숫자가 너무 크다는 의견 → 1 / 1.2 / 1.55 / 2 에서 줄임
 
     static readonly Color GhostRest = new Color(0.90f, 0.91f, 0.93f, 0.94f);
 

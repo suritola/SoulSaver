@@ -10,9 +10,9 @@ public class DamagePopup : MonoBehaviour
     const float Life = 0.75f, Rise = 1.3f;
     // 2.2.0: 보스 피해가 거의 안 보였음 (큰 몸 꼭대기 위 · 화면 밖에 작게 떴다 금방 사라짐)
     // → 몸 위쪽 안에서, 화면 안으로 맞춰, 1.8배 크게 · 주황 금색 · 두꺼운 테두리 · 더 오래, 연타는 더 길게 모아 큰 숫자로
-    const float BossLife = 1.15f, BossRise = 1.8f, BossSize = 1.8f;
+    const float BossLife = 1.15f, BossRise = 1.8f, BossSize = 1.45f;     // 1.2.2~ 1.8 → 1.45 (숫자 크기 줄임)
     // 플레이어가 받은 피해: 빨강 "-N" · 머리 위 조금 낮게 (체력바 조각과 눈이 같이 가게) · 적 숫자 위에
-    const float HurtLife = 1.0f, HurtSize = 1.3f, HurtHeight = 1.6f;
+    const float HurtLife = 1.0f, HurtSize = 1.1f, HurtHeight = 1.6f;     // 1.2.2~ 1.3 → 1.1
     const int HurtOrder = 50;
     const int MaxActive = 80;
 
@@ -209,14 +209,14 @@ public class DamagePopup : MonoBehaviour
         if (crit)
         {
             text.color = new Color(1f, 0.82f, 0.15f);
-            size = 1.9f + 0.4f * k;
+            size = 1.6f + 0.3f * k;     // 1.2.2~ 1.9~2.3 → 1.6~1.9
         }
         // 보스: 늘 주황 금색으로 크게 (치명타는 더 크게)
         if (boss)
         {
             if (!crit) text.color = Color.Lerp(new Color(1f, 0.8f, 0.3f), new Color(1f, 0.6f, 0.15f), k);     // 1.0.4~: 끝 색 (1, 0.4, 0.15) → (1, 0.6, 0.15), 붉은빛을 덜어 받은 피해와 구분
             // 1.1~: 치명타 1.9~2.3 × 1.8 = 최대 4.1배라 보스 패턴 시작점 · 적 탄을 덮었음 → 보스 치명타는 1.3배까지 · 최대 2.8
-            size = crit ? Mathf.Min(size * 1.3f * scale, 2.8f) : size * BossSize * scale;
+            size = crit ? Mathf.Min(size * 1.3f * scale, 2.3f) : size * BossSize * scale;
         }
         else size *= scale;      // 누적 등급별 크기 (1 / 1.2 / 1.55 / 2)
         // 치명 등급 누적 (치명타 아님): 더 진한 금빛
