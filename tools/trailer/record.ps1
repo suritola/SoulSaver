@@ -34,13 +34,14 @@ foreach ($d in "Assets", "Packages", "ProjectSettings") {
 $capDir = Join-Path $CopyDir "Assets\Capture"
 New-Item -ItemType Directory -Force $capDir | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "GameplayCapture.cs"), (Join-Path $PSScriptRoot "GameplayCapture.asmdef") $capDir
-# 하이라이트 음악: 직접 합성한 웅장한 트레일러 음악 (make_trailer_music.py → Assets/Capture/Resources/TrailerMusic.wav, 복사본에만)
-if ($Mode -ne "trailer") {
-    $musicDir = Join-Path $capDir "Resources"
-    New-Item -ItemType Directory -Force $musicDir | Out-Null
-    & py -X utf8 (Join-Path $PSScriptRoot "make_trailer_music.py") (Join-Path $musicDir "TrailerMusic.wav")
-    if ($LASTEXITCODE -ne 0) { throw "트레일러 음악 만들기 실패" }
-}
+# 영상 음악: 직접 합성한 웅장한 트레일러 음악 (make_trailer_music.py → Assets/Capture/Resources/TrailerMusic.wav, 복사본에만)
+# 상점 트레일러는 콘티(Capture)에 맞춘 트레일러 곡(--trailer) · 하이라이트 · 레딧은 하이라이트 곡
+$musicDir = Join-Path $capDir "Resources"
+New-Item -ItemType Directory -Force $musicDir | Out-Null
+$musicArgs = @((Join-Path $PSScriptRoot "make_trailer_music.py"), (Join-Path $musicDir "TrailerMusic.wav"))
+if ($Mode -eq "trailer") { $musicArgs += "--trailer" }
+& py -X utf8 @musicArgs
+if ($LASTEXITCODE -ne 0) { throw "트레일러 음악 만들기 실패" }
 $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 (Get-Content $settings -Raw) -replace "(?m)^  productName: .*$", "  productName: Soul Saver Capture" | Set-Content $settings -NoNewline
 

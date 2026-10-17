@@ -20,6 +20,7 @@ using UnityEngine.UI;
 //       → 스킬 진화 → 영혼 트리 · 결계 깨짐 → 로고 · 「무료 체험판」
 // 빈틈(WeakSpot) · 기억(BossMemory) · 궁수 수동 시위(CharacterKit.ManualBowInAuto)는 리플렉션으로만 봄 — 없으면 그 컷을 건너뜀 (게임 코드와 컴파일 의존 없음)
 // 화면에는 게임 커서(Resources/Cursors)를 겹쳐 그리고, 총소리 · 장전 소리는 음악과 함께 영상 소리에 섞음
+// 2026-10-18~ 트레일러는 합성 곡 TrailerMusic + 게임 효과음(처치 · 보스 타격 · 영웅 평타 · 필살기 · 결계 · 진화 · 장면 전환 휘익)을 같은 순간에 얹음 (Rec.rich) · 컷마다 [CUE] 로그
 public class GameplayCapture
 {
     static readonly string Out = Environment.GetEnvironmentVariable("CAPTURE_OUT") ?? "C:/Temp/SoulSaverCapture";
@@ -102,6 +103,56 @@ public class GameplayCapture
         return fx != null && Get(fx, "clips") is IDictionary d && d.Contains(name) ? d[name] as AudioClip : null;
     }
 
+    // 상점 트레일러(rich)에서만 게임 합성음을 얹음 (하이라이트 · 레딧 영상은 그대로)
+    static void Sx(string name, float vol, float pitch = 1f)
+    {
+        if (rec != null && rec.rich) rec.SfxVar(FxClip(name), vol, pitch);
+    }
+    static void SxRes(string path, float vol)
+    {
+        if (rec != null && rec.rich) rec.Sfx(Resources.Load<AudioClip>(path), vol);
+    }
+
+    // 지금 영웅 이름 (CharacterData.Selected · Load 가 Override 로 정함)
+    static string Hero() => StaticGet("CharacterData", "Selected")?.ToString() ?? "Gunner";
+
+    // 컷 시각 기록 (배경음 타이밍 검증용 · 녹화 프레임) — swish 면 장면이 바뀌는 「휘익」도
+    static void Cue(string name, bool swish = false)
+    {
+        if (rec == null) return;
+        Debug.Log("[CUE] " + name + " " + rec.frames);
+        if (swish && rec.rich) rec.Sfx(Swish(), 0.4f);
+    }
+
+    // 장면 전환 「휘익」: 게임에 맞는 소리가 없어 직접 합성 (거친 소음이 빠르게 커졌다가 차단 주파수가 내려가며 사라짐 + 낮은 쿵)
+    static AudioClip swishClip;
+    static AudioClip Swish()
+    {
+        if (swishClip != null) return swishClip;
+        const int rate = 48000;
+        const float dur = 0.45f;
+        int n = Mathf.CeilToInt(dur * rate);
+        float[] d = new float[n];
+        var r = new System.Random(4511);
+        float lp = 0f, lp2 = 0f, peak = 0.0001f;
+        for (int i = 0; i < n; i++)
+        {
+            float t = i / (float)rate, k = t / dur;
+            float env = k < 0.22f ? Mathf.Pow(k / 0.22f, 2f) : Mathf.Pow(1f - (k - 0.22f) / 0.78f, 2.2f);
+            float cut = Mathf.Lerp(0.45f, 0.03f, k);                       // 지나가며 어두워짐
+            float noise = (float)(r.NextDouble() * 2.0 - 1.0);
+            lp += (noise - lp) * cut;
+            lp2 += (lp - lp2) * cut;
+            float sub = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(110f, 45f, k) * t) * 0.35f * Mathf.Clamp01((k - 0.15f) * 4f);
+            d[i] = (lp2 * 2.2f + sub) * env;
+            peak = Mathf.Max(peak, Mathf.Abs(d[i]));
+        }
+        for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
+        swishClip = AudioClip.Create("trailer_swish", n, 1, rate, false);
+        swishClip.SetData(d, 0);
+        return swishClip;
+    }
+
     // ================================================================= 녹화기 (씬이 바뀌어도 남음)
     class Rec : MonoBehaviour
     {
@@ -112,7 +163,11 @@ public class GameplayCapture
         // 하이라이트 영상 연출 (2.2.1~): 펀치 줌 · 화면 흔들림 · 흰 번쩍임 (찍을 때만 카메라에 얹고 바로 되돌림)
         public float baseZoom = 1f, punch, shake, flashAmt;
         // 자동 조종이 적과 두는 거리 (잡몹 · 보스, 가까우면 물러나고 멀면 다가감)
+        //   humanMove 가 거짓(하이라이트 · 레딧)이면 예전 그대로 이 값만 씀 · 참(상점 트레일러)이면 근접(검사)만 이 값을 씀
         public float nearMob = 3.5f, farMob = 7f, nearBoss = 6.5f, farBoss = 9f;
+        // 2026-10-18~ 상점 트레일러: 사람이 하는 플레이처럼 (원거리 영웅은 거리를 두고 카이팅 · 부드러운 방향 전환 · 멈춰 조준 · 짧은 옆걸음)
+        public bool humanMove;
+        public float rangedMobNear = 6f, rangedMobFar = 9f, rangedBossNear = 8f, rangedBossFar = 11f;
         public Image flash;
         public Canvas captionCanvas;
         public TextMeshProUGUI caption, logo, sub;
@@ -138,15 +193,22 @@ public class GameplayCapture
 
         // ---------------- 효과음 섞기: 총소리 · 장전 소리 (gunSfx 가 참이면 탄 수 · 장전 상태가 바뀔 때 저절로)
         public bool gunSfx;
-        const int Voices = 8;
+        // 2026-10-18~ 상점 트레일러: 게임이 실제로 내는 소리를 같은 순간에 얹음 (rich 가 참일 때만 · 처치 · 보스 피격 · 평타 · 진화 연출 등은 상태 변화로 저절로)
+        public bool rich;
+        public bool weakSfx;                    // 빈틈 컷: 보스 피격 소리를 「빈틈」 타격음으로
+        public int quietBossDownUntil;          // 결계가 깨지는 프레임: domain_break 와 곡 충격음이 겹치므로 쓰러질 때 폭발 · 울음은 건너뜀
+        const int Voices = 16;                  // 8 → 16 (처치 · 타격 · 평타가 겹쳐도 큰 소리가 잘리지 않게)
         readonly float[][] vData = new float[Voices][];
         readonly double[] vPos = new double[Voices];
         readonly float[] vStep = new float[Voices], vVol = new float[Voices];
         readonly Dictionary<AudioClip, float[]> monoCache = new Dictionary<AudioClip, float[]>();
+        readonly System.Random sfxRnd = new System.Random(1018);           // 음높이 흔들기 (매번 같은 영상이 나오게 고정 씨앗)
+        readonly Dictionary<string, int> gapAt = new Dictionary<string, int>();
+        readonly List<(int at, AudioClip clip, float vol, float pitch)> later = new List<(int, AudioClip, float, float)>();
         int lastBullets = -1;
         bool lastReloading;
 
-        public void Sfx(AudioClip clip, float vol)
+        public void Sfx(AudioClip clip, float vol, float pitch = 1f)
         {
             float[] d = Mono(clip);
             if (d == null || d.Length == 0) return;
@@ -158,15 +220,48 @@ public class GameplayCapture
             }
             vData[pick] = d;
             vPos[pick] = 0;
-            vStep[pick] = clip.frequency / (float)Rate;
+            vStep[pick] = clip.frequency / (float)Rate * Mathf.Clamp(pitch, 0.25f, 4f);
             vVol[pick] = vol;
         }
 
+        // 게임(SpecialFeedback.Play)처럼 음높이를 ±2.5% 간격 5단계로 살짝 흔듦 — 같은 소리가 반복돼도 단조롭지 않게
+        public void SfxVar(AudioClip clip, float vol, float pitch = 1f) => Sfx(clip, vol, pitch * (1f + sfxRnd.Next(-2, 3) * 0.025f));
+        public float Rand(float a, float b) => a + (float)sfxRnd.NextDouble() * (b - a);
+
+        // 같은 갈래 소리는 seconds(녹화 시간) 안에 한 번만 — 기관총처럼 겹치지 않게
+        public bool Gap(string tag, float seconds)
+        {
+            if (gapAt.TryGetValue(tag, out int at) && frames - at < Mathf.RoundToInt(seconds * Fps)) return false;
+            gapAt[tag] = frames;
+            return true;
+        }
+
+        // seconds(녹화 시간) 뒤에 울림
+        public void Later(float seconds, AudioClip clip, float vol, float pitch = 1f)
+        {
+            if (clip != null) later.Add((frames + Mathf.Max(0, Mathf.RoundToInt(seconds * Fps)), clip, vol, pitch));
+        }
+
+        // 끝 카드 직전: 곡이 일부러 비워 둔 정적에 남은 효과음 꼬리 · 예약 소리를 모두 끊음
+        public void Hush()
+        {
+            for (int i = 0; i < Voices; i++) vData[i] = null;
+            later.Clear();
+        }
+
+        void RunLater()
+        {
+            for (int i = later.Count - 1; i >= 0; i--)
+                if (later[i].at <= frames) { Sfx(later[i].clip, later[i].vol, later[i].pitch); later.RemoveAt(i); }
+        }
+
         // 효과음을 한 갈래(모노)로 한 번만 꺼내 둠 (압축 · 스트리밍이라 못 꺼내면 빈 배열 → 그 소리만 빠짐)
+        // Sounds/domain_* 은 preloadAudioData 가 꺼져 있어 먼저 LoadAudioData — 아직 불러오는 중이면 다음에 다시 시도
         float[] Mono(AudioClip clip)
         {
             if (clip == null) return null;
             if (monoCache.TryGetValue(clip, out float[] m)) return m;
+            if (clip.loadState == AudioDataLoadState.Unloaded) clip.LoadAudioData();
             m = new float[0];
             try
             {
@@ -183,7 +278,7 @@ public class GameplayCapture
                 }
             }
             catch (Exception) { }
-            monoCache[clip] = m;
+            if (m.Length > 0 || clip.loadState != AudioDataLoadState.Loading) monoCache[clip] = m;
             return m;
         }
 
@@ -217,6 +312,11 @@ public class GameplayCapture
             rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
             frame = new Texture2D(W, H, TextureFormat.RGBA32, false);
             AudioClip clip = Resources.Load<AudioClip>(musicPath);
+            if (clip == null) { Debug.Log("[CAP] 음악 " + musicPath + " 없음 — Music/bgm_boss 로"); clip = Resources.Load<AudioClip>("Music/bgm_boss"); }
+            if (clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
+            // 결계 소리는 미리 불러 둠 (preloadAudioData 꺼짐 · 처음 쓰는 순간 빈 소리가 되지 않게)
+            foreach (string s in new[] { "Sounds/domain_open", "Sounds/domain_break", "Sounds/domain_shout" })
+                Resources.Load<AudioClip>(s)?.LoadAudioData();
             music = new float[clip.samples * clip.channels];
             clip.GetData(music, 0);
             musicCh = clip.channels; musicRate = clip.frequency; musicFrames = clip.samples;
@@ -250,8 +350,17 @@ public class GameplayCapture
                     int i0 = (int)pos % musicFrames, i1 = (i0 + 1) % musicFrames;
                     float k = (float)(pos - Math.Floor(pos));
                     float fx = MixSfx();
+                    // 리미터 (2026-10-18~): 음악 + 효과음이 겹쳐 1 에 닿던 찌그러짐을 막음 — 바로 줄이고 0.12초에 걸쳐 돌아옴, 천장 0.89(-1dB · AAC 넘침 여유)
+                    float peak = 0f;
+                    for (int c = 0; c < musicCh && c < 8; c++)
+                    {
+                        mixTmp[c] = Mathf.Lerp(music[i0 * musicCh + c], music[i1 * musicCh + c], k) * musicVolume + fx;
+                        peak = Mathf.Max(peak, Mathf.Abs(mixTmp[c]));
+                    }
+                    if (peak * limGain > LimCeil) limGain = LimCeil / peak;
+                    else limGain += (1f - limGain) * LimRelease;
                     for (int c = 0; c < musicCh; c++)
-                        audio[i * musicCh + c] = Mathf.Clamp(Mathf.Lerp(music[i0 * musicCh + c], music[i1 * musicCh + c], k) * musicVolume + fx, -1f, 1f);
+                        audio[i * musicCh + c] = SoftClip(mixTmp[Mathf.Min(c, 7)] * limGain);
                 }
                 cursor += perFrame;
                 encoder.AddSamples(audio);
@@ -259,10 +368,25 @@ public class GameplayCapture
             }
         }
 
+        // 큰 소리가 겹친 꼭대기만 부드럽게 눌러 「지직」 깨지지 않게 (0.8 까지는 그대로)
+        readonly float[] mixTmp = new float[8];
+        float limGain = 1f;
+        const float LimCeil = 0.89f;
+        static readonly float LimRelease = 1f - Mathf.Exp(-1f / (0.12f * Rate));
+
+        static float SoftClip(float x)
+        {
+            float a = Mathf.Abs(x);
+            if (a <= 0.8f) return x;
+            float y = 0.8f + 0.2f * (float)Math.Tanh((a - 0.8f) / 0.2f);
+            return x < 0f ? -y : y;
+        }
+
         public Texture2D Grab(bool withCaption)
         {
             Camera cam = Camera.main;
             if (cam == null) return frame;
+            CleanUi();
             cam.cullingMask |= 1 << 5;
             CanvasesToCamera(cam);
             captionCanvas.worldCamera = cam;
@@ -275,6 +399,7 @@ public class GameplayCapture
             cam.targetTexture = rt;
             Canvas.ForceUpdateCanvases();
             cam.Render();
+            RestoreUi();
             cam.targetTexture = old;
             cam.orthographicSize = size;
             cam.transform.position = pos;
@@ -286,6 +411,121 @@ public class GameplayCapture
             return frame;
         }
 
+        // ---------------- 촬영용 화면 정리 (2026-10-18~): 홍보 영상에 어울리지 않는 게임 UI · 화면 덮개를 찍는 순간에만 숨김 (게임 코드는 그대로 · 리플렉션)
+        //   1) 거너 필살기 조준 · 개발자 조준 흉내(PlayerController.HostileTimeSlow)의 화면 색(skillEffectPanel, 알파 0.6 까지 · 조준하는 동안 계속)
+        //      → 켜질 때 최대 TintMax 로 보였다가 TintFade 초 안에 사라지게 (개발자 장면에서 2.6초 넘게 화면이 하얗게 바래던 원인)
+        //   2) 장 제목 배너(StageManager 시작 → Notice.Big 「1장 · 지하 묘역」 — 촬영은 장을 나중에 바꿔 초원에서도 묘역으로 나옴) · 토스트 · 도움말 → 알림 묶음(Notice.root)을 투명하게
+        //   3) 조작 안내: 결계 컷신 「클릭 · Space: 건너뛰기」 · 스킬 진화 「클릭하거나 [Space] 를 눌러 계속」 · 레벨업 배지 「레벨업! [Space] 카드 고르기」
+        //      · 머리 위 「레벨업! [Space]」(GrowthPrompts) · 「레벨업!」 띠(LevelShop.LvUpPanel) · 카드 창 확정 안내 · 「이번 레벨업 포기」 버튼 · 영혼 트리 아래 조작 도움말
+        //   4) 피격 붉은 테두리(DamageFlash) — 촬영 중엔 체력을 늘 채우므로 맞은 티만 남음
+        public bool cleanUi = true;
+        const float TintMax = 0.35f, TintFade = 0.2f;
+        int tintFrames, cleanFrame = -1;
+        float tintCap = TintMax;
+        string[] hideExact;
+        string hidePrefix;
+
+        static string LocT(string ko)
+        {
+            MethodInfo m = T("Loc")?.GetMethod("T", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
+            return m != null ? (string)m.Invoke(null, new object[] { ko }) : ko;
+        }
+
+        // 찍는 동안(cam.Render 한 번)만 끄고 찍은 뒤 그대로 되돌림 → 게임 상태 · 다음 프레임 동작은 촬영하지 않을 때와 같음
+        //   (예전: 끈 채로 두어 GrowthPrompts 가 영영 꺼지고, Herald 가 레벨업 배지 켜짐을 읽는 등 게임 쪽 판단이 달라질 수 있었음)
+        readonly List<GameObject> hiddenGo = new List<GameObject>();
+        readonly List<Behaviour> hiddenBh = new List<Behaviour>();
+        Image tintPanel;
+        float tintAlpha = -1f;
+        CanvasGroup noticeGroup;
+        float noticeAlpha;
+
+        void Hide(object o)
+        {
+            GameObject g = o as GameObject ?? (o as Component)?.gameObject;
+            if (g != null && g.activeSelf) { g.SetActive(false); hiddenGo.Add(g); }
+        }
+
+        void Off(Behaviour b)
+        {
+            if (b != null && b.enabled) { b.enabled = false; hiddenBh.Add(b); }
+        }
+
+        void RestoreUi()
+        {
+            for (int i = hiddenGo.Count - 1; i >= 0; i--) if (hiddenGo[i] != null) hiddenGo[i].SetActive(true);
+            foreach (Behaviour b in hiddenBh) if (b != null) b.enabled = true;
+            hiddenGo.Clear();
+            hiddenBh.Clear();
+            if (tintPanel != null && tintAlpha >= 0f) { Color c = tintPanel.color; c.a = tintAlpha; tintPanel.color = c; }
+            tintPanel = null;
+            tintAlpha = -1f;
+            if (noticeGroup != null) noticeGroup.alpha = noticeAlpha;
+            noticeGroup = null;
+        }
+
+        void CleanUi()
+        {
+            if (!cleanUi) return;
+            bool tick = cleanFrame != Time.frameCount;      // 한 프레임에 여러 번 찍어도(스크린샷) 시간은 한 번만 셈
+            cleanFrame = Time.frameCount;
+
+            // 1) 필살기 조준 화면 색 — 조준이 시작되면 TintMax 에서 TintFade 초 안에 0 으로,
+            //    조준이 끝나도 게임 쪽 색(실제 값은 그대로 0.6 에서 내려감)이 다 빠질 때까지 계속 0
+            object p = Find("PlayerController");
+            if (p != null && Get(p, "skillEffectPanel") is Image panel && panel != null)
+            {
+                bool aiming = Get(p, "screenFadeTarget") is float target && target > 0.001f;
+                if (tick)
+                {
+                    if (aiming) tintFrames++;
+                    else if (panel.color.a <= 0.001f) tintFrames = 0;
+                    tintCap = TintMax * Mathf.Clamp01(1f - tintFrames / (TintFade * Fps));
+                }
+                Color c = panel.color;
+                if (tintFrames > 0 && c.a > tintCap) { tintPanel = panel; tintAlpha = c.a; c.a = tintCap; panel.color = c; }
+            }
+
+            // 4) 피격 붉은 테두리
+            if (StaticGet("DamageFlash", "instance") is Component df && df != null) Off(Get(df, "image") as Image);
+
+            // 2) 알림 묶음 (장 제목 · 토스트 · 도움말 · 목표 줄) — 찍기 직전마다 다시 찾으므로 장면 로드 뒤 늦게 만들어진 배너도 그 프레임부터 숨음
+            if (StaticGet("Notice", "root") is RectTransform nr && nr != null && nr.GetComponent<CanvasGroup>() is CanvasGroup ncg && ncg != null)
+            {
+                noticeGroup = ncg;
+                noticeAlpha = ncg.alpha;
+                ncg.alpha = 0f;
+            }
+
+            // 3) 조작 안내
+            object shop = Find("LevelShop");
+            if (shop != null)
+            {
+                Hide(Get(shop, "pendingBadge"));
+                Hide(Get(shop, "LvUpPanel"));
+                Hide(Get(shop, "selectHint"));
+                Hide(Get(shop, "skipButton"));
+            }
+            if (FindExists("GrowthPrompts")) Hide(Get(Find("GrowthPrompts"), "tag"));
+            object tree = T("SoulTreeUI")?.GetProperty("Instance")?.GetValue(null);
+            if (tree != null) Hide(Get(tree, "footText"));
+            if (hideExact == null)
+            {
+                hideExact = new[] { LocT("클릭 · Space: 건너뛰기"), LocT("[A]: 건너뛰기"), LocT("herald.skip"), LocT("herald.skip.pad") };
+                hidePrefix = LocT("클릭하거나 [");
+            }
+            if (FindExists("BossUltimate") || FindExists("SkillEvolutionUI") || StaticGet("Herald", "Playing") is bool hp && hp)
+                foreach (TMP_Text t in UnityEngine.Object.FindObjectsByType<TMP_Text>(FindObjectsSortMode.None))
+                {
+                    if (!t.enabled) continue;
+                    string s = t.text;
+                    if (string.IsNullOrEmpty(s) || s.Length > 80) continue;
+                    if (Array.IndexOf(hideExact, s) >= 0 || (hidePrefix.Length > 0 && s.StartsWith(hidePrefix))) Off(t);
+                }
+        }
+
+        static bool FindExists(string type) => T(type) != null && Find(type) != null;
+
         // ---------------- 자동 조종: 가까운 적(보스 먼저)을 겨누고 옆으로 돌며 싸움
         void Update()
         {
@@ -295,7 +535,8 @@ public class GameplayCapture
             Vector3 me = player.transform.position;
             Vector3? target = Nearest(me, out bool boss);
             Vector3 desired;
-            if (target.HasValue)
+            if (humanMove) desired = HumanMove(player, me, target, boss);
+            else if (target.HasValue)
             {
                 Vector2 to = target.Value - me;
                 float d = to.magnitude;
@@ -333,7 +574,10 @@ public class GameplayCapture
         {
             punch *= 0.86f;
             shake *= 0.85f;
-            flashAmt *= 0.8f;
+            // 번쩍임 (2026-10-18~ 0.8 → 0.62 · 0.05 아래는 0): 화면이 선형 색 공간이라 알파 0.1~0.2 만 남아도 어두운 장면이 회색으로 뿌옇게 떠 보였음
+            //   (0.8 이면 장면 전환 · 필살기 · 결계 깨짐마다 0.5초(15프레임) 넘게 HUD 까지 뿌연 막) → 이제 0.25초(7프레임) 안에 사라짐
+            flashAmt *= 0.62f;
+            if (flashAmt < 0.05f) flashAmt = 0f;
             if (flash != null) flash.color = new Color(1f, 1f, 1f, Mathf.Clamp01(flashAmt));
             object p = Find("PlayerController");
             if (p != null)
@@ -345,8 +589,169 @@ public class GameplayCapture
             if (!levelUpAllowed && Find("LevelShop") is object shop && (bool)shop.GetType().GetProperty("IsOpen").GetValue(shop))
                 ConfirmCard(shop, 0);
             GunSounds(p);
+            GameSounds(p);
+            RunLater();
             DrawCursor();
             Capture();
+        }
+
+        // ---------------- 인게임 소리 (rich): 게임이 그 순간 내는 소리를 상태 변화로 알아내 같은 클립으로 얹음
+        //   볼륨은 게임 값(SpecialFeedback.volume 0.45 × 부른 값)에 맞추되 음악을 덮지 않게 0.25~0.7
+        int lastAlive = -1;
+        float lastShoot = -1f, lastKick;
+        object lastPlayer;
+        UnityEngine.Object bossObj;
+        float bossHp;
+        bool bossDead, bossMem, weakFirst, lastWevoTitle, lastSevoBurst;
+        static PropertyInfo enemyDead;
+
+        void GameSounds(object p)
+        {
+            if (!rich) return;
+            // 진화 연출은 녹화와 상관없이 상태를 따라감 (녹화를 멈춘 동안 바뀌면 그 순간 소리는 빠짐)
+            object wevo = Find("WeaponEvolutionUI");
+            bool wTitle = wevo != null && Get(wevo, "title") is Component tc && tc != null && tc.gameObject.activeSelf;
+            object sevo = Find("SkillEvolutionUI");
+            bool sBurst = sevo != null && ((Component)sevo).transform.Find("EvoGlow") != null;
+            if (!recording)
+            {
+                lastAlive = -1; lastShoot = -1f; lastPlayer = null; bossObj = null;
+                lastWevoTitle = wTitle; lastSevoBurst = sBurst;
+                return;
+            }
+
+            // 무기 진화 (WeaponEvolutionUI.Play): 제목이 켜지는 순간 무기가 부서짐 → 0.45초 뒤 카드 펼침
+            if (wTitle && !lastWevoTitle)
+            {
+                Cue("weapon_evolve_burst");
+                Sfx(FxClip("shatter"), 0.55f, 0.8f);
+                Sfx(FxClip("bigboom"), 0.5f, 1.1f);
+                Later(0.45f, FxClip("whoosh"), 0.4f, 0.9f);
+            }
+            lastWevoTitle = wTitle;
+            // 스킬 진화 (SkillEvolutionUI.Play): 진화 아이콘이 생기는 순간 「번쩍!」
+            if (sBurst && !lastSevoBurst)
+            {
+                Cue("skill_evolve_burst");
+                Sfx(FxClip("shatter"), 0.55f, 1.1f);
+                Sfx(FxClip("bigboom"), 0.45f, 1.3f);
+                Sfx(FxClip("levelup"), 0.5f, 1f);
+            }
+            lastSevoBurst = sBurst;
+
+            // 잡몹 처치 (Juice 처치 「퐁」 · 한꺼번에 많이 죽으면 한 번만 크게 + 쓸려 나가는 「쿵」)
+            Type et = T("EnermyController");
+            if (et != null)
+            {
+                if (enemyDead == null) enemyDead = et.GetProperty("IsDead");
+                int alive = 0;
+                foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(et, FindObjectsSortMode.None))
+                    if (!(enemyDead?.GetValue(o) is bool dead && dead)) alive++;
+                if (lastAlive >= 0 && alive < lastAlive)
+                {
+                    int n = lastAlive - alive;
+                    if (Gap("kill", 0.07f)) Sfx(FxClip("pop"), Mathf.Min(0.6f, 0.3f + 0.05f * (n - 1)), Rand(0.85f, 1.2f));
+                    if (n >= 5 && Gap("wipe", 0.5f)) SfxVar(FxClip("boom"), 0.45f, 0.9f);
+                }
+                lastAlive = alive;
+            }
+
+            if (p != null) Attacks(p);
+            BossSounds();
+        }
+
+        // 평타 · 진화 무기: 다음 사격 시각(nextShootTime)이 늘면 한 번 쏜 것 · 진화 무기는 손 반동(PlayerLook.kick)이 튀면
+        void Attacks(object p)
+        {
+            if (!ReferenceEquals(p, lastPlayer)) { lastPlayer = p; lastShoot = -1f; lastKick = 0f; }
+            object sm = Find("StageManager");
+            object sa = sm != null ? Get(sm, "specials") : null;
+            bool weapon = sa != null && sa.GetType().GetProperty("WeaponActive")?.GetValue(sa) is bool w && w;
+            float next = Get(p, "nextShootTime") is float ns ? ns : -1f;
+            string hero = Hero();
+            if (!weapon && lastShoot >= 0f && next > lastShoot + 0.001f) HeroAttack(hero, p);
+            lastShoot = next;
+            object look = StaticGet("PlayerLook", "Instance");
+            float kick = look != null && Get(look, "kick") is float k ? k : 0f;
+            if (weapon && kick > lastKick + 0.02f && sa.GetType().GetProperty("CurrentWeapon")?.GetValue(sa) is int id) WeaponShot(id, hero, p);
+            lastKick = kick;
+        }
+
+        // 영웅 평타 (CharacterKit.Attack 이 내는 소리)
+        public void HeroAttack(string hero, object p)
+        {
+            if (hero == "Gunner" && gunSfx) return;                // 거너는 탄 수 감시(GunSounds)가 이미 냄
+            if (!Gap("atk", 0.12f)) return;
+            switch (hero)
+            {
+                case "Gunner": SfxVar((Get(p, "shotSound") as AudioClip) ?? FxClip("gunshot"), 0.3f); break;
+                case "Swordsman": SfxVar(FxClip("slash"), 0.45f, 0.95f); SfxVar(FxClip("whoosh"), 0.3f, 0.8f); break;
+                case "Archer": SfxVar(FxClip("bowtwang"), 0.45f); SfxVar(FxClip("arrowfly"), 0.3f, 1.2f); break;
+                case "Alchemist": SfxVar(FxClip("glassclink"), 0.4f, Rand(0.9f, 1.15f)); SfxVar(FxClip("whoosh"), 0.25f, 1.5f); break;
+                case "Ghost": SfxVar(FxClip("whoosh"), 0.35f, 0.75f); SfxVar(FxClip("freeze"), 0.25f, 1.4f); break;
+                case "Clockmaker": SfxVar(FxClip("ratchet"), 0.35f, 1.2f); SfxVar(FxClip("clank"), 0.25f, 1.5f); SfxVar(FxClip("whoosh"), 0.25f, 1.3f); break;
+                default: SfxVar(FxClip("whoosh"), 0.35f, 1.4f); SfxVar(FxClip("pew"), 0.25f, 1.2f); break;
+            }
+        }
+
+        // 진화 무기 (SpecialAbilities.Weapons 의 발사 소리 · 20번부터는 영웅 전용 무기라 그 영웅 평타 소리)
+        void WeaponShot(int id, string hero, object p)
+        {
+            if (id >= 20) { HeroAttack(hero, p); return; }
+            if (!Gap("wpn", id == 3 ? 0.6f : 0.08f)) return;
+            switch (id)
+            {
+                case 0: SfxVar(FxClip("shotgun"), 0.5f, 1.05f); break;
+                case 1: SfxVar(FxClip("crack"), 0.5f, 0.9f); break;
+                case 2: SfxVar(FxClip("gunshot"), 0.35f, Rand(1.05f, 1.2f)); break;
+                case 3: SfxVar(FxClip("ignite"), 0.4f); break;
+                case 4: SfxVar(FxClip("whoosh"), 0.3f, 1.6f); break;
+                case 5: SfxVar(FxClip("zap"), 0.35f, 0.9f); SfxVar(FxClip("gunshot"), 0.2f, 1.4f); break;
+                case 6: SfxVar(FxClip("whoosh"), 0.4f, 0.9f); break;
+                case 7: SfxVar(FxClip("thump"), 0.5f); break;
+                default: SfxVar(FxClip("gunshot"), 0.3f); break;
+            }
+        }
+
+        // 보스: 맞을 때 타격음 (센 한 방은 「쩍」) · 쓰러질 때 큰 폭발 · 기억(BossMemory)이 켜지면 막는 소리 · 깨지면 「쨍」
+        void BossSounds()
+        {
+            UnityEngine.Object b = Find("bosss");
+            Component mem = null;
+            Type mt = T("BossMemory");
+            if (b != null && mt != null) mem = ((Component)b).GetComponent(mt);
+            bool memOn = mem != null && mt.GetProperty("Active")?.GetValue(mem) is bool a && a;
+            if (b == null) { bossObj = null; return; }
+            float hp = Get(b, "EnemyHealth") is float h ? h : 0f;
+            float max = Mathf.Max(1f, Convert.ToSingle(Get(b, "setEnemyHP") ?? 1));     // int 칸
+            bool dead = b.GetType().GetProperty("IsDead")?.GetValue(b) is bool d && d;
+            if (b != bossObj) { bossObj = b; bossHp = hp; bossDead = dead; bossMem = memOn; weakFirst = false; return; }
+            if (dead && !bossDead)
+            {
+                Cue("boss_down");
+                if (frames >= quietBossDownUntil)
+                {
+                    SfxVar(FxClip("bigboom"), 0.55f, 0.9f);
+                    Sfx(FxClip("roar"), 0.35f, 0.6f);
+                }
+            }
+            else if (!dead && hp < bossHp - 0.01f)
+            {
+                float drop = (bossHp - hp) / max;
+                if (weakSfx)
+                {
+                    if (Gap("weak", 0.1f)) SfxVar(FxClip("weakhit"), 0.35f);       // 0.06초 · 0.45 는 따다닥 소리가 곡을 덮어서
+                    if (!weakFirst) { weakFirst = true; Cue("weak_hit"); Sfx(FxClip("ding"), 0.45f, 1.6f); }
+                }
+                else if (memOn) { if (Gap("block", 0.12f)) SfxVar(FxClip("clank"), 0.3f, 1.3f); }       // 기억한 공격을 막음
+                else if (drop > 0.03f && Gap("bosscrack", 0.25f)) SfxVar(FxClip("crack"), 0.45f, 0.8f);
+                else if (Gap("bosshit", 0.11f)) SfxVar(FxClip("thump"), 0.3f, 1.1f);
+            }
+            if (memOn && !bossMem) { Cue("memory_on"); Sfx(FxClip("shimmer"), 0.55f, 0.55f); Sfx(FxClip("clank"), 0.35f, 0.7f); }
+            if (!memOn && bossMem && !dead) { Cue("memory_break"); Sfx(FxClip("shatter"), 0.6f, 0.8f); }
+            bossHp = hp;
+            bossDead = dead;
+            bossMem = memOn;
         }
 
         // 탄이 줄면 총소리, 장전이 시작되면 장전 소리 · 「R」 키 그림
@@ -386,6 +791,286 @@ public class GameplayCapture
             RectTransform r = cursorImage.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(v.x, v.y);
             r.anchoredPosition = Vector2.zero;
+        }
+
+        // ================= 사람 같은 움직임 (humanMove · 상점 트레일러만)
+        //   원거리: 무리 · 보스 둘레를 원을 그리며 돎(카이팅) · 다가오면 물러나며 쏨 · 가끔 멈춰 서서 조준 · 탄이 오면 짧은 옆걸음
+        //   근접(검사): 예전 거리(nearMob · farMob …)로 붙어서 베기 — 방향 전환 보간 · 맵 가장자리 · 벽 · 탄 피하기만 같이
+        //   이동 입력은 몇 프레임에 걸쳐 보간(MoveRate) · 무작위는 장면마다 고정 씨앗(System.Random) → 다시 찍어도 같은 영상
+        const float MoveRate = 7f, DodgeRate = 20f;       // 입력 보간 빠르기 (1/초 · 7 ≈ 0.3초에 90%, 옆걸음은 더 날쌔게)
+        static readonly HashSet<string> MeleeHeroes = new HashSet<string> { "Swordsman", "Ghost" };   // 유령 평타도 4.5칸 손 → 붙어서 싸움
+        System.Random moveRnd = new System.Random(4210);
+        Component movePlayer;
+        int sceneNo, moveFrame, pauseAt, pauseLeft, dodgeLeft, dodgeCool, sidestepAt, flipCool, flipAt, aimPickAt;
+        float orbitDir = 1f;
+        Vector2 moveCur, dodgeDir, wallEscDir;
+        int wallEscLeft;
+        Transform aimMob;
+        readonly List<Transform> mobs = new List<Transform>();
+
+        int RndFrames(float a, float b) => Mathf.RoundToInt((a + (float)moveRnd.NextDouble() * (b - a)) * Fps);
+
+        Vector3 HumanMove(Component player, Vector3 me, Vector3? target, bool boss)
+        {
+            // 장면(씬)이 바뀌면 씨앗 · 타이머를 처음부터 (어느 장면을 다시 찍어도 같게)
+            if (player != movePlayer)
+            {
+                movePlayer = player;
+                sceneNo++;
+                moveRnd = new System.Random(4210 + sceneNo * 97);
+                moveFrame = 0; moveCur = Vector2.zero; dodgeLeft = dodgeCool = pauseLeft = flipCool = wallEscLeft = 0; aimMob = null; aimPickAt = 0;
+                pauseAt = RndFrames(1.0f, 2.0f); sidestepAt = RndFrames(0.8f, 1.5f); flipAt = RndFrames(3.5f, 6f);
+                orbitDir = moveRnd.Next(2) == 0 ? 1f : -1f;
+            }
+            moveFrame++;
+            if (dodgeCool > 0) dodgeCool--;
+            if (flipCool > 0) flipCool--;
+
+            string hero = Hero();
+            bool melee = MeleeHeroes.Contains(hero);
+            float near = boss ? (melee ? nearBoss : rangedBossNear) : (melee ? nearMob : rangedMobNear);
+            float far = boss ? (melee ? farBoss : rangedBossFar) : (melee ? farMob : rangedMobFar);
+            // 유령: 평타(손)가 4.5칸이라 검사보다 바짝 · 연금술사: 플라스크가 10칸에서 잘려 보스 앞에 떨어지지 않게
+            if (hero == "Ghost") { near = boss ? 5f : 3f; far = boss ? 7f : 4.3f; }
+            else if (hero == "Alchemist" && boss) far = Mathf.Min(far, 9.5f);
+
+            // 살아 있는 잡몹 (가까운 것 · 무리 가운데)
+            mobs.Clear();
+            Transform nearest = null;
+            float dNear = 999f, wSum = 0f;
+            Vector2 centroid = Vector2.zero;
+            foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None))
+            {
+                if (o.GetType().GetProperty("IsDead")?.GetValue(o) is bool dead && dead) continue;
+                Transform t = ((Component)o).transform;
+                float d = ((Vector2)(t.position - me)).magnitude;
+                if (d > 16f) continue;
+                mobs.Add(t);
+            }
+            // FindObjectsByType(None) 순서에 기대지 않게 자리로 정렬 (같은 판이면 같은 표적 · 같은 무작위 배정)
+            mobs.Sort((a, b) => a.position.x != b.position.x ? a.position.x.CompareTo(b.position.x) : a.position.y.CompareTo(b.position.y));
+            foreach (Transform t in mobs)
+            {
+                float d = ((Vector2)(t.position - me)).magnitude;
+                if (d < dNear) { dNear = d; nearest = t; }
+                float w = 1f / (1f + d);
+                centroid += (Vector2)t.position * w; wSum += w;
+            }
+            if (wSum > 0f) centroid /= wSum;
+
+            Vector2 desired = Vector2.zero;
+            Vector3 aim = me + Vector3.right * 5f;
+            if (target.HasValue)
+            {
+                Vector2 center = boss || wSum <= 0f ? (Vector2)target.Value : centroid;
+                Vector2 to = center - (Vector2)me;
+                float dC = Mathf.Max(0.01f, to.magnitude);
+                Vector2 toN = to / dC, side = new Vector2(-toN.y, toN.x);
+                if (melee)
+                {
+                    // 검사: 예전과 같은 붙어 베기 (가장 가까운 적 · 보스 기준)
+                    Vector2 tt = target.Value - me;
+                    float d = tt.magnitude;
+                    Vector2 s = new Vector2(-tt.y, tt.x).normalized;
+                    desired = s * 0.75f + (d < near ? -tt.normalized * 1.2f : d > far ? tt.normalized * 0.7f : Vector2.zero);
+                }
+                else
+                {
+                    // 거리 고리: 무리는 「가장 가까운 놈」이 near 안으로 오면 물러남 · 무리 가운데가 far 밖이면 다가감 / 보스는 보스까지 거리
+                    float dIn = boss ? dC : dNear;
+                    float radial = dIn < near ? -Mathf.Clamp((near - dIn) / 2f, 0.45f, 1.3f) : dC > far ? Mathf.Clamp((dC - far) / 2f, 0.3f, 0.8f) : 0f;
+                    // 원을 그리며 돎 (가까울 땐 덜 돌고 더 물러남) → 무리가 한쪽으로 뭉쳐 따라옴
+                    desired = side * orbitDir * (dIn < near * 0.7f ? 0.55f : 0.9f) + toN * radial;
+                    // 바짝 붙은 잡몹은 밀어내듯 피함 (보스 장면의 부하도)
+                    float repelR = boss ? 4f : near * 0.75f;
+                    foreach (Transform m in mobs)
+                    {
+                        Vector2 away = (Vector2)(me - m.position);
+                        float d = away.magnitude;
+                        if (d < repelR && d > 0.01f) desired += away / d * (1f - d / repelR) * 1.6f;
+                    }
+                    // 가끔 도는 방향을 바꿈 (늘 같은 쪽으로만 돌면 기계 같음)
+                    if (moveFrame >= flipAt) { orbitDir = -orbitDir; flipAt = moveFrame + RndFrames(3.5f, 6.5f); }
+                    // 가끔 멈춰 서서 조준 사격 (가까운 적이 없을 때만)
+                    if (moveFrame >= pauseAt)
+                    {
+                        bool safe = boss ? dNear > 4.5f && dC > near * 0.85f : dNear > near * 0.85f;
+                        if (safe) { pauseLeft = RndFrames(0.3f, 0.6f); pauseAt = moveFrame + pauseLeft + RndFrames(1.6f, 3.0f); }
+                        else pauseAt = moveFrame + RndFrames(0.25f, 0.45f);
+                    }
+                    // 정해진 간격의 짧은 옆걸음 (보스 장면은 더 자주 · 무작위지만 씨앗 고정)
+                    if (moveFrame >= sidestepAt)
+                    {
+                        if (dodgeLeft <= 0) StartDodge((moveRnd.Next(2) == 0 ? side : -side) * 0.9f - toN * 0.25f, RndFrames(0.18f, 0.3f));
+                        sidestepAt = moveFrame + (boss ? RndFrames(1.3f, 2.4f) : RndFrames(2.2f, 3.6f));
+                    }
+                }
+
+                // 조준: 보스 우선 · 무리는 몰린 곳 · 바짝 붙은 놈이 있으면 그놈 먼저 (0.4~0.7초마다 다시 고름 → 커서가 표적 사이를 옮겨 다님)
+                if (boss) aim = target.Value;
+                else
+                {
+                    bool lost = aimMob == null || !mobs.Contains(aimMob);
+                    if (melee) aimMob = nearest;      // 근접은 매 프레임 가장 가까운 놈 (반대쪽으로 베지 않게)
+                    else if (lost || moveFrame >= aimPickAt)
+                    {
+                        aimMob = PickAim(me, nearest, dNear, near);
+                        aimPickAt = moveFrame + RndFrames(0.4f, 0.7f);
+                    }
+                    aim = aimMob != null ? aimMob.position : target.Value;
+                }
+            }
+            bool pausing = pauseLeft > 0;
+            if (pausing) { pauseLeft--; desired = Vector2.zero; }
+
+            // 날아오는 적 탄 · 바닥 위험 구역을 보고 피함 (근접 · 원거리 모두)
+            if (dodgeCool <= 0 && Incoming(me, out Vector2 dodge)) StartDodge(dodge, Mathf.RoundToInt(0.24f * Fps));
+            desired += Hazard(me) * 1.6f;
+            if (dodgeLeft > 0) { dodgeLeft--; desired = dodgeDir + desired * 0.25f; pauseLeft = 0; pausing = false; }
+
+            // 맵 가장자리 · 결계 안쪽 유지 (가장자리로 밀리면 도는 방향도 바꿈)
+            Vector2 inward = Inward(me);
+            if (inward.sqrMagnitude > 0.09f && flipCool <= 0 && target.HasValue)
+            {
+                Vector2 to = (Vector2)(target.Value - me);
+                Vector2 side = new Vector2(-to.y, to.x).normalized * orbitDir;
+                if (Vector2.Dot(side, inward) < 0f) { orbitDir = -orbitDir; flipCool = Fps * 3 / 2; }
+            }
+            desired += inward;
+            if (desired.sqrMagnitude > 1f) desired.Normalize();
+
+            // 벽에 박히지 않게: 가려는 쪽이 벽이면 ±50° · ±100° 로 틀고, 다 막히면 돌아섬
+            //   돌아선 방향은 0.4~0.6초 붙들어 둠 (매 프레임 다시 고르면 구석에서 벽 쪽 ↔ 반대쪽을 오가며 제자리에서 떪)
+            if (wallEscLeft > 0)
+            {
+                wallEscLeft--;
+                if (Wall(me + (Vector3)(wallEscDir * 1.4f))) wallEscLeft = 0;
+                else desired = wallEscDir * Mathf.Max(0.6f, desired.magnitude);
+            }
+            if (wallEscLeft <= 0 && desired.sqrMagnitude > 0.01f && Wall(me + (Vector3)(desired.normalized * 1.4f)))
+            {
+                bool found = false;
+                foreach (float a in new[] { 50f, -50f, 100f, -100f })
+                {
+                    Vector2 r = Quaternion.Euler(0f, 0f, a * orbitDir) * desired;
+                    if (!Wall(me + (Vector3)(r.normalized * 1.4f))) { desired = r; found = true; break; }
+                }
+                if (!found)
+                {
+                    desired = -desired;
+                    wallEscDir = desired.normalized; wallEscLeft = RndFrames(0.4f, 0.6f);
+                    if (flipCool <= 0) { orbitDir = -orbitDir; flipCool = Fps; }
+                }
+            }
+
+            // 이동 입력 보간 (방향이 몇 프레임에 걸쳐 돌아감 · 멈출 때도 서서히) — 게임이 입력을 정규화하므로 아주 작아지면 0
+            float k = 1f - Mathf.Exp(-(dodgeLeft > 0 ? DodgeRate : MoveRate) / Fps);
+            // 멈춰 조준할 땐 바로 섬 (게임이 입력을 늘 최대 속도로 바꾸므로 서서히 줄이면 0.2초 넘게 그대로 달림)
+            moveCur = pausing ? Vector2.zero : Vector2.Lerp(moveCur, desired, k);
+            In("AutoMove", moveCur.sqrMagnitude < 0.04f ? Vector2.zero : moveCur);
+            return aim;
+        }
+
+        void StartDodge(Vector2 dir, int frames)
+        {
+            if (dir.sqrMagnitude < 0.0001f) return;
+            dodgeDir = dir.normalized;
+            dodgeLeft = Mathf.Max(1, frames);
+            dodgeCool = dodgeLeft + Fps / 3;
+        }
+
+        // 무리에서 조준할 놈: 바짝 붙은 놈이 있으면 그놈 · 아니면 2.5칸 안에 이웃이 많은(몰린) 놈 (먼 놈은 덜)
+        Transform PickAim(Vector3 me, Transform nearest, float dNear, float near)
+        {
+            if (nearest != null && dNear < near * 0.7f) return nearest;
+            Transform best = nearest;
+            float bs = -999f;
+            foreach (Transform a in mobs)
+            {
+                Vector2 off = (Vector2)(a.position - me);
+                if (Mathf.Abs(off.x) > 22f || Mathf.Abs(off.y) > 12.5f) continue;      // 화면 밖 적은 쏘지 않음 (카메라 15칸)
+                int n = 0;
+                foreach (Transform b in mobs) if (b != a && ((Vector2)(a.position - b.position)).sqrMagnitude < 2.5f * 2.5f) n++;
+                float s = n - off.magnitude * 0.25f + (float)moveRnd.NextDouble() * 0.4f;
+                if (s > bs) { bs = s; best = a; }
+            }
+            return best;
+        }
+
+        // 적 탄(HostileProjectile.Live)이 0.6초 안에 몸에 닿을 길로 오면, 탄 길에서 벗어나는 옆 방향
+        static FieldInfo liveF, pDirF, pSpeedF, pRadF;
+        bool Incoming(Vector3 me, out Vector2 dir)
+        {
+            dir = Vector2.zero;
+            Type hp = T("HostileProjectile");
+            if (hp == null) return false;
+            if (liveF == null) { liveF = hp.GetField("Live", Any); pDirF = hp.GetField("dir", Any); pSpeedF = hp.GetField("speed", Any); pRadF = hp.GetField("radius", Any); }
+            if (!(liveF?.GetValue(null) is IList live) || pDirF == null || pSpeedF == null) return false;
+            float best = 99f;
+            foreach (object o in live)
+            {
+                if (!(o is Component c) || c == null || !c.gameObject.activeInHierarchy) continue;
+                Vector2 v = ((Vector2)pDirF.GetValue(o)).normalized * (float)pSpeedF.GetValue(o);
+                float vv = v.sqrMagnitude;
+                if (vv < 0.01f) continue;
+                Vector2 r = (Vector2)(me - c.transform.position);
+                float t = Vector2.Dot(r, v) / vv;
+                if (t <= 0f || t > 0.6f || t >= best) continue;
+                Vector2 miss = r - v * t;
+                float rad = pRadF != null ? (float)pRadF.GetValue(o) : 0.5f;
+                if (miss.magnitude > rad + 0.9f) continue;
+                best = t;
+                Vector2 perp = new Vector2(-v.y, v.x).normalized;
+                dir = miss.sqrMagnitude < 0.0004f ? perp * orbitDir : Vector2.Dot(perp, miss) >= 0f ? perp : -perp;
+            }
+            return best < 99f;
+        }
+
+        // 바닥 위험 구역(HazardZone) 안이면 바깥쪽으로
+        static Vector2 Hazard(Vector3 me)
+        {
+            Type hz = T("HazardZone");
+            if (hz == null) return Vector2.zero;
+            Vector2 v = Vector2.zero;
+            foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(hz, FindObjectsSortMode.None))
+            {
+                float r = Get(o, "radius") is float f ? f + 0.6f : 0f;
+                Vector2 off = (Vector2)(me - ((Component)o).transform.position);
+                float d = off.magnitude;
+                if (d < r && d > 0.01f) v += off / d * (1f - d / r);
+            }
+            return Vector2.ClampMagnitude(v, 1f);
+        }
+
+        // 맵 가장자리(EnemySpawner 의 spawnArea · Hostile.ClampArena 와 같은 범위) · 결계 원(BossUltimate) 안쪽으로 미는 힘
+        static Vector2 Inward(Vector3 me)
+        {
+            Vector2 v = Vector2.zero;
+            const float m = 3.5f;
+            object sp = Find("EnemySpawner");
+            if (sp != null && Get(sp, "spawnAreaMin") is Vector2 lo && Get(sp, "spawnAreaMax") is Vector2 hi)
+            {
+                if (me.x < lo.x + m) v.x += (lo.x + m - me.x) / m;
+                if (me.x > hi.x - m) v.x -= (me.x - (hi.x - m)) / m;
+                if (me.y < lo.y + m) v.y += (lo.y + m - me.y) / m;
+                if (me.y > hi.y + 1.5f - m) v.y -= (me.y - (hi.y + 1.5f - m)) / m;
+            }
+            Type bu = T("BossUltimate");
+            if (bu != null && bu.GetProperty("Active", Any)?.GetValue(null) is bool on && on && Find("BossUltimate") is object ult
+                && Get(ult, "center") is Vector3 c && Get(ult, "radiusNow") is float r)
+            {
+                float lim = Mathf.Max(r * 0.6f, r - 6f);
+                Vector2 off = (Vector2)(me - c);
+                if (off.magnitude > lim) v -= off.normalized * Mathf.Clamp01((off.magnitude - lim) / 3f) * 1.5f;
+            }
+            return Vector2.ClampMagnitude(v, 1.5f);
+        }
+
+        static MethodInfo isWallM;
+        static bool Wall(Vector3 p)
+        {
+            if (isWallM == null) isWallM = T("Hostile")?.GetMethod("IsWall", Any, null, new[] { typeof(Vector3) }, null);
+            return isWallM != null && isWallM.Invoke(null, new object[] { p }) is bool w && w;
         }
 
         static Vector3? Nearest(Vector3 from, out bool boss)
@@ -547,10 +1232,55 @@ public class GameplayCapture
         yield return null;
         In("AutoUlt", true);
         In("UltDownFrame", Time.frameCount + 1);
+        UltSfx(true);
         yield return F(Mathf.Max(hold, 0.05f));
         In("AutoUlt", false);
         In("UltUpFrame", Time.frameCount + 1);
+        UltSfx(false);
         yield return null; yield return null;
+    }
+
+    // 필살기 소리 (UltCastFlair 「ultcast」 + 영웅마다 필살기 소리 · press: 누름 / 아니면 뗌)
+    static void UltSfx(bool press)
+    {
+        if (rec == null || !rec.rich || !rec.recording) return;
+        string hero = Hero();
+        object p = Find("PlayerController");
+        if (press)
+        {
+            Cue("ult_" + hero);
+            Sx("ultcast", 0.6f);
+            Sx("whoosh", 0.35f, 0.6f);
+        }
+        switch (hero)
+        {
+            case "Gunner":
+                if (press) rec.Sfx((p != null ? Get(p, "chargeSound") as AudioClip : null) ?? FxClip("railcharge"), 0.45f);
+                else { rec.Sfx((p != null ? Get(p, "shotSound") as AudioClip : null) ?? FxClip("gunshot"), 0.6f, 0.85f); Sx("bigboom", 0.45f, 1.1f); }
+                break;
+            case "Swordsman":
+                if (press) { Sx("spin", 0.55f); Sx("slash", 0.6f, 0.8f); }
+                else { Sx("boom", 0.45f, 0.9f); Sx("shatter", 0.4f, 0.8f); }
+                break;
+            case "Archer":
+                if (press) { Sx("bowtwang", 0.6f, 0.85f); Sx("whoosh", 0.4f, 0.9f); }
+                else for (int i = 0; i < 5; i++) rec.Later(0.08f * i, FxClip("arrowfly"), 0.25f, rec.Rand(0.8f, 1.2f));      // 화살 비
+                break;
+            case "Alchemist":
+                if (press) { Sx("glassclink", 0.5f, 0.8f); Sx("fizz", 0.4f); }
+                else { Sx("boom", 0.5f, 0.9f); Sx("shatter", 0.4f, 0.8f); }
+                break;
+            case "Ghost":
+                if (press) { Sx("possess", 0.6f); Sx("whoosh", 0.45f, 0.5f); }
+                else Sx("wail", 0.4f, 0.8f);
+                break;
+            case "Clockmaker":
+                if (press) { Sx("rewind", 0.6f); Sx("bell", 0.45f, 0.8f); }
+                break;
+            default:
+                if (!press) Sx("boom", 0.45f);
+                break;
+        }
     }
 
     static object SpawnBoss(int stage, float hp)
@@ -728,13 +1458,20 @@ public class GameplayCapture
         Call(shop, "openLevelShop");
         Call(shop, "setAbilitys");
         ForceCards(shop, 16, 19, 17);
+        Sx("levelup", 0.45f);                       // 레벨업 카드 창 (Juice.LevelUp)
+        Sx("ding", 0.35f, 0.8f);                    // 진화 힌트 (LevelShop.EvoUI)
         Say(C(caption), 4.6f);
         yield return F(0.9f);
         Call(shop, "onSecondButton");
+        Sx("pop", 0.4f, 1.3f);                      // 카드 누름
         yield return F(0.5f);
         Shot("09_skill_evolution_cards");
         yield return F(0.6f);
         ConfirmCard(shop, 1);                       // 마지막 재료 → 진화 연출
+        Cue("skill_evo_confirm");
+        Sx("chime", 0.45f, 1.3f);
+        Sx("pulse", 0.45f, 0.9f);                   // SkillEvolutionUI: 어두워지며 재료가 모임
+        Sx("shimmer", 0.4f, 0.8f);
         rec.levelUpAllowed = false;
         yield return F(2.9f);
         Shot("10_skill_evolution");
@@ -786,11 +1523,18 @@ public class GameplayCapture
         rec.autopilot = true;
         yield return F(1.2f);
         rec.recording = true;
+        Cue("mirror", true);
         yield return Fade(1f, 0f, 0.2f);
         Say(C(caption), brief ? 4.2f : 4.6f);
         yield return F(brief ? 0.4f : 1.6f);
         Shot("13_abyss_mirror_sovereign");
-        if (skills != null) ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+        if (skills != null)
+        {
+            ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+            Cue("mirror_ult");
+            Sx("roar", 0.4f, 0.5f);                 // 거울의 군주가 내 필살기를 흉내 냄
+            Sx("ultcast", 0.5f, 0.7f);
+        }
         yield return F(brief ? 2.0f : 2.4f);
         Shot("14_mirror_mimics_ult");
         yield return F(brief ? 0.6f : 2.2f);
@@ -816,6 +1560,8 @@ public class GameplayCapture
     static void SayRec(int caption, float time) => rec.StartCoroutine(CaptionRec(C(caption), time));
 
     // 녹화된 길이가 seconds 가 될 때까지 (컷 길이를 콘티에 맞춤)
+    const int EndcardFrame = 1246;   // make_trailer_music.py CUE["endcard"] 와 같은 값 (41.53초)
+
     static IEnumerator UntilRecorded(int start, float seconds)
     {
         int n = Mathf.RoundToInt(seconds * Fps);
@@ -872,12 +1618,13 @@ public class GameplayCapture
         return p != null && p.GetType().GetProperty("IsReloading")?.GetValue(p) is bool r && r;
     }
 
-    static IEnumerator MusicIn(float delay, float ramp)
+    // from 크기로 시작해 delay 뒤 ramp 초 동안 to 로 (트레일러 곡은 크기 흐름을 곡이 맡아 to = 1)
+    static IEnumerator MusicIn(float delay, float ramp, float from = 0f, float to = 0.9f)
     {
-        rec.musicVolume = 0f;
+        rec.musicVolume = from;
         yield return F(delay);
         int n = Mathf.Max(1, Mathf.RoundToInt(ramp * Fps));
-        for (int i = 1; i <= n; i++) { rec.musicVolume = 0.9f * i / n; yield return null; }
+        for (int i = 1; i <= n; i++) { rec.musicVolume = Mathf.Lerp(from, to, i / (float)n); yield return null; }
     }
 
     // ---------------- 0~4초: 초원 · 거너. 검은 화면 → 십자 커서가 슬라임 위로 → 한 발(음악 없이 총소리만) → 8발 · 빈 탄창 → 저절로 재장전
@@ -888,7 +1635,8 @@ public class GameplayCapture
         rec.keyHint = true;
         rec.recording = true;
         int start = rec.frames;
-        rec.StartCoroutine(MusicIn(1.2f, 0.3f));                 // 음악은 1.5초에 들어옴
+        Cue("open");
+        // 곡은 처음부터 한 크기(0.85) — 도입이 원래 작게 만들어져 있어 더 줄이면 첫 사격 타이코 · 심장 박동이 묻힘
         SayRec(C_NoAutoAim, 1.5f);
         yield return Fade(1f, 0f, 0.3f);
         yield return AimShot(0);
@@ -916,6 +1664,7 @@ public class GameplayCapture
         yield return F(1.0f);                       // 적이 다가올 시간 (녹화 안 함)
         rec.recording = true;
         int start = rec.frames;
+        Cue("hero_" + hero, true);
         Hit(0.6f, 0.3f, 0.4f);
         yield return F(seconds * 0.2f);
         yield return Ult(ultHold);
@@ -936,19 +1685,24 @@ public class GameplayCapture
         yield return F(1.0f);
         rec.recording = true;
         int start = rec.frames;
+        Cue("hero_Archer", true);
         if (manual)
         {
             object kit = StaticGet("CharacterKit", "Instance");
             In("FireDownFrame", Time.frameCount + 1);
             In("AutoFire", true);
+            Sx("bowdraw", 0.4f);                    // 시위를 당김
+            bool full = false;
             for (int i = 0; i < Fps * 2; i++)
             {
-                if (kit != null && Get(kit, "draw") is float d && d >= 1f) break;
+                if (kit != null && Get(kit, "draw") is float d && d >= 1f) { full = true; break; }
                 yield return null;
             }
+            if (full) Sx("ding", 0.4f, 1.6f);       // 가득 참 — 지금 놓으라는 신호 (CharacterKit 과 같은 소리)
             yield return F(0.2f);
             In("AutoFire", false);
             In("FireUpFrame", Time.frameCount + 1);
+            Sx("chime", 0.45f, 1.8f);               // 「완벽!」 (놓는 소리 · 화살 소리는 평타 감시가 냄)
         }
         yield return UntilRecorded(start, seconds);
         if (manual) SetStatic("CharacterKit", "ManualBowInAuto", false);
@@ -984,10 +1738,16 @@ public class GameplayCapture
         yield return RaiseBarrier(b);
         rec.recording = true;
         int start = rec.frames;
+        Cue("barrier_kill", true);
+        SxRes("Sounds/domain_open", 0.5f);         // 결계가 펼쳐짐 (BossUltimate.Expand)
+        Sx("roar", 0.35f, 0.8f);
         Hit(0.8f, 0.6f, 0.6f);
         SayRec(caption, 3f);
         yield return F(1.2f);
-        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);     // 결계가 깨지는 순간
+        KillBoss(b);     // 결계가 깨지는 순간
+        Cue("barrier_break");
+        SxRes("Sounds/domain_break", 0.7f);        // BossUltimate.Shatter
+        rec.quietBossDownUntil = rec.frames + 3;   // 같은 순간 보스 폭발 · 울음까지 겹치면 찌그러짐
         Hit(1.5f, 2f, 1f);
         rec.StartCoroutine(SlowMo(0.3f, 0.5f));
         yield return UntilRecorded(start, 1.5f);
@@ -1005,9 +1765,15 @@ public class GameplayCapture
             evo = Find("WeaponEvolutionUI");
         }
         yield return UntilRecorded(start, 2.5f);
-        if (evo != null) Call(evo, "Select", 0);
+        if (evo != null) { Call(evo, "Select", 0); Sx("ding", 0.4f); }          // WeaponEvolutionUI.Select
         yield return UntilRecorded(start, 3.0f);
-        if (evo != null) Set(evo, "confirmed", true);
+        if (evo != null)
+        {
+            Set(evo, "confirmed", true);
+            Cue("weapon_evolve_confirm");
+            Sx("railgun", 0.45f, 0.8f);            // 고른 카드가 가운데로 모이고 빛이 터짐
+            Sx("shimmer", 0.45f);
+        }
         rec.gunSfx = false;
     }
 
@@ -1032,7 +1798,9 @@ public class GameplayCapture
         rec.aimFixed = true;
         rec.aimPoint = at;
         rec.recording = true;
+        rec.weakSfx = true;
         int start = rec.frames;
+        Cue("weak", true);
         SayRec(caption, 2.8f);
         for (int f = 0; rec.frames - start < Fps * 2.6f; f++)
         {
@@ -1044,6 +1812,7 @@ public class GameplayCapture
         rec.aimFixed = false;
         rec.manualFire = false;
         rec.gunSfx = false;
+        rec.weakSfx = false;
     }
 
     static Vector3 ToV3(object v) => v is Vector2 v2 ? (Vector3)v2 : v is Vector3 v3 ? v3 : Vector3.zero;
@@ -1092,6 +1861,7 @@ public class GameplayCapture
         Set(b, "EnemyHealth", max * 0.505f);        // 지옥의 군주 기억 체력 50% 바로 위
         rec.recording = true;
         int start = rec.frames;
+        Cue("memory", true);
         SayRec(caption, 3f);
         yield return F(0.3f);
         Call(b, "TakeDamage", max * 0.012f, 0f, Vector3.zero);     // 50% 를 넘음 → 기억 발동
@@ -1119,6 +1889,7 @@ public class GameplayCapture
         rec.baseZoom = 0.92f;
         rec.recording = true;
         int start = rec.frames;
+        Cue("world_" + stage, true);
         Hit(0.8f, 0.4f, 0.5f);
         yield return F(0.2f);
         yield return Ult(0.3f);
@@ -1153,6 +1924,9 @@ public class GameplayCapture
         yield return F(1.0f);
         rec.recording = true;
         int start = rec.frames;
+        Cue("developer", true);
+        Sx("roar", 0.45f, 0.95f);                   // 개발자 등장
+        Sx("bell", 0.35f, 0.6f);
         SayRec(caption, 3.6f);
         yield return F(1.4f);
         yield return Ult(0.8f);
@@ -1173,6 +1947,7 @@ public class GameplayCapture
         rec.autopilot = false;
         StopInput();
         rec.recording = true;
+        Cue("skill_evo", true);
         yield return SkillEvolution(caption);
     }
 
@@ -1186,6 +1961,8 @@ public class GameplayCapture
         T("SoulShards").GetMethod("Add").Invoke(null, new object[] { 4000, Vector3.zero, false });
         Call(sm, "OpenSoulTree");
         rec.recording = true;
+        Cue("tree", true);
+        Sx("shimmer", 0.45f, 1.2f);                 // SoulTreeUI 열림
         SayRec(caption, 2.2f);
         yield return F(0.4f);
         object specials = Get(sm, "specials");
@@ -1200,7 +1977,7 @@ public class GameplayCapture
                 if (pick == null) pick = v;
                 if (Convert.ToInt32(Get(n, "branch")) == i % 6) { pick = v; break; }
             }
-            if (pick != null) Call(tree, "Buy", pick);
+            if (pick != null) { Call(tree, "Buy", pick); Sx("chime", 0.35f, 1f + 0.08f * i); Sx("sparkle", 0.3f, 1f + 0.05f * i); }
             yield return F(0.26f);
         }
         T("SoulTreeUI").GetMethod("Close").Invoke(null, null);
@@ -1220,9 +1997,13 @@ public class GameplayCapture
         yield return RaiseBarrier(b);
         rec.baseZoom = 0.95f;
         rec.recording = true;
+        Cue("barrier_shatter", true);              // domain_open 은 넣지 않음 (4.2초 꼬리가 끝 카드 앞 정적 · 로고까지 덮음)
         Hit(1f, 1f, 1f);
         yield return F(0.7f);
-        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);
+        KillBoss(b);
+        Cue("barrier_break_final");
+        SxRes("Sounds/domain_break", 0.75f);
+        rec.quietBossDownUntil = rec.frames + 3;
         Hit(1.5f, 2f, 1f);
         rec.StartCoroutine(SlowMo(0.25f, 1.3f));
         yield return F(1.4f);
@@ -1382,9 +2163,10 @@ public class GameplayCapture
             {
                 if (f == slam)
                 {
-                    if (boom != null) rec.Sfx(boom, 0.9f);
-                    rec.musicVolume = 1f;
+                    Cue("logo");
+                    if (boom != null) rec.Sfx(boom, 0.4f);      // 곡에도 LOGO 충격음 · 타이코 · 금관이 있어 0.8 → 0.4 (합이 커지면 SoftClip 에 뭉개짐)
                 }
+                if (f == slam + Mathf.RoundToInt(0.9f * Fps)) Sx("shimmer", 0.3f, 1.2f);      // 빛 훑기
                 // 흰 번쩍임 (0.18초) · 빛줄기는 금방 사라짐
                 rec.flash.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - ts / 0.18f) * 0.85f);
                 float sk = Mathf.Clamp01(1f - ts / 0.25f);
@@ -1427,8 +2209,8 @@ public class GameplayCapture
                     shineTex.SetPixels32(sp); shineTex.Apply();
                 }
                 sweep.color = new Color(1f, 1f, 1f, (sw > 0f && sw < 1f ? 1f : 0f) * fadeOut);
-                // 끝 무렵: 음악이 잦아듦
-                if (t > 3.4f) rec.musicVolume = Mathf.Lerp(1f, 0f, Mathf.Clamp01((t - 3.4f) / 1.8f));
+                // 끝 무렵: 곡이 스스로 잦아들므로 코드는 화면과 함께 마지막 0.6초만 닫음 (예전 3.4초부터 1.8초 페이드는 곡과 겹쳐 두 번 줄어듦)
+                rec.musicVolume = 0.85f * fadeOut;
             }
             yield return null;
         }
@@ -1450,6 +2232,7 @@ public class GameplayCapture
         rec = host.AddComponent<Rec>();
         BuildOverlay();
         rec.showCursor = true;                     // 트레일러만 커서를 그림 (하이라이트 · 레딧은 숨김)
+        rec.humanMove = true;                      // 트레일러만 사람 같은 움직임 (원거리 영웅은 잡몹 6~9칸 · 보스 8~11칸 거리 카이팅, 검사는 예전처럼 붙어 베기)
         rec.sub.text = NoCaptions ? "" : C(C_EndTag) + "\n" + C(C_FreeDemo);
         rec.sub.rectTransform.sizeDelta = new Vector2(1800f, 160f);
         rec.sub.rectTransform.anchoredPosition = new Vector2(0f, -190f);
@@ -1462,8 +2245,10 @@ public class GameplayCapture
         rec.aimFixed = true;
         rec.aimPoint = ((Component)Find("PlayerController")).transform.position + new Vector3(-3f, -1.5f, 0f);
         yield return F(1.2f);
+        rec.musicPath = "TrailerMusic";             // 2026-10-18~ 직접 합성한 긴박 · 웅장한 트레일러 곡 (make_trailer_music.py · 콘티 장면 전환에 충격음)
+        rec.rich = true;                            // 인게임 효과음을 다채롭게 (처치 · 타격 · 평타 · 필살기 · 결계 · 진화 · 장면 전환)
         rec.Begin(Path.Combine(Out, "SoulSaver_Trailer_" + Lang + ".mp4"));
-        rec.musicVolume = 0f;
+        rec.musicVolume = 0.85f;                    // 곡이 이미 최대 0.93 으로 눌려 있어 1.0 은 효과음 얹을 여유가 없음
         yield return AimOpening();
 
         // ---------------- 4~7초) 영웅 9명, 9개의 손 — 유령 빙의 · 시계공 되감기 · 궁수 「완벽!」
@@ -1504,6 +2289,10 @@ public class GameplayCapture
         rec.autopilot = false;
         StopInput();
         yield return Fade(0f, 1f, 0.4f);
+        // 끝 카드는 늘 같은 녹화 프레임에서 시작 (곡의 로고 「쾅」 · 정적과 맞춤 — 앞 장면 길이가 몇 프레임 흔들려도 검은 화면으로 기다림)
+        yield return UntilRecorded(0, EndcardFrame / (float)Fps);
+        rec.Hush();                                 // 곡이 비워 둔 정적 — 결계 소리 꼬리를 끊음
+        Cue("endcard");                             // 휘익 없이 (곡이 가장 조용한 순간)
         yield return EndCard();
 
         rec.End();
@@ -1518,6 +2307,24 @@ public class GameplayCapture
 
     // ================================================================= 하이라이트 영상 (2.2.1~, record.ps1 -Mode highlight)
     // 자막 없이 긴박한 음악 + 펀치 줌 · 흔들림 · 번쩍임 · 슬로 모션, 가장 화려하게 터지는 장면만 빠르게 이어 붙임
+    // 결계를 깨는 마지막 한 방 (2026-10-18~): 예전엔 TakeDamage(9999999) 라 머리 위에 「8000000」(× PlayerDamageMul 0.8) 거대 숫자가 떴음
+    //   → 남은 체력을 게임 배율(PlayerDamageMul · damageTakenMul · erosionMul · memoryTakenMul)로 되짚어 「남은 체력 + 조금」만 줌 (실제 막타처럼 보이는 숫자)
+    //   기억 방패 등으로 덜 들어가 살아남으면 체력을 거의 0 으로 두고 같은 한 방을 한 번 더 (숫자는 여전히 그럴듯한 크기)
+    static void KillBoss(object b)
+    {
+        float hp = Mathf.Max(1f, Get(b, "EnemyHealth") is float h ? h : 1f);
+        float k = StaticGet("GameMode", "PlayerDamageMul") is float pm ? pm : 1f;
+        foreach (string f in new[] { "damageTakenMul", "erosionMul", "memoryTakenMul" })
+            if (Get(b, f) is float m && m > 0.01f) k *= m;
+        float d = Mathf.Ceil((hp * 1.03f + 1f) / Mathf.Max(0.05f, k));
+        Call(b, "TakeDamage", d, 0f, Vector3.zero);
+        if (Get(b, "isDead") is bool dead && !dead)
+        {
+            Set(b, "EnemyHealth", 0.01f);
+            Call(b, "TakeDamage", d, 0f, Vector3.zero);
+        }
+    }
+
     static void Hit(float p, float s, float f) { rec.punch = Mathf.Max(rec.punch, p); rec.shake = Mathf.Max(rec.shake, s); rec.flashAmt = Mathf.Max(rec.flashAmt, f); }
 
     // 슬로 모션 (게임 시간만 느려지고 음악은 그대로)
@@ -1595,7 +2402,7 @@ public class GameplayCapture
         yield return F(2.6f);                       // 결계 안에서 쏟아지는 공격
         yield return Ult(0.3f);
         yield return F(0.5f);
-        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);     // 결계가 깨지는 순간
+        KillBoss(b);     // 결계가 깨지는 순간
         Hit(1.5f, 2f, 1f);
         rec.StartCoroutine(SlowMo(0.25f, 1.6f));
         yield return F(2.2f);
@@ -1708,7 +2515,7 @@ public class GameplayCapture
         yield return F(2.0f);                       // 결계 안에서 쏟아지는 보스 공격
         yield return Ult(0.3f);
         yield return F(0.4f);
-        Call(b, "TakeDamage", 9999999f, 0f, Vector3.zero);
+        KillBoss(b);
         Hit(1.5f, 2f, 1f);
         rec.StartCoroutine(SlowMo(0.25f, 1.3f));
         yield return F(1.5f);
@@ -1731,7 +2538,13 @@ public class GameplayCapture
         rec.baseZoom = 1.05f;
         rec.recording = true;
         Hit(0.8f, 0.5f, 0.7f);
-        if (skills != null) ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+        if (skills != null)
+        {
+            ((MonoBehaviour)skills).StartCoroutine((IEnumerator)Call(skills, "Run", Call(skills, "MirrorUlt", true, true)));
+            Cue("mirror_ult");
+            Sx("roar", 0.4f, 0.5f);                 // 거울의 군주가 내 필살기를 흉내 냄
+            Sx("ultcast", 0.5f, 0.7f);
+        }
         yield return F(1.6f);                       // 보스가 내 필살기를 흉내
         yield return Ult(0.4f);
         Hit(1f, 1f, 0.3f);
