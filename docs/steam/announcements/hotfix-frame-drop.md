@@ -1,16 +1,18 @@
-# 스팀 공지 — 1.1.9 긴급 업데이트 (프레임 저하 수정)
+# 스팀 공지 — 1.2.0 긴급 업데이트 (프레임 저하 수정 · 옛 1.1.9~1.2.1 묶음)
+규칙: 사용자 지시 — 게시글 제목에 버전을 쓰지 않고 「핫픽스 - 」로 시작
 
-종류: 게임 업데이트 · 소규모 업데이트 / 표시 이미지: docs/steam/art/events/v1.1_cover_800x450.png / 빌드 연결: Default 브랜치 1.1.9
-공지 범위: 1.1.9 만. 1.1.7(무한 모드 초반 완화)은 다음 업데이트 공지와 묶는다. 1.1.8 체력바 변경은 공지하지 않는다.
+종류: 게임 업데이트 · 소규모 업데이트 / 표시 이미지: docs/steam/art/events/hotfix_800x450.png / 빌드 연결: Default 브랜치 1.2.0
+공지 범위: 1.1.9 · 1.2.0 핫픽스 묶음. 1.1.7(무한 모드 초반 완화)은 다음 업데이트 공지와 묶는다. 1.1.8 체력바 변경은 공지하지 않는다.
 
 === ko
-제목: 1.1.9 긴급 업데이트 — 프레임 저하 수정
-부제: 판을 시작하자마자 생기던 렉을 고치고 프레임 설정을 추가했습니다.
+제목: 핫픽스 - 프레임 저하 수정
+부제: 판이 갈수록 느려지던 렉을 고치고 프레임 설정을 추가했습니다.
 본문:
 [p]플레이 중 프레임이 크게 떨어진다는 제보를 받고 긴급 업데이트를 준비했습니다. 불편을 드려 죄송합니다.[/p]
 [h2]🛠️ 프레임 저하 수정[/h2]
 [list]
-[*]판을 시작하자마자 프레임이 크게 떨어지던 문제를 고쳤습니다. 특히 내장 그래픽 PC와 무한 모드에서 렉이 크게 줄어듭니다.
+[*]판이 진행될수록 프레임이 점점 떨어지던 문제를 고쳤습니다. 오래 플레이할수록, 일시정지 중에도 느려지던 렉이 사라집니다.
+[*]특히 내장 그래픽 PC와 무한 모드에서 화면을 그리는 부담을 줄였습니다.
 [*]적이 많을 때 화면을 그리는 부담과 계산량을 줄였습니다. 게임 플레이와 겉모습은 그대로입니다.
 [/list]
 [h2]⚙️ 프레임 설정 추가[/h2]
@@ -22,13 +24,14 @@
 [p]여전히 렉이 있다면 사용하시는 PC 사양과 함께 커뮤니티 토론 게시판에 알려 주세요. 빠르게 확인하겠습니다.[/p]
 
 === en
-Title: 1.1.9 Hotfix — Frame Drop Fix
-Subtitle: Fixed the lag that started right at the beginning of a run and added frame settings.
+Title: Hotfix - Frame Drop Fix
+Subtitle: Fixed the lag that worsened as a run went on and added frame settings.
 Body:
 [p]We received reports of severe frame drops during play and prepared this hotfix right away. Sorry for the trouble.[/p]
 [h2]🛠️ Frame Drop Fix[/h2]
 [list]
-[*]Fixed a problem where the frame rate dropped sharply right after starting a run. Lag is greatly reduced, especially on integrated graphics and in Endless mode.
+[*]Fixed the frame rate dropping more and more as a run went on. The lag that kept getting worse the longer you played, even while paused, is gone.
+[*]Reduced rendering load, especially on integrated graphics and in Endless Mode.
 [*]Reduced rendering and processing load when many enemies are on screen. Gameplay and visuals are unchanged.
 [/list]
 [h2]⚙️ New Frame Settings[/h2]
@@ -40,13 +43,14 @@ Body:
 [p]If you still experience lag, please let us know on the Community Discussions board along with your PC specs. We will look into it quickly.[/p]
 
 === ja
-タイトル: 1.1.9 緊急アップデート — フレームレート低下の修正
-サブタイトル: 開始直後から起きていたラグを修正し、フレーム設定を追加しました。
+タイトル: ホットフィックス - フレームレート低下の修正
+サブタイトル: プレイが進むほど重くなるラグを修正し、フレーム設定を追加しました。
 本文:
 [p]プレイ中にフレームレートが大きく下がるというご報告を受け、緊急アップデートを用意しました。ご不便をおかけして申し訳ありません。[/p]
 [h2]🛠️ フレームレート低下の修正[/h2]
 [list]
-[*]プレイ開始直後からフレームレートが大きく下がる問題を修正しました。特に内蔵グラフィックスのPCやエンドレスで、ラグが大きく軽くなります。
+[*]プレイが進むほどフレームレートが下がっていく問題を修正しました。長く遊ぶほど、一時停止中でも重くなっていくラグがなくなります。
+[*]特に内蔵グラフィックスのPCやエンドレスで、描画の負荷を減らしました。
 [*]敵が多いときの描画と処理の負担を減らしました。ゲームプレイと見た目は変わりません。
 [/list]
 [h2]⚙️ フレーム設定の追加[/h2]
@@ -58,13 +62,14 @@ Body:
 [p]まだラグがある場合は、お使いのPCのスペックとあわせてコミュニティのディスカッションでお知らせください。すぐに確認します。[/p]
 
 === zh
-标题: 1.1.9 紧急更新 — 修复帧率下降
-副标题: 修复了开局就出现的卡顿，并新增了帧率设置。
+标题: 热修复 - 修复帧率下降
+副标题: 修复了越玩越卡的问题，并新增了帧率设置。
 正文:
 [p]我们收到了游戏中帧率大幅下降的反馈，立即准备了这次紧急更新。给您带来不便，非常抱歉。[/p]
 [h2]🛠️ 修复帧率下降[/h2]
 [list]
-[*]修复了开局后帧率立即大幅下降的问题。尤其是集成显卡电脑和无尽模式中的卡顿已大幅减轻。
+[*]修复了游戏进行越久帧率越低的问题。玩得越久、甚至暂停时也越来越卡的问题已经消失。
+[*]尤其在集成显卡电脑和无尽模式中减轻了画面绘制负担。
 [*]减轻了敌人众多时的渲染与运算负担。玩法和画面保持不变。
 [/list]
 [h2]⚙️ 新增帧率设置[/h2]
