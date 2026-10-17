@@ -102,6 +102,7 @@ public static class MenuExtras
     static void InstallMainMenu()
     {
         DailyChallenge.End();
+        EndlessMode.LastSeconds = -1f;  // 1.2.3~ 무한 판을 저장하고 나오면 남은 기록이 다음 이야기 판 결과 화면에 붙지 않게
         RunSave.EndContinue();          // 1.0.4~: 이어한 판의 캐릭터 · 난이도를 메뉴 선택에서 거둠 (난이도 버튼을 그리기 전에)
         GameObject start = GameObject.Find("GameStartButton");
         GameObject exit = GameObject.Find("ExitButton");
@@ -284,7 +285,10 @@ public static class MenuExtras
             System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
                       + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
-                      + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
+                      + " · " + (saved.difficulty == (int)Difficulty.Endless      // 1.2.3~ 무한 판은 장이 없어 생존 시간 · 보스 처치 수로
+                                 ? Loc.T("생존 시간 ") + EndlessMode.Clock(saved.endlessSeconds) + " · " + Loc.T("보스 처치 ") + saved.endlessBosses
+                                 : Chapters.Title(saved.stage))
+                      + " · Lv " + saved.level + "</size>";
             label();
             ct.gameObject.AddComponent<LocRefresh>().refresh = label;
         }

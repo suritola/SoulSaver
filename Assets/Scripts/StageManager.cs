@@ -171,14 +171,25 @@ public class StageManager : MonoBehaviour
             yield return TutorialRun.Run(this);
             yield break;
         }
-        // 2.1.9: 메인 메뉴 「이어하기」면 시작 이야기 · 첫 카드 대신 저장한 판을 되살림 (RunSave)
-        if (!endless && RunSave.Pending != null)
+        // 2.1.9: 메인 메뉴 「이어하기」면 시작 이야기 · 첫 카드 대신 저장한 판을 되살림 (RunSave) · 1.2.3~ 무한 모드도 같은 길
+        if (RunSave.Pending != null)
         {
+            RunSave.Data saved = RunSave.Pending;                   // Restore 가 Pending 을 비우므로 먼저
+            if (endless) PrepareEndless();                          // 사막 맵 · 무한 스테이지 · 보스 목록 · 시작 자리 (이야기 판은 Restore 안의 JumpToStage 가 맡음)
             yield return RunSave.Restore(this);
+            if (endless)
+            {
+                GameMode.StartEndlessClock(saved.endlessSeconds);
+                EndlessMode em = gameObject.AddComponent<EndlessMode>();
+                em.Init(this, endlessBosses, true);
+                em.RestoreRun(saved);                               // Init 바로 뒤 · 같은 프레임 (Update 가 끼지 않게)
+            }
             if (spawner != null) spawner.spawningEnabled = true;
             started = true;
-            RunClock.Create(RestoredClock);
-            Notice.Big(Loc.T("이어하기"), Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), NoticeIcon.Soul, resumeNote != null ? 3.2f : 2.8f);     // 1.2~ 무게를 진 판이면 한 줄 더
+            if (endless)
+                Notice.Big(Loc.T("이어하기"), Loc.T("무한 모드 · 불타는 사막") + "\n" + Loc.T("생존 시간 ") + EndlessMode.Clock(saved.endlessSeconds) + " · " + Loc.T("보스 처치 ") + saved.endlessBosses, NoticeIcon.Boss, 2.8f);
+            else RunClock.Create(RestoredClock);
+            if (!endless) Notice.Big(Loc.T("이어하기"), Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), NoticeIcon.Soul, resumeNote != null ? 3.2f : 2.8f);     // 1.2~ 무게를 진 판이면 한 줄 더
             resumeNote = null;
             yield break;
         }

@@ -250,7 +250,7 @@ public partial class SpecialAbilities
     }
 
     // ---------------- 무한 모드: 진화를 다 마친 뒤 보스를 잡을 때마다 쌓이는 전리품 (돌아가며)
-    public string BossTrophy(int n)
+    public string BossTrophy(int n, bool quiet = false)      // quiet: 1.2.3~ 이어하기 기록 재생 (효과음 · 글자 · 번쩍임 없이)
     {
         if (player == null) return "";
         string got;
@@ -264,6 +264,7 @@ public partial class SpecialAbilities
                 break;
             default: AddRate(0.95f); got = Loc.T("모든 무기 발사 간격 -5%"); break;     // -8% → -5%
         }
+        if (quiet) return got;
         if (fx != null) { fx.Play("levelup", 0.7f, 1f); fx.FloatText(player.transform.position, got, new Color(1f, 0.85f, 0.4f), 6f, 0f); }
         Flash(player.transform.position, 6f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.5f);
         return got;

@@ -7,8 +7,9 @@ using UnityEngine.SceneManagement;
 // 판의 상태를 통째로 적지 않고, 판을 바꾼 "선택"을 순서대로 적어 두었다가 이어할 때 그대로 다시 적용함
 //   c<번호> 레벨업 카드 · f<번호> 시작 카드(레벨이 오르지 않음) · e<번호> 무기 진화 · t<키> 영혼 트리 칸 · s<번호,…> 특수 능력 · b<번호> 코인 상점
 //   1.0.4~: 성장 카드도 c<100 ~ 103> · r 영혼 정련 한 번
+//   1.2.3~: bt<번호> 무한 모드 보스 전리품
 // 그 밖에 바뀌는 값(체력 · 경험치 · 남은 레벨업 · 코인 · 영혼 조각 · 처치 수 · 게이지 · 판 기록)은 저장할 때의 값을 그대로
-// 보통 이야기 판만 저장 (무한 모드 · 일일 도전 · 체험판 · 자동 촬영 · 튜토리얼은 저장하지 않음) · 죽거나 4장을 클리어하거나 새 판을 시작하면 지움
+// 이야기 · 무한 모드 판을 저장 (1.2.3~ 무한 모드도 같은 칸 · 일일 도전 · 체험판 · 자동 촬영 · 튜토리얼은 저장하지 않음) · 죽거나 4장을 클리어하거나 새 판을 시작하면 지움
 public static class RunSave
 {
     const string Key = "run.save";
@@ -57,6 +58,19 @@ public static class RunSave
         // 옛 저장에는 없어 0 → 기록을 다시 적용하기 전(시작 공격력일 때) 기준을 정함
         public float baseAttack;
         public int baseMag;
+        // 1.2.3~ 무한 모드 (EndlessMode.SaveRun · RestoreRun 이 적고 되살림 · 이야기 판 저장에는 모두 기본값)
+        public float endlessSeconds;                    // GameMode.EndlessSeconds — 경과 시간
+        public int endlessBosses;                       // 쓰러뜨린 보스 수
+        public int endlessTurn;                         // 다음에 나올 보스 차례 (보스가 살아 있었으면 1 뺀 값: 같은 보스가 다시 나오게)
+        public bool endlessBossAlive;                   // 평소 · 한계 돌파의 보스가 살아 있었음 → 이어할 때 바로 다시 (체력 가득)
+        public float endlessNextBoss = -1f;             // 다음 보스까지 남은 초 (-1 = 예약 없음)
+        public float endlessNextMid = -1f;              // 다음 중간 보스까지 남은 초
+        public int endlessFinal;                        // finalStage 0 평소 · 1 모든 보스 · 2 개발자(· 엄마) · 4 한계 돌파 (3 클리어 연출 중은 4 로)
+        public int endlessFinalAlive;                   // finalStage 1: 살아 있던 보스 종류 (bossPrefabs 번호 비트)
+        public bool endlessDevSummoned, endlessMomSummoned, endlessDevDown, endlessMomDown;
+        public int endlessMomKillBase = -1;             // 개발자를 쓰러뜨린 순간의 판 처치 수 (-1 = 아직)
+        public int endlessTrophies;                     // 진화를 다 마친 뒤 받은 전리품 수 (효과는 기록 bt<번호> 로 다시 적용)
+        public bool endlessStartGiven;                  // 레벨 10 시작 보너스를 받았음 (false 면 이어할 때 줌)
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -90,7 +104,7 @@ public static class RunSave
     }
 
     // 저장해도 되는 판인지
-    static bool Savable => !Disabled && !GameMode.IsEndless && !DailyChallenge.Active && !Demo.On
+    static bool Savable => !Disabled && !DailyChallenge.Active && !Demo.On
                            && !GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode
                            && SceneManager.GetActiveScene().name == "GameScene";
 
@@ -122,7 +136,7 @@ public static class RunSave
         }
     }
 
-    // ESC 메뉴 「다시 시작」 (1.0.4~): 저장하는 판을 버리고 새로 시작하면 이어할 판도 지움 (무한 모드 · 일일 도전 등은 이야기 판 저장을 건드리지 않음)
+    // ESC 메뉴 「다시 시작」 (1.0.4~): 저장하는 판을 버리고 새로 시작하면 이어할 판도 지움 (일일 도전 등은 남아 있던 저장을 건드리지 않음)
     public static void Abandon()
     {
         if (Savable) Delete();
@@ -212,8 +226,8 @@ public static class RunSave
         // 장 · 처치 수: 보스를 쓰러뜨린 뒤면 다음 장 처음부터, 보스와 싸우는 중이면 보스가 바로 다시 나오게
         // 마지막 보스가 쓰러지는 연출(1초) 중이면 이미 쓰러뜨린 것으로 (1.0.4~, 예전엔 보스가 다시 나왔음)
         int stage = sm.CurrentStage;
-        bool bossDown = sp.bossCleared;
-        if (!bossDown && Chapters.Next(stage) >= 0 && sp.bossSpawned && bosss.LiveCount == 0)
+        bool bossDown = !GameMode.IsEndless && sp.bossCleared;      // 1.2.3~ 무한 모드는 장이 없으므로 늘 「지금 장 · 처치 수」로
+        if (!bossDown && !GameMode.IsEndless && Chapters.Next(stage) >= 0 && sp.bossSpawned && bosss.LiveCount == 0)
             foreach (bosss b in Object.FindObjectsByType<bosss>(FindObjectsSortMode.None))
                 if (b != null && b.IsDead) { bossDown = true; break; }
         if (bossDown)
@@ -260,6 +274,7 @@ public static class RunSave
         }
 
         RunContent.Save(d);                                         // 1.1~ 이벤트 계획 · 상자 전설 횟수
+        if (GameMode.IsEndless && EndlessMode.Instance != null) EndlessMode.Instance.SaveRun(d);     // 1.2.3~ 무한 전용 상태
         Prefs.SetString(Key, JsonUtility.ToJson(d));
         Prefs.Save();
     }
@@ -306,7 +321,7 @@ public static class RunSave
         if (shop == null || p == null) yield break;
 
         shop.CancelOpening();                                       // 판을 시작할 때 뜨는 첫 카드 창은 닫음 (기록에 있는 첫 카드로 대신)
-        sm.JumpToStage(d.stage);
+        if (!GameMode.IsEndless) sm.JumpToStage(d.stage);           // 1.2.3~ 무한 모드 맵 · 스테이지는 StageManager.PrepareEndless 가 먼저 맡음
         RunStats.Seconds = d.seconds;                               // 다시 적용하는 진화의 시각이 00:00 으로 찍히지 않게 먼저 (1.0.4~)
         // 기준 공격력을 기록 재생 전에 고정: 실제 판은 시작 직후 첫 프레임(영혼 트리 버튼)에 시작 공격력으로 정해지는데,
         // 재생 중 처음 GrowAttack 에서 정하면 앞서 재생한 상점 공격력(b1) 만큼 부푼 값이 기준이 되어 ap · 트리 · 성장이 더 크게 들어갔음
@@ -338,6 +353,11 @@ public static class RunSave
                 if (twoDigit && e.StartsWith("tr"))
                 {
                     if (int.TryParse(e.Substring(2), out int tr)) shop.ReplayTranscend(tr);
+                    continue;
+                }
+                if (twoDigit && e.StartsWith("bt"))         // 1.2.3~ 무한 모드 보스 전리품 (알림 · 효과음 없이 능력치만, 체력은 아래에서 저장 값으로)
+                {
+                    if (int.TryParse(e.Substring(2), out int bt) && specials != null) specials.BossTrophy(bt, true);
                     continue;
                 }
                 string arg = e.Substring(1);

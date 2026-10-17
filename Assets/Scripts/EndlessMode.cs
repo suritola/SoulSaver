@@ -86,7 +86,7 @@ public class EndlessMode : MonoBehaviour
 
     bool daily;      // 일일 도전 판 (메인 메뉴로 나갈 때 DailyChallenge 가 먼저 풀려도 기록이 섞이지 않게 시작할 때 기억)
 
-    public void Init(StageManager sm, GameObject[] bosses)
+    public void Init(StageManager sm, GameObject[] bosses, bool resumed = false)
     {
         Instance = this;
         daily = DailyChallenge.Active;
@@ -96,7 +96,7 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + FirstBossAt;
         nextMidBoss = Time.time + MidBossFrom;
         BuildHud();
-        StartCoroutine(StartAtLevel(10));
+        if (!resumed) StartCoroutine(StartAtLevel(10));     // 1.2.3~ 이어하기는 LevelShop.RestoreLevels 가 레벨 · 대기 레벨업을 이미 되살렸음 (다시 주면 두 번 쌓임)
     }
 
     // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 포인트가 쌓임
@@ -109,7 +109,10 @@ public class EndlessMode : MonoBehaviour
         int add = Mathf.Max(0, level - p.level);
         Juice.LevelUp(p.transform.position);
         shop.GrantLevels(p, add);           // 올라갈 레벨만큼 레벨업 포인트로 쌓아 두고 [Space]로 하나씩 고름 (고를 때 레벨이 오름)
+        startGiven = true;
     }
+
+    bool startGiven;    // 1.2.3~ 레벨 10 시작 보너스를 줬음 (카드 · ESC 창이 열린 채 기다리는 동안 저장하고 나가면 이어할 때 줌)
 
     void Update()
     {
@@ -340,15 +343,90 @@ public class EndlessMode : MonoBehaviour
             if (sp != null && (sp.NextEvolutionOptions() == null || stages.IsEvolving))
             {
                 string loot = sp.BossTrophy(++trophies);
+                RunSave.Record("bt" + trophies);        // 1.2.3~ 이어할 때 같은 전리품 효과를 다시 (RunSave.Restore 의 기록 재생)
                 Notice.Big(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, NoticeIcon.Star, 3f, NoticeLevel.Normal);
                 return;
             }
             Notice.Big(Loc.T("보스 처치!"), NoticeIcon.Star, 2.5f, NoticeLevel.Normal);
+            RunSave.NeedEvolution = true;               // 1.2.3~ 진화 창이 뜨기 전에 나가면 이어할 때 고르게 (이야기 모드와 같음)
             stages.StartCoroutine(stages.Evolution(true));
             return;
         }
         stages.specialPoints++;
         Notice.Big(Loc.T("보스 처치!  특수 능력 포인트 +1"), NoticeIcon.Star, 3f, NoticeLevel.Normal);
+    }
+
+    // 1.2.3~ 판 중간 저장 (RunSave.Save): 무한 전용 상태. 평소 보스가 살아 있으면 같은 보스가 바로 다시 나오게 차례를 1 되돌림 (이야기 모드와 같은 규칙)
+    public void SaveRun(RunSave.Data d)
+    {
+        d.endlessSeconds = GameMode.EndlessSeconds;
+        d.endlessBosses = BossesDefeated;
+        d.endlessTrophies = trophies;
+        d.endlessStartGiven = startGiven;
+        d.endlessFinal = finalStage == 3 ? 4 : finalStage;              // 클리어 연출 중이면 이어할 때 바로 한계 돌파 (보너스 · 기록은 ClearEndless 가 이미 적었음)
+        d.endlessDevSummoned = devSummoned; d.endlessMomSummoned = momSummoned;
+        d.endlessDevDown = devDown;         d.endlessMomDown = momDown;
+        d.endlessMomKillBase = momKillBase;
+        bool bossLive = (finalStage == 0 || finalStage == 4) && spawner != null && spawner.bossSpawned && !spawner.bossCleared;
+        d.endlessBossAlive = bossLive;
+        d.endlessTurn = bossLive ? Mathf.Max(0, bossTurn - 1) : bossTurn;
+        d.endlessNextBoss = bossLive || nextBoss == float.MaxValue ? -1f : Mathf.Max(0f, nextBoss - Time.time);
+        d.endlessNextMid = Mathf.Max(0f, nextMidBoss - Time.time);
+        if (finalStage == 3) { d.endlessNextBoss = 20f; d.endlessNextMid = 30f; }     // ClearEndless 가 한계 돌파를 시작할 때 주는 값
+        int mask = 0;
+        if (finalStage == 1 && bossPrefabs != null)
+            for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
+                if (bossPrefabs[i] != null && bossPrefabs[i].TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind)) mask |= 1 << i;
+        d.endlessFinalAlive = mask;
+    }
+
+    // 1.2.3~ 이어하기 (StageManager.Opening): Init 바로 뒤 · 같은 프레임에 (Update 가 먼저 돌면 복원 전 상태로 StartFinal 이 잘못 걸림)
+    public void RestoreRun(RunSave.Data d)
+    {
+        BossesDefeated = d.endlessBosses;
+        bossTurn = Mathf.Max(0, d.endlessTurn);
+        trophies = d.endlessTrophies;
+        finalStage = d.endlessFinal == 3 ? 4 : Mathf.Clamp(d.endlessFinal, 0, 4);
+        devDown = d.endlessDevDown; momDown = d.endlessMomDown;
+        momKillBase = devDown ? d.endlessMomKillBase : -1;
+        nextBoss = d.endlessNextBoss >= 0f ? Time.time + d.endlessNextBoss : float.MaxValue;
+        nextMidBoss = Time.time + Mathf.Max(0f, d.endlessNextMid);
+        startGiven = d.endlessStartGiven;
+        if (!startGiven) StartCoroutine(StartAtLevel(10));     // 시작 보너스를 받기 전에 저장한 판 (p.level 은 Restore 가 이미 되살림 → 모자란 만큼만)
+        if (finalStage == 1) RestoreFinal(d.endlessFinalAlive);
+        else if (finalStage == 2)
+        {
+            // 살아 있던(또는 내려오던) 최종 보스는 등장 연출부터 다시 — 깃발을 내려 두면 SummonDeveloper · SummonMom 이 다시 켬 (체력 가득 · 전용 곡도 그 안에서)
+            bool devLive = d.endlessDevSummoned && !devDown, momLive = d.endlessMomSummoned && !momDown;
+            devSummoned = d.endlessDevSummoned && !devLive;
+            momSummoned = d.endlessMomSummoned && !momLive;
+            if (momLive) StartCoroutine(SummonMom());            // 개발자도 살아 있었으면 둘이 함께
+            else if (devLive || !devSummoned) StartCoroutine(SummonDeveloper());
+        }
+        else
+        {
+            devSummoned = d.endlessDevSummoned; momSummoned = d.endlessMomSummoned;
+            if (d.endlessBossAlive) nextBoss = Time.time;            // 다음 Update 에서 SpawnBoss → 같은 보스가 바로 (체력 가득)
+        }
+    }
+
+    // 15분 최종 국면에서 살아 있던 종류만 다시 (StartFinal 과 같은 자리 · 같은 깃발 · 비트가 비어 있으면 모두)
+    void RestoreFinal(int aliveMask)
+    {
+        if (aliveMask == 0 || bossPrefabs == null) { finalStage = 0; StartFinal(); return; }
+        finalStage = 1;
+        nextBoss = float.MaxValue;
+        int made = 0;
+        for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
+        {
+            if ((aliveMask & (1 << i)) == 0 || bossPrefabs[i] == null) continue;
+            Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * made) * Vector3.right * 4.5f);
+            Instantiate(bossPrefabs[i], Hostile.ClampArena(at), Quaternion.identity);
+            made++;
+        }
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
     }
 
     void OnDestroy()
