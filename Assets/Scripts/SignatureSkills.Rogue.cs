@@ -30,7 +30,8 @@ public partial class SignatureSkills
         int s = L("r.smoke");
         if (s <= 0) return;
         smokes.RemoveAll(z => z == null);
-        SigZone z = Zone(from, 3.5f, V(s, 2f, 1f), 0.2f, zone =>
+        // 1.2.3~ 판정 반지름도 그림 배율(Fs: 진화하면 1.7배)을 따름 — 예전엔 그림만 커지고 판정은 3.5 그대로라 연막 안에 서 있어도 「환영 연막」이 안 걸렸음
+        SigZone z = Zone(from, 3.5f * Fs("r.smoke"), V(s, 2f, 1f), 0.2f, zone =>
         {
             foreach (Collider2D c in Inside(zone))
             {
@@ -232,17 +233,18 @@ public partial class SignatureSkills
     // 환영 연막: 연막 안에 있으면 공격이 40% 확률로 빗나감
     // 1.2.3~ 모두 빗나감(사실상 무적 — 돌진마다 연막이 깔려 그 안에 서 있으면 피해 0)이 너무 강하다는 의견 → 맞을 때마다 40% 확률
     public const float PhantomMissChance = 0.4f;
-    float RogueTaken(float dmg)
+    //   1.2.3~ 피해 계산 뒤(무적 시간 · 피격 소리 · 맞음 처리 뒤)가 아니라 맞기 전에 판정 — 예전엔 빗나가도 맞은 것처럼 처리됐음 (PlayerController.TryHit → SignatureSkills.Evades)
+    bool RogueEvade()
     {
-        if (!E("re.phantom")) return dmg;
+        if (!E("re.phantom")) return false;
         foreach (SigZone z in smokes)
             if (z != null && z.Contains(transform.position))
             {
-                if (Random.value >= PhantomMissChance) return dmg;
+                if (Random.value >= PhantomMissChance) return false;
                 SpecialAbilities.SharedFx?.FloatText(transform.position, Loc.T("빗나감"), new Color(0.8f, 0.7f, 1f), 3.5f, 0.4f);
-                return 0f;
+                return true;
             }
-        return dmg;
+        return false;
     }
 
     void RogueTick()
