@@ -17,13 +17,19 @@ public class PlayerHP : MonoBehaviour
     int shownHp = -1, shownMax = -1, shownGuard = -1;
     bool guardHintTried;
 
-    // 타격감 (HealthBarFeel): 앞 막대는 실제 체력 · 잃은 양은 뒤에 주황 조각(HPghost)으로 잠깐 남았다 따라 내려옴
+    // 타격감 (HealthBarFeel): 앞 막대는 실제 체력 · 잃은 양은 뒤에 흰색 지연 게이지(HPghost)로 머물렀다 부드럽게 따라 내려옴 (연속 피해면 머무름 연장)
     readonly HealthBarFeel feel = new HealthBarFeel(HealthBarFeel.Kind.Player);
     RectTransform ghost;
     Image ghostImg, gaugeImg;
     Color gaugeColor;
-    RectTransform self;
+    RectTransform self;              // 흔들림 · 두께 펀치 대상 = HPbackground (프레임 · 흰 게이지 · 채움 · 글자가 한 몸으로)
     Vector2 restPos;                 // 흔들림 기준 (HPbackground 자기 위치)
+    Vector3 baseScale = Vector3.one;
+    Image frameImg;                  // HPbackground 프레임 (Big 이상에서 붉은 틴트)
+    Color frameColor = Color.white;
+    static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
+    static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
+    float shownIgnite = -1f;
     float lastHp = -1f, shownFront = -1f, shownGhost = -1f;
     bool damagedThisFrame;
     float hpTextPop;                 // 치명 등급 피해 때 체력 숫자가 잠깐 튐
@@ -37,9 +43,16 @@ public class PlayerHP : MonoBehaviour
         playerMaxHP = FindFirstObjectByType<PlayerController>().PlayerMaxHealth;
 
         HealthBarFeel.ResetStatics();       // 씬이 바뀌면 흔들리는 적 바 집계를 새로
-        self = GetComponent<RectTransform>();
-        restPos = self.anchoredPosition;
         gauge = HPgauge.GetComponent<RectTransform>();
+        // 스크립트가 HPgauge 자신에 붙어 있어 예전엔 채움만 흔들렸음(어긋남) → 채움의 부모(HPbackground)를 움직임
+        self = gauge != null ? gauge.parent as RectTransform : null;
+        if (self != null)
+        {
+            restPos = self.anchoredPosition;
+            baseScale = self.localScale;
+            frameImg = self.GetComponent<Image>();
+            if (frameImg != null) frameColor = frameImg.color;
+        }
         gaugeImg = HPgauge.GetComponent<Image>();
         if (gaugeImg != null) gaugeColor = gaugeImg.color;
         // 조각: 채움 막대(HPgauge)와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 길이만 다르게 하면 됨
@@ -89,23 +102,34 @@ public class PlayerHP : MonoBehaviour
         damagedThisFrame = false;
         lastHp = playerHP;
 
-        feel.Tick(playerHP, playerMaxHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
+        feel.Tick(playerHP, playerMaxHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         // 값이 같으면 안 씀 (예전엔 매 프레임 sizeDelta 를 썼음)
         if (f.front != shownFront) { shownFront = f.front; gauge.sizeDelta = new Vector2(f.front * HPmaxWidth, gauge.sizeDelta.y); }
         if (ghostImg != null && f.ghost != shownGhost)
         {
             shownGhost = f.ghost;
-            ghostImg.enabled = f.ghostShown;
+            if (ghostImg.enabled != f.ghostShown) { ghostImg.enabled = f.ghostShown; shownIgnite = -1f; }
             if (f.ghostShown) ghost.sizeDelta = new Vector2(f.ghost * HPmaxWidth, gauge.sizeDelta.y);
         }
         if (self != null)
         {
-            float h = gauge.sizeDelta.y;                                   // 20px → Big 5px · Deadly 10px
+            float h = gauge.sizeDelta.y;                                   // 20px → Big 9px · Deadly 16px
             Vector2 pos = restPos + new Vector2(f.shakeX * h, f.shakeY * h);
             if (pos != self.anchoredPosition) self.anchoredPosition = pos;
+            Vector3 sc = new Vector3(baseScale.x, baseScale.y * (1f + f.punch), baseScale.z);
+            if (sc != self.localScale) self.localScale = sc;
+            if (frameImg != null)
+            {
+                Color fc = f.backFlash > 0f ? Color.Lerp(frameColor, GameSettings.ColorBlind ? FrameHitCB : FrameHit, f.backFlash) : frameColor;
+                if (fc != frameImg.color) frameImg.color = fc;
+            }
         }
-        if (gaugeImg != null) gaugeImg.color = f.flash > 0f ? Color.Lerp(gaugeColor, Color.white, f.flash) : gaugeColor;
-        if (ghostImg != null && ghostImg.enabled) ghostImg.color = HealthBarFeel.GhostColor(f.flash);
+        if (gaugeImg != null)
+        {
+            Color gc = f.flash > 0f ? Color.Lerp(gaugeColor, Color.white, f.flash) : gaugeColor;
+            if (gc != gaugeImg.color) gaugeImg.color = gc;
+        }
+        if (ghostImg != null && ghostImg.enabled && f.ignite != shownIgnite) { shownIgnite = f.ignite; ghostImg.color = HealthBarFeel.GhostColor(f.ignite); }
         if (hpText != null && (hpTextPop > 0f || hpTextPopped))
         {
             hpTextPop -= Time.unscaledDeltaTime;

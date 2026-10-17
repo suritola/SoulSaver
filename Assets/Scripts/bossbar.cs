@@ -51,7 +51,7 @@ public class bossbar : MonoBehaviour
         main = MakeRow(backBar, barRect, gi != null ? gi.rectTransform : null);
     }
 
-    // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 조각 · 흔들림 · 번쩍임
+    // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 흰색 지연 게이지 · 흔들림 · 두께 펀치 · 번쩍임 · 프레임 붉은 틴트
     const string GhostName = "BossGhost";
 
     sealed class Row
@@ -59,9 +59,13 @@ public class bossbar : MonoBehaviour
         public RectTransform fill, ghost, root;
         public Image fillImg, ghostImg, backImg;
         public Vector2 rest;
+        public Vector3 baseScale = Vector3.one;     // 맨 위 줄 1 · 아래 줄 0.8
         public Color fillColor, backColor;
-        public float shownFront = -1f, shownGhost = -1f;
+        public float shownFront = -1f, shownGhost = -1f, shownIgnite = -1f;
+        public bosss drawnFor;                      // 지난번에 그린 보스 (바뀌면 지난 보스 값이 남지 않게 다시 그림)
     }
+    static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
+    static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
     Row main;
     readonly List<Row> extraRows = new List<Row>();
 
@@ -70,6 +74,7 @@ public class bossbar : MonoBehaviour
         Row r = new Row();
         r.root = back.GetComponent<RectTransform>();
         r.rest = r.root.anchoredPosition;
+        r.baseScale = r.root.localScale;
         r.backImg = back.GetComponent<Image>();
         if (r.backImg != null) r.backColor = r.backImg.color;
         r.fill = fill;
@@ -84,21 +89,36 @@ public class bossbar : MonoBehaviour
     void Draw(Row r, bosss s)
     {
         if (r == null || s == null) return;
-        s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
+        if (r.drawnFor != s) { r.drawnFor = s; r.shownFront = r.shownGhost = -1f; }
+        s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
         if (r.ghostImg != null && f.ghost != r.shownGhost)
         {
             r.shownGhost = f.ghost;
-            r.ghostImg.enabled = f.ghostShown;
+            if (r.ghostImg.enabled != f.ghostShown) { r.ghostImg.enabled = f.ghostShown; r.shownIgnite = -1f; }
             if (f.ghostShown) r.ghost.sizeDelta = new Vector2(f.ghost * MaxBarX, BarY);
         }
-        // BarY 119 라 높이 비율 그대로면 30~60px 로 과함 → ×0.25 (Big 약 7px · Deadly 15px)
-        Vector2 pos = r.rest + new Vector2(f.shakeX, f.shakeY) * BarY * 0.25f;
-        if (r.root != null && pos != r.root.anchoredPosition) r.root.anchoredPosition = pos;
-        if (r.fillImg != null) r.fillImg.color = f.flash > 0f ? Color.Lerp(r.fillColor, Color.white, f.flash) : r.fillColor;
-        if (r.ghostImg != null && r.ghostImg.enabled) r.ghostImg.color = HealthBarFeel.GhostColor(f.flash);
-        // Deadly: 배경까지 번쩍임
-        if (r.backImg != null) r.backImg.color = f.flashFull ? Color.Lerp(r.backColor, new Color(1f, 0.85f, 0.8f), 0.5f) : r.backColor;
+        // 흔들림: 실제 BarY 는 씬 크기 20 (인스펙터 기본값 119 아님) → 높이 비율 그대로 (Big 9px · Deadly 16px · 예전 ×0.25 는 1~2px 로 안 보였음)
+        if (r.root != null)
+        {
+            Vector2 pos = r.rest + new Vector2(f.shakeX, f.shakeY) * BarY;
+            if (pos != r.root.anchoredPosition) r.root.anchoredPosition = pos;
+            // 두께 펀치 (피벗이 위쪽이라 아래로 자람 · 가로는 그대로)
+            Vector3 sc = new Vector3(r.baseScale.x, r.baseScale.y * (1f + f.punch), r.baseScale.z);
+            if (sc != r.root.localScale) r.root.localScale = sc;
+        }
+        if (r.fillImg != null)
+        {
+            Color fc = f.flash > 0f ? Color.Lerp(r.fillColor, Color.white, f.flash) : r.fillColor;
+            if (fc != r.fillImg.color) r.fillImg.color = fc;
+        }
+        if (r.ghostImg != null && r.ghostImg.enabled && f.ignite != r.shownIgnite) { r.shownIgnite = f.ignite; r.ghostImg.color = HealthBarFeel.GhostColor(f.ignite); }
+        // Big 이상: 프레임이 붉게 물듦 (흰 틴트 프레임은 더 밝힐 수 없음)
+        if (r.backImg != null)
+        {
+            Color bc = f.backFlash > 0f ? Color.Lerp(r.backColor, GameSettings.ColorBlind ? FrameHitCB : FrameHit, f.backFlash) : r.backColor;
+            if (bc != r.backImg.color) r.backImg.color = bc;
+        }
     }
 
     // Update is called once per frame
@@ -157,8 +177,11 @@ public class bossbar : MonoBehaviour
             if (main != null)
             {
                 main.shownFront = main.shownGhost = -1f;
+                main.drawnFor = null;
                 if (main.ghostImg != null) main.ghostImg.enabled = false;
-                if (main.root != null) main.root.anchoredPosition = main.rest;
+                if (main.root != null) { main.root.anchoredPosition = main.rest; main.root.localScale = main.baseScale; }
+                if (main.backImg != null) main.backImg.color = main.backColor;
+                if (main.fillImg != null) main.fillImg.color = main.fillColor;
             }
         }
     }
@@ -184,6 +207,7 @@ public class bossbar : MonoBehaviour
     {
         while (extraBars.Count < count)
         {
+            // backBar 아래에는 MonoBehaviour 가 없어야 함 (Image · TMP · 흰 게이지 Image 뿐) — 스크립트가 붙으면 복제마다 따라붙음 (1.2.0 렉 원인과 같은 경로)
             GameObject clone = Instantiate(backBar, backBar.transform.parent);
             clone.name = backBar.name + "_" + (extraBars.Count + 1);
             // 1.1~: 복제는 캔버스 맨 뒤에 붙어 레벨업 · 일시정지 창 위에 그려졌음 → 원래 체력바 바로 뒤 순서로
@@ -202,7 +226,7 @@ public class bossbar : MonoBehaviour
             r.localScale = Vector3.one * ExtraScale;
             r.anchoredPosition = new Vector2(mainPos.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
             Transform fill = clone.transform.Find(bar.name);
-            Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 조각도 함께 복제됨
+            Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 흰 게이지도 함께 복제됨
             TMP_Text label = null;
             foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))
                 if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; FitName(t); }    // 원래 이름 글자 찾기와 헷갈리지 않게
