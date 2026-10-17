@@ -44,7 +44,9 @@ public class RunStats : MonoBehaviour
         SceneManager.sceneLoaded += (s, m) =>
         {
             // 게임 씬을 떠날 때 (게임 오버 · 메인 메뉴 · 다시 시작) 이번 판을 밸런스 기록에 한 줄
+            bool ended = runActive;
             if (runActive) { runActive = false; WriteBalanceLog(cleared ? "clear" : s.name == "GameOver" ? "death" : "quit"); }
+            RunLog.OnScene(s.name, ended);          // 1.2~ 판 사이 기록 (다시 하기 방식 · 메뉴에서 보낸 시간 · 세션) — 위 줄을 쓴 뒤에 이번 판 값을 새로 정함
             if (s.name != "GameScene") return;
             runActive = true;
             cleared = false;
@@ -156,6 +158,7 @@ public class RunStats : MonoBehaviour
         // 1.2~ 판 기록(balance_log)에 남길 무게 · 각인 · 유물 (기록은 씬이 바뀔 때 쓰므로 판 안에서 미리 잡아 둠 — 메인 메뉴로 나가면 각인 목록이 먼저 비워짐)
         LogWeight = SoulWeight.Level;
         LogBrands = SoulBrand.LogCodes();
+        RunLog.NotePoints(CharacterData.RunPoints);     // 1.2~ points_run (같은 씬을 다시 열면 다른 쪽이 먼저 0 으로 비울 수 있어 미리 잡아 둠)
         SpecialAbilities rs = SpecialAbilities.SharedInstance;
         if (rs != null)
         {
@@ -373,13 +376,16 @@ public class RunStats : MonoBehaviour
         try
         {
             string path = BalanceLogPath;
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos";     // 1.2~ 끝에 세 칸 · 1.1.2~ 스킬 진화 한 칸 (머리줄이 바뀌면 예전 기록은 따로 남김)
+            // 1.2~ 끝에 판 사이 기록 여섯 칸 (RunLog.Columns) · 1.2~ 무게 · 각인 · 유물 세 칸 · 1.1.2~ 스킬 진화 한 칸
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos," + RunLog.Columns;
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
+            // 1.2~ 끝에 칸만 더해진 머리줄이면 따로 떼지 않고 머리줄만 바꿔 한 파일로 이어 씀 (옛 줄은 뒤 칸이 비어 있음 · 합쳐 읽기는 tools/balance/merge_logs.py)
             if (System.IO.File.Exists(path))
             {
                 string first;
                 using (System.IO.StreamReader r = new System.IO.StreamReader(path)) first = r.ReadLine();
-                if (first != Header) System.IO.File.Move(path, System.IO.Path.Combine(Application.persistentDataPath, "balance_log_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv"));
+                if (first != Header && !RunLog.UpgradeHeader(path, first, Header))
+                    System.IO.File.Move(path, System.IO.Path.Combine(Application.persistentDataPath, "balance_log_" + System.DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".csv"));
             }
             bool fresh = !System.IO.File.Exists(path);
             System.Text.StringBuilder b = new System.Text.StringBuilder();
@@ -413,8 +419,10 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(result == "death" ? LastHurtBy : "")
              .Append(',').Append(ChapterDurations())       // 1.1~ 장별 소요 시간
              .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics)     // 1.2~ 무게 · 각인 · 유물
-             .Append(',').Append(LogSkillEvos).AppendLine();       // 1.1.2~ 스킬 진화 "키@초|…"
+             .Append(',').Append(LogSkillEvos)        // 1.1.2~ 스킬 진화 "키@초|…"
+             .Append(',').Append(RunLog.Row()).AppendLine();       // 1.2~ 판 사이 기록 (retry_kind … points_run)
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
+            RunLog.OnRunLogged(result, Seconds);      // 1.2~ 세션 기록(sessions.csv)의 판 수
         }
         catch (System.Exception ex) { Debug.LogWarning("balance log: " + ex.Message); }
     }
@@ -572,6 +580,7 @@ public class QuickRestart : MonoBehaviour
     void Update()
     {
         if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen || LeaderboardUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초 · 1.1.5~ 순위 창이 떠 있으면 받지 않음
+        RunLog.NextKind = "quick";          // 1.2~ 판 기록 retry_kind
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameScene");
     }

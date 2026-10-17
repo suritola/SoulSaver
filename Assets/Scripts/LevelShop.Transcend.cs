@@ -49,7 +49,12 @@ public partial class LevelShop
     readonly int[] transcendLevel = new int[TranscendCount];
 
     // 막대를 몇 번 채워야 초월 카드 창이 열리는지 · 지난 카드 뒤 채운 막대 수 · 막대 하나 채움 기록 번호 (tr9)
-    const int TranscendBarsPer = 3;
+    // 1.2~ 이야기 모드만 3 → 2 (상한에 닿은 뒤 첫 카드는 막대 한 번) · 무한 모드 · 일일 도전은 3 그대로 (무한 후반 · 한계 돌파의 유일한 성장이라 순위표가 갈리지 않게)
+    const int TranscendBarsPer = 3, StoryBarsPer = 2;
+    int BarsNeeded => GameMode.IsEndless ? TranscendBarsPer : TranscendPicks == 0 ? 1 : StoryBarsPer;
+    // HUD 충전 표시처럼 밖에서 볼 때 (상수 TranscendBarsPer 대신 이것을 · 이야기 모드는 2 · 첫 카드 1)
+    public int TranscendBarsNeeded => BarsNeeded;
+    public int TranscendBarsFilled => transcendBars;
     const int TranscendBarCode = 9;
     int transcendBars;
     public int TranscendLevel(int k) => k >= 0 && k < TranscendCount ? transcendLevel[k] : 0;
@@ -108,7 +113,7 @@ public partial class LevelShop
         // 막대가 찬 순간 바로 덮지 않게 잠깐 뒤에
         if (transcendReadyAt < 0f) { transcendReadyAt = Time.unscaledTime + 0.6f; return; }
         if (Time.unscaledTime < transcendReadyAt) return;
-        if (transcendBars < TranscendBarsPer - 1) { ChargeTranscend(); return; }
+        if (transcendBars < BarsNeeded - 1) { ChargeTranscend(); return; }
         StartCoroutine(TranscendPick());
     }
 
@@ -122,7 +127,7 @@ public partial class LevelShop
         Juice.LevelUp(bul.transform.position);
         StageManager sm = StageManager.Instance;
         // 칸이 채워지는 모양 (금빛 ◆ = 채운 막대)
-        string pips = "<color=#FFD75A>" + new string('◆', transcendBars) + "</color><color=#5E5272>" + new string('◆', TranscendBarsPer - transcendBars) + "</color>";
+        string pips = "<color=#FFD75A>" + new string('◆', transcendBars) + "</color><color=#5E5272>" + new string('◆', Mathf.Max(0, BarsNeeded - transcendBars)) + "</color>";
         if (sm != null) Notice.Toast(NoticeIcon.Up, Loc.T("새 규칙까지") + "  " + pips, 3f);
     }
 
@@ -160,7 +165,7 @@ public partial class LevelShop
             if (bul != null) Juice.LevelUp(bul.transform.position);
             StageManager sm = StageManager.Instance;
             if (sm != null) Notice.Toast(NoticeIcon.Up, TranscendName(chosen) + "  <color=#FFD75A>" + TranscendStageText(chosen, before) + "</color>", 3.5f);
-            Hints.Show("transcend", "최대 레벨에 닿은 뒤에는 경험치 막대를 세 번 채울 때마다 초월 카드로 판의 규칙 하나를 바꿉니다. (레벨은 오르지 않고, 같은 카드를 다시 고르면 다음 단계가 됩니다)");
+            Hints.Show("transcend", "transcend.hint");      // 1.2~ 이야기 모드 2번 · 무한 모드 3번
         }
         transcendReadyAt = -1f;
         transcending = false;

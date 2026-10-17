@@ -148,6 +148,51 @@ public static class ChestRewards
         picks[Mathf.Clamp(pick, 0, picks.Count - 1)].apply(c);
     }
 
+    // ================================================================= 1.2~ 보스 보상 가운데 칸 (StageManager.BossReward)
+    // 희귀 60 · 일반 25 · 전설 15% — 전설이면 「전설 상자」 칸 (고르면 룰렛, 한 판 전설 상한 MaxLegends 에 포함 · 상한이면 희귀 · 일반만)
+    // 고정 칸과 같은 보상(상자의 「힘」 +5% · 「정수」 +20)은 이 칸에 나오지 않음 (고정 칸 「전설의 힘」 +10% · 「생명의 정수」가 늘 더 좋아 고를 이유가 없음)
+    const float BossLegendChance = 0.15f, BossRareShare = 0.6f / 0.85f;
+    static readonly string[] BossSlotSkip = { "might", "essence" };
+
+    public class BossSlot
+    {
+        public ChoiceUI.Option option;
+        Ctx ctx;
+        RewardDef reward;
+        bool legend;
+
+        public BossSlot(Ctx c, RewardDef r, bool legend, ChoiceUI.Option o) { ctx = c; reward = r; this.legend = legend; option = o; }
+
+        // 고르면: 전설은 룰렛, 아니면 그 보상을 바로
+        public IEnumerator Take()
+        {
+            if (legend) { yield return Legend(ctx); yield break; }
+            reward?.apply?.Invoke(ctx);
+        }
+    }
+
+    public static BossSlot MakeBossSlot(PlayerController p, Vector3 at)
+    {
+        Ctx c = MakeCtx(p, at);
+        if (Legends < MaxLegends && Random.value < BossLegendChance)
+        {
+            RewardDef jp = ContentRegistry.Rewards.Find(r => r.rarity == RewardRarity.Legendary);
+            ChoiceUI.Option lo = new ChoiceUI.Option("chest.legend.title", "<color=#FFC94D>" + Loc.T("chest.boss.legend") + "</color>",
+                                                     jp != null ? jp.color : new Color(1f, 0.75f, 0.2f), jp != null ? jp.icon : "chest");
+            return new BossSlot(c, null, true, lo);
+        }
+        List<RewardDef> skip = new List<RewardDef>();
+        foreach (RewardDef r in ContentRegistry.Rewards) if (System.Array.IndexOf(BossSlotSkip, r.id) >= 0) skip.Add(r);
+        RewardDef pick = Draw(c, Random.value < BossRareShare ? RewardRarity.Rare : RewardRarity.Common, skip);
+        if (pick == null) return null;
+        string desc = pick.describe != null ? pick.describe(c) : "";
+        if (pick.rarity == RewardRarity.Rare) desc = "<color=#7FD3FF>" + Loc.T("chest.rare") + "</color>\n" + desc;
+        ChoiceUI.Option o = new ChoiceUI.Option(pick.nameKey, desc, pick.color, pick.icon);
+        if (pick.nameKey == "chest.card.name" && c.shop != null && c.cardId >= 0)
+            o = o.WithPips(c.shop.LevelOf(c.cardId), LevelShop.MaxLevelOf(CharacterData.Selected, c.cardId));
+        return new BossSlot(c, pick, false, o);
+    }
+
     // ================================================================= 전설: 룰렛 → 보상 3~5개 (+ 진화 촉매)
     static IEnumerator Legend(Ctx c)
     {

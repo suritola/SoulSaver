@@ -423,8 +423,10 @@ public class StageManager : MonoBehaviour
         StartCoroutine(PortalCountdown(fromStage));
     }
 
-    // 보스 보상 3택 (1.0.1): 무기 진화 뒤 하나를 고름 — 공격력 · 영혼 조각 · 생명력 (판 중간 저장 'a' · 'h')
-    // 이어하기 (RunSave): 보스를 잡고 보상을 고르기 전에 나갔으면 지금
+    // 보스 보상 3택 (1.0.1): 무기 진화 뒤 하나를 고름 (판 중간 저장 'ap' · 'h')
+    // 1.2~ 「전설의 힘」 · 「생명의 정수」 두 칸은 그대로(지금 선택지의 상한 유지), 가운데 칸만 보물 상자 보상 풀에서 (ChestRewards.BossSlot)
+    //   희귀 60 · 일반 25 · 전설 15% — 전설이면 그 칸을 고를 때 룰렛 (한 판 전설 상한 2 에 포함) · 예전 가운데 칸 「영혼 조각 다발」은 상자 풀의 영혼 조각으로
+    // 이어하기 (RunSave): 보스를 잡고 보상을 고르기 전에 나갔으면 지금 (가운데 칸은 다시 뽑음 · 고른 보상은 그 보상의 기록으로 다시 적용)
     public IEnumerator ResumeBossReward() => BossReward();
 
     IEnumerator BossReward()
@@ -432,23 +434,24 @@ public class StageManager : MonoBehaviour
         if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) { RunSave.NeedBossReward = false; yield break; }
         yield return new WaitForSecondsRealtime(0.5f);
         while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
-        int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
-        ChoiceUI.Option[] options =
+        PlayerController player = Hostile.Player;
+        ChestRewards.BossSlot slot = player != null ? ChestRewards.MakeBossSlot(player, player.transform.position) : null;
+        List<ChoiceUI.Option> options = new List<ChoiceUI.Option>
         {
             new ChoiceUI.Option("전설의 힘", "공격력 +10% (기본 공격력 기준, 이번 판 끝까지)", new Color(1f, 0.6f, 0.3f), "might"),      // 1.0.4~ 「영구 지속」은 다음 판에도 남는 것처럼 읽혔음
-            new ChoiceUI.Option("영혼 조각 다발", Loc.T("영혼 조각 +{0}").Replace("{0}", shards.ToString()), new Color(0.55f, 0.9f, 1f), "shards"),
-            new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"),
         };
+        if (slot != null) options.Add(slot.option);
+        options.Add(new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"));
         int pick = 0;
-        yield return ChoiceUI.Run("보스 보상", "하나를 고르세요", options, i => pick = i);
-        RunSave.NeedBossReward = false;                     // 고른 뒤에야 (고르기 전에 나가면 이어할 때 다시)
+        yield return ChoiceUI.Run("보스 보상", "하나를 고르세요", options.ToArray(), i => pick = i);
+        RunSave.NeedBossReward = false;                     // 고른 뒤에야 (고르기 전에 나가면 이어할 때 다시 · 룰렛 도중에 나가도 두 번 받지 않게 받기 전에 지움, 상자와 같음)
         PlayerController p = Hostile.Player;
         if (p == null) yield break;
         if (pick == 0)
         {
             RunSave.AddBaseAttack(p, 10f);         // 1.1.2~ 평타 고점 하향: 지금 공격력 ×1.1 → 기본 공격력의 +10% (영혼 트리 「무기 화력」과 같은 기준, 곱으로 쌓이지 않게)
         }
-        else if (pick == 1) SoulShards.Add(shards, p.transform.position, false);
+        else if (slot != null && pick == 1) yield return slot.Take();
         else
         {
             p.PlayerMaxHealth += 20f;
@@ -660,6 +663,7 @@ public class StageManager : MonoBehaviour
             // 1.2~ 영혼의 무게: 처음 어려움을 깨면 열림 · 무게를 진 판이면 이 영웅의 가장 무거운 클리어를 새로 적고 다음 무게를 엶
             string weight = SoulWeight.OnCleared(CharacterData.Selected, cleared, weightWasOpen);
             if (weight != null) Notice.Big(weight, NoticeIcon.Weight, 4f, NoticeLevel.Important);
+            if (cleared == Difficulty.Hard) UnlockRoutes.OnWeightCleared();     // 1.2~ 유령 대체 루트: 어려움에서 영혼의 무게 2 클리어
             StartCoroutine(EndingAfter(cleared, opened));
         }
     }

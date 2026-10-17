@@ -175,6 +175,7 @@ public static class MenuExtras
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
+        ClaimRewards.InstallMenu(root);         // 1.2~ 소급 해금 알림 · 이미 이룬 기록의 보상 「받기」 (위 창들이 닫힌 뒤)
         // 1.0.4~: 튜토리얼 완료 화면 「바로 첫 판 시작」 → 게임 시작 버튼을 대신 누름 (저장된 판이 있으면 원래처럼 한 번 물음)
         if (TutorialRun.ConsumeQuickStart())
         {
@@ -227,7 +228,7 @@ public static class MenuExtras
         UIKit.Text(pill, "잠김", 18f, new Color(0.85f, 0.82f, 0.78f), Vector2.zero, new Vector2(72f, 26f));
         TooltipTrigger tip = tile.AddComponent<TooltipTrigger>();
         tip.titleProvider = () => Loc.T("일일 도전");
-        tip.bodyProvider = () => Loc.T(Demo.On ? "정식판에서 만날 수 있습니다" : "어려움을 클리어하면 일일 도전이 열립니다");
+        tip.bodyProvider = () => Loc.T(Demo.On ? "정식판에서 만날 수 있습니다" : "ladder.lock.daily");      // 1.2~ 쉬움 클리어로 열림
     }
 
     // 1.0.4~: 저장 파일이 깨져서 백업에서 되살렸거나 새 저장으로 시작했으면 한 번 알림 (예전엔 말없이 빈 저장)
@@ -342,11 +343,26 @@ public static class MenuExtras
             }, 26f);
             b.name = "Difficulty_" + d;
             buttons.Add(b);
+            // 1.2~ 난이도 사다리: 마우스를 올리면 클리어하면 무엇이 열리는지 (잠긴 난이도도 미리 보임)
+            TooltipTrigger tip = b.gameObject.AddComponent<TooltipTrigger>();
+            tip.titleProvider = () => GameMode.Name(d);
+            tip.bodyProvider = () => LadderTip(d);
         }
         // 1.2~ 영혼의 무게: 어려움을 클리어하면 잠금 안내 줄 자리(이때는 늘 비어 있음)에 버튼 · 어려움을 고를 때만 보임
         SoulWeight.InstallMenu(parent, at + new Vector2(0f, -72f));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
+    }
+
+    // 1.2~ 난이도 버튼 툴팁: 클리어 보상 (체험판은 쉬움만이라 정식판 안내) · 이미 깼으면 한 줄 더
+    static string LadderTip(Difficulty d)
+    {
+        if (Demo.On && d != Difficulty.Easy) return Loc.T("정식판에서 만날 수 있습니다");
+        string[] keys = { "ladder.tip.easy", "ladder.tip.normal", "ladder.tip.hard", "ladder.tip.endless" };
+        string s = Loc.T(keys[Mathf.Clamp((int)d, 0, keys.Length - 1)]);
+        if (d == Difficulty.Endless) s += "\n" + Loc.T("ladder.tip.endless.points");
+        else if (!Demo.On && GameMode.HasCleared(d)) s += "\n<color=#7CFF9A>" + Loc.T("ladder.tip.cleared") + "</color>";
+        return s;
     }
 
     static void HighlightDifficulty(List<Button> buttons, TMP_Text hint, TMP_Text lockHint)
@@ -366,7 +382,7 @@ public static class MenuExtras
         // 체험판은 쉬움만이라 「쉬움을 클리어하면」 대신 정식판 안내 (1.0.4~)
         string lockText = Demo.On ? "보통 · 어려움 · 무한 모드는 정식판에서 만날 수 있습니다"
                         : !GameMode.IsUnlocked(Difficulty.Normal) ? "쉬움을 클리어하면 보통 · 어려움이 열립니다"
-                        : !GameMode.IsUnlocked(Difficulty.Endless) ? "어려움을 클리어하면 무한 모드가 열립니다"
+                        : !GameMode.IsUnlocked(Difficulty.Endless) ? (GameMode.Current == Difficulty.Hard ? "ladder.lock.endless.hard" : "ladder.lock.endless")     // 1.2~ 보통 클리어로 무한 모드
                         : SoulWeight.Unlocked && GameMode.Current != Difficulty.Hard ? "weight.menu.hardonly"     // 1.2~ (어려움이면 이 자리에 무게 버튼)
                         : "";
         hint.text = Loc.T(DifficultyDescs[Mathf.Clamp((int)GameMode.Current, 0, DifficultyDescs.Length - 1)]);
