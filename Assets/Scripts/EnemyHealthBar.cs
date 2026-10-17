@@ -167,7 +167,7 @@ public class EnemyHealthBar : MonoBehaviour
             return;
         }
 
-        if (f.ghost != shownGhost)
+        if (f.ghost != shownGhost || (ghostRenderer == null ? f.ghostShown : ghostRenderer.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
         {
             // 화면 밖 적은 흰 게이지 렌더러를 만들지 않음 (보일 때 다시 시도)
             if (f.ghostShown && ghostRenderer == null && fillRenderer.isVisible)

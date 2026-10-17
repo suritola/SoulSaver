@@ -105,7 +105,7 @@ public class PlayerHP : MonoBehaviour
         feel.Tick(playerHP, playerMaxHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         // 값이 같으면 안 씀 (예전엔 매 프레임 sizeDelta 를 썼음)
         if (f.front != shownFront) { shownFront = f.front; gauge.sizeDelta = new Vector2(f.front * HPmaxWidth, gauge.sizeDelta.y); }
-        if (ghostImg != null && f.ghost != shownGhost)
+        if (ghostImg != null && (f.ghost != shownGhost || ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
         {
             shownGhost = f.ghost;
             if (ghostImg.enabled != f.ghostShown) { ghostImg.enabled = f.ghostShown; shownIgnite = -1f; }

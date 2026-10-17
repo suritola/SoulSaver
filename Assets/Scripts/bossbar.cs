@@ -92,7 +92,7 @@ public class bossbar : MonoBehaviour
         if (r.drawnFor != s) { r.drawnFor = s; r.shownFront = r.shownGhost = -1f; }
         s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
-        if (r.ghostImg != null && f.ghost != r.shownGhost)
+        if (r.ghostImg != null && (f.ghost != r.shownGhost || r.ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값이 그대로라 켜짐 여부도 같이 봄
         {
             r.shownGhost = f.ghost;
             if (r.ghostImg.enabled != f.ghostShown) { r.ghostImg.enabled = f.ghostShown; r.shownIgnite = -1f; }
