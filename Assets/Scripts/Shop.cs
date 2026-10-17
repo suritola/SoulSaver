@@ -331,6 +331,7 @@ public partial class Shop : MonoBehaviour
 
     public IEnumerator StartGameCountdown()
     {
+        RunSave.MarkDirty();            // 1.1.9~ 상점을 닫는 순간 — 카운트다운이 끝나 시간이 흐르면 곧 저장
         isPause = true;
         if (pause != null) pause.SetActive(true);
 

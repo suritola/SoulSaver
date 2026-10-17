@@ -436,7 +436,9 @@ public partial class CharacterKit : MonoBehaviour
         // 정조준: 늘 더 빨리 가득 당김 (예전 「가만히 서서」 조건은 없앰)
         else if (card[5] > 0) fullTime /= 1f + 0.25f * card[5];
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
-        bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning;
+        // 1.1.9~ 설정 「공격 고정」이 걸려 있으면 가득 당겨진 순간 저절로 놓음 (「완벽!」 보너스 없음 · 숨 규칙은 그대로)
+        bool lockRelease = GameInput.AttackLockNow && !GameInput.FireKeyHeld;
+        bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning || lockRelease;
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
         if (!GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();       // 숨 고르기: 당기는 동안 숨이 닳음
         float heldFull = draw >= 1f && fullPlayed ? Time.time - fullAt : 0f;
@@ -484,7 +486,7 @@ public partial class CharacterKit : MonoBehaviour
         if (perfect) power = PerfectPower;
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
             power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
-        if (Breathless && !autoRelease) power *= 0.5f;                          // 숨이 차면 절반
+        if (Breathless && (!autoRelease || lockRelease)) power *= 0.5f;         // 숨이 차면 절반 (공격 고정도)
         if (perfect)
         {
             RestoreBreath(PerfectBreath);                                       // 완벽한 사격은 숨을 되돌려 줌
@@ -688,8 +690,12 @@ public partial class CharacterKit : MonoBehaviour
     bool ultAiming;
     LineRenderer ultAimLine, ultAimRing;
 
+    // 1.1.9~ 필살기 조준 · 발동 중인지 (「필살기 누르면 토글」이 헛누름을 풀 때 씀)
+    public bool UltEngaged => ultAiming || charging || aiming || folding || rewinding || expressing || possessAiming;
+
     void CancelUltAim()
     {
+        GameInput.ResetUltLatch();
         ultAiming = false;
         if (ultAimLine != null) ultAimLine.enabled = false;
         if (ultAimRing != null) ultAimRing.enabled = false;

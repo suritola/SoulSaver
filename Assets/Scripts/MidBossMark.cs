@@ -17,6 +17,15 @@ public class MidBossMark : MonoBehaviour
     {
         if (go == null) return;
         go.AddComponent<MidBossMark>().Build(name, prefix);
+        // 1.1.9~ 중간 보스 · 엘리트는 화면 밖이면 가장자리에 붉은 표식 (편의성 3차 8 · 색각 이상 모드면 주황) — 보상 몹 · 고블린(prefix false)은 따로
+        if (prefix)
+        {
+            SpriteRenderer body = go.GetComponentInChildren<SpriteRenderer>();
+            EnermyController e = go.GetComponent<EnermyController>();
+            Color tint = GameSettings.ColorBlind ? new Color(1f, 0.62f, 0.2f) : new Color(1f, 0.4f, 0.35f);
+            EdgeMarker.Attach(go.transform, body != null ? body.sprite : null, Color.Lerp(Color.white, tint, 0.45f), 0.9f, 0.35f, new Color(tint.r, tint.g, tint.b, 0.8f), 0.1f,
+                              null, null, () => e == null || !e.IsDead);
+        }
     }
 
     void Build(string name, bool prefix)
@@ -73,7 +82,7 @@ public class MidBossMark : MonoBehaviour
         float top = body != null ? body.bounds.max.y : transform.position.y + 1.5f;
         // 체력바(머리 위) 바로 위
         root.position = new Vector3(transform.position.x, top + 1.7f, 0f);
-        root.localScale = Vector3.one * (1f + 0.05f * Mathf.Sin(Time.time * 4f));
+        root.localScale = Vector3.one * (1f + 0.05f * Mathf.Sin(Time.time * 4f) * GameSettings.Motion);       // 1.1.9~ 「움직임 줄이기」
         if (border != null) border.color = new Color(1f, 0.78f, 0.3f, 0.7f + 0.25f * Mathf.Sin(Time.time * 4f));
     }
 

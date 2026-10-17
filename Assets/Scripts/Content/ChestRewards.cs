@@ -242,7 +242,7 @@ public static class ChestRewards
         src.ignoreListenerPause = true;
         float vol = 0.35f * GameSettings.SfxVolume;
 
-        float step = 0.05f, pitch = 0.8f;
+        float step = GameSettings.FastFx && !GameInput.Auto ? 0.1f : 0.05f, pitch = 0.8f;      // 1.1.9~ 「빠른 연출」: 시작 간격을 늘려 룰렛을 짧게
         int k = Random.Range(0, Mathf.Max(1, sprites.Count));
         while (step < 0.3f)
         {

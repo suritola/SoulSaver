@@ -186,10 +186,12 @@ public class GamePad : MonoBehaviour
         if (clickHeld) { clickHeld = false; clickUpFrame = Time.frameCount; }
     }
 
-    static void SetActive(bool on)
+    public static void SetActive(bool on)     // 1.1.9~ 스팀 덱 첫 실행 자동 설정이 바로 패드로 둠 (GameSettings)
     {
         if (Active == on) return;
         Active = on;
+        // 1.1.9~ 패드로 바뀌는 순간 확인 창 기본 선택을 풂 (A = 가상 커서 클릭 + Submit 으로 두 번 눌리지 않게, UIKit.SetDefault)
+        if (on && UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         if (on) cursor = ClampToScreen(Input.mousePosition);       // 마우스가 있던 자리에서 출발
         else if (clickHeld) { clickHeld = false; clickUpFrame = Time.frameCount; }
         Cursor.visible = !on;           // 패드 동안은 OS 커서를 숨기고 게임 커서 그림을 직접 그림 (OnGUI)

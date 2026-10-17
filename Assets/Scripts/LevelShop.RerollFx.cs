@@ -35,6 +35,26 @@ public partial class LevelShop
         if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
         if (card == null) yield break;
         Vector3 baseScale = Vector3.one;
+        // 1.1.9~ 「움직임 줄이기」: 부풂 · 뒤집기 · 불꽃 없이 0.15초 흰빛 페이드만 (잠금 0.45초는 그대로)
+        if (GameSettings.Motion <= 0f)
+        {
+            GameObject qf = new GameObject("RerollFlash", typeof(RectTransform), typeof(Image));
+            RectTransform qr = qf.GetComponent<RectTransform>();
+            qr.SetParent(card, false);
+            qr.anchorMin = Vector2.zero; qr.anchorMax = Vector2.one;
+            qr.offsetMin = qr.offsetMax = Vector2.zero;
+            qr.SetAsLastSibling();
+            Image qi = qf.GetComponent<Image>();
+            qi.raycastTarget = false;
+            for (float t = 0f; t < 0.15f; t += Time.unscaledDeltaTime)
+            {
+                if (card == null) { Destroy(qf); yield break; }
+                qi.color = new Color(1f, 0.97f, 0.85f, 0.6f * (1f - t / 0.15f));
+                yield return null;
+            }
+            Destroy(qf);
+            yield break;
+        }
 
         // 카드 위 흰 번쩍임 (가장 위에, 누르는 데 방해되지 않게)
         GameObject fl = new GameObject("RerollFlash", typeof(RectTransform), typeof(Image));

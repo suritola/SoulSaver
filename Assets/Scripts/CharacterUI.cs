@@ -44,6 +44,7 @@ public static class CharacterUI
         open = null;
         detail = null;
         menuFx = null;
+        MenuHeroPanel.Refresh();            // 1.1.9~ 메인 메뉴 「지금 영웅」 패널에 바로 반영
     }
 
     // 1.1~ 게임 안이면 게임 합성기, 메인 메뉴면 창의 합성기로
@@ -242,11 +243,15 @@ public static class CharacterUI
         y -= 10f;
         Info(dr, "기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack), ref y);
         Info(dr, "{ULT}", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc), ref y);      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭) · 잠긴 영웅도 미리 보기
+        // 1.1.9~ 머리 위 막대 한 줄 (영웅 안내 카드와 같은 글 · 막대가 없는 영웅은 생략) — 한 줄 상자 680×44
+        string bar = HeroGuide.BarText(id);
+        if (bar != null) Info(dr, "머리 위 막대", bar, ref y, 44f);
 
         if (unlocked)
         {
             bool selected = CharacterData.Selected == id;
-            Button sel = UIKit.MakeButton(dr, selected ? "선택됨" : "선택", new Vector2(-140f, -330f), new Vector2(240f, 70f), () =>
+            // 1.1.9~ 버튼 셋: 선택 · 선택하고 시작(금빛) · 취소 (y -330 → -345: 머리 위 막대 줄 자리)
+            Button sel = UIKit.MakeButton(dr, selected ? "선택됨" : "선택", new Vector2(-250f, -345f), new Vector2(220f, 70f), () =>
             {
                 CharacterData.Selected = id;
                 PlaySound("chime", 0.6f, 1.2f);
@@ -254,7 +259,19 @@ public static class CharacterUI
                 BuildGrid();
             }, 28f);
             sel.interactable = !selected;
-            UIKit.MakeButton(dr, "취소", new Vector2(140f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
+            Button go = UIKit.MakeButton(dr, "선택하고 시작", new Vector2(0f, -345f), new Vector2(260f, 70f), () =>
+            {
+                CharacterData.Selected = id;        // setter 가 저장까지 함
+                Close();
+                // 게임 시작 버튼을 그대로 누름 (저장된 판을 지울지 · 튜토리얼부터 할지 묻는 확인도 그대로)
+                GameObject start = GameObject.Find("GameStartButton");
+                Button sb = start != null ? start.GetComponent<Button>() : null;
+                if (sb != null) sb.onClick.Invoke();
+            }, 26f);
+            go.GetComponent<Image>().color = new Color(1f, 0.88f, 0.55f);
+            TMP_Text gt = go.GetComponentInChildren<TMP_Text>();
+            if (gt != null) gt.fontSizeMin = 16f;
+            UIKit.MakeButton(dr, "취소", new Vector2(250f, -345f), new Vector2(220f, 70f), CloseDetail, 28f);
         }
         else if (Demo.On)
         {
@@ -319,7 +336,7 @@ public static class CharacterUI
             mark.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.6f);
         }
         UIKit.Text(parent, known ? Mathf.RoundToInt(value * 100f) + "%" : "???", 26f, Gold, new Vector2(580f, y), new Vector2(120f, 40f), TextAlignmentOptions.Right);
-        y -= 46f;
+        y -= 42f;           // 1.1.9~ 46 → 42 (머리 위 막대 줄 자리)
     }
 
     static void StatText(RectTransform parent, string ko, string value, bool known, ref float y)
@@ -327,15 +344,19 @@ public static class CharacterUI
         UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
         TMP_Text t = UIKit.Text(parent, "", 26f, Gold, new Vector2(580f, y), new Vector2(300f, 40f), TextAlignmentOptions.Right);
         t.text = known ? value : "???";
-        y -= 46f;
+        y -= 42f;
     }
 
-    static void Info(RectTransform parent, string ko, string value, ref float y)
+    // height: 글 상자 높이 (1.1.9~ 머리 위 막대 줄은 한 줄짜리 44)
+    static void Info(RectTransform parent, string ko, string value, ref float y, float height = 70f)
     {
-        UIKit.Text(parent, ko, 24f, Gold, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
-        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(330f, y - 6f), new Vector2(680f, 70f), TextAlignmentOptions.TopLeft);
+        TMP_Text head = UIKit.Text(parent, ko, 24f, Gold, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
+        head.fontSizeMin = 14f;
+        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(330f, y - 6f - (70f - height) * 0.5f), new Vector2(680f, height), TextAlignmentOptions.TopLeft);
+        t.fontSizeMin = 14f;
+        t.enableWordWrapping = true;
         t.text = value;
-        y -= 78f;
+        y -= 72f;           // 1.1.9~ 78 → 72
     }
 }
 

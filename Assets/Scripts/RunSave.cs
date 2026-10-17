@@ -82,6 +82,9 @@ public static class RunSave
             if (s.name == "MainMenu") EndContinue();
             if (s.name != "GameScene") return;
             log.Clear();
+            dirty = false;
+            failNoticed = false;
+            LastSavedAt = 0f;
             NeedEvolution = NeedBossReward = false;
             Curse.PendingStage = -1;                        // 지난 판에서 남은 값이 섞이지 않게
             ChapterEvents.Resume(0, false, 0);
@@ -132,6 +135,7 @@ public static class RunSave
     {
         if (Replaying || !Savable) return;
         log.Add(entry);
+        MarkDirty();                // 1.1.9~ 선택 직후 곧 저장 (창이 닫혀 시간이 다시 흐른 뒤 0.5초 · 이어 고르기를 한 번에 묶음)
         if (entry.Length > 0 && (entry[0] == 'e' || entry.StartsWith("aw"))) NeedEvolution = false;
     }
 
@@ -144,6 +148,21 @@ public static class RunSave
         else if (p != null) p.damage *= 1f + pct / 100f;
         if (record) Record("ap" + pct.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
+
+    // 1.1.9~ 저장에 남는 선택을 했음 (기록이 없는 선택 — 보물 상자 열기 끝 · 상점 닫기 · 유물 장착 — 은 그 자리에서 부름)
+    static bool dirty;
+    static float dirtySince;
+    public static void MarkDirty()
+    {
+        if (Replaying || !Savable) return;
+        if (!dirty) dirtySince = Time.unscaledTime;
+        dirty = true;
+    }
+
+    // 1.1.9~ 마지막으로 저장한 때 (Time.unscaledTime, 0 = 이번 판에 아직 없음) · 저장할 때마다 (「저장됨」 표시)
+    public static float LastSavedAt { get; private set; }
+    public static event System.Action Saved;
+    static bool failNoticed;
 
     // 메인 메뉴에서 저장된 판 정보 보기 (이어하기 버튼 글)
     public static Data Peek()
@@ -262,6 +281,15 @@ public static class RunSave
         RunContent.Save(d);                                         // 1.1~ 이벤트 계획 · 상자 전설 횟수
         Prefs.SetString(Key, JsonUtility.ToJson(d));
         Prefs.Save();
+        dirty = false;
+        if (Prefs.LastError != null)
+        {
+            // 1.1.9~ 디스크가 꽉 찼거나 권한이 없으면 (예전엔 로그만 남기고 삼킴) — 같은 판에서 한 번만
+            if (!failNoticed) { failNoticed = true; Notice.Toast(NoticeIcon.Warn, Loc.T("저장하지 못했습니다. 저장 폴더를 확인해 주세요."), 5f); }
+            return;
+        }
+        LastSavedAt = Time.unscaledTime;
+        Saved?.Invoke();
     }
 
     // 메인 메뉴 「이어하기」: 캐릭터 · 난이도를 맞추고 게임 씬으로
@@ -279,7 +307,7 @@ public static class RunSave
         GameMode.Override = (Difficulty)Mathf.Clamp(d.difficulty, 0, 3);
         SoulWeight.Override = Mathf.Clamp(d.weight, 0, SoulWeight.Max);      // 1.2~ 저장한 판의 무게로 (메뉴에서 고른 무게는 그대로 둠)
         SoulWeight.Invalidate();
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
         return true;
     }
 
@@ -427,10 +455,49 @@ public static class RunSave
         const float AutoSaveEvery = 60f;
         float nextAutoSave;
 
-        void Start() => nextAutoSave = Time.unscaledTime + AutoSaveEvery;
+        void Start()
+        {
+            nextAutoSave = Time.unscaledTime + AutoSaveEvery;
+            Saved += OnSaved;
+        }
+
+        void OnDestroy() => Saved -= OnSaved;
+
+        // 1.1.9~ 「저장됨」: 오른쪽 위 포인트 배지(아래끝 -174)와 영혼 트리 버튼(위끝 -222) 사이 · 0.15초 나타남 → 1.2초 → 0.5초 사라짐
+        TMPro.TMP_Text badge;
+        float shownAt = -99f;
+
+        void OnSaved()
+        {
+            if (badge == null)
+            {
+                Canvas canvas = UIKit.HudCanvas();
+                if (canvas == null) return;
+                badge = UIKit.Text(canvas.transform, "저장됨", 18f, new Color(0.66f, 0.61f, 0.53f), Vector2.zero, new Vector2(220f, 26f), TMPro.TextAlignmentOptions.Right);
+                RectTransform r = badge.rectTransform;
+                r.pivot = new Vector2(1f, 0.5f);
+                UIKit.Pin(r, new Vector2(1f, 1f), new Vector2(-30f, -198f));
+                badge.alpha = 0f;
+            }
+            shownAt = Time.unscaledTime;
+        }
+
+        void LateUpdate()
+        {
+            if (badge == null) return;
+            float t = Time.unscaledTime - shownAt;
+            float a = t < 0.15f ? t / 0.15f : t < 1.35f ? 1f : 1f - (t - 1.35f) / 0.5f;
+            badge.alpha = Mathf.Clamp01(a) * 0.9f;
+        }
 
         void Update()
         {
+            // 1.1.9~ 선택 직후 저장: 창이 닫혀 시간이 다시 흐른 뒤 0.5초 (1분 자동 저장은 그대로)
+            if (dirty && Time.timeScale > 0f && !StoryDirector.Playing && Time.unscaledTime >= dirtySince + 0.5f)
+            {
+                StageManager dsm = StageManager.Instance;
+                if (dsm != null && !dsm.IsMenuOpen && CanSaveNow) { Save(); nextAutoSave = Time.unscaledTime + AutoSaveEvery; return; }
+            }
             if (Time.unscaledTime < nextAutoSave || Time.timeScale == 0f || StoryDirector.Playing) return;
             StageManager sm = StageManager.Instance;
             if (sm == null || sm.IsMenuOpen || !CanSaveNow) { nextAutoSave = Time.unscaledTime + 5f; return; }     // 저장하지 않는 판이면 매 프레임 찾지 않게 잠시 뒤에

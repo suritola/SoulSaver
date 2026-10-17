@@ -274,12 +274,12 @@ public partial class LevelShop : MonoBehaviour
         // 경험치 바 위 「특수 강화」 버튼(96 ~ 160)이 떠 있으면 그 위로 올려 겹치지 않게
         bool upgradeShown = StageManager.Instance != null && StageManager.Instance.UpgradeButtonAtBottom;
         ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
-        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
+        float pulse = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
         bool hover = pendingClick != null && pendingClick.Hover;       // 마우스를 올리면 밝고 크게 (누를 수 있음을 보여 줌)
         pendingBadge.GetComponent<Image>().color = hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
                                                          : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
-        pendingBadge.transform.localScale = Vector3.one * (hover ? 1.06f : 1f + 0.04f * pulse);
+        pendingBadge.transform.localScale = Vector3.one * (hover ? 1f + 0.06f * GameSettings.Motion : 1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)
         {
@@ -878,7 +878,9 @@ public partial class LevelShop : MonoBehaviour
         }
         if (what == 5)
         {
+            float oldPull = bul.coinMagnetRange;
             bul.coinMagnetRange += MagnetStep;
+            if (!RunSave.Replaying) PickupRing.Flash(oldPull);     // 1.1.9~ 얼마나 커졌는지 고리로 잠깐 (편의성 3차 3)
             if (ability_level[5] >= MagnetMaxLevel) ability_selected[5] = true;
         }
         if (what == 6)

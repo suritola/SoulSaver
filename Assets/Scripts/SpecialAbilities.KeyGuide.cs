@@ -99,7 +99,7 @@ public partial class SpecialAbilities
         bool fresh = newTileUntil.TryGetValue(t.id, out float until) && now < until;
         if (fresh)
         {
-            float k = 0.5f + 0.5f * Mathf.Sin(now * 6f);
+            float k = (0.5f + 0.5f * Mathf.Sin(now * 6f)) * GameSettings.Motion;       // 1.1.9~ 「움직임 줄이기」
             if (t.glow == null && GlowSprite != null)
             {
                 // 창의 모든 칸 뒤에 (옆 칸을 덮지 않고 이 칸 둘레로만 금빛이 번짐)
@@ -129,7 +129,7 @@ public partial class SpecialAbilities
                 t.arrow.raycastTarget = false;
             }
             // 칸 오른쪽에서 칸 쪽으로 콕콕 (새 칸은 늘 그 창의 맨 오른쪽이라 오른쪽은 비어 있음)
-            t.arrow.rectTransform.anchoredPosition = new Vector2(6f + 8f * (1f - Mathf.Abs(Mathf.Sin(now * 5f))), 0f);
+            t.arrow.rectTransform.anchoredPosition = new Vector2(6f + 8f * (1f - Mathf.Abs(Mathf.Sin(now * 5f))) * GameSettings.Motion, 0f);
             t.arrow.color = new Color(1f, 1f, 1f, Mathf.Clamp01((until - now) / 0.5f));
             t.border.color = Color.Lerp(KeyGold, Color.white, k);
         }
@@ -144,7 +144,7 @@ public partial class SpecialAbilities
         float s = 1f;
         if (pending)
         {
-            float p = 0.5f + 0.5f * Mathf.Sin(now * 4f);
+            float p = (0.5f + 0.5f * Mathf.Sin(now * 4f)) * GameSettings.Motion;
             s = 1f + 0.12f * p;
             t.keyCap.color = Color.Lerp(t.capBase, new Color(1f, 0.86f, 0.45f), 0.55f * p);
         }

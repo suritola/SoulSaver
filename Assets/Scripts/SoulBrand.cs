@@ -19,6 +19,8 @@ public static class SoulBrand
     const int Choices = 3;
 
     static readonly List<SoulBrandDef> run = new List<SoulBrandDef>();
+    internal static IReadOnlyList<SoulBrandDef> Run => run;        // 1.1.9~ 빌드 자세히 보기 (일시정지 왼쪽 각인 패널과 같은 자료)
+    internal static string CardTextOf(SoulBrandDef b) => CardText(b);
     static bool picking;
 
     // 이번 판이 각인을 쓰는 판인지 (판을 시작할 때 정함, 이어하기는 저장값)
@@ -253,7 +255,7 @@ public static class SoulBrand
             r.sizeDelta = new Vector2(440f, h);
             Image bg = panel.GetComponent<Image>();
             bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
-            bg.raycastTarget = false;
+            bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect)
 
             UIKit.Text(r, "brand.esc", 28f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, h / 2f - 34f), new Vector2(400f, 40f));
             for (int i = 0; i < run.Count; i++)

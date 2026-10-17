@@ -65,6 +65,7 @@ public partial class LevelShop
     string CardBodyOf(int id) => IsGrowth(id) ? GrowthCardText(id - GrowthFirstId) : ability_content[id];
 
     // 아이콘: 능력치 창과 같은 그림 (공격력 · 공격 속도 · 이동 속도), 생명은 강철같은 심장
+    internal Sprite GrowthIconOf(int k) => GrowthIcon(k);      // 1.1.9~ 빌드 자세히 보기
     Sprite GrowthIcon(int k) => k switch
     {
         0 => SpecialAbilities.StatIcon(0),

@@ -50,6 +50,7 @@ public class bosss : MonoBehaviour
     EnemySpawner spawner;
 
     public bool Enraged => EnemyHealth <= setEnemyHP * 0.5f;
+    bool enragedFired;              // 1.1.9~ 「분노!」 알림은 보스마다 한 번
 
     // 2.2.1 보스 개편: 리치 왕 「망자의 의식」 동안 무적 · 의식이 깨진 뒤 휘청이는 동안 받는 피해 배율 (BossSkills.Reborn)
     [HideInInspector] public bool invulnerable;
@@ -219,6 +220,14 @@ public class bosss : MonoBehaviour
         RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)
         float before = EnemyHealth;
         EnemyHealth -= damage;
+        // 1.1.9~ 「분노!」 (편의성 2차 12): 체력이 절반 아래로 처음 내려간 순간 한 번 — 지옥의 군주(66% · 33% 자기 배너) · 개발자 · 엄마는 제외
+        if (!enragedFired && Enraged && before > setEnemyHP * 0.5f && EnemyHealth > 0f && !developer && bossKind != 1)
+        {
+            enragedFired = true;
+            Notice.Big(Loc.T("분노!"), Loc.T("{0}의 체력이 절반 아래입니다. 이제 특수 스킬을 씁니다.").Replace("{0}", bossbar.BossName(bossKind)), NoticeIcon.Boss, 2.4f, NoticeLevel.Urgent);
+            Hostile.Play("roar", 0.6f, 1.2f);
+            bossbar.FlashName();
+        }
         HealthBarFeel.Tier tier = BarFeel.OnDamaged(damage, before, setEnemyHP);     // HUD 바는 늘 보임
         SignatureSkills.Hit(gameObject, damage, EnemyHealth <= 0);
         if (EnemyHealth > 0) BossUltimate.OnBossHit(this, damage);       // 필살기 게이지 (센 한 방일수록 많이)

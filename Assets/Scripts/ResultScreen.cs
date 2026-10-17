@@ -190,8 +190,7 @@ public static class ResultScreen
         GameObject same = UIKit.CloneButton(restart, "RetrySameButton", "result.retry.same", () =>
         {
             if (Time.unscaledTime < readyAt) return;
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("GameScene");
+            SceneFlow.Go("GameScene");
         });
         col.Add(same);
         // 일일 도전(캐릭터 고정 · 메인 메뉴로 가면 도전이 끝남) · 튜토리얼 판은 「캐릭터 바꿔 다시」 없이
@@ -200,16 +199,14 @@ public static class ResultScreen
             {
                 if (Time.unscaledTime < readyAt) return;
                 openHeroPick = true;
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("MainMenu");
+                SceneFlow.Go("MainMenu");
             }));
         if (menu != null)
         {
             col.Add(UIKit.CloneButton(menu, "ResultMenuButton", "메인 메뉴로", () =>
             {
                 if (Time.unscaledTime < readyAt) return;
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("MainMenu");
+                SceneFlow.Go("MainMenu");
             }));
             menu.SetActive(false);
         }

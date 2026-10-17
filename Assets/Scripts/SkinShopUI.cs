@@ -46,6 +46,7 @@ public class SkinShopUI : MonoBehaviour
 
     public static void Close()
     {
+        MenuHeroPanel.RefreshLater();       // 1.1.9~ 메인 메뉴 「지금 영웅」 패널 (끼운 스킨 그림)
         if (open == null) return;
         Destroy(open);
         open = null;

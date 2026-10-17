@@ -39,13 +39,13 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         if (!hud || !hovering) return;
         // 공격을 누르는 동안엔 계속 기다림 (떼고 다시 머물면 뜸)
-        if (Time.timeScale > 0f && GameInput.FireHeld) hoverSince = Time.unscaledTime;
+        if (Time.timeScale > 0f && GameInput.FireKeyHeld) hoverSince = Time.unscaledTime;
         bool ready = HudReady();
         if (ready && !shown) ShowNow();
         else if (!ready && shown) { TooltipUI.Hide(); shown = false; }
     }
 
-    bool HudReady() => Time.timeScale <= 0f || (!GameInput.FireHeld && Time.unscaledTime - hoverSince >= HudDelay);
+    bool HudReady() => Time.timeScale <= 0f || (!GameInput.FireKeyHeld && Time.unscaledTime - hoverSince >= HudDelay);
 
     void ShowNow()
     {

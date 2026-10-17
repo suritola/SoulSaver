@@ -178,6 +178,7 @@ public class StageManager : MonoBehaviour
             if (spawner != null) spawner.spawningEnabled = true;
             started = true;
             RunClock.Create(RestoredClock);
+            CombatStatsHUD.Ensure();        // 1.1.9~ 전투 통계 (설정 → 표시)
             Notice.Big(Loc.T("이어하기"), Chapters.Title(CurrentStage) + (resumeNote != null ? "\n" + Loc.T(resumeNote) : "") + SoulWeight.BannerLine(), NoticeIcon.Soul, resumeNote != null ? 3.2f : 2.8f);     // 1.2~ 무게를 진 판이면 한 줄 더
             resumeNote = null;
             yield break;
@@ -185,6 +186,7 @@ public class StageManager : MonoBehaviour
         if (endless) PrepareEndless();
         else if (Chapters.First != 0) PrepareFirstChapter();
         yield return StoryDirector.Intro(endless);
+        yield return HeroGuide.Show(this);                  // 1.1.9~ 이 영웅으로 처음이면 평타 · 필살기 · 머리 위 막대 안내 (한 번)
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
         if (endless && !Evo) yield return PickEndlessSpecials();
         if (!endless) yield return SoulBrand.RunStart();        // 1.2~ 영혼 각인 3택 1 (쉬움을 클리어한 이야기 판만)
@@ -202,6 +204,7 @@ public class StageManager : MonoBehaviour
         else
         {
             RunClock.Create();
+            CombatStatsHUD.Ensure();
             openBanner = Chapters.Title(CurrentStage);
             openTime = 2.5f;
             // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (1.0.1)
@@ -390,7 +393,7 @@ public class StageManager : MonoBehaviour
         evolving = true;
         if (waitMenus)
         {
-            yield return new WaitForSecondsRealtime(0.8f);
+            yield return new WaitForSecondsRealtime(0.8f * GameSettings.FxTime);        // 1.1.9~ 「빠른 연출」이면 절반
             while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
         }
         float before = Time.timeScale;
@@ -430,7 +433,7 @@ public class StageManager : MonoBehaviour
     IEnumerator BossReward()
     {
         if (TutorialRun.Active || Demo.On || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) { RunSave.NeedBossReward = false; yield break; }
-        yield return new WaitForSecondsRealtime(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f * GameSettings.FxTime);
         while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
         int shards = 40 + 10 * Chapters.SlotOf(CurrentStage);
         ChoiceUI.Option[] options =
@@ -607,6 +610,7 @@ public class StageManager : MonoBehaviour
             upgradeText.fontSizeMin = 12f;
         }
 
+        PauseInspect.TipTreeButton(upgradeButton);      // 1.1.9~ 마우스를 올리면 설명 (일시정지 중에는 바로)
         upgradeButton.SetActive(false);
     }
 
@@ -680,7 +684,7 @@ public class StageManager : MonoBehaviour
         if (spawner != null) spawner.spawningEnabled = false;
         Notice.Big(Loc.T("리치 왕을 쓰러뜨렸다!"), NoticeIcon.Star, 3f, NoticeLevel.Important);
         if (Evo) yield return Evolution(true);
-        yield return new WaitForSecondsRealtime(3f);
+        yield return new WaitForSecondsRealtime(3f * GameSettings.FxTime);
         while (Time.timeScale == 0f) yield return null;     // 레벨업 · 상점 창이 열려 있으면 닫을 때까지
         Demo.ShowEnd();
     }
@@ -690,7 +694,7 @@ public class StageManager : MonoBehaviour
 
     IEnumerator EndingAfter(Difficulty cleared, string opened)
     {
-        yield return new WaitForSecondsRealtime(4f);
+        yield return new WaitForSecondsRealtime(4f * GameSettings.FxTime);
         if (StoryDirector.ShouldSkipAll) yield break;
         yield return StoryDirector.Ending(cleared, opened);
     }
@@ -728,7 +732,7 @@ public class StageManager : MonoBehaviour
         transitioning = true;
         spawner.spawningEnabled = false;
         Time.timeScale = 0f;
-        yield return Fade(0f, 1f, 0.8f);
+        yield return Fade(0f, 1f, 0.8f * GameSettings.FxTime);
 
         bool firstGate = Chapters.SlotOf(stage) == 1;
         if (firstGate && !Evo)
@@ -757,7 +761,7 @@ public class StageManager : MonoBehaviour
         if (points) specialPoints += 2;
 
         Time.timeScale = 1f;
-        yield return Fade(1f, 0f, 0.8f);
+        yield return Fade(1f, 0f, 0.8f * GameSettings.FxTime);
         Notice.Big(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), NoticeIcon.Star, 3f);
         transitioning = false;
         StartCoroutine(Curse.Altar(stage));     // 2장부터 저주 제단 (1.0.1)

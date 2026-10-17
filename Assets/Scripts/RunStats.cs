@@ -46,7 +46,12 @@ public class RunStats : MonoBehaviour
         SceneManager.sceneLoaded += (s, m) =>
         {
             // 게임 씬을 떠날 때 (게임 오버 · 메인 메뉴 · 다시 시작) 이번 판을 밸런스 기록에 한 줄
-            if (runActive) { runActive = false; WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : s.name == "GameOver" ? "death" : "quit"); }
+            if (runActive)
+            {
+                runActive = false;
+                if (s.name == "GameOver") RunRecords.CommitBest();       // 1.1.9~ 내 최고 기록 (결과 화면 쪽에서도 부르지만 한 번만)
+                WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : s.name == "GameOver" ? "death" : "quit");
+            }
             // 1.1.9~ 무한 모드를 메인 메뉴 · 다시 시작으로 나가면 지난 기록이 남아 다음 이야기 모드 결과 화면에 섞여 나왔음
             if (s.name != "GameOver") EndlessMode.LastSeconds = -1f;
             if (s.name != "GameScene") return;
@@ -73,14 +78,57 @@ public class RunStats : MonoBehaviour
             ChapterLog = "";
             chapterSeen = 0;
             DamageSource.Current = null;
+            ResetCombatStats();
             new GameObject("RunStats").AddComponent<RunStats>();
         };
+    }
+
+    // ================================================================= 1.1.9~ 전투 통계 (편의성 3차 2): 최근 10초 초당 피해 · 최근 1분 분당 처치
+    // 0.1초 칸 100개 고리 · 게임 시간(Time.time) 기준이라 멈추면 멈춤 · 피해가 없던 칸은 읽을 때도 비움 (적이 없으면 0 으로 내려감)
+    static readonly float[] dpsRing = new float[100];
+    static int dpsAt = int.MinValue;
+    static readonly Queue<float> killTimes = new Queue<float>();
+
+    static void AdvanceDps()
+    {
+        int now = Mathf.FloorToInt(Time.time * 10f);
+        if (dpsAt == int.MinValue || now - dpsAt >= dpsRing.Length || now < dpsAt) { System.Array.Clear(dpsRing, 0, dpsRing.Length); dpsAt = now; return; }
+        while (dpsAt < now) { dpsAt++; dpsRing[((dpsAt % 100) + 100) % 100] = 0f; }
+    }
+
+    public static float Dps
+    {
+        get
+        {
+            AdvanceDps();
+            float s = 0f;
+            foreach (float v in dpsRing) s += v;
+            return s / 10f;
+        }
+    }
+
+    public static float KillsPerMin
+    {
+        get
+        {
+            while (killTimes.Count > 0 && Time.time - killTimes.Peek() > 60f) killTimes.Dequeue();
+            return killTimes.Count;
+        }
+    }
+
+    static void ResetCombatStats()
+    {
+        System.Array.Clear(dpsRing, 0, dpsRing.Length);
+        dpsAt = int.MinValue;
+        killTimes.Clear();
     }
 
     // 적 · 보스가 실제로 잃은 체력 (넘친 피해는 빼고): 지금 공격 중인 출처에
     public static void Dealt(float amount)
     {
         if (!runActive || amount <= 0f) return;
+        AdvanceDps();
+        dpsRing[((dpsAt % 100) + 100) % 100] += amount;
         string key = DamageSource.Current ?? DamageSource.Other;
         DamageDealt.TryGetValue(key, out float v);
         DamageDealt[key] = v + amount;
@@ -139,7 +187,7 @@ public class RunStats : MonoBehaviour
 
     void OnEnable() => EnermyController.Killed += OnKill;
     void OnDisable() => EnermyController.Killed -= OnKill;
-    static void OnKill(Vector3 pos) { if (EnermyController.KillCounts) Kills++; }     // 1.2~ 정화로 쓰러진 적 절반은 세지 않음
+    static void OnKill(Vector3 pos) { if (EnermyController.KillCounts) { Kills++; killTimes.Enqueue(Time.time); } }     // 1.2~ 정화로 쓰러진 적 절반은 세지 않음
 
     void Update()
     {
@@ -213,6 +261,13 @@ public class RunStats : MonoBehaviour
         }
     }
 
+    // 1.1.9~ 게임 씬을 떠나 결과 화면으로 가는 순간 (쓰러짐 첫 줄 · 포기 · 엔딩 끝): 기록 + 빌드 자세히 보기 스냅샷
+    public static void CaptureForResult()
+    {
+        Capture();
+        BuildView.TakeSnapshot();
+    }
+
     // 여러 줄 요약 (ESC 메뉴 · 결과 화면이 같이 씀)
     public static string Summary(bool withStats)
     {
@@ -281,47 +336,49 @@ public class RunStats : MonoBehaviour
         }
     }
 
-    static float Section(RectTransform box, float y, string title, List<KeyValuePair<string, float>> rows, Color bar)
+    // 1.1.9~ 빌드 자세히 보기(BuildView)도 같은 막대를 넓게 그림 (width, 결과 화면은 480)
+    internal static float Section(RectTransform box, float y, string title, List<KeyValuePair<string, float>> rows, Color bar, float width = 480f)
     {
         if (rows.Count == 0) return y;
         float total = 0f;
         foreach (KeyValuePair<string, float> kv in rows) total += kv.Value;
         float best = Mathf.Max(1f, rows[0].Value);
         foreach (KeyValuePair<string, float> kv in rows) best = Mathf.Max(best, kv.Value);
-        Line(box, y, "<color=#F5D478><size=110%>" + title + "</size></color>   <color=#A89C86>" + Mathf.RoundToInt(total).ToString("N0") + "</color>", 24f);
+        Line(box, y, "<color=#F5D478><size=110%>" + title + "</size></color>   <color=#A89C86>" + Mathf.RoundToInt(total).ToString("N0") + "</color>", 24f, width);
         y -= 40f;
         foreach (KeyValuePair<string, float> kv in rows)
         {
             // 막대 (가장 많은 것을 꽉 채운 길이로) · 이름 · 비율
-            RectTransform back = UIKit.Rect("Bar", box, Vector2.zero, new Vector2(480f, 30f));
+            RectTransform back = UIKit.Rect("Bar", box, Vector2.zero, new Vector2(width, 30f));
             back.anchorMin = back.anchorMax = back.pivot = new Vector2(0f, 1f);
             back.anchoredPosition = new Vector2(0f, y);
             Image bg = back.gameObject.AddComponent<Image>();
             bg.color = new Color(1f, 1f, 1f, 0.06f);
             bg.raycastTarget = false;
-            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2(480f * kv.Value / best, 30f));
+            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2(width * kv.Value / best, 30f));
             fill.anchorMin = fill.anchorMax = fill.pivot = new Vector2(0f, 0.5f);
             fill.anchoredPosition = Vector2.zero;
             Image fi = fill.gameObject.AddComponent<Image>();
             fi.color = new Color(bar.r, bar.g, bar.b, 0.45f);
             fi.raycastTarget = false;
-            TMP_Text name = UIKit.Text(back, "", 20f, new Color(0.95f, 0.92f, 0.86f), new Vector2(10f, 0f), new Vector2(340f, 30f), TextAlignmentOptions.Left);
+            TMP_Text name = UIKit.Text(back, "", 20f, new Color(0.95f, 0.92f, 0.86f), new Vector2(10f, 0f), new Vector2(width - 140f, 30f), TextAlignmentOptions.Left);
             name.rectTransform.anchorMin = name.rectTransform.anchorMax = name.rectTransform.pivot = new Vector2(0f, 0.5f);
             name.text = SourceName(kv.Key);
             name.enableAutoSizing = true;
             name.fontSizeMin = 12f;
             name.fontSizeMax = 20f;
             TMP_Text pct = UIKit.Text(back, "", 20f, new Color(0.95f, 0.92f, 0.86f), new Vector2(-10f, 0f), new Vector2(110f, 30f), TextAlignmentOptions.Right);
-            pct.text = (kv.Value / Mathf.Max(1f, total) * 100f).ToString("0") + "%";
+            pct.text = (width > 480f ? "<color=#A89C86>" + Mathf.RoundToInt(kv.Value).ToString("N0") + "</color>   " : "") + (kv.Value / Mathf.Max(1f, total) * 100f).ToString("0") + "%";      // 넓은 판(빌드 보기)은 총량도
+            if (width > 480f) pct.rectTransform.sizeDelta = new Vector2(260f, 30f);
             pct.rectTransform.anchorMin = pct.rectTransform.anchorMax = pct.rectTransform.pivot = new Vector2(1f, 0.5f);
             y -= 36f;
         }
         return y;
     }
 
-    static TMP_Text Line(RectTransform box, float y, string text, float size)
+    static TMP_Text Line(RectTransform box, float y, string text, float size, float width = 480f)
     {
-        TMP_Text t = UIKit.Text(box, "", size, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(480f, 34f), TextAlignmentOptions.Left);
+        TMP_Text t = UIKit.Text(box, "", size, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(width, 34f), TextAlignmentOptions.Left);
         t.text = text;
         RectTransform r = t.rectTransform;
         r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 1f);
@@ -447,14 +504,14 @@ public class RunStats : MonoBehaviour
         r.sizeDelta = new Vector2(440f, 560f);          // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
         bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
-        bg.raycastTarget = false;
+        bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
 
         GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform tr = tg.GetComponent<RectTransform>();
         tr.SetParent(r, false);
         tr.anchorMin = Vector2.zero;
         tr.anchorMax = Vector2.one;
-        tr.offsetMin = new Vector2(26f, 22f);
+        tr.offsetMin = new Vector2(26f, 92f);           // 1.1.9~ 바닥에 버튼 둘 (22 → 92)
         tr.offsetMax = new Vector2(-26f, -22f);
         TextMeshProUGUI t = tg.GetComponent<TextMeshProUGUI>();
         UIKit.EnsureStyle();
@@ -469,6 +526,16 @@ public class RunStats : MonoBehaviour
         t.alignment = TextAlignmentOptions.TopLeft;
         t.raycastTarget = false;
         t.text = "<size=120%>" + Loc.T("이번 판") + "</size>\n\n" + Summary(true);
+        // 1.1.9~ 「빌드 자세히 보기」 · 「영웅 안내」 (패널 폭 440 안 · 바닥에서 36)
+        Transform root = canvas.transform;
+        Button build = UIKit.MakeButton(r, "빌드 자세히 보기", new Vector2(-100f, -280f + 36f), new Vector2(210f, 52f), () => BuildView.Open(root), 20f);
+        Button guide = UIKit.MakeButton(r, "영웅 안내", new Vector2(115f, -280f + 36f), new Vector2(190f, 52f), () => HeroGuide.OpenView(root), 20f);
+        foreach (Button b in new[] { build, guide })
+        {
+            b.navigation = new Navigation { mode = Navigation.Mode.None };
+            TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
+            if (bt != null) { bt.fontSizeMin = 13f; bt.fontSizeMax = 20f; }
+        }
     }
 }
 
@@ -496,6 +563,8 @@ public static class Hints
     public static void ResetAll()
     {
         foreach (string k in Keys) Prefs.DeleteKey("hint." + k);
+        Prefs.DeleteKey("hint.pauseinspect");       // 1.1.9~ 일시정지 중 설명 안내 (처음 다섯 번)
+        HeroGuide.ResetAll();                       // 1.1.9~ 영웅 첫 판 안내 카드
         Prefs.Save();
     }
 
@@ -547,7 +616,7 @@ public static class Hints
         // 아래에서 살짝 올라오며 나타남 · 처음 0.5초 테두리가 밝게
         float k = Mathf.Clamp01(shown / 0.25f);
         box.cg.alpha = k;
-        box.r.anchoredPosition = new Vector2(0f, 236f - 30f * (1f - k) * (1f - k));
+        box.r.anchoredPosition = new Vector2(0f, 236f - 30f * (1f - k) * (1f - k) * GameSettings.Motion);      // 1.1.9~ 「움직임 줄이기」면 제자리 페이드
         float glow = GameSettings.Flashes ? Mathf.Clamp01(1f - shown / 0.5f) : 0f;
         box.rim.color = Color.Lerp(new Color(Notice.Sky.r, Notice.Sky.g, Notice.Sky.b, 0.95f), Color.white, glow * 0.7f);
         RectTransform bar = box.bar.rectTransform;
@@ -577,8 +646,7 @@ public class QuickRestart : MonoBehaviour
     void Update()
     {
         if (Time.unscaledTime < readyAt || !KeyBindings.Down(GameAction.Reload) || SettingsUI.IsOpen || LeaderboardUI.IsOpen) return;     // 1.0.4~ 바꾼 재장전 키 · 뜬 뒤 1초 · 1.1.5~ 순위 창이 떠 있으면 받지 않음
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
     }
 }
 

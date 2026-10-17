@@ -469,7 +469,7 @@ public class MapProps : MonoBehaviour
         }
         arrow.enabled = true;
         Vector3 dir = d.normalized, side = new Vector3(-dir.y, dir.x, 0f);
-        float pulse = 0.25f * Mathf.Sin(Time.time * 7f);
+        float pulse = 0.25f * Mathf.Sin(Time.time * 7f) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
         Vector3 tip = from + dir * (4f + pulse);
         arrow.SetPosition(0, tip - dir * 0.8f + side * 0.65f);
         arrow.SetPosition(1, tip);

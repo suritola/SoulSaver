@@ -107,7 +107,7 @@ public class PlayerController : MonoBehaviour
 
     // 코인 자석 (레벨업 능력): 이 거리 안의 코인을 끌어옴
     [HideInInspector] public float coinMagnetRange = 0f;
-    const float BaseCoinPull = 2.5f;        // 카드 없이도 끌어오는 코인 범위 (2.1.8)
+    internal const float BaseCoinPull = 2.5f;        // 카드 없이도 끌어오는 코인 범위 (2.1.8) · 1.1.9~ 획득 범위 고리(PickupRing)도 씀
 
     public float targetInterval = 0.2f;
 
@@ -385,6 +385,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool specialWeapon = special != null && special.WeaponActive;
+        GameInput.TickAttackLock(PointerOverUI());          // 1.1.9~ 설정 「공격 고정」: 공격 키를 누를 때마다 걸기 · 풀기
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null)
         {
@@ -875,6 +876,7 @@ void Shoot()
 
     void EndSkill()
     {
+        GameInput.ResetUltLatch();
         if (!isSkillUsing) return;
 
         isSkillUsing = false;
@@ -901,6 +903,7 @@ void Shoot()
 
     // 즉발 필살기 조준 (누르고 있는 동안 범위 표시)
     bool instantAiming;
+    public bool InstantAiming => instantAiming;
     static readonly List<EnermyController> noTargets = new List<EnermyController>();
 
     void CancelInstantAim()
@@ -913,6 +916,7 @@ void Shoot()
     // 조준을 쏘지 않고 취소 (일시정지할 때): 시간 · 화면 · 줌을 되돌리고 게이지는 그대로 둠
     public void CancelSkill()
     {
+        GameInput.ResetUltLatch();
         CancelInstantAim();
         if (!isSkillUsing) return;
 
@@ -1339,6 +1343,8 @@ void Shoot()
     {
         if (IsDying) yield break;
         IsDying = true;
+        RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (쓰러지는 순간의 빌드)
+        GameInput.ResetAttackLock();        // 1.1.9~ 공격 고정은 쓰러지면 풀림
         RunSave.Abandon();          // 죽으면 이어할 판은 지움 (2.1.9) · 1.1.9~ 무한 모드 · 일일 도전 · 튜토리얼에서 죽어도 이야기 판 저장은 남김
         invincibleUntil = float.MaxValue;
         CancelSkill();
@@ -1356,8 +1362,7 @@ void Shoot()
             if (Time.timeScale > 0f) Time.timeScale = Mathf.Lerp(0.25f, 0.05f, t / 1.1f);
             yield return null;
         }
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("GameOver");
+        SceneFlow.Go("GameOver");
     }
 
     // 무적 시간 동안 깜빡임

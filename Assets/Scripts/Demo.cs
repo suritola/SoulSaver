@@ -71,8 +71,7 @@ public static class Demo
         wish.GetComponent<Image>().color = new Color(1f, 0.85f, 0.45f);
         UIKit.MakeButton(win, "메인 메뉴로", new Vector2(200f, -200f), new Vector2(300f, 90f), () =>
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
+            SceneFlow.Go("MainMenu");
         }, 30f);
         Hostile.Play("levelup", 0.8f);
     }

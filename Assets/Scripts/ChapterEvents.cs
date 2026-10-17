@@ -424,6 +424,15 @@ public class ChapterEvents : MonoBehaviour
                     goblin.transform.localScale *= 1.3f;
                     goblin.AddComponent<GoldenGoblin>();
                     MidBossMark.Attach(goblin, Loc.T("event.goblin.name"), false);     // 1.1~ 「중간 보스 · 」 없이 이름만
+                    // 1.1.9~ 화면 밖이면 가장자리에 고블린 그림 + 남은 초 (편의성 3차 8 · 잡히거나 달아나면 사라짐)
+                    {
+                        GameObject gob = goblin;
+                        SpriteRenderer gsr = gob.GetComponentInChildren<SpriteRenderer>();
+                        EnermyController ge = gob.GetComponent<EnermyController>();
+                        EdgeMarker.Attach(gob.transform, gsr != null ? gsr.sprite : null, new Color(1f, 0.85f, 0.25f), 0.9f, 0.35f, new Color(1f, 0.85f, 0.3f, 0.8f), 0.1f,
+                                          () => SecondsLeft(goblinUntil).ToString(), () => goblinUntil - Time.time < 3f,
+                                          () => gob != null && goblin == gob && (ge == null || !ge.IsDead));
+                    }
                     Notice.Big(Loc.T("event.goblin.start"), NoticeIcon.Coin, 2.5f, NoticeLevel.Urgent);
                     Hostile.Play("chime", 0.8f, 1.5f);
                     break;
@@ -590,7 +599,7 @@ public class ChapterEvents : MonoBehaviour
             float a = inside ? 0.75f + 0.25f * Mathf.Sin(Time.time * 8f) : 0.45f;
             altarRing.startColor = altarRing.endColor = new Color(AltarColor.r, AltarColor.g, AltarColor.b, a);
         }
-        if (altar != null) altar.transform.localScale = Vector3.one * (1.4f + 1.6f * altarProgress + 0.1f * Mathf.Sin(Time.time * 5f));
+        if (altar != null) altar.transform.localScale = Vector3.one * (1.4f + 1.6f * altarProgress + 0.1f * Mathf.Sin(Time.time * 5f) * GameSettings.Motion);
         if (inside && Random.value < Time.deltaTime * 6f)
             Fx.Spawn("fx_sparkle", where + (Vector3)(Random.insideUnitCircle * AltarRadius), 1.1f, AltarColor, 20f);
         // 지키는 동안 둘레에서 적이 몰려옴
@@ -660,7 +669,7 @@ public class ChapterEvents : MonoBehaviour
         }
         arrow.enabled = true;
         Vector3 dir = d.normalized, side = new Vector3(-dir.y, dir.x, 0f);
-        float pulse = 0.25f * Mathf.Sin(Time.time * 8f);
+        float pulse = 0.25f * Mathf.Sin(Time.time * 8f) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」: 화살표는 그대로, 맥동만 없음
         Vector3 tip = from + dir * (3.2f + pulse);
         arrow.SetPosition(0, tip - dir * 0.75f + side * 0.6f);
         arrow.SetPosition(1, tip);
