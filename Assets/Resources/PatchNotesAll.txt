@@ -1,3 +1,26 @@
+@@@ v1.1.9
+# 1.1.9 긴급 업데이트
+
+- **게임 중 프레임이 크게 떨어지던 문제를 고쳤습니다.** 특히 내장 그래픽 PC와 무한 모드에서 판을 시작하자마자 생기던 렉이 줄어듭니다.
+- **설정 「화면」 탭에 프레임 설정을 추가했습니다.** 최대 프레임(30 · 60 · 120 · 144 · 제한 없음), 수직 동기화, 프레임 표시를 고를 수 있습니다.
+
+=== en
+# 1.1.9 Hotfix
+
+- **Fixed severe frame drops during play.** Lag that started right at the beginning of a run, especially on integrated graphics and in Endless mode, is greatly reduced.
+- **Added frame settings to the Display tab.** You can now choose a max frame rate (30 · 60 · 120 · 144 · Unlimited), toggle V-Sync, and show an FPS counter.
+
+=== ja
+# 1.1.9 緊急アップデート
+
+- **プレイ中にフレームレートが大きく下がる問題を修正しました。** 特に内蔵グラフィックスのPCやエンドレスで、開始直後から起きていたラグが軽くなります。
+- **設定の「画面」タブにフレーム設定を追加しました。** 最大フレームレート（30・60・120・144・無制限）、垂直同期、FPS表示を選べます。
+
+=== zh
+# 1.1.9 紧急更新
+
+- **修复了游戏中帧率大幅下降的问题。** 尤其是集成显卡电脑和无尽模式中开局就出现的卡顿已大幅减轻。
+- **在设置的「画面」页中新增帧率设置。** 可以选择最大帧率（30 · 60 · 120 · 144 · 无限制）、垂直同步以及帧率显示。
 @@@ v1.1.8
 # 1.1.8 업데이트
 
