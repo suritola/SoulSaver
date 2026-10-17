@@ -59,6 +59,8 @@ public class EndlessTerrain : MonoBehaviour
     readonly List<int> decorAdded = new List<int>();
     Transform props, pieceRoot;
     int sorting, order;
+    internal int SortLayer => sorting;
+    internal int SortOrder => order;
     Vector2 areaMin, areaMax;
     Vector2 gate = new Vector2(0.5f, 32f);
 
@@ -131,6 +133,7 @@ public class EndlessTerrain : MonoBehaviour
             if (layers[l] == null) continue;
             off[l] = layers[l].WorldToCell(zero);
             BoundsInt b = layers[l].cellBounds;
+            off[l].z = TileZ(layers[l]);             // 씬 타일이 z 100 에 깔려 있음 (cellBounds 는 z 0 ~ 100 이라 zMin 0 · z 0 으로 읽으면 전부 빈칸)
             x0 = Mathf.Min(x0, b.xMin - off[l].x); y0 = Mathf.Min(y0, b.yMin - off[l].y);
             x1 = Mathf.Max(x1, b.xMax - off[l].x); y1 = Mathf.Max(y1, b.yMax - off[l].y);
         }
@@ -160,6 +163,18 @@ public class EndlessTerrain : MonoBehaviour
         root.transform.SetParent(map.transform, false);
         pieceRoot = root.transform;
         art[Desert] = ArtFrom(desert != null ? desert.Values : null, null);
+    }
+
+    // 타일이 실제로 깔린 z (위에서부터 찾음 · 씬은 z 100) — cellBounds 의 zMin 은 원점 0 이라 쓸 수 없음 · CompressBounds 는 다른 곳이 쓰는 범위를 바꿀 수 있어 안 씀
+    static int TileZ(Tilemap tm)
+    {
+        if (tm == null) return 0;
+        BoundsInt b = tm.cellBounds;
+        for (int z = b.zMax - 1; z >= b.zMin; z--)
+            for (int y = b.yMin; y < b.yMax; y++)
+                for (int x = b.xMin; x < b.xMax; x++)
+                    if (tm.HasTile(new Vector3Int(x, y, z))) return z;
+        return 0;
     }
 
     static int OrderOf(Tilemap tm) => tm.TryGetComponent(out TilemapRenderer r) ? r.sortingOrder : 0;
@@ -405,7 +420,7 @@ public class EndlessTerrain : MonoBehaviour
     // 보스가 나오는 성문과 그 둘레는 어느 층도 칠하지 않음
     bool Gated(Vector3 p) => p.y >= gate.y - 1f && Mathf.Abs(p.x - gate.x) <= 4f;
 
-    Vector3Int CellOf(int i, int layer) => new Vector3Int(ux + i % uw + off[layer].x, uy + i / uw + off[layer].y, 0);
+    Vector3Int CellOf(int i, int layer) => new Vector3Int(ux + i % uw + off[layer].x, uy + i / uw + off[layer].y, off[layer].z);
     Vector3 WorldOf(int i) => layers[0].GetCellCenterWorld(new Vector3Int(ux + i % uw, uy + i / uw, 0));
     int IndexOf(Vector3 world)
     {
@@ -554,10 +569,11 @@ public class EndlessTerrain : MonoBehaviour
             foreach (Tilemap tm in maps)
             {
                 BoundsInt b = tm.cellBounds;
+                int z = TileZ(tm);
                 for (int y = b.yMin; y < b.yMax; y++)
                     for (int x = b.xMin; x < b.xMax; x++)
                     {
-                        Sprite s = tm.GetSprite(new Vector3Int(x, y, 0));
+                        Sprite s = tm.GetSprite(new Vector3Int(x, y, z));
                         if (s != null && seen.Add(s)) Add(s);
                     }
             }
@@ -803,6 +819,20 @@ public class EndlessTerrain : MonoBehaviour
 
     // 없어진 조각을 목록에서 뺌 (목록을 도는 중에는 빼지 않고 여기서만)
     void Purge() => pieces.RemoveAll(p => p == null || p.Gone);
+
+    // 살아 있는 웅덩이 · 늪과 가까운지 (pad: 웅덩이 반지름 밖으로 더 띄울 거리) · 공간 침식 고요의 눈 자리 고를 때
+    public static bool NearZone(Vector3 at, float pad)
+    {
+        EndlessTerrain t = Instance;
+        if (t == null || !t.isActiveAndEnabled) return false;
+        foreach (TerrainPiece piece in t.pieces)
+        {
+            if (piece == null || !piece.Alive || !piece.zone || !(piece is TerrainZone z)) continue;
+            float r = (z.lava ? LavaRadius : BogRadius) + pad;
+            if (((Vector2)(at - piece.transform.position)).sqrMagnitude < r * r) return true;
+        }
+        return false;
+    }
 
     void ClearPieces()
     {
@@ -1231,6 +1261,12 @@ public class TerrainZone : TerrainPiece
         if (owner != null) owner.PaintZone(this, true);
         Color c = Hostile.Accessible(lava ? new Color(1f, 0.45f, 0.15f, 0.8f) : new Color(0.55f, 1f, 0.35f, 0.6f));
         visual = Fx.Play("fx_puddle", transform.position, Radius * 1.1f, c, 8f, 0f, 1, true, -1f);
+        // 바닥 그림이라 지형 타일 바로 위(배경 층)에 깔음 (Effect 층이면 지나가는 적 위를 덮음)
+        if (visual != null && visual.sr != null && owner != null)
+        {
+            visual.sr.sortingLayerID = owner.SortLayer;
+            visual.sr.sortingOrder = owner.SortOrder + 1;
+        }
     }
 
     protected override void OnDown()
@@ -1242,6 +1278,7 @@ public class TerrainZone : TerrainPiece
 
     protected override void Tick()
     {
+        if (BossUltimate.Active) { tick = 0f; return; }      // 결계 · 침식 중에는 바닥 피해 · 느려짐 없음 (그림은 그대로)
         PlayerController p = Hostile.Player;
         if (p != null && !p.IsDying && Vector2.Distance(p.transform.position, transform.position) < Radius)
         {

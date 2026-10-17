@@ -42,6 +42,7 @@ public class PauseInspect : MonoBehaviour
     public static void OnPauseOpened()
     {
         if (instance == null || instance.esc == null || instance.esc.escMenu == null) return;
+        instance.openedAt = GameInput.PointerPosition;       // 1.2.6~ 연 자리에서 커서를 움직이기 전에는 적 설명을 띄우지 않음
         int n = Prefs.GetInt(HintKey, 0);
         if (n >= HintTimes || GameInput.Auto) { if (instance.hintLine != null) instance.hintLine.gameObject.SetActive(false); return; }
         Prefs.SetInt(HintKey, n + 1);
@@ -92,7 +93,12 @@ public class PauseInspect : MonoBehaviour
         foreach (RaycastResult h in hits)
         {
             if (h.gameObject == null) continue;
-            if (escRoot != null && h.gameObject.transform.IsChildOf(escRoot)) continue;      // ESC 패널 · 그 버튼 · 안내 글
+            if (escRoot != null && h.gameObject.transform.IsChildOf(escRoot))
+            {
+                // 1.2.6~ 메뉴 버튼 위면 그 아래 적 설명을 띄우지 않음 (커서가 적 위에 있던 채로 ESC 를 누르면 툴팁이 버튼을 가렸음)
+                if (h.gameObject.GetComponentInParent<Selectable>() != null) { HideMine(); return; }
+                continue;                             // ESC 패널 바탕 · 안내 글
+            }
             TooltipTrigger t = h.gameObject.GetComponentInParent<TooltipTrigger>();
             if (t != null && t.isActiveAndEnabled)
             {
@@ -102,12 +108,19 @@ public class PauseInspect : MonoBehaviour
             HideMine();                               // 툴팁 없는 UI(요약 · 각인 패널 바탕, 확인 창)가 가리면 그 아래는 안 봄
             return;
         }
+        // 1.2.6~ 적 위에 커서를 둔 채 ESC 를 누르면 바로 적 툴팁이 떠 메뉴 버튼을 가렸음 → 커서를 한 번 움직인 뒤부터
+        if (!float.IsNaN(openedAt.x))
+        {
+            if ((at - openedAt).sqrMagnitude < 4f) { HideMine(); return; }
+            openedAt = new Vector2(float.NaN, float.NaN);
+        }
         var w = WorldProvider?.Invoke(at);           // UI 가 없으면 세상(적)
         if (w.HasValue) { ShowMine(w.Value.title, w.Value.body); return; }
         HideMine();
     }
 
     Vector2 lastAt = new Vector2(float.NaN, float.NaN);
+    Vector2 openedAt = new Vector2(float.NaN, float.NaN);
     float nextLook;
 
     void ShowMine(string title, string body)

@@ -114,17 +114,28 @@ public partial class BossUltimate : MonoBehaviour
                 gauge[kind] = 1f;
         }
         if (kind >= DevSlot) DevHoldRelease();      // 개발자 · 엄마 대기가 풀릴 일 (쓰러짐 · 다른 결계) — BossUltimate.Developer.cs
-        if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) return;
+        if (Active || boss == null || boss.IsDead || gauge[kind] < 1f) { castWaitSince = -1f; return; }
         // 개발자 · 엄마는 겹쳐 쓰는 영웅 필살기로 casting 이 늘 켜져 있어 아래 DevReady 가 따로 기다림 (최대 3초)
-        if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing || (boss.casting && kind < DevSlot)) return;
+        if (Time.time - spawnedAt < 4f || Time.time < restUntil || Time.timeScale == 0f || StoryDirector.Playing) return;
+        if (boss.casting && kind < DevSlot)
+        {
+            // 1.2.6~ 게이지가 찬 뒤 3초가 지나도 시전이 이어지면 끊고 펼침 (리치처럼 시전이 쉬지 않고 이어지는 보스는 결계가 20초 넘게 늦었음 · DevReady 와 같은 3초)
+            if (castWaitSince < 0f) castWaitSince = Time.time;
+            if (Time.time - castWaitSince < 3f || (kind == 2 && !IsStrongestSlime()) || !boss.TryGetComponent(out BossSkills sk)) return;
+            sk.CancelForErosion();
+            if (boss.casting) return;
+        }
         if (SkillEvolutionUI.Open || WeaponEvolutionUI.Open || ChoiceUI.Open || ESCmenu.IsOpen) return;
         // 킹 슬라임: 살아 있는 덩어리 중 체력이 가장 많은 하나만 씀
         if (kind == 2 && !IsStrongestSlime()) return;
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying) return;
         if (kind >= DevSlot && !DevReady()) return;
+        castWaitSince = -1f;
         StartCoroutine(Run());
     }
+
+    float castWaitSince = -1f;      // 1.2.6~ 게이지가 찬 채 시전이 끝나기를 기다린 시작 시각
 
     static readonly List<bosss> slimeBuf = new List<bosss>(4);      // 1.2.5: 부를 때마다 new List 를 만들었음 → 하나를 비워 다시 씀
 

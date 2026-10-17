@@ -490,14 +490,18 @@ public class EnermyController : MonoBehaviour
 
     void LateUpdate()
     {
+        // 1.2.6~ 지난 프레임의 되돌림이 아직 안 됐으면(프레임 끝 코루틴이 돌지 않는 환경) 먼저 되돌림 — 찌그러짐이 쌓여 크기가 무한대로 가지 않게
+        if (squashPending) { transform.localScale = squashRestore; squashPending = false; }
         if (isDead || Time.time - hitAt >= SquashFor) return;
         float k = 1f - (Time.time - hitAt) / SquashFor;
         Vector3 s = transform.localScale;
         squashRestore = s;
         transform.localScale = new Vector3(s.x * Mathf.Lerp(1f, 1.15f, k), s.y * Mathf.Lerp(1f, 0.85f, k), s.z);
+        squashPending = true;
         squashed.Add(this);
         QueueUnsquash();
     }
+    bool squashPending;
 
     // 찌그러진 적을 한 목록에 모아 프레임 끝에 한 번에 되돌림 (적마다 프레임마다 코루틴을 만들지 않게 · 광역기로 수백 마리를 때려도 코루틴은 프레임당 하나)
     // 적이 중간에 꺼져도(풀로 돌아감) 크기는 여기서 되돌아감
@@ -518,7 +522,7 @@ public class EnermyController : MonoBehaviour
     {
         yield return Juice.EndOfFrame;
         for (int i = 0; i < squashed.Count; i++)
-            if (squashed[i] != null) squashed[i].transform.localScale = squashed[i].squashRestore;
+            if (squashed[i] != null && squashed[i].squashPending) { squashed[i].transform.localScale = squashed[i].squashRestore; squashed[i].squashPending = false; }
         squashed.Clear();
         unsquashQueued = false;
     }

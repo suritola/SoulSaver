@@ -42,6 +42,10 @@ public class Point : MonoBehaviour
         UpdatePointText();
     }
 
+    // 1.2.6~ 판 중간에 언어를 바꾸면 「포인트」 글자도 바로 (값이 바뀔 때만 다시 써서 이전 언어로 남았음)
+    void OnEnable() => Loc.Changed += MarkDirty;
+    void MarkDirty() => pointsDirty = true;
+
     // ================================================================= 포인트 배율 (1.2~ 여러 배율을 이 한 곳에서 곱함)
     // 지금 곱하는 것: 난이도 × 이번 장 저주 (GameMode.PointMul) × 영혼의 무게 (SoulWeight.PointMul) × 아래 RegisterMul 로 더한 것
     // 새 배율을 더하려면 (예: 영혼 각인) 판이 시작되기 전 아무 때나 한 번:
@@ -147,6 +151,7 @@ public class Point : MonoBehaviour
     // 금빛 효과 도중 꺼지면 코루틴이 멈추므로 크기 · 색을 여기서 되돌림
     void OnDisable()
     {
+        Loc.Changed -= MarkDirty;
         if (pulse == null) return;
         pulse = null;
         if (TextInput != null)

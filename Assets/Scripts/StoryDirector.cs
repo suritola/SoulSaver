@@ -502,6 +502,14 @@ public class StoryDirector : MonoBehaviour
     IEnumerator RunBossIntro(Transform boss, int kind)
     {
         Playing = true;
+        // 1.2.6~ 선택 창(일일 도전 「완주!」 · 상자 등)이 같은 프레임에 열렸으면 닫힐 때까지 기다림 (창 위에 인트로가 겹쳐 재생될 수 있었음)
+        if (ChoiceUI.Open)
+        {
+            if (canvas != null) canvas.enabled = false;           // 기다리는 동안 띠 · 건너뛰기 단추가 창 위에 보이지 않게
+            while (ChoiceUI.Open) yield return null;
+            if (canvas != null) canvas.enabled = true;
+        }
+        if (boss == null) { Playing = false; Destroy(gameObject); yield break; }
         GameInput.ResetAttackLock();
         var info = Bosses[kind];
         // 1.1.9~ 보스 등장 대사 「처음만」 (편의성 2차 5): 끝까지 본 보스는 다음부터 띠 · 포효 · 이름표만 짧게 (첫 번째는 늘 전체 · 설정 「항상」이면 늘 전체)

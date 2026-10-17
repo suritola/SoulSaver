@@ -761,10 +761,10 @@ public static class CodexUI
         Sprite dev = AbyssStage.Frames("developer")[0];
         if (!CodexSeen.Shown("sec.dev")) Hidden("sec.dev", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.dev"));
         else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
-                  Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다.") + "\n" + Accent.Tag(Loc.T(DevBarrierDesc)), Fresh("sec.dev"));
+                  Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다."), Fresh("sec.dev"));      // 1.2.6: 결계 설명은 보스 탭 카드(높이 400)에만 (비밀 탭 카드 240 에서는 「…」로 잘렸음)
         if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
         else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("개발자 처치 후 영혼 1000"),
-                  Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.") + "\n" + Accent.Tag(Loc.T(MomBarrierDesc)), Fresh("sec.mom"));
+                  Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다."), Fresh("sec.mom"));
         Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
         if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));
         else Card(chest, Color.white, Loc.T("chest.jackpot.name"), Loc.T("codex.sec.luck") + "  ·  " + Loc.T("chest.legend.title"), Loc.T("codex.sec.jackpot.desc"), Fresh("sec.jackpot"));

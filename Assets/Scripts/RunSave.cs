@@ -29,6 +29,7 @@ public static class RunSave
         public float px, py;
         // 1.0.4~: 끝나지 않은 일 — 보스를 잡고 문에 들어가기 전에 나갔음 · 보스 보상을 아직 안 고름 · 이 장 저주 제단을 아직 안 고름
         public bool gatePending, needBossReward, altarPending;
+        public string bossSlot = "";                    // 1.2.6~ 보스 보상 가운데 칸으로 뽑힌 것 (보상 id · "*legend" · 비면 이어할 때 새로 뽑음)
         // 1.0.4~: 진행 중이던 습격 · 살아 있던 중간 보스(엘리트) 는 다시, 안 연 보물 상자는 옆에 다시 놓음 · 이번 장 최후의 보루 쓴 횟수
         public bool midBossAlive;
         public int ambushLeft, chests, lastStandUsed;
@@ -95,6 +96,8 @@ public static class RunSave
     public static bool NeedEvolution;
     // 보스를 쓰러뜨렸고 보스 보상 3택을 아직 고르지 않음 (1.0.4~)
     public static bool NeedBossReward;
+    // 1.2.6~ 이번 보스 보상 가운데 칸 (ChestRewards.MakeBossSlot 이 정하고, 고르면 비움)
+    public static string BossSlotPick;
     // 튜토리얼처럼 저장하지 않는 판 (TutorialRun 이 켬)
     public static bool Disabled;
 
@@ -112,6 +115,7 @@ public static class RunSave
             failNoticed = false;
             LastSavedAt = 0f;
             NeedEvolution = NeedBossReward = false;
+            BossSlotPick = null;
             Curse.PendingStage = -1;                        // 지난 판에서 남은 값이 섞이지 않게
             ChapterEvents.Resume(0, false, 0);
             new GameObject("RunSaveWatcher").AddComponent<Watcher>();
@@ -306,6 +310,7 @@ public static class RunSave
             // 문에 들어갈 때 받는 것(첫 문의 특수 능력 · 포인트 +2 · 저주 제단) 과 보스 보상은 이어할 때 받음
             d.gatePending = true;
             d.needBossReward = sp.bossCleared ? NeedBossReward : true;
+            d.bossSlot = sp.bossCleared && NeedBossReward ? BossSlotPick ?? "" : "";
             if (!sp.bossCleared)
             {
                 d.needEvolution = sm.EvolutionAvailable;
@@ -486,6 +491,7 @@ public static class RunSave
         if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
         NeedEvolution = d.needEvolution;
         NeedBossReward = d.needBossReward;
+        BossSlotPick = d.needBossReward && !string.IsNullOrEmpty(d.bossSlot) ? d.bossSlot : null;
         sm.RestoredClock = d.clock > 0f ? d.clock : d.seconds;
         yield return null;
         // 보스를 쓰러뜨리고 무기 진화 · 보스 보상을 고르기 전에 나갔으면 지금 고름

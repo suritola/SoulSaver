@@ -453,7 +453,7 @@ public class ResultPop : MonoBehaviour
         float k = Mathf.Clamp01((t - delay) / 0.35f);
         if (g != null) g.alpha = k;
         transform.localScale = Vector3.one * Mathf.Lerp(1f + 0.25f * GameSettings.Motion, 1f, Mathf.SmoothStep(0f, 1f, k));      // 움직임 줄이기면 알파만
-        if (k > 0f && t - Time.unscaledDeltaTime - delay <= 0f) Hostile.Play("coin", 0.6f, 1.3f);
+        if (k > 0f && t - Time.unscaledDeltaTime - delay <= 0f) Hostile.Play("sparkle", 0.6f, 1.3f);
         if (k >= 1f) { transform.localScale = Vector3.one; enabled = false; }
     }
 }

@@ -473,7 +473,7 @@ public class StageManager : MonoBehaviour
     // 보스 보상 3택 (1.0.1): 무기 진화 뒤 하나를 고름 (판 중간 저장 'ap' · 'h')
     // 1.2~ 「전설의 힘」 · 「생명의 정수」 두 칸은 그대로(지금 선택지의 상한 유지), 가운데 칸만 보물 상자 보상 풀에서 (ChestRewards.BossSlot)
     //   희귀 60 · 일반 25 · 전설 15% — 전설이면 그 칸을 고를 때 룰렛 (한 판 전설 상한 2 에 포함) · 예전 가운데 칸 「영혼 조각 다발」은 상자 풀의 영혼 조각으로
-    // 이어하기 (RunSave): 보스를 잡고 보상을 고르기 전에 나갔으면 지금 (가운데 칸은 다시 뽑음 · 고른 보상은 그 보상의 기록으로 다시 적용)
+    // 이어하기 (RunSave): 보스를 잡고 보상을 고르기 전에 나갔으면 지금 (1.2.6~ 가운데 칸은 저장된 그대로 · 고른 보상은 그 보상의 기록으로 다시 적용)
     public IEnumerator ResumeBossReward() => BossReward();
 
     IEnumerator BossReward()
@@ -491,7 +491,9 @@ public class StageManager : MonoBehaviour
         options.Add(new ChoiceUI.Option("생명의 정수", "최대 체력 +20, 체력 모두 회복", new Color(1f, 0.45f, 0.45f), "essence"));
         int pick = 0;
         yield return ChoiceUI.Run("보스 보상", "하나를 고르세요", options.ToArray(), i => pick = i);
-        RunSave.NeedBossReward = false;                     // 고른 뒤에야 (고르기 전에 나가면 이어할 때 다시 · 룰렛 도중에 나가도 두 번 받지 않게 받기 전에 지움, 상자와 같음)
+        RunSave.NeedBossReward = false;
+        RunSave.BossSlotPick = null;                        // 1.2.6~ 다음 보스는 새로 뽑음
+        // ↑ 고른 뒤에야 (고르기 전에 나가면 이어할 때 다시 · 룰렛 도중에 나가도 두 번 받지 않게 받기 전에 지움, 상자와 같음)
         PlayerController p = Hostile.Player;
         if (p == null) yield break;
         if (pick == 0)

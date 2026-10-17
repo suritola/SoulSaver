@@ -208,6 +208,15 @@ public class bossbar : MonoBehaviour
         }
     }
 
+    // 1.2.6~ 맨 위 줄은 결계 게이지(-4 ~ -14)와 겹치지 않게 그 밑(-16)에 · 아래 줄은 게이지가 없어 바로 밑(-2)
+    void MemLinePlace(Row r)
+    {
+        if (r.memLine == null) return;
+        RectTransform rt = r.memLine.rectTransform;
+        Vector2 at = new Vector2(-12f, backBar != null && r.root == backBar.transform ? -16f : -2f);
+        if (rt.anchoredPosition != at) rt.anchoredPosition = at;
+    }
+
     // 바 아래 오른쪽 「기억: 탄환 8초」 (글자는 BossMemory 가 미리 만든 것 · 바뀔 때만 다시 씀)
     void UpdateMemLine(Row r, bosss s)
     {
@@ -229,7 +238,7 @@ public class bossbar : MonoBehaviour
                 rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
                 rt.pivot = new Vector2(1f, 1f);
                 rt.sizeDelta = new Vector2(640f, 24f);
-                rt.anchoredPosition = new Vector2(-12f, -2f);
+                rt.anchoredPosition = new Vector2(-12f, -2f);         // 맨 위 줄은 아래 MemLinePlace 가 결계 게이지 밑으로 내림
                 TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
                 t.font = nameText.font;
                 t.fontSharedMaterial = nameText.fontSharedMaterial;
@@ -242,6 +251,7 @@ public class bossbar : MonoBehaviour
                 t.enabled = false;
                 r.memLine = t;
             }
+            MemLinePlace(r);
             r.memShown = null;
             r.memLine.text = "";
             r.memLine.enabled = false;
@@ -460,16 +470,7 @@ public class bossbar : MonoBehaviour
             Transform cg = clone.transform.Find("UltGauge");        // 필살기 게이지는 맨 위 줄에만
             if (cg != null) Destroy(cg.gameObject);
             RectTransform r = clone.GetComponent<RectTransform>();
-            // 바 위의 이름 글자 · 왼쪽 해골 아이콘까지 포함한 높이로 쌓음
-            // (예전엔 바 높이만큼만 내려서, 아래 체력바의 이름이 윗 체력바를 덮었음)
-            Bounds b = RectTransformUtility.CalculateRelativeRectTransformBounds(backBar.transform);
-            // 흔들리는 중이어도 제자리(rest) 기준으로 쌓음
-            Vector2 mainPos = main != null ? main.rest : backBar.GetComponent<RectTransform>().anchoredPosition;
-            float prevBottom = extraRows.Count == 0
-                ? mainPos.y + b.min.y
-                : extraRows[extraRows.Count - 1].rest.y + b.min.y * ExtraScale;
-            r.localScale = Vector3.one * ExtraScale;
-            r.anchoredPosition = new Vector2(mainPos.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
+            r.localScale = Vector3.one * ExtraScale;        // 자리 · 크기는 아래 LayoutExtraBars 가 정함
             Transform fill = clone.transform.Find(bar.name);
             Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 흰 게이지도 함께 복제됨
             TMP_Text label = null;
@@ -485,6 +486,41 @@ public class bossbar : MonoBehaviour
         }
         for (int i = 0; i < extraBars.Count; i++)
             if (extraBars[i] != null && extraBars[i].activeSelf != (i < count)) extraBars[i].SetActive(i < count);
+        LayoutExtraBars(count);
+    }
+
+    // 1.2.6~ 아래 줄 자리 · 크기: 보스 셋 이상(아래 줄 둘 이상)이면 더 작게 (넷이면 화면 위쪽 절반 가까이를 덮었음)
+    //   맨 위 줄 아래에는 결계 게이지(-4 ~ -14)와 「기억」 줄(-16 ~ -40)이 있어서 그 바닥까지 비움 (만든 순서와 상관없이 같은 자리)
+    const float ExtraScaleMany = 0.6f;
+    const float MainBottom = -40f, ExtraBottom = -26f;
+    float laidScale = -1f;
+    int laidRows = -1;
+
+    void LayoutExtraBars(int count)
+    {
+        float scale = count >= 2 ? ExtraScaleMany : ExtraScale;
+        if (scale == laidScale && laidRows == extraRows.Count) return;
+        laidScale = scale; laidRows = extraRows.Count;
+        // 바 위의 이름 글자 · 왼쪽 해골 아이콘까지 포함한 높이로 쌓음
+        // (예전엔 바 높이만큼만 내려서, 아래 체력바의 이름이 윗 체력바를 덮었음)
+        Bounds b = RectTransformUtility.CalculateRelativeRectTransformBounds(backBar.transform);
+        // 흔들리는 중이어도 제자리(rest) 기준으로 쌓음
+        Vector2 mainPos = main != null ? main.rest : backBar.GetComponent<RectTransform>().anchoredPosition;
+        float gap = ExtraGap * scale / ExtraScale;
+        // MainBottom · ExtraBottom 은 바 아래 가장자리 기준 (게이지 · 「기억」 줄이 아래 가장자리에 붙음) → 피벗 기준 자리로 바꿈
+        float edge = backBar.GetComponent<RectTransform>().rect.yMin;
+        for (int i = 0; i < extraRows.Count; i++)
+        {
+            Row row = extraRows[i];
+            if (row == null || row.root == null) continue;
+            float prevBottom = i == 0
+                ? mainPos.y + Mathf.Min(b.min.y, edge + MainBottom)
+                : extraRows[i - 1].rest.y + Mathf.Min(b.min.y, edge + ExtraBottom) * scale;
+            row.rest = new Vector2(mainPos.x, prevBottom - gap - b.max.y * scale);
+            row.baseScale = Vector3.one * scale;
+            row.root.anchoredPosition = row.rest;
+            row.root.localScale = row.baseScale;
+        }
     }
 
     // 가장 아래에 보이는 보스 체력바 (알림판을 그 아래로 내릴 때)

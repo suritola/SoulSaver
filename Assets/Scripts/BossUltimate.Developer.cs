@@ -625,6 +625,10 @@ public partial class BossUltimate
         // 잔소리 글자는 1.6초 동안 보였다가 흐려짐
         if (d.nag != null)
         {
+            // 1.2.6~ 일시정지 · 설정 · 선택 창 위에 남지 않게 (시간이 멈추면 흐려짐도 멈춰 창 위에 그대로 떠 있었음)
+            bool paused = ESCmenu.IsOpen || SettingsUI.IsOpen || Time.timeScale == 0f;
+            Canvas nc = d.nag.transform.parent != null ? d.nag.transform.parent.GetComponent<Canvas>() : null;      // Graphic.canvas 는 꺼진 캔버스를 못 찾아서 부모에서 직접
+            if (nc != null && nc.enabled == paused) nc.enabled = !paused;
             float k = 1f - Mathf.Clamp01((Time.time - d.nagShownAt - 1.2f) / 0.4f);
             if (Mathf.Abs(d.nag.alpha - k) > 0.01f) d.nag.alpha = k;
         }
@@ -752,7 +756,7 @@ public partial class BossUltimate
         if (hit) DevHit(d, DevDamage(d, 18f));
     }
 
-    // 4. 잔소리 폭격: 화면 위쪽에 잔소리 한 줄 + 엄마 머리 위 「!」 → 몸 깜빡임 0.4초 → 나를 향한 부채꼴 7발 × 3번 (50°)
+    // 4. 잔소리 폭격: 화면 아래쪽에 잔소리 한 줄 + 엄마 머리 위 「!」 → 몸 깜빡임 0.4초 → 나를 향한 부채꼴 7발 × 3번 (50°)
     static IEnumerator Nag(DevDomainCtx d)
     {
         if (d.root != null && d.nag == null)
@@ -760,7 +764,7 @@ public partial class BossUltimate
             UIKit.EnsureStyle();
             Canvas canvas = NewCanvas("MomNagCanvas", 30400);
             canvas.transform.SetParent(d.root, false);
-            d.nag = (TextMeshProUGUI)UIKit.Text(canvas.transform, "", 58f, EndlessMode.MomTint, new Vector2(0f, 400f), new Vector2(1600f, 90f));
+            d.nag = (TextMeshProUGUI)UIKit.Text(canvas.transform, "", 58f, EndlessMode.MomTint, new Vector2(0f, -260f), new Vector2(1600f, 90f));      // 1.2.6: 화면 아래쪽 (y 400 은 보스 체력바를 덮었음)
             d.nag.fontStyle = FontStyles.Bold;
             d.nag.outlineWidth = 0.2f;
             d.nag.outlineColor = new Color32(0, 0, 0, 255);

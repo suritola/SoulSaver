@@ -448,7 +448,7 @@ public class SpaceErosion : MonoBehaviour
         for (int i = 0; i < cracks.Length; i++)
         {
             Color cc = colors[i % Mathf.Max(1, count)];
-            cracks[i] = Hostile.NewLine("ErosionCrack", new Color(cc.r, cc.g, cc.b, 0f), 0.22f, 39);
+            cracks[i] = Hostile.NewLine("ErosionCrack", new Color(cc.r, cc.g, cc.b, 0f), 0.22f, 41);      // 어둠 메시(40) 위
             cracks[i].sortingLayerName = "Background";
             cracks[i].transform.SetParent(root.transform, true);
             cracks[i].positionCount = 8;
@@ -633,13 +633,18 @@ public class SpaceErosion : MonoBehaviour
         PlayerController p = Hostile.Player;
         Vector3 me = p != null ? p.transform.position : center;
         float inner = Radius - DomainStrikes.EyeRadius - 1f;
-        for (int i = 0; i < 12; i++)
+        Vector3 inside = Vector3.zero;
+        bool any = false;
+        for (int i = 0; i < 24; i++)
         {
             float a = Random.Range(0f, Mathf.PI * 2f);
             Vector3 at = me + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(7f, 11f);
             at.z = 0f;
-            if ((at - center).sqrMagnitude <= inner * inner) return at;
+            if ((at - center).sqrMagnitude > inner * inner) continue;
+            if (!EndlessTerrain.NearZone(at, DomainStrikes.EyeRadius + 0.5f)) return at;     // 안전 자리가 용암 · 늪 위에 생기지 않게
+            if (!any) { any = true; inside = at; }
         }
+        if (any) return inside;
         Vector3 toCenter = center - me;
         toCenter.z = 0f;
         Vector3 fallback = me + (toCenter.sqrMagnitude > 0.01f ? toCenter.normalized : Vector3.right) * 8f;
@@ -704,6 +709,20 @@ public class SpaceErosion : MonoBehaviour
             to.z = pos.z;
             if ((to - pos).sqrMagnitude > 1.5f * 1.5f && sparks++ < 6) Fx.Spawn("fx_spark", to, 2.2f, Color.white, 18f);
             e.transform.position = to;
+        }
+        // 침식에 들지 않은 보스(뒤늦게 나온 보스 등)도 밖으로 (BossUltimate.RepelMobs 와 같은 방식)
+        float bossEdge = r + 2.2f;
+        foreach (bosss o in bosss.Live)
+        {
+            if (o == null || o.IsDead || members.Contains(o)) continue;
+            Vector3 pos = o.transform.position;
+            Vector3 d = pos - center;
+            d.z = 0f;
+            if (d.sqrMagnitude >= bossEdge * bossEdge) continue;
+            if (d.sqrMagnitude < 0.01f) d = Vector3.left;
+            Vector3 to = BossUltimate.EdgeInArenaFrom(center, d, bossEdge);
+            to.z = pos.z;
+            o.transform.position = to;
         }
     }
 }

@@ -693,8 +693,19 @@ public static class Hostile
 
     public static void Play(string sound, float vol = 1f, float pitch = 1f)
     {
-        if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play(sound, vol, pitch);
+        if (SpecialAbilities.SharedFx != null) { SpecialAbilities.SharedFx.Play(sound, vol, pitch); return; }
+        // 1.2.6~ 메인 메뉴 · 결과 화면에는 SharedFx 가 없어 계약 · 사다리 · 기억 조각 · 결과 보상 소리가 전부 무음이었음
+        //   → 장면을 넘어 남는 소리 전용 하나를 한 번만 만들어 돌려 씀 (합성 클립이 많아 다시 만들지 않음)
+        if (menuFx == null)
+        {
+            GameObject go = new GameObject("MenuAudio");
+            Object.DontDestroyOnLoad(go);
+            menuFx = go.AddComponent<SpecialFeedback>();
+            menuFx.Init(UIKit.Font, UIKit.FontMaterial);
+        }
+        menuFx.Play(sound, vol, pitch);
     }
+    static SpecialFeedback menuFx;
 
     public static void Shake(float strength)
     {

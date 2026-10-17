@@ -154,7 +154,9 @@ public static class ChestRewards
     // 희귀 60 · 일반 25 · 전설 15% — 전설이면 「전설 상자」 칸 (고르면 룰렛, 한 판 전설 상한 MaxLegends 에 포함 · 상한이면 희귀 · 일반만)
     // 고정 칸과 같은 보상(상자의 「힘」 +5% · 「정수」 +20)은 이 칸에 나오지 않음 (고정 칸 「전설의 힘」 +10% · 「생명의 정수」가 늘 더 좋아 고를 이유가 없음)
     const float BossLegendChance = 0.15f, BossRareShare = 0.6f / 0.85f;
-    static readonly string[] BossSlotSkip = { "might", "essence" };
+    // 1.2.6~ 「생명」(최대 체력 +10 · 회복) · 「회복」(50%)도 뺌 — 옆 고정 칸 「생명의 정수」(+20 · 모두 회복)보다 늘 나빴고, 체력이 낮을 때 회복 가중치 ×3 이라 힘든 보스전 뒤에 더 자주 나왔음
+    static readonly string[] BossSlotSkip = { "might", "essence", "life", "heal" };
+    const string BossSlotLegend = "*legend";
 
     public class BossSlot
     {
@@ -173,20 +175,35 @@ public static class ChestRewards
         }
     }
 
+    // 1.2.6~ 뽑은 칸은 판 중간 저장(RunSave.BossSlotPick)에 남김 → 보상 창에서 나갔다 이어해도 같은 칸 (다시 뽑아 전설 15% 를 노릴 수 있었음)
     public static BossSlot MakeBossSlot(PlayerController p, Vector3 at)
     {
         Ctx c = MakeCtx(p, at);
-        if (Legends < MaxLegends && Random.value < BossLegendChance)
+        string saved = RunSave.BossSlotPick;
+        RewardDef pick = null;
+        bool legend;
+        if (!string.IsNullOrEmpty(saved))
         {
+            legend = saved == BossSlotLegend && Legends < MaxLegends;
+            if (!legend) pick = ContentRegistry.Rewards.Find(r => r.id == saved && r.rarity != RewardRarity.Legendary && Usable(r, c));
+        }
+        else legend = Legends < MaxLegends && Random.value < BossLegendChance;
+        if (legend)
+        {
+            RunSave.BossSlotPick = BossSlotLegend;
             RewardDef jp = ContentRegistry.Rewards.Find(r => r.rarity == RewardRarity.Legendary);
             ChoiceUI.Option lo = new ChoiceUI.Option("chest.legend.title", "<color=#FFC94D>" + Loc.T("chest.boss.legend") + "</color>",
                                                      jp != null ? jp.color : new Color(1f, 0.75f, 0.2f), jp != null ? jp.icon : "chest");
             return new BossSlot(c, null, true, lo);
         }
-        List<RewardDef> skip = new List<RewardDef>();
-        foreach (RewardDef r in ContentRegistry.Rewards) if (System.Array.IndexOf(BossSlotSkip, r.id) >= 0) skip.Add(r);
-        RewardDef pick = Draw(c, Random.value < BossRareShare ? RewardRarity.Rare : RewardRarity.Common, skip);
+        if (pick == null)
+        {
+            List<RewardDef> skip = new List<RewardDef>();
+            foreach (RewardDef r in ContentRegistry.Rewards) if (System.Array.IndexOf(BossSlotSkip, r.id) >= 0) skip.Add(r);
+            pick = Draw(c, Random.value < BossRareShare ? RewardRarity.Rare : RewardRarity.Common, skip);
+        }
         if (pick == null) return null;
+        RunSave.BossSlotPick = pick.id;
         string desc = pick.describe != null ? pick.describe(c) : "";
         if (pick.rarity == RewardRarity.Rare) desc = "<color=#7FD3FF>" + Loc.T("chest.rare") + "</color>\n" + desc;
         ChoiceUI.Option o = new ChoiceUI.Option(pick.nameKey, desc, pick.color, pick.icon);

@@ -402,7 +402,7 @@ public static class ContractBoard
             Button b = UIKit.MakeButton(cell, "claim.one", new Vector2(0f, -44f), new Vector2(size.x - 40f, 30f), () =>
             {
                 int got = Claim(cc);
-                if (got > 0) { Hostile.Play("coin", 0.8f, 1.2f); Notice.Toast(NoticeIcon.Coin, Loc.T("claim.done") + "  +" + got.ToString("N0") + " P", 2.5f); }
+                if (got > 0) { Hostile.Play("sparkle", 0.8f, 1.2f); Notice.Toast(NoticeIcon.Coin, Loc.T("claim.done") + "  +" + got.ToString("N0") + " P", 2.5f); }
                 Changed?.Invoke();
                 Draw();
             }, 16f);

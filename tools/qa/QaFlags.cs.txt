@@ -1,0 +1,5 @@
+// QA 전용 (tools/qa/qa.ps1 이 프로젝트 복사본에만 넣음 · 원본 저장소에는 없음)
+public static class QaFlags
+{
+    public static bool AllowSave, AllowReward;
+}

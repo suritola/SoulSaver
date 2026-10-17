@@ -808,6 +808,8 @@ public static class Notice
         return t;
     }
 
+    static readonly Vector3[] corners = new Vector3[4];
+
     internal static void TickToasts(bool held, float dt)
     {
         if (toastCol == null) return;
@@ -815,6 +817,14 @@ public static class Notice
         if (held || toasts.Count == 0) return;
         bool fx = GameSettings.Flashes;
         float y = 0f;
+        // 1.2.6~ 큰 알림 띠가 떠 있는 동안 띠와 겹치는 토스트는 옅게 (토스트가 띠 글 끝을 덮어 잘려 보였음)
+        bool band = bigNow != null && bigView != null && bigView.band != null && bigView.band.gameObject.activeInHierarchy && bigView.cg.alpha > 0.01f;
+        float bandLo = 0f, bandHi = 0f;
+        if (band)
+        {
+            bigView.band.GetWorldCorners(corners);
+            bandLo = corners[0].y; bandHi = corners[1].y;
+        }
         for (int i = 0; i < toasts.Count; i++)
         {
             ToastItem t = toasts[i];
@@ -844,6 +854,11 @@ public static class Notice
             // 최적화: 끝에 거의 다 온 Lerp 의 아주 작은 변화(0.01px 미만)는 쓰지 않음 · 같은 크기는 다시 쓰지 않음
             Vector2 ap = new Vector2(slide, -t.y);
             if ((ap - t.r.anchoredPosition).sqrMagnitude >= 0.0001f) t.r.anchoredPosition = ap;
+            if (band)
+            {
+                t.r.GetWorldCorners(corners);
+                if (corners[0].y < bandHi && corners[1].y > bandLo) alpha *= 0.15f;
+            }
             if (t.cg.alpha != alpha) t.cg.alpha = alpha;
             // 들어온 순간 · 「×2」 때 바탕이 강조색으로 번쩍
             float f = fx ? Mathf.Clamp01(1f - Mathf.Min(t.age, t.bump) / 0.45f) : 0f;

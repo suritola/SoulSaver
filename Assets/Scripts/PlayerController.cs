@@ -1324,7 +1324,9 @@ void Shoot()
         taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
         // 1.0.4~ 보스전 한 방 즉사 보호: 보스가 살아 있는 동안 한 대는 최대 체력의 BossHitShare 까지
         // (3장 지옥의 군주 화염 돌진이 보통에서 약 103 으로 기본 체력 100 을 한 번에 넘었음 · 4장은 원래 20% 상한)
-        if (bosss.LiveCount > 0) taken = Mathf.Min(taken, PlayerMaxHealth * BossHitShare);
+        // 1.2.6~ 공간 침식 중에는 결계 공격이 아닌 피해(돌진 · 몸통 · 잡몹 등)도 기획대로 한 대 25% 상한 (예전엔 40% 로 맞았음)
+        float hitShare = BossUltimate.Active && BossUltimate.ErosionActive ? Mathf.Min(BossHitShare, SpaceErosion.HitShare) : BossHitShare;
+        if (bosss.LiveCount > 0) taken = Mathf.Min(taken, PlayerMaxHealth * hitShare);
         if (taken <= 0f) return true;
 
         // 1.0.4~: 한 방에 쓰러질 피해라도 이번 장 「최후의 보루」가 남아 있으면 체력 1로 버티고 발동 (아래 LastStand.Check)

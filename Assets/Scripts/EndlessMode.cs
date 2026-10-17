@@ -167,7 +167,7 @@ public class EndlessMode : MonoBehaviour
         if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
         if (!daily) EndlessMilestones.CheckTime(s);                         // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 제외)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
-        if (finalStage == 0 && !storm && s >= FinalAt && free)
+        if (finalStage == 0 && !storm && s >= FinalAt && free && !BossUltimate.Active && !BossUltimate.ErosionPending)      // 결계 · 공간 침식이 끝난 프레임에 시작 (안에 새 보스 · 인트로가 겹치지 않게)
         {
             // 1.2.3~ 15:00 판정 한 번: 보스를 쓰러뜨려 왔으면 지금처럼 모든 보스 → 개발자 → 엄마, 처치 0 이면 모래 폭풍만 (보스 순환은 계속)
             if (BossesDefeated >= FinalMinBosses) StartFinal();
@@ -247,6 +247,9 @@ public class EndlessMode : MonoBehaviour
         Notice.Big(Loc.T("15분을 버텼다… 모래 폭풍이 거세진다!"), Loc.T("최후의 시간은 보스를 한 번이라도 쓰러뜨린 자에게만 열립니다. 적은 끝없이 몰려옵니다 — 끝까지 버티세요."), NoticeIcon.Warn, 4f, NoticeLevel.Urgent);
     }
 
+    const float FinalGap = 7f;            // 1.2.6~ 4.5 → 7 (보스 넷이 뭉쳐 보였음)
+    static readonly Vector3[] FinalSpread = { Vector3.zero, Vector3.right, Vector3.left, Vector3.down, new Vector3(0.7f, -0.7f, 0f) };
+
     // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
     void StartFinal()
     {
@@ -258,7 +261,7 @@ public class EndlessMode : MonoBehaviour
             foreach (GameObject prefab in bossPrefabs)
             {
                 if (prefab == null || (prefab.TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind))) continue;
-                Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * made) * Vector3.right * 4.5f);
+                Vector3 at = (Vector3)spawner.bossSpawnPoint + FinalSpread[Mathf.Min(made, FinalSpread.Length - 1)] * FinalGap;      // 큰 몸들이 한 자리에 겹치지 않게 (성문 위쪽은 아레나 밖이라 오른쪽 · 왼쪽 · 아래)
                 Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
                 made++;
             }
@@ -513,7 +516,7 @@ public class EndlessMode : MonoBehaviour
             foreach (GameObject g in bossPrefabs)
                 if (g != null && g.TryGetComponent(out bosss pb) && pb.bossKind == kind) { prefab = g; break; }
             if (prefab == null || bosss.KindAlive(kind)) continue;
-            Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * (made - 1)) * Vector3.right * 4.5f);
+            Vector3 at = (Vector3)spawner.bossSpawnPoint + FinalSpread[Mathf.Min(made, FinalSpread.Length - 1)] * FinalGap;      // 1.2.6~ 15분 등장과 같은 자리 (예전 셋째는 성문 위 아레나 밖으로 갔다가 끌려 들어왔음)
             GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
             if (go.TryGetComponent(out bosss b))
             {
@@ -521,6 +524,8 @@ public class EndlessMode : MonoBehaviour
                 b.restoreHp = Mathf.Max(1, hp);
                 b.spawnTimed = true;
                 b.spawnedAt = Time.time - Mathf.Max(0, alive);  // 겹침 · 풍화 시각이 이어짐 (풍화 배율은 다음 초에 UpdateErosion 이 다시 계산)
+                // 1.2.6~ 풍화 배율도 바로 이어 줌 (1 로 시작하면 UpdateErosion 이 「풍화 시작」 토스트를 이어할 때마다 다시 띄웠음)
+                b.erosionMul = 1f + Mathf.Min(Mathf.Max(0f, alive - ErodeAfter) / 60f * ErodePerMin, ErodeMax - 1f);
                 if (f.Length >= 5 && f[4] == "1") { b.restoreDying = true; b.restoreHp = 1f; }     // 쓰러지는 중에 저장됨 → 한 대에 처치 (보상 중복 없음)
             }
             StoryDirector.MarkIntroduced(kind);              // 이어할 때 인트로를 다시 틀지 않음

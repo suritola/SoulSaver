@@ -65,7 +65,7 @@ public partial class BossSkills : MonoBehaviour
             // 되비친 기억: 이번 판에 가장 많이 쓴 공격 (RunStats)
             string top = TopSource();
             if (StageManager.Instance != null)
-                Notice.Big(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", RunStats.SourceName(top)), NoticeIcon.Boss, 2.2f, NoticeLevel.Urgent);
+                Notice.Big(MirrorLine(RunStats.SourceName(top)), NoticeIcon.Boss, 2.2f, NoticeLevel.Urgent);
             StartCoroutine(Run(ReflectedMemory(p, top)));
             return;
         }
@@ -106,6 +106,16 @@ public partial class BossSkills : MonoBehaviour
         foreach (GameObject g in owned) if (g != null) Destroy(g);
         owned.Clear();
         next = Mathf.Max(next, Time.time + 1.2f);
+    }
+
+    // 1.2.6~ 한국어면 이름 받침에 맞춰 「을」 · 「를」 (예전엔 「을(를)」이 그대로 보였음) · 다른 언어는 번역 그대로
+    static string MirrorLine(string name)
+    {
+        string line = Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", name);
+        if (Loc.Current != Loc.Lang.Korean || string.IsNullOrEmpty(name)) return line;
+        char last = name[name.Length - 1];
+        if (last < '가' || last > '힣') return line;      // 한글 음절이 아니면 그대로
+        return line.Replace("을(를)", (last - 0xAC00) % 28 != 0 ? "을" : "를");
     }
 
     IEnumerator Windup(Color color, float seconds)
@@ -674,7 +684,7 @@ public partial class BossSkills : MonoBehaviour
         Mimic m = list.Find(x => top != null && x.key == top);
         if (m.name == null) m = Pick(list);
         if (banner && StageManager.Instance != null)
-            Notice.Big(Loc.T("거울의 군주가 「{0}」을(를) 되비춘다!").Replace("{0}", m.name), NoticeIcon.Boss, 2f, NoticeLevel.Urgent);
+            Notice.Big(MirrorLine(m.name), NoticeIcon.Boss, 2f, NoticeLevel.Urgent);
         ultHits = 0;
         Fx.Spawn("fx_sparkle", transform.position, 5f, Mirror, 20f);
         Hostile.Play("shimmer", 0.5f, 1.1f);
