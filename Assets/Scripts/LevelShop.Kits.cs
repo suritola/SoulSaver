@@ -34,7 +34,18 @@ public partial class LevelShop
     {
         string[] p = v.Split('|');
         if (p.Length != 3) return Loc.T(v);
-        return (p[0].Length > 0 ? Loc.T(p[0]) : "") + p[1] + (p[2].Length > 0 ? Loc.T(p[2]) : "");
+        string unit = p[2].Length > 0 ? Loc.T(p[2]) : "";
+        // 영어 「번째마다」(th): 「3th」가 되지 않게 서수로 — 「every 3rd」
+        if (Loc.Current == Loc.Lang.English && unit.StartsWith("th") && int.TryParse(p[1], out int n))
+            return "every " + n + Ordinal(n) + unit.Substring(2);
+        return (p[0].Length > 0 ? Loc.T(p[0]) : "") + p[1] + unit;
+    }
+
+    static string Ordinal(int n)
+    {
+        int h = n % 100;
+        if (h >= 11 && h <= 13) return "th";
+        return (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
     }
 
     // 모든 레벨업 카드 설명의 모양: 한 문장 + "수치  지금 ▶ 다음(금빛 굵게)"
