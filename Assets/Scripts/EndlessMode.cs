@@ -23,9 +23,26 @@ public class EndlessMode : MonoBehaviour
     public const float MidBossPhaseFrom = 90f;  // 1.1.7~ 페이즈가 오를 때 나오는 중간 보스는 1:30 뒤에만 (EnemySpawn.UpdatePhase)
     float nextMidBoss;
 
+    // 1.2.3~ 「보스는 기다리지 않는다」: 보스가 BossOverlapAfter 넘게 살아 있으면 다음 차례 보스가 함께 나옴 (15분 전 · 한계 돌파 · 동시에 MaxLiveBosses 마리 · 종류는 다름)
+    //   모래 폭풍 풍화: ErodeAfter 넘게 살아 있는 보스는 받는 피해가 1분마다 ErodePerMin 씩 늘어남 (최대 ErodeMax 배 · bosss.erosionMul · 개발자 · 엄마 제외)
+    //   최후의 시간(15:00)은 보스를 FinalMinBosses 마리 이상 쓰러뜨렸을 때만 — 아니면 모래 폭풍(GameMode.Surge 는 시간대로)만 거세지고 보스 순환은 계속 (storm)
+    const int MaxLiveBosses = 2;
+    const float BossOverlapAfter = 180f;
+    const float ErodeAfter = 180f, ErodePerMin = 0.25f, ErodeMax = 2.5f;
+    public const int FinalMinBosses = 1;
+    bool storm;             // 15:00 을 보스 처치 0 으로 넘김 — 이 판에서는 최후의 시간이 열리지 않음 (저장 · 이어하기)
+    int erodeSec = -1;
+    // 1.2.3~ 규칙 E: 개발자 · 엄마와 싸우는 동안(등장 연출 제외) 약한 잡몹을 — EnemySpawner.SpawnEnemy 가 봄
+    //   1초마다 4마리 · 동시 최대 30 · 기본 체력 22 이하 5종 · 처치 포인트 ×0.25 (경험치 · 처치 수는 그대로)
+    public const float FinalMobEvery = 1f;
+    public const int FinalMobBatch = 4;
+    public const int FinalMobMax = 30;
+    public const float FinalMobPointMul = 0.25f;
+    const int FinalMobMaxBaseHp = 22;
+
     // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분): 15분을 버티면 적이 기하급수로 몰려오고(GameMode.Surge) 모든 보스가 한꺼번에 깨어남
     // → 그 보스들을 모두 쓰러뜨리면 최종 보스 「개발자」(1.0.4~ 체력 20만 → 30만 · 공격 주기 ÷10)
-    //   1.0.4~ 개발자가 나오기 시작한 뒤로는 잡몹 · 습격 · 중간 보스 · 보스 부하가 나오지 않음
+    //   1.0.4~ 개발자가 나오기 시작한 뒤로는 잡몹 · 습격 · 중간 보스 · 보스 부하가 나오지 않음 (1.2.3~ 약한 잡몹만 1초마다 4마리 · 규칙 E · EnemySpawner.SpawnEnemy)
     // → 1.0.4~ 30분이 되면 「개발자 엄마」(개발자의 모든 능력치 2배: 체력 60만 · 공격 주기 ÷20 · 피해 · 이동 속도 2배)
     //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 900f;
@@ -63,12 +80,14 @@ public class EndlessMode : MonoBehaviour
         }
     }
     public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
-    // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴)
+    // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴 · 1.2.3~ 개발자 · 엄마전 잡몹은 규칙 E 뿐)
     public bool NoMobs => devSummoned && finalStage != 4;
     // 1.1.4~ 클리어 뒤 「한계 돌파」: 잡몹 · 습격 · 중간 보스 · 보스가 다시 나오고 시간이 갈수록 계속 강해짐 (기록은 죽을 때까지 늘어남)
     public bool Beyond => finalStage == 4;
     // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹이 3배로)
     public bool FinalBossAlive => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead) || FinalBossIncoming);
+    // 1.2.3~ 규칙 E: 개발자 · 엄마가 실제로 서서 싸우는 중 (등장 연출 FinalBossIncoming 은 빼고 — 그 사이 ClearMobs 가 흩는 중) → 약한 잡몹만 조금씩
+    public bool FinalBossFighting => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead));
     // 1.1.2~ 개발자를 쓰러뜨린 뒤 엄마가 오기 전까지 잡몹이 개발자 등장 전보다 3배 빨리 나옴 (영혼 3000개를 모으는 국면 · GameMode.SpawnIntervalMul 이 나눔)
     public const float AfterDevSpawnMul = 3f;
     public static float MobSpawnBoost => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3 ? AfterDevSpawnMul : 1f;
@@ -86,7 +105,7 @@ public class EndlessMode : MonoBehaviour
 
     bool daily;      // 일일 도전 판 (메인 메뉴로 나갈 때 DailyChallenge 가 먼저 풀려도 기록이 섞이지 않게 시작할 때 기억)
 
-    public void Init(StageManager sm, GameObject[] bosses)
+    public void Init(StageManager sm, GameObject[] bosses, bool resumed = false)
     {
         Instance = this;
         daily = DailyChallenge.Active;
@@ -96,7 +115,9 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + FirstBossAt;
         nextMidBoss = Time.time + MidBossFrom;
         BuildHud();
-        StartCoroutine(StartAtLevel(10));
+        // 1.2.3~ 지형 변화 「왕들의 영토」 시드 (일일 도전은 그날 시드 · 이어하기는 RestoreRun 이 저장한 시드로 Restore)
+        if (!resumed && EndlessTerrain.Instance != null) EndlessTerrain.Instance.Begin(daily ? DailyChallenge.RunSeed : EndlessTerrain.NewSeed());
+        if (!resumed) StartCoroutine(StartAtLevel(10));     // 1.2.3~ 이어하기는 LevelShop.RestoreLevels 가 레벨 · 대기 레벨업을 이미 되살렸음 (다시 주면 두 번 쌓임)
     }
 
     // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 포인트가 쌓임
@@ -109,7 +130,10 @@ public class EndlessMode : MonoBehaviour
         int add = Mathf.Max(0, level - p.level);
         Juice.LevelUp(p.transform.position);
         shop.GrantLevels(p, add);           // 올라갈 레벨만큼 레벨업 포인트로 쌓아 두고 [Space]로 하나씩 고름 (고를 때 레벨이 오름)
+        startGiven = true;
     }
+
+    bool startGiven;    // 1.2.3~ 레벨 10 시작 보너스를 줬음 (카드 · ESC 창이 열린 채 기다리는 동안 저장하고 나가면 이어할 때 줌)
 
     void Update()
     {
@@ -127,16 +151,26 @@ public class EndlessMode : MonoBehaviour
             // 1.1.2~ 개발자를 쓰러뜨렸으면 엄마가 강림하기까지 남은 영혼(잡몹 처치) 수
             string final = finalStage == 4 ? Loc.T("클리어 뒤 · 한계 돌파") : devDown && !momSummoned ? Loc.T("그녀의 강림까지 남은 영혼 수") + " " + MomSoulsLeft + "/" + MomSouls : Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간");
             hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
-                     + (finalStage > 0 ? "   <color=#FF5A4A>" + final + "</color>" : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
+                     + (finalStage > 0 ? "   <color=#FF5A4A>" + final + "</color>"
+                        : storm ? "   <color=#FF5A4A>" + Loc.T("모래 폭풍") + "</color>"         // 1.2.3~ 15:00 을 보스 처치 0 으로 넘긴 판
+                        : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
+        if (sec != erodeSec) { erodeSec = sec; UpdateErosion(); }      // 1.2.3~ 풍화는 1초에 한 번 (HUD 글이 안 바뀌어도)
 
         if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
         if (!daily) EndlessMilestones.CheckTime(s);                         // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 제외)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
-        if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
+        if (finalStage == 0 && !storm && s >= FinalAt && free)
+        {
+            // 1.2.3~ 15:00 판정 한 번: 보스를 쓰러뜨려 왔으면 지금처럼 모든 보스 → 개발자 → 엄마, 처치 0 이면 모래 폭풍만 (보스 순환은 계속)
+            if (BossesDefeated >= FinalMinBosses) StartFinal();
+            else StartStorm();
+            return;
+        }
         // 1.1.2~ 개발자를 쓰러뜨린 뒤 잡몹 MomSouls 마리: 개발자 엄마
         if (finalStage >= 2 && finalStage < 3 && devDown && !momSummoned && momKillBase >= 0 && souls <= 0 && free) { StartCoroutine(SummonMom()); return; }
-        if ((finalStage == 0 || finalStage == 4) && !spawner.bossSpawned && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen) SpawnBoss();
+        // 1.2.3~ 보스가 살아 있어도 nextBoss(등장 3분 뒤)가 되면 다음 보스가 함께 (동시 MaxLiveBosses · 쓰러지는 연출 중인 보스가 있으면 처치 처리가 nextBoss 를 다시 정할 때까지 기다림)
+        if ((finalStage == 0 || finalStage == 4) && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen && bosss.Dying == 0 && bosss.LiveCount < MaxLiveBosses) SpawnBoss();
         if (!NoMobs && Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
         {
             spawner.SpawnMidBoss();
@@ -149,22 +183,66 @@ public class EndlessMode : MonoBehaviour
     void SpawnBoss()
     {
         if (bossPrefabs == null || bossPrefabs.Length == 0) return;
+        // 1.2.3~ 살아 있는 종류는 건너뜀 (결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나) — 상한 2 · 종류 4 라 보통은 걸리지 않음
+        int skipped = 0;
+        while (skipped < bossPrefabs.Length && bossPrefabs[bossTurn % bossPrefabs.Length] != null
+               && bossPrefabs[bossTurn % bossPrefabs.Length].TryGetComponent(out bosss k) && bosss.KindAlive(k.bossKind)) { bossTurn++; skipped++; }
+        if (skipped >= bossPrefabs.Length) { nextBoss = Time.time + 30f; return; }
         GameObject prefab = bossPrefabs[bossTurn % bossPrefabs.Length];
+        if (prefab == null) { bossTurn++; nextBoss = Time.time + 30f; return; }
         bossTurn++;
-        nextBoss = float.MaxValue;              // 쓰러뜨리면 다시 정함
+        nextBoss = Time.time + BossOverlapAfter;          // 1.2.3~ 쓰러뜨리면 OnBossDefeated 가 다시 정함 · 못 쓰러뜨리면 이 시각에 다음 보스가 함께 나옴 (예전 float.MaxValue)
+        bool overlap = bosss.LiveCount > 0;               // 이미 살아 있는 보스가 있음 → 겹쳐 등장
         spawner.bossSpawned = true;
         spawner.bossCleared = false;
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
-        GameObject go = Instantiate(prefab, spawner.bossSpawnPoint, Quaternion.identity);
-        if (finalStage == 0 && bossTurn == 2 && go.TryGetComponent(out bosss b)) b.setEnemyHP = Mathf.RoundToInt(b.setEnemyHP * SecondBossHpMul);   // bossTurn 은 위에서 이미 ++ 됨 · Start 가 BossHpMul 을 곱하기 전 · finalStage 0: 15분 전에 보스를 하나만 잡고 한계 돌파로 간 판에서 뒤늦게 걸리지 않게
-        Hostile.Play("roar", 1f, 0.9f);
-        Notice.Big(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), NoticeIcon.Boss, 2.5f, NoticeLevel.Urgent);
+        Vector3 at = (Vector3)spawner.bossSpawnPoint + (overlap ? Vector3.right * 4.5f : Vector3.zero);     // StartFinal 의 두 번째 자리와 같은 간격 (둘이 한 자리에 겹쳐 서지 않게)
+        GameObject go = Instantiate(prefab, at, Quaternion.identity);
+        if (go.TryGetComponent(out bosss b))
+        {
+            b.spawnTimed = true;
+            b.spawnedAt = Time.time;                      // 1.2.3~ 겹침 · 풍화 기준 (Start 전)
+            if (finalStage == 0 && bossTurn == 2) b.setEnemyHP = Mathf.RoundToInt(b.setEnemyHP * SecondBossHpMul);   // bossTurn 은 위에서 이미 ++ 됨 · Start 가 BossHpMul 을 곱하기 전 · finalStage 0: 15분 전에 보스를 하나만 잡고 한계 돌파로 간 판에서 뒤늦게 걸리지 않게
+        }
+        Hostile.Play("roar", 1f, overlap ? 0.75f : 0.9f);
+        if (overlap)
+        {
+            Notice.Big(Loc.T("다음 왕이 기다리지 않고 나타났다!"), Loc.T("보스는 기다려 주지 않습니다. 한 번에 둘까지 나옵니다."), NoticeIcon.Boss, 3.5f, NoticeLevel.Urgent);
+            Hints.Show("endless.bossqueue", "보스는 기다려 주지 않습니다. 보스가 3분 넘게 살아 있으면 다음 보스가 함께 나오고(한 번에 둘까지), 오래 버틴 보스는 모래 폭풍에 풍화되어 받는 피해가 늘어납니다. 15분까지 보스를 하나라도 쓰러뜨려야 「최후의 시간」이 열립니다.");
+        }
+        else Notice.Big(Loc.T("사막의 모래 폭풍 속에서 보스가 나타났다!"), NoticeIcon.Boss, 2.5f, NoticeLevel.Urgent);
+    }
+
+    // 1.2.3~ 1초마다: 살아 있은 시간으로 풍화 배율 (bosss.Live ≤ 4 · 할당 없음) · 시작하는 순간 보스마다 토스트 한 번
+    void UpdateErosion()
+    {
+        foreach (bosss b in bosss.Live)
+        {
+            if (b == null || b.IsDead) continue;
+            if (b.developer || !b.spawnTimed) { b.erosionMul = 1f; continue; }
+            float over = Time.time - b.spawnedAt - ErodeAfter;
+            float mul = over <= 0f ? 1f : 1f + Mathf.Min(over / 60f * ErodePerMin, ErodeMax - 1f);
+            if (mul > 1f && b.erosionMul <= 1f)
+                Notice.Toast(NoticeIcon.Warn, Loc.T("{0} — 모래 폭풍에 풍화되어 받는 피해가 1분마다 {1}% 늘어납니다.").Replace("{0}", bossbar.BossName(b.bossKind)).Replace("{1}", Mathf.RoundToInt(ErodePerMin * 100f).ToString()), 4f);
+            b.erosionMul = mul;
+        }
+    }
+
+    // 1.2.3~ 15:00 에 보스 처치 0: 최후의 시간(모든 보스 → 개발자)은 이 판에서 열리지 않고 모래 폭풍(GameMode.Surge · 시간대로)만 거세짐 · 보스 순환(상한 2 · 풍화)은 계속
+    // 지형 조각은 그대로 (보스 넷이 오지 않으니 아레나를 비울 이유가 없음 — EndlessTerrain.OnFinalBegin 을 부르지 않음)
+    void StartStorm()
+    {
+        storm = true;
+        Hostile.Play("roar", 1f, 0.6f);
+        Hostile.Shake(0.4f);
+        Notice.Big(Loc.T("15분을 버텼다… 모래 폭풍이 거세진다!"), Loc.T("최후의 시간은 보스를 한 번이라도 쓰러뜨린 자에게만 열립니다. 적은 끝없이 몰려옵니다 — 끝까지 버티세요."), NoticeIcon.Warn, 4f, NoticeLevel.Urgent);
     }
 
     // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
     void StartFinal()
     {
         finalStage = 1;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnFinalBegin();      // 1.2.3~ 지형 조각이 모두 꺼짐 (시각이 아니라 최종 국면 시작에 묶음)
         nextBoss = float.MaxValue;
         int made = 0;
         if (bossPrefabs != null)
@@ -304,6 +382,7 @@ public class EndlessMode : MonoBehaviour
         yield return new WaitForSecondsRealtime(5f);
         // 1.1.4~ 한계 돌파: 최종 보스 곡을 끄고(평소 · 보스 곡으로) 적 · 보스를 다시, 초월 카드도 다시 열림 (Cleared 는 finalStage 3 동안만)
         finalStage = 4;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnBeyond();          // 1.2.3~ 처치마다 다시 영토가 번짐
         finalMusic = 0;
         spawner.spawningEnabled = true;
         spawner.bossCleared = false;
@@ -313,7 +392,11 @@ public class EndlessMode : MonoBehaviour
     }
 
     // 함께 나온 보스 중 마지막이 아닌 보스를 쓰러뜨렸을 때: 처치 연출만 빼고 보상(진화 · 전리품 · 포인트)은 똑같이
-    public void OnExtraBossDown() => OnBossDefeated();
+    public void OnExtraBossDown()
+    {
+        SteamManager.OnExtraBossDown();         // 1.2.3~ 보스전 무피격 · 아슬아슬 업적을 보스마다 판정
+        OnBossDefeated();
+    }
 
     // StageManager가 보스 처치를 알려 줌
     int trophies;
@@ -334,6 +417,10 @@ public class EndlessMode : MonoBehaviour
         if (devDown && !devWas && !momSummoned) { momKillBase = RunStats.Kills; StartCoroutine(ForeshadowMom()); }
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
+        // 1.2.3~ 겹쳐 나온 보스가 아직 살아 있으면 그 보스의 「등장 3분 뒤 다음 보스」 시각을 지움 없이 (둘 중 이른 쪽 · 할당 없음)
+        foreach (bosss b in bosss.Live)
+            if (b != null && !b.IsDead && !b.developer && b.spawnTimed) nextBoss = Mathf.Min(nextBoss, b.spawnedAt + BossOverlapAfter);
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnBossDefeated(BossesDefeated, finalStage);     // 1.2.3~ 쓰러진 왕의 영토가 번짐 (처치 연출 · 진화 창 뒤)
         if (SpecialAbilities.UsesEvolution)
         {
             // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번)
@@ -343,15 +430,155 @@ public class EndlessMode : MonoBehaviour
             if (sp != null && (sp.NextEvolutionOptions() == null || stages.IsEvolving))
             {
                 string loot = sp.BossTrophy(++trophies);
+                RunSave.Record("bt" + trophies);        // 1.2.3~ 이어할 때 같은 전리품 효과를 다시 (RunSave.Restore 의 기록 재생)
                 Notice.Big(Loc.T("보스 처치!") + "\n" + Loc.T("전리품") + " : " + loot, NoticeIcon.Star, 3f, NoticeLevel.Normal);
                 return;
             }
             Notice.Big(Loc.T("보스 처치!"), NoticeIcon.Star, 2.5f, NoticeLevel.Normal);
+            RunSave.NeedEvolution = true;               // 1.2.3~ 진화 창이 뜨기 전에 나가면 이어할 때 고르게 (이야기 모드와 같음)
             stages.StartCoroutine(stages.Evolution(true));
             return;
         }
         stages.specialPoints++;
         Notice.Big(Loc.T("보스 처치!  특수 능력 포인트 +1"), NoticeIcon.Star, 3f, NoticeLevel.Normal);
+    }
+
+    // 1.2.3~ 판 중간 저장 (RunSave.Save): 무한 전용 상태. 평소 보스가 살아 있으면 같은 보스가 바로 다시 나오게 차례를 1 되돌림 (이야기 모드와 같은 규칙)
+    public void SaveRun(RunSave.Data d)
+    {
+        d.endlessSeconds = GameMode.EndlessSeconds;
+        d.endlessBosses = BossesDefeated;
+        d.endlessTrophies = trophies;
+        d.endlessStartGiven = startGiven;
+        d.endlessFinal = finalStage == 3 ? 4 : finalStage;              // 클리어 연출 중이면 이어할 때 바로 한계 돌파 (보너스 · 기록은 ClearEndless 가 이미 적었음)
+        d.endlessDevSummoned = devSummoned; d.endlessMomSummoned = momSummoned;
+        d.endlessDevDown = devDown;         d.endlessMomDown = momDown;
+        d.endlessMomKillBase = momKillBase;
+        bool bossLive = (finalStage == 0 || finalStage == 4) && spawner != null && spawner.bossSpawned && !spawner.bossCleared;
+        d.endlessBossAlive = bossLive;
+        d.endlessStorm = storm;
+        // 1.2.3~ 살아 있는 보스는 체력 · 살아 있은 시간까지 그대로 (겹쳐 나온 둘 · 최종 국면 넷) — 다 쓰러지는 연출 중이면 예전처럼 같은 보스를 체력 가득으로 다시
+        d.endlessLiveBosses = finalStage == 0 || finalStage == 1 || finalStage == 4 ? LiveBossesText() : "";
+        bool exact = d.endlessLiveBosses.Length > 0;
+        d.endlessTurn = bossLive && !exact ? Mathf.Max(0, bossTurn - 1) : bossTurn;
+        d.endlessNextBoss = (bossLive && !exact) || nextBoss == float.MaxValue ? -1f : Mathf.Max(0f, nextBoss - Time.time);
+        d.endlessNextMid = Mathf.Max(0f, nextMidBoss - Time.time);
+        if (finalStage == 3) { d.endlessNextBoss = 20f; d.endlessNextMid = 30f; }     // ClearEndless 가 한계 돌파를 시작할 때 주는 값
+        int mask = 0;
+        if (finalStage == 1 && bossPrefabs != null)
+            for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
+                if (bossPrefabs[i] != null && bossPrefabs[i].TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind)) mask |= 1 << i;
+        d.endlessFinalAlive = mask;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.Save(out d.terrainSeed, out d.terrain);     // 1.2.3~ 지형 변화
+    }
+
+    // 1.2.3~ 살아 있는 보스 (개발자 · 엄마 제외 · 최대 4): "종류,최대 체력,체력,살아 있은 초[,1];…" — 저장할 때만 (StringBuilder 하나 재사용)
+    //   끝의 ",1" = 쓰러지는 연출 중(처치 처리 전)이던 보스 → 체력 1 로 다시 (처치 수 · 진화 · 지형 · 15분 판정이 사라지지 않게 · 보상은 Die 에서 이미 받아 다시 주지 않음)
+    static readonly System.Text.StringBuilder liveText = new System.Text.StringBuilder(64);
+    static string LiveBossesText()
+    {
+        liveText.Length = 0;
+        foreach (bosss b in bosss.Live)
+        {
+            if (b == null || b.developer) continue;
+            bool dying = b.DefeatPending;
+            if (b.IsDead && !dying) continue;
+            if (liveText.Length > 0) liveText.Append(';');
+            liveText.Append(b.bossKind).Append(',').Append(b.setEnemyHP).Append(',').Append(dying ? 1 : Mathf.Max(1, Mathf.CeilToInt(b.EnemyHealth)))
+                    .Append(',').Append(Mathf.Max(0, Mathf.RoundToInt(Time.time - b.spawnedAt)));
+            if (dying) liveText.Append(",1");
+        }
+        return liveText.ToString();
+    }
+
+    // 1.2.3~ 이어하기: 저장한 보스를 그때의 체력 · 살아 있은 시간으로 (인트로 · 알림 · 울음 없이) — 하나라도 되살렸으면 true
+    bool RestoreLive(string text)
+    {
+        if (string.IsNullOrEmpty(text) || bossPrefabs == null) return false;
+        int made = 0;
+        foreach (string part in text.Split(';'))
+        {
+            string[] f = part.Split(',');
+            if (f.Length < 4 || !int.TryParse(f[0], out int kind) || !int.TryParse(f[1], out int maxHp) || !int.TryParse(f[2], out int hp) || !int.TryParse(f[3], out int alive)) continue;
+            GameObject prefab = null;
+            foreach (GameObject g in bossPrefabs)
+                if (g != null && g.TryGetComponent(out bosss pb) && pb.bossKind == kind) { prefab = g; break; }
+            if (prefab == null || bosss.KindAlive(kind)) continue;
+            Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * (made - 1)) * Vector3.right * 4.5f);
+            GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
+            if (go.TryGetComponent(out bosss b))
+            {
+                b.restoreMaxHp = Mathf.Max(1, maxHp);         // Start 가 난이도 배율을 곱한 뒤 덮어씀 (보상 배율은 그대로 들어감)
+                b.restoreHp = Mathf.Max(1, hp);
+                b.spawnTimed = true;
+                b.spawnedAt = Time.time - Mathf.Max(0, alive);  // 겹침 · 풍화 시각이 이어짐 (풍화 배율은 다음 초에 UpdateErosion 이 다시 계산)
+                if (f.Length >= 5 && f[4] == "1") { b.restoreDying = true; b.restoreHp = 1f; }     // 쓰러지는 중에 저장됨 → 한 대에 처치 (보상 중복 없음)
+            }
+            StoryDirector.MarkIntroduced(kind);              // 이어할 때 인트로를 다시 틀지 않음
+            made++;
+        }
+        if (made == 0) return false;
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+        return true;
+    }
+
+    // 1.2.3~ 이어하기 (StageManager.Opening): Init 바로 뒤 · 같은 프레임에 (Update 가 먼저 돌면 복원 전 상태로 StartFinal 이 잘못 걸림)
+    public void RestoreRun(RunSave.Data d)
+    {
+        BossesDefeated = d.endlessBosses;
+        bossTurn = Mathf.Max(0, d.endlessTurn);
+        trophies = d.endlessTrophies;
+        finalStage = d.endlessFinal == 3 ? 4 : Mathf.Clamp(d.endlessFinal, 0, 4);
+        devDown = d.endlessDevDown; momDown = d.endlessMomDown;
+        momKillBase = devDown ? d.endlessMomKillBase : -1;
+        nextBoss = d.endlessNextBoss >= 0f ? Time.time + d.endlessNextBoss : float.MaxValue;
+        nextMidBoss = Time.time + Mathf.Max(0f, d.endlessNextMid);
+        startGiven = d.endlessStartGiven;
+        storm = d.endlessStorm;
+        if (!startGiven) StartCoroutine(StartAtLevel(10));     // 시작 보너스를 받기 전에 저장한 판 (p.level 은 Restore 가 이미 되살림 → 모자란 만큼만)
+        if (finalStage == 1)
+        {
+            if (RestoreLive(d.endlessLiveBosses)) nextBoss = float.MaxValue;     // 1.2.3~ 체력 · 살아 있은 시간 그대로
+            else RestoreFinal(d.endlessFinalAlive);
+        }
+        else if (finalStage == 2)
+        {
+            // 살아 있던(또는 내려오던) 최종 보스는 등장 연출부터 다시 — 깃발을 내려 두면 SummonDeveloper · SummonMom 이 다시 켬 (체력 가득 · 전용 곡도 그 안에서)
+            bool devLive = d.endlessDevSummoned && !devDown, momLive = d.endlessMomSummoned && !momDown;
+            devSummoned = d.endlessDevSummoned && !devLive;
+            momSummoned = d.endlessMomSummoned && !momLive;
+            if (momLive) StartCoroutine(SummonMom());            // 개발자도 살아 있었으면 둘이 함께
+            else if (devLive || !devSummoned) StartCoroutine(SummonDeveloper());
+        }
+        else
+        {
+            devSummoned = d.endlessDevSummoned; momSummoned = d.endlessMomSummoned;
+            if (RestoreLive(d.endlessLiveBosses)) { }                // 1.2.3~ 살아 있던 보스를 그때의 체력으로 · 다음 보스 시각은 저장값 그대로 (겹침)
+            else if (d.endlessBossAlive) nextBoss = Time.time;       // 다음 Update 에서 SpawnBoss → 같은 보스가 바로 (체력 가득 · 쓰러지는 연출 중에 저장했을 때)
+        }
+        // 1.2.3~ 지형 변화: 국면 · 플레이어 자리가 되살아난 뒤, 적이 나오기 전 — 기록대로 즉시 (파동 · 알림 없이)
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.Restore(d.terrainSeed, d.terrain);
+    }
+
+    // 15분 최종 국면에서 살아 있던 종류만 다시 (StartFinal 과 같은 자리 · 같은 깃발 · 비트가 비어 있으면 모두)
+    void RestoreFinal(int aliveMask)
+    {
+        if (aliveMask == 0 || bossPrefabs == null) { finalStage = 0; StartFinal(); return; }
+        finalStage = 1;
+        nextBoss = float.MaxValue;
+        int made = 0;
+        for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
+        {
+            if ((aliveMask & (1 << i)) == 0 || bossPrefabs[i] == null) continue;
+            Vector3 at = (Vector3)spawner.bossSpawnPoint + (made == 0 ? Vector3.zero : Quaternion.Euler(0f, 0f, 90f * made) * Vector3.right * 4.5f);
+            Instantiate(bossPrefabs[i], Hostile.ClampArena(at), Quaternion.identity);
+            made++;
+        }
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
     }
 
     void OnDestroy()
@@ -445,6 +672,9 @@ public class EndlessMode : MonoBehaviour
         }
         float[] minions = new float[enemies.Count];
         for (int i = 0; i < minions.Length; i++) minions[i] = 1f;
+        // 1.2.3~ 규칙 E: 개발자 · 엄마전에 나오는 약한 적 (기본 체력 22 이하 — 해골 · 구울 · 임프 · 망령 · 초원 슬라임 · 모두 근접 기본형)
+        float[] finals = new float[enemies.Count];
+        for (int i = 0; i < finals.Length; i++) finals[i] = enemies[i].TryGetComponent(out EnermyController fe) && fe.setEnemyHP <= FinalMobMaxBaseHp ? 1f : 0f;
 
         StageConfig endless = new StageConfig
         {
@@ -454,6 +684,7 @@ public class EndlessMode : MonoBehaviour
             bossKills = int.MaxValue,
             bossPrefab = null,
             minionWeights = minions,
+            finalWeights = finals,
         };
         List<StageConfig> list = new List<StageConfig>(stages);
         while (list.Count > 4) list.RemoveAt(list.Count - 1);
@@ -468,6 +699,7 @@ public class EndlessMode : MonoBehaviour
         GameObject map = ReskinHellMap(hellMap, "DesertMap", "Desert", "_desert", out Dictionary<string, Sprite> desert, out int sorting, out int order);
         if (map == null) return null;
         ScatterProps(map.transform, desert, areaMin, areaMax, keepClear, sorting, order + 1);
+        map.AddComponent<EndlessTerrain>().Init(map, areaMin, areaMax, desert, sorting, order);     // 1.2.3~ 보스 처치마다 지형 변화
         map.AddComponent<DesertAmbience>();
         return map;
     }
@@ -485,7 +717,7 @@ public class EndlessMode : MonoBehaviour
 
         Dictionary<string, Sprite> desert = sprites;
         foreach (Sprite s in Resources.LoadAll<Sprite>(folder)) desert[s.name] = s;
-        Dictionary<Sprite, Tile> tiles = new Dictionary<Sprite, Tile>();
+        // 최적화: Tile 은 EndlessTerrain 의 정적 캐시를 같이 씀 (판마다 새로 만들지 않음 · 칸 플래그는 아래에서 None 으로 지정 · 이 맵엔 TilemapCollider2D 없음)
 
         foreach (Tilemap tm in map.GetComponentsInChildren<Tilemap>(true))
         {
@@ -496,12 +728,7 @@ public class EndlessMode : MonoBehaviour
             {
                 Sprite s = tm.GetSprite(pos);
                 if (s == null || !desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d)) continue;
-                if (!tiles.TryGetValue(d, out Tile tile))
-                {
-                    tile = ScriptableObject.CreateInstance<Tile>();
-                    tile.sprite = d;
-                    tiles[d] = tile;
-                }
+                Tile tile = EndlessTerrain.TileFor(d);
                 Matrix4x4 m = tm.GetTransformMatrix(pos);
                 Color c = tm.GetColor(pos);
                 tm.SetTile(pos, tile);
@@ -583,7 +810,7 @@ public class FireFlicker : MonoBehaviour
     }
 }
 
-// 사막 전체: 화면 주변에 불티가 떠오르고 가끔 모래 바람이 스침
+// 사막 전체: 화면 주변에 불티가 떠오르고 가끔 모래 바람이 스침 (1.2.3~ 영토 위에서는 그 영토의 바람 색 · 불티는 사막 · 지옥만)
 public class DesertAmbience : MonoBehaviour
 {
     float nextEmber, nextGust;
@@ -594,8 +821,9 @@ public class DesertAmbience : MonoBehaviour
         if (cam == null || Time.timeScale == 0f) return;
         float h = cam.orthographicSize, w = h * cam.aspect;
         Vector3 c = cam.transform.position;
+        int realm = EndlessTerrain.Instance != null ? EndlessTerrain.Instance.RealmAt(c) : EndlessTerrain.Desert;
 
-        if (Time.time >= nextEmber)
+        if (Time.time >= nextEmber && EndlessTerrain.Embers(realm))
         {
             nextEmber = Time.time + 0.06f;
             Vector3 p = new Vector3(c.x + Random.Range(-w, w), c.y - h - 0.5f + Random.Range(0f, h * 0.6f), 0f);
@@ -605,7 +833,7 @@ public class DesertAmbience : MonoBehaviour
         {
             nextGust = Time.time + Random.Range(2.5f, 5f);
             Vector3 from = new Vector3(c.x - w - 2f, c.y + Random.Range(-h, h), 0f);
-            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), new Color(0.95f, 0.78f, 0.5f, 0.35f), 10f);
+            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), EndlessTerrain.Gust(realm), 10f);
         }
     }
 }

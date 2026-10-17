@@ -55,6 +55,16 @@ public class bosss : MonoBehaviour
     // 2.2.1 보스 개편: 리치 왕 「망자의 의식」 동안 무적 · 의식이 깨진 뒤 휘청이는 동안 받는 피해 배율 (BossSkills.Reborn)
     [HideInInspector] public bool invulnerable;
     [HideInInspector] public float damageTakenMul = 1f;
+    // 1.2.3~ 무한 모드 「보스는 기다리지 않는다」 (EndlessMode · 직렬화하지 않음 — 프리팹 · 복제에 섞이지 않게)
+    [System.NonSerialized] public float spawnedAt;        // 등장 시각 (Time.time) — 겹쳐 등장 · 모래 폭풍 풍화의 기준 · 이어하기가 되돌림
+    [System.NonSerialized] public bool spawnTimed;        // spawnedAt 을 EndlessMode 가 이미 넣었음 (아니면 Start 가 지금 시각으로)
+    [System.NonSerialized] public float erosionMul = 1f;  // 모래 폭풍 풍화: 받는 피해 배율 (EndlessMode.UpdateErosion 이 1초마다 · 개발자 · 엄마 1) — damageTakenMul 은 망자의 의식이 절댓값으로 덮어써서 따로 둠
+    [System.NonSerialized] public int restoreMaxHp;       // 이어하기: 저장할 때의 최대 체력 (0 = 평소대로 · 난이도 배율 뒤에 덮어씀)
+    [System.NonSerialized] public float restoreHp;        // 이어하기: 저장할 때의 체력 (0 = 가득)
+    [System.NonSerialized] public bool restoreDying;      // 이어하기: 쓰러지는 연출 중에 저장된 보스 (체력 1 로 다시 · 경험치 · 포인트 · 영혼 조각은 그때 이미 받아서 다시 주지 않음)
+    bool defeatHandled;                                   // Death 가 처치 처리(OnBossDefeated)를 불렀음
+    // 1.2.3~ 쓰러졌지만 처치 처리가 아직 (연출 1초 중) — 저장이 이 보스를 빠뜨리면 처치가 사라져서 따로 적음 (EndlessMode.LiveBossesText)
+    public bool DefeatPending => isDead && !defeatHandled && !developer;
 
     // 킹 슬라임 (bossKind 2): 2.2.1~ 분열하지 않음 (예전 1 → 2 → 3마리 분열 때문에 1장 보스가 가장 세게 느껴졌음)
     // 보스바 · 결계가 쓰는 슬라임 목록과 번호는 그대로 둠 (한 마리만 들어감)
@@ -100,7 +110,14 @@ public class bosss : MonoBehaviour
     public static bosss Primary;      // 지금 위쪽 한 줄이 그리는 보스 (IsPrimary 가 Update 에서 세움)
     bool IsPrimary { get { foreach (bosss b in Live) if (b != null && !b.isDead) return b == this; return true; } }
     void OnEnable() { if (!Live.Contains(this)) Live.Add(this); }
-    void OnDestroy() => Live.Remove(this);
+    void OnDestroy()
+    {
+        Live.Remove(this);
+        if (dyingCounted) { dyingCounted = false; Dying--; }
+    }
+    // 1.2.3~ 쓰러지는 연출(1초) 중인 보스 수 — 처치 처리(EndlessMode.OnBossDefeated)가 다음 보스 시각을 정하기 전에 겹쳐 등장이 끼지 않게
+    public static int Dying { get; private set; }
+    bool dyingCounted;
 
     void Summon(int count)
     {
@@ -127,7 +144,9 @@ public class bosss : MonoBehaviour
             expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul * rw);
             coinDrop = Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul * rw);
         }
-        EnemyHealth = setEnemyHP;
+        if (restoreMaxHp > 0) setEnemyHP = restoreMaxHp;      // 1.2.3~ 이어하기 (두 번째 보스 ×0.5 할인 · 그때의 체력 배율이 이미 들어 있음)
+        EnemyHealth = restoreHp > 0f ? Mathf.Min(restoreHp, setEnemyHP) : setEnemyHP;
+        if (!spawnTimed) { spawnTimed = true; spawnedAt = Time.time; }
         BarFeel.Reset(EnemyHealth);
 
         // 플레이어 찾기
@@ -165,6 +184,7 @@ public class bosss : MonoBehaviour
             bossbar.bossKind = developer ? (developerMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind) : bossKind;     // 1.0.4~ 엄마
             // 킹 슬라임도 개체마다 자기 체력만 (갈라질 몫을 합치지 않음 · 갈라진 뒤에는 bossbar 가 슬라임마다 따로 그림)
             bossbar.MaxHealth = setEnemyHP;
+            bossbar.erosion = erosionMul;       // 1.2.3~ 이름 뒤 「풍화 +n%」
             bossbar.NowHealth = Mathf.CeilToInt(EnemyHealth);
             Primary = this;
         }
@@ -210,6 +230,7 @@ public class bosss : MonoBehaviour
             return;
         }
         damage *= damageTakenMul;
+        damage *= erosionMul;               // 1.2.3~ 모래 폭풍 풍화 (무한 모드 · 평소 1)
 
         // 치명타: 보스도 모든 캐릭터의 공격 · 스킬에 치명타를 맞음 (거너 평타 총알은 쏠 때 이미 굴림)
         if (!SpecialAbilities.CritRolled && SpecialAbilities.SharedInstance != null) damage = SpecialAbilities.SharedInstance.RollCrit(damage);
@@ -282,11 +303,12 @@ public class bosss : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        if (!dyingCounted) { dyingCounted = true; Dying++; }
 
         bool lastOne = !IsSlime || SlimeRemaining() <= 0;
         if (lastOne && LiveCount == 0) bossbar.bossSpawn = false;      // 다른 보스가 남아 있으면 체력바는 그 보스로
         spriteRenderer.color = Color.white;
-        if (a == 1)
+        if (a == 1 && !restoreDying)
         {
             
             playerC = Cache<PlayerController>.Get;
@@ -342,6 +364,10 @@ public class bosss : MonoBehaviour
             slimes.Remove(this);
             if (allDown) { if (slimeBossCleared) allDown = false; else slimeBossCleared = true; }
         }
+        // 1.2.3~ 쓰러진 왕의 영토가 이 자리에서 번짐 — 처치 처리(EndlessMode.OnBossDefeated → EndlessTerrain.OnBossDefeated)를 부르기 바로 앞에서
+        //   같은 호출 안에서 바로 읽음 (겹쳐 나온 둘이 1초 안에 차례로 쓰러져도 앞 보스의 종류 · 자리가 뒤 보스 것으로 덮이지 않게 · 예전엔 Die 에서 적었음)
+        defeatHandled = true;
+        if (allDown && GameMode.IsEndless) EndlessTerrain.NoteBossDown(developer ? -1 : bossKind, transform.position);
         // 무한 모드에서 함께 나온 다른 보스가 아직 살아 있으면: 처치 수만 세고 처치 연출 · 진화는 마지막 보스 때
         if (allDown && GameMode.IsEndless && EndlessMode.Instance != null && (LiveCount > 0 || (enemySpawner != null && !enemySpawner.bossSpawned)))     // 거의 같이 쓰러져 연출이 이미 시작됐을 때도
             EndlessMode.Instance.OnExtraBossDown();

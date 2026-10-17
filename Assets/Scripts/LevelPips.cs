@@ -33,8 +33,12 @@ public class LevelPips : MonoBehaviour
     readonly Image[] rims = new Image[MaxCells];
     readonly Image[] fills = new Image[MaxCells];
     TextMeshProUGUI maxLabel;
+    Image plateRim, plateFill;          // 최대일 때 「MAX」 밑에 까는 금빛 판 (글자가 칸 사이 틈을 가로질러 지저분하던 것)
     int now, max, adding;
     int builtFor = -1;
+    // 칸을 정수 픽셀로 맞춘 기준 (루트 캔버스 배율 = 해상도 · UI 크기). 배율이 바뀌면 다시 배치
+    Canvas rootCanvas;
+    float laidScale = -1f;
 
     // parent 안 pos(가운데 기준)에 size 크기 칸 줄. 높이(size.y)가 한 칸의 높이 (두 줄이면 위아래로 조금 넘침)
     public static LevelPips Create(RectTransform parent, Vector2 pos, Vector2 size, string name = "LevelPips")
@@ -61,8 +65,19 @@ public class LevelPips : MonoBehaviour
         this.adding = Mathf.Clamp(adding, 0, Mathf.Max(0, max - this.now));
         gameObject.SetActive(max > 0);
         if (max <= 0) return;
-        if (builtFor != max) Layout(max);
+        if (builtFor != max || !Mathf.Approximately(PixelScale(), laidScale)) Layout(max);
         Paint(0f);
+    }
+
+    // 캔버스 단위 1 = 화면 몇 픽셀인지 (루트 캔버스 배율: 해상도 · UI 크기 설정)
+    float PixelScale()
+    {
+        if (rootCanvas == null)
+        {
+            Canvas c = GetComponentInParent<Canvas>(true);
+            rootCanvas = c != null ? c.rootCanvas : null;
+        }
+        return rootCanvas != null ? Mathf.Max(0.05f, rootCanvas.scaleFactor) : 1f;
     }
 
     public bool IsMax => max > 0 && now >= max;
@@ -75,17 +90,26 @@ public class LevelPips : MonoBehaviour
         g.alpha = on ? 0.4f : 1f;
     }
 
+    // 1.2.3~ 칸 폭 · 간격 · 테두리를 화면 정수 픽셀로 맞춤
+    //   예전엔 폭이 소수(HUD 3칸 = 18.67)라 칸마다 픽셀 경계에 걸리는 자리가 달라, 좌우 대칭인 바깥 두 칸은 19px 인데
+    //   한가운데(0 기준 ±9.33) 칸만 18px · 테두리 두께도 달라 가운데 칸만 깨져 보였음
+    //   → 모든 칸을 같은 정수 픽셀 폭 · 간격으로 두면 칸끼리 픽셀 위상이 같아 모두 똑같이 그려짐
     void Layout(int n)
     {
         builtFor = n;
-        float h = area.y;
+        float s = PixelScale();
+        laidScale = s;
+        int H = Mathf.Max(3, Mathf.RoundToInt(area.y * s));
+        int areaW = Mathf.Max(3, Mathf.RoundToInt(area.x * s));
+        int gap = Mathf.Max(1, Mathf.RoundToInt(Gap * s));
         int rows = 1;
-        float w = (area.x - (n - 1) * Gap) / n;
-        if (w < h * 0.6f && n >= 6) rows = 2;          // 칸이 너무 좁으면 두 줄
+        if ((areaW - (n - 1) * gap) / (float)n < H * 0.6f && n >= 6) rows = 2;          // 칸이 너무 좁으면 두 줄
         int perRow = Mathf.CeilToInt(n / (float)rows);
-        float cellH = rows == 1 ? h : h * 0.8f;
-        w = Mathf.Min(h * 2.6f, (area.x - (perRow - 1) * Gap) / perRow);      // 칸이 적어도 너무 길쭉하지 않게
-        w = Mathf.Max(3f, w);
+        int cellH = rows == 1 ? H : Mathf.Max(3, Mathf.RoundToInt(H * 0.8f));
+        int w = Mathf.Min(Mathf.RoundToInt(H * 2.6f), (areaW - (perRow - 1) * gap) / perRow);      // 칸이 적어도 너무 길쭉하지 않게
+        w = Mathf.Max(3, w);
+        // 속은 테두리 안쪽 (칸이 아주 작으면 1px)
+        int inset = Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(w, cellH) * 0.18f), 1, Mathf.Max(1, Mathf.RoundToInt(2.5f * s)));
         for (int i = 0; i < MaxCells; i++)
         {
             bool has = i < n;
@@ -94,17 +118,11 @@ public class LevelPips : MonoBehaviour
             rims[i].gameObject.SetActive(true);
             int row = i / perRow, col = i % perRow;
             int inRow = row < rows - 1 ? perRow : n - perRow * (rows - 1);
-            float x = (col - (inRow - 1) * 0.5f) * (w + Gap);
-            float y = rows == 1 ? 0f : (row == 0 ? 1f : -1f) * (cellH + Gap) * 0.5f;
-            RectTransform cr = rims[i].rectTransform;
-            cr.sizeDelta = new Vector2(w, cellH);
-            cr.anchoredPosition = new Vector2(x, y);
-            // 속은 테두리 안쪽 (칸이 아주 작으면 1)
-            float inset = Mathf.Clamp(Mathf.Min(w, cellH) * 0.18f, 1f, 2.5f);
-            RectTransform fr = fills[i].rectTransform;
-            fr.offsetMin = new Vector2(inset, inset);
-            fr.offsetMax = new Vector2(-inset, -inset);
+            float x = -(inRow * w + (inRow - 1) * gap) * 0.5f + col * (w + gap) + w * 0.5f;        // 픽셀
+            float y = rows == 1 ? 0f : (row == 0 ? 1f : -1f) * (cellH + gap) * 0.5f;
+            PlaceBox(rims[i], fills[i], w, cellH, inset, x, y, s);
         }
+        int rowW = perRow * w + (perRow - 1) * gap;
         if (maxLabel == null)
         {
             GameObject go = new GameObject("Max", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -126,37 +144,62 @@ public class LevelPips : MonoBehaviour
             maxLabel.outlineColor = new Color32(255, 240, 190, 255);
             maxLabel.raycastTarget = false;
         }
-        maxLabel.fontSize = Mathf.Clamp(h * 1.05f, 9f, 22f);
+        maxLabel.fontSize = Mathf.Clamp(area.y * 1.05f, 9f, 22f);
+
+        // 최대일 때 「MAX」 밑 금빛 판: 글자 폭 + 여백 (칸 줄 폭 안) · 칸과 같은 픽셀 위상(폭의 홀짝을 칸 줄과 맞춤)
+        if (plateRim == null) MakeBox("MaxPlate", out plateRim, out plateFill);
+        int pad = Mathf.Max(2, inset + 1);
+        int plateW = Mathf.CeilToInt(maxLabel.GetPreferredValues("MAX").x * s) + pad * 2;
+        if (((plateW - rowW) & 1) != 0) plateW++;
+        plateW = Mathf.Min(plateW, rowW);
+        PlaceBox(plateRim, plateFill, plateW, cellH, inset, 0f, 0f, s);
+        plateRim.transform.SetAsLastSibling();
         maxLabel.transform.SetAsLastSibling();
     }
 
-    void MakeCell(int i)
+    // 칸 하나 배치 (크기 · 위치는 픽셀) — 테두리 1텍셀 = 정확히 1px 이 되게 9-슬라이스 배율도 맞춤
+    static void PlaceBox(Image rim, Image fill, int wPx, int hPx, int insetPx, float xPx, float yPx, float s)
     {
-        GameObject go = new GameObject("Pip" + i, typeof(RectTransform), typeof(Image));
+        float u = 1f / s;
+        RectTransform cr = rim.rectTransform;
+        cr.sizeDelta = new Vector2(wPx * u, hPx * u);
+        cr.anchoredPosition = new Vector2(xPx * u, yPx * u);
+        rim.pixelsPerUnitMultiplier = s;
+        fill.pixelsPerUnitMultiplier = s;
+        RectTransform fr = fill.rectTransform;
+        fr.offsetMin = new Vector2(insetPx * u, insetPx * u);
+        fr.offsetMax = new Vector2(-insetPx * u, -insetPx * u);
+    }
+
+    void MakeCell(int i) => MakeBox("Pip" + i, out rims[i], out fills[i]);
+
+    void MakeBox(string name, out Image rim, out Image fill)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
         RectTransform r = go.GetComponent<RectTransform>();
         r.SetParent(root, false);
         r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
-        Image rim = go.GetComponent<Image>();
+        rim = go.GetComponent<Image>();
         rim.sprite = CellSprite;
         rim.type = Image.Type.Sliced;
         rim.raycastTarget = false;
-        rims[i] = rim;
 
         GameObject fg = new GameObject("Fill", typeof(RectTransform), typeof(Image));
         RectTransform fr = fg.GetComponent<RectTransform>();
         fr.SetParent(r, false);
         fr.anchorMin = Vector2.zero;
         fr.anchorMax = Vector2.one;
-        Image fill = fg.GetComponent<Image>();
+        fill = fg.GetComponent<Image>();
         fill.sprite = CellSprite;
         fill.type = Image.Type.Sliced;
         fill.raycastTarget = false;
-        fills[i] = fill;
     }
 
     void Update()
     {
         if (max <= 0) return;
+        // 해상도 · UI 크기가 바뀌면 정수 픽셀로 다시 배치 (값 비교만 · 할당 없음)
+        if (!Mathf.Approximately(PixelScale(), laidScale)) Layout(max);
         // 차오를 칸이 있을 때만 맥동 (HUD 처럼 늘 떠 있는 칸은 가만히 — 매 프레임 색을 바꾸면 캔버스를 계속 다시 그림)
         if (adding > 0) Paint(0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
     }
@@ -196,10 +239,20 @@ public class LevelPips : MonoBehaviour
                 rim.rectTransform.localScale = Vector3.one;
             }
         }
+        if (plateRim != null)
+        {
+            if (plateRim.gameObject.activeSelf != full) plateRim.gameObject.SetActive(full);
+            if (full)
+            {
+                plateRim.color = FilledRim;
+                plateFill.color = Color.Lerp(Gold, GoldBright, 0.35f + k * 0.35f);
+            }
+        }
         if (maxLabel != null) maxLabel.gameObject.SetActive(full);
     }
 
-    // ================================================================= 칸 그림 (둥근 네모 12x12, 모서리 1칸 비움 · 9-슬라이스 테두리 3)
+    // ================================================================= 칸 그림 (둥근 네모 12x12, 모서리 1칸 비움 · 9-슬라이스 테두리 1)
+    // 1.2.3~ 테두리 3 → 1: PlaceBox 가 1텍셀 = 1px 로 맞춰 모서리 홈이 어느 칸이든 정확히 1px (예전엔 3텍셀을 소수 픽셀로 늘려 칸마다 홈 크기가 달랐음)
     static Sprite cellSprite;
     public static Sprite CellSprite
     {
@@ -219,7 +272,7 @@ public class LevelPips : MonoBehaviour
                 }
             t.SetPixels32(px);
             t.Apply(false, true);
-            cellSprite = Sprite.Create(t, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(3, 3, 3, 3));
+            cellSprite = Sprite.Create(t, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(1, 1, 1, 1));
             cellSprite.name = "LevelPipCell";
             return cellSprite;
         }

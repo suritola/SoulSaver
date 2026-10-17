@@ -282,6 +282,7 @@ public class TrailerDirector : MonoBehaviour
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920f, 1080f);
         cs.matchWidthOrHeight = 1f;
+        UiScaler.Fit(cs);               // UiScaler 가 1초마다 찾지 않으므로 만들 때 맞춤
 
         black = new GameObject("Black", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
         black.transform.SetParent(go.transform, false);

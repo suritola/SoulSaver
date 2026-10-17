@@ -19,6 +19,7 @@ public class MapProps : MonoBehaviour
     public const float TimeStopSeconds = 4f, TimeStopMul = 0.05f;
     public const float MagnetSeconds = 2.5f, MagnetRange = 200f;
     public const float MeatHeal = 0.2f;                         // 최대 체력의 20%
+    public const float RespawnSeconds = 40f;                    // 1.2.1~ 부서진 통(물체)이 이 장 안에서 40초마다 하나씩 다시 생김 (처음 놓인 수까지)
     static readonly Color SarcoColor = new Color(0.75f, 0.5f, 1f);
 
     public static MapProps Instance { get; private set; }
@@ -87,6 +88,9 @@ public class MapProps : MonoBehaviour
     int placedStage = -1;
     LineRenderer arrow;
     float hintAt = -1f;
+    PropDef placedDef;          // 이 장에 놓은 물체 종류 · 처음 놓인 수 (다시 생김 상한)
+    int placedFull;
+    float nextRespawn = -1f;
 
     void Awake() => Instance = this;
 
@@ -113,6 +117,7 @@ public class MapProps : MonoBehaviour
         PlayerController p = Hostile.Player;
         if (Off || sm == null || sp == null || p == null || !sm.Started || RunSave.Pending != null) { ShowArrow(false, Vector3.zero, Vector3.zero); return; }
         if (sm.CurrentStage != placedStage) Place(sm.CurrentStage, p, sp);
+        TickRespawn();
 
         if (hintAt > 0f && Time.time >= hintAt && Time.timeScale > 0f)
         {
@@ -131,6 +136,8 @@ public class MapProps : MonoBehaviour
         int slot = Chapters.SlotOf(stage);
         System.Random rng = new System.Random(unchecked(seed + 7349 * (slot + 1) + 131 * stage));
         int count = rng.Next(MinProps, MaxProps + 1);
+        placedFull = count;
+        nextRespawn = Time.time + RespawnSeconds;
         bool sarcoRoll = rng.NextDouble() < SarcoChance;
         if (brokenStage == stage) count = Mathf.Max(0, count - brokenHere);
         else { brokenStage = stage; brokenHere = 0; }
@@ -162,6 +169,21 @@ public class MapProps : MonoBehaviour
             StartCoroutine(SarcoBanner());
         }
         if (def != null && count > 0) hintAt = Time.time + 8f;
+        placedDef = def;
+    }
+
+    // 1.2.1~ 부서진 물체가 주기적으로 다시 생김: 게임 시간(일시정지 · 레벨업 창에선 멈춤)으로 40초마다, 안 부서진 물체가 처음 놓인 수보다 적으면 하나
+    //   석관은 다시 생기지 않음 · 플레이어에게서 떨어진 빈자리(RespawnProp → Spot) · 자리를 못 찾으면 다음 주기
+    void TickRespawn()
+    {
+        if (placedDef == null || placedFull <= 0 || Time.timeScale <= 0f) return;
+        if (Time.time < nextRespawn) return;
+        nextRespawn = Time.time + RespawnSeconds;
+        int alive = 0;
+        foreach (MapProp q in props) if (q != null && !q.Broken && !q.Def.sarcophagus) alive++;
+        if (alive >= placedFull) return;
+        Vector3? at = RespawnProp(placedDef);
+        if (at.HasValue) ShockRing.Spawn(at.Value, 0.3f, 2.2f, 0.5f, new Color(1f, 0.9f, 0.6f), 0.25f);
     }
 
     static char SlotChar(int slot) => (char)('0' + Mathf.Clamp(slot, 0, 9));
@@ -722,9 +744,28 @@ public class PropShard : MonoBehaviour
         {
             Color c = i % 3 == 0 ? rim : i % 3 == 1 ? body : dark;
             float s = Random.Range(0.12f, 0.24f) * size;
-            GameObject go = SpecialAbilities.MakeSprite("PropShard", Square, at, s, c, "Effect", 10);
-            PropShard sh = go.AddComponent<PropShard>();
-            sh.sr = go.GetComponent<SpriteRenderer>();
+            // 1.2.4: 다 튄 조각은 꺼 두었다가 다시 씀 (부술 때마다 8~14개 생성 · 파괴하던 것 · 무작위 값을 뽑는 순서는 그대로)
+            PropShard sh = null;
+            while (pool.Count > 0 && sh == null) sh = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+            GameObject go;
+            if (sh == null)
+            {
+                go = SpecialAbilities.MakeSprite("PropShard", Square, at, s, c, "Effect", 10);
+                sh = go.AddComponent<PropShard>();
+                sh.sr = go.GetComponent<SpriteRenderer>();
+            }
+            else
+            {
+                // MakeSprite 가 넣던 값으로 되돌림
+                go = sh.gameObject;
+                go.transform.position = at;
+                go.transform.localScale = Vector3.one * s;
+                sh.sr.sprite = Square;
+                sh.sr.color = c;
+                sh.age = 0f;
+                sh.bounced = false;
+                sh.spawnFrame = Time.frameCount;
+            }
             sh.color = c;
             sh.ground = at + Vector3.down * size * Random.Range(0.1f, 0.4f);
             sh.height = at.y - sh.ground.y;
@@ -732,11 +773,16 @@ public class PropShard : MonoBehaviour
             sh.up = Random.Range(5f, 9f);
             sh.spin = Random.Range(-720f, 720f);
             go.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 90f));
+            if (!go.activeSelf) go.SetActive(true);
         }
     }
 
+    static readonly System.Collections.Generic.Stack<PropShard> pool = new System.Collections.Generic.Stack<PropShard>();
+    int spawnFrame = -1;
+
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;      // 새로 만든 것처럼 켜진 그 프레임에는 움직이지 않음
         float dt = Time.deltaTime;
         age += dt;
         ground += (Vector3)(vel * dt);
@@ -752,7 +798,11 @@ public class PropShard : MonoBehaviour
         transform.Rotate(0f, 0f, spin * dt);
         float fade = Mathf.Clamp01((Life - age) / 0.3f);
         sr.color = new Color(color.r, color.g, color.b, color.a * fade);
-        if (age >= Life) Destroy(gameObject);
+        if (age >= Life)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
 

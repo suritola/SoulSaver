@@ -209,7 +209,7 @@ public class ESCmenu : MonoBehaviour
         CloseConfirm();
         RunStats.GaveUp = true;
         RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (떠나는 순간의 빌드)
-        RunSave.Abandon();          // 무한 모드 · 일일 도전은 저장하지 않으므로 따로 남은 이야기 판 저장(「이어하기」)은 지우지 않음
+        RunSave.Abandon();          // 1.2.3~ 무한 모드는 이 판 저장을 지움 · 일일 도전은 저장하지 않으므로 따로 남은 판 저장(「이어하기」)은 지우지 않음
         IsOpen = false;
         // 1.2~ 망자의 전령 짧은 한 줄 (멈춘 채 · 넘기면 바로) 뒤 결과 화면
         if (Herald.Enabled)

@@ -30,7 +30,8 @@ public partial class SignatureSkills
         int s = L("r.smoke");
         if (s <= 0) return;
         smokes.RemoveAll(z => z == null);
-        SigZone z = Zone(from, 3.5f, V(s, 2f, 1f), 0.2f, zone =>
+        // 1.2.3~ 판정 반지름도 그림 배율(Fs: 진화하면 1.7배)을 따름 — 예전엔 그림만 커지고 판정은 3.5 그대로라 연막 안에 서 있어도 「환영 연막」이 안 걸렸음
+        SigZone z = Zone(from, 3.5f * Fs("r.smoke"), V(s, 2f, 1f), 0.2f, zone =>
         {
             foreach (Collider2D c in Inside(zone))
             {
@@ -97,8 +98,12 @@ public partial class SignatureSkills
 
     void RogueAttack(Vector3 start, Vector2 dir)
     {
+        // 회전 표창: 방금 던진 그 평타 표창이 RogueRange × 0.8 만큼 날아가(또는 관통 수가 다하거나 벽에 닿으면 그 자리에서) 꺾여 돌아옴
+        //   예전엔 0.35초 뒤 그 자리에 새 표창을 만들어 날려 엉뚱한 데서 나타나 보였음
+        Bullet thrown = Kit != null ? Kit.TakeRogueThrow() : null;
         int b = L("r.boomerang");
-        if (b > 0) StartCoroutine(Boomerang(start, dir, Atk * V(b, 0.4f, 0.15f)));
+        if (b > 0 && thrown != null && thrown.isActiveAndEnabled && Alive)      // 풀로 돌아간 표창(꺼짐)에는 붙이지 않음 (다시 쓰일 때 남지 않게)
+            thrown.gameObject.AddComponent<ReturningShuriken>().Throw(thrown, transform, start, RogueRange * 0.8f, Atk * V(b, 0.4f, 0.15f), E("re.return"));
         // 처형자의 길: 급습 시간 동안 꿰뚫는 그림자 표창이 함께
         if (E("re.executioner") && Time.time < ambushUntil)
         {
@@ -107,24 +112,10 @@ public partial class SignatureSkills
         }
     }
 
-    IEnumerator Boomerang(Vector3 start, Vector2 dir, float dmg)
+    // 귀환하는 칼날: 돌아온 표창 한 번(평타 한 번)마다 탄창에 한 발
+    public void ShurikenBack()
     {
-        yield return new WaitForSeconds(0.35f);
-        if (!Alive) yield break;
-        Vector3 far = start + (Vector3)(dir * RogueRange * 0.8f);
-        Vector2 back = ((Vector2)(transform.position - far)).normalized;
-        int n = E("re.return") ? 2 : 1;
-        for (int i = 0; i < n; i++)
-        {
-            Vector2 d = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 10f) * back;
-            Bullet b = Shot(far, d, dmg, 2, 26f, RogueRange, "fx_shuriken", 0.7f * Fs("r.boomerang"), Tint("r.boomerang", new Color(0.85f, 0.8f, 1f)), true);
-            if (b != null) b.hitOnce = new HashSet<int>();
-        }
-        if (E("re.return"))
-        {
-            yield return new WaitForSeconds(RogueRange * 0.8f / 26f);
-            if (player != null && (Sp == null || !Sp.RefundHeldAmmo(1)) && player.NowBullet < player.MaxBullet) player.NowBullet++;     // 들고 있는 무기의 탄창에 (2.1.8)
-        }
+        if (player != null && who == CharacterId.Rogue && (Sp == null || !Sp.RefundHeldAmmo(1)) && player.NowBullet < player.MaxBullet) player.NowBullet++;     // 들고 있는 무기의 탄창에 (2.1.8)
     }
 
     // 표창을 다 던져 주머니가 빔 (장전 시작)
@@ -229,16 +220,14 @@ public partial class SignatureSkills
         }
     }
 
-    // 환영 연막: 연막 안에 있으면 공격이 빗나감
+    // 환영 연막: 연막 안에 서 있는 동안 받는 피해 -90%
+    // 1.2.3 모두 빗나감(사실상 무적) → 40% 확률 빗나감 → 1.2.5~ 사용자 결정으로 확률 대신 받는 피해 90% 감소 (늘 같은 효과 · 피격 연출은 그대로)
+    public const float PhantomTakenMul = 0.1f;
     float RogueTaken(float dmg)
     {
         if (!E("re.phantom")) return dmg;
         foreach (SigZone z in smokes)
-            if (z != null && z.Contains(transform.position))
-            {
-                SpecialAbilities.SharedFx?.FloatText(transform.position, Loc.T("빗나감"), new Color(0.8f, 0.7f, 1f), 3.5f, 0.4f);
-                return 0f;
-            }
+            if (z != null && z.Contains(transform.position)) return dmg * PhantomTakenMul;
         return dmg;
     }
 
@@ -264,4 +253,119 @@ public partial class SignatureSkills
         }
         gaugeWasFull = full;
     }
+}
+
+// 회전 표창: 던진 평타 표창에 붙어, 날아가다 꺾여 주인에게 그대로 돌아옴 (SignatureSkills.RogueAttack)
+//   가는 길: 평타 그대로 (피해 · 관통 · 카드 효과). RogueRange × 0.8 을 날았거나 · 관통 수가 다했거나 · 벽에 닿으면 그 자리에서 꺾임
+//   오는 길: 예전 회전 표창 그대로 — 고유 스킬 피해(Atk × V(b, 0.4, 0.15)) · 관통 2 · 속도 26 · 같은 적은 한 번만(가는 길에 벤 적도 다시) · 카드 효과 없음
+//            벽은 지나침, 매 프레임 주인 쪽으로 방향을 틂(트는 빠르기가 점점 빨라져 주인 둘레를 맴돌지 않음), 주인에게 닿으면 사라짐
+//   귀환하는 칼날(re.return): 꺾이는 순간 하나 더 갈라져 둘이 양쪽으로 휘어 돌아옴, 처음 표창이 끝나면 탄창에 한 발 (평타 한 번에 한 발 — 예전과 같음)
+//   안전: 돌아오는 길은 최대 3초 (그 뒤 사라짐) · 매 프레임 할당 없음 · 복제(Instantiate) 없음 (갈라지는 표창도 평타 표창처럼 새로 만듦)
+public class ReturningShuriken : MonoBehaviour
+{
+    const float BackSpeed = 26f, CatchDist = 1.2f, MaxBack = 3f, BaseTurn = 540f, TurnGrow = 1440f, Split = 40f, Curl = 20f;
+    const int BackPene = 2;
+    static readonly System.Action PassWall = () => { };
+
+    Bullet bullet;
+    Transform owner;
+    Vector3 origin;
+    float outDistSq, backDmg, backAge;
+    bool returning, twin, refund;
+
+    // 던진 평타 표창에 (가는 길부터)
+    public void Throw(Bullet b, Transform owner, Vector3 from, float outDist, float dmg, bool twin)
+    {
+        bullet = b;
+        this.owner = owner;
+        origin = from;
+        outDistSq = outDist * outDist;
+        backDmg = dmg;
+        this.twin = twin;
+        refund = twin;
+        b.onSpent = Spent;          // 관통 수가 다해도 사라지지 않고 그 자리에서 꺾임
+        b.onHitWall = TurnBack;     // 벽에 닿으면 거기서 꺾임
+    }
+
+    // 갈라진 표창 (처음부터 돌아오는 길)
+    void Back(Bullet b, Transform owner, float dmg)
+    {
+        bullet = b;
+        this.owner = owner;
+        backDmg = dmg;
+        returning = true;
+        b.SetSource(DamageSource.Signature);
+        b.hitOnce = new System.Collections.Generic.HashSet<int>();
+        b.onHitWall = PassWall;
+    }
+
+    bool Spent()
+    {
+        if (returning) return false;
+        TurnBack();
+        return true;
+    }
+
+    void TurnBack()
+    {
+        if (returning || bullet == null) return;
+        returning = true;
+        backAge = 0f;
+        Vector2 outDir = bullet.Direction;
+        bullet.SetSource(DamageSource.Signature);
+        bullet.damage = backDmg;
+        bullet.ResetPene(BackPene);
+        if (bullet.hitOnce != null) bullet.hitOnce.Clear();
+        else bullet.hitOnce = new System.Collections.Generic.HashSet<int>();
+        bullet.onHitEnemy = null;           // 카드 효과(출혈 · 도탄 · 독 등)는 가는 길에만
+        bullet.onSpent = null;              // 오는 길에 관통 수가 다하면 사라짐
+        bullet.onHitWall = PassWall;        // 오는 길엔 벽을 지나침 (벽 앞에서 막혀 못 돌아오지 않게)
+        bullet.isCrit = false;
+        bullet.critRolled = false;
+        bullet.speed = BackSpeed;
+        bullet.Halt();                      // 이번 프레임 남은 길의 적은 오는 표창이 맞히지 않게
+        // 한 방향으로 휘어 돌아옴 (둘이면 양쪽으로 갈라져)
+        bullet.Steer(Quaternion.Euler(0f, 0f, twin ? -Split : -Curl) * outDir);
+        if (twin)
+        {
+            CharacterKit kit = CharacterKit.Instance;
+            Bullet t = kit != null ? kit.TwinShuriken(transform.position, Quaternion.Euler(0f, 0f, Split) * outDir, bullet) : null;
+            if (t != null) t.gameObject.AddComponent<ReturningShuriken>().Back(t, owner, backDmg);
+        }
+    }
+
+    void Update()
+    {
+        if (bullet == null) return;
+        if (!returning)
+        {
+            if ((transform.position - origin).sqrMagnitude >= outDistSq) TurnBack();
+            return;
+        }
+        backAge += Time.deltaTime;
+        if (owner == null || backAge > MaxBack) { Finish(false); return; }
+        Vector2 to = owner.position - transform.position;
+        if (to.sqrMagnitude <= CatchDist * CatchDist) { Finish(true); return; }
+        float max = (BaseTurn + TurnGrow * backAge) * Time.deltaTime;
+        float a = Mathf.Clamp(Vector2.SignedAngle(bullet.Direction, to), -max, max);
+        bullet.Steer(Quaternion.Euler(0f, 0f, a) * bullet.Direction);
+    }
+
+    void Finish(bool caught)
+    {
+        if (caught) Fx.Spawn("fx_spark", owner.position, 1f, new Color(0.85f, 0.8f, 1f), 26f);
+        Refund();
+        Destroy(gameObject);
+    }
+
+    void Refund()
+    {
+        if (!refund) return;
+        refund = false;
+        SignatureSkills s = SignatureSkills.Instance;
+        if (s != null) s.ShurikenBack();
+    }
+
+    // 오는 길에 관통 수가 다했거나 수명이 끝나 사라져도 탄창 한 발은 (예전처럼 평타 한 번에 한 발)
+    void OnDestroy() => Refund();
 }

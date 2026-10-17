@@ -606,6 +606,8 @@ public class RunClock : MonoBehaviour
         c.curseText = ct;
         c.start = Time.time - Mathf.Max(0f, already);
         instance = c;
+        // 1초마다 글자가 바뀌므로 하위 캔버스로 (HUD 루트를 다시 묶지 않게 · 1.2.4 HUD 최적화와 같은 규칙, 클릭 없음)
+        UiScaler.Isolate(box, false);
     }
 
     void Update()

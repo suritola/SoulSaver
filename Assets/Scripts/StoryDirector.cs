@@ -488,6 +488,8 @@ public class StoryDirector : MonoBehaviour
     internal static int BossCount => Bosses.Length;
     internal static (string name, string title, string[] lines) BossLines(int kind) => (Bosses[kind].name, Bosses[kind].title, Bosses[kind].lines);
     internal static string IntroSeenKey(bool endless, bool classic, CharacterId id) => "intro.seen." + (endless ? "e" : classic ? "c" : "m") + "." + (int)id;
+    // 1.2.3~ 무한 모드 이어하기: 되살린 보스의 인트로를 다시 틀지 않음 (씬이 바뀔 때 비워지므로 복원 직전에 넣음)
+    public static void MarkIntroduced(int kind) => introduced.Add(kind);
 
     public static void PlayBossIntro(Transform boss, int kind)
     {

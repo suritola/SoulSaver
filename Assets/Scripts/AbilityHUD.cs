@@ -251,6 +251,11 @@ public class AbilityHUD : MonoBehaviour
         order.Insert(at >= 0 && at <= order.Count ? at : order.Count, evoId);
         ApplyOpen();       // 접혀 있으면 새 진화 칸도 숨기고 수 갱신
         slot.level = 0;
+        // 1.2.3~ 칸 폭 안에서 자동으로 줄임 (영어 「Evolution」 22pt 는 약 102px 라 76px 칸 밖 옆 칸까지 넘쳤음)
+        slot.label.enableAutoSizing = true;
+        slot.label.fontSizeMin = 12f;
+        slot.label.fontSizeMax = 22f;
+        slot.label.margin = new Vector4(3f, 0f, 3f, 0f);
         slot.label.text = Loc.T("진화");
         slot.label.color = new Color(0.79f, 0.63f, 1f);
         Image bg = slot.rect.GetComponent<Image>();

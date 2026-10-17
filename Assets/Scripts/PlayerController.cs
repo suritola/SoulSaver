@@ -200,6 +200,7 @@ public class PlayerController : MonoBehaviour
         new List<GameObject>();
 
     private Vector3 move;
+    public Vector3 MoveInput => move;       // 1.2.3~ 지형 장애물 끼임 방지 (EndlessTerrain)
 
     private Animator animator;
 
@@ -673,12 +674,12 @@ void Shoot()
     {
         if (bulletPrefab == null) return null;
 
-        GameObject newBullet = Instantiate(bulletPrefab, startPosition, Quaternion.identity);
-
-        Bullet bullet = newBullet.GetComponent<Bullet>();
+        // 최적화 8: 사라진 탄을 지우지 않고 다시 씀 (Bullet.Spawn · Release, 꾸밈 자식도 BulletGlow 가 다시 씀)
+        Bullet bullet = Bullet.Spawn(bulletPrefab, startPosition);
+        if (bullet == null) return null;
+        GameObject newBullet = bullet.gameObject;
         if (SkinFx.WeaponSkin != null) newBullet.AddComponent<SkinTint>();        // 무기 스킨: 총알 · 투사체 색
 
-        if (bullet != null)
         {
             bullet.Dir = direction;
             bullet.pene = penes;
@@ -688,7 +689,8 @@ void Shoot()
             bullet.knockBack = knockBack * knockBackRate;
             // 1.1.2: 납작한 흰 실선 대신 금빛 예광탄 (보이는 크기 3~4배, BulletGlow 예광탄 모드)
             //   판정 = 보이는 예광탄 몸통 (BulletGlow.FitTracerHit, 피해는 그대로) · 터널링은 Bullet 의 스윕 검사가 막음
-            BulletGlow glow = newBullet.AddComponent<BulletGlow>();
+            BulletGlow glow = bullet.Glow;
+            if (glow == null) glow = newBullet.AddComponent<BulletGlow>();
             if (newBullet.TryGetComponent(out SpriteRenderer bodySr)) glow.tracerSprite = bodySr.sprite;
             glow.tracerBaseScale = newBullet.transform.localScale;
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참
@@ -709,7 +711,8 @@ void Shoot()
 
     public void Slow(float factor, float seconds)
     {
-        slowFactor = factor;
+        // 1.2.3~ 감속이 걸려 있는 동안은 더 센 쪽을 남김 (점액 늪이 매 프레임 불러도 보스 감속이 약해지지 않게)
+        slowFactor = Time.time < slowUntil ? Mathf.Min(slowFactor, factor) : factor;
         slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
     }
 
@@ -1348,7 +1351,7 @@ void Shoot()
         IsDying = true;
         RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (쓰러지는 순간의 빌드)
         GameInput.ResetAttackLock();        // 1.1.9~ 공격 고정은 쓰러지면 풀림
-        RunSave.Abandon();          // 죽으면 이어할 판은 지움 (2.1.9) · 1.1.9~ 무한 모드 · 일일 도전 · 튜토리얼에서 죽어도 이야기 판 저장은 남김
+        RunSave.Abandon();          // 죽으면 이어할 판은 지움 (2.1.9) · 1.2.3~ 저장하는 판만 (일일 도전 · 튜토리얼에서 쓰러져도 남아 있던 저장은 그대로)
         invincibleUntil = float.MaxValue;
         CancelSkill();
         move = Vector3.zero;

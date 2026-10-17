@@ -21,6 +21,7 @@ public class bossbar : MonoBehaviour
     public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.0.2)
     public const int DeveloperMomKind = 10;   // 1.0.4~ 30분의 「개발자 엄마」 (이름만)
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
+    public float erosion = 1f;          // 1.2.3~ 무한 모드 모래 폭풍 풍화 배율 (보스가 매 프레임 알려줌 · 이름 뒤 「풍화 +n%」)
 
     TMP_Text nameText;
     RectTransform barRect;
@@ -45,19 +46,19 @@ public class bossbar : MonoBehaviour
         BarY = barRect.sizeDelta.y;
 
         HealthBarFeel.ResetStatics();
-        // 조각: 채움 막대를 복제해 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제에도 함께 따라감
-        GameObject g = Instantiate(bar, bar.transform.parent);
-        g.name = GhostName;
-        g.transform.SetSiblingIndex(bar.transform.GetSiblingIndex());
-        foreach (Transform c in g.transform) Destroy(c.gameObject);     // 복제된 자식(있다면)은 지움
-        Image gi = g.GetComponent<Image>();
-        if (gi != null) { gi.color = HealthBarFeel.GhostColor(0f); gi.raycastTarget = false; gi.enabled = false; }
-        main = MakeRow(backBar, barRect, g.GetComponent<RectTransform>());
+        // 조각: 채움 막대와 같은 자리 · 크기의 Image 를 새로 만들어 바로 뒤(형제 순서 한 칸 앞)에 — 아래로 쌓는 줄 복제(backBar 복제)에도 함께 따라감
+        // 1.2.0: Instantiate(bar) 복제 대신 (PlayerHP 의 자기 복제 연쇄와 같은 일이 생기지 않게 · HealthBarFeel.MakeGhost 는 스크립트 · 자식을 복제하지 않음)
+        Image gi = HealthBarFeel.MakeGhost(bar.GetComponent<Image>(), GhostName);
+        main = MakeRow(backBar, barRect, gi != null ? gi.rectTransform : null);
         instance = this;
-        AddTip(backBar, main);
+        AddTip(backBar, main);          // 1.1.9~ 뒤판 툴팁 (뒤판이 raycastTarget 이 됨)
+        // 최적화: 보스 체력바 묶음을 하위 캔버스로 — 타격마다 막대 · 흔들림 · 이름이 바뀌어도 HUD 전체를 다시 묶지 않게
+        //   (Canvas 컴포넌트만 붙임 · MonoBehaviour 아님 → 아래 줄 복제(ShowExtraBars)에도 그대로 따라가 각자 하위 캔버스)
+        //   툴팁(마우스)을 받아야 하므로 레이캐스터도 둠
+        UiScaler.Isolate(backBar, true);
     }
 
-    // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 조각 · 흔들림 · 번쩍임
+    // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 흰색 지연 게이지 · 흔들림 · 두께 펀치 · 번쩍임 · 프레임 붉은 틴트
     const string GhostName = "BossGhost";
 
     sealed class Row
@@ -65,8 +66,15 @@ public class bossbar : MonoBehaviour
         public RectTransform fill, ghost, root;
         public Image fillImg, ghostImg, backImg;
         public Vector2 rest;
+        public Vector3 baseScale = Vector3.one;     // 맨 위 줄 1 · 아래 줄 0.8
         public Color fillColor, backColor;
-        public float shownFront = -1f, shownGhost = -1f;
+        public float shownFront = -1f, shownGhost = -1f, shownIgnite = -1f;
+        public bosss drawnFor;                      // 지난번에 그린 보스 (바뀌면 지난 보스 값이 남지 않게 다시 그림)
+        // 1.2.3~ 이름 글자 캐시 (SetBar): 값이 바뀔 때만 문자열을 새로 (예전엔 여러 줄일 때 매 프레임 줄마다 문자열을 만들어 비교했음)
+        public bosss nameFor;
+        public int nameKind = -1, nameNow = -1, nameMax = -1, nameErode = -1;
+        public Loc.Lang nameLang;
+        public float nameAt;                        // 체력 숫자만 바뀔 때 다음 갱신 시각 (0.1초)
         // 1.1.9~ 체력바 눈금 (편의성 2차 12): 실제 단계 자리 — 지옥의 군주 66% · 33%, 나머지 50% · 지나면 빨강 + 뒤판이 붉어짐
         public readonly List<Image> ticks = new List<Image>();
         public int tickKind = -99;
@@ -75,6 +83,8 @@ public class bossbar : MonoBehaviour
         public float enrage;
         public int kind;            // 이 줄의 보스 (툴팁)
     }
+    static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
+    static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
 
     static readonly float[] HalfTick = { 0.5f }, HellTicks = { 0.66f, 0.33f };
     static readonly float[] NoTicks = new float[0];
@@ -181,6 +191,7 @@ public class bossbar : MonoBehaviour
         Row r = new Row();
         r.root = back.GetComponent<RectTransform>();
         r.rest = r.root.anchoredPosition;
+        r.baseScale = r.root.localScale;
         r.backImg = back.GetComponent<Image>();
         if (r.backImg != null) r.backColor = r.backImg.color;
         r.fill = fill;
@@ -195,23 +206,38 @@ public class bossbar : MonoBehaviour
     void Draw(Row r, bosss s)
     {
         if (r == null || s == null) return;
+        if (r.drawnFor != s) { r.drawnFor = s; r.shownFront = r.shownGhost = -1f; }
         r.kind = KindOf(s);
         UpdateTicks(r, s, r.kind);
-        s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
+        s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
-        if (r.ghostImg != null && f.ghost != r.shownGhost)
+        if (r.ghostImg != null && (f.ghost != r.shownGhost || r.ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값이 그대로라 켜짐 여부도 같이 봄
         {
             r.shownGhost = f.ghost;
-            r.ghostImg.enabled = f.ghostShown;
+            if (r.ghostImg.enabled != f.ghostShown) { r.ghostImg.enabled = f.ghostShown; r.shownIgnite = -1f; }
             if (f.ghostShown) r.ghost.sizeDelta = new Vector2(f.ghost * MaxBarX, BarY);
         }
-        // BarY 119 라 높이 비율 그대로면 30~60px 로 과함 → ×0.25 (Big 약 7px · Deadly 15px)
-        Vector2 pos = r.rest + new Vector2(f.shakeX, f.shakeY) * BarY * 0.25f;
-        if (r.root != null && pos != r.root.anchoredPosition) r.root.anchoredPosition = pos;
-        if (r.fillImg != null) r.fillImg.color = f.flash > 0f ? Color.Lerp(r.fillColor, Color.white, f.flash) : r.fillColor;
-        if (r.ghostImg != null && r.ghostImg.enabled) r.ghostImg.color = HealthBarFeel.GhostColor(f.flash);
-        // Deadly: 배경까지 번쩍임
-        if (r.backImg != null) r.backImg.color = f.flashFull ? Color.Lerp(r.backColor, new Color(1f, 0.85f, 0.8f), 0.5f) : r.backColor;
+        // 흔들림: 실제 BarY 는 씬 크기 20 (인스펙터 기본값 119 아님) → 높이 비율 그대로 (Big 9px · Deadly 16px · 예전 ×0.25 는 1~2px 로 안 보였음)
+        if (r.root != null)
+        {
+            Vector2 pos = r.rest + new Vector2(f.shakeX, f.shakeY) * BarY;
+            if (pos != r.root.anchoredPosition) r.root.anchoredPosition = pos;
+            // 두께 펀치 (피벗이 위쪽이라 아래로 자람 · 가로는 그대로)
+            Vector3 sc = new Vector3(r.baseScale.x, r.baseScale.y * (1f + f.punch), r.baseScale.z);
+            if (sc != r.root.localScale) r.root.localScale = sc;
+        }
+        if (r.fillImg != null)
+        {
+            Color fc = f.flash > 0f ? Color.Lerp(r.fillColor, Color.white, f.flash) : r.fillColor;
+            if (fc != r.fillImg.color) r.fillImg.color = fc;
+        }
+        if (r.ghostImg != null && r.ghostImg.enabled && f.ignite != r.shownIgnite) { r.shownIgnite = f.ignite; r.ghostImg.color = HealthBarFeel.GhostColor(f.ignite); }
+        // Big 이상: 프레임이 붉게 물듦 (흰 틴트 프레임은 더 밝힐 수 없음)
+        if (r.backImg != null)
+        {
+            Color bc = f.backFlash > 0f ? Color.Lerp(r.backColor, GameSettings.ColorBlind ? FrameHitCB : FrameHit, f.backFlash) : r.backColor;
+            if (bc != r.backImg.color) r.backImg.color = bc;
+        }
     }
 
     // Update is called once per frame
@@ -237,10 +263,10 @@ public class bossbar : MonoBehaviour
             if (split && liveSlimes.Count > 0)
             {
                 // 슬라임마다 자기 체력 (각자 따로 깎이고, 이름 번호는 그 개체에 고정)
-                SetBar(nameText, liveSlimes[0]);
+                SetBar(main, nameText, liveSlimes[0]);
                 Draw(main, liveSlimes[0]);
                 ShowExtraBars(liveSlimes.Count - 1);
-                for (int i = 1; i < liveSlimes.Count; i++) { SetBar(extraNames[i - 1], liveSlimes[i]); Draw(extraRows[i - 1], liveSlimes[i]); }
+                for (int i = 1; i < liveSlimes.Count; i++) { SetBar(extraRows[i - 1], extraNames[i - 1], liveSlimes[i]); Draw(extraRows[i - 1], liveSlimes[i]); }
                 wasMulti = true;
                 return;
             }
@@ -250,10 +276,10 @@ public class bossbar : MonoBehaviour
         {
             liveBosses.Clear();
             liveBosses.AddRange(bosss.Live);
-            SetBar(nameText, liveBosses[0]);
+            SetBar(main, nameText, liveBosses[0]);
             Draw(main, liveBosses[0]);
             ShowExtraBars(liveBosses.Count - 1);
-            for (int i = 1; i < liveBosses.Count; i++) { SetBar(extraNames[i - 1], liveBosses[i]); Draw(extraRows[i - 1], liveBosses[i]); }
+            for (int i = 1; i < liveBosses.Count; i++) { SetBar(extraRows[i - 1], extraNames[i - 1], liveBosses[i]); Draw(extraRows[i - 1], liveBosses[i]); }
             wasMulti = true;
             return;
         }
@@ -271,8 +297,11 @@ public class bossbar : MonoBehaviour
             if (main != null)
             {
                 main.shownFront = main.shownGhost = -1f;
+                main.drawnFor = null;
                 if (main.ghostImg != null) main.ghostImg.enabled = false;
-                if (main.root != null) main.root.anchoredPosition = main.rest;
+                if (main.root != null) { main.root.anchoredPosition = main.rest; main.root.localScale = main.baseScale; }
+                if (main.backImg != null) main.backImg.color = main.backColor;
+                if (main.fillImg != null) main.fillImg.color = main.fillColor;
             }
         }
     }
@@ -286,18 +315,34 @@ public class bossbar : MonoBehaviour
     readonly List<GameObject> extraBars = new List<GameObject>();
     readonly List<TMP_Text> extraNames = new List<TMP_Text>();
 
-    // 줄 이름 글자 (막대 길이는 Draw 가 그림)
-    void SetBar(TMP_Text label, bosss s)
+    // 줄 이름 글자 (막대 길이는 Draw 가 그림) · 1.2.3~ 보스 · 체력 숫자 · 풍화 · 언어가 바뀔 때만 글자를 새로
+    void SetBar(Row r, TMP_Text label, bosss s)
     {
-        string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(s.developerMom ? DeveloperMomKind : DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
-        if (label != null && label.text != n) label.text = n;
+        if (r == null || label == null || s == null) return;
+        int kind = s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind == 2 && s.slimeGen >= 2 ? 100 + s.barSlot : s.bossKind;
+        int now = Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
+        int erode = s.developer ? 0 : ErodePct(s.erosionMul);
+        if (r.nameFor == s && r.nameKind == kind && r.nameMax == s.setEnemyHP && r.nameErode == erode && r.nameLang == Loc.Current)
+        {
+            // 최적화: 체력 숫자만 바뀐 것은 0.1초에 한 번만 글자를 새로 (초당 수십 타에서도 눈에 같음 · 막대는 매 타격 즉시)
+            if (r.nameNow == now || Time.unscaledTime < r.nameAt) return;
+        }
+        r.nameAt = Time.unscaledTime + 0.1f;
+        r.nameFor = s; r.nameKind = kind; r.nameNow = now; r.nameMax = s.setEnemyHP; r.nameErode = erode; r.nameLang = Loc.Current;
+        label.text = (kind >= 100 ? BossName(2) + " " + (s.barSlot + 1) : BossName(kind)) + "  " + now + " / " + s.setEnemyHP + ErodeTag(erode);
     }
+
+    // 1.2.3~ 모래 폭풍 풍화: 받는 피해가 몇 % 늘었는지 (10% 단위 내림 · 글자가 덜 바뀌게)
+    static int ErodePct(float mul) => mul <= 1f ? 0 : Mathf.FloorToInt((mul - 1f) * 10f + 0.001f) * 10;
+    static string ErodeTag(int pct) => pct > 0 ? "  <color=#F0C060>" + Loc.T("풍화") + " +" + pct + "%</color>" : "";
 
     // 위쪽 보스 체력바(배경 · 채움 · 이름)를 복제해 아래로 쌓음
     void ShowExtraBars(int count)
     {
         while (extraBars.Count < count)
         {
+            // backBar 아래에는 스스로 복제하는 스크립트가 없어야 함 (Image · TMP · 흰 게이지 Image · 눈금 Image 뿐) — 그런 스크립트가 붙으면 복제마다 따라붙음 (1.2.0 렉 원인과 같은 경로)
+            //   뒤판의 TooltipTrigger(1.1.9~)는 복제되지만 아무것도 만들지 않고, 아래 AddTip 이 지우고 새로 붙임
             GameObject clone = Instantiate(backBar, backBar.transform.parent);
             clone.name = backBar.name + "_" + (extraBars.Count + 1);
             // 1.1~: 복제는 캔버스 맨 뒤에 붙어 레벨업 · 일시정지 창 위에 그려졌음 → 원래 체력바 바로 뒤 순서로
@@ -316,7 +361,7 @@ public class bossbar : MonoBehaviour
             r.localScale = Vector3.one * ExtraScale;
             r.anchoredPosition = new Vector2(mainPos.x, prevBottom - ExtraGap - b.max.y * ExtraScale);
             Transform fill = clone.transform.Find(bar.name);
-            Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 조각도 함께 복제됨
+            Transform ghost = clone.transform.Find(GhostName);          // 위쪽 줄의 흰 게이지도 함께 복제됨
             TMP_Text label = null;
             foreach (TMP_Text t in clone.GetComponentsInChildren<TMP_Text>(true))
                 if (t.name == "BossName") { label = t; t.name = "BossNameExtra"; FitName(t); }    // 원래 이름 글자 찾기와 헷갈리지 않게
@@ -346,6 +391,7 @@ public class bossbar : MonoBehaviour
     // ================================================================= 보스 필살기 게이지 (맨 위 체력바 바로 아래, 가득 차면 결계)
     RectTransform ultFill;
     Image ultFillImg;
+    float shownUlt = -1f;
     const float UltWidth = 596f;
 
     void UpdateUltGauge()
@@ -376,10 +422,13 @@ public class bossbar : MonoBehaviour
         if (gaugeObj.activeSelf != hasUlt) gaugeObj.SetActive(hasUlt);
         if (!hasUlt) return;
         float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
-        ultFill.sizeDelta = new Vector2(UltWidth * g, 10f);
+        // 최적화: 1/300 단위로 맞춰 바뀔 때만 크기를 씀 (예전엔 매 프레임 같은 값을 썼음)
+        float gq = Mathf.Round(g * 300f) / 300f;
+        if (gq != shownUlt) { shownUlt = gq; ultFill.sizeDelta = new Vector2(UltWidth * gq, 10f); }
         UltLabel(g);
         float pulse = g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
-        ultFillImg.color = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        Color uc = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        if (ultFillImg.color != uc) ultFillImg.color = uc;
     }
 
     // 1.0.4~: 이름표 없는 보라색 막대라 뜻을 몰랐음 → 게이지 오른쪽 끝에 「결계」 글자 · 처음 찰 때 도움말 한 번
@@ -448,16 +497,25 @@ public class bossbar : MonoBehaviour
 
     // 보스가 한 마리일 때 이름 + 「현재 / 최대」 (1.0.4~: 예전엔 여러 마리일 때만 숫자가 보였음)
     // 숫자 · 보스 · 언어가 바뀔 때만 글자를 새로
-    int shownNow = -1, shownMax = -1;
+    int shownNow = -1, shownMax = -1, shownErode = -1;
+    float singleNameAt;
     void WriteSingleName()
     {
         if (nameText == null) return;
         int now = Mathf.Max(0, NowHealth);
-        if (shownKind == bossKind && shownLang == Loc.Current && shownNow == now && shownMax == MaxHealth) return;
+        int erode = bossKind >= DeveloperKind ? 0 : ErodePct(erosion);
+        if (shownKind == bossKind && shownLang == Loc.Current && shownMax == MaxHealth && shownErode == erode)
+        {
+            // 최적화: 체력 숫자만 바뀐 것은 0.1초에 한 번만 (막대는 매 타격 즉시)
+            if (shownNow == now || Time.unscaledTime < singleNameAt) return;
+        }
+        singleNameAt = Time.unscaledTime + 0.1f;
         shownKind = bossKind;
         shownLang = Loc.Current;
         shownNow = now;
         shownMax = MaxHealth;
-        nameText.text = BossName(bossKind) + (MaxHealth > 0 ? "  " + now + " / " + MaxHealth : "");
+        shownErode = erode;
+        nameText.text = BossName(bossKind) + (MaxHealth > 0 ? "  " + now + " / " + MaxHealth : "") + ErodeTag(erode);
+        if (main != null) main.nameFor = null;      // 여러 줄로 돌아가면 첫 줄 이름을 다시 씀
     }
 }

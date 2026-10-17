@@ -37,19 +37,53 @@ public static class Specials
 
     static readonly List<Collider2D> nearestHits = new List<Collider2D>(64);
 
+    // 최적화: 보스(EnermyController 없음)는 GetComponent 생략 · 거리는 제곱으로 비교 (고르는 적은 같음)
     public static Transform NearestEnemy(Vector3 from, float range)
     {
         Transform best = null;
-        float bestDist = range;
-        foreach (Collider2D c in Overlap(from, range, nearestHits))
+        float bestSq = range * range;
+        Vector2 f = from;
+        List<Collider2D> hits = Overlap(from, range, nearestHits);
+        for (int i = 0; i < hits.Count; i++)
         {
-            if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
-            EnermyController e = c.GetComponent<EnermyController>();
-            if (e != null && e.IsDead) continue;
-            float d = Vector2.Distance(from, c.transform.position);
-            if (d < bestDist) { bestDist = d; best = c.transform; }
+            Collider2D c = hits[i];
+            bool enemy = c.CompareTag("enermy");
+            if (!enemy && !c.CompareTag("boss")) continue;
+            if (enemy && c.TryGetComponent(out EnermyController e) && e.IsDead) continue;
+            Transform t = c.transform;
+            float d = ((Vector2)t.position - f).sqrMagnitude;
+            if (d < bestSq) { bestSq = d; best = t; }
         }
         return best;
+    }
+
+    // 피해를 주는 광역 판정용 공용 목록 (피해 콜백이 다시 질의해도 돌던 목록이 바뀌지 않게 복사본을 돎)
+    static readonly List<Collider2D> areaHits = new List<Collider2D>(64);
+    static readonly List<List<Collider2D>> copyPool = new List<List<Collider2D>>();
+    static int copyDepth;
+
+    // OverlapCircleAll 과 같은 결과를 복사본 목록으로 (다 쓰면 반드시 ReleaseCopy · 중첩 호출 가능)
+    internal static List<Collider2D> OverlapCopy(Vector3 pos, float radius)
+    {
+        Overlap(pos, radius, areaHits);
+        if (copyDepth >= copyPool.Count) copyPool.Add(new List<Collider2D>(64));
+        List<Collider2D> copy = copyPool[copyDepth++];
+        copy.Clear();
+        copy.AddRange(areaHits);
+        return copy;
+    }
+
+    internal static void ReleaseCopy(List<Collider2D> copy)
+    {
+        copy.Clear();
+        if (copyDepth > 0) copyDepth--;
+    }
+
+    // 표적이 아직 쓸 만한지 (살아 있고 켜져 있음)
+    internal static bool StillTarget(Transform t)
+    {
+        if (t == null || !t.gameObject.activeInHierarchy) return false;
+        return !(t.TryGetComponent(out EnermyController e) && e.IsDead);
     }
 }
 
@@ -64,6 +98,8 @@ public class Burn : MonoBehaviour
     float tick;
     float puff;
     GameObject flame;
+    SpriteRenderer hostSr;
+    float seed;
 
     public static void Apply(GameObject target, float dps, float duration)
     {
@@ -76,6 +112,8 @@ public class Burn : MonoBehaviour
 
     void Start()
     {
+        hostSr = GetComponent<SpriteRenderer>();
+        seed = (GetInstanceID() & 1023) * 0.61f;
         // 몸에서 타오르는 불빛
         if (FireSprite != null)
             flame = SpecialAbilities.MakeSprite("BurnFlame", FireSprite, transform.position, 0.3f, new Color(1f, 0.5f, 0.15f, 0.7f), "Effect", 2);
@@ -89,12 +127,16 @@ public class Burn : MonoBehaviour
         if (flame != null)
         {
             flame.transform.position = transform.position + new Vector3(0f, 0.3f, 0f);
-            flame.transform.localScale = Vector3.one * Random.Range(0.26f, 0.36f);
+            // 최적화: 매 프레임 난수 대신 빠른 떨림 함수 (같은 범위 0.26~0.36 · 적마다 다른 위상)
+            float flick = Mathf.Sin(Time.time * 37f + seed) * 0.6f + Mathf.Sin(Time.time * 23f + seed * 1.7f) * 0.4f;
+            flame.transform.localScale = Vector3.one * (0.31f + 0.05f * flick);
         }
         puff += Time.deltaTime;
         if (puff >= 0.1f && FireSprite != null)
         {
             puff = 0f;
+            // 최적화: 화면 밖 적은 불꽃 입자를 만들지 않음 (보이지 않음 · 피해는 그대로)
+            if (hostSr == null || hostSr.isVisible)
             FlameParticle.Spawn(FireSprite, transform.position + (Vector3)(Random.insideUnitCircle * 0.8f),
                                 new Vector2(Random.Range(-0.5f, 0.5f), Random.Range(3f, 5f)), 0.45f, 0.04f, 0.28f, false);
         }
@@ -116,7 +158,7 @@ public class Burn : MonoBehaviour
 }
 
 // 불꽃 입자: 흰노랑 → 주황 → 빨강 → 연기로 변하며 커지고 느려짐
-public class FlameParticle : MonoBehaviour
+public class FlameParticle : FxTicked
 {
     Vector2 velocity;
     float life;
@@ -130,6 +172,14 @@ public class FlameParticle : MonoBehaviour
     // 다 탄 입자는 지우지 않고 꺼 두었다가 다시 씀 (화염 방사 · 폭발마다 수십 개씩 만들고 지우지 않게)
     static readonly Stack<FlameParticle> pool = new Stack<FlameParticle>();
     static int effectLayer = -1;
+
+    // 그래픽 품질 낮음(L5): 동시에 150개까지 (넘치면 새 입자 생략)
+    static int active;
+    const int LowCap = 150;
+    static bool Capped => GraphicsQuality.Low && active >= LowCap;
+
+    protected override void OnEnable() { base.OnEnable(); active++; }
+    protected override void OnDisable() { base.OnDisable(); if (active > 0) active--; }
 
     static FlameParticle Take(string name, Sprite sprite, Vector3 pos, float scale, Color color, int order)
     {
@@ -158,6 +208,7 @@ public class FlameParticle : MonoBehaviour
 
     public static void Spawn(Sprite sprite, Vector3 pos, Vector2 velocity, float life, float startScale, float endScale, bool smoke)
     {
+        if (Capped) return;
         FlameParticle p = Take(smoke ? "Smoke" : "Flame", sprite, pos, startScale, Color.white, smoke ? 1 : 4);
         p.velocity = velocity;
         p.life = life;
@@ -169,6 +220,7 @@ public class FlameParticle : MonoBehaviour
 
     public static void SpawnEmber(Sprite sprite, Vector3 pos, Vector2 velocity)
     {
+        if (Capped) return;
         FlameParticle p = Take("Ember", sprite, pos, 0.025f, new Color(1f, 0.9f, 0.5f), 5);
         p.velocity = velocity;
         p.life = Random.Range(0.4f, 0.7f);
@@ -194,7 +246,7 @@ public class FlameParticle : MonoBehaviour
 
     int spawnFrame = -1;
 
-    void Update()
+    internal override void Tick()
     {
         // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
         if (Time.frameCount == spawnFrame) return;
@@ -229,6 +281,9 @@ public class Homing : MonoBehaviour
     const float LookAhead = 5f, LockLost = 60f, SnapTurn = 900f;
     Bullet bullet;
     Transform target;
+    static readonly List<Collider2D> grazeHits = new List<Collider2D>(64);
+    Transform seek;          // 예전 방식 유도: 지금 꺾어 가는 적 (살아 있으면 0.1초마다만 더 가까운 적을 찾음)
+    float retargetAt;
 
     float trail;
 
@@ -247,7 +302,8 @@ public class Homing : MonoBehaviour
         Vector2 pos = transform.position, dir = bullet.Direction;
         Transform best = null;
         float bestSide = float.MaxValue;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, LookAhead))
+        // 최적화: 공용 목록으로 (OverlapCircleAll 은 부를 때마다 새 배열 · 피해를 주지 않고 고르기만 함)
+        foreach (Collider2D c in Specials.Overlap(pos, LookAhead, grazeHits))
         {
             if (!Alive(c)) continue;
             Vector2 to = (Vector2)c.transform.position - pos;
@@ -284,7 +340,13 @@ public class Homing : MonoBehaviour
             FadeSprite.Spawn("SeekerTrail", SpecialAbilities.GlowSprite, transform.position, 0.06f, new Color(0.75f, 0.5f, 1f, 0.55f), "Effect", 4, 0.3f);
         }
         if (nearMiss > 0f) { NearMiss(); return; }
-        Transform nearest = Specials.NearestEnemy(transform.position, 20f);
+        // 최적화: 표적이 살아 있으면 0.1초마다만 가장 가까운 적을 다시 찾음 (표적이 죽거나 꺼지면 바로)
+        if (!Specials.StillTarget(seek) || Time.time >= retargetAt)
+        {
+            seek = Specials.NearestEnemy(transform.position, 20f);
+            retargetAt = Time.time + 0.1f;
+        }
+        Transform nearest = seek;
         if (nearest == null) return;
         Vector2 dirTo = ((Vector2)(nearest.position - transform.position)).normalized;
         float a = Vector2.SignedAngle(bullet.Direction, dirTo);
@@ -515,8 +577,15 @@ public class DamageZone : MonoBehaviour
         if (tick >= 0.5f)
         {
             tick = 0f;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, radius))
+            // 최적화: 공용 목록의 복사본을 돎 (피해 콜백이 다시 질의해도 안전 · 할당 없음)
+            List<Collider2D> hits = Specials.OverlapCopy(transform.position, radius);
+            for (int i = 0; i < hits.Count; i++)
+            {
+                Collider2D c = hits[i];
+                if (c == null) continue;
                 if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, tickDamage, Vector3.zero, 0f);
+            }
+            Specials.ReleaseCopy(hits);
         }
         if (t >= duration) Destroy(gameObject);
     }
@@ -532,6 +601,8 @@ public class AllySkeleton : MonoBehaviour
     public float life = 10f;
     float t;
     SpriteRenderer sr;
+    Transform seek;
+    float retargetAt;
 
     void Start() => sr = GetComponent<SpriteRenderer>();
 
@@ -539,7 +610,13 @@ public class AllySkeleton : MonoBehaviour
     {
         using var source = DamageSource.As(dmgSource);
         t += Time.deltaTime;
-        Transform target = Specials.NearestEnemy(transform.position, 30f);
+        // 최적화: 표적이 살아 있으면 0.1초마다만 가장 가까운 적을 다시 찾음 (표적이 죽거나 꺼지면 바로)
+        if (!Specials.StillTarget(seek) || Time.time >= retargetAt)
+        {
+            seek = Specials.NearestEnemy(transform.position, 30f);
+            retargetAt = Time.time + 0.1f;
+        }
+        Transform target = seek;
         if (target != null)
         {
             Vector3 d = target.position - transform.position;
@@ -585,10 +662,30 @@ public class FadeOut : MonoBehaviour
 
 // 옅어지며 사라지는 빛 조각 (총알 꼬리 · 섬광 · 터짐): MakeSprite + FadeOut 과 보이는 모습이 같음
 // 다 사라지면 지우지 않고 꺼 두었다가 다시 씀 (총알마다 초당 수십 개씩 만들고 지우지 않게)
-public class FadeSprite : MonoBehaviour
+public class FadeSprite : FxTicked
 {
     static readonly Stack<FadeSprite> pool = new Stack<FadeSprite>();
     static readonly Dictionary<string, int> layerIds = new Dictionary<string, int>();
+
+    // 그래픽 품질 낮음(L1): 잔상 · 꼬리(평타 · 적 탄 · 유도탄 · 예전 탄 꼬리)는 2개 중 1개만
+    //   건너뛴 호출은 꺼져 있는 빈 조각(sink)을 돌려줌 — 돌려받은 것에 Shape 를 바로 부르는 호출자가 있어 null 대신
+    static readonly HashSet<string> Decor = new HashSet<string> { "AtkTrail", "Trail", "SeekerTrail", "BulletTrail" };
+    static int decorTurn;
+    static FadeSprite sink;
+    static FadeSprite Sink
+    {
+        get
+        {
+            if (sink == null)
+            {
+                GameObject go = new GameObject("FadeSink");
+                go.SetActive(false);
+                sink = go.AddComponent<FadeSprite>();
+                sink.sr = go.AddComponent<SpriteRenderer>();
+            }
+            return sink;
+        }
+    }
 
     SpriteRenderer sr;
     float duration, t;
@@ -598,6 +695,7 @@ public class FadeSprite : MonoBehaviour
     // 돌려받은 것으로 회전 · 축마다 다른 크기를 줄 수 있음 (Shape, 평타 잔상)
     public static FadeSprite Spawn(string name, Sprite sprite, Vector3 pos, float scale, Color color, string layer, int order, float duration)
     {
+        if (GraphicsQuality.Low && Decor.Contains(name) && (++decorTurn & 1) == 0) return Sink;
         FadeSprite f = null;
         while (pool.Count > 0 && f == null) f = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
         if (f == null)
@@ -641,7 +739,7 @@ public class FadeSprite : MonoBehaviour
         transform.localScale = s * (0.8f + 0.4f * k);
     }
 
-    void Update()
+    internal override void Tick()
     {
         // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
         if (Time.frameCount == spawnFrame) return;
@@ -702,6 +800,8 @@ public class FireTornado : MonoBehaviour
     const float Radius = 3f;
     float age, tick;
     FxAnim body;
+    Transform seek;
+    float retargetAt;
 
     void Start()
     {
@@ -714,7 +814,13 @@ public class FireTornado : MonoBehaviour
     {
         using var source = DamageSource.As(dmgSource);
         age += Time.deltaTime;
-        Transform target = Specials.NearestEnemy(transform.position, 14f);
+        // 최적화: 표적이 살아 있으면 0.1초마다만 가장 가까운 적을 다시 찾음 (표적이 죽거나 꺼지면 바로)
+        if (!Specials.StillTarget(seek) || Time.time >= retargetAt)
+        {
+            seek = Specials.NearestEnemy(transform.position, 14f);
+            retargetAt = Time.time + 0.1f;
+        }
+        Transform target = seek;
         if (target != null) transform.position = Vector3.MoveTowards(transform.position, target.position, 5f * Time.deltaTime);
         if (body != null) body.transform.position = transform.position + Vector3.up * 1.8f;
 
@@ -729,12 +835,17 @@ public class FireTornado : MonoBehaviour
         if (tick >= 0.25f)
         {
             tick = 0f;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, Radius))
+            // 최적화: 공용 목록의 복사본을 돎 (피해 콜백이 다시 질의해도 안전 · 할당 없음)
+            List<Collider2D> hits = Specials.OverlapCopy(transform.position, Radius);
+            for (int i = 0; i < hits.Count; i++)
             {
+                Collider2D c = hits[i];
+                if (c == null) continue;
                 if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                 Specials.Damage(c.gameObject, damage, Vector3.zero, 0f);
                 Burn.Apply(c.gameObject, damage, 2f);
             }
+            Specials.ReleaseCopy(hits);
             if (SpecialAbilities.GlowSprite != null)
                 for (int i = 0; i < 4; i++)
                     FlameParticle.SpawnEmber(SpecialAbilities.GlowSprite, transform.position, Random.insideUnitCircle.normalized * Random.Range(6f, 12f));

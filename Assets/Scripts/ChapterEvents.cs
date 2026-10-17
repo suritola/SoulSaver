@@ -171,6 +171,17 @@ public class ChapterEvents : MonoBehaviour
     Vector3 where;
     bool hasWhere;
     string labelText;
+
+    // 최적화: 진행 줄 글자는 표시 숫자(남은 적 · 초 · %) · 언어가 바뀔 때만 다시 조립 (예전엔 매 프레임 Format · Replace)
+    string lblKey, lblCache;
+    int lblA = int.MinValue, lblB;
+    Loc.Lang lblLang;
+    string CachedLabel(string key, int a, int b) => key == lblKey && a == lblA && b == lblB && Loc.Current == lblLang ? lblCache : null;
+    string StoreLabel(string key, int a, int b, string text)
+    {
+        lblKey = key; lblA = a; lblB = b; lblLang = Loc.Current; lblCache = text;
+        return text;
+    }
     float markerAt;
 
     List<GameObject> group;             // 정예 무리 · 저주받은 적
@@ -502,7 +513,8 @@ public class ChapterEvents : MonoBehaviour
     {
         if (ambush == null) { Finish(); return; }
         int left = Alive(ambush);
-        labelText = string.Format(Loc.T("습격 · 남은 적 {0} · {1}초"), left, SecondsLeft(ambushUntil));
+        int raidSec = SecondsLeft(ambushUntil);
+        labelText = CachedLabel("raid", left, raidSec) ?? StoreLabel("raid", left, raidSec, string.Format(Loc.T("습격 · 남은 적 {0} · {1}초"), left, raidSec));
         if (left == 0)
         {
             ambush = null;
@@ -535,7 +547,8 @@ public class ChapterEvents : MonoBehaviour
             return;
         }
         if (goblin == null) { Finish(); return; }
-        labelText = Loc.T("event.goblin.label").Replace("{0}", SecondsLeft(goblinUntil).ToString());
+        int goblinSec = SecondsLeft(goblinUntil);
+        labelText = CachedLabel("event.goblin.label", goblinSec, 0) ?? StoreLabel("event.goblin.label", goblinSec, 0, Loc.T("event.goblin.label").Replace("{0}", goblinSec.ToString()));
         ShowArrow(true, me, goblin.transform.position, new Color(1f, 0.85f, 0.3f));
         if (Time.time > goblinUntil)
         {
@@ -551,7 +564,8 @@ public class ChapterEvents : MonoBehaviour
         if (!cursedOpened)
         {
             if (cursedChest == null) { Finish(); return; }
-            labelText = Loc.T("event.cursed.wait").Replace("{0}", SecondsLeft(cursedUntil).ToString());
+            int cursedSec = SecondsLeft(cursedUntil);
+            labelText = CachedLabel("event.cursed.wait", cursedSec, 0) ?? StoreLabel("event.cursed.wait", cursedSec, 0, Loc.T("event.cursed.wait").Replace("{0}", cursedSec.ToString()));
             ShowArrow(true, me, where, CursedColor);
             if (Time.time > cursedUntil)
             {
@@ -582,7 +596,8 @@ public class ChapterEvents : MonoBehaviour
     {
         if (group == null) { Finish(); return; }
         int left = Alive(group);
-        labelText = Loc.T(labelKey).Replace("{0}", left.ToString()).Replace("{1}", SecondsLeft(groupUntil).ToString());
+        int groupSec = SecondsLeft(groupUntil);
+        labelText = CachedLabel(labelKey, left, groupSec) ?? StoreLabel(labelKey, left, groupSec, Loc.T(labelKey).Replace("{0}", left.ToString()).Replace("{1}", groupSec.ToString()));
         if (left == 0)
         {
             EventWon(current.def.id == ContentRegistry.CursedChest ? "cursed" : "pack");
@@ -626,8 +641,9 @@ public class ChapterEvents : MonoBehaviour
             altarWaveAt = Time.time + AltarWaveEvery;
             sp.SpawnAmbush(where, 3 + slot, 13f);
         }
-        labelText = Loc.T("event.altar.label").Replace("{0}", Mathf.Clamp(Mathf.FloorToInt(altarProgress * 100f), 0, 100).ToString())
-                                              .Replace("{1}", SecondsLeft(altarUntil).ToString());
+        int altarPct = Mathf.Clamp(Mathf.FloorToInt(altarProgress * 100f), 0, 100), altarSec = SecondsLeft(altarUntil);
+        labelText = CachedLabel("event.altar.label", altarPct, altarSec) ?? StoreLabel("event.altar.label", altarPct, altarSec,
+            Loc.T("event.altar.label").Replace("{0}", altarPct.ToString()).Replace("{1}", altarSec.ToString()));
         if (altarProgress >= 1f)
         {
             EventWon("altar");

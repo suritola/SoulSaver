@@ -15,6 +15,7 @@ public class EnemyHitbox : MonoBehaviour
     SpriteRenderer sr;
     float centerX, oldLocal = -1f, contactLocal;
     bool flipped;
+    static readonly System.Collections.Generic.Dictionary<Sprite, (Vector2 min, Vector2 max)> extents = new System.Collections.Generic.Dictionary<Sprite, (Vector2 min, Vector2 max)>();
 
     public static EnemyHitbox Fit(GameObject go)
     {
@@ -34,18 +35,26 @@ public class EnemyHitbox : MonoBehaviour
         if (sr == null || sr.sprite == null) { col.radius = oldLocal * HurtMin; return; }
 
         // Tight 메시면 꼭짓점이 불투명한 부분을 감쌈 (Full Rect 면 그림 틀 전체)
-        Vector2 min, max;
-        Vector2[] v = sr.sprite.vertices;
-        if (v != null && v.Length > 0)
+        // 그림마다 한 번만 계산해 둠 (sprite.vertices 는 부를 때마다 새 배열 — 스폰마다 할당이던 것)
+        Sprite sp = sr.sprite;
+        if (!extents.TryGetValue(sp, out var e))
         {
-            min = max = v[0];
-            for (int i = 1; i < v.Length; i++) { min = Vector2.Min(min, v[i]); max = Vector2.Max(max, v[i]); }
+            Vector2 mn, mx;
+            Vector2[] v = sp.vertices;
+            if (v != null && v.Length > 0)
+            {
+                mn = mx = v[0];
+                for (int i = 1; i < v.Length; i++) { mn = Vector2.Min(mn, v[i]); mx = Vector2.Max(mx, v[i]); }
+            }
+            else
+            {
+                Bounds b = sp.bounds;
+                mn = b.min; mx = b.max;
+            }
+            e = (mn, mx);
+            extents[sp] = e;
         }
-        else
-        {
-            Bounds b = sr.sprite.bounds;
-            min = b.min; max = b.max;
-        }
+        Vector2 min = e.min, max = e.max;
 
         Vector2 c = (min + max) * 0.5f;
         centerX = c.x;

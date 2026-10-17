@@ -204,6 +204,7 @@ public partial class LevelShop : MonoBehaviour
     BadgeClick pendingClick;
     public GameObject PendingBadge => pendingBadge;        // 1.0.4~: 튜토리얼이 레벨업 배지를 짚어 줌
     TextMeshProUGUI pendingText;
+    Image pendingBadgeImg;                                  // 최적화: 매 프레임 GetComponent 대신 캐시
     int shownPending = -1;
     bool shownTree;
 
@@ -269,16 +270,22 @@ public partial class LevelShop : MonoBehaviour
             pendingText.fontSizeMax = 30f;
             pendingText.alignment = TextAlignmentOptions.Center;
             pendingText.raycastTarget = false;
+            pendingBadgeImg = bg;
+            // 최적화: 매 프레임 숨 쉬는 배지를 하위 캔버스로 — HUD 전체를 매 프레임 다시 묶지 않게 (1.1.9~ 눌러서 카드 열기 · 레이캐스터 둠)
+            UiScaler.Isolate(pendingBadge, true);
         }
         if (!pendingBadge.activeSelf) pendingBadge.SetActive(true);
         // 경험치 바 위 「특수 강화」 버튼(96 ~ 160)이 떠 있으면 그 위로 올려 겹치지 않게
         bool upgradeShown = StageManager.Instance != null && StageManager.Instance.UpgradeButtonAtBottom;
-        ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
+        RectTransform badgeRect = (RectTransform)pendingBadge.transform;
+        Vector2 badgePos = new Vector2(0f, upgradeShown ? 172f : 110f);
+        if (badgeRect.anchoredPosition != badgePos) badgeRect.anchoredPosition = badgePos;
         float pulse = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
         bool hover = pendingClick != null && pendingClick.Hover;       // 마우스를 올리면 밝고 크게 (누를 수 있음을 보여 줌)
-        pendingBadge.GetComponent<Image>().color = hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
-                                                         : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
+        if (pendingBadgeImg == null) pendingBadgeImg = pendingBadge.GetComponent<Image>();
+        pendingBadgeImg.color = hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
+                                      : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
         pendingBadge.transform.localScale = Vector3.one * (hover ? 1f + 0.06f * GameSettings.Motion : 1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)

@@ -40,13 +40,39 @@ public static class SpriteOutline
             mat = new Material(s) { name = "SpriteOutline" };
             mat.SetColor("_OutlineColor", color);
         }
-        // 기본 스프라이트 재질을 쓰는 몸 그림에만 (이펙트 · 글자 · 체력바는 그대로)
-        foreach (SpriteRenderer sr in go.GetComponentsInChildren<SpriteRenderer>(true))
+        if (effectLayer == int.MinValue)
         {
-            Material m = sr.sharedMaterial;
-            if (m == null || m.shader == null || m.shader.name != "Sprites/Default") continue;
-            if (sr.sortingLayerName == "Effect" || sr.sortingLayerName == "TargetMark") continue;
-            sr.sharedMaterial = mat;
+            effectLayer = SortingLayer.NameToID("Effect");
+            markLayer = SortingLayer.NameToID("TargetMark");
         }
+        // 기본 스프라이트 재질을 쓰는 몸 그림에만 (이펙트 · 글자 · 체력바는 그대로)
+        // 자식이 없으면 배열을 만들지 않고 자기 렌더러 하나만 (스폰마다 할당 줄임)
+        if (go.transform.childCount == 0)
+        {
+            Tint(go.GetComponent<SpriteRenderer>(), mat);
+            return;
+        }
+        go.GetComponentsInChildren(true, renderers);
+        for (int i = 0; i < renderers.Count; i++) Tint(renderers[i], mat);
+        renderers.Clear();
+    }
+
+    static readonly System.Collections.Generic.List<SpriteRenderer> renderers = new System.Collections.Generic.List<SpriteRenderer>(16);
+    static int effectLayer = int.MinValue, markLayer;
+    static Shader spriteDefault;
+
+    static void Tint(SpriteRenderer sr, Material mat)
+    {
+        if (sr == null) return;
+        Material m = sr.sharedMaterial;
+        if (m == null) return;
+        Shader sh = m.shader;
+        if (sh == null) return;
+        if (spriteDefault != null) { if (sh != spriteDefault) return; }
+        else if (sh.name == "Sprites/Default") spriteDefault = sh;
+        else return;
+        int layer = sr.sortingLayerID;
+        if (layer == effectLayer || layer == markLayer) return;
+        sr.sharedMaterial = mat;
     }
 }

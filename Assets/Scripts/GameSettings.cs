@@ -325,6 +325,7 @@ public static class GameSettings
     public static void ResetDisplay()           // 화면 모드 · 해상도 · 모니터는 그대로
     {
         UiScaleIndex = DefUiScale; NoticeSize = DefNoticeSize; VSync = DefVSync; MaxFpsIndex = DefMaxFps; ShowFps = DefShowFps; ScreenShake = DefShake; Flashes = DefFlash;
+        GraphicsQuality.Index = 0;              // 1.2.4~ 그래픽 품질 높음 (기본)
         Save();
     }
 
@@ -499,7 +500,9 @@ public static class GameSettings
         {
             AudioListener.volume = Volume;
             Loc.ApplyFonts();
+            SceneLocalizer.Clear();         // 최적화: 지난 씬 글자의 원문이 세션 내내 쌓이지 않게 (이 씬 글자는 RefreshAll 이 다시 등록)
             SceneLocalizer.RefreshAll();
+            UIKit.Prune();                  // 지난 씬에서 만든 창 글자 항목 정리
             MenuExtras.Install();
         };
         SteamDeckFirstRun();            // 메인 메뉴를 그리기 전에 (알림이 메뉴에 뜨게)
@@ -529,6 +532,8 @@ public static class GameSettings
 public static class SceneLocalizer
 {
     static readonly System.Collections.Generic.Dictionary<int, string> original = new System.Collections.Generic.Dictionary<int, string>();
+
+    public static void Clear() => original.Clear();
 
     public static void RefreshAll()
     {

@@ -67,9 +67,10 @@ public class Point : MonoBehaviour
     }
 
     // 1.2~ 일반 적 한 마리 (무한 모드 처치 수 체감 MobKillMul 을 함께 곱함)
-    public void AddMobPoint(int point) => AddScaled(point, MobKillMul);
+    // 1.2.3~ mul: 적마다 따로 거는 배율 (무한 모드 개발자 · 엄마전 약한 잡몹 0.25)
+    public void AddMobPoint(int point, float mul = 1f) => AddScaled(point, MobKillMul * mul);
 
-    public void AddPoint(int point) => AddScaled(point, 1f);
+    public void AddPoint(int point, float mul = 1f) => AddScaled(point, mul);
 
     void AddScaled(int point, float extra)
     {
@@ -82,8 +83,17 @@ public class Point : MonoBehaviour
         // 캐릭터 구매에 쓰는 포인트로도 쌓임 (게임을 꺼도 유지)
         CharacterData.AddPoints(point);
 
-        UpdatePointText();
+        // 최적화: 처치 폭발 때 한 프레임에 수십 번 글자를 다시 만들던 것을 프레임 끝 한 번으로 (꺼져 있으면 바로)
+        if (isActiveAndEnabled) pointsDirty = true;
+        else UpdatePointText();
+    }
 
+    bool pointsDirty;
+    void LateUpdate()
+    {
+        if (!pointsDirty) return;
+        pointsDirty = false;
+        UpdatePointText();
     }
 
     // 1.1~ 클리어 보너스: 배율 없이 그대로 · 포인트 글자가 잠깐 금빛으로 커짐 (판 안에 Point 가 없으면 보유 포인트에만)
@@ -140,7 +150,10 @@ public class Point : MonoBehaviour
     void UpdatePointText()
     {
         if (TextInput == null) return;
-        TextInput.text = Loc.T("포인트") + " : " + points;
-        if (pulse != null) TextInput.text += "  <color=#F5D478>+" + pulseBonus.ToString("N0") + "</color>";      // 1.0.4~ 번역 없이 「POINT : 」였음 (판 안의 코인과 다른, 영웅 · 스킨을 사는 재화)
+        pointsDirty = false;
+        // 최적화: 한 번에 완성해서 대입 (예전엔 꼬리가 있으면 글자를 두 번 써 TMP 가 두 번 더러워짐)
+        string s = Loc.T("포인트") + " : " + points;
+        if (pulse != null) s += "  <color=#F5D478>+" + pulseBonus.ToString("N0") + "</color>";
+        TextInput.text = s;      // 1.0.4~ 번역 없이 「POINT : 」였음 (판 안의 코인과 다른, 영웅 · 스킨을 사는 재화)
     }
 }

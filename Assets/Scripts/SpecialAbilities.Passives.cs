@@ -48,6 +48,21 @@ public partial class SpecialAbilities
                 Specials.Damage(c.gameObject, Damage * (IsEvolved(OrbsId) ? 1.2f : 0.8f), (c.transform.position - player.transform.position).normalized, 0.8f);
             }
         }
+        PruneOrbHits();
+    }
+
+    // 명중 기록 가지치기 — 0.5초 넘은 기록은 판정에 안 쓰이므로 2초마다 지움 (한 판 내내 쌓이던 누수)
+    float orbPruneAt;
+    static readonly List<Collider2D> orbStale = new List<Collider2D>(32);
+    void PruneOrbHits()
+    {
+        if (Time.time < orbPruneAt) return;
+        orbPruneAt = Time.time + 2f;
+        orbStale.Clear();
+        foreach (var kv in orbHitTimes)
+            if (kv.Key == null || Time.time - kv.Value > 1f) orbStale.Add(kv.Key);
+        for (int i = 0; i < orbStale.Count; i++) orbHitTimes.Remove(orbStale[i]);
+        orbStale.Clear();
     }
 
     // 플레이어가 맞았을 때 (복수의 가시)
@@ -124,7 +139,7 @@ public partial class SpecialAbilities
     // ================================================================= shared effects
     public void Explode(Vector3 pos, float radius, float damage, float knock, Color color)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, radius))
+        using (var ovl = PhysHits.Circle(pos, radius)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector3 dir = (c.transform.position - pos).normalized;
@@ -155,16 +170,27 @@ public partial class SpecialAbilities
         return dz;
     }
 
+    // 맞은 적 집합을 빌려 씀 (피해 도중 다시 연쇄 번개가 터져도 서로 다른 집합)
+    static readonly Stack<HashSet<Collider2D>> chainSets = new Stack<HashSet<Collider2D>>();
+
     void ChainLightning(Vector3 from, Collider2D first, float damage, int jumps, float falloff = 0.8f)
     {
+        HashSet<Collider2D> hit = chainSets.Count > 0 ? chainSets.Pop() : new HashSet<Collider2D>();
+        hit.Clear();
+        try { ChainLightning(hit, from, first, damage, jumps, falloff); }
+        finally { hit.Clear(); if (chainSets.Count < 8) chainSets.Push(hit); }
+    }
+
+    void ChainLightning(HashSet<Collider2D> hit, Vector3 from, Collider2D first, float damage, int jumps, float falloff)
+    {
         fx.Play("zap", 0.5f, Random.Range(0.9f, 1.1f));
-        HashSet<Collider2D> hit = new HashSet<Collider2D> { first };
+        hit.Add(first);
         Vector3 current = from;
         for (int j = 0; j < jumps; j++)
         {
             Collider2D next = null;
             float best = 6f;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(current, 6f))
+            using (var ovl = PhysHits.Circle(current, 6f)) foreach (Collider2D c in ovl)
             {
                 if (hit.Contains(c) || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
                 float d = Vector2.Distance(current, c.transform.position);

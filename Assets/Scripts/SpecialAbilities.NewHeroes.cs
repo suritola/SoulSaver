@@ -29,7 +29,7 @@ public partial class SpecialAbilities
                         Fx.Beam(tri[i], tri[(i + 1) % 3], 0.7f, new Color(1f, 0.82f, 0.35f, 0.95f), 0.5f, 16);
                         DamageLine(tri[i], tri[(i + 1) % 3], 0.9f, D * 1.1f, 1f);
                     }
-                    foreach (Collider2D col in Physics2D.OverlapCircleAll(c, r))
+                    using (var ovl = PhysHits.Circle(c, r)) foreach (Collider2D col in ovl)
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         if (!InTriangle(col.transform.position, tri[0], tri[1], tri[2])) continue;
@@ -51,7 +51,7 @@ public partial class SpecialAbilities
                     {
                         Vector3 front = KitClamp(start + (Vector3)(dir * len * (t / 0.5f)));
                         if (Random.value < 0.7f) Fx.Spawn("fx_puddle", front + (Vector3)(Random.insideUnitCircle * width * 0.5f), 3f, new Color(0.18f, 0.25f, 0.75f, 0.85f), 18f);
-                        foreach (Collider2D col in Physics2D.OverlapCircleAll(front, width))
+                        using (var ovl = PhysHits.Circle(front, width)) foreach (Collider2D col in ovl)
                         {
                             if ((!col.CompareTag("enermy") && !col.CompareTag("boss")) || !hit.Add(col)) continue;
                             Specials.Damage(col.gameObject, D * 3f, dir, 5f);
@@ -149,7 +149,7 @@ public partial class SpecialAbilities
                     // 절대 영도: 둘레 모두 얼림
                     float r = evo ? 11f : 9f;
                     Vector3 c = player.transform.position;
-                    foreach (Collider2D col in Physics2D.OverlapCircleAll(c, r))
+                    using (var ovl = PhysHits.Circle(c, r)) foreach (Collider2D col in ovl)
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         Specials.Damage(col.gameObject, D * 3f, (col.transform.position - c).normalized, 0f);
@@ -211,7 +211,7 @@ public partial class SpecialAbilities
                     FxAnim storm = Fx.Play("fx_tornado", at, r * 1.8f, new Color(1f, 0.85f, 0.55f, 0.85f), 14f, 0f, 14, true, 4f);
                     for (float t = 0f; t < 4f; t += 0.3f)
                     {
-                        foreach (Collider2D col in Physics2D.OverlapCircleAll(at, r))
+                        using (var ovl = PhysHits.Circle(at, r)) foreach (Collider2D col in ovl)
                         {
                             if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                             if (col.CompareTag("enermy")) col.transform.position = Vector3.MoveTowards(col.transform.position, at, 0.8f);

@@ -66,6 +66,7 @@ public class TreasureChest : MonoBehaviour
     }
 
     Color tint = Gold;
+    SpriteRenderer haloSr, pillarSr;
 
     void Update()
     {
@@ -77,9 +78,14 @@ public class TreasureChest : MonoBehaviour
         if (halo != null)
         {
             halo.transform.localScale = Vector3.one * (0.6f + 0.1f * Mathf.Sin(t * 4f) * m);
-            halo.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.5f + 0.2f * Mathf.Sin(t * 4f));
+            if (haloSr == null) haloSr = halo.GetComponent<SpriteRenderer>();      // 1.2.4: 매 프레임 GetComponent → 한 번만
+            haloSr.color = new Color(tint.r, tint.g, tint.b, 0.5f + 0.2f * Mathf.Sin(t * 4f));
         }
-        if (pillar != null) pillar.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
+        if (pillar != null)
+        {
+            if (pillarSr == null) pillarSr = pillar.GetComponent<SpriteRenderer>();
+            pillarSr.color = new Color(tint.r, tint.g, tint.b, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
+        }
         if (Random.value < Time.deltaTime * 9f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.4f), 1.2f, tint, 20f);
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || Time.timeScale == 0f) return;

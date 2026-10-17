@@ -169,7 +169,7 @@ public partial class SpecialAbilities
     int DamageArc(Vector3 origin, Vector2 dir, float range, float halfAngle, float damage, float knock)
     {
         int n = 0;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(origin, range))
+        using (var ovl = PhysHits.Circle(origin, range)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector2 to = c.transform.position - origin;
@@ -183,7 +183,7 @@ public partial class SpecialAbilities
     int DamageLine(Vector3 a, Vector3 b, float width, float damage, float knock)
     {
         int n = 0;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width))
+        using (var ovl = PhysHits.Circle((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
@@ -195,7 +195,7 @@ public partial class SpecialAbilities
 
     void DamageCircle(Vector3 pos, float r, float dmg, float knock)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, r))
+        using (var ovl = PhysHits.Circle(pos, r)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Specials.Damage(c.gameObject, dmg, (c.transform.position - pos).normalized, knock);
@@ -205,7 +205,7 @@ public partial class SpecialAbilities
     // 반지름 안의 살아 있는 일반 적 (보스 제외)
     static IEnumerable<EnermyController> EnemiesIn(Vector3 pos, float r)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, r))
+        using (var ovl = PhysHits.Circle(pos, r)) foreach (Collider2D c in ovl)
         {
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null && !e.IsDead) yield return e;
@@ -216,17 +216,22 @@ public partial class SpecialAbilities
     static List<Transform> NearestEnemies(Vector3 from, float range, int n)
     {
         List<Transform> list = new List<Transform>();
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(from, range))
+        using (var ovl = PhysHits.Circle(from, range)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null && e.IsDead) continue;
             list.Add(c.transform);
         }
-        list.Sort((a, b) => (a.position - from).sqrMagnitude.CompareTo((b.position - from).sqrMagnitude));
+        // 결과 목록은 코루틴이 들고 쓰므로 새로 만들고, 정렬 비교만 정적으로 (호출마다 클로저를 만들지 않게)
+        nearestFrom = from;
+        list.Sort(ByNearest);
         if (list.Count > n) list.RemoveRange(n, list.Count - n);
         return list;
     }
+
+    static Vector3 nearestFrom;
+    static readonly System.Comparison<Transform> ByNearest = (a, b) => (a.position - nearestFrom).sqrMagnitude.CompareTo((b.position - nearestFrom).sqrMagnitude);
 
     Bullet KitProjectile(Vector3 start, Vector2 dir, float dmg, int pene, float speed, string fxName, float size, Color tint, bool spin)
     {
@@ -284,7 +289,7 @@ public partial class SpecialAbilities
                     Vector3 me = player.transform.position;
                     Vector3 at = me + Vector3.ClampMagnitude(MouseWorld() - me, 4f);
                     float r = evo ? 3.2f : 2.5f;
-                    fx.SetRing(previewRing, at, r, new Color(col.r, col.g, col.b, Ready() ? 0.6f : 0.25f), 0.1f);
+                    PreviewRing(previewRing, at, r, new Color(col.r, col.g, col.b, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
                     Smash(at, r, KitWD * 2.5f, evo ? 1f : 0.5f);
@@ -293,7 +298,7 @@ public partial class SpecialAbilities
             case KitWhip:
                 {
                     float len = evo ? 12f : 10f;
-                    fx.SetLine(aimLine, m, m + (Vector3)(dir * len), new Color(col.r, col.g, col.b, 0.3f), 0.06f);
+                    PreviewLine(aimLine, m, m + (Vector3)(dir * len), new Color(col.r, col.g, col.b, 0.3f), 0.06f);
                     if (!held || !Ready()) break;
                     BeginShot(0, out _, out _);
                     Whip(m, dir, len, KitWD * 0.9f, evo ? 2.5f : 1.8f);
@@ -302,7 +307,7 @@ public partial class SpecialAbilities
             case KitLance:
                 {
                     float dist = evo ? 4.5f : 3f;
-                    fx.SetLine(aimLine, m, m + (Vector3)(dir * (dist + 1.5f)), new Color(col.r, col.g, col.b, 0.4f), 0.1f);
+                    PreviewLine(aimLine, m, m + (Vector3)(dir * (dist + 1.5f)), new Color(col.r, col.g, col.b, 0.4f), 0.1f);
                     if (!down || lancing || !Ready()) break;
                     BeginShot(0, out _, out _);
                     StartCoroutine(LanceCharge(dir, dist, 0.12f, KitWD * 1.8f, 2.5f, evo));
@@ -333,8 +338,8 @@ public partial class SpecialAbilities
                 {
                     int max = evo ? 5 : 3;
                     Vector3 at = MouseWorld();
-                    fx.SetRing(previewRing, at, 0.45f, new Color(col.r, col.g, col.b, 0.8f), 0.08f);
-                    if (wires.Count > 0) fx.SetLine(aimLine, wires[wires.Count - 1].pos, at, new Color(0.85f, 0.8f, 1f, 0.35f), 0.05f);
+                    PreviewRing(previewRing, at, 0.45f, new Color(col.r, col.g, col.b, 0.8f), 0.08f);
+                    if (wires.Count > 0) PreviewLine(aimLine, wires[wires.Count - 1].pos, at, new Color(0.85f, 0.8f, 1f, 0.35f), 0.05f);
                     player.ammoTextOverride = Loc.T("와이어") + " " + wires.Count + " / " + max;
                     if (!down || !Ready()) break;
                     BeginShot(0, out _, out _);
@@ -389,8 +394,8 @@ public partial class SpecialAbilities
                 {
                     Vector3 land = GrenadeLanding();
                     float pull = evo ? 6f : 4.5f;
-                    fx.SetLine(aimLine, m, land, new Color(col.r, col.g, col.b, 0.4f), 0.08f);
-                    fx.SetRing(previewRing, land, pull, new Color(0.7f, 0.6f, 1f, Ready() ? 0.6f : 0.25f), 0.1f);
+                    PreviewLine(aimLine, m, land, new Color(col.r, col.g, col.b, 0.4f), 0.08f);
+                    PreviewRing(previewRing, land, pull, new Color(0.7f, 0.6f, 1f, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(1, out Vector3 s, out _);
                     float dmg = KitWD * 2.2f;
@@ -401,8 +406,8 @@ public partial class SpecialAbilities
             case KitFirework:
                 {
                     Vector3 land = GrenadeLanding();
-                    fx.SetLine(aimLine, m, land, new Color(1f, 0.8f, 0.4f, 0.35f), 0.06f);
-                    fx.SetRing(previewRing, land, 2.2f, new Color(1f, 0.8f, 0.4f, Ready() ? 0.6f : 0.25f), 0.1f);
+                    PreviewLine(aimLine, m, land, new Color(1f, 0.8f, 0.4f, 0.35f), 0.06f);
+                    PreviewRing(previewRing, land, 2.2f, new Color(1f, 0.8f, 0.4f, Ready() ? 0.6f : 0.25f), 0.1f);
                     if (!down || !Ready()) break;
                     BeginShot(1, out Vector3 s, out _);
                     StartCoroutine(FireworkRoutine(s, land, evo ? 8 : 5, KitWD * 0.7f));
@@ -414,7 +419,7 @@ public partial class SpecialAbilities
     // 검사 전쟁 망치 · 심판의 대검: 원 안의 적에게 피해 + 기절
     void Smash(Vector3 at, float r, float dmg, float stun)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(at, r))
+        using (var ovl = PhysHits.Circle(at, r)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Specials.Damage(c.gameObject, dmg, (c.transform.position - at).normalized, 1.5f);
@@ -434,7 +439,7 @@ public partial class SpecialAbilities
         whipAlt = !whipAlt;
         Vector2 side = new Vector2(-dir.y, dir.x) * (whipAlt ? 1f : -1f);
         Vector3 b = a + (Vector3)(dir * len);
-        foreach (Collider2D c in Physics2D.OverlapCircleAll((a + b) * 0.5f, len * 0.5f + 1f))
+        using (var ovl = PhysHits.Circle((a + b) * 0.5f, len * 0.5f + 1f)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > 0.9f) continue;
@@ -525,7 +530,7 @@ public partial class SpecialAbilities
     // 궁수 그물: 원 안의 적을 묶음
     void NetAt(Vector3 p, float r, float hold, float dmg)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
+        using (var ovl = PhysHits.Circle(p, r)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (dmg > 0f) Specials.Damage(c.gameObject, dmg, Vector3.zero, 0f);
@@ -652,7 +657,7 @@ public partial class SpecialAbilities
         {
             case KitWarCry:
                 warCryUntil = Time.time + 6f;
-                foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 5f))
+                using (var ovl = PhysHits.Circle(pos, 5f)) foreach (Collider2D c in ovl)
                     if (c.CompareTag("enermy") || c.CompareTag("boss")) Specials.Damage(c.gameObject, KitD * 0.5f, (c.transform.position - pos).normalized, 4f);
                 Fx.Spawn("fx_shock", pos, 11f, new Color(1f, 0.75f, 0.4f, 0.85f), 16f);
                 fx.FloatText(pos, Loc.T("전투 함성!"), new Color(1f, 0.75f, 0.4f), 5f, 0f);
@@ -812,7 +817,7 @@ public partial class SpecialAbilities
         {
             Vector3 p = from + (Vector3)(dir * d);
             if (Hostile.IsWall(p)) break;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, 1.3f))
+            using (var ovl = PhysHits.Circle(p, 1.3f)) foreach (Collider2D c in ovl)
             {
                 if ((!c.CompareTag("enermy") && !c.CompareTag("boss")) || !hit.Add(c)) continue;
                 Specials.Damage(c.gameObject, KitD * 3f, Vector3.up, 1f);
@@ -932,6 +937,9 @@ public partial class SpecialAbilities
     public float KitUnstableChance => Has(KitVolatile) ? (IsEvolved(KitVolatile) ? 0.5f : 0.35f) : 0.15f;
     public bool KitUnstableBurns => Has(KitVolatile);
 
+    float keepDistanceAt;
+    bool keepDistanceBonus;
+
     void KitTick()
     {
         if (player == null) return;
@@ -948,8 +956,16 @@ public partial class SpecialAbilities
         if (Time.time < spreeUntil) speed *= 1.15f;
         if (Has(KitOath) && player.PlayerHealth >= player.PlayerMaxHealth * 0.99f) dmg *= IsEvolved(KitOath) ? 1.25f : 1.15f;
         if (Time.time < fugitiveUntil) speed *= IsEvolved(KitFugitive) ? 1.45f : 1.3f;
-        if (Has(KitKeepDistance) && Specials.NearestEnemy(player.transform.position, 5f) == null)
-            dmg *= IsEvolved(KitKeepDistance) ? 1.4f : 1.25f;
+        // 거리 유지: 5칸 안 적 검사는 0.1초마다만 (피해 배율은 다음 발사에 쓰이고 발사 간격 ≥ 0.1초라 같음)
+        if (Has(KitKeepDistance))
+        {
+            if (Time.time >= keepDistanceAt)
+            {
+                keepDistanceAt = Time.time + 0.1f;
+                keepDistanceBonus = Specials.NearestEnemy(player.transform.position, 5f) == null;
+            }
+            if (keepDistanceBonus) dmg *= IsEvolved(KitKeepDistance) ? 1.4f : 1.25f;
+        }
         ApplyDynamic(dmg, rate, speed);
 
         UpdateWires();
@@ -1191,6 +1207,8 @@ public class Poison : MonoBehaviour
     public float perStack;
     public int stacks;
     float until, tick, drip;
+    SpriteRenderer body;
+    bool bodyChecked;
 
     public static void Apply(GameObject target, float perStack, int maxStacks)
     {
@@ -1210,7 +1228,10 @@ public class Poison : MonoBehaviour
         if (drip >= 0.35f)
         {
             drip = 0f;
-            Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.2f, new Color(0.5f, 1f, 0.35f), 14f);
+            // 화면 밖 적은 독 방울을 만들지 않음 (보이지 않으니 겉모습 같음 · 피해는 그대로)
+            if (!bodyChecked) { bodyChecked = true; TryGetComponent(out body); }
+            if (body == null || body.isVisible)
+                Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.2f, new Color(0.5f, 1f, 0.35f), 14f);
         }
         tick += Time.deltaTime;
         if (tick >= 0.5f)

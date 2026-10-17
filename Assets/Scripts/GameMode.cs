@@ -125,7 +125,7 @@ public static class GameMode
 
     // ================================================================= 무한 모드 경과
     static float endlessStart = -1f;
-    public static void StartEndlessClock() => endlessStart = Time.time;
+    public static void StartEndlessClock(float elapsed = 0f) => endlessStart = Time.time - Mathf.Max(0f, elapsed);      // 1.2.3~ 이어하기는 저장한 경과 시간부터
     // 무한 모드 판이 진행 중일 때만 (메뉴에서는 0)
     public static float EndlessSeconds => IsEndless && endlessStart >= 0f && EndlessMode.Instance != null ? Time.time - endlessStart : 0f;
     static float Ramp

@@ -181,25 +181,58 @@ public static class Prefs
 
     public static void Save()
     {
-        if (data == null || !dirty) return;
-        try
+        Store s = Snapshot(out string folder, out string file, out int seq);
+        if (s != null) Write(s, folder, file, seq);
+    }
+
+    // 최적화: 판 중 자동 저장(1분)용 — 값 목록만 지금 복사하고 JSON 만들기 · 파일 쓰기는 백그라운드에서 (주기적 끊김 방지)
+    //   끌 때 · 씬 전환 등 다른 Save() 는 그대로 바로 씀. 쓰기는 잠금으로 한 번에 하나, 더 새 저장이 이미 쓰였으면 오래된 것은 버림
+    public static void SaveInBackground()
+    {
+        Store s = Snapshot(out string folder, out string file, out int seq);
+        if (s != null) System.Threading.Tasks.Task.Run(() => Write(s, folder, file, seq));
+    }
+
+    static readonly object writeLock = new object();
+    static int snapSeq, writtenSeq;
+
+    // 메인 스레드: 지금 값의 복사본 (Application.productName 등 경로도 여기서)
+    static Store Snapshot(out string folder, out string file, out int seq)
+    {
+        folder = file = null;
+        seq = 0;
+        if (data == null || !dirty) return null;
+        Store s = new Store();
+        foreach (KeyValuePair<string, (char type, string value)> kv in data)
         {
-            Directory.CreateDirectory(FolderPath);
-            Store s = new Store();
-            foreach (KeyValuePair<string, (char type, string value)> kv in data)
-            {
-                s.keys.Add(kv.Key);
-                s.types.Add(kv.Value.type.ToString());
-                s.values.Add(kv.Value.value);
-            }
-            string tmp = FilePath + ".tmp";
-            File.WriteAllText(tmp, JsonUtility.ToJson(s));
-            // 한 번에 바꿔치기 (중간에 꺼져도 둘 중 하나는 남음) · 1.0.4~: 바로 전 저장은 save.json.bak 으로 남김 (본 파일이 깨지면 이걸로 되살림)
-            if (File.Exists(FilePath)) File.Replace(tmp, FilePath, FilePath + ".bak");
-            else File.Move(tmp, FilePath);
-            dirty = false;
-            LastError = null;
+            s.keys.Add(kv.Key);
+            s.types.Add(kv.Value.type.ToString());
+            s.values.Add(kv.Value.value);
         }
-        catch (System.Exception e) { LastError = e.Message; Debug.LogWarning("[Prefs] 저장 파일을 쓰지 못함: " + e.Message); }
+        folder = FolderPath;
+        file = FilePath;
+        seq = ++snapSeq;
+        dirty = false;                  // 쓰다 실패하면 Write 가 다시 true
+        return s;
+    }
+
+    static void Write(Store s, string folder, string file, int seq)
+    {
+        lock (writeLock)
+        {
+            if (seq < writtenSeq) return;           // 더 새 저장이 이미 쓰임
+            try
+            {
+                Directory.CreateDirectory(folder);
+                string tmp = file + ".tmp";
+                File.WriteAllText(tmp, JsonUtility.ToJson(s));
+                // 한 번에 바꿔치기 (중간에 꺼져도 둘 중 하나는 남음) · 1.0.4~: 바로 전 저장은 save.json.bak 으로 남김 (본 파일이 깨지면 이걸로 되살림)
+                if (File.Exists(file)) File.Replace(tmp, file, file + ".bak");
+                else File.Move(tmp, file);
+                writtenSeq = seq;
+                LastError = null;
+            }
+            catch (System.Exception e) { dirty = true; LastError = e.Message; Debug.LogWarning("[Prefs] 저장 파일을 쓰지 못함: " + e.Message); }
+        }
     }
 }

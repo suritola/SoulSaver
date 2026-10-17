@@ -153,6 +153,7 @@ public class RunStats : MonoBehaviour
             "BossSkills" => "보스 스킬",
             "BossUltimate" => "보스 결계",
             "PlayerController" => "보스와 부딪힘",
+            "EndlessTerrain" => AttackLabel.Pending ?? "용암 웅덩이",      // 1.2.3~ 무한 지형
             _ => DamageSource.Other,
         };
         DamageTaken.TryGetValue(key, out float v);
@@ -572,7 +573,8 @@ public static class Hints
     // 설정 「도움말 다시 보기」가 지우는 키 (Hints.Show 를 부르는 곳의 키를 모두 적음)
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
                                              "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
-                                             "relic", "mapprop" };       // 1.2~ 유물 · 맵 물체
+                                             "relic", "mapprop",         // 1.2~ 유물 · 맵 물체
+                                             "terrain", "endless.bossqueue" };   // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
 
     public static void ResetAll()
     {
@@ -603,7 +605,23 @@ public static class Hints
         return box != null;
     }
 
-    static string CloseText => GamePad.Active || !Notice.TipCloseKeyFree ? "" : Loc.T("notice.tip.close").Replace("{0}", "Tab");
+    // 최적화: 패드 · Tab 키 사용 여부 · 언어가 바뀔 때만 다시 만듦 (예전엔 도움말이 떠 있는 동안 매 프레임 Replace)
+    static string closeText;
+    static bool closePad, closeFree;
+    static Loc.Lang closeLang;
+    static string CloseText
+    {
+        get
+        {
+            bool pad = GamePad.Active, free = Notice.TipCloseKeyFree;
+            if (closeText == null || pad != closePad || free != closeFree || Loc.Current != closeLang)
+            {
+                closePad = pad; closeFree = free; closeLang = Loc.Current;
+                closeText = pad || !free ? "" : Loc.T("notice.tip.close").Replace("{0}", "Tab");
+            }
+            return closeText;
+        }
+    }
 
     public static void Tick()
     {

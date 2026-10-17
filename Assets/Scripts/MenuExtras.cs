@@ -122,6 +122,7 @@ public static class MenuExtras
     static void InstallMainMenu()
     {
         DailyChallenge.End();
+        EndlessMode.LastSeconds = -1f;  // 1.2.3~ 무한 판을 저장하고 나오면 남은 기록이 다음 이야기 판 결과 화면에 붙지 않게
         RunSave.EndContinue();          // 1.0.4~: 이어한 판의 캐릭터 · 난이도를 메뉴 선택에서 거둠 (난이도 버튼을 그리기 전에)
         GameObject start = GameObject.Find("GameStartButton");
         GameObject exit = GameObject.Find("ExitButton");
@@ -333,7 +334,10 @@ public static class MenuExtras
             System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
                       + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
-                      + " · " + Chapters.Title(saved.stage) + " · Lv " + saved.level + "</size>";
+                      + " · " + (saved.difficulty == (int)Difficulty.Endless      // 1.2.3~ 무한 판은 장이 없어 생존 시간 · 보스 처치 수로
+                                 ? Loc.T("생존 시간 ") + EndlessMode.Clock(saved.endlessSeconds) + " · " + Loc.T("보스 처치 ") + saved.endlessBosses
+                                 : Chapters.Title(saved.stage))
+                      + " · Lv " + saved.level + "</size>";
             label();
             ct.gameObject.AddComponent<LocRefresh>().refresh = label;
         }
@@ -543,21 +547,29 @@ public static class UIKit
     static readonly Dictionary<TMP_Text, string> labels = new Dictionary<TMP_Text, string>();
     static bool hooked;
     public static void Forget(TMP_Text t) => labels.Remove(t);
+    static int rememberCount;
     public static void Remember(TMP_Text t, string ko)
     {
         labels[t] = ko;
+        // 최적화: 창을 닫아 지워진 글자가 세션 내내 쌓이지 않게 256번마다 정리 (씬 로드 때도 GameSettings 가 부름)
+        if (++rememberCount >= 256) { rememberCount = 0; Prune(); }
         if (hooked) return;
         hooked = true;
         Loc.Changed += () =>
         {
-            List<TMP_Text> dead = new List<TMP_Text>();
-            foreach (KeyValuePair<TMP_Text, string> kv in labels)
-            {
-                if (kv.Key == null) dead.Add(kv.Key);
-                else kv.Key.text = Loc.T(kv.Value);
-            }
-            foreach (TMP_Text d in dead) labels.Remove(d);
+            Prune();
+            foreach (KeyValuePair<TMP_Text, string> kv in labels) kv.Key.text = Loc.T(kv.Value);
         };
+    }
+
+    // 지워진 글자 항목을 뺌 (살아 있는 글자는 그대로)
+    static readonly List<TMP_Text> deadLabels = new List<TMP_Text>();
+    public static void Prune()
+    {
+        foreach (KeyValuePair<TMP_Text, string> kv in labels)
+            if (kv.Key == null) deadLabels.Add(kv.Key);
+        for (int i = 0; i < deadLabels.Count; i++) labels.Remove(deadLabels[i]);
+        deadLabels.Clear();
     }
 
     public static void EnsureStyle()
@@ -724,6 +736,168 @@ public static class UIKit
         Text(r, ko, fontSize, new Color(0.96f, 0.9f, 0.8f), Vector2.zero, size - new Vector2(20f, 12f));
         return b;
     }
+
+    // 1.2.4~ 드롭다운 (설정 「화면」 탭 해상도 · 그래픽 품질 · 최대 프레임) — 프리팹 없이 템플릿 · 뷰포트 · 스크롤 · 항목 토글까지 코드로 만듦
+    // 펼친 목록은 TMP_Dropdown 이 템플릿을 복제해 자기 캔버스(정렬 30000, 그 아래 30000-1 막)에 그려 다른 줄 위에 뜨고, 캔버스 밖으로 나가면 위로 뒤집힘
+    // 템플릿에는 우리 스크립트를 넣지 않음 (DropdownAssist 는 바깥 루트에만 · 복제되지 않음)
+    // names: 한국어 원문(translate = true 면 Loc.T 로 번역 · 언어가 바뀌면 다시) 또는 숫자 같은 그대로 쓰는 글
+    // maxVisible: 펼친 목록에 한 번에 보이는 항목 수 (넘으면 스크롤 · 휠 · 오른쪽 스틱)
+    public static DropdownAssist MakeDropdown(Transform parent, Vector2 pos, Vector2 size, string[] names, bool translate,
+                                              System.Func<int> get, System.Action<int> set, float fontSize = 26f, int maxVisible = 7)
+    {
+        EnsureStyle();
+        Color cream = new Color(0.96f, 0.9f, 0.8f);
+        RectTransform r = Rect("Dropdown", parent, pos, size);
+        Image img = r.gameObject.AddComponent<Image>();
+        img.sprite = ButtonSprite;
+        img.type = Image.Type.Sliced;
+        img.color = new Color(0.96f, 0.83f, 0.47f);
+        TMP_Text caption = Text(r, "", fontSize, cream, new Vector2(-18f, 0f), size - new Vector2(64f, 12f));
+        Image[] arrow = Chevron(r, new Vector2(size.x * 0.5f - 30f, 0f), cream);
+
+        float itemH = Mathf.Max(36f, size.y - 4f);
+
+        // 템플릿: 버튼 바로 아래, 버튼 폭 그대로 (항목이 적으면 TMP_Dropdown 이 높이를 줄임)
+        RectTransform template = Rect("Template", r, Vector2.zero, Vector2.zero);
+        template.anchorMin = new Vector2(0f, 0f);
+        template.anchorMax = new Vector2(1f, 0f);
+        template.pivot = new Vector2(0.5f, 1f);
+        template.anchoredPosition = new Vector2(0f, -4f);
+        template.sizeDelta = new Vector2(0f, itemH * Mathf.Max(1, maxVisible));     // 위아래 여백 없음 (있으면 항목이 적을 때 줄인 높이가 여백만큼 모자라 조금 스크롤됨)
+        Image frame = template.gameObject.AddComponent<Image>();
+        frame.sprite = ButtonSprite;
+        frame.type = Image.Type.Sliced;
+        frame.color = new Color(0.55f, 0.5f, 0.6f, 1f);
+        ScrollRect scroll = template.gameObject.AddComponent<ScrollRect>();
+
+        RectTransform viewport = Rect("Viewport", template, Vector2.zero, Vector2.zero);
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.pivot = new Vector2(0f, 1f);
+        viewport.offsetMin = viewport.offsetMax = Vector2.zero;
+        viewport.gameObject.AddComponent<Image>().color = new Color(0.09f, 0.07f, 0.12f, 0.98f);
+        viewport.gameObject.AddComponent<RectMask2D>();
+
+        RectTransform content = Rect("Content", viewport, Vector2.zero, Vector2.zero);
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = Vector2.zero;
+        content.sizeDelta = new Vector2(0f, itemH);
+
+        // 항목 하나 (TMP_Dropdown 이 옵션 수만큼 복제): 배경 = 토글 색 · 왼쪽 금색 막대 = 지금 값 표시
+        RectTransform item = Rect("Item", content, Vector2.zero, Vector2.zero);
+        item.anchorMin = Vector2.zero;
+        item.anchorMax = Vector2.one;
+        item.offsetMin = item.offsetMax = Vector2.zero;
+        Toggle toggle = item.gameObject.AddComponent<Toggle>();
+        RectTransform bg = Rect("Bg", item, Vector2.zero, Vector2.zero);
+        bg.anchorMin = Vector2.zero;
+        bg.anchorMax = Vector2.one;
+        bg.offsetMin = new Vector2(3f, 2f);
+        bg.offsetMax = new Vector2(-3f, -2f);
+        Image bgImg = bg.gameObject.AddComponent<Image>();
+        bgImg.color = Color.white;
+        RectTransform mark = Rect("Mark", item, new Vector2(12f, 0f), new Vector2(6f, itemH - 16f));
+        mark.anchorMin = mark.anchorMax = new Vector2(0f, 0.5f);
+        Image markImg = mark.gameObject.AddComponent<Image>();
+        markImg.color = new Color(0.96f, 0.83f, 0.47f);
+        markImg.raycastTarget = false;
+        TMP_Text label = Text(item, "", fontSize - 2f, new Color(0.92f, 0.88f, 0.80f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Left);
+        RectTransform lr = label.rectTransform;
+        lr.anchorMin = Vector2.zero;
+        lr.anchorMax = Vector2.one;
+        lr.offsetMin = new Vector2(28f, 2f);
+        lr.offsetMax = new Vector2(-8f, -2f);
+        toggle.targetGraphic = bgImg;
+        toggle.graphic = markImg;
+        toggle.isOn = false;
+        ColorBlock tc = toggle.colors;
+        tc.normalColor = new Color(0.16f, 0.13f, 0.2f);
+        tc.highlightedColor = new Color(0.44f, 0.35f, 0.21f);
+        tc.selectedColor = new Color(0.44f, 0.35f, 0.21f);       // 마우스를 올리거나 패드 · 키보드로 고른 항목
+        tc.pressedColor = new Color(0.32f, 0.25f, 0.16f);
+        tc.fadeDuration = 0.05f;
+        toggle.colors = tc;
+
+        // 스크롤 막대: 보이기만 (누를 수 없게 해 패드 커서가 막대로 붙지 않음 · 끌기 대신 휠 · 오른쪽 스틱)
+        RectTransform bar = Rect("Scrollbar", template, Vector2.zero, Vector2.zero);
+        bar.anchorMin = new Vector2(1f, 0f);
+        bar.anchorMax = new Vector2(1f, 1f);
+        bar.pivot = new Vector2(1f, 1f);
+        bar.sizeDelta = new Vector2(10f, 0f);
+        bar.anchoredPosition = Vector2.zero;
+        Image barImg = bar.gameObject.AddComponent<Image>();
+        barImg.color = new Color(0.2f, 0.17f, 0.25f, 1f);
+        barImg.raycastTarget = false;
+        RectTransform slide = Rect("Sliding Area", bar, Vector2.zero, Vector2.zero);
+        slide.anchorMin = Vector2.zero;
+        slide.anchorMax = Vector2.one;
+        slide.offsetMin = slide.offsetMax = Vector2.zero;
+        RectTransform handle = Rect("Handle", slide, Vector2.zero, Vector2.zero);
+        handle.offsetMin = handle.offsetMax = Vector2.zero;
+        Image handleImg = handle.gameObject.AddComponent<Image>();
+        handleImg.color = new Color(0.96f, 0.75f, 0.3f);
+        handleImg.raycastTarget = false;
+        Scrollbar sb = bar.gameObject.AddComponent<Scrollbar>();
+        sb.handleRect = handle;
+        sb.targetGraphic = handleImg;
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.interactable = false;
+        ColorBlock sc = sb.colors;
+        sc.disabledColor = Color.white;
+        sb.colors = sc;
+        Navigation none = new Navigation { mode = Navigation.Mode.None };
+        sb.navigation = none;
+
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.movementType = ScrollRect.MovementType.Clamped;
+        scroll.inertia = false;
+        scroll.scrollSensitivity = itemH;       // 휠 한 칸 = 항목 하나
+        scroll.viewport = viewport;
+        scroll.content = content;
+        scroll.verticalScrollbar = sb;
+        scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        scroll.verticalScrollbarSpacing = 2f;
+
+        template.gameObject.SetActive(false);
+
+        TMP_Dropdown dd = r.gameObject.AddComponent<TMP_Dropdown>();
+        dd.targetGraphic = img;
+        ColorBlock cb = dd.colors;
+        cb.highlightedColor = new Color(1f, 0.9f, 0.62f);
+        cb.pressedColor = new Color(0.72f, 0.62f, 0.48f);
+        cb.selectedColor = Color.white;
+        cb.disabledColor = new Color(0.55f, 0.55f, 0.58f, 0.7f);
+        dd.colors = cb;
+        dd.template = template;
+        dd.captionText = caption;
+        dd.itemText = label;
+        dd.alphaFadeSpeed = 0.08f;
+
+        DropdownAssist assist = r.gameObject.AddComponent<DropdownAssist>();
+        assist.Init(dd, caption, arrow, itemH, names, translate, get);
+        dd.onValueChanged.AddListener(v => set?.Invoke(v));
+        return assist;
+    }
+
+    // 드롭다운 오른쪽 「V」 화살표 (글꼴에 ▼ 가 없을 수 있어 막대 두 개로)
+    static Image[] Chevron(Transform parent, Vector2 pos, Color color)
+    {
+        RectTransform root = Rect("Arrow", parent, pos, new Vector2(20f, 14f));
+        Image[] bars = new Image[2];
+        for (int i = 0; i < 2; i++)
+        {
+            float side = i == 0 ? -1f : 1f;
+            RectTransform b = Rect("Bar", root, new Vector2(4.6f * side, 0f), new Vector2(13f, 4f));
+            b.localRotation = Quaternion.Euler(0f, 0f, 45f * side);
+            bars[i] = b.gameObject.AddComponent<Image>();
+            bars[i].color = color;
+            bars[i].raycastTarget = false;
+        }
+        return bars;
+    }
 }
 
 // ===================================================================== settings
@@ -785,7 +959,7 @@ public static class SettingsUI
     static Button resetButton;
     static float resetArmedAt = -99f;
     static Color resetLabelColor = Color.white;
-    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 10줄이라 48 · 화면 탭은 BuildDisplay 에서 52)
+    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 10줄이라 48 · 화면 탭은 BuildDisplay 에서 10줄 48 · 11줄 44)
 
     static float resetDoneAt = -99f;
     static bool ResetArmed => resetArmedAt > -99f;
@@ -833,7 +1007,7 @@ public static class SettingsUI
     {
         tab = t;
         DisarmReset();                                  // 다른 탭으로 옮기면 무장 해제
-        rowH = tab == 1 || tab == 4 ? 54f : 64f;          // 1.1.9~ 화면 · 접근성 탭만 9줄 (나머지는 75 간격 · 64 높이 · 화면 탭이 10줄이면 BuildDisplay 가 48 로)
+        rowH = tab == 1 || tab == 4 ? 54f : 64f;          // 1.1.9~ 화면 · 접근성 탭만 9줄 (나머지는 75 간격 · 64 높이 · 화면 탭은 BuildDisplay 가 줄 수에 맞춰 다시 정함)
         capturing = -1;
         blocked = -1;
         keyLabels.Clear();
@@ -935,101 +1109,79 @@ public static class SettingsUI
     }
 
     // ================================================================= 화면
-    // 1.1.9~ 화면 모드 · 모니터 · 해상도 · 최대 프레임 · UI 크기 · 안내 메시지 크기 · 수직 동기화 · 프레임 표시 · 화면 흔들림 · 번쩍임 효과
-    //   모니터가 둘 이상이면 10줄: 53 간격 · 높이 48 (y 238 ~ -239, 게임 탭 10줄 때와 같은 범위 — 탭 버튼 아래 · 「닫기」 위)
-    //   모니터가 하나면 「모니터」 줄을 빼고 9줄: 60 간격 · 높이 54 (RowsY9) — 줄 목록에 y 를 차례로 배정
+    // 1.1.9~ 화면 모드 · 모니터 · 해상도 · 최대 프레임 · 그래픽 품질 · UI 크기 · 안내 메시지 크기 · 수직 동기화 · 프레임 표시 · 화면 흔들림 · 번쩍임 효과
+    //   1.2.4~ 해상도 · 최대 프레임 · 그래픽 품질 · 모니터는 드롭다운 (DropdownAssist · 「이 탭 기본값으로」는 탭을 다시 그려 드롭다운 표시도 새 값으로)
+    //   모니터가 둘 이상이면 11줄: 50 간격 · 높이 44 (RowsY11) · 모니터가 하나면 10줄: 53 간격 · 높이 48 (RowsY10, 게임 탭 10줄과 같은 범위) — 줄 목록에 y 를 차례로 배정
     static void BuildDisplay()
     {
         List<DisplayInfo> monitors = GameSettings.Displays();
         List<System.Action<float>> rows = new List<System.Action<float>>();
-        TMP_Text res = null;
-        System.Action fpsRefresh = null;
-        rows.Add(y => DisplayModeRow(y, () => res));
+        rows.Add(DisplayModeRow);
         if (monitors.Count > 1) rows.Add(y => MonitorRow(y, monitors));
-        rows.Add(y => res = ResolutionRow(y));
-        rows.Add(y => fpsRefresh = FpsRow(y));          // 1.1.9 핫픽스의 최대 프레임 (MaxFpsIndex · 저장 키 settings.maxFps)
+        rows.Add(ResolutionRow);
+        // 1.2.4~ 최대 프레임 · 그래픽 품질은 드롭다운 · 수직 동기화가 켜져 있으면 최대 프레임은 흐리게 (모니터 주사율을 따름)
+        rows.Add(y =>
+        {
+            maxFpsDropdown = DropdownRow("최대 프레임", y, GameSettings.MaxFpsNames, () => GameSettings.MaxFpsIndex, v => GameSettings.MaxFpsIndex = v,
+                     "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
+            maxFpsDropdown.SetUsable(!GameSettings.VSync);
+        });
+        // 그래픽 품질: 낮음이면 꾸밈 효과만 줄임 (GraphicsQuality · 다음 이펙트부터 바로 적용)
+        rows.Add(y => graphicsDropdown = DropdownRow("그래픽 품질", y, GraphicsQuality.Names, () => GraphicsQuality.Index, v => GraphicsQuality.Index = v,
+                 "낮음으로 두면 잔상 · 불꽃 · 빛 번짐 같은 꾸밈 효과만 줄여 내장 그래픽에서도 부드럽게 움직입니다. 적 · 공격 · 경고 표시 · 피해 숫자는 그대로입니다."));
         rows.Add(y => CycleRow("UI 크기", y, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v));
         rows.Add(y => CycleRow("안내 메시지 크기", y, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
                  "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다."));
-        rows.Add(y => ToggleRow("수직 동기화", y, () => GameSettings.VSync, v => { GameSettings.VSync = v; fpsRefresh?.Invoke(); },
-                  "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다."));
+        rows.Add(y => ToggleRow("수직 동기화", y, () => GameSettings.VSync, v =>
+        {
+            GameSettings.VSync = v;
+            if (maxFpsDropdown != null) maxFpsDropdown.SetUsable(!v);
+        }, "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다."));
         rows.Add(y => ToggleRow("프레임 표시", y, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
                   "화면 오른쪽 위 구석에 초당 프레임 수(FPS)를 작게 표시합니다."));
         rows.Add(y => ToggleRow("화면 흔들림", y, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v));
         rows.Add(y => ToggleRow("번쩍임 효과", y, () => GameSettings.Flashes, v => GameSettings.Flashes = v));
-        float[] ys = rows.Count > RowsY9.Length ? RowsY10 : RowsY9;
-        rowH = rows.Count > RowsY9.Length ? 48f : 54f;
+        float[] ys = rows.Count > RowsY10.Length ? RowsY11 : RowsY10;
+        rowH = rows.Count > RowsY10.Length ? 44f : 48f;
         for (int i = 0; i < rows.Count; i++) rows[i](ys[i]);
     }
 
     static readonly float[] RowsY9 = { 235f, 175f, 115f, 55f, -5f, -65f, -125f, -185f, -245f };
     static readonly float[] RowsY10 = { 238f, 185f, 132f, 79f, 26f, -27f, -80f, -133f, -186f, -239f };
+    // 화면 탭 11줄 (모니터가 둘 이상): 50 간격 · 높이 44 — 윗변 266 (탭 버튼 아랫변 270 아래) · 아랫변 -278 (「닫기」 윗변 -296 위, 페이지 기준)
+    static readonly float[] RowsY11 = { 244f, 194f, 144f, 94f, 44f, -6f, -56f, -106f, -156f, -206f, -256f };
     static readonly float[] RowsY6 = { 200f, 125f, 50f, -25f, -100f, -175f, -250f };
 
     // 창이 있는 모니터 크기 (예전엔 Display.main = 주 모니터라 보조 모니터에서 전체 화면 해상도가 맞지 않았음)
     static Vector2Int Monitor => GameSettings.MonitorSize;
 
+    // 모니터: 드롭다운 (모니터 1 (1920×1080) …) — 고르면 창을 옮기고, 해상도 목록이 새 모니터 것으로 바뀌므로 창이 옮겨진 뒤 탭을 다시 그림
     static void MonitorRow(float y, List<DisplayInfo> monitors)
     {
         RowTip(RowLabel("모니터", y), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
-        TMP_Text label = null;
-        System.Action refresh = () =>
-        {
-            if (label == null) return;
-            int at = GameSettings.CurrentDisplayIndex(monitors);
-            if (at < 0) at = Mathf.Clamp(GameSettings.DisplayIndex, 0, monitors.Count - 1);
-            DisplayInfo d = monitors[at];
-            UIKit.Forget(label);
-            label.text = Loc.T("모니터 {0}").Replace("{0}", (at + 1).ToString()) + " (" + d.width + "×" + d.height + ")";
-        };
-        Button b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
+        string[] names = new string[monitors.Count];
+        for (int i = 0; i < monitors.Count; i++)
+            names[i] = Loc.T("모니터 {0}").Replace("{0}", (i + 1).ToString()) + " (" + monitors[i].width + "×" + monitors[i].height + ")";
+        // 항목 글자는 만들 때 번역해 둠 (언어는 일반 탭에서 바꾸므로 이 탭으로 돌아오면 다시 그려짐)
+        UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), names, false, () =>
         {
             int at = GameSettings.CurrentDisplayIndex(monitors);
-            if (at < 0) at = GameSettings.DisplayIndex;
-            GameSettings.DisplayIndex = (at + 1) % monitors.Count;
-            Deselect();
-            // 해상도 목록이 새 모니터 것으로 바뀌므로 창이 옮겨진 뒤 탭을 다시 그림
+            return at >= 0 ? at : Mathf.Clamp(GameSettings.DisplayIndex, 0, monitors.Count - 1);
+        }, i =>
+        {
+            if (i < 0 || i >= monitors.Count) return;
+            GameSettings.DisplayIndex = i;
             MenuToast.RunLater(() => { if (open != null && tab == 1) ShowTab(1); }, 0.4f);
-        }, 24f);
-        b.GetComponent<Image>().color = Gold;
-        label = b.GetComponentInChildren<TMP_Text>();
-        label.fontSizeMin = 14f;
-        refresh();
-        label.gameObject.AddComponent<LocRefresh>().refresh = refresh;
+        }, 22f, 7);
     }
 
-    // 최대 프레임: 수직 동기화가 켜져 있으면 「(수직 동기화 켜짐)」을 붙이고 흐리게 (눌리긴 함 — 끄면 바로 반영)
-    static System.Action FpsRow(float y)
-    {
-        RowTip(RowLabel("최대 프레임", y), "최대 프레임", "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
-        TMP_Text label = null;
-        Button b = null;
-        System.Action refresh = () =>
-        {
-            if (label == null || b == null) return;
-            UIKit.Forget(label);
-            bool vs = GameSettings.VSync;
-            label.text = Loc.T(GameSettings.MaxFpsNames[GameSettings.MaxFpsIndex]) + (vs ? " <size=70%><color=#A89C86>" + Loc.T("(수직 동기화 켜짐)") + "</color></size>" : "");
-            b.GetComponent<Image>().color = vs ? Off : Gold;
-        };
-        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
-        {
-            GameSettings.MaxFpsIndex = (GameSettings.MaxFpsIndex + 1) % GameSettings.MaxFpsValues.Length;
-            Deselect();
-            refresh();
-        }, 26f);
-        label = b.GetComponentInChildren<TMP_Text>();
-        label.fontSizeMin = 14f;
-        refresh();
-        label.gameObject.AddComponent<LocRefresh>().refresh = refresh;
-        return refresh;
-    }
-
-    static void DisplayModeRow(float y, System.Func<TMP_Text> resText)
+    static void DisplayModeRow(float y)
     {
         RowLabel("화면 모드", y);
         Button full = null, windowed = null;
         // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
+        chosenRes = new Vector2Int(Screen.width, Screen.height);
+        chosenMode = Screen.fullScreenMode;
         System.Action<bool> highlightMode = isFull =>
         {
             full.GetComponent<Image>().color = isFull ? Gold : Off;
@@ -1039,17 +1191,18 @@ public static class SettingsUI
         };
         full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, y), new Vector2(250f, rowH), () =>
         {
-            int w = Monitor.x, h = Monitor.y;
-            Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
-            TMP_Text res = resText();
-            if (res != null) res.text = w + " × " + h;
+            Vector2Int m = Monitor;
+            chosenRes = m;
+            chosenMode = FullScreenMode.FullScreenWindow;
+            Screen.SetResolution(m.x, m.y, chosenMode);
+            RefreshResolutions();
             Deselect();
             highlightMode(true);
         }, 26f);
         windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, y), new Vector2(250f, rowH), () =>
         {
             // 화면을 꽉 채우는 크기면 창 테두리가 화면 밖으로 나가므로 한 단계 작은 해상도로
-            Vector2Int r = new Vector2Int(Screen.width, Screen.height);
+            Vector2Int r = chosenRes;
             Vector2Int m = Monitor;
             if (r.x >= m.x || r.y >= m.y)
             {
@@ -1057,41 +1210,67 @@ public static class SettingsUI
                 for (int i = list.Count - 1; i >= 0; i--)
                     if (list[i].x < m.x && list[i].y < m.y) { r = list[i]; break; }
             }
-            Screen.SetResolution(r.x, r.y, FullScreenMode.Windowed);
-            TMP_Text res = resText();
-            if (res != null) res.text = r.x + " × " + r.y;
+            chosenRes = r;
+            chosenMode = FullScreenMode.Windowed;
+            Screen.SetResolution(r.x, r.y, chosenMode);
+            RefreshResolutions();
             Deselect();
             highlightMode(false);
         }, 26f);
-        highlightMode(Screen.fullScreenMode != FullScreenMode.Windowed);
+        highlightMode(chosenMode != FullScreenMode.Windowed);
     }
 
-    // 해상도: < 1920 × 1080 >
-    static TMP_Text ResolutionRow(float y)
+    // 해상도: 1.2.4~ < > 로 넘기던 것을 드롭다운으로 (창 모드는 모니터보다 작은 것만 · 지금 화면 모드 그대로 적용)
+    //   화면 모드 줄이 먼저 그려져 chosenRes · chosenMode 가 정해진 뒤에 부름
+    static void ResolutionRow(float y)
     {
         RowLabel("해상도", y);
-        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, y), new Vector2(320f, 50f));
-        res.text = Screen.width + " × " + Screen.height;
-        System.Action<int> step = d =>
-        {
-            List<Vector2Int> list = Resolutions();
-            // 1.1~ 창 모드에서는 모니터보다 작은 해상도만 (창 테두리 · 제목 표시줄이 화면 밖으로 나가지 않게, 「창 모드」 버튼과 같은 조건)
-            if (Screen.fullScreenMode == FullScreenMode.Windowed)
+        resOptions = ResolutionOptions();
+        resDropdown = UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), ResolutionNames(resOptions), false,
+            () => resOptions.IndexOf(chosenRes), i =>
             {
-                Vector2Int m = Monitor;
-                List<Vector2Int> fit = list.FindAll(v => v.x < m.x && v.y < m.y);
-                if (fit.Count > 0) list = fit;
-            }
-            int at = list.FindIndex(v => v.x == Screen.width && v.y == Screen.height);
-            if (at < 0) at = list.Count - 1;
-            at = Mathf.Clamp(at + d, 0, list.Count - 1);
-            Screen.SetResolution(list[at].x, list[at].y, Screen.fullScreenMode);
-            res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
-            Deselect();
-        };
-        UIKit.MakeButton(page, "<", new Vector2(-110f, y), new Vector2(80f, rowH), () => step(-1), 30f);
-        UIKit.MakeButton(page, ">", new Vector2(300f, y), new Vector2(80f, rowH), () => step(1), 30f);
-        return res;
+                if (i < 0 || i >= resOptions.Count) return;
+                chosenRes = resOptions[i];
+                Screen.SetResolution(chosenRes.x, chosenRes.y, chosenMode);       // 실제 적용은 다음 프레임
+            }, 26f, 7);
+    }
+
+    // 1.2.4~ 해상도 드롭다운: 고른 해상도 · 화면 모드 (SetResolution 이 다음 프레임에 적용돼 Screen 값 대신 이것으로 표시)
+    static Vector2Int chosenRes;
+    static FullScreenMode chosenMode;
+    static List<Vector2Int> resOptions = new List<Vector2Int>();
+    static DropdownAssist resDropdown, maxFpsDropdown, graphicsDropdown;
+
+    // 드롭다운에 넣을 해상도: 창 모드면 모니터보다 작은 것만 (창 테두리 · 제목 표시줄이 화면 밖으로 나가지 않게, 「창 모드」 버튼과 같은 조건) + 지금 고른 것
+    static List<Vector2Int> ResolutionOptions()
+    {
+        List<Vector2Int> list = Resolutions();
+        if (chosenMode == FullScreenMode.Windowed)
+        {
+            Vector2Int m = Monitor;
+            List<Vector2Int> fit = list.FindAll(v => v.x < m.x && v.y < m.y);
+            if (fit.Count > 0) list = fit;
+        }
+        if (!list.Contains(chosenRes))
+        {
+            list.Add(chosenRes);
+            list.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
+        }
+        return list;
+    }
+
+    static string[] ResolutionNames(List<Vector2Int> list)
+    {
+        string[] names = new string[list.Count];
+        for (int i = 0; i < list.Count; i++) names[i] = list[i].x + " × " + list[i].y;
+        return names;
+    }
+
+    // 화면 모드를 바꾸면 고를 수 있는 해상도도 바뀜
+    static void RefreshResolutions()
+    {
+        resOptions = ResolutionOptions();
+        if (resDropdown != null) resDropdown.SetOptions(ResolutionNames(resOptions), resOptions.IndexOf(chosenRes));
     }
 
     // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)
@@ -1191,6 +1370,13 @@ public static class SettingsUI
         TooltipTrigger t = label.gameObject.AddComponent<TooltipTrigger>();
         t.title = ko;
         t.body = tip;
+    }
+
+    // 1.2.4~ 펼쳐서 고르는 줄 (CycleRow 와 같은 자리 · 크기, 항목 글자는 Loc.T 로 번역)
+    static DropdownAssist DropdownRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
+    {
+        RowTip(RowLabel(ko, y), ko, tip);
+        return UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), names, true, get, set, 26f, 7);
     }
 
     // 누를 때마다 다음 값으로
@@ -1313,6 +1499,7 @@ public static class SettingsUI
         if (GameInput.EscDown)
         {
             EscHandledFrame = Time.frameCount;
+            if (DropdownAssist.HideOpen()) return;          // 1.2.4~ 펼친 드롭다운 목록만 닫음 (설정 창은 그대로)
             if (capturing >= 0) { capturing = -1; RefreshKeys(); }
             else Close();
             return;
@@ -1423,6 +1610,171 @@ public class LocRefresh : MonoBehaviour
     void OnEnable() => Loc.Changed += Run;
     void OnDisable() => Loc.Changed -= Run;
     void Run() => refresh?.Invoke();
+}
+// 1.2.4~ UIKit.MakeDropdown 이 드롭다운 루트에 붙임 (템플릿 밖이라 펼칠 때 복제되지 않음)
+//   옵션 글자 번역 · 언어가 바뀌면 다시 · 값 다시 읽기(Sync) · 흐리게(SetUsable)
+//   펼쳤을 때: 지금 값이 보이게 스크롤, 패드 · 키보드로 고른 항목이 가려지면 따라 스크롤 (패드는 한 칸 앞까지 미리 보여 십자키가 다음 항목에 붙게)
+//   닫히면 선택을 풀어 Space · Enter 가 다시 펼치지 않게 (설정 창 버튼들과 같은 규칙) · ESC · B 는 SettingsUI.Tick 이 HideOpen 으로 목록만 닫음
+public class DropdownAssist : MonoBehaviour
+{
+    static readonly List<DropdownAssist> live = new List<DropdownAssist>();
+    static readonly List<string> scratch = new List<string>();
+
+    public TMP_Dropdown Dropdown { get; private set; }
+    TMP_Text caption;
+    Image[] arrow;
+    float itemH;
+    string[] names;
+    bool translate;
+    System.Func<int> get;
+
+    bool wasOpen;
+    ScrollRect scroll;
+    RectTransform content, viewport;
+    Camera cam;
+    GameObject lastSel;
+
+    internal void Init(TMP_Dropdown dd, TMP_Text caption, Image[] arrow, float itemH, string[] names, bool translate, System.Func<int> get)
+    {
+        Dropdown = dd;
+        this.caption = caption;
+        this.arrow = arrow;
+        this.itemH = itemH;
+        this.translate = translate;
+        this.get = get;
+        SetOptions(names, get != null ? get() : 0);
+    }
+
+    void OnEnable() { live.Add(this); Loc.Changed += Relabel; }
+    void OnDisable() { live.Remove(this); Loc.Changed -= Relabel; }
+
+    // 펼친 목록이 있으면 닫고 true (ESC · B 가 설정 창까지 닫지 않게)
+    public static bool HideOpen()
+    {
+        bool any = false;
+        for (int i = 0; i < live.Count; i++)
+        {
+            TMP_Dropdown d = live[i] != null ? live[i].Dropdown : null;
+            if (d == null || !d.IsExpanded) continue;
+            d.Hide();
+            any = true;
+        }
+        return any;
+    }
+
+    // 항목을 바꿈 (해상도 목록처럼 상황에 따라 달라질 때) · 알림 없이 value 만 맞춤
+    public void SetOptions(string[] names, int value)
+    {
+        this.names = names;
+        if (Dropdown == null || names == null) return;
+        if (Dropdown.IsExpanded) Dropdown.Hide();
+        scratch.Clear();
+        for (int i = 0; i < names.Length; i++) scratch.Add(translate ? Loc.T(names[i]) : names[i]);
+        Dropdown.ClearOptions();
+        Dropdown.AddOptions(scratch);
+        scratch.Clear();
+        Dropdown.SetValueWithoutNotify(Mathf.Clamp(value, 0, Mathf.Max(0, names.Length - 1)));
+        Dropdown.RefreshShownValue();
+    }
+
+    // 설정 값이 밖에서 바뀌었을 때 (기본값 되돌리기 등) 표시를 다시 맞춤
+    public void Sync()
+    {
+        if (Dropdown == null || get == null || names == null) return;
+        Dropdown.SetValueWithoutNotify(Mathf.Clamp(get(), 0, Mathf.Max(0, names.Length - 1)));
+        Dropdown.RefreshShownValue();
+    }
+
+    // 누를 수 없게 흐리게 (수직 동기화가 켜지면 최대 프레임)
+    public void SetUsable(bool on)
+    {
+        if (Dropdown == null) return;
+        if (!on && Dropdown.IsExpanded) Dropdown.Hide();
+        Dropdown.interactable = on;
+        float a = on ? 1f : 0.4f;
+        if (caption != null) caption.alpha = a;
+        if (arrow != null)
+            for (int i = 0; i < arrow.Length; i++)
+                if (arrow[i] != null) { Color c = arrow[i].color; c.a = a; arrow[i].color = c; }
+    }
+
+    void Relabel()
+    {
+        if (!translate || Dropdown == null) return;
+        SetOptions(names, Dropdown.value);
+    }
+
+    static GameObject Selected()
+    {
+        UnityEngine.EventSystems.EventSystem es = UnityEngine.EventSystems.EventSystem.current;
+        return es != null ? es.currentSelectedGameObject : null;
+    }
+
+    void Update()
+    {
+        if (Dropdown == null) return;
+        if (!Dropdown.IsExpanded)
+        {
+            if (!wasOpen) return;
+            wasOpen = false;
+            scroll = null;
+            content = viewport = null;
+            lastSel = null;
+            if (Selected() == gameObject) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+            return;
+        }
+        if (!wasOpen || scroll == null)
+        {
+            wasOpen = true;
+            Transform list = transform.Find("Dropdown List");      // TMP_Dropdown 이 템플릿을 복제해 이 이름으로 루트 밑에 둠
+            scroll = list != null ? list.GetComponent<ScrollRect>() : null;
+            if (scroll == null) return;
+            content = scroll.content;
+            viewport = scroll.viewport;
+            Canvas c = GetComponentInParent<Canvas>();
+            Canvas root = c != null ? c.rootCanvas : null;
+            cam = root != null && root.renderMode != RenderMode.ScreenSpaceOverlay ? root.worldCamera : null;
+            // 항목에 버튼 소리를 바로 붙임 (UISound 가 0.25초마다 찾아 붙이기 전에도 올림 · 누름 소리 · 템플릿이 아니라 복제된 항목에)
+            for (int i = 0; i < content.childCount; i++)
+            {
+                Transform t = content.GetChild(i);
+                if (t.gameObject.activeSelf && !t.TryGetComponent(out UISoundHook _)) t.gameObject.AddComponent<UISoundHook>();
+            }
+            // 펼치자마자 지금 값을 가운데쯤 (해상도처럼 항목이 많으면 지금 값이 아래에 가려져 있었음)
+            Reveal(Dropdown.value, 0f, true);
+            lastSel = Selected();
+            if (GamePad.Active && lastSel != null && lastSel.transform.parent == content) GamePad.WarpTo((RectTransform)lastSel.transform);
+            return;
+        }
+        GameObject sel = Selected();
+        if (sel == lastSel) return;
+        lastSel = sel;
+        if (sel == null || sel.transform.parent != content) return;
+        RectTransform item = (RectTransform)sel.transform;
+        bool pad = GamePad.Active;
+        // 마우스를 올려 고른 것은 그대로 (따라 스크롤하면 마우스 밑 항목이 바뀌며 계속 내려감)
+        if (!pad && RectTransformUtility.RectangleContainsScreenPoint(item, Input.mousePosition, cam)) return;
+        if (Reveal(item.GetSiblingIndex() - 1, pad ? itemH : 0f, false) && pad) GamePad.WarpTo(item);     // 커서도 그 항목을 따라감
+    }
+
+    // i 번째 항목(위에서부터)이 보이게 목록을 옮김 · margin 만큼 앞뒤 항목도 · 옮겼으면 true
+    bool Reveal(int i, float margin, bool center)
+    {
+        if (content == null || viewport == null || i < 0) return false;
+        float vh = viewport.rect.height;
+        float max = Mathf.Max(0f, content.rect.height - vh);
+        float top = i * itemH, bottom = top + itemH;
+        Vector2 p = content.anchoredPosition;
+        float want = p.y;
+        if (center) want = top - (vh - itemH) * 0.5f;
+        else if (top - margin < p.y) want = top - margin;
+        else if (bottom + margin > p.y + vh) want = bottom + margin - vh;
+        want = Mathf.Clamp(want, 0f, max);
+        if (Mathf.Abs(want - p.y) < 0.5f) return false;
+        content.anchoredPosition = new Vector2(p.x, want);
+        scroll.velocity = Vector2.zero;
+        return true;
+    }
 }
 
 // 1.0.4~: 처음 켰을 때 한 번 언어 고르기 (스팀 → OS 언어로 미리 골라 둔 것을 강조, 언어 이름은 그 언어 글꼴로)

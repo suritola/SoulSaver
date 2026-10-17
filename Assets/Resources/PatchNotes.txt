@@ -1,4 +1,4 @@
-# 1.2.0 업데이트 — 한 판 더!
+# 1.2.5 업데이트 — 한 판 더!
 
 - **영혼 계약**: 판마다 목표 3개가 주어지고, 이루면 바로 포인트를 받습니다. 메인 메뉴의 계약 보드 45칸을 채우면 새 유물 9종과 칭호가 열립니다.
 - **망자의 전령 · 기억 조각**: 쓰러지면 상황에 맞는 한마디가 들려옵니다. 영웅마다 기억 조각 6장을 모아 도감 「기억」 탭에서 읽을 수 있습니다.
@@ -18,9 +18,10 @@
 - **무한 모드 클리어 보너스**: 1,500P → **5,000P**
 - **영혼의 무게 포인트**: 무게마다 +5% → **+8%**
 - **영혼 정련 비용 (이야기 모드)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
+- **도적 진화 「환영 연막」**: 연막 안에서 적의 공격이 40% 확률로 빗나감 → 연막 안에서 **받는 피해 90% 감소** (늘 같은 효과)
 
 === en
-# 1.2.0 Update — One More Run!
+# 1.2.5 Update — One More Run!
 
 - **Soul Contracts**: Every run gives you three goals, and you earn points as soon as you complete them. Fill the 45-slot Contract Board in the main menu to unlock 9 new relics and titles.
 - **Herald of the Dead · Memory Shards**: When you fall, you hear a line that fits the moment. Collect 6 Memory Shards per hero and read them in the new Codex "Memories" tab.
@@ -28,7 +29,7 @@
 - **Endless milestones**: Earn points the first time you pass 5, 10, 15, or 20 minutes and more. Milestones you already passed can be claimed from "Claim" in the main menu.
 - **Daily Challenge rewards**: 5, 10, and 15-minute rewards, login streak and completion rewards, and 14 rule sets instead of 7.
 - **Quality of life**: Hover over icons while paused to read their details. Also added a detailed build view, a run history window, a loading screen, Codex search, and Copy Results.
-- **Settings**: New Accessibility and Display tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, Combat Stats, and monitor selection.
+- **Settings**: New Accessibility and HUD tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, Combat Stats, and monitor selection.
 - The game now pauses automatically when you open the Steam overlay or a gamepad disconnects. The cursor stays inside the window during combat.
 - All in-game descriptions have been rewritten to be easier to read.
 
@@ -40,9 +41,10 @@
 - **Endless clear bonus**: 1,500P → **5,000P**
 - **Soul Weight points**: +5% per weight → **+8%**
 - **Soul Refining cost (Story Mode)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
+- **Rogue evolution "Phantom Smoke"**: enemy attacks had a 40% chance to miss inside the smoke → **damage taken reduced by 90%** inside the smoke (always active)
 
 === ja
-# 1.2.0 アップデート — もう一回！
+# 1.2.5 アップデート — もう一回！
 
 - **魂の契約**: 毎回のプレイで目標が3つ与えられ、達成するとすぐにポイントを獲得します。メインメニューの契約ボード45マスを埋めると、新しい遺物9種と称号が解放されます。
 - **亡者の伝令・記憶のかけら**: 倒れると、状況に合ったひと言が聞こえます。英雄ごとに記憶のかけらを6枚集め、図鑑の「記憶」タブで読めます。
@@ -62,9 +64,10 @@
 - **エンドレスのクリアボーナス**: 1,500P → **5,000P**
 - **魂の重みのポイント**: 重み1ごとに+5% → **+8%**
 - **魂の精錬の費用（ストーリーモード）**: 40・200・1,000・5,000 → **60・180・540・1,620・4,860**
+- **盗賊の進化「幻影の煙幕」**: 煙幕の中で敵の攻撃が40%の確率で外れる → 煙幕の中で**受けるダメージ90%減少**（常に同じ効果）
 
 === zh
-# 1.2.0 更新 — 再来一局！
+# 1.2.5 更新 — 再来一局！
 
 - **灵魂契约**: 每局都会给出3个目标，达成后立即获得点数。填满主菜单中45格的契约面板，即可解锁9种新遗物与称号。
 - **亡者信使 · 记忆碎片**: 倒下时会听到一句符合当时情况的话。每位英雄可收集6块记忆碎片，并在图鉴的「记忆」页阅读。
@@ -84,3 +87,4 @@
 - **无尽模式通关奖励**: 1,500P → **5,000P**
 - **灵魂之重点数**: 每重+5% → **+8%**
 - **灵魂精炼费用（故事模式）**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
+- **盗贼进化「幻影烟幕」**: 烟幕中敌人的攻击有40%概率落空 → 烟幕中**受到的伤害降低90%**（效果始终不变）

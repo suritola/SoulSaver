@@ -28,6 +28,18 @@ public partial class BossSkills
     int devRunning;
     float devBannerAt, devFxAt;
 
+    // 1.1.9~ 예고(경고 원 · 선 · Windup · 판정 전 대기)를 짧게: 개발자 ×0.6 · 엄마 ×0.5 (엄마가 더 빠름)
+    //   경고 표시 시간과 판정 시각은 같은 값에서 나오므로 계속 맞음 · 한 번의 경고는 최소 DevTeleFloor 초는 보임
+    //   개발자 · 엄마가 아니면 ×1 (거울의 군주 흉내 Ult* 는 이 배율을 쓰지 않음)
+    const float DevTeleMulDev = 0.6f, DevTeleMulMom = 0.5f, DevTeleFloor = 0.35f;
+    float DevTeleMul => boss == null || !boss.developer ? 1f : boss.developerMom ? DevTeleMulMom : DevTeleMulDev;
+    // 경고 한 번의 전체 길이 (바닥 DevTeleFloor, 원래 그보다 짧던 값은 그대로)
+    float DevTele(float seconds)
+    {
+        float k = DevTeleMul;
+        return k >= 1f ? seconds : Mathf.Max(Mathf.Min(seconds, DevTeleFloor), seconds * k);
+    }
+
     void DeveloperTurn(PlayerController p)
     {
         if (Time.time < next || devRunning >= DevMaxRunning) return;
@@ -66,7 +78,7 @@ public partial class BossSkills
             Fx.Spawn("fx_soulburst", transform.position, 11f, Dev, 16f);
             Hostile.Play("shimmer", 0.7f, 0.55f);
         }
-        yield return Windup(Dev, 0.6f);
+        yield return Windup(Dev, DevTele(0.6f));
         if (!Alive) yield break;
         DevCastFlair(who);         // 1.0.4~ 플레이어 필살기와 같은 시전 연출 (그 영웅 색)
         // 1.0.4~ 영웅 필살기는 플레이어가 쓸 때와 같은 이펙트 · 소리 · 화면 연출 (BossSkills.DeveloperFx.cs)
@@ -264,7 +276,7 @@ public partial class BossSkills
         }
     }
 
-    // 플레이어 둘레에 작은 폭발이 차례로 (경고 0.9초)
+    // 플레이어 둘레에 작은 폭발이 차례로 (경고 0.9초 × DevTeleMul)
     IEnumerator DevFireworks(int count)
     {
         for (int i = 0; i < count && Alive; i++)
@@ -279,8 +291,9 @@ public partial class BossSkills
 
     IEnumerator DevPop(Vector3 at, float r)
     {
-        Hostile.Circle(at, r, 0.9f, Dev);
-        yield return new WaitForSeconds(0.9f);
+        float warn = DevTele(0.9f);
+        Hostile.Circle(at, r, warn, Dev);
+        yield return new WaitForSeconds(warn);
         if (!Alive) yield break;
         Fx.Spawn("fx_explosion", at, r * 2.2f, Dev, 20f);
         UltHit(UltInCircle(at, r));

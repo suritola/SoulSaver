@@ -10,7 +10,10 @@ public class PickupGlow : MonoBehaviour
     public float size = 1.1f;          // 빛 무리 지름 (칸)
 
     GameObject halo;
+    Transform haloTr;
+    SpriteRenderer haloSr;
     float phase;
+    Vector3 shownScale;
 
     public static void Add(GameObject go, Color color, float size)
     {
@@ -25,7 +28,7 @@ public class PickupGlow : MonoBehaviour
     {
         color = c;
         size = s;
-        if (halo != null && halo.TryGetComponent(out SpriteRenderer hr)) hr.color = new Color(c.r, c.g, c.b, 0.6f);
+        if (haloSr != null) haloSr.color = new Color(c.r, c.g, c.b, 0.6f);
     }
 
     void Start()
@@ -38,16 +41,38 @@ public class PickupGlow : MonoBehaviour
         }
         phase = Random.value * 6f;
         if (SpecialAbilities.GlowSprite != null)
+        {
             halo = SpecialAbilities.MakeSprite("PickupHalo", SpecialAbilities.GlowSprite, transform.position, size / 8f,
                                                new Color(color.r, color.g, color.b, 0.6f), "Effect", Order);
+            // 최적화: 빛 무리를 코인의 자식으로 — 매 프레임 위치를 따라 쓰지 않음 (그리는 층 · 순서는 그대로 지정돼 있음)
+            //   크기는 부모(코인 단계별 크기) 를 나눠 월드 크기가 예전과 같게
+            haloTr = halo.transform;
+            haloSr = halo.GetComponent<SpriteRenderer>();
+            haloTr.SetParent(transform, true);
+            haloTr.localPosition = Vector3.zero;
+            haloTr.localRotation = Quaternion.identity;
+            shownScale = Vector3.zero;
+            ApplyScale(1f);
+        }
     }
+
+    void ApplyScale(float pulse)
+    {
+        Vector3 ls = transform.lossyScale;
+        float w = size / 8f * pulse;
+        Vector3 want = new Vector3(Div(w, ls.x), Div(w, ls.y), Div(w, ls.z));
+        if (want != shownScale) { shownScale = want; haloTr.localScale = want; }
+    }
+
+    static float Div(float w, float s) => Mathf.Abs(s) > 1e-5f ? w / Mathf.Abs(s) : w;
 
     void LateUpdate()
     {
         if (halo == null) return;
-        float pulse = 1f + 0.18f * Mathf.Sin(Time.time * 6f + phase) * GameSettings.Motion;     // 1.1.9~ 「움직임 줄이기」
-        halo.transform.position = transform.position;
-        halo.transform.localScale = Vector3.one * (size / 8f) * pulse;
+        // 그래픽 품질 낮음(L7): 맥동 없이 고정 크기 (바뀔 때만 씀) · 1.1.9~ 「움직임 줄이기」도 맥동 없음
+        if (GraphicsQuality.Low || GameSettings.Motion <= 0f) { ApplyScale(1f); return; }
+        if (haloSr != null && !haloSr.isVisible) return;       // 화면 밖이면 맥동을 계산하지 않음 (보이지 않음)
+        ApplyScale(1f + 0.18f * Mathf.Sin(Time.time * 6f + phase) * GameSettings.Motion);
     }
 
     void OnDisable() { if (halo != null) halo.SetActive(false); }

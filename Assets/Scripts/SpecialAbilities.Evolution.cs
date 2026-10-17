@@ -750,9 +750,46 @@ public partial class SpecialAbilities
     public void OnEvolvedTier1() { }
 
     // 살 수 있는 칸이 있는지 (버튼 반짝임)
+    // 1.2.3~ 최적화: 2초마다 트리 전체(칸 ~100개 · 클로저 · 번역 글)를 새로 만들던 것을, 트리 모양을 바꿀 수 있는 상태가 같으면 지난 트리로 검사
+    //   (배운 칸 · 진화 · 무기/형태 · 능력 수 · 정련 · 언어 · 영웅) — 그래도 20초가 지나면 새로 만듦. 판정(CanBuy)은 지금 값 그대로
+    List<SoulNode> affordTree;
+    int affordKey;
+    float affordBuiltAt;
+
+    int AffordKey()
+    {
+        unchecked
+        {
+            int h = 17;
+            h = h * 31 + ownedNodes.Count;
+            h = h * 31 + gunEvo1;
+            h = h * 31 + gunEvo2;
+            h = h * 31 + UltId;
+            h = h * 31 + equipped.Count;
+            h = h * 31 + evolved.Count;
+            h = h * 31 + weapons.Count;
+            h = h * 31 + skills.Count;
+            h = h * 31 + relics.Count;
+            h = h * 31 + weaponHistory.Count;
+            h = h * 31 + historyTier.Count;
+            h = h * 31 + Refines;
+            h = h * 31 + (int)Loc.Current;
+            h = h * 31 + (int)CharacterData.Selected;
+            h = h * 31 + (Kit != null ? Kit.form : -9);
+            return h;
+        }
+    }
+
     public bool AnyAffordable()
     {
-        foreach (SoulNode n in BuildSoulTree()) if (CanBuy(n)) return true;
+        int key = AffordKey();
+        if (affordTree == null || key != affordKey || Time.time - affordBuiltAt > 20f || Time.time < affordBuiltAt)
+        {
+            affordTree = BuildSoulTree();
+            affordKey = key;
+            affordBuiltAt = Time.time;
+        }
+        for (int i = 0; i < affordTree.Count; i++) if (CanBuy(affordTree[i])) return true;
         return false;
     }
 

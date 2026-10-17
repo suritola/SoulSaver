@@ -28,7 +28,7 @@ Shader "SoulSaver/SpriteOutline"
         Pass
         {
             CGPROGRAM
-            #pragma vertex SpriteVert
+            #pragma vertex Vert
             #pragma fragment Frag
             #pragma target 2.0
             #pragma multi_compile_instancing
@@ -41,7 +41,32 @@ Shader "SoulSaver/SpriteOutline"
             float _Saturation, _Brightness, _EmptyAlpha;
             float _Flash;
 
-            fixed4 Frag (v2f IN) : SV_Target
+            // 1.2.4: 옆 칸 4개의 좌표를 정점에서 미리 계산 (픽셀마다 좌표 계산 뒤 읽던 종속 텍스처 읽기 → 바로 읽기 · 같은 칸을 읽으므로 결과 같음)
+            struct v2fOutline
+            {
+                float4 vertex   : SV_POSITION;
+                fixed4 color    : COLOR;
+                float2 texcoord : TEXCOORD0;
+                float4 nearX    : TEXCOORD1;     // xy = 오른쪽 칸, zw = 왼쪽 칸
+                float4 nearY    : TEXCOORD2;     // xy = 위 칸, zw = 아래 칸
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            v2fOutline Vert (appdata_t IN)
+            {
+                v2f b = SpriteVert(IN);         // Sprites/Default 와 같은 정점 처리 (반전 · 색 · 픽셀 스냅)
+                v2fOutline o;
+                o.vertex = b.vertex;
+                o.color = b.color;
+                o.texcoord = b.texcoord;
+                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(b, o);
+                float2 t = _MainTex_TexelSize.xy;
+                o.nearX = float4(b.texcoord + float2(t.x, 0), b.texcoord - float2(t.x, 0));
+                o.nearY = float4(b.texcoord + float2(0, t.y), b.texcoord - float2(0, t.y));
+                return o;
+            }
+
+            fixed4 Frag (v2fOutline IN) : SV_Target
             {
                 // 판정은 그림 자체의 알파로 (무적 깜빡임처럼 반투명해져도 몸이 윤곽선 색으로 바뀌지 않게)
                 fixed4 tex = SampleSpriteTexture(IN.texcoord);
@@ -49,9 +74,8 @@ Shader "SoulSaver/SpriteOutline"
                 // 빈칸 판정: 캐릭터는 0.5, 이펙트는 0.05 (반투명한 빛 번짐이 검은 테두리로 바뀌지 않게)
                 if (tex.a < _EmptyAlpha)
                 {
-                    float2 t = _MainTex_TexelSize.xy;
-                    float a = max(max(SampleSpriteTexture(IN.texcoord + float2(t.x, 0)).a, SampleSpriteTexture(IN.texcoord - float2(t.x, 0)).a),
-                                  max(SampleSpriteTexture(IN.texcoord + float2(0, t.y)).a, SampleSpriteTexture(IN.texcoord - float2(0, t.y)).a));
+                    float a = max(max(SampleSpriteTexture(IN.nearX.xy).a, SampleSpriteTexture(IN.nearX.zw).a),
+                                  max(SampleSpriteTexture(IN.nearY.xy).a, SampleSpriteTexture(IN.nearY.zw).a));
                     if (a > 0.5)
                     {
                         fixed4 o = _OutlineColor;

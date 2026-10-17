@@ -38,14 +38,28 @@ public static class Fx
     }
     public static TierScope Tier(int tier) => new TierScope(tier);
 
+    // 최적화: 이름 · 단계마다 고른 시트를 기억 (예전엔 부를 때마다 name + "_t" + t 문자열 2개를 만들었음 · 초당 수백 번)
+    //   단계마다 처음 필요할 때만 찾음 (쓰지 않는 _t2 · _t3 시트를 미리 불러오지 않음). 고르는 규칙은 같음: _t3 → _t2 → 기본
+    static readonly Dictionary<string, Sprite[][]> tiered = new Dictionary<string, Sprite[][]>();
     static Sprite[] TieredFrames(string name)
     {
-        for (int t = TierOf(DamageSource.Current); t > 1; t--)
+        int tier = Mathf.Clamp(TierOf(DamageSource.Current), 1, 3);
+        if (!tiered.TryGetValue(name, out Sprite[][] byTier)) tiered[name] = byTier = new Sprite[4][];
+        return TierSheet(name, byTier, tier);
+    }
+
+    static Sprite[] TierSheet(string name, Sprite[][] byTier, int tier)
+    {
+        if (byTier[tier] != null) return byTier[tier];
+        Sprite[] f;
+        if (tier <= 1) f = Frames(name);
+        else
         {
-            Sprite[] f = Frames(name + "_t" + t);
-            if (f != null && f.Length > 0) return f;
+            f = Frames(name + "_t" + tier);
+            if (f == null || f.Length == 0) f = TierSheet(name, byTier, tier - 1);
         }
-        return Frames(name);
+        byTier[tier] = f;
+        return f;
     }
 
     // 정렬 층 이름 → 번호 (이펙트마다 이름으로 찾지 않게 한 번만)
@@ -93,6 +107,7 @@ public static class Fx
     static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
     {
         if (Hostile.Glow == null || size < 1.2f) return;
+        if (GraphicsQuality.Low) return;   // 그래픽 품질 낮음(L2): 빛 번짐 생략
         bool evo = forcedTier >= 3;        // 1.1.2~ 진화한 고유 스킬: 빛 번짐도 더 크고 길게
         FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * (evo ? 2.2f : 1.7f) / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), evo ? 0.85f : 0.7f)), layer, order - 1, evo ? 0.55f : 0.38f);     // 1.0.2: 더 크고 진하게
     }
@@ -100,7 +115,42 @@ public static class Fx
     static void Style(SpriteRenderer sr)
     {
         Material m = SpriteOutline.EffectMaterial;
+        if (GraphicsQuality.Low)
+        {
+            // 그래픽 품질 낮음(L3): 이펙트는 기본 스프라이트 재질 (윤곽선 셰이더의 픽셀당 여러 번 읽기를 줄임 · 적 · 플레이어 윤곽선은 그대로)
+            //   새 SpriteRenderer 는 이미 기본 재질 · 높음에서 쓰던 것을 다시 쓰면 기본으로 되돌림
+            if (m != null && sr.sharedMaterial == m) sr.sharedMaterial = SpriteDefault;
+            return;
+        }
         if (m != null) sr.sharedMaterial = m;
+    }
+
+    static Material spriteDefault;
+    static Material SpriteDefault
+    {
+        get
+        {
+            if (spriteDefault == null)
+            {
+                GameObject tmp = new GameObject("FxDefaultMat");
+                spriteDefault = tmp.AddComponent<SpriteRenderer>().sharedMaterial;
+                Object.Destroy(tmp);
+            }
+            return spriteDefault;
+        }
+    }
+
+    // 그래픽 품질 낮음(L4): 꾸밈 이펙트(불꽃 튐 · 반짝임 · 핏방울 · 연기)는 0.05초에 12개까지 (넘치면 생략, 처치 연출 상한과 같은 방식)
+    static readonly HashSet<string> DecorFx = new HashSet<string> { "fx_spark", "fx_sparkle", "fx_bleed", "fx_smoke" };
+    static float decorWindow = -1f;
+    static int decorCount;
+    static bool DecorBudgetFull(string name)
+    {
+        if (!GraphicsQuality.Low || !DecorFx.Contains(name)) return false;
+        if (Time.time - decorWindow >= 0.05f || Time.time < decorWindow) { decorWindow = Time.time; decorCount = 0; }
+        if (decorCount >= 12) return true;
+        decorCount++;
+        return false;
     }
 
     static int Index(string spriteName)
@@ -153,6 +203,7 @@ public static class Fx
     public static void Spawn(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
     {
+        if (DecorBudgetFull(name)) return;
         Sprite[] frames = TieredFrames(name);
         if (frames == null || frames.Length == 0) return;
 
@@ -245,8 +296,76 @@ public static class Fx
     }
 }
 
+// 최적화: 수천 개가 동시에 뜨는 이펙트(FxAnim · FadeSprite · FlameParticle)가 저마다 Update 를 받던 것을
+//   FxRunner 하나의 Update 가 차례로 Tick 을 부르게 바꿈 (계산 · 순서 규칙은 그대로 · 켜진 동안만 목록에 있음)
+public abstract class FxTicked : MonoBehaviour
+{
+    internal int tickIndex = -1;
+    internal int tickedFrame = -1;
+    internal abstract void Tick();
+
+    protected virtual void OnEnable() => FxRunner.Add(this);
+    protected virtual void OnDisable() => FxRunner.Remove(this);
+}
+
+public sealed class FxRunner : MonoBehaviour
+{
+    static FxRunner instance;
+    static readonly List<FxTicked> live = new List<FxTicked>(512);
+
+    internal static void Add(FxTicked x)
+    {
+        if (x.tickIndex >= 0) return;
+        if (instance == null)
+        {
+            GameObject go = new GameObject("FxRunner");
+            DontDestroyOnLoad(go);
+            instance = go.AddComponent<FxRunner>();
+        }
+        x.tickIndex = live.Count;
+        x.tickedFrame = Time.frameCount;        // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 Tick 하지 않음
+        live.Add(x);
+    }
+
+    internal static void Remove(FxTicked x)
+    {
+        int i = x.tickIndex;
+        if (i < 0) return;
+        x.tickIndex = -1;
+        if (i >= live.Count || !ReferenceEquals(live[i], x)) return;
+        RemoveAt(i);
+    }
+
+    static void RemoveAt(int i)
+    {
+        int last = live.Count - 1;
+        if (i != last)
+        {
+            FxTicked moved = live[last];
+            live[i] = moved;
+            if (!ReferenceEquals(moved, null)) moved.tickIndex = i;
+        }
+        live.RemoveAt(last);
+    }
+
+    void Update()
+    {
+        int frame = Time.frameCount;
+        // 뒤에서부터: Tick 안에서 꺼지면(풀로 돌아감) 맨 끝 것이 그 자리로 옴 — 이미 돈 것이라 tickedFrame 으로 두 번 돌지 않음
+        for (int i = live.Count - 1; i >= 0; i--)
+        {
+            if (i >= live.Count) continue;
+            FxTicked x = live[i];
+            if (x == null) { RemoveAt(i); continue; }       // 꺼짐 알림 없이 사라진 것 (안전장치)
+            if (x.tickedFrame == frame) continue;
+            x.tickedFrame = frame;
+            x.Tick();
+        }
+    }
+}
+
 // 프레임 애니메이션: 한 번 재생 후 사라지거나(loop = false), life 동안 반복
-public class FxAnim : MonoBehaviour
+public class FxAnim : FxTicked
 {
     public Sprite[] frames;
     public float fps = 16f;
@@ -280,7 +399,7 @@ public class FxAnim : MonoBehaviour
         Fx.pool.Push(this);
     }
 
-    void Update()
+    internal override void Tick()
     {
         // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
         if (Time.frameCount == spawnFrame) return;
@@ -297,7 +416,8 @@ public class FxAnim : MonoBehaviour
             if (!loop) { Finish(); return; }
             i %= frames.Length;
         }
-        sr.sprite = frames[i];
+        Sprite want = frames[i];
+        if (!ReferenceEquals(sr.sprite, want)) sr.sprite = want;      // 최적화: 같은 그림이면 다시 쓰지 않음
         if (spin != 0f) transform.Rotate(0f, 0f, spin * Time.deltaTime);
         if (follow != null) transform.position = follow.position;
 

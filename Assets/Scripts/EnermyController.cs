@@ -85,7 +85,11 @@ public class EnermyController : MonoBehaviour
     private EnemyHitbox hitbox;
     // 살아 있는 적의 콜라이더 → 적 (밀어내기 계산용)
     static readonly System.Collections.Generic.Dictionary<Collider2D, EnermyController> byCollider = new System.Collections.Generic.Dictionary<Collider2D, EnermyController>();
-    private static readonly Collider2D[] nearby = new Collider2D[24];
+    // 48칸: 뭉친 무리에서도 이웃 적을 놓치지 않게 (예전 24칸은 탄 · 코인으로 차서 밀어내기가 빠지기도 했음)
+    private static readonly Collider2D[] nearby = new Collider2D[48];
+    static int EnemyLayer = -2;
+    // 밀어내기 검색: 적 층만 (층이 없으면 플레이어 탄 층만 뺌) · 트리거 포함
+    static ContactFilter2D separationFilter = new ContactFilter2D { useTriggers = true, useLayerMask = true, layerMask = ~0 };
     // 1.1.9~ 콜라이더로 적 찾기 (멈춘 동안 적 위에 마우스 → 설명, PauseInspect)
     public static EnermyController FromCollider(Collider2D c)
     {
@@ -98,6 +102,9 @@ public class EnermyController : MonoBehaviour
     [HideInInspector] public bool difficultyApplied;
     // 보스가 나오기 전에 생긴 적 (처치 수로 보스를 부름): 처치 수가 늘어난 만큼 보상 · 영혼 조각을 나눔
     [HideInInspector] public bool countsTowardBoss;
+    // 1.2.3~ 처치 포인트 배율 (무한 모드 개발자 · 엄마전 약한 잡몹 0.25 · 경험치 · 처치 수 · 영혼 조각은 그대로)
+    [System.NonSerialized] public float pointMul = 1f;
+    [System.NonSerialized] public bool finalMob;           // 1.2.3~ 규칙 E 잡몹 (EnemySpawner.finalMobs 로 따로 셈)
     // 1.1~ 영혼 부스러기 무리 (SwarmWave): 있으면 이동 · 몸통 닿기 · 죽은 뒤 처리를 부스러기가 맡음 (체력바 없음 · 한 화면 최대 수 · 보스까지 처치 수와 따로 셈)
     [HideInInspector] public SwarmMote swarm;
 
@@ -106,6 +113,14 @@ public class EnermyController : MonoBehaviour
     {
         CircleCollider2D c = GetComponent<CircleCollider2D>();
         if (c != null) byCollider[c] = this;
+        // 적 전용 층 (밀어내기 검색이 적만 보게 · 코인 · 회복약과의 접촉은 충돌 행렬에서 끔) — 프리팹 · 코드로 만든 적 모두
+        if (EnemyLayer == -2)
+        {
+            EnemyLayer = LayerMask.NameToLayer("Enemy");
+            int shot = LayerMask.NameToLayer("PlayerShot");
+            separationFilter.SetLayerMask(EnemyLayer >= 0 ? 1 << EnemyLayer : shot >= 0 ? ~(1 << shot) : ~0);
+        }
+        if (EnemyLayer >= 0 && gameObject.layer == 0) gameObject.layer = EnemyLayer;
         // 생긴 프레임에 맞아도 색 바꾸기 · 피해 숫자가 깨지지 않게 미리
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -122,6 +137,7 @@ public class EnermyController : MonoBehaviour
     void Start()
     {
         SpriteOutline.Enemy(gameObject);        // 1.8.7 짙은 윤곽선 (배경과 분리)
+        midBoss = -1;                           // 스폰 직후 붙은 중간 보스 표식 · 황금 고블린을 다시 봄
         if (!difficultyApplied)
         {
             difficultyApplied = true;
@@ -190,8 +206,8 @@ public class EnermyController : MonoBehaviour
         move = move.normalized;
 
         // 좌우 방향 변경
-        if (move.x < 0) spriteRenderer.flipX = true;
-        else if (move.x > 0) spriteRenderer.flipX = false;
+        if (move.x < 0) { if (!spriteRenderer.flipX) spriteRenderer.flipX = true; }
+        else if (move.x > 0) { if (spriteRenderer.flipX) spriteRenderer.flipX = false; }
     }
 
     void FixedUpdate()
@@ -229,13 +245,41 @@ public class EnermyController : MonoBehaviour
         }
     }
 
-    static readonly Collider2D[] wallHits = new Collider2D[8];
+    static readonly Collider2D[] wallHits = new Collider2D[16];
     static ContactFilter2D solidOnly = new ContactFilter2D { useTriggers = false };
+
+    // 벽 검사 생략: 넓게(몸 + WallMargin) 한 번 봐서 벽이 없으면, 그 원 안에 들어가는 자리는 짧은 동안 다시 검색하지 않음 (결과 같음)
+    // 넓은 원에 벽이 있으면 한동안은 예전처럼 매번 정확히 검색
+    const float WallMargin = 0.75f, WallClearFor = 0.1f;
+    Vector2 wallClearAt;
+    float wallClearR, wallClearUntil = -1f, wallNearUntil = -1f;
 
     bool Blocked(Vector3 pos)
     {
         float r = bodyCollider != null ? BodyRadius(bodyCollider) * 0.8f : 0.5f;
         Vector2 center = (Vector2)pos + (bodyCollider != null ? bodyCollider.offset * (Vector2)transform.lossyScale : Vector2.zero);
+        float now = Time.time;
+        if (now < wallClearUntil)
+        {
+            float room = wallClearR - r;
+            if (room > 0f && (center - wallClearAt).sqrMagnitude <= room * room) return false;
+        }
+        if (now >= wallNearUntil)
+        {
+            if (!WallIn(center, r + WallMargin))
+            {
+                wallClearAt = center;
+                wallClearR = r + WallMargin;
+                wallClearUntil = now + WallClearFor;
+                return false;
+            }
+            wallNearUntil = now + 0.2f;
+        }
+        return WallIn(center, r);
+    }
+
+    static bool WallIn(Vector2 center, float r)
+    {
         // 1.1.9: 트리거(주변 적 · 탄 · 코인)는 처음부터 빼고 검색 — 벽은 트리거가 아니라 결과 같음 · 뭉친 무리에서 8칸이 적으로 차 벽을 놓치던 것도 없어짐
         int n = Physics2D.OverlapCircle(center, r, solidOnly, wallHits);
         for (int i = 0; i < n; i++)
@@ -285,15 +329,30 @@ public class EnermyController : MonoBehaviour
     }
 
     // 주변 적과 겹친 정도에 비례해 바깥으로 밀어내는 방향
+    // 밀어내기는 두 물리 단계에 한 번 계산하고 사이 단계는 지난 값을 그대로 씀 (적마다 번갈아 — 연속량이라 눈에 같음)
+    Vector3 lastPush;
+    int lastPushStep = int.MinValue;
+
     Vector3 Separation()
     {
         if (bodyCollider == null) return Vector3.zero;
 
+        int stepNo = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
+        if (lastPushStep == stepNo - 1 && ((stepNo + sepPhase) & 1) == 1) { lastPushStep = stepNo; return lastPush; }
+        lastPush = ComputeSeparation();
+        lastPushStep = stepNo;
+        return lastPush;
+    }
+
+    int sepPhase => GetHashCode() & 1;
+
+    Vector3 ComputeSeparation()
+    {
         Vector2 center = bodyCollider.bounds.center;
         float myRadius = BodyRadius(bodyCollider);
 
-        // 가장 큰 적까지 잡히도록 넉넉하게 검색
-        int count = Physics2D.OverlapCircleNonAlloc(center, myRadius * 3f, nearby);
+        // 가장 큰 적까지 잡히도록 넉넉하게 검색 (적 층만 — 탄 · 코인 · 회복약이 칸을 차지하지 않게)
+        int count = Physics2D.OverlapCircle(center, myRadius * 3f, separationFilter, nearby);
 
         Vector2 push = Vector2.zero;
         for (int i = 0; i < count; i++)
@@ -485,7 +544,7 @@ public class EnermyController : MonoBehaviour
             Point point = Cache<Point>.Get;
 
             // 1.0.4~: 중간 보스는 +100P (예전엔 일반 적과 같은 10P)
-            if (point != null) { if (IsMidBoss) point.AddPoint(100); else point.AddMobPoint(10); }     // 1.2~ 일반 적만 무한 모드 처치 수 체감 (Point.MobKillMul)
+            if (point != null) { if (IsMidBoss) point.AddPoint(100, pointMul); else point.AddMobPoint(10, pointMul); }     // 1.2~ 일반 적만 무한 모드 처치 수 체감 (Point.MobKillMul) · 1.2.3~ pointMul: 적마다 따로 거는 배율
 
             // 영혼 조각: 강한 적 · 중간 보스일수록 많이 (중간 보스는 크게 알림)
             SoulShards.Add(SoulShards.ForEnemy(this), transform.position, IsMidBoss);
@@ -500,13 +559,15 @@ public class EnermyController : MonoBehaviour
     [Header("힐팩")]
     public int chanceofHP = 30;
     float hpChance = -1f;               // 난이도를 반영한 실제 확률 (%), 음수면 chanceofHP 그대로
+    static readonly WaitForSeconds DeathWait = new WaitForSeconds(1f);     // 처치마다 새로 만들지 않게
 
     IEnumerator Death(int a)
     {
         // 죽음 애니메이션 시간
-        yield return new WaitForSeconds(1f);
+        yield return DeathWait;
         EnemySpawner enemySpawner = Cache<EnemySpawner>.Get;
         enemySpawner.spawnedEnemys--;
+        if (finalMob && enemySpawner.finalMobs > 0) enemySpawner.finalMobs--;
         // 총알에 죽었을 때만 코인 생성
         if (a == 1)
         {
@@ -533,7 +594,17 @@ public class EnermyController : MonoBehaviour
     }
 
     // 1.1.0 다시 올림: 황금 고블린은 이름표 때문에 MidBossMark 가 붙지만 중간 보스 보상(+100P · 멈춤 · 큰 조각)은 주지 않음 (SignatureSkills.IsBoss 와 같은 기준)
-    public bool IsMidBoss => GetComponent<MidBossMark>() != null && GetComponent<GoldenGoblin>() == null;
+    // 처음 물을 때 한 번만 계산 (처치마다 3번 · 중력 규칙 0.1초마다 GetComponent 2회씩 하던 것) — 표식은 스폰 직후 붙고, Start · MarkMidBoss 에서 다시 계산
+    sbyte midBoss = -1;
+    public bool IsMidBoss
+    {
+        get
+        {
+            if (midBoss < 0) midBoss = (sbyte)(GetComponent<MidBossMark>() != null && GetComponent<GoldenGoblin>() == null ? 1 : 0);
+            return midBoss == 1;
+        }
+    }
+    public void MarkMidBoss() => midBoss = -1;
 
     void TouchPlayer(Collider2D collision)
     {

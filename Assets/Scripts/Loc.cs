@@ -81,6 +81,10 @@ public static class Loc
 
     static TMP_FontAsset MakeFont(string path)
     {
+        // 1.2.4: 에디터에서 글리프를 미리 구운 글꼴 에셋(Resources/Fonts/NotoSansJP-Bold SDF 등)이 있으면 그것을 씀
+        //   (실행 중 동적 생성은 새 글자마다 메인 스레드에서 그리고 2048² 텍스처를 올려 끊김) · 없으면 예전처럼 만듦
+        TMP_FontAsset baked = Resources.Load<TMP_FontAsset>(path + " SDF");
+        if (baked != null) return baked;
         Font f = Resources.Load<Font>(path);
         if (f == null) return null;
         TMP_FontAsset a = TMP_FontAsset.CreateFontAsset(f, 64, 6, UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDFAA, 2048, 2048,

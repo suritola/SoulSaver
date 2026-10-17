@@ -237,7 +237,7 @@ public partial class CharacterKit : MonoBehaviour
     public static int DamageCircle(Vector3 pos, float radius, float damage, float knock)
     {
         int n = 0;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, radius))
+        using (var ovl = PhysHits.Circle(pos, radius)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Specials.Damage(c.gameObject, damage, (c.transform.position - pos).normalized, knock);
@@ -365,7 +365,7 @@ public partial class CharacterKit : MonoBehaviour
         Vector3 origin = transform.position;
         float sig = SignatureSkills.BeforeSwing(origin, dir);      // 영혼 흡수 · 반격 검기
         int hits = 0;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(origin, reach))
+        using (var ovl = PhysHits.Circle(origin, reach)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector2 to = c.transform.position - origin;
@@ -553,7 +553,8 @@ public partial class CharacterKit : MonoBehaviour
             {
                 RunCounters.Both("unstable");          // 1.2~ 영혼 계약 · 보드
                 // 불안정! 보라색 대폭발
-                Collider2D[] caught = Physics2D.OverlapCircleAll(p, r);
+                using var caughtHits = PhysHits.Circle(p, r);
+                List<Collider2D> caught = caughtHits.List;
                 DamageCircle(p, r, hit, 2.2f);
                 foreach (Collider2D c in caught)
                 {
@@ -569,7 +570,8 @@ public partial class CharacterKit : MonoBehaviour
                 SignatureSkills.Flask(p, r, kind, true, new List<Collider2D>(caught), DeadCount(caught), conc > 1f);
                 return;
             }
-            Collider2D[] inside = Physics2D.OverlapCircleAll(p, r);
+            using var insideHits = PhysHits.Circle(p, r);
+            List<Collider2D> inside = insideHits.List;
             DamageCircle(p, r, hit, 1.2f);
             Fx.Spawn("fx_alchemyblast", p, r * 2.2f, SkinFx.Tint(ReagentColors[kind]), 18f, 0f, AttackLook.AreaOrder - 2);      // 1.1.2: 적 · 맵 물체 · 적 이펙트 위 (크기 = 판정 그대로)
             foreach (Collider2D c in inside)
@@ -607,7 +609,7 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 이 폭발로 쓰러진 적 수 (증폭 용액)
-    static int DeadCount(Collider2D[] cols)
+    static int DeadCount(List<Collider2D> cols)
     {
         int n = 0;
         foreach (Collider2D c in cols)
@@ -955,7 +957,7 @@ public partial class CharacterKit : MonoBehaviour
         if (mastery >= 1) StartCoroutine(DashHaste(2f, 1.35f));
         if (mastery >= 2)
         {
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(at, 4f))
+            using (var ovl = PhysHits.Circle(at, 4f)) foreach (Collider2D c in ovl)
             {
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null && !e.IsDead) e.Slow(0.4f, 1.5f);
@@ -988,7 +990,7 @@ public partial class CharacterKit : MonoBehaviour
     // 이번 프레임에 지나간 구간 전체 (프레임이 길어도 건너뛰지 않게)
     void Cut(Vector3 a, Vector3 b, float width, Vector2 dir, HashSet<Collider2D> hit)
     {
-        foreach (Collider2D c in Physics2D.OverlapCircleAll((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width))
+        using (var ovl = PhysHits.Circle((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
@@ -1018,7 +1020,7 @@ public partial class CharacterKit : MonoBehaviour
         {
             Vector3 at = center + (Vector3)(Random.insideUnitCircle * radius);
             Fx.Spawn("fx_arrowrain", at + Vector3.up * 1f, 2f, Color.white, 18f);
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(at, 1.3f))
+            using (var ovl = PhysHits.Circle(at, 1.3f)) foreach (Collider2D c in ovl)
             {
                 bool boss = c.CompareTag("boss");
                 if (!boss && !c.CompareTag("enermy")) continue;
@@ -1108,7 +1110,7 @@ public partial class CharacterKit : MonoBehaviour
     {
         for (float t = 0f; t < duration; t += 0.3f)
         {
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r))
+            using (var ovl = PhysHits.Circle(p, r)) foreach (Collider2D c in ovl)
             {
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null && !e.IsDead) e.Slow(0.6f, 0.4f);
@@ -1214,6 +1216,15 @@ public partial class CharacterKit : MonoBehaviour
         return b;
     }
 
+    // 회전 표창 「귀환하는 칼날」: 돌아오는 표창이 둘로 갈라질 때 — 평타 표창과 같은 그림 · 판정 · 색
+    public Bullet TwinShuriken(Vector3 at, Vector2 dir, Bullet like)
+    {
+        if (like == null) return null;
+        Bullet b = Projectile(at, dir, like.damage, 2, like.speed, 0f, "fx_shuriken", 1.1f, Color.white, true);
+        if (b != null && like.TryGetComponent(out SpriteRenderer from) && b.TryGetComponent(out SpriteRenderer to)) to.color = from.color;
+        return b;
+    }
+
     // 도적 그림자 분신: 돌진을 시작한 자리에 분신이 남아 가까운 적에게 표창을 던짐
     IEnumerator ShadowClone(Vector3 at, float duration)
     {
@@ -1260,7 +1271,7 @@ public partial class CharacterKit : MonoBehaviour
     {
         Transform best = null;
         float bestDist = range;
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(from, range))
+        using (var ovl = PhysHits.Circle(from, range)) foreach (Collider2D c in ovl)
         {
             if (c.transform == except || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
             EnermyController e = c.GetComponent<EnermyController>();
@@ -1316,7 +1327,7 @@ public partial class CharacterKit : MonoBehaviour
         if (Special != null) Special.SpawnZone(center, radius, duration, Damage * 0.4f, new Color(0.45f, 0.7f, 0.25f, 0.6f));
         for (float t = 0f; t < duration; t += 0.25f)
         {
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(center, radius))
+            using (var ovl = PhysHits.Circle(center, radius)) foreach (Collider2D c in ovl)
             {
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (e != null && !e.IsDead) e.Slow(0.45f, 0.4f);
@@ -1430,6 +1441,8 @@ public class Bleed : MonoBehaviour
     public float dps;
     public float until;
     float tick, drip;
+    SpriteRenderer body;
+    bool bodyChecked;
 
     public static void Apply(GameObject target, float dps, float duration)
     {
@@ -1448,7 +1461,10 @@ public class Bleed : MonoBehaviour
         if (drip >= 0.25f)
         {
             drip = 0f;
-            Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.4f, Color.white, 14f);
+            // 화면 밖 적은 핏방울을 만들지 않음 (보이지 않으니 겉모습 같음 · 피해는 그대로)
+            if (!bodyChecked) { bodyChecked = true; TryGetComponent(out body); }
+            if (body == null || body.isVisible)
+                Fx.Spawn("fx_bleed", transform.position + (Vector3)(Random.insideUnitCircle * 0.4f), 1.4f, Color.white, 14f);
         }
         tick += Time.deltaTime;
         if (tick >= 0.25f)

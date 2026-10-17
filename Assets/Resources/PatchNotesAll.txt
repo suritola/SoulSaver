@@ -1,5 +1,5 @@
-@@@ v1.2.0
-# 1.2.0 업데이트 — 한 판 더!
+@@@ v1.2.5
+# 1.2.5 업데이트 — 한 판 더!
 
 - **영혼 계약**: 판마다 목표 3개가 주어지고, 이루면 바로 포인트를 받습니다. 메인 메뉴의 계약 보드 45칸을 채우면 새 유물 9종과 칭호가 열립니다.
 - **망자의 전령 · 기억 조각**: 쓰러지면 상황에 맞는 한마디가 들려옵니다. 영웅마다 기억 조각 6장을 모아 도감 「기억」 탭에서 읽을 수 있습니다.
@@ -19,9 +19,10 @@
 - **무한 모드 클리어 보너스**: 1,500P → **5,000P**
 - **영혼의 무게 포인트**: 무게마다 +5% → **+8%**
 - **영혼 정련 비용 (이야기 모드)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
+- **도적 진화 「환영 연막」**: 연막 안에서 적의 공격이 40% 확률로 빗나감 → 연막 안에서 **받는 피해 90% 감소** (늘 같은 효과)
 
 === en
-# 1.2.0 Update — One More Run!
+# 1.2.5 Update — One More Run!
 
 - **Soul Contracts**: Every run gives you three goals, and you earn points as soon as you complete them. Fill the 45-slot Contract Board in the main menu to unlock 9 new relics and titles.
 - **Herald of the Dead · Memory Shards**: When you fall, you hear a line that fits the moment. Collect 6 Memory Shards per hero and read them in the new Codex "Memories" tab.
@@ -29,7 +30,7 @@
 - **Endless milestones**: Earn points the first time you pass 5, 10, 15, or 20 minutes and more. Milestones you already passed can be claimed from "Claim" in the main menu.
 - **Daily Challenge rewards**: 5, 10, and 15-minute rewards, login streak and completion rewards, and 14 rule sets instead of 7.
 - **Quality of life**: Hover over icons while paused to read their details. Also added a detailed build view, a run history window, a loading screen, Codex search, and Copy Results.
-- **Settings**: New Accessibility and Display tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, Combat Stats, and monitor selection.
+- **Settings**: New Accessibility and HUD tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, Combat Stats, and monitor selection.
 - The game now pauses automatically when you open the Steam overlay or a gamepad disconnects. The cursor stays inside the window during combat.
 - All in-game descriptions have been rewritten to be easier to read.
 
@@ -41,9 +42,10 @@
 - **Endless clear bonus**: 1,500P → **5,000P**
 - **Soul Weight points**: +5% per weight → **+8%**
 - **Soul Refining cost (Story Mode)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
+- **Rogue evolution "Phantom Smoke"**: enemy attacks had a 40% chance to miss inside the smoke → **damage taken reduced by 90%** inside the smoke (always active)
 
 === ja
-# 1.2.0 アップデート — もう一回！
+# 1.2.5 アップデート — もう一回！
 
 - **魂の契約**: 毎回のプレイで目標が3つ与えられ、達成するとすぐにポイントを獲得します。メインメニューの契約ボード45マスを埋めると、新しい遺物9種と称号が解放されます。
 - **亡者の伝令・記憶のかけら**: 倒れると、状況に合ったひと言が聞こえます。英雄ごとに記憶のかけらを6枚集め、図鑑の「記憶」タブで読めます。
@@ -63,9 +65,10 @@
 - **エンドレスのクリアボーナス**: 1,500P → **5,000P**
 - **魂の重みのポイント**: 重み1ごとに+5% → **+8%**
 - **魂の精錬の費用（ストーリーモード）**: 40・200・1,000・5,000 → **60・180・540・1,620・4,860**
+- **盗賊の進化「幻影の煙幕」**: 煙幕の中で敵の攻撃が40%の確率で外れる → 煙幕の中で**受けるダメージ90%減少**（常に同じ効果）
 
 === zh
-# 1.2.0 更新 — 再来一局！
+# 1.2.5 更新 — 再来一局！
 
 - **灵魂契约**: 每局都会给出3个目标，达成后立即获得点数。填满主菜单中45格的契约面板，即可解锁9种新遗物与称号。
 - **亡者信使 · 记忆碎片**: 倒下时会听到一句符合当时情况的话。每位英雄可收集6块记忆碎片，并在图鉴的「记忆」页阅读。
@@ -85,28 +88,177 @@
 - **无尽模式通关奖励**: 1,500P → **5,000P**
 - **灵魂之重点数**: 每重+5% → **+8%**
 - **灵魂精炼费用（故事模式）**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
-@@@ v1.1.9
-# 1.1.9 긴급 업데이트
+- **盗贼进化「幻影烟幕」**: 烟幕中敌人的攻击有40%概率落空 → 烟幕中**受到的伤害降低90%**（效果始终不变）
+@@@ v1.2.4
+# 1.2.4 업데이트
 
-- **게임 중 프레임이 크게 떨어지던 문제를 고쳤습니다.** 특히 내장 그래픽 PC와 무한 모드에서 판을 시작하자마자 생기던 렉이 줄어듭니다.
+- **최적화:** 적과 탄이 많이 몰리는 후반 · 무한 모드 · 보스전에서 프레임이 더 안정적입니다. 오래 플레이할수록 조금씩 쌓이던 메모리도 정리했습니다.
+- **설정 「화면」 탭에 「그래픽 품질」을 추가했습니다.** 「낮음」은 잔상 · 불꽃 · 빛 번짐 같은 꾸밈 효과만 줄여 사양이 낮은 PC에서도 부드럽게 움직입니다.
+- **설정 「화면」 탭의 해상도 · 그래픽 품질 · 최대 프레임을 펼쳐서 고르는 목록으로 바꿨습니다.**
+- 스킬 아이콘의 단계 칸 중 가운데 칸이 깨져 보이던 문제를 고쳤습니다.
+
+=== en
+# 1.2.4 Update
+
+- **Optimization:** Frame rate is more stable in the late game, Endless Mode, and boss fights when many enemies and projectiles pile up. Memory that slowly built up during long sessions is now cleaned up.
+- **Added "Graphics Quality" to the Display tab.** "Low" only reduces decorative effects such as trails, sparks, and glow, so the game runs smoothly on lower-end PCs.
+- **Resolution, Graphics Quality, and Max Frame Rate in the Display tab are now dropdown lists.**
+- Fixed the middle level pip on skill icons looking broken.
+
+=== ja
+# 1.2.4 アップデート
+
+- **最適化：** 敵や弾が多く集まる終盤・エンドレス・ボス戦で、フレームレートがより安定しました。長く遊ぶほど少しずつ溜まっていたメモリも整理しました。
+- **設定の「画面」タブに「グラフィック品質」を追加しました。** 「低」は残像・火花・光のにじみなどの装飾効果だけを減らし、低スペックのPCでも滑らかに動きます。
+- **設定の「画面」タブの解像度・グラフィック品質・最大フレームレートを、開いて選ぶリスト形式に変更しました。**
+- スキルアイコンの段階マスのうち、真ん中のマスが崩れて見える問題を修正しました。
+
+=== zh
+# 1.2.4 更新
+
+- **优化：** 在敌人和子弹大量聚集的后期、无尽模式和首领战中，帧率更加稳定。长时间游玩时逐渐累积的内存也已清理。
+- **在设置的「画面」页中新增「画质」选项。** 「低」只会减少残影、火花、光晕等装饰效果，让低配置电脑也能流畅运行。
+- **设置「画面」页中的分辨率、画质和最大帧率改为下拉列表。**
+- 修复了技能图标的等级格中，中间一格显示异常的问题。
+@@@ v1.2.3
+# 1.2.3 업데이트
+
+- **무한 모드도 저장 · 이어하기가 됩니다.** 메인 메뉴로 나가거나 게임을 끄면 저장되고, 「이어하기」로 같은 지점부터 다시 할 수 있습니다. (일일 도전은 저장되지 않습니다.)
+- **왕들의 영토:** 무한 모드에서 보스를 쓰러뜨리면 그 왕의 영토가 사막을 덮으며 지형이 바뀝니다. 묘비 · 영혼 수정은 길과 탄을 막고, 용암 웅덩이는 밟으면 아프며, 점액 늪은 모두를 느리게 합니다.
+- **보스는 기다리지 않습니다:** 보스를 오래 못 잡으면 다음 보스가 함께 나오고, 오래 버틴 보스는 모래 폭풍에 풍화되어 약해집니다.
+- **도적 회전 표창:** 던진 표창이 그대로 꺾여 돌아옵니다.
+
+## 밸런스 조정
+
+- **무한 모드 다음 보스 등장:** 처치 뒤에만 → 처치 뒤 또는 등장 3분 뒤 (동시에 최대 2마리)
+- **무한 모드 보스 풍화:** 없음 → 등장 3분 뒤부터 받는 피해가 1분마다 +25%, 최대 ×2.5 (개발자 · 엄마 제외)
+- **무한 모드 15분 「최후의 시간」:** 시간만 채우면 → 보스를 1마리 이상 쓰러뜨렸을 때만 (0마리면 보스 추가 없이 적만 늘어남)
+- **개발자 · 개발자 엄마전 잡몹:** 없음 → 1초마다 약한 적 4마리, 동시 최대 30 (처치 포인트 10 → 2.5)
+- **개발자 · 개발자 엄마 필살기 예고 시간:** ×1 → 개발자 ×0.6 · 엄마 ×0.5 (최소 0.35초)
+- **도적 진화 「환영 연막」:** 연막 안 적 공격 모두 빗나감 → 40% 확률로 빗나감 (연막 판정 범위가 보이는 연막 크기와 같아짐)
+
+=== en
+# 1.2.3 Update
+
+- **Endless Mode can now be saved and continued.** Your run is saved when you return to the main menu or quit, and you can pick it up again with "Continue." (Daily Challenge is not saved.)
+- **Realm of the Kings:** In Endless Mode, each defeated boss spreads its realm across the desert and reshapes the terrain. Tombstones and soul crystals block movement and shots, lava pools burn you, and slime bogs slow everyone.
+- **Bosses don't wait:** If a boss survives too long, the next boss joins in, and a boss that lingers is weathered by the sandstorm and grows weaker.
+- **Rogue's Spinning Stars:** Your thrown shuriken now curve back to you themselves.
+
+## Balance Changes
+
+- **Next Endless boss:** only after a kill → after a kill or 3 minutes after the boss appears (up to 2 at once)
+- **Endless boss weathering:** none → from 3 minutes after appearing, damage taken +25% per minute, up to ×2.5 (not the Developer or Mom)
+- **Endless 15-minute "Final Hour":** on time alone → only if you have defeated at least 1 boss (with 0, only enemies increase and no bosses are added)
+- **Enemies during the Developer / Developer's Mom fight:** none → 4 weak enemies every second, up to 30 at once (kill points 10 → 2.5)
+- **Developer / Developer's Mom ultimate warning time:** ×1 → Developer ×0.6 · Mom ×0.5 (minimum 0.35s)
+- **Rogue evolution "Phantom Smoke":** all enemy attacks miss in the smoke → 40% chance to miss (the smoke's hit area now matches its visible size)
+
+=== ja
+# 1.2.3 アップデート
+
+- **エンドレスもセーブ・続きからプレイできるようになりました。** メインメニューに戻るかゲームを終了するとセーブされ、「続きから」で同じところから再開できます。（デイリーチャレンジはセーブされません。）
+- **王たちの領土：** エンドレスでボスを倒すと、その王の領土が砂漠を覆い、地形が変わります。墓石・魂の水晶は移動と弾を遮り、溶岩だまりは踏むとダメージを受け、粘液の沼はすべてを遅くします。
+- **ボスは待ってくれません：** ボスを長く倒せないと次のボスが一緒に現れ、長く生き残ったボスは砂嵐に風化して弱くなります。
+- **盗賊の回転手裏剣：** 投げた手裏剣がそのまま曲がって戻ってきます。
+
+## バランス調整
+
+- **エンドレスの次のボスの登場：** 撃破後のみ → 撃破後、または登場から3分後（同時に最大2体）
+- **エンドレスのボスの風化：** なし → 登場3分後から被ダメージが1分ごとに+25%、最大×2.5（開発者・母は対象外）
+- **エンドレス15分の「最後の時間」：** 時間を満たせば → ボスを1体以上倒したときのみ（0体なら、ボスは追加されず敵だけが増えます）
+- **開発者・開発者の母との戦闘中の雑魚：** なし → 1秒ごとに弱い敵4体、同時に最大30体（撃破ポイント 10 → 2.5）
+- **開発者・開発者の母の必殺技の予告時間：** ×1 → 開発者 ×0.6・母 ×0.5（最短0.35秒）
+- **盗賊の進化「幻影の煙幕」：** 煙幕の中では敵の攻撃がすべて外れる → 40%の確率で外れる（煙幕の判定範囲が見た目の大きさと同じになりました）
+
+=== zh
+# 1.2.3 更新
+
+- **无尽模式现在也可以保存并继续游戏。** 返回主菜单或退出游戏时会自动保存，可通过「继续游戏」从同一位置重新开始。（每日挑战不会保存。）
+- **王之领地：** 在无尽模式中击败首领后，该王的领地会覆盖沙漠，改变地形。墓碑和灵魂水晶会阻挡移动和子弹，熔岩池踩上去会受伤，黏液沼泽会让所有人减速。
+- **首领不会等待：** 如果长时间无法击败首领，下一个首领会一同出现；存活过久的首领会被沙暴风化而变弱。
+- **盗贼旋转飞镖：** 掷出的飞镖会直接折返回到你身边。
+
+## 平衡调整
+
+- **无尽模式下一个首领登场：** 仅在击败后 → 击败后或登场3分钟后（同时最多2个）
+- **无尽模式首领风化：** 无 → 登场3分钟后起，受到的伤害每分钟+25%，最多×2.5（开发者 · 开发者妈妈除外）
+- **无尽模式15分钟「最后时刻」：** 时间到即开启 → 仅在击败至少1个首领时开启（0个时不再追加首领，只增加敌人）
+- **开发者 · 开发者妈妈战中的小怪：** 无 → 每秒4只弱小敌人，同时最多30只（击杀点数 10 → 2.5）
+- **开发者 · 开发者妈妈必杀技预警时间：** ×1 → 开发者 ×0.6 · 妈妈 ×0.5（最短0.35秒）
+- **盗贼进化「幻影烟幕」：** 烟幕中敌人攻击全部落空 → 40%几率落空（烟幕判定范围与可见大小一致）
+@@@ v1.2.2
+# 1.2.2 업데이트
+
+- **피격 시 체력바에 효과가 추가됩니다!**
+- **탄이 더 잘 보입니다.** 내 탄과 적 탄에 어두운 테두리를 더하고 그림을 조금 키웠습니다. 특히 무한 모드 사막 맵에서 잘 보입니다. (맞는 판정 크기는 그대로입니다.)
+
+=== en
+# 1.2.2 Update
+
+- **Health bars now react when you take a hit!**
+- **Projectiles are easier to see.** Your shots and enemy shots now have a dark outline and are drawn slightly larger, especially noticeable on the Endless desert map. (Hitboxes are unchanged.)
+
+=== ja
+# 1.2.2 アップデート
+
+- **被弾時に体力バーへ演出が追加されます！**
+- **弾が見やすくなりました。** 自分の弾と敵の弾に暗い縁取りを加え、少し大きく描くようにしました。特にエンドレスの砂漠マップで見やすくなります。（当たり判定の大きさは変わりません。）
+
+=== zh
+# 1.2.2 更新
+
+- **受击时生命条会出现特效！**
+- **子弹更容易看清了。** 为自己和敌人的子弹加上了深色描边，并稍微放大了显示，尤其在无尽模式的沙漠地图中更加明显。（命中判定大小不变。）
+@@@ v1.2.1
+# 1.2.1 업데이트
+
+- 맵에 놓인 통이 부서진 뒤 40초마다 하나씩 다시 생깁니다.
+- 자잘한 개선
+
+=== en
+# 1.2.1 Update
+
+- Breakable barrels on the map now reappear one at a time every 40 seconds after being destroyed.
+- Minor improvements
+
+=== ja
+# 1.2.1 アップデート
+
+- マップに置かれた樽が、壊れたあと40秒ごとにひとつずつ再び現れます。
+- 細かな改善
+
+=== zh
+# 1.2.1 更新
+
+- 地图上的木桶被打破后，每40秒会重新出现一个。
+- 细节改进
+@@@ v1.2.0
+# 1.2.0 긴급 업데이트
+
+- **판이 진행될수록 프레임이 떨어지던 문제를 고쳤습니다.** 게임을 오래 할수록, 일시정지 중에도 점점 느려지던 렉이 사라집니다.
+- **화면을 그리는 부담을 줄였습니다.** 특히 내장 그래픽 PC와 무한 모드에서 더 부드럽게 플레이할 수 있습니다.
 - **설정 「화면」 탭에 프레임 설정을 추가했습니다.** 최대 프레임(30 · 60 · 120 · 144 · 제한 없음), 수직 동기화, 프레임 표시를 고를 수 있습니다.
 
 === en
-# 1.1.9 Hotfix
+# 1.2.0 Hotfix
 
-- **Fixed severe frame drops during play.** Lag that started right at the beginning of a run, especially on integrated graphics and in Endless mode, is greatly reduced.
+- **Fixed frame rate dropping more and more as a run went on.** The lag that kept getting worse the longer you played, even while paused, is gone.
+- **Reduced rendering load.** Play is smoother, especially on integrated graphics and in Endless Mode.
 - **Added frame settings to the Display tab.** You can now choose a max frame rate (30 · 60 · 120 · 144 · Unlimited), toggle V-Sync, and show an FPS counter.
 
 === ja
-# 1.1.9 緊急アップデート
+# 1.2.0 緊急アップデート
 
-- **プレイ中にフレームレートが大きく下がる問題を修正しました。** 特に内蔵グラフィックスのPCやエンドレスで、開始直後から起きていたラグが軽くなります。
+- **プレイが進むほどフレームレートが下がる問題を修正しました。** 長く遊ぶほど、一時停止中でも重くなっていくラグがなくなります。
+- **描画の負荷を減らしました。** 特に内蔵グラフィックスのPCやエンドレスで、より快適にプレイできます。
 - **設定の「画面」タブにフレーム設定を追加しました。** 最大フレームレート（30・60・120・144・無制限）、垂直同期、FPS表示を選べます。
 
 === zh
-# 1.1.9 紧急更新
+# 1.2.0 紧急更新
 
-- **修复了游戏中帧率大幅下降的问题。** 尤其是集成显卡电脑和无尽模式中开局就出现的卡顿已大幅减轻。
+- **修复了游戏进行越久帧率越低的问题。** 玩得越久、甚至暂停时也越来越卡的问题已经消失。
+- **减轻了画面绘制负担。** 尤其在集成显卡电脑和无尽模式中可以更流畅地游玩。
 - **在设置的「画面」页中新增帧率设置。** 可以选择最大帧率（30 · 60 · 120 · 144 · 无限制）、垂直同步以及帧率显示。
 @@@ v1.1.8
 # 1.1.8 업데이트

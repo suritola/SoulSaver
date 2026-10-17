@@ -38,7 +38,11 @@ public partial class BossSkills
     {
         PlayerController pl = Hostile.Player;
         if (pl == null) yield break;
-        pl.HostileTimeSlow(marks * DevAimEvery);
+        // 1.1.9~ 표식 간격 · 쉬는 틈 · 발사 간격 모두 DevTeleMul 배 (마지막 표식 경고도 DevTeleFloor 이상이 되게 쉬는 틈을 늘림)
+        float k = DevTeleMul;
+        float aim = DevAimEvery * k, every = DevShotEvery * k;
+        float grace = Mathf.Max(DevShotGrace * k, DevTeleFloor - aim);
+        pl.HostileTimeSlow(marks * aim);
         List<Vector3> spots = new List<Vector3>();
         List<GameObject> pins = new List<GameObject>();
         for (int i = 0; i < marks && Alive; i++)
@@ -46,14 +50,14 @@ public partial class BossSkills
             pl = Hostile.Player;
             if (pl == null) break;
             Vector3 at = pl.transform.position;
-            // 이 표식이 쏘일 때까지 경고 (풀린 뒤 DevShotGrace 쉬고 DevShotEvery 마다 한 발)
-            Hostile.Circle(at, 1.5f, (marks - i) * DevAimEvery + DevShotGrace + i * DevShotEvery, Dev);
+            // 이 표식이 쏘일 때까지 경고 (풀린 뒤 grace 쉬고 every 마다 한 발)
+            Hostile.Circle(at, 1.5f, (marks - i) * aim + grace + i * every, Dev);
             pins.Add(DevAimMark(pl, at));
             spots.Add(at);
             Hostile.Play("zap", 0.3f, 2f);
-            yield return new WaitForSeconds(DevAimEvery);
+            yield return new WaitForSeconds(aim);
         }
-        if (Alive) yield return new WaitForSeconds(DevShotGrace);
+        if (Alive) yield return new WaitForSeconds(grace);
         for (int i = 0; i < spots.Count && Alive; i++)
         {
             if (pins[i] != null) Destroy(pins[i]);
@@ -66,7 +70,7 @@ public partial class BossSkills
                 Fx.Spawn("fx_spark", at, 4f, Dev, 20f);
             }
             UltHit(UltInCircle(at, 1.5f));
-            yield return new WaitForSeconds(DevShotEvery);
+            yield return new WaitForSeconds(every);
         }
         foreach (GameObject g in pins) if (g != null) Destroy(g);
     }
@@ -94,9 +98,10 @@ public partial class BossSkills
         float gap = Vector2.Distance(transform.position, pl.transform.position);
         Vector3 at = Hostile.ClampArena(transform.position + (Vector3)(DirTo(pl) * Mathf.Min(3.5f, gap)));
         if (Hostile.IsWall(at)) at = transform.position;
-        Hostile.Circle(at, r, 1f, Dev);
+        float warn = DevTele(1f);
+        Hostile.Circle(at, r, warn, Dev);
         Hostile.Play("hum", 0.5f, 0.8f);
-        for (float t = 0f; t < 1f; t += Time.deltaTime)
+        for (float t = 0f; t < warn; t += Time.deltaTime)
         {
             if (!Alive) yield break;
             if (Random.value < 0.4f)
@@ -132,8 +137,9 @@ public partial class BossSkills
             Vector3 end = Hostile.ClampArena(from + (Vector3)(d * len));
             if (!Hostile.IsWall(end)) { to = end; break; }
         }
-        Hostile.Line(from, to, 2f, 0.75f, Dev);
-        yield return Windup(Dev, 0.75f);
+        float warn = DevTele(0.75f);
+        Hostile.Line(from, to, 2f, warn, Dev);
+        yield return Windup(Dev, warn);
         if (!Alive) yield break;
         float rot = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
         using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
@@ -180,6 +186,7 @@ public partial class BossSkills
         const float r = 2.2f;
         const int n = 5;
         Vector3[] spots = new Vector3[n];
+        float warn = DevTele(1f);
         for (int w = 0; w < waves && Alive; w++)
         {
             PlayerController pl = Hostile.Player;
@@ -190,10 +197,10 @@ public partial class BossSkills
             {
                 float a = (start + i * 360f / (n - 1)) * Mathf.Deg2Rad;
                 spots[i] = i == 0 ? c : Hostile.ClampArena(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3.5f, 5f));
-                Hostile.Circle(spots[i], r, 1f, Dev);
+                Hostile.Circle(spots[i], r, warn, Dev);
             }
             Hostile.Play("bowdraw", 0.5f, 0.8f);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(warn);
             if (!Alive) yield break;
             bool inside = false;
             for (int i = 0; i < n; i++) inside |= UltInCircle(spots[i], r);
@@ -219,19 +226,22 @@ public partial class BossSkills
 
     IEnumerator DevBlast(int blasts)
     {
+        // 1.1.9~ 경고 1.3초 × DevTeleMul, 플라스크 비행도 같은 비율 (떨어지는 순간 = 판정 = 경고가 사라지는 때)
+        float warn = DevTele(1.3f);
+        float flight = DevFlaskFlight * warn / 1.3f;
         for (int n = 0; n < blasts && Alive; n++)
         {
             PlayerController pl = Hostile.Player;
             if (pl == null) yield break;
             float r = n == 0 ? 4.5f : 3.5f;
             Vector3 at = pl.transform.position;
-            Hostile.Circle(at, r, 1.3f, Dev);
+            Hostile.Circle(at, r, warn, Dev);
             Hostile.Play("bubble", 0.5f, 0.8f);
-            yield return Windup(Dev, 1.3f - DevFlaskFlight);
+            yield return Windup(Dev, warn - flight);
             if (!Alive) yield break;
             float size = r * 2.4f;
             using (DamageSource.As(DamageSource.Ult))       // 날아가는 동안 · 떨어질 때도 필살기 출처 (FlaskLob 이 만들 때의 출처를 이어 감)
-                FlaskLob.Throw(transform.position, at, DevFlaskFlight, 1.6f, KitFlask, p =>
+                FlaskLob.Throw(transform.position, at, flight, 1.6f, KitFlask, p =>
                 {
                     if (!Alive) return;
                     Fx.Spawn("fx_alchemyblast", p, size, Color.white, 16f);
@@ -239,7 +249,7 @@ public partial class BossSkills
                     Hostile.Play("shatter", 0.8f, 0.8f);
                     Hostile.Play("fizz", 0.7f, 0.8f);
                 });
-            yield return Windup(Dev, DevFlaskFlight);
+            yield return Windup(Dev, flight);
             if (!Alive) yield break;
             UltHit(UltInCircle(at, r));
             Hostile.Shake(0.25f);
@@ -254,6 +264,9 @@ public partial class BossSkills
     IEnumerator DevFold(int folds)
     {
         const float half = 2.5f, len = 18f;
+        // 1.1.9~ 경고 1초 × DevTeleMul, 접히는 시간도 같은 비율 (접힘이 끝나는 순간 = 판정 = 경고가 사라지는 때)
+        float warn = DevTele(1f);
+        float close = DevFoldClose * warn;
         for (int n = 0; n < folds && Alive; n++)
         {
             PlayerController pl = Hostile.Player;
@@ -262,18 +275,18 @@ public partial class BossSkills
             Vector2 d = DirTo(pl);
             Vector2 crease = new Vector2(-d.y, d.x);
             Vector3 a = c - (Vector3)(crease * len * 0.5f), b = c + (Vector3)(crease * len * 0.5f);
-            Hostile.Line(a, b, half * 2f, 1f, Dev);
+            Hostile.Line(a, b, half * 2f, warn, Dev);
             Hostile.Play("hum", 0.5f, 1.2f);
-            yield return Windup(Dev, 1f - DevFoldClose);
+            yield return Windup(Dev, warn - close);
             if (!Alive) yield break;
             Vector3 off = (Vector3)(d * half);
             Hostile.Play("whoosh", 0.9f, 0.7f);
             using (DamageSource.As(DamageSource.Ult))
             {
-                Fx.Beam(a + off, b + off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), DevFoldClose);
-                Fx.Beam(a - off, b - off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), DevFoldClose);
+                Fx.Beam(a + off, b + off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), close);
+                Fx.Beam(a - off, b - off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), close);
             }
-            yield return Windup(Dev, DevFoldClose);
+            yield return Windup(Dev, close);
             if (!Alive) yield break;
             pl = Hostile.Player;
             UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, a, b) < half);
@@ -300,23 +313,26 @@ public partial class BossSkills
     IEnumerator DevClock(int marks)
     {
         Hostile.Play("clank", 0.5f, 2.2f);
+        // 1.1.9~ 표식 경고 1.2초 · 표식 간격 0.35초 모두 DevTeleMul 배
+        float warn = DevTele(1.2f);
+        float gap = 0.35f * DevTeleMul;
         for (int i = 0; i < marks && Alive; i++)
         {
             PlayerController pl = Hostile.Player;
             if (pl == null) break;
             Vector3 at = pl.transform.position;
-            Hostile.Circle(at, DevClockR, 1.2f, Dev);
+            Hostile.Circle(at, DevClockR, warn, Dev);
             using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_target_rune", at, DevClockR * 2f, new Color(1f, 0.8f, 0.4f, 0.75f), 12f);
             Hostile.Play("clank", 0.3f, 2.2f);
-            StartCoroutine(DevRewindBlast(at));
-            yield return new WaitForSeconds(0.35f);
+            StartCoroutine(DevRewindBlast(at, warn));
+            yield return new WaitForSeconds(gap);
         }
-        yield return new WaitForSeconds(1.2f);
+        yield return new WaitForSeconds(warn);
     }
 
-    IEnumerator DevRewindBlast(Vector3 at)
+    IEnumerator DevRewindBlast(Vector3 at, float warn)
     {
-        yield return new WaitForSeconds(1.2f);
+        yield return new WaitForSeconds(warn);
         if (!Alive) yield break;
         using (DamageSource.As(DamageSource.Ult))
         {
@@ -334,7 +350,9 @@ public partial class BossSkills
     // 플레이어 둘레 곳곳에 경고 + 플레이어 속달과 같은 편지 표식이 하나씩 붙고(소리가 점점 높게), 표식이 두근거리다 1.3초 뒤 한꺼번에 같은 폭발 · 소리 (빈자리로 피함)
     IEnumerator DevExpress(int marks)
     {
-        const float r = 1.7f, wait = 1.3f, attach = 0.4f;
+        const float r = 1.7f;
+        // 1.1.9~ 경고 1.3초 × DevTeleMul, 편지가 붙는 시간 · 휙 소리 시점도 같은 비율
+        float wait = DevTele(1.3f), scale = wait / 1.3f, attach = 0.4f * scale;
         PlayerController pl = Hostile.Player;
         if (pl == null) yield break;
         Vector3 c = pl.transform.position;
@@ -363,7 +381,7 @@ public partial class BossSkills
                 baseScale.Add(icon != null ? icon.transform.localScale.x : 1f);
                 Hostile.Play("pop", 0.15f, 2.2f + 0.02f * icons.Count);
             }
-            if (!whooshed && t >= wait - 1f) { whooshed = true; Hostile.Play("whoosh", 0.8f, 1.2f); }
+            if (!whooshed && t >= wait - 1f * scale) { whooshed = true; Hostile.Play("whoosh", 0.8f, 1.2f); }
             // CharacterKit.PlaceExpressIcon 처럼 두근거리며 점점 커짐
             float k = t / wait;
             for (int i = 0; i < icons.Count; i++)
@@ -400,7 +418,8 @@ public partial class BossSkills
     // 플레이어 곁 자리에 경고 → 플레이어 빙의처럼 스며들어(같은 소리) 거의 투명해진 채 영혼 빛을 두르고, 1초 뒤 같은 영혼 폭발 · 냉기 충격파 · 소리 (경고 원 밖으로 피함)
     IEnumerator DevPossess(int times)
     {
-        const float R = 3.4f, slide = 0.15f, inside = 1f;      // 스며드는 시간 · 안에 머무는 시간 (CharacterKit.PossessRoutine 과 같음)
+        const float R = 3.4f, slide = 0.15f;      // 스며드는 시간 (CharacterKit.PossessRoutine 과 같음)
+        float inside = DevTele(slide + 1f) - slide;     // 안에 머무는 시간 1초 → 1.1.9~ 경고 전체(스며듦 + 머묾)가 DevTeleMul 배
         for (int n = 0; n < times && Alive; n++)
         {
             PlayerController pl = Hostile.Player;

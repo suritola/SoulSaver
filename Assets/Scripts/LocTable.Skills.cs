@@ -204,7 +204,8 @@ public static partial class LocTable
         K("필살기가 끝난 뒤 2초 동안 표창의 피해가 증가합니다.", "필살기가 끝난 뒤 2초 동안 표창의 피해가 늘어납니다.", "Your throwing stars hit harder for 2s after your Ultimate.", "必殺技が終わった後2秒間、手裏剣のダメージが増えます。", "流血突进结束后2秒内飞镖伤害提升。");
         A("급습 피해", "Ambush damage", "急襲ダメージ", "突袭伤害");
         A("회전 표창", "Boomerang Star", "回転手裏剣", "回旋飞镖");
-        A("던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다.", "Your thrown stars come back a moment later, cutting again.", "投げた手裏剣が少し後に戻ってきて、もう一度斬ります。", "掷出的飞镖片刻后折返，再斩一次。");
+        // 회전 표창: 새 표창이 나타나는 대신 던진 그 표창이 꺾여 돌아옴 (SignatureSkills.Rogue ReturningShuriken)
+        Entries["던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다."] = E("던진 표창이 멀리 날아가거나 적을 다 꿰뚫으면 그 자리에서 꺾여 나에게 돌아오며, 오는 길의 적을 한 번 더 벱니다.", "Once your throwing star flies far or runs out of pierce, it turns back toward you, cutting enemies on the way again.", "投げた手裏剣は遠くまで飛ぶか貫通し切ると、その場で曲がって戻り、帰り道の敵をもう一度斬ります。", "掷出的飞镖飞远或穿透次数用尽后，会就地折返回到你身边，沿途再斩一次敌人。");
         A("되돌아오는 표창 피해", "Returning star damage", "戻る手裏剣のダメージ", "折返飞镖伤害");
         A("궤적 칼날", "Blade Path", "軌跡の刃", "轨迹刀刃");
         A("필살기가 지나간 길에 칼날 자국이 남아 닿는 적을 벱니다.", "Your Ultimate leaves a trail of blades that cuts enemies touching it.", "必殺技の通り道に刃の跡が残り、触れた敵を斬ります。", "流血突进的路径上留下刀痕，斩击触碰的敌人。");
@@ -309,7 +310,7 @@ public static partial class LocTable
         A("영혼 회오리", "Soul Vortex", "魂の渦", "灵魂漩涡");
         A("잔향 베기가 흡수한 영혼만큼 커지고 강해지며, 쓴 영혼의 절반을 되돌려 줍니다.", "Echo Slash grows bigger and stronger with your stored souls, and refunds half of them.", "残響斬りが吸収した魂の分だけ大きく強くなり、使った魂の半分を返します。", "余响斩随储存的灵魂变大变强，并返还一半灵魂。");
         A("환영 연막", "Phantom Smoke", "幻影の煙幕", "幻影烟幕");
-        A("연막 안에 서 있는 동안 적의 공격이 모두 빗나갑니다.", "While you stand in your smoke, every enemy attack misses.", "煙幕の中にいる間、敵の攻撃はすべて外れます。", "站在烟幕中时，敌人的攻击全部落空。");
+        Entries["연막 안에 서 있는 동안 적의 공격이 모두 빗나갑니다."] = E("연막 안에 서 있는 동안 받는 피해가 90% 줄어듭니다.", "While you stand in your smoke, damage taken is reduced by 90%.", "煙幕の中にいる間、受けるダメージが90%減少します。", "站在烟幕中时，受到的伤害降低90%。");     // 1.2.5~ 빗나감 → 받는 피해 -90%
         A("피바다", "Sea of Blood", "血の海", "血海");
         A("출혈 폭발이 주변 적에게도 같은 피해를 주고, 터질 때마다 체력을 회복합니다.", "Hemorrhage also hits nearby enemies for the same damage, and heals you each time.", "出血爆発が周りの敵にも同じダメージを与え、弾けるたびに体力を回復します。", "出血爆发对周围敌人造成同等伤害，并在每次爆发时恢复生命。");
         A("처형자의 길", "Executioner's Path", "処刑人の道", "处刑者之路");
@@ -390,5 +391,6 @@ public static partial class LocTable
         K("모든 칸을 배웠습니다", "모든 칸을 배웠습니다.", "You've learned every node.", "すべてのマスを習得しました。", "已学会所有节点。");
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
         AddTranscend();     // 1.1~ 3장 각성 · 초월 카드 (LocTable.Transcend)
+        AddTerrain();       // 1.2.3~ 무한 모드 지형 변화 (LocTable.Terrain)
     }
 }

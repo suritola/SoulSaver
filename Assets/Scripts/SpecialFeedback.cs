@@ -12,8 +12,11 @@ public class SpecialFeedback : MonoBehaviour
     readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
     AudioSource oneShot;
     AudioSource loop;
-    Material lineMaterial;
-    Material dashMaterialTemplate;
+    // 1.2.4: 실선 재질 · 점선 텍스처 · 점선 틀은 판마다 새로 만들던 것 → 한 번만 만들어 같이 씀 (장면이 바뀌어 지워졌으면 다시 만듦)
+    static Material lineMaterial;
+    static Material dashMaterialTemplate;
+    static Texture2D dashTexture;
+    readonly List<Material> dashMaterials = new List<Material>();       // 점선 선마다 하나 (선마다 반복 배율이 달라서) · 이 장면이 끝나면 지움
     TMP_FontAsset font;
     Material fontMaterial;
     Coroutine shake;
@@ -31,15 +34,23 @@ public class SpecialFeedback : MonoBehaviour
         loop.playOnAwake = false;
         loop.loop = true;
 
-        lineMaterial = new Material(Shader.Find("Sprites/Default"));
+        // 장면 전환의 사용 안 하는 에셋 정리(UnloadUnusedAssets)가 정적 캐시를 지우지 않게 (이 Awake 뒤에 지워지면 선이 분홍색이 됨)
+        if (lineMaterial == null) lineMaterial = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontUnloadUnusedAsset };
 
         // 점선: 절반은 채우고 절반은 비운 텍스처를 선 길이만큼 반복
-        Texture2D dash = new Texture2D(8, 1, TextureFormat.RGBA32, false);
-        for (int x = 0; x < 8; x++) dash.SetPixel(x, 0, x < 5 ? Color.white : Color.clear);
-        dash.wrapMode = TextureWrapMode.Repeat;
-        dash.filterMode = FilterMode.Point;
-        dash.Apply();
-        dashMaterialTemplate = new Material(lineMaterial) { mainTexture = dash };
+        if (dashTexture == null)
+        {
+            Texture2D dash = new Texture2D(8, 1, TextureFormat.RGBA32, false);
+            for (int x = 0; x < 8; x++) dash.SetPixel(x, 0, x < 5 ? Color.white : Color.clear);
+            dash.wrapMode = TextureWrapMode.Repeat;
+            dash.filterMode = FilterMode.Point;
+            dash.Apply();
+            dash.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            dashTexture = dash;
+            if (dashMaterialTemplate != null) Destroy(dashMaterialTemplate);
+            dashMaterialTemplate = null;
+        }
+        if (dashMaterialTemplate == null) dashMaterialTemplate = new Material(lineMaterial) { mainTexture = dashTexture, hideFlags = HideFlags.DontUnloadUnusedAsset };
 
         BuildClips();
     }
@@ -525,7 +536,13 @@ public class SpecialFeedback : MonoBehaviour
     {
         GameObject go = new GameObject(name);
         LineRenderer lr = go.AddComponent<LineRenderer>();
-        lr.material = dashed ? new Material(dashMaterialTemplate) : lineMaterial;
+        Material m = lineMaterial;
+        if (dashed)
+        {
+            m = new Material(dashMaterialTemplate);
+            dashMaterials.Add(m);
+        }
+        lr.sharedMaterial = m;
         lr.textureMode = LineTextureMode.Stretch;
         lr.sortingLayerName = "Effect";
         lr.sortingOrder = order;
@@ -540,13 +557,17 @@ public class SpecialFeedback : MonoBehaviour
 
     void SetDashScale(LineRenderer lr, float length)
     {
-        if (lr.material.mainTexture != null) lr.material.mainTextureScale = new Vector2(Mathf.Max(1f, length / DashLength), 1f);
+        // 1.2.4: lr.material 게터는 공유 재질을 넣은 선(실선 · 활 조준선)도 처음 부를 때 재질을 복제했음 → sharedMaterial
+        //   (점선 선은 NewLine 이 이미 선마다 따로 만든 재질이라 sharedMaterial 도 그 재질)
+        Material m = lr.sharedMaterial;
+        if (m != null && m.mainTexture != null) m.mainTextureScale = new Vector2(Mathf.Max(1f, length / DashLength), 1f);
     }
 
     public void SetLine(LineRenderer lr, Vector3 a, Vector3 b, Color color, float width)
     {
         // 점선용 선은 도트 화살촉으로 그림 (Sprites/Default 셰이더가 텍스처 반복을 무시해 실선으로 보였음)
-        if (lr.material != null && lr.material.mainTexture != null)
+        Material shared = lr.sharedMaterial;
+        if (shared != null && shared.mainTexture != null)
         {
             lr.enabled = false;
             SetDots(lr, a, b, color, width);
@@ -566,12 +587,14 @@ public class SpecialFeedback : MonoBehaviour
     {
         const int seg = 48;
         lr.enabled = true;
-        lr.positionCount = seg + 1;
+        if (lr.positionCount != seg + 1) lr.positionCount = seg + 1;
+        Vector3[] buf = Hostile.PointBuffer(seg + 1);       // 1.2.4: 점마다 SetPosition → 한 번에 (같은 좌표)
         for (int i = 0; i <= seg; i++)
         {
             float a = i / (float)seg * Mathf.PI * 2f;
-            lr.SetPosition(i, center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radius);
+            buf[i] = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radius;
         }
+        lr.SetPositions(buf);
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
         SetDashScale(lr, 2f * Mathf.PI * radius);
@@ -581,14 +604,16 @@ public class SpecialFeedback : MonoBehaviour
     {
         const int seg = 16;
         lr.enabled = true;
-        lr.positionCount = seg + 3;
-        lr.SetPosition(0, origin);
+        if (lr.positionCount != seg + 3) lr.positionCount = seg + 3;
+        Vector3[] buf = Hostile.PointBuffer(seg + 3);       // 1.2.4: 점마다 SetPosition → 한 번에 (같은 좌표)
+        buf[0] = origin;
         for (int i = 0; i <= seg; i++)
         {
             float a = Mathf.Lerp(-halfAngle, halfAngle, i / (float)seg);
-            lr.SetPosition(i + 1, origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, a) * dir) * range));
+            buf[i + 1] = origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, a) * dir) * range);
         }
-        lr.SetPosition(seg + 2, origin);
+        buf[seg + 2] = origin;
+        lr.SetPositions(buf);
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
         SetDashScale(lr, range * 2f + range * halfAngle * Mathf.Deg2Rad * 2f);
@@ -660,6 +685,13 @@ public class SpecialFeedback : MonoBehaviour
         }
     }
 
+    // 1.2.4: 이 장면에서 만든 점선 재질은 장면과 함께 지움 (Unity 는 재질을 자동으로 지우지 않음)
+    void OnDestroy()
+    {
+        foreach (Material m in dashMaterials) if (m != null) Destroy(m);
+        dashMaterials.Clear();
+    }
+
     // ================================================================= floating text
     readonly Dictionary<string, float> lastText = new Dictionary<string, float>();
 
@@ -669,9 +701,12 @@ public class SpecialFeedback : MonoBehaviour
         if (lastText.TryGetValue(text, out float t) && Time.time - t < throttle) return;
         lastText[text] = Time.time;
 
-        GameObject go = new GameObject("FloatText");
+        // 1.2.4: 다 떠오른 글자는 꺼 두었다가 다시 씀 (글꼴 · 재질 · 크기 · 정렬은 아래에서 다시 넣음)
+        FloatUp up = FloatUp.Take();
+        bool reused = up != null;
+        GameObject go = reused ? up.gameObject : new GameObject("FloatText");
         go.transform.position = pos + new Vector3(0f, 3.2f, 0f);
-        TextMeshPro tmp = go.AddComponent<TextMeshPro>();
+        TextMeshPro tmp = reused ? up.Text : go.AddComponent<TextMeshPro>();
         if (font != null) tmp.font = font;
         Material outlined = Notice.WorldMaterial(tmp.font);         // 1.1.2~ 진한 외곽선 (이펙트 · 금빛 물체 위에서도 읽히게)
         if (outlined != null) tmp.fontSharedMaterial = outlined;
@@ -683,7 +718,9 @@ public class SpecialFeedback : MonoBehaviour
         tmp.enableWordWrapping = false;
         tmp.sortingLayerID = SortingLayer.NameToID("Effect");
         tmp.sortingOrder = 50;      // 1.1.2~ 30 -> 50: 피해 숫자(40 · 45) · 이펙트보다 위
-        go.AddComponent<FloatUp>().duration = duration;     // 1.1~ 읽어야 하는 안내는 더 오래 남김
+        if (!reused) up = go.AddComponent<FloatUp>();
+        up.duration = duration;     // 1.1~ 읽어야 하는 안내는 더 오래 남김
+        if (reused) up.Reopen(color);
     }
 
     // ================================================================= screen shake
@@ -766,18 +803,70 @@ public class FloatUp : MonoBehaviour
     float t;
     TextMeshPro tmp;
     Color c;
+    bool ready;
+
+    // 1.2.4: 다 떠오른 글자는 꺼 두었다가 SpecialFeedback.FloatText 가 다시 씀
+    static readonly Stack<FloatUp> pool = new Stack<FloatUp>();
+    int spawnFrame = -1;
+    byte meshAlpha = 255;
+
+    public TextMeshPro Text => tmp != null ? tmp : (tmp = GetComponent<TextMeshPro>());
+
+    public static FloatUp Take()
+    {
+        FloatUp f = null;
+        while (pool.Count > 0 && f == null) f = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        return f;
+    }
+
+    // 다시 쓸 때: 새로 만든 것처럼 처음부터 (켜진 그 프레임에는 움직이지 않음)
+    public void Reopen(Color color)
+    {
+        tmp = Text;
+        c = color;
+        ready = true;
+        t = 0f;
+        meshAlpha = 255;
+        spawnFrame = Time.frameCount;
+        gameObject.SetActive(true);
+    }
 
     void Start()
     {
+        if (ready) return;
         tmp = GetComponent<TextMeshPro>();
         c = tmp.color;
+        ready = true;
     }
 
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;
         t += Time.unscaledDeltaTime;
         transform.position += Vector3.up * 2.2f * Time.unscaledDeltaTime;
-        tmp.color = new Color(c.r, c.g, c.b, c.a * Mathf.Clamp01(1f - (t - duration * 0.5f) / (duration * 0.5f)));
-        if (t >= duration) Destroy(gameObject);
+        // 1.2.4: 알파를 tmp.color 로 바꾸면 TMP 가 매 프레임 글자 메시를 통째로 다시 만듦 → 정점 알파만 (DamagePopup 과 같은 방식 · 같은 모습)
+        SetMeshAlpha(c.a * Mathf.Clamp01(1f - (t - duration * 0.5f) / (duration * 0.5f)));
+        if (t >= duration)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
+    }
+
+    void SetMeshAlpha(float a)
+    {
+        byte b = (byte)Mathf.RoundToInt(Mathf.Clamp01(a) * 255f);
+        if (b == meshAlpha) return;
+        meshAlpha = b;
+        TMP_TextInfo info = tmp.textInfo;
+        if (info == null || info.meshInfo == null) return;
+        for (int i = 0; i < info.meshInfo.Length; i++)
+        {
+            Color32[] cols = info.meshInfo[i].colors32;
+            if (cols == null) continue;
+            int n = Mathf.Min(info.meshInfo[i].vertexCount, cols.Length);
+            for (int j = 0; j < n; j++) cols[j].a = b;
+        }
+        tmp.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
 }

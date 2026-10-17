@@ -21,7 +21,7 @@ public class PlayerLook : MonoBehaviour
     float swingSign = 1f;
 
     // 무기마다: 반동 거리, 들리는 각도, 손에서 총구까지 길이
-    static float Recoil(int id) => id == -1 ? BaseRecoil() : id switch
+    float Recoil(int id) => id == -1 ? baseRecoil : id switch
     {
         SpecialAbilities.ShotgunId => 0.45f, SpecialAbilities.SniperId => 0.6f, SpecialAbilities.DualId => 0.15f,
         SpecialAbilities.FlameId => 0.05f, SpecialAbilities.SeekerId => 0.3f, SpecialAbilities.ChainId => 0.2f,
@@ -37,7 +37,7 @@ public class PlayerLook : MonoBehaviour
         CharacterId.Swordsman => 0f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f, _ => 8f,
     };
 
-    static float Lift(int id) => id == -1 ? BaseLift() : id switch
+    float Lift(int id) => id == -1 ? baseLift : id switch
     {
         SpecialAbilities.ShotgunId => 22f, SpecialAbilities.SniperId => 16f, SpecialAbilities.GrenadeId => 26f,
         SpecialAbilities.SeekerId => 12f, SpecialAbilities.FlameId => 2f, SpecialAbilities.ScytheId => -70f, _ => 8f,
@@ -86,6 +86,18 @@ public class PlayerLook : MonoBehaviour
         foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + SkinData.BodySheet("gunner_nogun"))) noGun[s.name] = s;     // 캐릭터 스킨
     }
 
+    // 최적화 29: 영웅별 상수는 판 시작에 한 번 (CharacterData.Selected 는 부를 때마다 저장값 조회)
+    float baseRecoil, baseLift;
+    bool swordsman;
+    readonly System.Collections.Generic.Dictionary<Sprite, Sprite> bareOf = new System.Collections.Generic.Dictionary<Sprite, Sprite>();
+
+    void Start()
+    {
+        baseRecoil = BaseRecoil();
+        baseLift = BaseLift();
+        swordsman = CharacterData.Selected == CharacterId.Swordsman;
+    }
+
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -98,7 +110,17 @@ public class PlayerLook : MonoBehaviour
     {
         if (player == null || body == null) return;
         // 캐릭터 그림에 그려진 권총은 지우고 (애니메이션이 이번 프레임에 고른 그림을 같은 이름의 총 없는 그림으로)
-        if (body.sprite != null && noGun.TryGetValue(body.sprite.name, out Sprite bare)) body.sprite = bare;
+        //   최적화 29: sprite.name 은 부를 때마다 새 문자열이라, 처음 보는 그림만 이름으로 찾고 그림 참조로 기억
+        Sprite cur = body.sprite;
+        if (cur != null)
+        {
+            if (!bareOf.TryGetValue(cur, out Sprite bare))
+            {
+                noGun.TryGetValue(cur.name, out bare);
+                bareOf[cur] = bare;
+            }
+            if (bare != null && bare != cur) body.sprite = bare;
+        }
 
         int id = CurrentWeapon;
         if (id != shownWeapon)
@@ -114,8 +136,9 @@ public class PlayerLook : MonoBehaviour
             held.color = id >= 0 && SkinFx.WeaponSkin != null ? SkinFx.Tint(Color.white) : Color.white;
         }
         // 죽는 연출 · 숨김(시작 연출) 중에는 몸과 함께 숨김
-        held.enabled = held.sprite != null && body.enabled;
-        if (!held.enabled) return;
+        bool show = held.sprite != null && body.enabled;
+        if (held.enabled != show) held.enabled = show;
+        if (!show) return;
 
         if (player.special != null) aim = player.special.AimDirection;
         if (aim.sqrMagnitude < 0.01f) aim = body.flipX ? Vector2.left : Vector2.right;
@@ -130,17 +153,29 @@ public class PlayerLook : MonoBehaviour
         float swing = SwingOffset(dt, out float grow);
         float angle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg + (left ? -(kickAngle + swing) : kickAngle + swing);
         Vector3 hand = new Vector3(left ? -0.35f : 0.35f, -0.55f, 0f);
-        held.transform.localPosition = hand - (Vector3)(aim * (kick + 0.25f * drawAmount));
-        held.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
-        held.transform.localScale = Vector3.one * (grow * HeldScale(id) * (1f + 0.25f * drawAmount));
-        held.flipY = left;                           // 왼쪽을 볼 때 무기가 뒤집히지 않게
-        held.color = body.color;                     // 피격 깜빡임을 몸과 같이
+        // 최적화 29: 값이 바뀌었을 때만 씀 (가만히 겨누고 있으면 쓰지 않음)
+        Transform ht = held.transform;
+        Vector3 pos = hand - (Vector3)(aim * (kick + 0.25f * drawAmount));
+        Vector3 scale = Vector3.one * (grow * HeldScale(id) * (1f + 0.25f * drawAmount));
+        if (pos != shownPos || angle != shownAngle || scale != shownScale)
+        {
+            shownPos = pos; shownAngle = angle; shownScale = scale;
+            ht.localPosition = pos;
+            ht.localRotation = Quaternion.Euler(0f, 0f, angle);
+            ht.localScale = scale;
+        }
+        if (held.flipY != left) held.flipY = left;   // 왼쪽을 볼 때 무기가 뒤집히지 않게
+        Color bc = body.color;
+        if (held.color != bc) held.color = bc;       // 피격 깜빡임을 몸과 같이
     }
 
+    Vector3 shownPos = new Vector3(float.NaN, 0f, 0f), shownScale;
+    float shownAngle = float.NaN;
+
     // 기본 무기 크기: 검사의 장검은 크게 (레벨업 긴 칼날로 더 커짐)
-    static float HeldScale(int id)
+    float HeldScale(int id)
     {
-        if (id != -1 || CharacterData.Selected != CharacterId.Swordsman) return 1f;
+        if (id != -1 || !swordsman) return 1f;
         CharacterKit kit = CharacterKit.Instance;
         return 2.6f * (kit != null ? Mathf.Sqrt(kit.reachMul) : 1f);
     }
@@ -266,21 +301,52 @@ public class Casing : MonoBehaviour
     float age;
     SpriteRenderer sr;
 
+    // 최적화 16: 다 떨어진 탄피는 지우지 않고 꺼 두었다가 다시 씀 (발사마다 새로 만들고 지우지 않게)
+    static readonly System.Collections.Generic.Stack<Casing> pool = new System.Collections.Generic.Stack<Casing>();
+    static int effectLayer = int.MinValue;
+    int spawnFrame = -1;
+
     public static void Spawn(Vector3 pos, Vector2 velocity, Color color)
     {
-        GameObject go = SpecialAbilities.MakeSprite("Casing", SpecialAbilities.GlowSprite, pos, 0.03f, color, "Effect", 6);
-        Casing c = go.AddComponent<Casing>();
+        Casing c = null;
+        while (pool.Count > 0 && c == null) c = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        if (c == null)
+        {
+            GameObject go = SpecialAbilities.MakeSprite("Casing", SpecialAbilities.GlowSprite, pos, 0.03f, color, "Effect", 6);
+            c = go.AddComponent<Casing>();
+            c.v = velocity;
+            c.sr = go.GetComponent<SpriteRenderer>();
+            return;
+        }
+        // MakeSprite 로 막 만든 것과 같은 상태로
+        if (effectLayer == int.MinValue) effectLayer = SortingLayer.NameToID("Effect");
+        Transform t = c.transform;
+        t.SetPositionAndRotation(pos, Quaternion.identity);
+        t.localScale = Vector3.one * 0.03f;
+        c.sr.sprite = SpecialAbilities.GlowSprite;
+        c.sr.color = color;
+        c.sr.sortingLayerID = effectLayer;
+        c.sr.sortingOrder = 6;
         c.v = velocity;
-        c.sr = go.GetComponent<SpriteRenderer>();
+        c.age = 0f;
+        c.spawnFrame = Time.frameCount;
+        c.gameObject.SetActive(true);
     }
 
     void Update()
     {
+        // 새로 만든 오브젝트처럼, 켜진 그 프레임에는 움직이지 않음
+        if (Time.frameCount == spawnFrame) return;
         age += Time.deltaTime;
         v.y -= 14f * Time.deltaTime;
         transform.position += (Vector3)(v * Time.deltaTime);
         transform.Rotate(0f, 0f, 720f * Time.deltaTime);
         if (sr != null) { Color c = sr.color; c.a = Mathf.Clamp01(1f - (age - 0.25f) / 0.2f); sr.color = c; }
-        if (age > 0.45f) Destroy(gameObject);
+        if (age > 0.45f)
+        {
+            if (sr == null) { Destroy(gameObject); return; }
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }

@@ -44,6 +44,9 @@ public class EnemySpawner : MonoBehaviour
     public System.Action onMidBossDefeated;
     int midBossPhase = 1;
     int midBossCount = 0;
+    // 1.2.3~ 규칙 E: 개발자 · 엄마전 약한 잡몹 — 지금 살아 있는 수 (EnermyController.Death 가 뺌 · 상한은 이 수로만 · 보스 부하 · 죽는 연출 중인 다른 적과 따로)
+    [System.NonSerialized] public int finalMobs;
+    static readonly WaitForSeconds finalMobWait = new WaitForSeconds(EndlessMode.FinalMobEvery);
 
     PlayerController playerC;
     bossbar bossbar;
@@ -76,6 +79,7 @@ public class EnemySpawner : MonoBehaviour
 
         // 페이즈에 따라 간격이 짧아지는 적 생성
         StartCoroutine(SpawnLoop());
+        StartCoroutine(FinalMobLoop());      // 1.2.3~ 무한 모드 규칙 E (평소 생성 주기와 떼어 정확히 1초마다 · 다른 모드에선 1초에 한 번 확인만)
         InvokeRepeating("clear", 30, 30);
     }
 
@@ -94,10 +98,35 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnLoop()
     {
+        // 간격이 매번 달라 WaitForSeconds 를 캐시할 수 없어 직접 시간을 잼 (스폰마다 할당 없음 · 프레임 단위로 깨는 것은 같음)
+        float next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);     // 앞쪽 장은 드물게 (2.1.5)
         while (true)
         {
-            yield return new WaitForSeconds(Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex));     // 앞쪽 장은 드물게 (2.1.5)
+            yield return null;
+            if (Time.time < next) continue;
             if (spawningEnabled) SpawnEnemy(false, transform.position);
+            next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);
+        }
+    }
+
+    // 1.2.3~ 규칙 E: 개발자 · 엄마와 싸우는 동안(등장 연출 제외) 1초마다 약한 잡몹 FinalMobBatch 마리 · 이 잡몹만 동시 FinalMobMax
+    // 평소 생성 간격 · Surge · 3배 부스트 · 일일 규칙과 상관없는 고정 주기 (SpawnLoop 틱에 묶으면 0.7초 주기면 1.4초마다로 밀렸음)
+    IEnumerator FinalMobLoop()
+    {
+        while (true)
+        {
+            yield return finalMobWait;
+            if (!spawningEnabled || EndlessMode.Instance == null || !EndlessMode.Instance.FinalBossFighting || Stage.finalWeights == null) continue;
+            if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
+            if (playerC == null) continue;
+            for (int n = 0; n < EndlessMode.FinalMobBatch && finalMobs < EndlessMode.FinalMobMax; n++)
+            {
+                spawnedEnemys++;
+                finalMobs++;
+                GameObject mob = Instantiate(Pick(Stage.finalWeights), GetSpawnPosition(playerC.transform.position), Quaternion.identity);
+                if (mob.TryGetComponent(out EnermyController fe)) { fe.pointMul = EndlessMode.FinalMobPointMul; fe.finalMob = true; }
+                else finalMobs--;
+            }
         }
     }
 
@@ -109,7 +138,11 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.FinalBossAlive) return;     // 1.1.2~ 개발자 · 엄마와 싸우는 동안엔 잡몹도 없음
+        if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.FinalBossAlive)
+        {
+            // 1.1.2~ 개발자 · 엄마와 싸우는 동안엔 평소 잡몹이 없음 → 1.2.3~ 약한 잡몹만 (FinalMobLoop · 1초마다 4마리 · 이 잡몹만 동시 30 · 포인트 ×0.25)
+            return;
+        }
         if (spawnedEnemys >= MaxAlive) return;      // 1.0.7~ 한 화면 최대 수 (1.1.2~ 개발자 · 엄마전 중엔 위에서 잡몹까지 막음)
         if (playerC == null) playerC = FindFirstObjectByType<PlayerController>();
 
@@ -197,6 +230,7 @@ public class EnemySpawner : MonoBehaviour
             e.baseColor = midBossColor;
             e.onKilled += () => onMidBossDefeated?.Invoke();
             MidBossMark.Attach(go, CodexUI.EnemyName(prefab.name));
+            e.MarkMidBoss();        // 중간 보스 여부 캐시를 다시 계산하게
         }
         onMidBossSpawned?.Invoke();
     }
@@ -430,6 +464,7 @@ public class EnemySpawner : MonoBehaviour
         bossSpawned = false;
         bossCleared = false;
         spawnedEnemys = 0;
+        finalMobs = 0;
         spawningEnabled = true;
     }
 

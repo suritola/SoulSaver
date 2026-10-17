@@ -261,6 +261,7 @@ public partial class CharacterKit
     readonly Dictionary<GameObject, LineRenderer> chillMarks = new Dictionary<GameObject, LineRenderer>();
     static readonly HashSet<GameObject> chillShown = new HashSet<GameObject>();
     static readonly List<GameObject> chillStale = new List<GameObject>();
+    readonly Dictionary<LineRenderer, Vector3> chillShape = new Dictionary<LineRenderer, Vector3>();     // 1.2.4: 마지막으로 그린 고리 (반지름 · 차오름 · 얼어붙음)
 
     void DrawChillMarks()
     {
@@ -271,7 +272,7 @@ public partial class CharacterKit
         foreach (var kv in chillMarks) if (kv.Key == null || !chillShown.Contains(kv.Key)) chillStale.Add(kv.Key);
         foreach (GameObject g in chillStale)
         {
-            if (chillMarks.TryGetValue(g, out LineRenderer lr) && lr != null) Destroy(lr.gameObject);
+            if (chillMarks.TryGetValue(g, out LineRenderer lr) && lr != null) { chillShape.Remove(lr); Destroy(lr.gameObject); }
             chillMarks.Remove(g);
         }
     }
@@ -286,21 +287,27 @@ public partial class CharacterKit
         if (!chillMarks.TryGetValue(g, out LineRenderer lr) || lr == null)
         {
             lr = Hostile.NewLine("ChillMark", Chill, 0.12f, 30);
+            lr.useWorldSpace = false;      // 1.2.4: 고리는 선 자기 자리 기준으로 그려 두고 매 프레임 선 위치만 옮김 (보이는 좌표는 같음)
             chillMarks[g] = lr;
         }
         chillShown.Add(g);
+        lr.transform.position = center;
+        // 1.2.4: 적마다 매 프레임 61점을 다시 넣던 것 → 반지름 · 차오름 · 얼어붙음이 바뀔 때만 다시 그림
+        Vector3 shape = new Vector3(r, frozen ? 1f : k, frozen ? 1f : 0f);
+        bool redraw = !chillShape.TryGetValue(lr, out Vector3 old) || old.x != shape.x || old.y != shape.y || old.z != shape.z;
+        if (redraw) chillShape[lr] = shape;
         if (frozen)
         {
             float pulse = 0.6f + 0.35f * Mathf.Sin(Time.time * 12f);
             lr.loop = true;
-            Hostile.SetArc(lr, center, r, 0f, 360f);
+            if (redraw) Hostile.SetArc(lr, Vector3.zero, r, 0f, 360f);
             lr.startColor = lr.endColor = new Color(0.85f, 0.97f, 1f, pulse);
             lr.startWidth = lr.endWidth = 0.18f;
         }
         else
         {
             lr.loop = false;
-            Hostile.SetArc(lr, center, r, 90f, 90f - 360f * k);
+            if (redraw) Hostile.SetArc(lr, Vector3.zero, r, 90f, 90f - 360f * k);
             lr.startColor = lr.endColor = new Color(Chill.r, Chill.g, Chill.b, 0.9f);
             lr.startWidth = lr.endWidth = 0.12f;
         }
@@ -489,6 +496,7 @@ public partial class CharacterKit
         wispFx.Clear();
         foreach (var kv in chillMarks) if (kv.Value != null) Destroy(kv.Value.gameObject);
         chillMarks.Clear();
+        chillShape.Clear();
         if (possessRange != null) Destroy(possessRange.gameObject);
     }
 }

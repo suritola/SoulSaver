@@ -66,6 +66,10 @@ public class StatsHUD : MonoBehaviour
     float[] labelRight;
     float baseSpeed;
     float timer;
+    // 최적화: 줄마다 지난번 원시 값(숫자 두 개)을 기억해 바뀐 줄만 글자를 새로 만들고 폭을 잼 (예전엔 0.2초마다 13줄 전부)
+    float[] keyA, keyB;
+    bool[] rowDirty;
+    Loc.Lang shownLang = (Loc.Lang)(-1);
 
     void Start()
     {
@@ -75,7 +79,10 @@ public class StatsHUD : MonoBehaviour
         values = new TextMeshProUGUI[Labels.Length];
         labels = new TextMeshProUGUI[Labels.Length];
         labelRight = new float[Labels.Length];
-        for (int i = 0; i < Labels.Length; i++) BuildRow(i);
+        keyA = new float[Labels.Length];
+        keyB = new float[Labels.Length];
+        rowDirty = new bool[Labels.Length];
+        for (int i = 0; i < Labels.Length; i++) { keyA[i] = keyB[i] = float.NaN; BuildRow(i); }
 
         panelRect = GetComponent<RectTransform>();
         // 줄이 늘어난 만큼 패널을 키움 (아래쪽 기준이라 위로 자람)
@@ -86,7 +93,19 @@ public class StatsHUD : MonoBehaviour
         openAmount = open ? 1f : 0f;
         ApplyOpenAmount();
 
+        // 최적화: 능력치 창을 하위 캔버스로 — 숫자가 바뀌거나 접고 펼 때 HUD 전체를 다시 묶지 않게 (창 안에는 버튼 없음 · 탭은 형제)
+        UiScaler.Isolate(gameObject, false);
+
         Refresh();
+    }
+
+    // 원시 값이 지난번과 다르면 true (언어가 바뀌면 모든 줄 다시)
+    bool Changed(int i, float a, float b = 0f)
+    {
+        if (keyA[i].Equals(a) && keyB[i].Equals(b)) return false;
+        keyA[i] = a; keyB[i] = b;
+        rowDirty[i] = true;
+        return true;
     }
 
     // 패널 바로 아래(탄약 패널 위)에 붙는 화살표 버튼
@@ -252,64 +271,80 @@ public class StatsHUD : MonoBehaviour
     void Refresh()
     {
         if (player == null || values == null) return;
-        string[] v = ValueTexts();
-        for (int i = 0; i < values.Length && i < v.Length; i++) values[i].text = v[i];
-        FitLabels();
-    }
-
-    // 1.1.9~ 13줄 값 (HUD 와 빌드 자세히 보기가 같이 씀)
-    internal string[] ValueTexts()
-    {
-        string[] values = new string[Labels.Length];
-        if (player == null) player = FindFirstObjectByType<PlayerController>();
-        if (player == null) { for (int i = 0; i < values.Length; i++) values[i] = "-"; return values; }
+        if (shownLang != Loc.Current)
+        {
+            shownLang = Loc.Current;
+            for (int i = 0; i < keyA.Length; i++) keyA[i] = keyB[i] = float.NaN;
+        }
 
         // 공격력: 멀티샷이면 발당 피해 x 발사 수
         int shots = Mathf.Max(1, player.multiShot);
-        values[0] = shots > 1
-            ? (player.damage * player.MultiShotDamageRate(shots)).ToString("0.##") + " x " + shots
-            : player.damage.ToString("0.##");
+        float atk = shots > 1 ? player.damage * player.MultiShotDamageRate(shots) : player.damage;
+        if (Changed(0, atk, shots))
+            values[0].text = shots > 1 ? atk.ToString("0.##") + " x " + shots : atk.ToString("0.##");
 
         // 방어력: 받는 피해 감소율
-        values[1] = (Mathf.Min(player.def, PlayerController.MaxDef) * 100f).ToString("0") + "%";
+        float def = Mathf.Min(player.def, PlayerController.MaxDef);
+        if (Changed(1, def)) values[1].text = (def * 100f).ToString("0") + "%";
 
         // 공격 속도: 초당 발사 수
-        values[2] = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");
+        float rate = 1f / Mathf.Max(0.01f, player.ShootSpeed);
+        if (Changed(2, rate)) values[2].text = rate.ToString("0.0") + Loc.T("/초");
 
         // 1.0.4~: 탄을 쓰지 않는 영웅(근접 · 궁수 등)은 재장전이 없으니 「-」
         CharacterKit kit = CharacterKit.Instance;
-        values[3] = kit != null && !kit.UsesAmmo ? "-" : player.reloadTime.ToString("0.0") + Loc.T("초");
+        bool noAmmo = kit != null && !kit.UsesAmmo;
+        if (Changed(3, player.reloadTime, noAmmo ? 1f : 0f))
+            values[3].text = noAmmo ? "-" : player.reloadTime.ToString("0.0") + Loc.T("초");
 
         // 이동 속도: 시작 속도 대비
-        values[4] = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
+        if (Changed(4, player.speed))
+            values[4].text = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
 
-        values[5] = Mathf.CeilToInt(player.PlayerHealth) + " / " + Mathf.RoundToInt(player.PlayerMaxHealth);
+        int hpNow = Mathf.CeilToInt(player.PlayerHealth), hpMax = Mathf.RoundToInt(player.PlayerMaxHealth);
+        if (Changed(5, hpNow, hpMax)) values[5].text = hpNow + " / " + hpMax;
 
         // 치명타: 영혼 트리에서 얻음 (없으면 0%)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
-        values[6] = ((sp != null ? sp.TreeCrit : 0f) * 100f).ToString("0") + "%";
-        // 1.0.4~: 치명타 확률이 0% 면 치명타 피해는 쓰이지 않으니 「-」 (예전엔 0% 인데도 200% 가 보였음)
         float critChance = sp != null ? sp.TreeCrit : 0f;
-        values[7] = critChance <= 0f ? "-" : ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
+        if (Changed(6, critChance)) values[6].text = (critChance * 100f).ToString("0") + "%";
+        // 1.0.4~: 치명타 확률이 0% 면 치명타 피해는 쓰이지 않으니 「-」 (예전엔 0% 인데도 200% 가 보였음)
+        float critDmg = sp != null ? sp.TreeCritDamage : 2f;
+        if (Changed(7, critChance <= 0f ? 0f : 1f, critDmg))
+            values[7].text = critChance <= 0f ? "-" : (critDmg * 100f).ToString("0") + "%";
 
         // 피해 배율: 버프 · 특수 능력으로 곱해지는 값
-        values[8] = (player.damageMultiplier * 100f).ToString("0") + "%";
+        if (Changed(8, player.damageMultiplier)) values[8].text = (player.damageMultiplier * 100f).ToString("0") + "%";
 
         // 관통: 뚫고 지나가는 적 수
         int pierce = Mathf.Max(0, player.pene - 1);
-        values[9] = pierce + Loc.T(pierce == 1 ? "마리 (한 마리)" : "마리");      // 1.1~ 영어 「1 enemy」 (예전엔 「1 enemies」)
+        if (Changed(9, pierce)) values[9].text = pierce + Loc.T(pierce == 1 ? "마리 (한 마리)" : "마리");      // 1.1~ 영어 「1 enemy」 (예전엔 「1 enemies」)
 
         // 체력 재생: 초당 · 처치 시
         // 행운 (1.0.2): 지금 키우는 카드가 나올 확률 (행운 1마다 +40%, LevelShop.DrawWeight)
         int luck = sp != null ? sp.Luck : 0;
-        values[11] = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
+        if (Changed(11, luck)) values[11].text = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
         // 1.1~: 처치 회복이 붙으면 값이 길어져 이름 위로 겹쳤음 → 처치 회복은 작게
-        values[10] = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? " <size=65%>+" + player.healOnKill.ToString("0.#") + Loc.T("/처치") + "</size>" : "");
+        if (Changed(10, player.regenPerSecond, player.healOnKill))
+            values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? " <size=65%>+" + player.healOnKill.ToString("0.#") + Loc.T("/처치") + "</size>" : "");
         // 성장 (1.0.4~): 만렙 뒤 고른 성장 카드 수 · 영혼 정련 횟수
         LevelShop shop = Cache<LevelShop>.Get;
         int grown = shop != null ? shop.GrowthPicks : 0, refines = sp != null ? sp.Refines : 0;
-        values[12] = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
-        return values;
+        if (Changed(12, grown, refines))
+            values[12].text = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
+        FitLabels();
+    }
+
+    // 1.1.9~ 13줄 값 (빌드 자세히 보기가 씀) — HUD 와 같은 글자: 바뀐 줄만 다시 써 두고(Refresh) 그 글자를 그대로 돌려줌
+    //   창을 열 때 한 번만 불림 (매 프레임 아님)
+    internal string[] ValueTexts()
+    {
+        string[] v = new string[Labels.Length];
+        if (player == null) player = FindFirstObjectByType<PlayerController>();
+        if (player == null || values == null) { for (int i = 0; i < v.Length; i++) v[i] = "-"; return v; }
+        Refresh();
+        for (int i = 0; i < v.Length && i < values.Length; i++) v[i] = values[i] != null ? values[i].text : "-";
+        return v;
     }
 
     // 1.1~: 줄마다 이름 칸 오른쪽 끝을 값 글자 왼쪽(+8)까지로 (값이 길면 이름이 자동으로 작아짐)
@@ -319,6 +354,7 @@ public class StatsHUD : MonoBehaviour
         for (int i = 0; i < labels.Length; i++)
         {
             if (labels[i] == null || values[i] == null) continue;
+            if (rowDirty != null) { if (!rowDirty[i]) continue; rowDirty[i] = false; }      // 글자가 바뀐 줄만 폭을 잼
             float w = values[i].GetPreferredValues(values[i].text).x;
             float right = -padding - Mathf.Ceil(w) - 8f;
             if (Mathf.Approximately(labelRight[i], right)) continue;

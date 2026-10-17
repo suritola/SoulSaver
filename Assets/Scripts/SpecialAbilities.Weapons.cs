@@ -19,7 +19,7 @@ public partial class SpecialAbilities
         {
             case ShotgunId:
                 // 공격 범위(부채꼴) 표시
-                fx.SetCone(previewCone, player.MuzzlePosition, AimDir(), ShotgunHalfAngle, ShotgunRange, new Color(1f, 0.55f, 0.2f, 0.45f), 0.1f);
+                PreviewCone(previewCone, player.MuzzlePosition, AimDir(), ShotgunHalfAngle, ShotgunRange, new Color(1f, 0.55f, 0.2f, 0.45f), 0.1f);
                 if (held && Ready()) FireShotgun();
                 break;
             case SniperId:
@@ -35,7 +35,7 @@ public partial class SpecialAbilities
                 {
                     // 유도탄이 쫓아갈 적 표시
                     Transform target = Specials.NearestEnemy(MouseWorld(), 20f) ?? Specials.NearestEnemy(player.transform.position, 20f);
-                    if (target != null) fx.SetRing(targetRing, target.position, 1.6f + Mathf.Sin(Time.time * 8f) * 0.15f, new Color(0.75f, 0.5f, 1f, 0.85f), 0.12f);
+                    if (target != null) PreviewRing(targetRing, target.position, 1.6f + Mathf.Sin(Time.time * 8f) * 0.15f, new Color(0.75f, 0.5f, 1f, 0.85f), 0.12f);
                     if (held && Ready()) FireSeeker();
                 }
                 break;
@@ -44,7 +44,7 @@ public partial class SpecialAbilities
                 break;
             case ScytheId:
                 if (activeScythe == null)
-                    fx.SetLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
+                    PreviewLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
                 if (held && activeScythe == null && !player.IsSkillUsing && Time.time >= nextScytheAt) FireScythe();
                 player.ammoTextOverride = activeScythe == null ? Loc.T("낫 준비") : Loc.T("낫 회수 중");
                 break;
@@ -52,8 +52,8 @@ public partial class SpecialAbilities
                 {
                     // 떨어질 지점과 폭발 범위
                     Vector3 land = GrenadeLanding();
-                    fx.SetLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
-                    fx.SetRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
+                    PreviewLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
+                    PreviewRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
                     if (held && Ready()) FireGrenade();
                 }
                 break;
@@ -105,7 +105,7 @@ public partial class SpecialAbilities
             : full ? Color.Lerp(new Color(1f, 0.85f, 0.3f, 0.7f), new Color(1f, 1f, 0.8f, 1f), Mathf.PingPong(Time.time * 6f, 1f))
             : new Color(0.5f, 0.95f, 1f, 0.4f + 0.5f * k);
         // 화면 끝까지 닿는 점선 조준선 (충전할수록 밝고 굵어짐)
-        fx.SetLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * ScreenEdgeDistance(muzzle, AimDir())), lineColor, 0.08f + 0.1f * k);
+        PreviewLine(aimLine, muzzle, muzzle + (Vector3)(AimDir() * ScreenEdgeDistance(muzzle, AimDir())), lineColor, 0.08f + 0.1f * k);
         if (sniperCharge < 0f) return;
 
         sniperCharge = Mathf.Min(SniperChargeTime, sniperCharge + Time.deltaTime);
@@ -213,7 +213,7 @@ public partial class SpecialAbilities
         bool hitAny = false;
         bool boom = GunBoomShot();
 
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(start, ShotgunRange))
+        using (var ovl = PhysHits.Circle(start, ShotgunRange)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector2 to = (Vector2)(c.transform.position - start);

@@ -185,10 +185,28 @@ public class SteamManager : MonoBehaviour
                 if (!BossUltimate.UsedThisFight(AbyssStage.MirrorKind)) SteamAchievements.Unlock(SteamAchievements.MirrorQuick);
             }
         }
+        JudgeBossFight();
+        bossFight = false;
+    }
+
+    // 보스 하나를 쓰러뜨린 순간의 업적 판정 (보스전 무피격 · 아슬아슬)
+    void JudgeBossFight()
+    {
         if (bossFight && !bossHit) SteamAchievements.Unlock(SteamAchievements.NoHitBoss);
         if (player != null && player.PlayerHealth > 0f && player.PlayerHealth <= player.PlayerMaxHealth * 0.1f)
             SteamAchievements.Unlock(SteamAchievements.CloseCall);
-        bossFight = false;
+    }
+
+    // 1.2.3~ 무한 모드에서 겹쳐 나온 보스 중 먼저 쓰러진 보스 (EndlessMode.OnExtraBossDown — onBossDefeated 는 마지막 한 마리에만 옴)
+    // 그 보스로도 판정하고, 남은 보스와의 싸움은 지금부터 새로 잼 (여러 보스를 한 판정으로 묶지 않게)
+    public static void OnExtraBossDown()
+    {
+        SteamManager m = Instance;
+        if (m == null || m.player == null) return;
+        m.JudgeBossFight();
+        m.bossFight = true;
+        m.bossHit = false;
+        m.lastHealth = m.player.PlayerHealth;
     }
 
     void OnEnemyKilled(Vector3 at)

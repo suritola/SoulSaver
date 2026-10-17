@@ -18,6 +18,8 @@ public partial class CharacterKit
     float tickSoundAt;
     int gearThrows;
     LineRenderer clockRing, clockDial;
+    bool clockDialDrawn;
+    float clockRingK = -1f;
     public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0));
     public bool ClockReady => clockTicks >= ClockNeed;
     public void AddClockTicks(float n) { clockTickFrac += n; while (clockTickFrac >= 1f) { clockTickFrac -= 1f; if (clockTicks < ClockNeed) clockTicks++; } }
@@ -159,6 +161,11 @@ public partial class CharacterKit
             clockDial.loop = true;
             clockRing = Hostile.NewLine("ClockRing", Brass, 0.18f, 59);
             clockRing.loop = false;
+            // 1.2.4: 고리를 선 자기 자리 기준(로컬)으로 그려 두고 매 프레임 선 위치만 옮김 — 모양이 바뀔 때만 다시 그림 (보이는 좌표는 같음)
+            clockDial.useWorldSpace = false;
+            clockRing.useWorldSpace = false;
+            clockDialDrawn = false;
+            clockRingK = -1f;
         }
         float k = Mathf.Clamp01(clockTicks / (float)ClockNeed);
         bool show = !PlayerController.Cinematic;
@@ -166,9 +173,11 @@ public partial class CharacterKit
         clockRing.enabled = show && k > 0f;
         if (!show) return;
         Vector3 at = transform.position + Vector3.down * 0.9f;
-        Hostile.SetArc(clockDial, at, 1.1f, 0f, 360f);
+        clockDial.transform.position = at;
+        if (!clockDialDrawn) { Hostile.SetArc(clockDial, Vector3.zero, 1.1f, 0f, 360f); clockDialDrawn = true; }
         if (k <= 0f) return;
-        Hostile.SetArc(clockRing, at, 1.1f, 90f, 90f - 360f * k);
+        clockRing.transform.position = at;
+        if (k != clockRingK) { Hostile.SetArc(clockRing, Vector3.zero, 1.1f, 90f, 90f - 360f * k); clockRingK = k; }
         float pulse = ClockReady ? 0.75f + 0.25f * Mathf.Sin(Time.time * 12f) : 0.95f;
         Color c = ClockReady ? new Color(1f, 0.9f, 0.4f, pulse) : new Color(Mathf.Lerp(Brass.r, 1f, 0.35f), Mathf.Lerp(Brass.g, 1f, 0.35f), Mathf.Lerp(Brass.b, 1f, 0.35f), pulse);
         clockRing.startColor = clockRing.endColor = c;

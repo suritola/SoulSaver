@@ -53,8 +53,9 @@ public class BossUltimate : MonoBehaviour
         if (boss != null && (kind != 2 || boss.slimeGen == 1))
         {
             gauge[kind] = 0f;
-            refHp[kind] = Mathf.Max(1f, boss.setEnemyHP);
-            usedThisFight[kind] = false;
+            refHp[kind] = Mathf.Max(1f, boss.restoreMaxHp > 0 ? boss.restoreMaxHp : boss.setEnemyHP);
+            // 1.2.3~ 무한 이어하기로 되살린 보스: 저장 때 이미 체력 40% 아래였으면 결계를 썼던 것으로 (이어하자마자 4초 만에 다시 펼치지 않게 · 게이지는 저장하지 않음)
+            usedThisFight[kind] = boss.restoreMaxHp > 0 && boss.restoreHp > 0f && boss.restoreHp < boss.restoreMaxHp * 0.4f;
             lastHit[kind] = Time.time;
         }
     }
@@ -149,6 +150,7 @@ public class BossUltimate : MonoBehaviour
             yield return null;
         }
         StopCoroutine(attack);
+        FadeLichBeams();
         // 업적: 결계 중 보스를 쓰러뜨림 · 끝까지 버팀 · 한 번도 맞지 않음
         if (boss == null || boss.IsDead) SteamAchievements.Unlock(SteamAchievements.BarrierBreak);
         else if (player != null && !player.IsDying && Time.time >= until)
@@ -165,6 +167,7 @@ public class BossUltimate : MonoBehaviour
 
     void EndNow()
     {
+        FadeLichBeams();
         HideWalls(false);
         restUntil = Time.time + 15f;
         if (domainRoot != null) Destroy(domainRoot);
@@ -334,12 +337,15 @@ public class BossUltimate : MonoBehaviour
         SetDark(dark, 1f);
     }
 
+    LineRenderer ringDrawn;     // 1.2.4: 가득 펼친 고리를 이미 그린 선 (Expand 가 새 고리를 만들면 다시 그림)
+
     void Animate(Color color)
     {
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 6f);
         if (ring != null)
         {
-            Hostile.SetArc(ring, center, Radius, 0f, 360f);
+            // 1.2.4: 중심 · 반지름이 결계 내내 그대로라 처음 한 번만 그림 (폭 · 색만 맥동)
+            if (ringDrawn != ring) { Hostile.SetArc(ring, center, Radius, 0f, 360f); ringDrawn = ring; }
             ring.startWidth = ring.endWidth = 0.8f + 0.25f * pulse;
             ring.startColor = ring.endColor = Color.Lerp(color, Color.white, 0.25f * pulse);
         }
@@ -381,7 +387,8 @@ public class BossUltimate : MonoBehaviour
         if (Time.time > mobsAt)
         {
             mobsAt = Time.time + 0.2f;
-            mobs = FindObjectsOfType<EnermyController>();
+            // 1.2.4: 같은 대상(켜진 잡몹 전부) · 번호순 정렬만 뺌 (반지름 질의로 바꾸면 0.2초 사이 들어온 잡몹을 놓쳐 결과가 달라짐)
+            mobs = FindObjectsByType<EnermyController>(FindObjectsSortMode.None);
         }
         float edge = r + 0.9f;
         int sparks = 0;
@@ -401,6 +408,20 @@ public class BossUltimate : MonoBehaviour
                 Fx.Spawn("fx_spark", to, 2.2f, Color.white, 18f);
             }
             e.transform.position = to;
+        }
+        // 1.2.3~ 무한 모드에서 겹쳐 나온 다른 보스도 결계 밖으로 (결계는 펼친 보스와 1:1 · 다른 보스의 기술 · 부하는 Active 동안 이미 멈춤, 이동 · 몸통만 남았었음)
+        float bossEdge = r + 2.2f;
+        foreach (bosss o in bosss.Live)
+        {
+            if (o == null || o == boss || o.IsDead) continue;
+            Vector3 pos = o.transform.position;
+            Vector3 d = pos - center;
+            d.z = 0f;
+            if (d.sqrMagnitude >= bossEdge * bossEdge) continue;
+            if (d.sqrMagnitude < 0.01f) d = Vector3.left;
+            Vector3 to = EdgeInArena(d, bossEdge);
+            to.z = pos.z;
+            o.transform.position = to;
         }
     }
 
@@ -519,7 +540,8 @@ public class BossUltimate : MonoBehaviour
             float a0 = (angle + i * 90f) * Mathf.Deg2Rad;
             Warn((boss != null ? boss.transform.position : center) + new Vector3(Mathf.Cos(a0), Mathf.Sin(a0)) * 7f, 1.4f, 1.6f);
         }
-        FxAnim[] beams = new FxAnim[4];
+        FxAnim[] beams = lichBeams;
+        Color[] beamColors = new Color[4];
         while (Time.time < until)
         {
             angle += spin * Time.deltaTime;
@@ -534,8 +556,14 @@ public class BossUltimate : MonoBehaviour
                 warn[i].SetPosition(1, end);
                 if (on)
                 {
-                    if (beams[i] != null) Destroy(beams[i].gameObject);
-                    beams[i] = Fx.Beam(c, end, 1.4f, soul, 0.08f, 22);
+                    // 1.2.4: 빔 넷을 매 프레임 지우고 새로 만들던 것 → 처음 한 번 만들고 매 프레임 자리 · 각도 · 길이만 옮기고 새것처럼 다시 시작
+                    //   (보이는 것: 늘 첫 그림 · 원래 색 그대로 = 매 프레임 새로 만든 빔과 같음, 공격이 멈추면 원래처럼 0.08초 뒤 스스로 사라짐)
+                    if (beams[i] == null)
+                    {
+                        beams[i] = Fx.Beam(c, end, 1.4f, soul, -1f, 22);      // 수명은 직접 (멈추면 FadeLichBeams 가 원래 수명 0.08 을 줌)
+                        if (beams[i] != null) beamColors[i] = beams[i].sr.color;
+                    }
+                    else PlaceBeam(beams[i], c, end, beamColors[i]);
                 }
             }
             PlayerController p = Hostile.Player;
@@ -566,7 +594,39 @@ public class BossUltimate : MonoBehaviour
             }
             yield return null;
         }
-        foreach (FxAnim b in beams) if (b != null) Destroy(b.gameObject);
+        for (int i = 0; i < beams.Length; i++) { if (beams[i] != null) Destroy(beams[i].gameObject); beams[i] = null; }
+    }
+
+    readonly FxAnim[] lichBeams = new FxAnim[4];
+
+    // 공격이 도중에 멈추면 (결계 끝 · 보스 사라짐): 매 프레임 새로 만들던 때처럼 마지막 빔이 0.08초 동안 흐려지며 스스로 사라짐
+    void FadeLichBeams()
+    {
+        for (int i = 0; i < lichBeams.Length; i++)
+        {
+            FxAnim b = lichBeams[i];
+            lichBeams[i] = null;
+            if (b == null) continue;
+            b.life = 0.08f;
+            b.Restart();
+        }
+    }
+
+    // Fx.Beam 과 같은 계산으로 이미 있는 빔을 옮김 (두께 · 그림 · 색은 만들 때 그대로, 수명 · 프레임은 처음부터)
+    static void PlaceBeam(FxAnim a, Vector3 from, Vector3 to, Color color)
+    {
+        Vector3 d = to - from;
+        float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        Vector3 mid = (from + to) * 0.5f;
+        Transform tr = a.transform;
+        tr.position = new Vector3(mid.x, mid.y, 0f);
+        tr.rotation = Quaternion.Euler(0f, 0f, angle);
+        if (a.frames != null && a.frames.Length > 0) a.sr.sprite = a.frames[0];
+        float unit = a.sr.sprite.bounds.size.x;
+        Vector3 s = tr.localScale;
+        tr.localScale = new Vector3(d.magnitude / unit, s.y, 1f);
+        a.sr.color = color;
+        a.Restart();
     }
 
     // 연옥 낙화 (지옥의 군주) — 1.0.1 개편: 화염 고리 · 용암 줄기가 운석과 한꺼번에 겹쳐 피하기 불쾌했음
@@ -746,7 +806,7 @@ public class BossUltimate : MonoBehaviour
     {
         if (Hostile.Glow == null) return null;
         GameObject g = SpecialAbilities.MakeSprite("AcidBall", Hostile.Glow, from, 0.22f, new Color(acid.r, acid.g, acid.b, 0.95f), "Effect", 20);
-        HostileProjectile.Dress(g, acid, 1.6f);       // 1.0.1: 다른 적 탄처럼 테두리 구슬로 또렷하게
+        HostileProjectile.Dress(g, acid, 1.6f * HostileProjectile.LookMul);       // 1.0.1: 다른 적 탄처럼 테두리 구슬로 또렷하게 (1.1.9: 그림만 1.2배, 닿는 거리 1.1 그대로)
         DomainBall b = g.AddComponent<DomainBall>();
         b.center = center;
         b.radius = Radius - 0.6f;
@@ -786,6 +846,27 @@ public class BossUltimate : MonoBehaviour
     {
         GameObject go = new GameObject("DomainDark", typeof(MeshFilter), typeof(MeshRenderer));
         go.transform.SetParent(parent, false);
+        // 1.2.4: 결계마다 새 Mesh · Material 을 만들고 지우지 않아 결계 횟수만큼 쌓였음 → 한 번만 만들어 같이 씀
+        //   (반지름이 상수라 정점은 늘 같음 · 결계는 한 번에 하나 · 색은 SetDark 가 처음부터 다시 씀)
+        if (darkMesh == null) { darkMesh = BuildDarkMesh(); darkMesh.hideFlags = HideFlags.DontUnloadUnusedAsset; }     // 장면 전환 정리에 지워지지 않게 (판끼리 같이 씀)
+        go.GetComponent<MeshFilter>().sharedMesh = darkMesh;
+        MeshRenderer mr = go.GetComponent<MeshRenderer>();
+        if (darkMaterial == null) darkMaterial = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontUnloadUnusedAsset };
+        mr.sharedMaterial = darkMaterial;
+        // 바닥 층 맨 위 (바닥 타일 · 장판 위, 캐릭터 · 적 · 적 탄 아래): 맵만 어두워지고 싸우는 것들은 또렷하게
+        // (예전엔 이펙트 층이라 결계 안의 캐릭터까지 어둡게 덮어 잘 보이지 않았음)
+        mr.sortingLayerName = "Background";
+        mr.sortingOrder = 40;
+        darkTint = color;
+        return mr;
+    }
+
+    static Mesh darkMesh;
+    static Material darkMaterial;
+    static Color[] darkColors;
+
+    static Mesh BuildDarkMesh()
+    {
         Mesh m = new Mesh();
         const int seg = 96;
         float[] radii = { 0f, Radius - 0.2f, Radius + 1.8f, 400f };
@@ -805,15 +886,7 @@ public class BossUltimate : MonoBehaviour
             }
         m.SetVertices(v);
         m.SetTriangles(tri, 0);
-        go.GetComponent<MeshFilter>().mesh = m;
-        MeshRenderer mr = go.GetComponent<MeshRenderer>();
-        mr.material = new Material(Shader.Find("Sprites/Default"));
-        // 바닥 층 맨 위 (바닥 타일 · 장판 위, 캐릭터 · 적 · 적 탄 아래): 맵만 어두워지고 싸우는 것들은 또렷하게
-        // (예전엔 이펙트 층이라 결계 안의 캐릭터까지 어둡게 덮어 잘 보이지 않았음)
-        mr.sortingLayerName = "Background";
-        mr.sortingOrder = 40;
-        darkTint = color;
-        return mr;
+        return m;
     }
 
     Color darkTint;
@@ -822,18 +895,21 @@ public class BossUltimate : MonoBehaviour
     {
         if (mr == null) return;
         MeshFilter f = mr.GetComponent<MeshFilter>();
-        Mesh m = f.mesh;
+        Mesh m = f.sharedMesh;         // 1.2.4: .mesh 는 복제본을 만들 수 있음 → 같이 쓰는 메시 그대로
+        if (m == null) return;
         int seg = m.vertexCount / 4;
         Color inner = new Color(darkTint.r * 0.25f, darkTint.g * 0.15f, darkTint.b * 0.3f, 0.32f * k);
         Color edge = new Color(0f, 0f, 0f, 0.55f * k);
         Color outer = new Color(0.01f, 0f, 0.02f, 0.9f * k);
-        Color[] c = new Color[m.vertexCount];
+        // 1.2.4: 열릴 때 · 부서질 때 매 프레임 Color[384] 를 새로 만들던 것 → 한 번 만든 버퍼에 채움
+        if (darkColors == null || darkColors.Length != m.vertexCount) darkColors = new Color[m.vertexCount];
+        Color[] c = darkColors;
         for (int i = 0; i < c.Length; i++)
         {
             int ri = i / seg;
             c[i] = ri <= 1 ? (ri == 0 ? inner : Color.Lerp(inner, edge, 0.3f)) : ri == 2 ? outer : outer;
         }
-        m.colors = c;
+        m.SetColors(c);
     }
 
     static void PlaySfx(string name, float vol)
@@ -909,7 +985,7 @@ public class DomainBall : MonoBehaviour
             velocity = Vector2.Reflect(velocity, -n);
             transform.position = center + (Vector3)(n * radius);
         }
-        transform.localScale = Vector3.one * (0.46f + 0.04f * Mathf.Sin(age * 12f));     // HostileProjectile.Dress 의 빛 크기 (지름 1.6 × 2.3 ÷ 8)
+        transform.localScale = Vector3.one * ((0.46f + 0.04f * Mathf.Sin(age * 12f)) * HostileProjectile.LookMul);     // HostileProjectile.Dress 의 빛 크기 (지름 1.6 × 1.2 × 2.3 ÷ 8)
         trail += Time.deltaTime;
         if (trail > 0.12f) { trail = 0f; Fx.Spawn("fx_puddle", transform.position, 1.2f, new Color(0.55f, 1f, 0.35f, 0.6f), 14f); }
         PlayerController p = Hostile.Player;

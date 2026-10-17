@@ -21,4 +21,5 @@ public class StageConfig
     public int bossKills = 60;          // 이만큼 처치하면 보스 등장
     public GameObject bossPrefab;
     public float[] minionWeights;       // 보스가 부르는 부하 비율
+    [System.NonSerialized] public float[] finalWeights;   // 무한 모드 (1.2.3~): 개발자 · 엄마와 싸우는 동안 나오는 약한 적 비율 (EndlessMode.WithEndlessStage 가 넣음 · 이야기 모드 null)
 }

@@ -176,7 +176,7 @@ public partial class CharacterKit
         {
             // 대지의 일격: 세 번째 베기마다 내리찍어 주변 적 피해 + 잠깐 기절
             float r = reach * 0.8f;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(origin, r))
+            using (var ovl = PhysHits.Circle(origin, r)) foreach (Collider2D c in ovl)
                 if (c.TryGetComponent(out EnermyController e) && !e.IsDead) e.Slow(0f, 0.6f);
             DamageCircle(origin, r, Damage * 1.5f * formPower, 2f);
             Fx.Spawn("fx_shock", origin, r * 2.4f, new Color(0.8f, 0.85f, 1f, 0.8f), 20f);
@@ -200,7 +200,7 @@ public partial class CharacterKit
         {
             Transform next = null;
             float best = 6f;
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(cur.position, 6f))
+            using (var ovl = PhysHits.Circle(cur.position, 6f)) foreach (Collider2D c in ovl)
             {
                 if (hit.Contains(c.transform) || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
                 float d = Vector2.Distance(cur.position, c.transform.position);
@@ -221,11 +221,21 @@ public partial class CharacterKit
     }
 
     // ================================================================= 도적
+    // 이번 평타에서 던진 가운데 표창 — 회전 표창(SignatureSkills.RogueAttack)이 이 표창을 그대로 되돌려 보냄
+    Bullet lastRogueThrow;
+    public Bullet TakeRogueThrow() { Bullet b = lastRogueThrow; lastRogueThrow = null; return b; }
+
     void RogueThrow(Vector3 start, Vector2 dir, float dmg, int shots)
     {
         if (augment == AugVolley) shots++;
         float step = form == SpecialAbilities.KitCards ? 9f : 8f;
-        foreach (Vector2 d in Spread(dir, shots, step)) ThrowOne(start, d, dmg, 1f);
+        lastRogueThrow = null;
+        int i = 0, mid = shots / 2;
+        foreach (Vector2 d in Spread(dir, shots, step))
+        {
+            Bullet b = ThrowOne(start, d, dmg, 1f);
+            if (i++ == mid) lastRogueThrow = b;
+        }
         Play("whoosh", 0.35f, form == SpecialAbilities.KitBlowgun ? 2.3f : 1.8f);
         if (augment == AugEcho) StartCoroutine(EchoThrow(dir, dmg, shots, step));
     }
@@ -289,7 +299,7 @@ public partial class CharacterKit
                 if (draw >= 0.5f)
                     b.onHitEnemy += (s, c) =>
                     {
-                        foreach (Collider2D o in Physics2D.OverlapCircleAll(c.transform.position, 2.6f))
+                        using (var ovl = PhysHits.Circle(c.transform.position, 2.6f)) foreach (Collider2D o in ovl)
                             if (o.TryGetComponent(out EnermyController e)) e.Slow(0f, 0.8f + 0.6f * draw);
                         Fx.Spawn("fx_shock", c.transform.position, 5.2f, new Color(0.7f, 1f, 0.6f, 0.7f), 18f);
                     };
@@ -354,7 +364,7 @@ public partial class CharacterKit
     {
         if (form == SpecialAbilities.KitMagnet)
         {
-            foreach (Collider2D c in Physics2D.OverlapCircleAll(p, r * 2.2f))
+            using (var ovl = PhysHits.Circle(p, r * 2.2f)) foreach (Collider2D c in ovl)
                 if (c.CompareTag("enermy")) c.transform.position = Vector3.Lerp(c.transform.position, p, 0.7f);
             Fx.Spawn("fx_shock", p, r * 4.4f, new Color(0.6f, 0.7f, 1f, 0.6f), 22f);
         }

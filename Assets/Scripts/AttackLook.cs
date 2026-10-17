@@ -13,7 +13,16 @@ public static class AttackLook
     //   (예전 총알 61 과 같은 자리, 빛 무리는 가산 혼합이라 밑을 가리지 않음)
     // 판 위 범위 공격(검사 베기 · 지도 획 · 유령 손길 · 플라스크 폭발): 크게 덮으니 적 이펙트 위 · 피해 숫자 · 스킬 이펙트 아래 (AreaOrder)
     // 적 탄(구슬 · 심 · 그림자)은 그보다 위 층(HitScan)이라, 평타가 아무리 커져도 적 탄을 가리지 않음
-    public const int HaloOrder = 60, TrailOrder = 61, Order = 63, CoreOrder = 64;
+    public const int HaloOrder = 60, TrailOrder = 61, OutlineOrder = 62, Order = 63, CoreOrder = 64;
+
+    // 1.1.9 핫픽스: 「무한 사막 맵에서 총알이 잘 안 보여 · 크기도 조금만 키우자」
+    //   밝은 모래(≈ 0.95, 0.78, 0.5)가 거너 금빛(1, 0.8, 0.22) · 흰 심과 명도 · 색상이 거의 같고, 그림 속 1칸 외곽선은 0.3칸 남짓한 탄에선 화면 1~2픽셀이라 묻힘
+    //   → 보이는 그림만 LookMul 배 (판정 상자 · 원 · 편지 닿는 거리는 그대로 — BulletGlow 가 그림 자식만 키움)
+    //     + 그 뒤에 같은 그림의 어두운 실루엣 테두리 (OutlineOrder, 공유 기본 재질 · 탄마다 새 재질 없음)
+    public const float LookMul = 1.2f;
+    public static readonly Color OutlineInk = new Color(0.06f, 0.03f, 0.08f, 0.9f);
+    // 실루엣 테두리 두께 (월드): 짧은 쪽의 14%, 0.03 ~ 0.07칸
+    public static float OutlineWidth(float w, float h) => Mathf.Clamp(Mathf.Min(w, h) * 0.14f, 0.03f, 0.07f);
     public const int AreaOrder = 32;
     static int layer = -1;
     public static int Layer => layer >= 0 ? layer : (layer = SortingLayer.NameToID("Effect"));

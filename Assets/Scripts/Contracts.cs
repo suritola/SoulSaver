@@ -190,7 +190,7 @@ public static class Contracts
     public static int DoneThisRun { get; private set; }
     public static int PointsThisRun { get; private set; }
     static int codexAtStart, memoryAtStart;
-    static bool runStory;               // 이야기 모드 판이었는지 (메인 메뉴로 나갈 때 이어하기 판을 남겼는지 볼 때 · 일일 도전은 메뉴에서 먼저 풀림)
+    static bool runStory;               // 이어하기로 저장하는 판이었는지 (이야기 · 1.2.3~ 무한 모드 — 메인 메뉴로 나갈 때 이어하기 판을 남겼는지 볼 때 · 일일 도전은 메뉴에서 먼저 풀림)
     public static int CodexGained { get; private set; }
     public static int MemoryGained { get; private set; }
 
@@ -276,7 +276,7 @@ public static class Contracts
         LastRunOn = false;
         DoneThisRun = PointsThisRun = 0;
         RunOn = !Off;
-        runStory = !GameMode.IsEndless && !DailyChallenge.Active;
+        runStory = !DailyChallenge.Active;     // 1.2.3~ 무한 모드도 이어하기 저장 (RunSave) → 나갔다 이어하면 계약이 그대로 이어지게
         if (!RunOn) return;
         runStartedAt = Time.realtimeSinceStartup;
         run.AddRange(Preview(GameMode.IsEndless, DailyChallenge.Active, CharacterData.Selected));
@@ -397,7 +397,7 @@ public static class Contracts
         RunCounters.Restore(d.counters);        // 옛 저장(빈 글)은 0부터
         RunOn = !Off && !string.IsNullOrEmpty(d.contracts);
         if (!RunOn) return;
-        runStory = true;                // 이어하기는 이야기 모드 판뿐
+        runStory = true;                // 이어하기는 저장하는 판뿐 (이야기 · 무한 모드)
         runStartedAt = Time.realtimeSinceStartup - ShortRunSec;     // 이어한 판은 짧은 판으로 치지 않음
         DoneThisRun = PointsThisRun = 0;
         foreach (string raw in d.contracts.Split(','))

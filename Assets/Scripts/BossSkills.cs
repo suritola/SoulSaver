@@ -882,12 +882,16 @@ public partial class BossSkills : MonoBehaviour
         }
     }
 
+    static readonly Vector3[] runeInBuf = new Vector3[61];
+    static readonly Vector3[] runeOutBuf = new Vector3[61];
+
     // 두 겹의 룬 고리: 안쪽은 끊긴 점선처럼, 바깥은 반대로 회전
     static void DrawRunes(LineRenderer inner, LineRenderer outer, Vector3 center, float r1, float r2, float spin, float alpha)
     {
         const int seg = 60;
-        inner.positionCount = seg + 1;
-        outer.positionCount = seg + 1;
+        if (inner.positionCount != seg + 1) inner.positionCount = seg + 1;
+        if (outer.positionCount != seg + 1) outer.positionCount = seg + 1;
+        // 1.2.4: 점마다 SetPosition(매 프레임 122번) → 버퍼에 채워 SetPositions 두 번 (같은 좌표)
         for (int i = 0; i <= seg; i++)
         {
             float k = i / (float)seg * Mathf.PI * 2f;
@@ -895,9 +899,11 @@ public partial class BossSkills : MonoBehaviour
             float wobble = 1f + 0.08f * Mathf.Sin(k * 6f + spin * Mathf.Deg2Rad * 2f);
             float a1 = k + spin * Mathf.Deg2Rad;
             float a2 = k - spin * Mathf.Deg2Rad * 0.6f;
-            inner.SetPosition(i, center + new Vector3(Mathf.Cos(a1), Mathf.Sin(a1)) * r1 * wobble);
-            outer.SetPosition(i, center + new Vector3(Mathf.Cos(a2), Mathf.Sin(a2)) * r2);
+            runeInBuf[i] = center + new Vector3(Mathf.Cos(a1), Mathf.Sin(a1)) * r1 * wobble;
+            runeOutBuf[i] = center + new Vector3(Mathf.Cos(a2), Mathf.Sin(a2)) * r2;
         }
+        inner.SetPositions(runeInBuf);
+        outer.SetPositions(runeOutBuf);
         inner.startColor = inner.endColor = new Color(0.75f, 0.4f, 1f, alpha);
         outer.startColor = outer.endColor = new Color(0.55f, 0.95f, 1f, alpha * 0.8f);
     }
@@ -1103,20 +1109,42 @@ public class SoulWisp : MonoBehaviour
     SpriteRenderer sr;
     Color color;
 
+    // 1.2.4: 다 날아간 조각은 꺼 두었다가 다시 씀 (폭발 1회에 8개씩 생성 · 파괴하던 것)
+    static readonly Stack<SoulWisp> pool = new Stack<SoulWisp>();
+    int spawnFrame = -1;
+
     public static void Spawn(Vector3 from, Vector3 to, Color color, bool burst = false)
     {
         if (Hostile.Glow == null) return;
-        GameObject go = SpecialAbilities.MakeSprite("SoulWisp", Hostile.Glow, from, 0.07f, color, "Effect", 10);
-        SoulWisp w = go.AddComponent<SoulWisp>();
+        SoulWisp w = null;
+        while (pool.Count > 0 && w == null) w = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        if (w == null)
+        {
+            GameObject go = SpecialAbilities.MakeSprite("SoulWisp", Hostile.Glow, from, 0.07f, color, "Effect", 10);
+            w = go.AddComponent<SoulWisp>();
+            w.sr = go.GetComponent<SpriteRenderer>();
+        }
+        else
+        {
+            // MakeSprite 가 넣던 값으로 되돌림
+            Transform tr = w.transform;
+            tr.position = from;
+            tr.localScale = Vector3.one * 0.07f;
+            w.sr.sprite = Hostile.Glow;
+            w.sr.color = color;
+            w.t = 0f;
+            w.spawnFrame = Time.frameCount;
+        }
         w.from = from;
         w.to = to;
         w.duration = burst ? Random.Range(0.4f, 0.7f) : Random.Range(0.5f, 0.8f);
-        w.sr = go.GetComponent<SpriteRenderer>();
         w.color = color;
+        if (!w.gameObject.activeSelf) w.gameObject.SetActive(true);
     }
 
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
         float ease = k * k;
@@ -1125,6 +1153,10 @@ public class SoulWisp : MonoBehaviour
         transform.position = Vector3.Lerp(from, to, ease) + side;
         transform.localScale = Vector3.one * Mathf.Lerp(0.07f, 0.03f, k);
         sr.color = new Color(color.r, color.g, color.b, color.a * Mathf.Sin(k * Mathf.PI));
-        if (k >= 1f) Destroy(gameObject);
+        if (k >= 1f)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
