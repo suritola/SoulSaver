@@ -25,6 +25,34 @@ public class SteamManager : MonoBehaviour
 
     public static SteamManager Instance { get; private set; }
     public static bool Initialized { get; private set; }
+    // 1.1.9~ 스팀 덱에서 실행 중인지 (첫 실행 자동 설정 · GameSettings)
+    public static bool OnDeck { get; private set; }
+
+    // 1.1.9~ 패드로 글 입력 칸을 누르면 스팀 화면 키보드 (도감 검색) — 패드가 아니거나 스팀이 없으면 아무것도 안 함
+#if STEAM
+    static Callback<GamepadTextInputDismissed_t> textHook;
+    static System.Action<string> textDone;
+#endif
+    public static void ShowTextInput(string description, string existing, System.Action<string> done)
+    {
+#if STEAM
+        if (!Initialized || !GamePad.Active) return;
+        try
+        {
+            textDone = done;
+            if (textHook == null)
+                textHook = Callback<GamepadTextInputDismissed_t>.Create(e =>
+                {
+                    System.Action<string> cb = textDone;
+                    textDone = null;
+                    if (!e.m_bSubmitted || cb == null) return;
+                    if (SteamUtils.GetEnteredGamepadTextInput(out string text, 41)) cb(text);
+                });
+            SteamUtils.ShowGamepadTextInput(EGamepadTextInputMode.k_EGamepadTextInputModeNormal, EGamepadTextInputLineMode.k_EGamepadTextInputLineModeSingleLine, description, 40, existing ?? "");
+        }
+        catch (System.Exception e) { Debug.LogWarning("[Steam] 화면 키보드: " + e.Message); }
+#endif
+    }
 
     // 스팀에서 고른 이 게임의 언어 ("koreana" · "english" · "japanese" · "schinese" …, 스팀이 없으면 "") · 1.0.4~ 첫 실행 언어 감지
     public static string GameLanguage
@@ -72,6 +100,7 @@ public class SteamManager : MonoBehaviour
         try { Initialized = SteamAPI.Init(); }
         catch (System.DllNotFoundException e) { Debug.LogWarning("[Steam] steam_api 라이브러리를 찾지 못했습니다: " + e.Message); }
         if (!Initialized) Debug.LogWarning("[Steam] 초기화 실패 - 스팀이 켜져 있는지, steam_appid.txt가 있는지 확인하세요");
+        try { OnDeck = Initialized && SteamUtils.IsSteamRunningOnSteamDeck(); } catch { OnDeck = false; }
         // 1.1.9~ 스팀 오버레이(Shift+Tab · 패드 가이드 버튼)는 창 포커스를 뺏지 않아 덮인 채 게임이 계속 돌았음 → 열릴 때 일시정지 (닫을 때는 그대로, ESC 로 직접 재개)
         if (Initialized) overlayHook = Callback<GameOverlayActivated_t>.Create(e => { if (e.m_bActive != 0) ESCmenu.RequestPause(); });
 #endif

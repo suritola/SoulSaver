@@ -23,6 +23,7 @@ public partial class SpecialAbilities
         relics.Add(id);
         KitOnEquip(id, false);
         RebuildHudRows();
+        RunSave.MarkDirty();            // 1.1.9~ 유물 장착 — 곧 저장 (이어하기 재적용 중이면 무시)
         if (silent) return true;
         AnnounceKey(id, true);          // 1.1.2~ 「[Q] 이름 / Q 키를 눌러 사용」 + 칸 반짝임 (SpecialAbilities.KeyGuide)
         RelicDef codexRelic = ContentRegistry.RelicByAbility(id);

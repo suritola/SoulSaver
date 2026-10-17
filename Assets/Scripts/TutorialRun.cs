@@ -68,7 +68,7 @@ public class TutorialRun : MonoBehaviour
         Prefs.Save();
         CharacterData.Override = CharacterId.Gunner;
         RunSave.Disabled = true;
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -137,13 +137,11 @@ public class TutorialRun : MonoBehaviour
         UIKit.MakeButton(panel, "바로 첫 판 시작", new Vector2(-170f, -120f), new Vector2(320f, 70f), () =>
         {
             quickStart = true;
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
+            SceneFlow.Go("MainMenu");
         }, 26f);
         UIKit.MakeButton(panel, "메인 메뉴로", new Vector2(170f, -120f), new Vector2(320f, 70f), () =>
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
+            SceneFlow.Go("MainMenu");
         }, 26f);
     }
 
@@ -460,12 +458,12 @@ public class TutorialRun : MonoBehaviour
         // 시간은 멈추지 않음 (튜토리얼 적은 아프지 않고, ESC 일시정지 메뉴와 멈춤 상태가 꼬이지 않게)
         UIKit.Text(win, "튜토리얼을 그만둘까요?", 38f, Gold, new Vector2(0f, 78f), new Vector2(720f, 60f));
         UIKit.Text(win, "메인 메뉴로 돌아갑니다. 다음에는 1단계부터 시작합니다.", 26f, Parch, new Vector2(0f, 20f), new Vector2(720f, 40f));
-        UIKit.MakeButton(win, "메인 메뉴로", new Vector2(-150f, -90f), new Vector2(260f, 76f), () =>
+        Button ok = UIKit.MakeButton(win, "메인 메뉴로", new Vector2(-150f, -90f), new Vector2(260f, 76f), () =>
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
+            SceneFlow.Go("MainMenu");
         }, 28f);
-        UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        Button cancel = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UIKit.ConfirmKeys(win, ok, cancel, -143f);       // 1.1.9~ Enter 로 확인
     }
 
     void CloseConfirm()

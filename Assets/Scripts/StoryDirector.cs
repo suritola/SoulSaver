@@ -13,7 +13,8 @@ public class StoryDirector : MonoBehaviour
     // 배치 모드(자동 테스트)에서도 연출을 보고 싶을 때
     public static bool ForceInBatch;
 
-    const float CharTime = 0.035f;
+    // 1.1.9~ 대사 속도 (설정 → 접근성): 보통 0.035 · 빠름 0.015 · 즉시 0 (편의성 2차 10)
+    static float CharTime => GameSettings.DialogueSpeed switch { 1 => 0.015f, 2 => 0f, _ => 0.035f };
     const float LineHold = 1.7f;
 
     static readonly string[] IntroLines =
@@ -274,6 +275,7 @@ public class StoryDirector : MonoBehaviour
     IEnumerator RunIntro(bool endless)
     {
         Playing = true;
+        GameInput.ResetAttackLock();        // 1.1.9~ 공격 고정은 이야기 연출이 시작되면 풀림
         // 1.1~ 같은 캐릭터로 같은 이야기를 이미 봤으면 (두 번째 판부터) 이야기는 건너뛰고 떨어지는 연출만 짧게
         string seenKey = "intro.seen." + (endless ? "e" : Chapters.IsClassic ? "c" : "m") + "." + (int)CharacterData.Selected;
         bool seen = Prefs.GetInt(seenKey, 0) == 1;
@@ -312,7 +314,9 @@ public class StoryDirector : MonoBehaviour
         }
 
         // 1) 검은 화면이 걷히며 떨어짐 (게임 시간은 흐르되 적 생성 · 조작은 멈춤)
-        const float fallFrom = 13f, fadeTime = 0.9f, fallTime = 0.75f;
+        // 1.1.9~ 설정 「빠른 연출」이면 절반 (편의성 3차 7)
+        const float fallFrom = 13f;
+        float fadeTime = 0.9f * GameSettings.FxTime, fallTime = 0.75f * GameSettings.FxTime;
         for (float t = 0f; t < fadeTime + fallTime && !skip; t += Time.unscaledDeltaTime)
         {
             SetAlpha(black, 1f - Mathf.Clamp01(t / fadeTime));
@@ -366,6 +370,9 @@ public class StoryDirector : MonoBehaviour
         Playing = true;
         EndingPlaying = true;
         Time.timeScale = 0f;
+        GameInput.ResetAttackLock();
+        // 1.1.9~ 도감 「이야기」 탭: 이야기 모드 엔딩을 본 것으로 (대사를 건너뛰어도 클리어는 했으므로 열어 줌 · 무한 모드 클리어는 대사가 없음)
+        if (lines) { Prefs.SetInt("ending.seen." + (int)CharacterData.Selected, 1); Prefs.Save(); }
         // 1.1~ 최종 클리어 보너스 (결과 화면의 획득 포인트에 들어가게 씬을 바꾸기 전에)
         // 일일 도전은 같은 날 몇 번이고 다시 깰 수 있어 포인트 벌이 길이 되므로 주지 않음 (이야기 · 무한 모드는 판마다 한 번)
         int bonusBefore = Point.RunBonus;
@@ -384,14 +391,14 @@ public class StoryDirector : MonoBehaviour
         body.text = sub + bonus + Loc.T("플레이해 주셔서 고맙습니다!");
         yield return Fade(title, 0f, 1f, 0.6f);
         advance = false;
-        for (float t = 0f; t < 4f && !skip && !advance; t += Time.unscaledDeltaTime) yield return null;
+        for (float t = 0f; t < 4f * GameSettings.FxTime && !skip && !advance; t += Time.unscaledDeltaTime) yield return null;
 
-        Time.timeScale = 1f;
-        Playing = false;
+        Playing = false;                // timeScale 은 SceneFlow 가 막을 내린 뒤 새 씬에서 1 로 (막이 내리는 동안 게임이 풀리지 않게)
         EndingPlaying = false;
         // 1.0.4~: 엔딩 뒤 바로 메인 메뉴가 아니라 결과 화면(기록 · 획득 포인트 · 다음 해금)을 「클리어!」로 보여 줌
         RunStats.MarkCleared();
-        SceneManager.LoadScene("GameOver");
+        RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (떠나는 순간의 빌드)
+        SceneFlow.Go("GameOver");
     }
 
     // ================================================================= 공통
@@ -403,8 +410,14 @@ public class StoryDirector : MonoBehaviour
             body.text = text;
             body.maxVisibleCharacters = 0;
             advance = false;
+            // 1.1.9~ 대사 속도 「즉시」: 한 줄을 한 번에 (소리는 줄마다 한 번)
+            if (CharTime <= 0f)
+            {
+                if (voice == null) Hostile.Play("pew", 0.12f, 2.2f);
+                else Hostile.Play(voice, 0.55f, voicePitch);
+            }
             // 한 글자씩 (Space를 누르면 이 대사를 바로 끝까지)
-            for (int n = 0; n <= text.Length && !skip && !advance; n++)
+            for (int n = CharTime <= 0f ? text.Length + 1 : 0; n <= text.Length && !skip && !advance; n++)
             {
                 body.maxVisibleCharacters = n;
                 if (n < text.Length && text[n] != ' ')
@@ -466,6 +479,16 @@ public class StoryDirector : MonoBehaviour
         SceneManager.sceneLoaded += (s, m) => introduced.Clear();
     }
 
+    internal static string BossSeenKey(int kind) => "boss.intro.seen." + kind;
+
+    // 1.1.9~ 도감 「이야기」 탭 (편의성 2차 6): 표를 그대로 돌려줌
+    internal static string[] IntroLinesFor(CharacterId id, bool classic) => classic ? IntroFor(id) : MeadowIntroFor(id);
+    internal static string[] EndlessIntroLines => EndlessLines;
+    internal static string[] EndingLinesFor(CharacterId id) => EndingFor(id);
+    internal static int BossCount => Bosses.Length;
+    internal static (string name, string title, string[] lines) BossLines(int kind) => (Bosses[kind].name, Bosses[kind].title, Bosses[kind].lines);
+    internal static string IntroSeenKey(bool endless, bool classic, CharacterId id) => "intro.seen." + (endless ? "e" : classic ? "c" : "m") + "." + (int)id;
+
     public static void PlayBossIntro(Transform boss, int kind)
     {
         if (boss == null || kind < 0 || kind >= Bosses.Length || ShouldSkipAll || Playing) return;
@@ -477,7 +500,14 @@ public class StoryDirector : MonoBehaviour
     IEnumerator RunBossIntro(Transform boss, int kind)
     {
         Playing = true;
+        GameInput.ResetAttackLock();
         var info = Bosses[kind];
+        // 1.1.9~ 보스 등장 대사 「처음만」 (편의성 2차 5): 끝까지 본 보스는 다음부터 띠 · 포효 · 이름표만 짧게 (첫 번째는 늘 전체 · 설정 「항상」이면 늘 전체)
+        string seenKey = BossSeenKey(kind);
+        bool brief = Prefs.GetInt(seenKey, 0) == 1 && !GameSettings.BossIntroAlways;
+        if (brief && skipButton != null) skipButton.SetActive(false);
+        if (brief && skipHint != null) skipHint.gameObject.SetActive(false);
+        float barTime = brief ? 0.5f : 0.7f;
         float before = Time.timeScale;
         Time.timeScale = 0f;
         SetAlpha(black, 0f);
@@ -498,9 +528,9 @@ public class StoryDirector : MonoBehaviour
         title.text = Loc.T(info.name) + "  <size=60%><color=#d8c8a8>" + Loc.T(info.title) + "</color></size>";
         SetAlpha(title, 0f);
 
-        for (float t = 0f; t < 0.7f && !skip; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < barTime && !skip; t += Time.unscaledDeltaTime)
         {
-            float k = Mathf.SmoothStep(0f, 1f, t / 0.7f);
+            float k = Mathf.SmoothStep(0f, 1f, t / barTime);
             top.sizeDelta = bottom.sizeDelta = new Vector2(0f, BossBarH * k);
             if (fx != null && boss != null) fx.HoldCamera(boss.position);
             yield return null;
@@ -511,7 +541,18 @@ public class StoryDirector : MonoBehaviour
 
         voice = info.voice;
         voicePitch = info.pitch;
-        if (!skip) yield return Lines(ReunionLines(kind, info.lines));
+        if (brief)
+        {
+            // 1.2~ 이미 본 보스: 이름표만 잠깐 · 다시 만난 보스면 재회 한 줄만 (보스 재회)
+            string[] reunion = ReunionLines(kind, new string[0]);
+            if (reunion.Length > 0) { if (!skip) yield return Lines(reunion); }
+            else for (float t = 0f; t < 0.9f && !skip; t += Time.unscaledDeltaTime) yield return null;
+        }
+        else
+        {
+            if (!skip) yield return Lines(ReunionLines(kind, info.lines));      // 1.2~ 보스 재회 한 줄
+            if (!skip) { Prefs.SetInt(seenKey, 1); Prefs.Save(); }      // 건너뛴 사람은 다음에 다시 봄 (시작 이야기와 같은 규칙)
+        }
         voice = null;
         Prefs.SetInt(SeenKey + kind, 1);
 

@@ -86,6 +86,13 @@ public class EnermyController : MonoBehaviour
     // 살아 있는 적의 콜라이더 → 적 (밀어내기 계산용)
     static readonly System.Collections.Generic.Dictionary<Collider2D, EnermyController> byCollider = new System.Collections.Generic.Dictionary<Collider2D, EnermyController>();
     private static readonly Collider2D[] nearby = new Collider2D[24];
+    // 1.1.9~ 콜라이더로 적 찾기 (멈춘 동안 적 위에 마우스 → 설명, PauseInspect)
+    public static EnermyController FromCollider(Collider2D c)
+    {
+        if (c == null) return null;
+        if (byCollider.TryGetValue(c, out EnermyController e) && e != null) return e;
+        return c.GetComponentInParent<EnermyController>();
+    }
 
     // 난이도 배율을 이미 적용했는지 (복제돼도 두 번 곱하지 않게)
     [HideInInspector] public bool difficultyApplied;

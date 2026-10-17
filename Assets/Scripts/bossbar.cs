@@ -53,6 +53,8 @@ public class bossbar : MonoBehaviour
         Image gi = g.GetComponent<Image>();
         if (gi != null) { gi.color = HealthBarFeel.GhostColor(0f); gi.raycastTarget = false; gi.enabled = false; }
         main = MakeRow(backBar, barRect, g.GetComponent<RectTransform>());
+        instance = this;
+        AddTip(backBar, main);
     }
 
     // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 조각 · 흔들림 · 번쩍임
@@ -65,7 +67,111 @@ public class bossbar : MonoBehaviour
         public Vector2 rest;
         public Color fillColor, backColor;
         public float shownFront = -1f, shownGhost = -1f;
+        // 1.1.9~ 체력바 눈금 (편의성 2차 12): 실제 단계 자리 — 지옥의 군주 66% · 33%, 나머지 50% · 지나면 빨강 + 뒤판이 붉어짐
+        public readonly List<Image> ticks = new List<Image>();
+        public int tickKind = -99;
+        public Color baseBack;
+        public bool baseSet;
+        public float enrage;
+        public int kind;            // 이 줄의 보스 (툴팁)
     }
+
+    static readonly float[] HalfTick = { 0.5f }, HellTicks = { 0.66f, 0.33f };
+    static float[] TicksOf(int kind) => kind >= DeveloperKind ? new float[0] : kind == 1 ? HellTicks : HalfTick;
+    static readonly Color TickColor = new Color(1f, 0.9f, 0.7f, 0.75f), TickPassed = new Color(1f, 0.4f, 0.35f, 0.9f);
+    static readonly Color EnragedBack = new Color(0.35f, 0.08f, 0.08f, 1f);
+
+    void UpdateTicks(Row r, bosss s, int kind)
+    {
+        if (r == null || r.fill == null || s == null) return;
+        Transform parent = r.fill.parent;
+        if (r.tickKind != kind)
+        {
+            r.tickKind = kind;
+            // 줄을 복제하면 눈금도 같이 복제되므로 이름으로 다시 찾아 씀
+            r.ticks.Clear();
+            List<Image> found = new List<Image>();
+            foreach (Transform c in parent) if (c.name == "BossTick") { Image im = c.GetComponent<Image>(); if (im != null) found.Add(im); }
+            float[] fr = TicksOf(kind);
+            for (int i = 0; i < found.Count; i++)
+            {
+                if (i < fr.Length) r.ticks.Add(found[i]);
+                else Destroy(found[i].gameObject);
+            }
+            while (r.ticks.Count < fr.Length)
+            {
+                GameObject g = new GameObject("BossTick", typeof(RectTransform), typeof(Image));
+                g.transform.SetParent(parent, false);
+                g.transform.SetSiblingIndex(r.fill.GetSiblingIndex() + 1);
+                Image im = g.GetComponent<Image>();
+                im.raycastTarget = false;
+                r.ticks.Add(im);
+            }
+            for (int i = 0; i < r.ticks.Count; i++)
+            {
+                RectTransform t = r.ticks[i].rectTransform;
+                t.anchorMin = r.fill.anchorMin;
+                t.anchorMax = r.fill.anchorMax;
+                t.pivot = new Vector2(0.5f, 0.5f);
+                t.sizeDelta = new Vector2(3f, BarY + 8f);
+                float left = r.fill.anchoredPosition.x - r.fill.pivot.x * r.fill.sizeDelta.x;
+                float midY = r.fill.anchoredPosition.y + (0.5f - r.fill.pivot.y) * BarY;
+                t.anchoredPosition = new Vector2(left + MaxBarX * fr[i], midY);
+            }
+        }
+        float frac = s.setEnemyHP > 0 ? s.EnemyHealth / s.setEnemyHP : 1f;
+        float[] at = TicksOf(kind);
+        int passed = 0;
+        for (int i = 0; i < r.ticks.Count && i < at.Length; i++)
+        {
+            bool p = frac <= at[i];
+            if (p) passed++;
+            r.ticks[i].color = p ? TickPassed : TickColor;
+        }
+        if (!r.baseSet) { r.baseSet = true; r.baseBack = r.backColor; }
+        float want = at.Length > 0 ? passed / (float)at.Length : 0f;
+        r.enrage = Mathf.MoveTowards(r.enrage, want, Time.unscaledDeltaTime / 0.3f);
+        r.backColor = Color.Lerp(r.baseBack, EnragedBack, r.enrage * 0.7f);
+    }
+
+    static int KindOf(bosss s) => s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind;
+
+    // 1.1.9~ 보스바 뒤판에 마우스 → 이름 · 도감 설명 · 단계 규칙 (전투 중엔 잠깐 머물러야 · 일시정지 중에는 바로)
+    static void AddTip(GameObject back, Row r)
+    {
+        if (back == null) return;
+        Image img = back.GetComponent<Image>();
+        if (img != null) img.raycastTarget = true;      // hud 툴팁이라 평타를 막지 않음 (PlayerController.PointerOverUI)
+        TooltipTrigger old = back.GetComponent<TooltipTrigger>();
+        if (old != null) Destroy(old);
+        TooltipTrigger t = back.AddComponent<TooltipTrigger>();
+        t.hud = true;
+        t.titleProvider = () => BossName(r.kind);
+        t.bodyProvider = () =>
+        {
+            if (r.kind >= DeveloperKind) return "";
+            string desc = CodexUI.BossDescOf(r.kind);
+            string rule = Loc.T(r.kind == 1 ? "체력 66% · 33%에서 단계가 오르고, 결계 게이지가 차면 결계를 펼칩니다." : "체력이 절반 아래로 내려가면 특수 스킬을 쓰고, 결계 게이지가 차면 결계를 펼칩니다.");
+            return (desc.Length > 0 ? desc + "\n\n" : "") + "<color=#F5D478>" + rule + "</color>";
+        };
+    }
+
+    // 1.1.9~ 「분노!」 순간 보스 이름표를 0.4초 붉게
+    static bossbar instance;
+    float nameFlashUntil = -1f;
+    Color nameBase;
+    bool nameBaseSet;
+    public static void FlashName() { if (instance != null) instance.nameFlashUntil = Time.unscaledTime + 0.4f; }
+
+    void FlashTick()
+    {
+        if (nameText == null) return;
+        if (!nameBaseSet) { nameBaseSet = true; nameBase = nameText.color; }
+        float left = nameFlashUntil - Time.unscaledTime;
+        nameText.color = left > 0f ? Color.Lerp(nameBase, new Color(1f, 0.35f, 0.3f), Mathf.Clamp01(left / 0.4f) * 1.5f) : nameBase;
+    }
+
+    void OnDestroy() { if (instance == this) instance = null; }
     Row main;
     readonly List<Row> extraRows = new List<Row>();
 
@@ -88,6 +194,8 @@ public class bossbar : MonoBehaviour
     void Draw(Row r, bosss s)
     {
         if (r == null || s == null) return;
+        r.kind = KindOf(s);
+        UpdateTicks(r, s, r.kind);
         s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, Time.unscaledDeltaTime, out HealthBarFeel.Frame f);
         if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
         if (r.ghostImg != null && f.ghost != r.shownGhost)
@@ -116,6 +224,7 @@ public class bossbar : MonoBehaviour
         }
         backBar.SetActive(true);
         UpdateName();
+        FlashTick();
         UpdateUltGauge();
         if (barRect == null) barRect = bar.GetComponent<RectTransform>();
 
@@ -214,7 +323,8 @@ public class bossbar : MonoBehaviour
             extraNames.Add(label);
             Row row = MakeRow(clone, fill as RectTransform, ghost as RectTransform);
             // 복제 순간 원래 줄이 번쩍이는 중이었을 수 있으니 색은 원래 줄의 기본색으로
-            if (main != null) { row.fillColor = main.fillColor; row.backColor = main.backColor; }
+            if (main != null) { row.fillColor = main.fillColor; row.backColor = main.baseSet ? main.baseBack : main.backColor; }
+            AddTip(clone, row);             // 1.1.9~ 줄마다 자기 보스 설명 (복제는 코드로 채운 툴팁 내용을 잃음)
             extraRows.Add(row);
         }
         for (int i = 0; i < extraBars.Count; i++)

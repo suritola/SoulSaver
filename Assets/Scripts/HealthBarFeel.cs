@@ -139,8 +139,9 @@ public sealed class HealthBarFeel
             shakeT += unscaledDt;
             float k = 1f - Mathf.Clamp01(shakeT / shakeLen);
             float w = shakeT * ShakeHz * 6.2832f;
-            f.shakeX = Mathf.Sin(w) * shakeAmp * k;
-            f.shakeY = Mathf.Sin(w * 0.77f + 1.3f) * shakeAmp * k * 0.6f;
+            float mo = GameSettings.Motion;         // 1.1.9~ 「움직임 줄이기」: 흔들림만 없앰 (잃은 양 조각 · 번쩍임 규칙은 그대로)
+            f.shakeX = Mathf.Sin(w) * shakeAmp * k * mo;
+            f.shakeY = Mathf.Sin(w * 0.77f + 1.3f) * shakeAmp * k * 0.6f * mo;
             if (shakeT >= shakeLen && shaking) { shaking = false; if (kind == Kind.Enemy && enemyShaking > 0) enemyShaking--; }
         }
         f.flash = 0f;

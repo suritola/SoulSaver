@@ -161,8 +161,7 @@ public static class DailyRewards
                 close();
                 RunStats.GaveUp = true;
                 RunSave.Abandon();
-                Time.timeScale = 1f;
-                SceneManager.LoadScene("GameOver");
+                SceneFlow.Go("GameOver");           // 1.1.9~ 로딩 막 · 공격 고정 풀기 (다른 씬 전환과 같게)
             }, 28f);
             keep.gameObject.AddComponent<ResultPadFocus>();
             UIKit.EscCancel(blocker, () => close());

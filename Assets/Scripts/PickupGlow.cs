@@ -45,7 +45,7 @@ public class PickupGlow : MonoBehaviour
     void LateUpdate()
     {
         if (halo == null) return;
-        float pulse = 1f + 0.18f * Mathf.Sin(Time.time * 6f + phase);
+        float pulse = 1f + 0.18f * Mathf.Sin(Time.time * 6f + phase) * GameSettings.Motion;     // 1.1.9~ 「움직임 줄이기」
         halo.transform.position = transform.position;
         halo.transform.localScale = Vector3.one * (size / 8f) * pulse;
     }

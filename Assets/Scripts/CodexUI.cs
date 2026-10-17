@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public static class CodexUI
 {
     static GameObject open;
+    public static bool IsOpen => open != null;          // 1.1.9~ 게임 씬 ESC 메뉴에서도 엶 (ESCmenu 가 같은 ESC 로 일시정지를 풀지 않게)
     static int tab;
     static RectTransform grid;
     static ScrollRect scroll;
@@ -24,9 +25,10 @@ public static class CodexUI
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
 
     // 1.2~ 발견형 도감: 유물 · 각인 · 비밀 탭을 더함 · 진화 · 유물 · 각인 · 비밀은 얻은 것만 자세히 (CodexSeen)
-    // 1.2~ 「기억」: 영웅마다 기억 조각 6장 (MemoryShards · 도감 수집률 밖)
-    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점", "memory.section" };
-    const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11, TabMemory = 12;
+    // 1.1.9~ 13번째 「이야기」 탭 (편의성 2차 6 — 본 이야기를 글로 다시 읽기 · 수집률 · 보상에는 넣지 않음)
+    // 1.2~ 14번째 「기억」: 영웅마다 기억 조각 6장 (MemoryShards · 도감 수집률 밖)
+    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점", "이야기", "memory.section" };
+    const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11, TabStory = 12, TabMemory = 13;
     static CodexSeen.Cat? CatOf(int t) => t == TabEvo ? CodexSeen.Cat.Evo : t == TabRelic ? CodexSeen.Cat.Relic : t == TabBrand ? CodexSeen.Cat.Brand : t == TabSecret ? CodexSeen.Cat.Secret : (CodexSeen.Cat?)null;
     static readonly List<GameObject> tabBadges = new List<GameObject>();
     static Transform openRoot;
@@ -48,8 +50,16 @@ public static class CodexUI
         "codex.tab.secret",
         "transcend.codex.levelhint",     // 1.0.4~ 성장 카드 · 1.1~ 초월 카드 · 1.2~ 초월 간격 이야기 모드 2번 · 무한 모드 3번
         "상점 제단(적을 처치하다 보면 나타남)에서 코인으로 강화합니다",
+        "codex.tab.story",
         "memory.hint",
     };
+
+    // 1.1.9~ 로딩 화면 팁 (SceneFlow): 탭 안내 가운데 따로 읽어도 뜻이 통하는 것만 (캐릭터 · 운명 · 패시브 탭 안내는 화면 이름을 가리켜 빼 둠)
+    internal static IEnumerable<string> LoadingTips()
+    {
+        int[] use = { 0, 1, 3, TabEvo, TabRelic, TabBrand, TabSecret, TabLevelUp, TabShop };
+        foreach (int i in use) if (i < Hints.Length) yield return Hints[i];
+    }
 
     static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };
     // 1.0.4~: 도감은 플레이 순서로 (예전엔 옛 순서 = 지하 묘역 먼저). 체험판은 예전 순서 그대로 (Chapters.IsClassic)
@@ -59,6 +69,21 @@ public static class CodexUI
     // 적 이름 · 설명 (프리팹 이름으로 찾음)
     // 프리팹 이름으로 적 이름 (번역됨, 모르면 빈 문자열)
     public static string EnemyName(string prefab) => EnemyText.TryGetValue(prefab, out var t) ? Loc.T(t.name) : "";
+
+    // 1.1.9~ 멈춘 동안 적 위에 마우스 (PauseInspect · 편의성 3차 1): 프리팹 이름으로 설명 (번역됨, 모르면 빈 문자열)
+    internal static string EnemyDesc(string prefab) => EnemyText.TryGetValue(prefab, out var t) ? Loc.T(t.desc) : "";
+    internal static string BossDescOf(int kind) => kind >= 0 && kind < BossDesc.Length ? Loc.T(BossDesc[kind]) : "";
+
+    // 1.1.9~ 유물 이름 (메인 메뉴 기록 창 · 판 밖에서도)
+    internal static string RelicName(RelicDef r)
+    {
+        if (r == null) return "";
+        int id = r.abilityId;
+        if (SpecialAbilities.IsKit(id)) return Loc.T(SpecialAbilities.KitName(id));
+        CodexData data = CodexData.Load();
+        SpecialDef d = data != null && data.specials != null && id >= 0 && id < data.specials.Length ? data.specials[id] : null;
+        return d != null ? Loc.T(d.name) : r.id;
+    }
 
     static readonly Dictionary<string, (string name, string desc)> EnemyText = new Dictionary<string, (string, string)>
     {
@@ -166,14 +191,35 @@ public static class CodexUI
             tick.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.1f, 1f);
         }
         rewardButton = UIKit.MakeButton(win, "codex.rewards", new Vector2(520f, 425f), new Vector2(200f, 58f), OpenRewards, 22f);
+        // 1.1.9~ 게임 씬(일시정지 메뉴)에서 열면 「스킬 진화」 버튼 (메인 메뉴에는 타일이 따로 있음 · 편의성 3차 1)
+        bool inGame = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene";
+        if (inGame)
+        {
+            Transform evoRoot = root;
+            UIKit.MakeButton(win, "스킬 진화", new Vector2(330f, 425f), new Vector2(160f, 58f), () => SkillEvoCodexUI.Open(evoRoot), 22f);
+        }
+        // 1.1.9~ 검색 칸 (편의성 2차 14): 게임 씬에서는 「스킬 진화」 버튼을 피해 좁게
+        //   메인 메뉴 (290, 425) 240×50 + 왼쪽 「검색」 라벨 · 게임 씬 (158, 425) 176×50 (라벨은 제목 글자와 닿아 뺌, 자리 글이 대신)
+        Vector2 sPos = inGame ? new Vector2(158f, 425f) : new Vector2(290f, 425f), sSize = inGame ? new Vector2(176f, 50f) : new Vector2(240f, 50f);
+        if (!inGame)
+        {
+            TMP_Text sLabel = UIKit.Text(win, "검색", 20f, Dim, sPos - new Vector2(sSize.x * 0.5f + 34f, 0f), new Vector2(64f, 40f));
+            sLabel.fontSizeMin = 12f;
+        }
+        search = UIKit.MakeInput(win, GamePad.Active && !SteamManager.Initialized ? "키보드로 입력" : "이름이나 설명으로 찾기…", sPos, sSize, 20f);
+        search.onValueChanged.AddListener(_ => searchAt = Time.unscaledTime + 0.15f);
+        search.onSelect.AddListener(_ => SteamManager.ShowTextInput(Loc.T("검색"), search.text, s => { if (search != null) search.text = s; }));
+        searchAt = -1f;
+        searching = false;
+        open.AddComponent<CodexSearchTick>();
 
         tabButtons.Clear();
         tabBadges.Clear();
-        float w = 112f;         // 1.2~ 13칸 (기억 탭) — 122 × 12 → 112 × 13 (창 1640 안)
+        float w = 99f;          // 1.1.9~ 13탭 108 · 1.2~ 14탭(이야기 · 기억): 99 × 14 + 간격 8 × 13 = 1490 (양 끝 ±745, 창 1660 안)
         for (int i = 0; i < Tabs.Length; i++)
         {
             int t = i;
-            Button b = UIKit.MakeButton(win, Tabs[i], new Vector2((i - (Tabs.Length - 1) * 0.5f) * (w + 10f), 345f), new Vector2(w, 64f), () => Show(t), 26f);
+            Button b = UIKit.MakeButton(win, Tabs[i], new Vector2((i - (Tabs.Length - 1) * 0.5f) * (w + 8f), 345f), new Vector2(w, 64f), () => { ClearSearch(); Show(t); }, 26f);
             TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
             if (bt != null) { bt.enableAutoSizing = true; bt.fontSizeMin = 14f; bt.fontSizeMax = 26f; }
             tabButtons.Add(b);
@@ -185,7 +231,14 @@ public static class CodexUI
 
         BuildScroll(win);
         Show(0);
-        UIKit.EscCancel(open, Close);       // 1.1~ ESC · 패드 B 로도 닫힘
+        // 1.1~ ESC · 패드 B 로도 닫힘 · 1.1.9~ 검색 글이 있으면 ESC 는 검색만 비움 (두 번째 ESC 가 닫기)
+        //   위에 스킬 진화 도감이 열려 있으면 그것부터 (두 창의 ESC 처리 순서가 정해져 있지 않아도 위 창이 먼저 닫히게)
+        UIKit.EscCancel(open, () =>
+        {
+            if (SkillEvoCodexUI.IsOpen) { SkillEvoCodexUI.Close(); return; }
+            if (search != null && search.text.Length > 0) { ClearSearch(); Show(tab); }
+            else Close();
+        });
         WindowFit.Attach(win, new Vector2(1660f, 980f));      // 1.1~ UI 크기 120% · 좁은 화면에서 창이 화면 밖으로 나가지 않게
     }
 
@@ -229,15 +282,24 @@ public static class CodexUI
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
         hint.text = Loc.T(Hints[tab]);
+        if (tab == 0 && CurrentStage >= 0) hint.text = Loc.T("지금 장: {0}").Replace("{0}", Chapters.Title(CurrentStage)) + "  ·  " + hint.text;     // 1.1.9~ 판 안에서 열면 지금 장의 적이 맨 앞
         if (tab == TabMemory) hint.text = "<color=#F5D478>" + MemoryShards.HeaderLine + "</color>  " + hint.text;
         CodexSeen.Cat? cat = CatOf(tab);
         tabWasOpened = cat.HasValue && CodexSeen.TabOpenedThisVersion(cat.Value);
         if (cat.HasValue && CodexSeen.ShowAll) hint.text += "  <color=#F5D478>(" + Loc.T("codex.showall.on") + ")</color>";
-        CardH = tab == 2 ? HeroCardH : BaseCardH;
+        CardH = tab == 2 || tab == TabStory ? HeroCardH : BaseCardH;
         if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
 
-        CodexData data = CodexData.Load();
-        switch (tab)
+        Build(tab, CodexData.Load());
+        scroll.verticalNormalizedPosition = 1f;
+        if (cat.HasValue) CodexSeen.TabViewed(cat.Value);       // 그린 뒤에 (이번에 보이는 NEW 는 그대로 두고 다음부터 끔)
+        RefreshHeader();
+    }
+
+    // 탭 하나의 카드를 그리드에 그림 (Show · 검색이 같이 씀)
+    static void Build(int t, CodexData data)
+    {
+        switch (t)
         {
             case 0: Enemies(data); break;
             case 1: Bosses(data); break;
@@ -259,10 +321,145 @@ public static class CodexUI
                     Card(stall ? ShopStall.StallSprite : FxIcon(s.icon), stall ? Color.white : Gold, Loc.T(s.name), "", Loc.T(s.desc));
                 }
                 break;
+            case TabStory: Stories(data); break;
         }
+    }
+
+    // 판 안에서 열었으면 지금 장 번호 (아니면 -1)
+    static int CurrentStage => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene" && StageManager.Instance != null ? StageManager.Instance.CurrentStage : -1;
+
+    // ================================================================= 1.1.9~ 이야기 탭: 본 것만 글로 (안 본 것은 조건 한 줄 · 「도감 모두 보기」면 모두)
+    static void Stories(CodexData data)
+    {
+        bool all = CodexSeen.ShowAll;
+        bool classic = Chapters.IsClassic;
+        string sec = Loc.T("시작 이야기");
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            if (!CharacterData.IsDeveloped(c) || !Demo.CharacterAllowed(c)) continue;
+            CharacterDef d = CharacterData.Def(c);
+            bool seen = all || Prefs.GetInt(StoryDirector.IntroSeenKey(false, classic, c), 0) == 1;
+            StoryCard(CharacterUI.Portrait(c), Loc.T(d.name), sec + "  ·  " + Loc.T(d.title), seen, StoryDirector.IntroLinesFor(c, classic), "이 영웅으로 판을 시작하면 볼 수 있습니다.");
+        }
+        if (!Demo.On)
+        {
+            bool seen = all;
+            for (int i = 0; i < CharacterData.All.Length && !seen; i++) seen = Prefs.GetInt(StoryDirector.IntroSeenKey(true, false, (CharacterId)i), 0) == 1;
+            StoryCard(FxIcon("fx_warn"), Loc.T("무한 모드"), sec, seen, StoryDirector.EndlessIntroLines, "이 영웅으로 판을 시작하면 볼 수 있습니다.");
+        }
+        sec = Loc.T("보스 등장");
+        for (int kind = 0; kind < StoryDirector.BossCount; kind++)
+        {
+            if (Demo.On && kind > 0) break;          // 체험판은 1장 보스(리치 왕)만
+            var b = StoryDirector.BossLines(kind);
+            Sprite icon = null;
+            if (kind == AbyssStage.MirrorKind) icon = AbyssStage.Frames("mirrorlord")[0];
+            else if (data != null && data.bosses != null)
+                foreach (GameObject p in data.bosses)
+                {
+                    bosss bb = p != null ? p.GetComponent<bosss>() : null;
+                    if (bb != null && bb.bossKind == kind) { icon = SpriteOf(p); break; }
+                }
+            bool seen = all || Prefs.GetInt(StoryDirector.BossSeenKey(kind), 0) == 1;
+            StoryCard(icon, Loc.T(b.name), sec + "  ·  " + Loc.T(b.title), seen, b.lines,
+                      Loc.T("{0}에서 만나면 볼 수 있습니다.").Replace("{0}", Loc.T(StageNames[Mathf.Clamp(kind, 0, StageNames.Length - 1)])));
+        }
+        if (Demo.On) return;                         // 체험판은 1장에서 끝나 엔딩이 없음
+        sec = Loc.T("엔딩");
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId c = (CharacterId)i;
+            if (!CharacterData.IsDeveloped(c)) continue;
+            CharacterDef d = CharacterData.Def(c);
+            bool seen = all || Prefs.GetInt("ending.seen." + i, 0) == 1;
+            StoryCard(CharacterUI.Portrait(c), Loc.T(d.name), sec + "  ·  " + Loc.T(d.title), seen, StoryDirector.EndingLinesFor(c), "이 영웅으로 끝까지 클리어하면 볼 수 있습니다.");
+        }
+    }
+
+    static void StoryCard(Sprite icon, string title, string tag, bool seen, string[] lines, string howKo)
+    {
+        if (!seen)
+        {
+            Card(icon, new Color(0.25f, 0.24f, 0.3f, 1f), "<color=#9E968A>" + title + "</color>", tag,
+                 "<color=#A89C86>" + Loc.T("아직 보지 못한 이야기") + "\n" + Loc.T(howKo) + "</color>");
+            return;
+        }
+        List<string> said = new List<string>();
+        if (lines != null) foreach (string l in lines) said.Add(Loc.T(l));
+        bool en = Loc.Current == Loc.Lang.English;
+        string open = en ? "\u201C" : "\u300C", close = en ? "\u201D" : "\u300D";
+        Card(icon, Color.white, title, tag, open + string.Join("\n", said) + close);
+    }
+
+    // ================================================================= 1.1.9~ 도감 검색 (편의성 2차 14)
+    // 탭 빌더를 고치지 않고 「모든 탭을 그린 뒤 글자로 걸러냄」 — 「???」 카드는 빼고(스포일러) · 최대 60장 · NEW 처리(TabViewed)는 부르지 않음
+    static TMP_InputField search;
+    static float searchAt = -1f;
+    static bool searching;
+    const int MaxResults = 60;
+
+    static void ClearSearch()
+    {
+        searching = false;
+        searchAt = -1f;
+        if (search != null && search.text.Length > 0) search.SetTextWithoutNotify("");
+    }
+
+    internal static void SearchTick()
+    {
+        if (searchAt < 0f || Time.unscaledTime < searchAt || search == null) return;
+        searchAt = -1f;
+        string q = search.text.Trim();
+        if (q.Length < 2) { if (searching) { searching = false; Show(tab); } return; }
+        RunSearch(q);
+    }
+
+    static void RunSearch(string q)
+    {
+        searching = true;
+        for (int i = grid.childCount - 1; i >= 0; i--) { GameObject g = grid.GetChild(i).gameObject; g.SetActive(false); Object.Destroy(g); }
+        foreach (Button b in tabButtons) { b.GetComponent<Image>().color = new Color(0.6f, 0.58f, 0.65f); b.transform.localScale = Vector3.one; }
+        tabWasOpened = true;                     // 이번 업데이트 NEW 배지를 띄우지 않음
+        CardH = BaseCardH;
+        if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
+        CodexData data = CodexData.Load();
+        int found = 0;
+        bool more = false;
+        for (int t = 0; t < Tabs.Length; t++)
+        {
+            int before = grid.childCount;
+            try { Build(t, data); }
+            catch (System.Exception e) { Debug.LogWarning("[Codex] 검색 중 탭 " + t + ": " + e.Message); }
+            for (int i = before; i < grid.childCount; i++)
+            {
+                GameObject card = grid.GetChild(i).gameObject;
+                if (!card.activeSelf) continue;
+                bool keep = !more && Matches(card, q, out bool hidden) && !hidden;
+                if (keep && found >= MaxResults) { more = true; keep = false; }
+                if (!keep) { card.SetActive(false); Object.Destroy(card); continue; }
+                found++;
+                // 왼쪽 위 작은 탭 이름 · 긴 본문은 줄임표
+                TMP_Text tabTag = UIKit.Text(card.transform, Tabs[t], 18f, Dim, new Vector2(-300f, CardH * 0.5f - 22f), new Vector2(130f, 24f), TextAlignmentOptions.Left);
+                tabTag.fontSizeMin = 12f;
+                foreach (TMP_Text tx in card.GetComponentsInChildren<TMP_Text>(true)) tx.overflowMode = TextOverflowModes.Ellipsis;
+            }
+        }
+        hint.text = found == 0 ? Loc.T("일치하는 항목이 없습니다.") : Loc.T("검색 결과 {0}개").Replace("{0}", found + (more ? "+" : ""));
         scroll.verticalNormalizedPosition = 1f;
-        if (cat.HasValue) CodexSeen.TabViewed(cat.Value);       // 그린 뒤에 (이번에 보이는 NEW 는 그대로 두고 다음부터 끔)
-        RefreshHeader();
+    }
+
+    static bool Matches(GameObject card, string q, out bool hidden)
+    {
+        hidden = false;
+        System.Text.StringBuilder all = new System.Text.StringBuilder();
+        foreach (TMP_Text t in card.GetComponentsInChildren<TMP_Text>(true))
+        {
+            string s = RunRecords.Plain(t.text);
+            if (s == "???") hidden = true;
+            all.Append(s).Append(' ');
+        }
+        return all.ToString().IndexOf(q, System.StringComparison.CurrentCultureIgnoreCase) >= 0;
     }
 
     // ================================================================= tabs
@@ -274,7 +471,10 @@ public static class CodexUI
         List<int> order = new List<int>();
         for (int i = 0; i < data.enemies.Length; i++) order.Add(i);
         int StageOf(int i) => data.enemyStage != null && i < data.enemyStage.Length ? data.enemyStage[i] : 0;
-        order.Sort((x, y) => { int cmp = PlaySlot(StageOf(x)).CompareTo(PlaySlot(StageOf(y))); return cmp != 0 ? cmp : x.CompareTo(y); });
+        int cur = CurrentStage;
+        int SlotOf(int i) => StageOf(i) == cur ? -1 : PlaySlot(StageOf(i));        // 1.1.9~ 판 안에서 열면 지금 장의 적부터
+        order.Sort((x, y) => { int cmp = SlotOf(x).CompareTo(SlotOf(y)); return cmp != 0 ? cmp : x.CompareTo(y); });
+        if (cur == 3) AbyssEnemies();
         foreach (int i in order)
         {
             GameObject p = data.enemies[i];
@@ -286,7 +486,12 @@ public static class CodexUI
             if (e != null) tag += "  ·  " + Stats(e.setEnemyHP, e.speed, e.contactDamage);
             Card(SpriteOf(p), Color.white, Loc.T(txt.name ?? p.name), tag, Loc.T(txt.desc ?? ""));
         }
-        // 4장 적은 프리팹이 없어 도트와 AbyssStage 수치로
+        if (cur != 3) AbyssEnemies();
+    }
+
+    // 4장 적은 프리팹이 없어 도트와 AbyssStage 수치로
+    static void AbyssEnemies()
+    {
         foreach (var a in AbyssStage.CodexEnemies())
         {
             EnemyText.TryGetValue(a.name, out var txt);
@@ -813,6 +1018,8 @@ public static class CodexUI
         CloseRewards();
         if (open != null) Object.Destroy(open);
         open = null;
+        search = null;
+        searching = false;
         // 1.2~ 메인 메뉴 도감 버튼: 더 볼 NEW · 받을 보상이 없으면 반짝임을 걷음
         GameObject button = GameObject.Find("CodexButton");
         if (button == null) return;
@@ -821,6 +1028,12 @@ public static class CodexUI
         if (glow != null && !want) glow.Remove();
         else if (glow == null && want) button.AddComponent<NewGlow>();
     }
+}
+
+// 1.1.9~ 도감 검색 디바운스 (멈춘 화면에서도 돎)
+public class CodexSearchTick : MonoBehaviour
+{
+    void Update() => CodexUI.SearchTick();
 }
 
 // 1.1~ 도감 · 스킬 진화 도감처럼 큰 창: 캔버스(UI 크기로 바뀜)보다 크면 창을 통째로 줄임

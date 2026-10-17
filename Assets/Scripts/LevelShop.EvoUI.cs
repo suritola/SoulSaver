@@ -285,7 +285,7 @@ public partial class LevelShop
         if (!show) return;
         skipButton.interactable = selectReady;
         if (skipArmedAt > 0f && !SkipArmed) DisarmSkip();
-        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
+        float pulse = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
         skipButton.transform.localScale = Vector3.one * (1f + 0.03f * pulse);
         if (skipText != null) skipText.color = SkipArmed ? Color.Lerp(new Color(1f, 0.45f, 0.4f), Color.white, pulse)
                                                          : Color.Lerp(Color.white, new Color(1f, 0.9f, 0.6f), pulse);

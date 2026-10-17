@@ -30,12 +30,35 @@ public class StatsHUD : MonoBehaviour
     RectTransform arrowRect;
 
     // 한국어 원문 (static 초기화 중엔 설정을 읽을 수 없으므로 쓸 때 번역)
-    static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도",
+    internal static readonly string[] Labels = { "공격력", "방어력", "공격 속도", "재장전", "이동 속도",
                                         "체력", "치명타 확률", "치명타 피해", "피해 배율", "관통", "체력 재생", "행운", "성장" };     // 1.0.4~ 성장 (성장 카드 · 영혼 정련 횟수)
     // 6번째 줄부터는 레벨업 카드 아이콘을 빌려 씀 (강철같은 심장 · 노려보는 눈빛 · 관통하는 총알 · 생명의 샘)
     // 1.0.4~: 마지막 줄 「행운」도 아이콘 (영혼 트리 행운 칸과 같은 4번 카드 아이콘, 예전엔 빈칸)
     // 1.1~: 마지막 줄 「성장」도 아이콘 (레벨업 · 경험치 4번 카드 아이콘, 예전엔 배열이 모자라 빈칸)
     static readonly int[] CardIcons = { 8, 3, 3, -1, 0, 10, 4, 4 };
+
+    // 1.1.9~ 줄마다 마우스를 올리면 뜻 (일시정지 중에는 PauseInspect 가 바로 보여 줌) — Labels 와 같은 순서
+    internal static readonly string[] Descs =
+    {
+        "평타 한 발의 피해입니다. 멀티 샷이면 발당 피해 × 발사 수로 보입니다.",
+        "받는 피해를 이 비율만큼 줄입니다. 상한이 있습니다.",
+        "초당 평타 횟수입니다.",
+        "탄창을 다 쓴 뒤 다시 채우는 데 걸리는 시간입니다. 탄창이 없는 영웅은 「-」로 보입니다.",
+        "시작 속도에 비한 지금 이동 속도입니다.",
+        "지금 체력과 최대 체력입니다. 0이 되면 쓰러집니다.",
+        "공격이 치명타가 될 확률입니다. 영혼 트리에서 올립니다.",
+        "치명타가 났을 때의 피해 배율입니다.",
+        "버프 · 특수 능력으로 모든 피해에 곱해지는 값입니다.",
+        "총알 하나가 뚫고 지나가는 적의 수입니다.",
+        "초당 회복하는 체력입니다. 적을 쓰러뜨릴 때 회복하는 양은 작게 붙습니다.",
+        "지금 키우는 카드가 레벨업 카드에 나올 확률을 올립니다. 1마다 40%씩 더 자주 나옵니다.",
+        "최대 레벨 뒤에 고른 성장 카드 수와 영혼 정련 횟수입니다.",
+    };
+
+    // 1.1.9~ 빌드 자세히 보기(BuildView) 가 같은 값을 쓰려고
+    public static StatsHUD Instance { get; private set; }
+    void Awake() => Instance = this;
+    void OnDestroy() { if (Instance == this) Instance = null; }
 
     PlayerController player;
     TextMeshProUGUI[] values;
@@ -148,7 +171,30 @@ public class StatsHUD : MonoBehaviour
         labels[i].overflowMode = TextOverflowModes.Ellipsis;
         values[i] = MakeText("Value", "", new Color(0.96f, 0.83f, 0.47f), TextAlignmentOptions.Right,
                              padding, y);
+
+        // 1.1.9~ 줄 전체에 투명 판 + 툴팁 (전투 중 조준은 막지 않음 · hud)
+        GameObject hit = new GameObject("RowTip", typeof(RectTransform), typeof(Image));
+        RectTransform hr = hit.GetComponent<RectTransform>();
+        hr.SetParent(transform, false);
+        hr.anchorMin = new Vector2(0f, 1f);
+        hr.anchorMax = new Vector2(1f, 1f);
+        hr.pivot = new Vector2(0.5f, 0.5f);
+        hr.offsetMin = new Vector2(padding * 0.5f, 0f);
+        hr.offsetMax = new Vector2(-padding * 0.5f, 0f);
+        hr.sizeDelta = new Vector2(hr.sizeDelta.x, rowHeight);
+        hr.anchoredPosition = new Vector2(hr.anchoredPosition.x, y);
+        Image hi = hit.GetComponent<Image>();
+        hi.color = new Color(0f, 0f, 0f, 0f);
+        hi.raycastTarget = true;
+        TooltipTrigger tip = hit.AddComponent<TooltipTrigger>();
+        int row = i;
+        tip.titleProvider = () => Loc.T(Labels[row]);
+        tip.bodyProvider = () => Loc.T(Descs[row]) + (values != null && values[row] != null ? "\n\n<color=#F5D478>" + values[row].GetParsedText() + "</color>" : "");
+        tip.hud = true;
     }
+
+    // 1.1.9~ 빌드 자세히 보기: 줄 아이콘 (HUD 와 같은 그림)
+    internal Sprite RowSprite(int i) => i < icons.Length ? icons[i] : RowIcon(i);
 
     Sprite RowIcon(int i)
     {
@@ -206,53 +252,64 @@ public class StatsHUD : MonoBehaviour
     void Refresh()
     {
         if (player == null || values == null) return;
+        string[] v = ValueTexts();
+        for (int i = 0; i < values.Length && i < v.Length; i++) values[i].text = v[i];
+        FitLabels();
+    }
+
+    // 1.1.9~ 13줄 값 (HUD 와 빌드 자세히 보기가 같이 씀)
+    internal string[] ValueTexts()
+    {
+        string[] values = new string[Labels.Length];
+        if (player == null) player = FindFirstObjectByType<PlayerController>();
+        if (player == null) { for (int i = 0; i < values.Length; i++) values[i] = "-"; return values; }
 
         // 공격력: 멀티샷이면 발당 피해 x 발사 수
         int shots = Mathf.Max(1, player.multiShot);
-        values[0].text = shots > 1
+        values[0] = shots > 1
             ? (player.damage * player.MultiShotDamageRate(shots)).ToString("0.##") + " x " + shots
             : player.damage.ToString("0.##");
 
         // 방어력: 받는 피해 감소율
-        values[1].text = (Mathf.Min(player.def, PlayerController.MaxDef) * 100f).ToString("0") + "%";
+        values[1] = (Mathf.Min(player.def, PlayerController.MaxDef) * 100f).ToString("0") + "%";
 
         // 공격 속도: 초당 발사 수
-        values[2].text = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");
+        values[2] = (1f / Mathf.Max(0.01f, player.ShootSpeed)).ToString("0.0") + Loc.T("/초");
 
         // 1.0.4~: 탄을 쓰지 않는 영웅(근접 · 궁수 등)은 재장전이 없으니 「-」
         CharacterKit kit = CharacterKit.Instance;
-        values[3].text = kit != null && !kit.UsesAmmo ? "-" : player.reloadTime.ToString("0.0") + Loc.T("초");
+        values[3] = kit != null && !kit.UsesAmmo ? "-" : player.reloadTime.ToString("0.0") + Loc.T("초");
 
         // 이동 속도: 시작 속도 대비
-        values[4].text = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
+        values[4] = baseSpeed > 0f ? (player.speed / baseSpeed * 100f).ToString("0") + "%" : player.speed.ToString("0.0");
 
-        values[5].text = Mathf.CeilToInt(player.PlayerHealth) + " / " + Mathf.RoundToInt(player.PlayerMaxHealth);
+        values[5] = Mathf.CeilToInt(player.PlayerHealth) + " / " + Mathf.RoundToInt(player.PlayerMaxHealth);
 
         // 치명타: 영혼 트리에서 얻음 (없으면 0%)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
-        values[6].text = ((sp != null ? sp.TreeCrit : 0f) * 100f).ToString("0") + "%";
+        values[6] = ((sp != null ? sp.TreeCrit : 0f) * 100f).ToString("0") + "%";
         // 1.0.4~: 치명타 확률이 0% 면 치명타 피해는 쓰이지 않으니 「-」 (예전엔 0% 인데도 200% 가 보였음)
         float critChance = sp != null ? sp.TreeCrit : 0f;
-        values[7].text = critChance <= 0f ? "-" : ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
+        values[7] = critChance <= 0f ? "-" : ((sp != null ? sp.TreeCritDamage : 2f) * 100f).ToString("0") + "%";
 
         // 피해 배율: 버프 · 특수 능력으로 곱해지는 값
-        values[8].text = (player.damageMultiplier * 100f).ToString("0") + "%";
+        values[8] = (player.damageMultiplier * 100f).ToString("0") + "%";
 
         // 관통: 뚫고 지나가는 적 수
         int pierce = Mathf.Max(0, player.pene - 1);
-        values[9].text = pierce + Loc.T(pierce == 1 ? "마리 (한 마리)" : "마리");      // 1.1~ 영어 「1 enemy」 (예전엔 「1 enemies」)
+        values[9] = pierce + Loc.T(pierce == 1 ? "마리 (한 마리)" : "마리");      // 1.1~ 영어 「1 enemy」 (예전엔 「1 enemies」)
 
         // 체력 재생: 초당 · 처치 시
         // 행운 (1.0.2): 지금 키우는 카드가 나올 확률 (행운 1마다 +40%, LevelShop.DrawWeight)
         int luck = sp != null ? sp.Luck : 0;
-        values[11].text = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
+        values[11] = luck > 0 ? luck + "  <size=80%><color=#9FE89F>(+" + (luck * 40) + "%)</color></size>" : "0";
         // 1.1~: 처치 회복이 붙으면 값이 길어져 이름 위로 겹쳤음 → 처치 회복은 작게
-        values[10].text = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? " <size=65%>+" + player.healOnKill.ToString("0.#") + Loc.T("/처치") + "</size>" : "");
+        values[10] = player.regenPerSecond.ToString("0.#") + Loc.T("/초") + (player.healOnKill > 0f ? " <size=65%>+" + player.healOnKill.ToString("0.#") + Loc.T("/처치") + "</size>" : "");
         // 성장 (1.0.4~): 만렙 뒤 고른 성장 카드 수 · 영혼 정련 횟수
         LevelShop shop = Cache<LevelShop>.Get;
         int grown = shop != null ? shop.GrowthPicks : 0, refines = sp != null ? sp.Refines : 0;
-        values[12].text = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
-        FitLabels();
+        values[12] = grown + (refines > 0 ? "  <size=80%><color=#C9A0FF>" + Loc.T("영혼 정련") + " " + refines + "</color></size>" : "");
+        return values;
     }
 
     // 1.1~: 줄마다 이름 칸 오른쪽 끝을 값 글자 왼쪽(+8)까지로 (값이 길면 이름이 자동으로 작아짐)

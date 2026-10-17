@@ -17,18 +17,19 @@ public class MenuManager : MonoBehaviour
         if (!RunSave.Has)
         {
             if (ShouldSuggestTutorial()) { SuggestTutorial(); return; }
-            SceneManager.LoadScene("GameScene");
+            SceneFlow.Go("GameScene");
             return;
         }
         RectTransform win = Window("ConfirmNewRun", new Vector2(820f, 340f));
         UIKit.Text(win, "새 게임을 시작할까요?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(760f, 60f));
         UIKit.Text(win, "저장된 판(이어하기)은 지워집니다.", 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(760f, 40f));
-        UIKit.MakeButton(win, "새 게임", new Vector2(-150f, -90f), new Vector2(260f, 76f), () =>
+        UnityEngine.UI.Button ok = UIKit.MakeButton(win, "새 게임", new Vector2(-150f, -90f), new Vector2(260f, 76f), () =>
         {
             RunSave.Delete();
-            SceneManager.LoadScene("GameScene");
+            SceneFlow.Go("GameScene");
         }, 28f);
-        UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UnityEngine.UI.Button cancel = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UIKit.ConfirmKeys(win, ok, cancel, -143f);
     }
 
     // 1.0.4~: 튜토리얼 기록이 없고 한 판도 해 본 적 없으면 (체험판 포함) · 한 번 고르면 다시 묻지 않음
@@ -42,16 +43,17 @@ public class MenuManager : MonoBehaviour
         UIKit.Text(win, "튜토리얼부터 해 볼까요?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 105f), new Vector2(840f, 60f));
         UIKit.Text(win, "실제 게임 화면에서 이동 · 공격 · 재장전 · 필살기 · 레벨업을 하나씩 직접 해 봅니다. 언제든 그만둘 수 있습니다.",
                    24f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 20f), new Vector2(820f, 90f));
-        UIKit.MakeButton(win, "튜토리얼", new Vector2(-165f, -110f), new Vector2(290f, 80f), () =>
+        UnityEngine.UI.Button tut = UIKit.MakeButton(win, "튜토리얼", new Vector2(-165f, -110f), new Vector2(290f, 80f), () =>
         {
             Asked();
             TutorialRun.Begin();
         }, 28f);
-        UIKit.MakeButton(win, "바로 시작", new Vector2(165f, -110f), new Vector2(290f, 80f), () =>
+        UnityEngine.UI.Button now = UIKit.MakeButton(win, "바로 시작", new Vector2(165f, -110f), new Vector2(290f, 80f), () =>
         {
             Asked();
-            SceneManager.LoadScene("GameScene");
+            SceneFlow.Go("GameScene");
         }, 28f);
+        UIKit.ConfirmKeys(win, tut, now, -164f);
     }
 
     static void Asked()
@@ -66,12 +68,13 @@ public class MenuManager : MonoBehaviour
         if (confirm != null) return;
         RectTransform win = Window("ConfirmQuit", new Vector2(760f, 300f));
         UIKit.Text(win, "게임을 종료할까요?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 60f), new Vector2(700f, 60f));
-        UIKit.MakeButton(win, "게임 종료", new Vector2(-150f, -70f), new Vector2(260f, 76f), () =>
+        UnityEngine.UI.Button quit = UIKit.MakeButton(win, "게임 종료", new Vector2(-150f, -70f), new Vector2(260f, 76f), () =>
         {
             Prefs.Save();
             Application.Quit();
         }, 28f);
-        UIKit.MakeButton(win, "취소", new Vector2(150f, -70f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UnityEngine.UI.Button cancel = UIKit.MakeButton(win, "취소", new Vector2(150f, -70f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UIKit.ConfirmKeys(win, quit, cancel, 0f, false);         // 1.1.9~ Enter 한 번에 게임이 꺼지지 않게 기본 선택은 하지 않음 (←→ 이동만)
     }
 
     // 확인 창 하나 (ESC = 취소 · 1.0.4~ 예전엔 ESC 로 안 닫혔음)

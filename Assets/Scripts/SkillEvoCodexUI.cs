@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public static class SkillEvoCodexUI
 {
     static GameObject open;
+    public static bool IsOpen => open != null;          // 1.1.9~ 게임 씬 ESC 메뉴에서도 엶 (ESCmenu 가 같은 ESC 로 일시정지를 풀지 않게)
     static RectTransform grid;
     static ScrollRect scroll;
     static readonly List<Button> tabs = new List<Button>();

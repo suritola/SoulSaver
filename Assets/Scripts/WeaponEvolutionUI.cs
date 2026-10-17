@@ -78,10 +78,11 @@ public class WeaponEvolutionUI : MonoBehaviour
         fx?.Play("pulse", 0.7f, 0.7f);
         Image core = Img("Core", root, Vector2.zero, new Vector2(150f, 150f), CurrentSprite(), Color.white);
         core.preserveAspect = true;
-        for (float t = 0f; t < 1.1f && !skipIntro; t += Time.unscaledDeltaTime)
+        float fxT = GameSettings.FxTime;        // 1.1.9~ 「빠른 연출」이면 인트로 · 결과 머무름 절반
+        for (float t = 0f; t < 1.1f * fxT && !skipIntro; t += Time.unscaledDeltaTime)
         {
             if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
-            float k = t / 1.1f;
+            float k = t / (1.1f * fxT);
             dim.color = new Color(0.02f, 0.01f, 0.04f, 0.9f * Mathf.Clamp01(k * 2f));
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(900f, 260f, k);
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.8f * k);
@@ -100,10 +101,10 @@ public class WeaponEvolutionUI : MonoBehaviour
         Destroy(core.gameObject);
         title.gameObject.SetActive(true);
         subtitle.gameObject.SetActive(true);
-        for (float t = 0f; t < 0.45f && !skipIntro; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.45f * fxT && !skipIntro; t += Time.unscaledDeltaTime)
         {
             if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
-            float k = t / 0.45f;
+            float k = t / (0.45f * fxT);
             flash.color = new Color(1f, 0.95f, 1f, (1f - k) * FlashMul);
             burst.rectTransform.sizeDelta = Vector2.one * Mathf.Lerp(260f, 1500f, k);
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.8f * (1f - k) + 0.12f);
@@ -127,10 +128,10 @@ public class WeaponEvolutionUI : MonoBehaviour
             goal[i] = new Vector2((i - (cards.Length - 1) / 2f) * 480f, -50f);          // 1.1~ -40 → -50: 고른 카드(1.08배) 윗변이 부제 글자 밑(295)에 오게
             cards[i].gameObject.SetActive(true);
         }
-        for (float t = 0f; t < 0.55f && !skipIntro; t += Time.unscaledDeltaTime)
+        for (float t = 0f; t < 0.55f * fxT && !skipIntro; t += Time.unscaledDeltaTime)
         {
             if (SkipPressed(startedAt, 0.4f)) { skipIntro = true; break; }
-            float k = EaseOut(t / 0.55f);
+            float k = EaseOut(t / (0.55f * fxT));
             for (int i = 0; i < cards.Length; i++)
             {
                 cards[i].anchoredPosition = Vector2.Lerp(Vector2.zero, goal[i], k);
@@ -200,7 +201,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         for (int i = 0; i < 40; i++) Spark(new Vector2(0f, -70f), Random.insideUnitCircle.normalized * Random.Range(500f, 1300f), Random.Range(0.5f, 0.9f));
         // 1.0.4~: 결과 화면 1.1초도 클릭 · [상호작용 키]로 넘김 (확정한 그 입력은 받지 않게 0.15초 뒤부터)
         float resultAt = Time.unscaledTime;
-        while (Time.unscaledTime - resultAt < 1.1f && !SkipPressed(resultAt)) yield return null;
+        while (Time.unscaledTime - resultAt < 1.1f * GameSettings.FxTime && !SkipPressed(resultAt)) yield return null;
 
         // 6) 사라짐
         CanvasGroup all = root.gameObject.AddComponent<CanvasGroup>();

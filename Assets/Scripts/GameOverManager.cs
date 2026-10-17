@@ -19,11 +19,11 @@ public class GameOverManager : MonoBehaviour
 
     public void OnPressRestart()
     {
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
     }
 
     public void OnPressMainMenu()
     {
-        SceneManager.LoadScene("MainMenu");
+        SceneFlow.Go("MainMenu");
     }
 }

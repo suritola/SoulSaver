@@ -120,8 +120,7 @@ public static class DailyChallenge
         Active = true;
         GameMode.Override = Difficulty.Endless;
         CharacterData.Override = CharacterOf(runDay);
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
     }
 
     // 메인 메뉴로 돌아오면 원래 난이도 · 캐릭터로 (메뉴가 난이도 버튼을 그리기 전에도 부름)

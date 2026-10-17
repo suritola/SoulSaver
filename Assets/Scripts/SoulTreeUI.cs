@@ -24,6 +24,7 @@ public class SoulTreeUI : MonoBehaviour
         Soul,                           // 영혼
         new Color(1f, 0.85f, 0.35f),    // 재물
     };
+    internal static Color BranchColorOf(int b) => BranchColor[Mathf.Clamp(b, 0, BranchColor.Length - 1)];     // 1.1.9~ 빌드 자세히 보기
     static readonly float[] BranchAngle = { 90f, 30f, -30f, -90f, -150f, 150f };
     const float Sector = 54f;           // 가지 하나가 쓸 수 있는 각도
     const float R0 = 210f, RStep = 135f; // 깊이 1 반지름 · 깊이마다 늘어나는 거리

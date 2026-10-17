@@ -165,6 +165,9 @@ public static class Prefs
         if (PlayerPrefs.HasKey(key)) PlayerPrefs.DeleteKey(key);
     }
 
+    // 1.1.9~ 마지막 저장이 실패했으면 그 까닭 (성공하면 null) — 판 저장이 「저장하지 못했습니다」 알림을 띄움 (RunSave)
+    public static string LastError { get; private set; }
+
     public static void Save()
     {
         if (data == null || !dirty) return;
@@ -184,7 +187,8 @@ public static class Prefs
             if (File.Exists(FilePath)) File.Replace(tmp, FilePath, FilePath + ".bak");
             else File.Move(tmp, FilePath);
             dirty = false;
+            LastError = null;
         }
-        catch (System.Exception e) { Debug.LogWarning("[Prefs] 저장 파일을 쓰지 못함: " + e.Message); }
+        catch (System.Exception e) { LastError = e.Message; Debug.LogWarning("[Prefs] 저장 파일을 쓰지 못함: " + e.Message); }
     }
 }

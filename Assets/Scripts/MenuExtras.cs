@@ -44,7 +44,9 @@ public static class MenuExtras
             res.enableAutoSizing = true;
             res.fontSizeMin = 14f;
             res.fontSizeMax = 24f;
-            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunStats.Summary(false);
+            RunRecords.CommitBest();         // 1.1.9~ 내 최고 기록 갱신 (판 기록 쓰기와 순서가 보장되지 않아 양쪽에서 부르되 한 번만)
+            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunRecords.WithBest(RunStats.Summary(false));
+            RunRecords.PlayNewRecordSound(canvas.transform);
             ResultScreen.BuildGoals(canvas.transform);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
             RectTransform rr = res.rectTransform;
             rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
@@ -59,6 +61,20 @@ public static class MenuExtras
             ResultScreen.FitTitle();
             ResultScreen.BuildLeftBehind(canvas.transform);     // 1.2~ 「이번 판이 남긴 것」
             ResultScreen.BuildRecommend(canvas.transform);      // 1.2~ 3연속 사망 추천 한 줄
+            // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (왼쪽 기준 (60, -300) 300×60 · 떠나기 전에 떠 둔 스냅샷)
+            if (BuildView.HasSnapshot)
+            {
+                Transform croot = canvas.transform;
+                Button bv = UIKit.MakeButton(croot, "빌드 자세히 보기", Vector2.zero, new Vector2(300f, 60f), () => BuildView.Open(croot), 24f);
+                RectTransform bvr = (RectTransform)bv.transform;
+                bvr.anchorMin = bvr.anchorMax = new Vector2(0f, 0.5f);
+                bvr.pivot = new Vector2(0f, 0.5f);
+                bvr.anchoredPosition = new Vector2(60f, -300f);
+                bv.name = "BuildViewButton";
+                bv.navigation = new Navigation { mode = Navigation.Mode.None };
+            }
+            // 1.1.9~ 오른쪽 아래 구석 「결과 복사」 (편의성 3차 10)
+            RunRecords.InstallCopyButton(canvas.transform, RunRecords.ShareText);
         }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
@@ -168,6 +184,7 @@ public static class MenuExtras
 
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
+        MenuHeroPanel.Install(sr.parent, sr.root);         // 1.1.9~ 왼쪽 「지금 영웅」 패널 (씬의 고정 그림 자리)
         // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~)
         Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(220f, 56f), () => PatchNotesUI.OpenHistory(sr.root), 24f);
         RectTransform nr = (RectTransform)notes.transform;
@@ -185,8 +202,25 @@ public static class MenuExtras
             streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
             UIKit.Forget(streak);
         }
+        // 1.1.9~ 순위표 아래 「기록」 (지난 판 · 영웅별 통계 — 체험판은 숨김: 체험판 기록은 정식판으로 이어지지 않음)
+        if (!Demo.On)
+        {
+            Transform hroot = sr.root;
+            Button hist = UIKit.MakeButton(sr.parent, "기록", Vector2.zero, new Vector2(220f, 56f), () => RunHistoryUI.Open(hroot), 24f);
+            RectTransform hr = (RectTransform)hist.transform;
+            hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(1f, 1f);
+            hr.anchoredPosition = new Vector2(-30f, -306f);
+            hist.name = "RunHistoryButton";
+        }
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
+        // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
+        if (GameSettings.DeckApplied && GameSettings.LanguageChosen)
+        {
+            Canvas mc = sr.GetComponentInParent<Canvas>();
+            MenuToast.Show(mc != null ? mc.rootCanvas.transform : sr.parent, "스팀 덱에 맞춰 설정했습니다 (UI 크기 110% · 게임패드). 설정에서 바꿀 수 있습니다.", 8f);
+            GameSettings.DeckNoticed();
+        }
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
         ClaimRewards.InstallMenu(root);         // 1.2~ 소급 해금 알림 · 이미 이룬 기록의 보상 「받기」 (위 창들이 닫힌 뒤)
         // 1.0.4~: 튜토리얼 완료 화면 「바로 첫 판 시작」 → 게임 시작 버튼을 대신 누름 (저장된 판이 있으면 원래처럼 한 번 물음)
@@ -263,8 +297,9 @@ public static class MenuExtras
             if (blocker != null) Object.Destroy(blocker);
             then?.Invoke();
         };
-        UIKit.MakeButton(win, "저장 폴더 열기", new Vector2(-160f, -150f), new Vector2(290f, 76f), () => Application.OpenURL("file:///" + Prefs.FolderPath.Replace('\\', '/')), 26f);
-        UIKit.MakeButton(win, "확인", new Vector2(160f, -150f), new Vector2(260f, 76f), () => close(), 28f);
+        Button folder = UIKit.MakeButton(win, "저장 폴더 열기", new Vector2(-160f, -150f), new Vector2(290f, 76f), () => Application.OpenURL("file:///" + Prefs.FolderPath.Replace('\\', '/')), 26f);
+        Button okButton = UIKit.MakeButton(win, "확인", new Vector2(160f, -150f), new Vector2(260f, 76f), () => close(), 28f);
+        UIKit.ConfirmKeys(win, okButton, folder, -205f);         // 1.1.9~ Enter 로 확인
         UIKit.EscCancel(blocker, () => close());
     }
 
@@ -453,6 +488,13 @@ public static class MenuExtras
         qr.anchoredPosition = new Vector2((half + 16f) * 0.5f, rowY);
         Transform hint = esc.escMenu.transform.Find("ResumeHint");
         if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, rowY - H * 0.5f - 34f);
+
+        // 1.1.9~ 설정 줄을 반으로 나눠 「설정 | 도감」 (편의성 3차 1 — 판 중간에 적 · 보스 · 진화 설명을 찾아봄)
+        GameObject codex = UIKit.CloneButton(lowest.gameObject, "CodexButton", "도감", () => CodexUI.Open(esc.escMenu.transform.root));
+        RectTransform cr = (RectTransform)codex.transform;
+        r.sizeDelta = cr.sizeDelta = new Vector2(half, H);
+        cr.anchoredPosition = new Vector2((half + 16f) * 0.5f, r.anchoredPosition.y);
+        r.anchoredPosition = new Vector2(-(half + 16f) * 0.5f, r.anchoredPosition.y);
     }
 }
 
@@ -598,6 +640,74 @@ public static class UIKit
         return t;
     }
 
+    // 1.1.9~ 확인 창 키보드 조작: 기본 버튼을 선택해 두면 Unity 의 Submit(Enter · Space)이 그 버튼을 누르고 ←→ 로 옮겨 감
+    // 게임패드가 활성이면 선택하지 않음 (A 가 가상 커서 클릭 + Submit 으로 두 번 눌릴 수 있음)
+    public static void SetDefault(Button ok)
+    {
+        if (ok == null || GamePad.Active) return;
+        UnityEngine.EventSystems.EventSystem es = UnityEngine.EventSystems.EventSystem.current;
+        if (es != null) es.SetSelectedGameObject(ok.gameObject);
+    }
+
+    // 확인 · 취소 두 버튼: 서로만 오가게 (뒤에 깔린 창 버튼으로 새지 않게) · 기본 선택 · 아래 「[Enter] 확인   [ESC] 취소」 (패드면 숨김)
+    // selectOk = false (게임 종료 확인): 기본 선택도 안내도 없이 ←→ 이동만
+    public static void ConfirmKeys(RectTransform win, Button ok, Button cancel, float footerY, bool selectOk = true)
+    {
+        if (ok != null && cancel != null)
+        {
+            ok.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnRight = cancel, selectOnLeft = cancel };
+            cancel.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = ok, selectOnRight = ok };
+        }
+        if (!selectOk) return;
+        SetDefault(ok);
+        if (GamePad.Active || win == null) return;
+        Text(win, "[Enter] 확인   [ESC] 취소", 18f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, footerY), new Vector2(720f, 28f));
+    }
+
+    // 1.1.9~ 글 입력 칸 (도감 검색): 어두운 뒤판 + 자리 글(Dim) · 일본어 · 중국어 입력은 글꼴 보강
+    public static TMP_InputField MakeInput(Transform parent, string placeholderKo, Vector2 pos, Vector2 size, float fontSize = 22f)
+    {
+        EnsureStyle();
+        RectTransform r = Rect("Input", parent, pos, size);
+        Image bg = r.gameObject.AddComponent<Image>();
+        bg.sprite = ButtonSprite;
+        bg.type = Image.Type.Sliced;
+        bg.color = new Color(0.2f, 0.18f, 0.25f, 1f);
+        RectTransform area = Rect("Text Area", r, Vector2.zero, Vector2.zero);
+        area.anchorMin = Vector2.zero; area.anchorMax = Vector2.one;
+        area.offsetMin = new Vector2(14f, 4f); area.offsetMax = new Vector2(-14f, -4f);
+        area.gameObject.AddComponent<RectMask2D>();
+        TMP_Text ph = Text(area, placeholderKo, fontSize, new Color(0.62f, 0.58f, 0.52f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Left);
+        Stretch(ph.rectTransform);
+        ph.enableAutoSizing = true;
+        ph.fontSizeMin = 12f;
+        ph.fontStyle = FontStyles.Italic;
+        TMP_Text txt = Text(area, "", fontSize, new Color(0.96f, 0.9f, 0.8f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Left);
+        Stretch(txt.rectTransform);
+        txt.enableAutoSizing = false;
+        txt.fontSize = fontSize;
+        txt.raycastTarget = false;
+        TMP_InputField f = r.gameObject.AddComponent<TMP_InputField>();
+        f.textViewport = area;
+        f.textComponent = txt;
+        f.placeholder = ph;
+        f.targetGraphic = bg;
+        f.lineType = TMP_InputField.LineType.SingleLine;
+        f.characterLimit = 40;
+        f.richText = false;
+        f.restoreOriginalTextOnEscape = false;          // ESC 는 창이 처리 (검색 비우기)
+        if (Font != null) f.fontAsset = Font;
+        f.pointSize = fontSize;
+        Loc.EnsureCjkFallback(txt);
+        return f;
+    }
+
+    static void Stretch(RectTransform r)
+    {
+        r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one;
+        r.offsetMin = r.offsetMax = Vector2.zero;
+    }
+
     public static Button MakeButton(Transform parent, string ko, Vector2 pos, Vector2 size, UnityAction onClick, float fontSize = 26f)
     {
         RectTransform r = Rect("Button", parent, pos, size);
@@ -627,7 +737,8 @@ public static class SettingsUI
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color Off = new Color(0.6f, 0.58f, 0.65f);
 
-    static readonly string[] TabNames = { "일반", "화면", "조작", "게임" };
+    // 1.1.9~ 탭 6개 (편의성 2 · 3차): 접근성 · 표시(전장 · HUD 에 그려지는 것)를 더함
+    static readonly string[] TabNames = { "일반", "화면", "조작", "게임", "접근성", "표시" };
     static int tab;
     static RectTransform page;
     static readonly List<Button> tabButtons = new List<Button>();
@@ -654,7 +765,10 @@ public static class SettingsUI
         for (int i = 0; i < TabNames.Length; i++)
         {
             int t = i;
-            tabButtons.Add(UIKit.MakeButton(win, TabNames[i], new Vector2(-405f + 270f * i, 272f), new Vector2(250f, 64f), () => ShowTab(t), 28f));
+            Button tb = UIKit.MakeButton(win, TabNames[i], new Vector2(-475f + 190f * i, 272f), new Vector2(180f, 64f), () => ShowTab(t), 24f);
+            TMP_Text tl = tb.GetComponentInChildren<TMP_Text>();
+            if (tl != null) { tl.enableAutoSizing = true; tl.fontSizeMin = 16f; tl.fontSizeMax = 24f; }      // 「Accessibility」 · 「アクセシビリティ」
+            tabButtons.Add(tb);
         }
         page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
 
@@ -698,7 +812,9 @@ public static class SettingsUI
         if (tab == 0) GameSettings.ResetGeneral();
         else if (tab == 1) GameSettings.ResetDisplay();
         else if (tab == 2) { capturing = -1; KeyBindings.ResetAll(); }
-        else GameSettings.ResetGameplay();
+        else if (tab == 3) GameSettings.ResetGameplay();
+        else if (tab == 4) GameSettings.ResetAccess();
+        else GameSettings.ResetHud();
         ShowTab(tab);                                   // 줄을 다시 그려 새 값이 보이게 (무장 해제)
         // 되돌렸다는 표시는 버튼 글자로 잠깐 (토스트는 설정 창 뒤에 가려 보이지 않음)
         SetResetLabel(t, "되돌렸습니다", new Color(0.6f, 0.95f, 0.6f));
@@ -717,7 +833,7 @@ public static class SettingsUI
     {
         tab = t;
         DisarmReset();                                  // 다른 탭으로 옮기면 무장 해제
-        rowH = tab == 3 ? 48f : 64f;
+        rowH = tab == 1 || tab == 4 ? 54f : 64f;          // 1.1.9~ 화면 · 접근성 탭만 9줄 (나머지는 75 간격 · 64 높이 · 화면 탭이 10줄이면 BuildDisplay 가 48 로)
         capturing = -1;
         blocked = -1;
         keyLabels.Clear();
@@ -730,7 +846,9 @@ public static class SettingsUI
         if (tab == 0) BuildGeneral();
         else if (tab == 1) BuildDisplay();
         else if (tab == 2) BuildControls();
-        else BuildGameplay();
+        else if (tab == 3) BuildGameplay();
+        else if (tab == 4) BuildAccess();
+        else BuildHud();
     }
 
     static TMP_Text RowLabel(string ko, float y) =>
@@ -817,13 +935,100 @@ public static class SettingsUI
     }
 
     // ================================================================= 화면
+    // 1.1.9~ 화면 모드 · 모니터 · 해상도 · 최대 프레임 · UI 크기 · 안내 메시지 크기 · 수직 동기화 · 프레임 표시 · 화면 흔들림 · 번쩍임 효과
+    //   모니터가 둘 이상이면 10줄: 53 간격 · 높이 48 (y 238 ~ -239, 게임 탭 10줄 때와 같은 범위 — 탭 버튼 아래 · 「닫기」 위)
+    //   모니터가 하나면 「모니터」 줄을 빼고 9줄: 60 간격 · 높이 54 (RowsY9) — 줄 목록에 y 를 차례로 배정
     static void BuildDisplay()
     {
-        // 1.1.9~ 「최대 프레임」 · 「프레임 표시」 두 줄을 더 넣으려고 줄 간격 75 → 56 · 버튼 높이 64 → 52 (9줄, y 216 ~ -232)
-        rowH = 52f;
-        RowLabel("화면 모드", 216f);
-        Button full = null, windowed = null;
+        List<DisplayInfo> monitors = GameSettings.Displays();
+        List<System.Action<float>> rows = new List<System.Action<float>>();
         TMP_Text res = null;
+        System.Action fpsRefresh = null;
+        rows.Add(y => DisplayModeRow(y, () => res));
+        if (monitors.Count > 1) rows.Add(y => MonitorRow(y, monitors));
+        rows.Add(y => res = ResolutionRow(y));
+        rows.Add(y => fpsRefresh = FpsRow(y));          // 1.1.9 핫픽스의 최대 프레임 (MaxFpsIndex · 저장 키 settings.maxFps)
+        rows.Add(y => CycleRow("UI 크기", y, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v));
+        rows.Add(y => CycleRow("안내 메시지 크기", y, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
+                 "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다."));
+        rows.Add(y => ToggleRow("수직 동기화", y, () => GameSettings.VSync, v => { GameSettings.VSync = v; fpsRefresh?.Invoke(); },
+                  "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다."));
+        rows.Add(y => ToggleRow("프레임 표시", y, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
+                  "화면 오른쪽 위 구석에 초당 프레임 수(FPS)를 작게 표시합니다."));
+        rows.Add(y => ToggleRow("화면 흔들림", y, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v));
+        rows.Add(y => ToggleRow("번쩍임 효과", y, () => GameSettings.Flashes, v => GameSettings.Flashes = v));
+        float[] ys = rows.Count > RowsY9.Length ? RowsY10 : RowsY9;
+        rowH = rows.Count > RowsY9.Length ? 48f : 54f;
+        for (int i = 0; i < rows.Count; i++) rows[i](ys[i]);
+    }
+
+    static readonly float[] RowsY9 = { 235f, 175f, 115f, 55f, -5f, -65f, -125f, -185f, -245f };
+    static readonly float[] RowsY10 = { 238f, 185f, 132f, 79f, 26f, -27f, -80f, -133f, -186f, -239f };
+    static readonly float[] RowsY6 = { 200f, 125f, 50f, -25f, -100f, -175f, -250f };
+
+    // 창이 있는 모니터 크기 (예전엔 Display.main = 주 모니터라 보조 모니터에서 전체 화면 해상도가 맞지 않았음)
+    static Vector2Int Monitor => GameSettings.MonitorSize;
+
+    static void MonitorRow(float y, List<DisplayInfo> monitors)
+    {
+        RowTip(RowLabel("모니터", y), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
+        TMP_Text label = null;
+        System.Action refresh = () =>
+        {
+            if (label == null) return;
+            int at = GameSettings.CurrentDisplayIndex(monitors);
+            if (at < 0) at = Mathf.Clamp(GameSettings.DisplayIndex, 0, monitors.Count - 1);
+            DisplayInfo d = monitors[at];
+            UIKit.Forget(label);
+            label.text = Loc.T("모니터 {0}").Replace("{0}", (at + 1).ToString()) + " (" + d.width + "×" + d.height + ")";
+        };
+        Button b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
+        {
+            int at = GameSettings.CurrentDisplayIndex(monitors);
+            if (at < 0) at = GameSettings.DisplayIndex;
+            GameSettings.DisplayIndex = (at + 1) % monitors.Count;
+            Deselect();
+            // 해상도 목록이 새 모니터 것으로 바뀌므로 창이 옮겨진 뒤 탭을 다시 그림
+            MenuToast.RunLater(() => { if (open != null && tab == 1) ShowTab(1); }, 0.4f);
+        }, 24f);
+        b.GetComponent<Image>().color = Gold;
+        label = b.GetComponentInChildren<TMP_Text>();
+        label.fontSizeMin = 14f;
+        refresh();
+        label.gameObject.AddComponent<LocRefresh>().refresh = refresh;
+    }
+
+    // 최대 프레임: 수직 동기화가 켜져 있으면 「(수직 동기화 켜짐)」을 붙이고 흐리게 (눌리긴 함 — 끄면 바로 반영)
+    static System.Action FpsRow(float y)
+    {
+        RowTip(RowLabel("최대 프레임", y), "최대 프레임", "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
+        TMP_Text label = null;
+        Button b = null;
+        System.Action refresh = () =>
+        {
+            if (label == null || b == null) return;
+            UIKit.Forget(label);
+            bool vs = GameSettings.VSync;
+            label.text = Loc.T(GameSettings.MaxFpsNames[GameSettings.MaxFpsIndex]) + (vs ? " <size=70%><color=#A89C86>" + Loc.T("(수직 동기화 켜짐)") + "</color></size>" : "");
+            b.GetComponent<Image>().color = vs ? Off : Gold;
+        };
+        b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
+        {
+            GameSettings.MaxFpsIndex = (GameSettings.MaxFpsIndex + 1) % GameSettings.MaxFpsValues.Length;
+            Deselect();
+            refresh();
+        }, 26f);
+        label = b.GetComponentInChildren<TMP_Text>();
+        label.fontSizeMin = 14f;
+        refresh();
+        label.gameObject.AddComponent<LocRefresh>().refresh = refresh;
+        return refresh;
+    }
+
+    static void DisplayModeRow(float y, System.Func<TMP_Text> resText)
+    {
+        RowLabel("화면 모드", y);
+        Button full = null, windowed = null;
         // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
         System.Action<bool> highlightMode = isFull =>
         {
@@ -832,35 +1037,40 @@ public static class SettingsUI
             full.transform.localScale = Vector3.one * (isFull ? 1.06f : 1f);
             windowed.transform.localScale = Vector3.one * (isFull ? 1f : 1.06f);
         };
-        full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, 216f), new Vector2(250f, rowH), () =>
+        full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, y), new Vector2(250f, rowH), () =>
         {
-            int w = Display.main.systemWidth, h = Display.main.systemHeight;
+            int w = Monitor.x, h = Monitor.y;
             Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
-            res.text = w + " × " + h;
+            TMP_Text res = resText();
+            if (res != null) res.text = w + " × " + h;
             Deselect();
             highlightMode(true);
         }, 26f);
-        windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, 216f), new Vector2(250f, rowH), () =>
+        windowed = UIKit.MakeButton(page, "창 모드", new Vector2(230f, y), new Vector2(250f, rowH), () =>
         {
             // 화면을 꽉 채우는 크기면 창 테두리가 화면 밖으로 나가므로 한 단계 작은 해상도로
             Vector2Int r = new Vector2Int(Screen.width, Screen.height);
-            if (r.x >= Display.main.systemWidth || r.y >= Display.main.systemHeight)
+            Vector2Int m = Monitor;
+            if (r.x >= m.x || r.y >= m.y)
             {
                 List<Vector2Int> list = Resolutions();
                 for (int i = list.Count - 1; i >= 0; i--)
-                    if (list[i].x < Display.main.systemWidth && list[i].y < Display.main.systemHeight) { r = list[i]; break; }
+                    if (list[i].x < m.x && list[i].y < m.y) { r = list[i]; break; }
             }
             Screen.SetResolution(r.x, r.y, FullScreenMode.Windowed);
-            res.text = r.x + " × " + r.y;
+            TMP_Text res = resText();
+            if (res != null) res.text = r.x + " × " + r.y;
             Deselect();
             highlightMode(false);
         }, 26f);
         highlightMode(Screen.fullScreenMode != FullScreenMode.Windowed);
+    }
 
-        // 해상도: < 1920 × 1080 >
-        // 1.1.2~ 「안내 메시지 크기」 한 줄을 더 넣으려고 줄 간격 90 → 75
-        RowLabel("해상도", 160f);
-        res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, 160f), new Vector2(320f, 50f));
+    // 해상도: < 1920 × 1080 >
+    static TMP_Text ResolutionRow(float y)
+    {
+        RowLabel("해상도", y);
+        TMP_Text res = UIKit.Text(page, "", 30f, Gold, new Vector2(95f, y), new Vector2(320f, 50f));
         res.text = Screen.width + " × " + Screen.height;
         System.Action<int> step = d =>
         {
@@ -868,7 +1078,8 @@ public static class SettingsUI
             // 1.1~ 창 모드에서는 모니터보다 작은 해상도만 (창 테두리 · 제목 표시줄이 화면 밖으로 나가지 않게, 「창 모드」 버튼과 같은 조건)
             if (Screen.fullScreenMode == FullScreenMode.Windowed)
             {
-                List<Vector2Int> fit = list.FindAll(v => v.x < Display.main.systemWidth && v.y < Display.main.systemHeight);
+                Vector2Int m = Monitor;
+                List<Vector2Int> fit = list.FindAll(v => v.x < m.x && v.y < m.y);
                 if (fit.Count > 0) list = fit;
             }
             int at = list.FindIndex(v => v.x == Screen.width && v.y == Screen.height);
@@ -878,21 +1089,9 @@ public static class SettingsUI
             res.text = list[at].x + " × " + list[at].y;     // 실제 적용은 다음 프레임
             Deselect();
         };
-        UIKit.MakeButton(page, "<", new Vector2(-110f, 160f), new Vector2(80f, rowH), () => step(-1), 30f);
-        UIKit.MakeButton(page, ">", new Vector2(300f, 160f), new Vector2(80f, rowH), () => step(1), 30f);
-
-        // 2.1.9: UI 크기 (모든 화면 글자 · 버튼 · HUD), 한 줄 더 넣으려고 줄 간격 90
-        CycleRow("UI 크기", 104f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
-        CycleRow("안내 메시지 크기", 48f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
-                 "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다.");
-        CycleRow("최대 프레임", -8f, GameSettings.MaxFpsNames, () => GameSettings.MaxFpsIndex, v => GameSettings.MaxFpsIndex = v,
-                 "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
-        ToggleRow("수직 동기화", -64f, () => GameSettings.VSync, v => GameSettings.VSync = v,
-                  "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다.");
-        ToggleRow("프레임 표시", -120f, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
-                  "화면 오른쪽 위 구석에 초당 프레임 수(FPS)를 작게 표시합니다.");
-        ToggleRow("화면 흔들림", -176f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
-        ToggleRow("번쩍임 효과", -232f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
+        UIKit.MakeButton(page, "<", new Vector2(-110f, y), new Vector2(80f, rowH), () => step(-1), 30f);
+        UIKit.MakeButton(page, ">", new Vector2(300f, y), new Vector2(80f, rowH), () => step(1), 30f);
+        return res;
     }
 
     // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)
@@ -917,8 +1116,9 @@ public static class SettingsUI
         // 1.0.4~ 줄마다 마우스를 올리면 한 줄 설명, 거의 효과가 없던 「키 아이콘」은 뺌 (줄 간격 75 → 80), 「투명도」 → 「불투명도」
         // 1.1.9~ 「커서를 창 안에 가두기」 · 「카드 한 번 클릭으로 확정」 두 줄을 더 넣어 9줄: 줄 간격 75 → 60, 버튼 높이 64 → 54 (rowH)
         //        위 끝 = 탭 버튼 아래(창 240) 밑, 아래 끝 = 「닫기」 위(창 -326) 위 (page 가운데가 창 -30)
-        // 1.2~ 「망자의 전령」 한 줄을 더 넣어 10줄: 줄 간격 60 → 53, 버튼 높이 54 → 48
-        float[] y = { 238f, 185f, 132f, 79f, 26f, -27f, -80f, -133f, -186f, -239f };
+        // 1.1.9~ 색각 이상 모드는 접근성, 피해 숫자 · 내 이펙트 불투명도는 표시 탭으로 옮겨 75 간격 · 높이 64 로 되돌림
+        // 1.2~ 「망자의 전령」을 더해 7줄 (RowsY6 의 7칸을 다 씀)
+        float[] y = RowsY6;
         ToggleRow("도움말 안내", y[0], () => GameSettings.Hints, v => GameSettings.Hints = v,
                   "처음 보는 기능마다 짧은 도움말을 한 번씩 띄웁니다.");
         // 1.0.4~: 본 도움말을 처음부터 다시 볼 수 있게 (켜기 · 끄기 옆)
@@ -932,24 +1132,55 @@ public static class SettingsUI
         }, 22f);
         TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
         if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
-        CycleRow("피해 숫자", y[1], GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
-                 "적에게 준 피해를 숫자로 띄웁니다. 끄면 화면이 깔끔해집니다.");
-        CycleRow("내 이펙트 불투명도", y[2], GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
-                 "내 공격 · 스킬 · 필살기 이펙트의 진하기입니다. 낮추면 캐릭터와 적의 공격이 잘 보입니다. (적 공격은 그대로)");
-        ToggleRow("색각 이상 모드", y[3], () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
-                  "경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로 그립니다.");
-        ToggleRow("게임 커서", y[4], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
+        TMP_Text cursorLabel = ToggleRow("게임 커서", y[1], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
-        ToggleRow("커서를 창 안에 가두기", y[5], () => GameSettings.ConfineCursor, v => GameSettings.ConfineCursor = v,
+        if (GamePad.Active && cursorLabel != null) cursorLabel.color = Off;       // 1.1.9~ 패드 중엔 뜻이 없어 흐리게 (누를 수는 있음 · 스팀 덱)
+        ToggleRow("커서를 창 안에 가두기", y[2], () => GameSettings.ConfineCursor, v => GameSettings.ConfineCursor = v,
                   "전투 중 마우스가 창 밖으로 나가지 않게 합니다. 멈춘 화면 · 메뉴 · 패드를 쓸 때는 풀립니다. 창 모드나 모니터가 두 대일 때 유용합니다.");
-        ToggleRow("레벨업 바로 열기", y[6], () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
+        ToggleRow("레벨업 바로 열기", y[3], () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
                   "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
-        ToggleRow("카드 한 번 클릭으로 확정", y[7], () => GameSettings.OneClickPick, v => GameSettings.OneClickPick = v,
+        ToggleRow("카드 한 번 클릭으로 확정", y[4], () => GameSettings.OneClickPick, v => GameSettings.OneClickPick = v,
                   "켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 무기 진화는 늘 두 번 확인합니다.");
-        ToggleRow("herald.setting", y[8], () => GameSettings.Herald, v => GameSettings.Herald = v, "herald.setting.desc");
+        ToggleRow("herald.setting", y[5], () => GameSettings.Herald, v => GameSettings.Herald = v, "herald.setting.desc");
         // 1.2~ 발견형 도감의 스포일러 허용 (줄 간격 80 → 75 로 한 줄 더)
-        ToggleRow("도감 모두 보기", y[9], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
+        ToggleRow("도감 모두 보기", y[6], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
                   "켜면 도감의 진화 · 유물 · 각인 · 비밀 탭에서 아직 못 얻은 것도 모두 보입니다 (스포일러). 수집률과 보상에는 들어가지 않습니다.");
+    }
+
+    // ================================================================= 1.1.9~ 접근성 (9줄 · 60 간격 · 높이 54, ⑧ ⑨ 는 비워 둠)
+    static void BuildAccess()
+    {
+        float[] y = RowsY9;
+        ToggleRow("색각 이상 모드", y[0], () => GameSettings.ColorBlind, v => GameSettings.ColorBlind = v,
+                  "경고 표시를 빨강 · 초록 대신 주황 · 파랑 · 자홍으로 그립니다.");
+        ToggleRow("공격 고정", y[1], () => GameSettings.AttackLock, v => GameSettings.AttackLock = v,
+                  "켜면 공격 키를 한 번 누르면 손을 떼도 계속 쏘고, 다시 누르면 멈춥니다. 조준은 마우스 그대로입니다. 궁수는 가득 당겨지면 자동으로 놓되 「완벽!」 보너스는 받지 못하고, 숨이 차면 숨을 고릅니다.");
+        ToggleRow("필살기 누르면 토글", y[2], () => GameSettings.UltToggle, v => GameSettings.UltToggle = v,
+                  "켜면 필살기 키를 누르고 있는 대신 한 번 누르면 조준이 시작되고, 다시 누르면 발동합니다. 오래 누르기가 힘들 때 유용합니다.");
+        CycleRow("대사 속도", y[3], GameSettings.DialogueSpeedNames, () => GameSettings.DialogueSpeed, v => GameSettings.DialogueSpeed = v,
+                 "이야기 · 보스 대사 글자가 나타나는 속도입니다. 「즉시」는 한 줄이 한 번에 다 나옵니다.");
+        CycleRow("보스 등장 대사", y[4], GameSettings.BossIntroNames, () => GameSettings.BossIntroAlways ? 1 : 0, v => GameSettings.BossIntroAlways = v == 1,
+                 "보스가 처음 나올 때는 늘 대사를 봅니다. 「처음만」이면 다음 판부터 이름만 짧게 보여 주고 바로 싸웁니다.");
+        ToggleRow("움직임 줄이기", y[5], () => GameSettings.ReduceMotion, v => GameSettings.ReduceMotion = v,
+                  "버튼 · 배지의 맥동, 카드 뒤집기, 체력바 흔들림, 알림이 들어오는 움직임을 없애고 제자리에서 바로 보여 줍니다. 켜면 화면 흔들림도 함께 꺼집니다. 조준 줌과 진화 연출은 그대로입니다.");
+        ToggleRow("빠른 연출", y[6], () => GameSettings.FastFx, v => GameSettings.FastFx = v,
+                  "보스 처치, 진화, 상자 · 보상, 장 전환, 엔딩 같은 조작하지 않는 연출을 절반 시간으로 보여 줍니다. 상점 · 포털 카운트다운, 보스 결계 · 등장 연출, 카드 실수 방지 시간은 그대로입니다.");
+    }
+
+    // ================================================================= 1.1.9~ 표시 (전장 · HUD 에 그려지는 것 — 75 간격 · 높이 64, 남은 두 줄은 비워 둠)
+    static void BuildHud()
+    {
+        float[] y = RowsY6;
+        CycleRow("피해 숫자", y[0], GameSettings.DamageNumberNames, () => GameSettings.DamageNumbers, v => GameSettings.DamageNumbers = v,
+                 "적에게 준 피해를 숫자로 띄웁니다. 끄면 화면이 깔끔해집니다.");
+        CycleRow("내 이펙트 불투명도", y[1], GameSettings.MyFxAlphaNames, () => GameSettings.MyFxAlphaIndex, v => GameSettings.MyFxAlphaIndex = v,
+                 "내 공격 · 스킬 · 필살기 이펙트의 진하기입니다. 낮추면 캐릭터와 적의 공격이 잘 보입니다. (적 공격은 그대로)");
+        CycleRow("전투 통계", y[2], GameSettings.CombatStatsNames, () => GameSettings.CombatStats, v => GameSettings.CombatStats = v,
+                 "화면 위에 최근 10초의 초당 피해와 최근 1분의 분당 처치 수를 보여 줍니다. 멈춘 동안은 흐리게 보입니다.");
+        ToggleRow("획득 범위 표시", y[3], () => GameSettings.ShowPickupRange, v => GameSettings.ShowPickupRange = v,
+                  "코인을 끌어오는 범위를 캐릭터 둘레에 연한 고리로 늘 보여 줍니다. 꺼도 코인 자석 카드를 고른 직후에는 잠깐 보입니다.");
+        ToggleRow("화면 밖 표시", y[4], () => GameSettings.EdgeMarkers, v => GameSettings.EdgeMarkers = v,
+                  "보물 상자 · 떠돌이 상점 · 황금 고블린 · 중간 보스가 화면 밖에 있으면 화면 가장자리에 방향과 남은 시간을 보여 줍니다. 석관 · 영혼 제단 화살표와 포털 안내선은 늘 보입니다.");
     }
 
     // 1.0.4~ 설정 줄 이름에 마우스를 올리면 한 줄 설명 (글자는 TooltipUI.Show 가 Loc.T 로 번역)
@@ -985,9 +1216,10 @@ public static class SettingsUI
         refresh();
     }
 
-    static void ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set, string tip = null)
+    static TMP_Text ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set, string tip = null)
     {
-        RowTip(RowLabel(ko, y), ko, tip);
+        TMP_Text rowLabel = RowLabel(ko, y);
+        RowTip(rowLabel, ko, tip);
         Button b = null;
         TMP_Text label = null;
         System.Action refresh = () =>
@@ -1006,6 +1238,7 @@ public static class SettingsUI
         }, 26f);
         label = b.GetComponentInChildren<TMP_Text>();
         refresh();
+        return rowLabel;
     }
 
     // ================================================================= 조작
@@ -1206,6 +1439,13 @@ public static class LanguagePicker
         TMP_Text title = UIKit.Text(win, "", 44f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 145f), new Vector2(920f, 64f));
         title.text = Loc.T("언어를 고르세요") + (Loc.Current != Loc.Lang.English ? "  <size=60%><color=#A89C86>Language</color></size>" : "");
         UIKit.Text(win, "설정 → 일반에서 언제든 바꿀 수 있습니다.", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -150f), new Vector2(900f, 36f));
+        if (GameSettings.DeckApplied)
+        {
+            // 1.1.9~ 스팀 덱 첫 실행: 자동으로 맞춘 설정 안내 (창 아래 안내 줄 위)
+            UIKit.Text(win, "스팀 덱에 맞춰 설정했습니다 (UI 크기 110% · 게임패드). 설정에서 바꿀 수 있습니다.", 20f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -118f), new Vector2(940f, 30f));
+            GameSettings.DeckNoticed();
+        }
+        Button preset = null;
         bool done = false;
         System.Action<Loc.Lang> pick = lang =>
         {
@@ -1228,7 +1468,9 @@ public static class LanguagePicker
             bool on = lang == Loc.Current;
             b.GetComponent<Image>().color = on ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.6f, 0.58f, 0.65f);
             b.transform.localScale = Vector3.one * (on ? 1.06f : 1f);
+            if (on) preset = b;
         }
+        UIKit.SetDefault(preset);          // 1.1.9~ 미리 고른 언어를 선택해 둠 (Enter · Space 로 확정, ←→ 로 이동)
         // ESC 는 미리 골라 둔 언어 그대로
         UIKit.EscCancel(open, () => pick(Loc.Current));
     }

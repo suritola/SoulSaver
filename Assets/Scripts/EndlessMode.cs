@@ -402,6 +402,7 @@ public class EndlessMode : MonoBehaviour
         hud.fontSizeMax = 30f;
         hud.fontSizeMin = 18f;
         hud.raycastTarget = false;
+        CombatStatsHUD.Ensure();            // 1.1.9~ 전투 통계 (무한 모드 글자 왼쪽)
     }
 
     // ================================================================= 스테이지 구성

@@ -83,7 +83,7 @@ public class SkillEvolutionUI : MonoBehaviour
         closeRequested = false;
         SpecialFeedback fx = SpecialAbilities.SharedFx;
         string seenKey = "seen.evofx." + who + ":" + e.key;
-        float speed = Prefs.GetInt(seenKey, 0) == 1 ? 2f : 1f;
+        float speed = Prefs.GetInt(seenKey, 0) == 1 || GameSettings.FxTime < 1f ? 2f : 1f;      // 1.1.9~ 「빠른 연출」이면 첫 번째도 2배
         if (speed == 1f && !GameInput.Auto) Prefs.SetInt(seenKey, 1);
         float startedAt = Time.unscaledTime;
         bool skip = false;

@@ -29,6 +29,11 @@ public static class GameSettings
     const string HeraldKey = "settings.herald";            // 1.2~ 망자의 전령 (쓰러진 뒤 한 줄)
     const string MaxFpsKey = "settings.maxFps";
     const string ShowFpsKey = "settings.showFps";
+    // 1.1.9~ 편의성 2 · 3차: 접근성 · 표시 · 화면
+    const string BossIntroKey = "settings.bossIntroAlways", AttackLockKey = "settings.attackLock", UltToggleKey = "settings.ultToggle", DialogueKey = "settings.dialogueSpeed";
+    const string ReduceMotionKey = "settings.reduceMotion", FastFxKey = "settings.fastFx";
+    const string CombatStatsKey = "settings.combatStats", PickupRangeKey = "settings.showPickupRange", EdgeMarkersKey = "settings.edgeMarkers";
+    const string DisplayKey = "settings.display";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     // 1.1.9~ 기본값 (처음 불러올 때 · 설정 「이 탭 기본값으로」가 같이 써서 어긋나지 않게)
@@ -36,6 +41,9 @@ public static class GameSettings
     const bool DefMute = true, DefVSync = false, DefShowFps = false, DefShake = true, DefFlash = true;
     const int DefMaxFps = 1, DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
     const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false, DefHerald = true;
+    const bool DefBossIntroAlways = false, DefAttackLock = false, DefUltToggle = false, DefReduceMotion = false, DefFastFx = false;
+    const int DefDialogueSpeed = 0, DefCombatStats = 0, DefDisplay = 0;
+    const bool DefShowPickupRange = false, DefEdgeMarkers = true;
 
     static bool loaded;
     static float mouseSens = 1f;
@@ -51,6 +59,8 @@ public static class GameSettings
     static bool confineCursor = DefConfine, oneClickPick = DefOneClick, herald = DefHerald;
     static int maxFps = DefMaxFps;
     static bool showFps;
+    static bool bossIntroAlways, attackLock, ultToggle, reduceMotion, fastFx, showPickupRange, edgeMarkers = DefEdgeMarkers;
+    static int dialogueSpeed, combatStats, displayIndex;
 
     public static Loc.Lang Language
     {
@@ -135,6 +145,151 @@ public static class GameSettings
         confineCursor = Prefs.GetInt(ConfineKey, B(DefConfine)) == 1;
         oneClickPick = Prefs.GetInt(OneClickKey, B(DefOneClick)) == 1;
         herald = Prefs.GetInt(HeraldKey, B(DefHerald)) == 1;
+        bossIntroAlways = Prefs.GetInt(BossIntroKey, B(DefBossIntroAlways)) == 1;
+        attackLock = Prefs.GetInt(AttackLockKey, B(DefAttackLock)) == 1;
+        ultToggle = Prefs.GetInt(UltToggleKey, B(DefUltToggle)) == 1;
+        dialogueSpeed = Mathf.Clamp(Prefs.GetInt(DialogueKey, DefDialogueSpeed), 0, 2);
+        reduceMotion = Prefs.GetInt(ReduceMotionKey, B(DefReduceMotion)) == 1;
+        fastFx = Prefs.GetInt(FastFxKey, B(DefFastFx)) == 1;
+        combatStats = Mathf.Clamp(Prefs.GetInt(CombatStatsKey, DefCombatStats), 0, 2);
+        showPickupRange = Prefs.GetInt(PickupRangeKey, B(DefShowPickupRange)) == 1;
+        edgeMarkers = Prefs.GetInt(EdgeMarkersKey, B(DefEdgeMarkers)) == 1;
+        displayIndex = Mathf.Max(0, Prefs.GetInt(DisplayKey, DefDisplay));
+    }
+
+    // ================================================================= 1.1.9~ 접근성 탭
+    // 보스 등장 대사: 「처음만」(false) · 「항상」(true) — 보스마다 첫 번째는 늘 전체 (StoryDirector.RunBossIntro)
+    public static readonly string[] BossIntroNames = { "처음만", "항상" };
+    public static bool BossIntroAlways
+    {
+        get { Load(); return bossIntroAlways; }
+        set { Load(); bossIntroAlways = value; Prefs.SetInt(BossIntroKey, B(value)); }
+    }
+
+    // 공격 고정: 공격 키를 한 번 누르면 계속 쏘고 다시 누르면 멈춤 (GameInput.AttackLockNow · 패드 제외)
+    public static bool AttackLock
+    {
+        get { Load(); return attackLock; }
+        set { Load(); attackLock = value; Prefs.SetInt(AttackLockKey, B(value)); if (!value) GameInput.ResetAttackLock(); }
+    }
+
+    // 필살기 누르면 토글: 한 번 누르면 조준 시작, 다시 누르면 발동 (GameInput.UltDown/Held/Up)
+    public static bool UltToggle
+    {
+        get { Load(); return ultToggle; }
+        set { Load(); ultToggle = value; Prefs.SetInt(UltToggleKey, B(value)); GameInput.ResetUltLatch(); }
+    }
+
+    // 대사 속도: 0 보통 · 1 빠름 · 2 즉시 (StoryDirector.CharTime)
+    public static readonly string[] DialogueSpeedNames = { "보통", "빠름", "즉시" };
+    public static int DialogueSpeed
+    {
+        get { Load(); return dialogueSpeed; }
+        set { Load(); dialogueSpeed = Mathf.Clamp(value, 0, 2); Prefs.SetInt(DialogueKey, dialogueSpeed); }
+    }
+
+    // 3차 6 움직임 줄이기: UI 맥동 · 카드 연출 · 체력바 흔들림 · 알림 움직임의 진폭에 곱함 (켤 때 화면 흔들림도 끔)
+    public static bool ReduceMotion
+    {
+        get { Load(); return reduceMotion; }
+        set { Load(); reduceMotion = value; Prefs.SetInt(ReduceMotionKey, B(value)); if (value) ScreenShake = false; }
+    }
+    public static float Motion => ReduceMotion && !GameInput.Auto ? 0f : 1f;
+
+    // 3차 7 빠른 연출: 조작하지 않는 연출의 대기 시간만 절반 (튜토리얼 · 자동 조종은 그대로)
+    public static bool FastFx
+    {
+        get { Load(); return fastFx; }
+        set { Load(); fastFx = value; Prefs.SetInt(FastFxKey, B(value)); }
+    }
+    public static float FxTime => FastFx && !GameInput.Auto && !TutorialRun.Active ? 0.5f : 1f;
+
+    public static void ResetAccess()
+    {
+        ColorBlind = DefColorBlind; AttackLock = DefAttackLock; UltToggle = DefUltToggle; DialogueSpeed = DefDialogueSpeed;
+        BossIntroAlways = DefBossIntroAlways; ReduceMotion = DefReduceMotion; FastFx = DefFastFx;
+        Save();
+    }
+
+    // ================================================================= 1.1.9~ 표시 탭 (전장 · HUD 에 그려지는 것)
+    // 3차 2 전투 통계: 0 꺼짐 · 1 작게 · 2 크게
+    public static readonly string[] CombatStatsNames = { "꺼짐", "작게", "크게" };
+    public static int CombatStats
+    {
+        get { Load(); return combatStats; }
+        set { Load(); combatStats = Mathf.Clamp(value, 0, 2); Prefs.SetInt(CombatStatsKey, combatStats); CombatStatsHUD.Refresh(); }
+    }
+
+    // 3차 3 획득 범위 표시 (꺼도 코인 자석 카드를 고른 직후엔 잠깐)
+    public static bool ShowPickupRange
+    {
+        get { Load(); return showPickupRange; }
+        set { Load(); showPickupRange = value; Prefs.SetInt(PickupRangeKey, B(value)); }
+    }
+
+    // 3차 8 화면 밖 표시 (보물 상자 · 떠돌이 상점 · 황금 고블린 · 중간 보스, 기본 켜짐)
+    public static bool EdgeMarkers
+    {
+        get { Load(); return edgeMarkers; }
+        set { Load(); edgeMarkers = value; Prefs.SetInt(EdgeMarkersKey, B(value)); }
+    }
+
+    public static void ResetHud()
+    {
+        DamageNumbers = DefDamageNumbers; MyFxAlphaIndex = DefMyFxAlpha; CombatStats = DefCombatStats; ShowPickupRange = DefShowPickupRange; EdgeMarkers = DefEdgeMarkers;
+        Save();
+    }
+
+    // ================================================================= 1.1.9~ 화면: 모니터 (최대 프레임은 아래 MaxFpsIndex — 1.1.9 핫픽스 저장 키 settings.maxFps)
+    // 고른 모니터 (0 = 주 모니터) — 표시는 저장값이 아니라 창이 실제로 있는 모니터 (CurrentDisplayIndex)
+    public static int DisplayIndex
+    {
+        get { Load(); return displayIndex; }
+        set { Load(); displayIndex = Mathf.Max(0, value); Prefs.SetInt(DisplayKey, displayIndex); ApplyDisplay(); }
+    }
+
+    public static System.Collections.Generic.List<DisplayInfo> Displays()
+    {
+        System.Collections.Generic.List<DisplayInfo> list = new System.Collections.Generic.List<DisplayInfo>();
+        try { Screen.GetDisplayLayout(list); } catch { }
+        return list;
+    }
+
+    public static int CurrentDisplayIndex(System.Collections.Generic.List<DisplayInfo> list)
+    {
+        DisplayInfo now = Screen.mainWindowDisplayInfo;
+        return list.FindIndex(d => d.Equals(now));
+    }
+
+    // 창이 있는 모니터의 해상도 (보조 모니터에서도 맞게 — 예전엔 Display.main = 주 모니터)
+    public static Vector2Int MonitorSize
+    {
+        get
+        {
+            DisplayInfo d = Screen.mainWindowDisplayInfo;
+            return d.width > 0 && d.height > 0 ? new Vector2Int(d.width, d.height) : new Vector2Int(Display.main.systemWidth, Display.main.systemHeight);
+        }
+    }
+
+    static void ApplyDisplay()
+    {
+        System.Collections.Generic.List<DisplayInfo> list = Displays();
+        if (displayIndex >= list.Count) return;                // 모니터가 빠졌으면 그대로 (설정값은 남겨 다음에 꽂으면 다시)
+        DisplayInfo d = list[displayIndex];
+        if (d.Equals(Screen.mainWindowDisplayInfo)) return;
+        bool full = Screen.fullScreenMode != FullScreenMode.Windowed;
+        int w = Screen.width, h = Screen.height;
+        // 전체 화면은 모니터 사이 이동이 들쭉날쭉 → 창 모드로 잠깐 바꾸고 옮긴 뒤 그 모니터 해상도로 다시 전체 화면
+        if (full)
+        {
+            w = Mathf.Min(w, d.width - 80);
+            h = Mathf.Min(h, d.height - 80);
+            Screen.SetResolution(w, h, FullScreenMode.Windowed);
+        }
+        Vector2Int at = new Vector2Int(Mathf.Max(0, (d.width - w) / 2), Mathf.Max(0, (d.height - h) / 2));
+        AsyncOperation op;
+        try { op = Screen.MoveMainWindowTo(d, at); } catch { op = null; }
+        if (full && op != null) op.completed += _ => Screen.SetResolution(d.width, d.height, FullScreenMode.FullScreenWindow);
     }
 
     static int B(bool v) => v ? 1 : 0;
@@ -167,7 +322,7 @@ public static class GameSettings
         Save();
     }
 
-    public static void ResetDisplay()           // 화면 모드 · 해상도는 그대로
+    public static void ResetDisplay()           // 화면 모드 · 해상도 · 모니터는 그대로
     {
         UiScaleIndex = DefUiScale; NoticeSize = DefNoticeSize; VSync = DefVSync; MaxFpsIndex = DefMaxFps; ShowFps = DefShowFps; ScreenShake = DefShake; Flashes = DefFlash;
         Save();
@@ -175,7 +330,7 @@ public static class GameSettings
 
     public static void ResetGameplay()
     {
-        Hints = DefHints; DamageNumbers = DefDamageNumbers; MyFxAlphaIndex = DefMyFxAlpha; ColorBlind = DefColorBlind; GameCursor = DefGameCursor;
+        Hints = DefHints; GameCursor = DefGameCursor;       // 1.1.9~ 색각 이상 모드는 접근성, 피해 숫자 · 내 이펙트 불투명도는 표시 탭으로
         AutoLevelUp = DefAutoLevelUp; ConfineCursor = DefConfine; OneClickPick = DefOneClick; Herald = DefHerald; CodexSeen.ShowAll = false;
         Save();
     }
@@ -347,7 +502,26 @@ public static class GameSettings
             SceneLocalizer.RefreshAll();
             MenuExtras.Install();
         };
+        SteamDeckFirstRun();            // 메인 메뉴를 그리기 전에 (알림이 메뉴에 뜨게)
         MenuExtras.Install();
+        // 1.1.9~ 고른 모니터가 지금 모니터와 다르면 첫 프레임 뒤 한 번 옮김 (MoveMainWindowTo 는 첫 프레임 전엔 실패)
+        if (displayIndex > 0 && !Application.isBatchMode && !GameInput.Auto) MenuToast.RunLater(ApplyDisplay);
+    }
+
+    // 1.1.9~ 스팀 덱에서 처음 켰을 때 한 번: UI 110% · 안내 메시지 크게 · 바로 게임패드 안내 · 전체 화면 (사용자가 바꾼 값은 그 뒤로 그대로)
+    public static bool DeckApplied { get; private set; }
+    public static void DeckNoticed() => DeckApplied = false;        // 알림은 한 번만 (언어 창 또는 메뉴 아래)
+    static void SteamDeckFirstRun()
+    {
+        if (!SteamManager.OnDeck || Prefs.GetInt("deck.applied", 0) != 0 || GameInput.Auto || Application.isBatchMode) return;
+        UiScaleIndex = 3;
+        NoticeSize = 2;
+        GamePad.SetActive(true);
+        Vector2Int m = MonitorSize;
+        Screen.SetResolution(m.x, m.y, FullScreenMode.FullScreenWindow);
+        Prefs.SetInt("deck.applied", 1);
+        Prefs.Save();
+        DeckApplied = true;          // 메인 메뉴가 한 번 알림 (MenuExtras)
     }
 }
 

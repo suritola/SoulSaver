@@ -14,9 +14,16 @@ public class ESCmenu : MonoBehaviour
     static float timeScaleBeforeOpen = 1f;
     public static void ResumeAt(float scale) => timeScaleBeforeOpen = scale;
     // Start is called before the first frame update
+    static ESCmenu current;
+    // 1.1.9~ 확인 창(메인 메뉴로 · 다시 시작 · 종료 · 포기)이 떠 있는지 (PauseInspect 가 툴팁을 끔)
+    public static bool ConfirmOpen => current != null && current.confirm != null;
+
     void Start()
     {
+        current = this;
         shop = FindFirstObjectByType<Shop>();
+        PauseInspect.Install(this);         // 1.1.9~ 멈춘 동안 HUD 아이콘 · 적 위에 마우스 → 설명
+        AccessHud.Install();                // 1.1.9~ 공격 고정 · 필살기 토글 안내 한 줄
         // 1.1.9~ 무한 모드 · 일일 도전: 「메인 메뉴로」 → 「포기하고 결과 보기」 (씬 버튼 글자를 덮어씀 · 언어를 바꿔도 이 글자로)
         if (GiveUpMode && escMenu != null)
             foreach (UnityEngine.UI.Button b in escMenu.GetComponentsInChildren<UnityEngine.UI.Button>(true))
@@ -43,6 +50,8 @@ public class ESCmenu : MonoBehaviour
 
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing || Herald.Playing) return;
+        // 1.1.9~ 일시정지 위에 연 도감 · 스킬 진화 · 빌드 자세히 보기 · 영웅 안내: 그 창이 ESC 로 닫힘 (같은 프레임에 일시정지까지 풀리지 않게)
+        if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || BuildView.IsOpen || HeroGuide.IsOpen) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
@@ -109,7 +118,7 @@ public class ESCmenu : MonoBehaviour
         reasonBanner = null;
     }
 
-    void OnDestroy() => IsOpen = false;
+    void OnDestroy() { IsOpen = false; if (current == this) current = null; }
 
     // 일시정지 메뉴 첫 버튼: 다시 시작 대신 계속하기 (ESC 를 다시 누른 것과 같음)
     public void onPressResume()
@@ -128,7 +137,7 @@ public class ESCmenu : MonoBehaviour
             return;
         }
         // 2.1.9: 판이 저장되어 메인 메뉴 「이어하기」로 계속할 수 있음 (저장하지 않는 판은 예전 안내)
-        Confirm("ConfirmMainMenu", "정말로 메인 메뉴로 가시겠습니까?", SaveNote(), "메인 메뉴로", GoMainMenu);
+        Confirm("ConfirmMainMenu", "정말로 메인 메뉴로 가시겠습니까?", SaveNote(), "메인 메뉴로", GoMainMenu, LastSaveLine());
     }
 
     // 1.0.4~: 「다시 시작」 — 지금 판을 버리고 같은 캐릭터 · 난이도로 새 판 (튜토리얼이면 튜토리얼을 처음부터)
@@ -140,7 +149,7 @@ public class ESCmenu : MonoBehaviour
     // 1.0.4~: 「게임 종료」 — 저장되는 판이면 저장하고 끔
     public void onPressQuit()
     {
-        Confirm("ConfirmQuit", "정말로 게임을 종료하시겠습니까?", SaveNote(), "게임 종료", QuitGame);
+        Confirm("ConfirmQuit", "정말로 게임을 종료하시겠습니까?", SaveNote(), "게임 종료", QuitGame, LastSaveLine(), false);     // Enter 한 번에 게임이 꺼지지 않게 기본 버튼 없음
     }
 
     // 나가면 지금 판이 어떻게 되는지 (1.0.4~: 쓰러지는 중 · 마지막 보스를 쓰러뜨린 뒤는 「저장됨」이라고 하지 않음)
@@ -151,8 +160,16 @@ public class ESCmenu : MonoBehaviour
         return "지금 진행 중인 판이 끝납니다.";
     }
 
+    // 1.1.9~ 마지막으로 저장한 때 (자동 · 선택 직후 저장 · RunSave.LastSavedAt) — 숫자를 끼운 글이라 번역 키로 넘기지 않고 그대로 씀
+    static string LastSaveLine()
+    {
+        if (!RunSave.CanSaveNow || RunSave.LastSavedAt <= 0f) return null;
+        return Loc.T("마지막 저장: {0}초 전").Replace("{0}", Mathf.Max(0, Mathf.RoundToInt(Time.unscaledTime - RunSave.LastSavedAt)).ToString());
+    }
+
     // 한 번 더 묻는 창 (메인 메뉴로 · 다시 시작 · 게임 종료가 같이 씀)
-    void Confirm(string name, string question, string note, string okLabel, UnityEngine.Events.UnityAction ok)
+    // extra: 넷째 줄(번역하지 않은 글 그대로) · selectOk: 확인 버튼을 기본 선택 (Enter · Space 로 확정, 1.1.9~)
+    void Confirm(string name, string question, string note, string okLabel, UnityEngine.Events.UnityAction ok, string extra = null, bool selectOk = true)
     {
         if (confirm != null) return;
         Transform root = escMenu != null ? escMenu.transform.root : transform.root;
@@ -161,8 +178,14 @@ public class ESCmenu : MonoBehaviour
         UIKit.Text(win, question, 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
         // 안내는 두 줄까지 (포기 안내처럼 긴 영어 · 일본어 문구가 한 줄 높이에 맞추느라 아주 작아지지 않게) — 제목(48~) · 버튼(~-52) 사이
         UIKit.Text(win, note, 26f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, 14f), new Vector2(720f, 66f));
-        UIKit.MakeButton(win, okLabel, new Vector2(-150f, -90f), new Vector2(260f, 76f), ok, 28f);
-        UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        if (!string.IsNullOrEmpty(extra))
+        {
+            TMPro.TMP_Text ex = UIKit.Text(win, "", 20f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -34f), new Vector2(720f, 30f));
+            ex.text = extra;
+        }
+        UnityEngine.UI.Button okButton = UIKit.MakeButton(win, okLabel, new Vector2(-150f, -90f), new Vector2(260f, 76f), ok, 28f);
+        UnityEngine.UI.Button cancelButton = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+        UIKit.ConfirmKeys(win, okButton, cancelButton, -143f, selectOk);
     }
 
     void CloseConfirm()
@@ -175,8 +198,7 @@ public class ESCmenu : MonoBehaviour
     {
         CloseConfirm();
         RunSave.Save();             // 판 중간 저장 (2.1.9)
-        SceneManager.LoadScene("MainMenu");
-        Time.timeScale = 1f;
+        SceneFlow.Go("MainMenu");
     }
 
     static bool GiveUpMode => GameMode.IsEndless || DailyChallenge.Active;
@@ -186,26 +208,25 @@ public class ESCmenu : MonoBehaviour
     {
         CloseConfirm();
         RunStats.GaveUp = true;
+        RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (떠나는 순간의 빌드)
         RunSave.Abandon();          // 무한 모드 · 일일 도전은 저장하지 않으므로 따로 남은 이야기 판 저장(「이어하기」)은 지우지 않음
         IsOpen = false;
         // 1.2~ 망자의 전령 짧은 한 줄 (멈춘 채 · 넘기면 바로) 뒤 결과 화면
         if (Herald.Enabled)
         {
             if (escMenu != null) escMenu.SetActive(false);
-            Herald.RunThen(true, () => { Time.timeScale = 1f; SceneManager.LoadScene("GameOver"); });
+            Herald.RunThen(true, () => SceneFlow.Go("GameOver"));
             return;
         }
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("GameOver");
+        SceneFlow.Go("GameOver");
     }
 
     void Restart()
     {
         CloseConfirm();
         RunSave.Abandon();          // 저장해 둔 이 판은 지움 (메인 메뉴 「이어하기」에 옛 판이 남지 않게)
-        Time.timeScale = 1f;
         IsOpen = false;
-        SceneManager.LoadScene("GameScene");
+        SceneFlow.Go("GameScene");
     }
 
     void QuitGame()
@@ -243,6 +264,8 @@ public class ESCmenu : MonoBehaviour
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
         RunStats.ShowSummary(isEscOpen);
+        if (isEscOpen) PauseInspect.OnPauseOpened();
+        else { BuildView.Close(); HeroGuide.CloseView(); }
 
         if (isEscOpen)
         {

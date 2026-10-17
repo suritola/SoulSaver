@@ -628,7 +628,7 @@ public static class Notice
             if (cut < bigEnd) bigEnd = cut;
         }
 
-        bool fx = GameSettings.Flashes;
+        bool fx = GameSettings.Flashes && GameSettings.Motion > 0f;      // 1.1.9~ 「움직임 줄이기」면 튀어나옴 · 펼침 · 숨 쉬기 없이 제자리 페이드
         float S = Scale;
         if (bigT < BigIn)
         {
@@ -659,7 +659,7 @@ public static class Notice
                 return;
             }
             v.cg.alpha = 1f - o;
-            v.content.anchoredPosition = new Vector2(0f, 18f * o);
+            v.content.anchoredPosition = new Vector2(0f, 18f * o * GameSettings.Motion);
         }
         // 강조색 줄이 은은히 숨 쉬고, 아이콘이 살짝 들썩 · 키캡은 0.9초마다 눌리는 시늉
         float breath = fx ? 0.5f + 0.5f * Mathf.Sin(bigT * 5f) : 1f;
@@ -793,14 +793,14 @@ public static class Notice
                 float k = t.dieT / 0.3f;
                 if (k >= 1f) { Object.Destroy(t.r.gameObject); toasts.RemoveAt(i); i--; continue; }
                 alpha = 1f - k;
-                slide = 60f * k;
+                slide = 60f * k * GameSettings.Motion;
                 room = 1f - k;
             }
             else
             {
                 float k = Mathf.Clamp01(t.age / 0.24f);
                 alpha = k;
-                slide = (1f - EaseOut(k)) * (ToastW * 0.6f);      // 화면 밖 오른쪽에서 밀려 들어옴
+                slide = (1f - EaseOut(k)) * (ToastW * 0.6f) * GameSettings.Motion;      // 화면 밖 오른쪽에서 밀려 들어옴 (움직임 줄이기면 제자리 페이드)
             }
             if (!t.placed) { t.y = y; t.placed = true; }
             t.y = Mathf.Lerp(t.y, y, 1f - Mathf.Exp(-14f * dt));

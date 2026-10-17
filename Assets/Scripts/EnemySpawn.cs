@@ -305,20 +305,21 @@ public class EnemySpawner : MonoBehaviour
         // 연출 동안은 조작하지 않고 감상만 (이동 · 공격 · 스킬 · 영혼 트리 입력을 막음)
         PlayerController.Cinematic = true;
         playerC.CancelSkill();
-        playerC.GrantInvincibility(FinaleTime + 1f);
-        PlayerMotion.Of(playerC).Spin(FinaleTime, 7f);
+        playerC.GrantInvincibility(FinaleTime + 1f);              // 무적은 「빠른 연출」이어도 그대로
+        float finale = FinaleTime * GameSettings.FxTime;           // 1.1.9~ 「빠른 연출」: 소용돌이도 절반 시간에 (편의성 3차 7)
+        PlayerMotion.Of(playerC).Spin(finale, 7f);
         Hostile.Play("shimmer", 0.9f, 0.6f);
         Hostile.Play("whoosh", 0.9f, 0.5f);
         Hostile.Shake(0.3f);
         Color soul = new Color(0.7f, 0.95f, 1f);
-        FxAnim rune = Fx.Play("fx_rune", me.position, 7f, new Color(soul.r, soul.g, soul.b, 0.8f), 1f, 0f, 30, true, FinaleTime);
+        FxAnim rune = Fx.Play("fx_rune", me.position, 7f, new Color(soul.r, soul.g, soul.b, 0.8f), 1f, 0f, 30, true, finale);
         if (rune != null) { rune.spin = 240f; rune.follow = me; }
 
         int coins = 0;
         float spark = 0f, coinSound = 0f;
-        for (float t = 0f; t < FinaleTime; t += Time.deltaTime)
+        for (float t = 0f; t < finale; t += Time.deltaTime)
         {
-            float k = t / FinaleTime, ease = k * k;
+            float k = t / finale, ease = k * k;
             Vector3 c = me != null ? me.position : Vector3.zero;
             foreach (Pulled p in list)
             {

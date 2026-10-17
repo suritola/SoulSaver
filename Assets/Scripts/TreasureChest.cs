@@ -11,7 +11,8 @@ public class TreasureChest : MonoBehaviour
     // 1.0.1: 더 잘 보이게 — 크기 1.6 → 2.6, 크고 숨 쉬는 후광, 하늘로 솟는 빛기둥, 화면 밖이면 가장자리에 방향 표시
     const float OpenRange = 2.2f, Size = 2.6f;
 
-    GameObject label, halo, pillar, pointer;
+    GameObject label, halo, pillar;
+    EdgeMarker pointer;
     SpriteRenderer sr;
     Vector3 home;
     bool opening;
@@ -54,10 +55,9 @@ public class TreasureChest : MonoBehaviour
         c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(tint.r, tint.g, tint.b, 0.4f), "Effect", 6);
         c.pillar.transform.localScale = new Vector3(0.22f, 2.6f, 1f);
         // 1.1~ 화면 가장자리 포인터도 몸통과 같은 색 (저주받은 · 정예 상자가 보통 상자 포인터와 똑같이 보였음) · 뒤 빛도 보통 상자가 아니면 크게
-        c.pointer = SpecialAbilities.MakeSprite("ChestPointer", art != null ? art : Hostile.Glow, at, 0.9f, art != null ? body : tint, "Effect", 40);
-        GameObject pointerGlow = SpecialAbilities.MakeSprite("ChestPointerGlow", Hostile.Glow, at, tint == Gold ? 0.25f : 0.4f, new Color(tint.r, tint.g, tint.b, tint == Gold ? 0.7f : 0.85f), "Effect", 39);
-        pointerGlow.transform.SetParent(c.pointer.transform, true);
-        c.pointer.SetActive(false);
+        // 1.1.9~ 가장자리 표식은 공용 EdgeMarker (상점 · 고블린 · 중간 보스와 같은 코드 · 설정 「화면 밖 표시」)
+        c.pointer = EdgeMarker.Attach(go.transform, art != null ? art : Hostile.Glow, art != null ? body : tint, 0.9f,
+                                      tint == Gold ? 0.25f : 0.4f, new Color(tint.r, tint.g, tint.b, tint == Gold ? 0.7f : 0.85f), 0.12f);
         c.label = SkillTag.Show(go.transform, label, 2.6f);
         Fx.Spawn("fx_soulburst", at, 3.5f, tint, 18f);
         ShockRing.Spawn(at, 0.4f, 3f, 0.4f, tint, 0.3f);
@@ -71,16 +71,16 @@ public class TreasureChest : MonoBehaviour
     {
         if (opening) return;
         float t = Time.time;
-        transform.position = home + Vector3.up * Mathf.Sin(t * 3f) * 0.2f;
-        transform.localScale = Vector3.one * Size * (1f + 0.07f * Mathf.Sin(t * 6f));
+        float m = GameSettings.Motion;          // 1.1.9~ 「움직임 줄이기」면 둥실 · 맥동 없음
+        transform.position = home + Vector3.up * Mathf.Sin(t * 3f) * 0.2f * m;
+        transform.localScale = Vector3.one * Size * (1f + 0.07f * Mathf.Sin(t * 6f) * m);
         if (halo != null)
         {
-            halo.transform.localScale = Vector3.one * (0.6f + 0.1f * Mathf.Sin(t * 4f));
+            halo.transform.localScale = Vector3.one * (0.6f + 0.1f * Mathf.Sin(t * 4f) * m);
             halo.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.5f + 0.2f * Mathf.Sin(t * 4f));
         }
         if (pillar != null) pillar.GetComponent<SpriteRenderer>().color = new Color(tint.r, tint.g, tint.b, 0.3f + 0.15f * Mathf.Sin(t * 2.5f));
         if (Random.value < Time.deltaTime * 9f) Fx.Spawn("fx_sparkle", home + (Vector3)(Random.insideUnitCircle * 1.4f), 1.2f, tint, 20f);
-        UpdatePointer(t);
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || Time.timeScale == 0f) return;
         if (Vector2.Distance(p.transform.position, home) <= OpenRange) StartCoroutine(OpenChest(p));
@@ -105,21 +105,10 @@ public class TreasureChest : MonoBehaviour
         // 1.1~ 보상 풀 3택 · 전설 룰렛 (ChestRewards, 예전엔 코인 · 영혼 조각 · 생명 고정)
         yield return ChestRewards.Open(p, home, elite);
         UnlockRoutes.OnChestOpened();       // 1.2~ 지도 제작자 대체 루트: 이야기 모드 보물 상자 누적 15개 (무한 모드 · 일일 도전 · 튜토리얼은 세지 않음)
+        RunSave.MarkDirty();            // 1.1.9~ 상자를 연 끝 (안 연 상자 수가 바뀜) — 곧 저장
         Fx.Spawn("fx_sparkle", home, 3f, Color.white, 20f);
         if (label != null) Destroy(label);
         Destroy(gameObject);
-    }
-
-    // 화면 밖이면 화면 가장자리(안쪽으로 조금)에 상자 그림이 상자 쪽을 가리킴 (1.1.9~ 계산은 EdgePointer, 떠돌이 상점 제단도 같이 씀)
-    void UpdatePointer(float t)
-    {
-        if (pointer == null) return;
-        if (Camera.main == null || !Camera.main.orthographic) return;
-        bool outside = EdgePointer.EdgePoint(home, out Vector3 at);
-        pointer.SetActive(outside);
-        if (!outside) return;
-        pointer.transform.position = at;
-        pointer.transform.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(t * 8f));
     }
 
     void OnDestroy()
@@ -127,27 +116,6 @@ public class TreasureChest : MonoBehaviour
         if (label != null) Destroy(label);
         if (halo != null) Destroy(halo);
         if (pillar != null) Destroy(pillar);
-        if (pointer != null) Destroy(pointer);
-    }
-}
-
-// 1.1.9~ 화면 밖 대상을 가리키는 가장자리 표시의 자리 (보물 상자 · 떠돌이 상점 제단)
-public static class EdgePointer
-{
-    // 카메라 안이면 false. 밖이면 화면 가장자리 안쪽 — 위 16% · 아래 14% · 옆 5% (최소 1.2칸), 체력 패널 · 경험치 바 같은 HUD 밑에 숨지 않게
-    public static bool EdgePoint(Vector3 target, out Vector3 at)
-    {
-        at = target;
-        Camera cam = Camera.main;
-        if (cam == null || !cam.orthographic) return false;
-        Vector3 c = cam.transform.position;
-        float hh = cam.orthographicSize, hw = hh * cam.aspect;
-        Vector2 d = (Vector2)(target - c);
-        if (Mathf.Abs(d.x) < hw - 0.5f && Mathf.Abs(d.y) < hh - 0.5f) return false;
-        float mx = Mathf.Max(1.2f, hw * 2f * 0.05f), my = Mathf.Max(1.2f, hh * 2f * (d.y > 0f ? 0.16f : 0.14f));
-        float sx = (hw - mx) / Mathf.Max(0.001f, Mathf.Abs(d.x)), sy = (hh - my) / Mathf.Max(0.001f, Mathf.Abs(d.y));
-        Vector2 edge = d * Mathf.Min(sx, sy);
-        at = new Vector3(c.x + edge.x, c.y + edge.y, 0f);
-        return true;
+        if (pointer != null) pointer.Remove();
     }
 }

@@ -136,7 +136,7 @@ public class RecommendGlow : MonoBehaviour
         float t = Time.unscaledTime;
         Vector2 size = Vector2.Scale(target.rect.size, (Vector2)target.localScale);
         Vector3 center = target.TransformPoint(target.rect.center);
-        float breathe = 0.5f + 0.5f * Mathf.Sin(t * 4.2f);
+        float breathe = (0.5f + 0.5f * Mathf.Sin(t * 4.2f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
 
         halo.anchorMin = halo.anchorMax = target.anchorMin == target.anchorMax ? target.anchorMin : new Vector2(0.5f, 0.5f);
         halo.position = center;
@@ -247,7 +247,7 @@ public class HintBadge : MonoBehaviour
     // 기본 크기는 1 로 고정 (예전엔 켜질 때의 크기를 기억해서, 두근거리던 중에 창이 닫혔다 열릴 때마다 계속 커졌음)
     void Update()
     {
-        float b = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f + phase);
+        float b = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f + phase)) * GameSettings.Motion;
         transform.localScale = Vector3.one * (1f + 0.06f * b);
         if (rim != null) rim.color = Color.Lerp(rimColor, Color.white, 0.55f * b);
     }

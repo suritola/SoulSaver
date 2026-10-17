@@ -444,6 +444,27 @@ public partial class SpecialAbilities
         return IsKit(id) ? KitPassiveState(id, detail) : "";
     }
 
+    // 1.1.9~ 빌드 자세히 보기(BuildView): HUD 칸과 같은 순서 · 같은 글 (무기 진화 칸 → 기본 무기 → 고른 순서)
+    public struct TileInfo
+    {
+        public Sprite icon;
+        public string title, body;
+        public bool relic, evoRow;
+    }
+
+    public List<TileInfo> BuildTiles()
+    {
+        List<TileInfo> list = new List<TileInfo>();
+        if (abilities == null) return list;
+        List<int> ids = new List<int>();
+        if (UsesEvolution && EvolutionTier > 0) ids.Add(EvoRow);
+        if (weapons.Count > 0 && !UsesEvolution) ids.Add(PistolRow);
+        foreach (int id in equipped) if (id >= 0 && id < abilities.Length && abilities[id] != null) ids.Add(id);
+        foreach (int id in ids)
+            list.Add(new TileInfo { icon = TileIcon(id), title = TileTitle(id), body = TileBody(id), relic = id >= 0 && relics.Contains(id), evoRow = id == EvoRow });
+        return list;
+    }
+
     // ================================================================= 툴팁
     string TileTitle(int id)
     {

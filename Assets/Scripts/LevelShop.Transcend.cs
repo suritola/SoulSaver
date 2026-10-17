@@ -69,6 +69,16 @@ public partial class LevelShop
     }
     public static string TranscendName(int k) => Loc.T(TranscendNames[Mathf.Clamp(k, 0, TranscendCount - 1)]);
 
+    // 1.1.9~ 빌드 자세히 보기: 지금까지 생긴 규칙 (단계마다 한 줄)
+    internal static string TranscendBody(int k, int level)
+    {
+        if (k < 0 || k >= TranscendCount) return "";
+        string[] d = TranscendDescs[k];
+        List<string> lines = new List<string>();
+        for (int i = 0; i < level && i < d.Length; i++) lines.Add(Loc.T(d[i]));
+        return string.Join("\n", lines);
+    }
+
     // 이번 판에서 나올 수 있는 카드인지 (역전: 최후의 보루가 있어야 · 맵 지배: 맵 물체가 있는 이야기 모드)
     static bool TranscendFits(int k)
     {
