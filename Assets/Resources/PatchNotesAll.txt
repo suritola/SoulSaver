@@ -1,21 +1,25 @@
 @@@ v1.2.1
 # 1.2.1 업데이트
 
+- 맵에 놓인 통이 부서진 뒤 40초마다 하나씩 다시 생깁니다.
 - 자잘한 개선
 
 === en
 # 1.2.1 Update
 
+- Breakable barrels on the map now reappear one at a time every 40 seconds after being destroyed.
 - Minor improvements
 
 === ja
 # 1.2.1 アップデート
 
+- マップに置かれた樽が、壊れたあと40秒ごとにひとつずつ再び現れます。
 - 細かな改善
 
 === zh
 # 1.2.1 更新
 
+- 地图上的木桶被打破后，每40秒会重新出现一个。
 - 细节改进
 @@@ v1.2.0
 # 1.2.0 긴급 업데이트
