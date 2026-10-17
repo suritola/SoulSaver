@@ -656,6 +656,7 @@ public class StageManager : MonoBehaviour
             upgradeGlow.sizeDelta = new Vector2(310f, 100f);
             upgradeText.fontSize = upgradeText.fontSizeMax = 20f;
             upgradeText.fontSizeMin = 12f;
+            Notice.ToastsBelow(root);       // 1.2.5~ 오른쪽 위 토스트가 이 버튼 아래에서 시작하고 버튼보다 위에 그려지게 (예전엔 겹쳐 가렸음)
         }
 
         PauseInspect.TipTreeButton(upgradeButton);      // 1.1.9~ 마우스를 올리면 설명 (일시정지 중에는 바로)

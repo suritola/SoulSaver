@@ -450,6 +450,8 @@ public partial class SpecialAbilities
         public Sprite icon;
         public string title, body;
         public bool relic, evoRow;
+        public SpecialKind kind;        // 1.2.5~ 일시정지 「지금 가진 스킬」 묶음 (기본 무기 · 무기 진화 칸 = Weapon)
+        public bool evolved;            // 진화한 능력 · 무기 진화 칸
     }
 
     public List<TileInfo> BuildTiles()
@@ -461,7 +463,11 @@ public partial class SpecialAbilities
         if (weapons.Count > 0 && !UsesEvolution) ids.Add(PistolRow);
         foreach (int id in equipped) if (id >= 0 && id < abilities.Length && abilities[id] != null) ids.Add(id);
         foreach (int id in ids)
-            list.Add(new TileInfo { icon = TileIcon(id), title = TileTitle(id), body = TileBody(id), relic = id >= 0 && relics.Contains(id), evoRow = id == EvoRow });
+            list.Add(new TileInfo
+            {
+                icon = TileIcon(id), title = TileTitle(id), body = TileBody(id), relic = id >= 0 && relics.Contains(id), evoRow = id == EvoRow,
+                kind = id >= 0 ? abilities[id].kind : SpecialKind.Weapon, evolved = id == EvoRow || (id >= 0 && IsEvolved(id)),
+            });
         return list;
     }
 

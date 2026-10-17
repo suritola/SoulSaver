@@ -264,6 +264,7 @@ public class ESCmenu : MonoBehaviour
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
         RunStats.ShowSummary(isEscOpen);
+        PauseBuild.Show(isEscOpen);         // 1.2.5~ 메뉴 왼쪽: 지금 가진 무기 · 레벨업 스킬 · 특수 스킬 · 유물 · 각인 아이콘
         if (isEscOpen) PauseInspect.OnPauseOpened();
         else { BuildView.Close(); HeroGuide.CloseView(); }
 

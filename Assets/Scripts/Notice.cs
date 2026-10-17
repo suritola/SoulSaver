@@ -698,6 +698,35 @@ public static class Notice
     static RectTransform toastCol;
     static CanvasGroup toastGroup;
 
+    // 1.2.5~ 토스트가 피할 오른쪽 위 요소 (거너 영혼 트리 버튼 · 위에서 222 ~ 266): 토스트가 그 아래에서 시작하고 그보다 뒤에(= 위에) 그려짐
+    //   예전: 토스트 줄(위끝 -214)이 버튼 자리와 겹쳤고, 알림 판(탄약 패널 바로 뒤)이 버튼(StageBanner 앞 · 일시정지 판 뒤)보다 먼저 그려져 버튼에 가렸음
+    //   토스트는 창 · 일시정지 중(Held)엔 숨으므로 HUD 순서에서 버튼 바로 뒤로 옮겨도 다른 창을 덮지 않음
+    static RectTransform toastAvoid;
+
+    public static void ToastsBelow(RectTransform avoid)
+    {
+        toastAvoid = avoid;
+        if (toastCol != null) PlaceToastCol();
+    }
+
+    static void PlaceToastCol()
+    {
+        float top = ToastTop;
+        RectTransform a = toastAvoid;
+        if (a != null && a.parent != null && a.anchorMin == new Vector2(1f, 1f) && a.anchorMax == a.anchorMin)
+        {
+            // 오른쪽 위에 붙은 요소의 아래끝 (피벗 기준) + 틈 12
+            float bottom = a.anchoredPosition.y - a.pivot.y * a.sizeDelta.y;
+            top = Mathf.Min(top, bottom - 12f);
+            if (toastCol.parent != a.parent) toastCol.SetParent(a.parent, false);
+            int ai = a.GetSiblingIndex(), ti = toastCol.GetSiblingIndex();
+            if (ti != ai + 1) toastCol.SetSiblingIndex(ti < ai ? ai : ai + 1);      // 버튼 바로 뒤
+        }
+        toastCol.anchoredPosition = new Vector2(ToastRight, top);
+        // 알림 판 밖으로 옮겨도 토스트가 움직일 때 HUD 전체를 다시 묶지 않게 하위 캔버스로 (클릭 없음)
+        UiScaler.Isolate(toastCol.gameObject, false);
+    }
+
     static string ToastText(ToastItem t)
     {
         string hex = ColorHex(Color.Lerp(t.accent, Color.white, 0.2f));
@@ -719,6 +748,8 @@ public static class Notice
             toastCol.sizeDelta = new Vector2(ToastW, 400f);
             toastGroup = cgo.GetComponent<CanvasGroup>();
             toastGroup.blocksRaycasts = false;
+            toastGroup.interactable = false;
+            PlaceToastCol();
         }
         toastCol.localScale = Vector3.one * Scale;
 
