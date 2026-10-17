@@ -27,6 +27,10 @@ public partial class BossSkills
     string DevName => boss != null && boss.developerMom ? "개발자 엄마" : "개발자";      // 받은 피해 · 쓰러진 곳 이름 (AttackLabel)
     int devRunning;
     float devBannerAt, devFxAt;
+    // 결계 「디버그 모드」 · 「엄마의 대청소」(BossUltimate.Developer.cs)가 씀: 도는 영웅 필살기 수 · 피해 배율 · 결계 뒤 쉬는 시간
+    public int DevRunning => devRunning;
+    public float DevPower => DevPow;
+    public void AfterDomain(float seconds) => next = Mathf.Max(next, Time.time + seconds);
 
     // 1.1.9~ 예고(경고 원 · 선 · Windup · 판정 전 대기)를 짧게: 개발자 ×0.6 · 엄마 ×0.5 (엄마가 더 빠름)
     //   경고 표시 시간과 판정 시각은 같은 값에서 나오므로 계속 맞음 · 한 번의 경고는 최소 DevTeleFloor 초는 보임

@@ -52,7 +52,7 @@ public partial class BossSkills : MonoBehaviour
     void Update()
     {
         if (Alive && kind != AbyssStage.MirrorKind) RebornTick();
-        if (busy || !Alive || BossUltimate.Active) return;      // 필살기 결계 동안은 결계 공격만
+        if (busy || !Alive || BossUltimate.Active || BossUltimate.DevHold || BossUltimate.ErosionPending) return;      // 필살기 결계 동안은 결계 공격만 · 개발자 · 엄마 결계 대기 중엔 새 필살기 없음
         PlayerController p = Hostile.Player;
         if (p == null) return;
         if (boss.developer) { DeveloperTurn(p); return; }      // 무한 모드 최종 보스 (BossSkills.Developer.cs)
@@ -87,6 +87,24 @@ public partial class BossSkills : MonoBehaviour
         if (sr != null && Alive) sr.color = Color.white;
         owned.RemoveAll(g => g == null);
         busy = false;
+        next = Mathf.Max(next, Time.time + 1.2f);
+    }
+
+    // 1.2.5~ 공간 침식이 대기 3초를 넘겨 시작될 때 돌던 스킬을 끊음 (개발자 · 엄마는 따로 · SpaceErosion.Run)
+    // 끊긴 스킬은 침식 피해 배율 · 한 대 상한 밖이고, 돌진 · 점프가 domainHold 와 상관없이 몸을 옮기므로
+    // 스킬이 남기는 상태(시전 중 · 공중 · 몸 색 · 기울기 · 받는 피해 배율)를 되돌리고 스킬이 만든 오브젝트를 지움
+    public void CancelForErosion()
+    {
+        if (!busy || boss == null || boss.developer) return;
+        StopAllCoroutines();
+        busy = false;
+        airborne = false;
+        boss.casting = false;
+        boss.damageTakenMul = 1f;
+        transform.rotation = Quaternion.identity;
+        if (sr != null && Alive) sr.color = Color.white;
+        foreach (GameObject g in owned) if (g != null) Destroy(g);
+        owned.Clear();
         next = Mathf.Max(next, Time.time + 1.2f);
     }
 

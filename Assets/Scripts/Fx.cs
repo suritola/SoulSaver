@@ -202,10 +202,24 @@ public static class Fx
 
     public static void Spawn(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
+        => SpawnGet(name, pos, size, color, fps, rotation, order, loop, life, layer);
+
+    // 1.2.5~ 결계 예고 느낌표: 튀어나왔다가 두근거림 (예전 WarnPop 컴포넌트를 새 오브젝트마다 붙이던 것 → 풀 이펙트의 pop 표시)
+    // 반복 재생 · life 동안 (Play 와 같은 모습 · 다시 쓸 때 Setup 이 pop 을 끔)
+    public static void SpawnPop(string name, Vector3 pos, float size, Color color, float fps, int order, float life)
     {
-        if (DecorBudgetFull(name)) return;
+        FxAnim a = SpawnGet(name, pos, size, color, fps, 0f, order, true, life, "Effect");
+        if (a == null) return;
+        a.pop = true;
+        a.popBase = a.transform.localScale;
+    }
+
+    static FxAnim SpawnGet(string name, Vector3 pos, float size, Color? color, float fps,
+                           float rotation, int order, bool loop, float life, string layer)
+    {
+        if (DecorBudgetFull(name)) return null;
         Sprite[] frames = TieredFrames(name);
-        if (frames == null || frames.Length == 0) return;
+        if (frames == null || frames.Length == 0) return null;
 
         FxAnim a = null;
         while (pool.Count > 0 && a == null) a = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
@@ -227,6 +241,7 @@ public static class Fx
         }
         Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
         a.gameObject.SetActive(true);
+        return a;
     }
 
     // 이미 있는 이펙트를 다른 모습으로 처음부터 다시 재생 (매 프레임 다시 그리는 조준 표시 등)
@@ -262,6 +277,7 @@ public static class Fx
         a.life = life;
         a.spin = 0f;
         a.follow = null;
+        a.pop = false;          // 1.2.5: 풀로 돌아간 느낌표가 다른 이펙트에서 튀지 않게
         a.Restart();
     }
 
@@ -375,6 +391,8 @@ public class FxAnim : FxTicked
     public Transform follow;       // 따라다닐 대상
     public SpriteRenderer sr;
     public bool pooled;             // Fx.Spawn 으로 만든 것: 끝나면 지우지 않고 다시 씀
+    public bool pop;                // 1.2.5~ 결계 예고 느낌표 (0.15초 동안 1.8 → 1배, 그 뒤 두근거림 · Fx.SpawnPop)
+    public Vector3 popBase;
     float t;
     float age;
     Color baseColor;
@@ -420,6 +438,7 @@ public class FxAnim : FxTicked
         if (!ReferenceEquals(sr.sprite, want)) sr.sprite = want;      // 최적화: 같은 그림이면 다시 쓰지 않음
         if (spin != 0f) transform.Rotate(0f, 0f, spin * Time.deltaTime);
         if (follow != null) transform.position = follow.position;
+        if (pop) transform.localScale = popBase * (age < 0.15f ? Mathf.Lerp(1.8f, 1f, age / 0.15f) : 1f + 0.12f * Mathf.Sin(age * 18f));
 
         if (life > 0f)
         {

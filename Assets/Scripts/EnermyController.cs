@@ -456,9 +456,32 @@ public class EnermyController : MonoBehaviour
         hitFxRunning = false;
     }
 
+    // 1.2.5~ 켜진 적 목록 (결계 · 공간 침식이 0.2초마다 장면 전체를 찾아 새 배열을 받지 않게)
+    // 켜질 때 넣고 꺼질 때 빼서 쌓이지 않음 (자리 번호를 기억해 끝 칸과 바꿔 뺌)
+    public static readonly System.Collections.Generic.List<EnermyController> Live = new System.Collections.Generic.List<EnermyController>(256);
+    int liveIndex = -1;
+
+    void OnEnable()
+    {
+        if (liveIndex >= 0) return;
+        liveIndex = Live.Count;
+        Live.Add(this);
+    }
+
+    void LeaveLive()
+    {
+        int i = liveIndex;
+        liveIndex = -1;
+        if (i < 0 || i >= Live.Count || Live[i] != this) { Live.Remove(this); return; }
+        int last = Live.Count - 1;
+        if (i != last) { EnermyController moved = Live[last]; Live[i] = moved; moved.liveIndex = i; }
+        Live.RemoveAt(last);
+    }
+
     // 오브젝트가 꺼지면 코루틴이 멈추므로 번쩍임을 거둠
     void OnDisable()
     {
+        LeaveLive();
         if (!hitFxRunning) return;
         hitFxRunning = false;
         Juice.SetFlash(spriteRenderer, false);

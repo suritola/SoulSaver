@@ -124,6 +124,9 @@ public static class CodexUI
         "필살기 「산성 범람」 — 9초 동안 결계 벽에 튕기는 산성 덩어리 · 쏟아지는 산성 비",
         "필살기 「거울의 방」 — 15초 동안 둘레의 거울들이 차례로 플레이어를 노려 광선을 되쏘고, 깨진 거울 조각이 쏟아집니다",
     };
+    // 1.2.5~ 개발자 · 엄마 결계 (BossUltimate.Developer.cs) — 카드 설명 뒤에 붙음
+    const string DevBarrierDesc = "필살기 「디버그 모드」 — 12초 동안 결계 안이 디버그 화면으로 바뀝니다. 예상 이동 경로에 찍히는 브레이크포인트, 위에서부터 한 줄씩 실행되는 코드 줄(주석 처리된 한 줄만 안전합니다), 결계 벽에 튕기는 버그, 회전하는 무한 루프 탄막이 이어지고, 결계 끝 무렵에는 플레이어를 가로지르는 거대한 X자 「강제 종료」를 씁니다. 체력이 절반 아래면 「강제 종료」를 한 번 더 씁니다.";
+    const string MomBarrierDesc = "필살기 「엄마의 대청소」 — 14초 동안 결계 안을 대청소합니다. 내 자리를 내려치는 등짝 스매싱, 몸을 끌어당기며 먼지를 빨아들이는 청소기, 줄지어 떨어지는 빨래, 잔소리와 함께 쏟아지는 탄막이 이어지고, 통금 시간이 되면 결계가 절반 가까이 좁아집니다.";
 
     // 필살기 설명 (무기 ID 순서) · 즉발 여부
     static readonly string[] UltDesc =
@@ -505,6 +508,10 @@ public static class CodexUI
         Card(FxIcon("fx_rune"), new Color(0.79f, 0.63f, 1f), Loc.T("결계 침식"), Loc.T("모든 보스의 필살기"),
              Loc.T("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.")
              + " " + Loc.T("보스전마다 적어도 한 번: 결계를 펼치기 전에 보스 체력이 40% 아래로 내려가면 게이지가 곧바로 가득 찹니다."));     // 1.0.4~: 40% 규칙도 적음
+        // 1.2.5~ 보스가 둘 이상일 때의 통합 게이지 · 공간 침식 (무한 모드에서만 겹쳐 나와서 체험판에는 없음)
+        if (!Demo.On)
+            Card(FxIcon("fx_rune"), new Color(0.54f, 0.17f, 0.89f), Loc.T("공간 침식"), Loc.T("여러 보스의 필살기"),
+                 Loc.T("보스가 둘 이상 함께 있으면 결계 게이지가 하나로 합쳐집니다. 어느 보스를 때려도 같은 게이지가 차고, 가득 차면 모든 보스의 결계가 하나로 무너지는 「공간 침식」이 펼쳐집니다. 15초 동안 맵 거의 전체가 결계가 되고, 모든 보스의 결계 공격이 더 짧은 간격으로 함께 쏟아집니다. 경고 시간은 그대로이고, 천천히 떠도는 「고요의 눈」 안에는 땅을 치는 공격이 떨어지지 않습니다. 보스가 하나만 남으면 남은 게이지를 그 보스가 그대로 이어받습니다."));
         if (data == null || data.bosses == null) return;
         List<int> order = new List<int>();
         for (int i = 0; i < data.bosses.Length; i++) order.Add(i);
@@ -526,9 +533,9 @@ public static class CodexUI
         if (!GameMode.IsUnlocked(Difficulty.Endless)) return;
         Sprite dev = AbyssStage.Frames("developer")[0];
         Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
-             Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다."));
+             Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다.") + "\n" + Accent.Tag(Loc.T(DevBarrierDesc)));
         Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 1000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
-             Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다."));
+             Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.") + "\n" + Accent.Tag(Loc.T(MomBarrierDesc)));
     }
 
     static void Specials(CodexData data, SpecialKind kind)
@@ -734,10 +741,10 @@ public static class CodexUI
         Sprite dev = AbyssStage.Frames("developer")[0];
         if (!CodexSeen.Shown("sec.dev")) Hidden("sec.dev", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.dev"));
         else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
-                  Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다."), Fresh("sec.dev"));
+                  Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다.") + "\n" + Accent.Tag(Loc.T(DevBarrierDesc)), Fresh("sec.dev"));
         if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
         else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("개발자 처치 후 영혼 1000"),
-                  Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다."), Fresh("sec.mom"));
+                  Loc.T("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.") + "\n" + Accent.Tag(Loc.T(MomBarrierDesc)), Fresh("sec.mom"));
         Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
         if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));
         else Card(chest, Color.white, Loc.T("chest.jackpot.name"), Loc.T("codex.sec.luck") + "  ·  " + Loc.T("chest.legend.title"), Loc.T("codex.sec.jackpot.desc"), Fresh("sec.jackpot"));

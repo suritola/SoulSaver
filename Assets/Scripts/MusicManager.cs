@@ -85,7 +85,7 @@ public class MusicManager : MonoBehaviour
         if (spawner == null) spawner = FindFirstObjectByType<EnemySpawner>();
         Hook(spawner);
         // 1.1.2~ 무한 모드 최종 보스 (개발자 · 엄마) 전용 곡 — 등장 배너 1초 전부터 쓰러질 때까지 (EndlessMode.FinalBossMusic · 둘이 함께면 엄마 곡)
-        // 결계 곡보다 앞에 둠: 개발자 · 엄마는 결계를 쓰지 않고(BossUltimate 가 developer 를 거름) 다른 보스는 모두 쓰러진 뒤라 결계가 켜질 일이 없지만,
+        // 결계 곡보다 앞에 둠: 1.2.5~ 개발자 · 엄마도 결계(디버그 모드 · 엄마의 대청소)를 쓰지만 결계 동안에도 전용 곡을 그대로 둠,
         // 혹시 켜지더라도 24초짜리 결계 곡이 1분 넘게 고조되는 최종 곡을 끊지 않게. 보스 곡 붙잡아 두기(BossFight)는 이 아래에서만 평가되므로 서로 건드리지 않음
         if (GameMode.IsEndless && EndlessMode.Instance != null)
         {

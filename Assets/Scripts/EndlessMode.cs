@@ -178,7 +178,8 @@ public class EndlessMode : MonoBehaviour
         if (devDown && !momSummoned && momKillBase < 0 && finalStage < 3) momKillBase = RunStats.Kills;      // 1.2.5~ 처치 기준이 빠진 저장 · 이어하기에서도 엄마가 끝내 안 오지 않게 지금부터 셈
         if (finalStage >= 2 && finalStage < 3 && devDown && !momSummoned && momKillBase >= 0 && souls <= 0 && free) { StartCoroutine(SummonMom()); return; }
         // 1.2.3~ 보스가 살아 있어도 nextBoss(등장 3분 뒤)가 되면 다음 보스가 함께 (동시 MaxLiveBosses · 쓰러지는 연출 중인 보스가 있으면 처치 처리가 nextBoss 를 다시 정할 때까지 기다림)
-        if ((finalStage == 0 || finalStage == 4) && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen && bosss.Dying == 0 && bosss.LiveCount < MaxLiveBosses) SpawnBoss();
+        if ((finalStage == 0 || finalStage == 4) && Time.time >= nextBoss && Time.timeScale > 0f && !stages.IsMenuOpen && bosss.Dying == 0 && bosss.LiveCount < MaxLiveBosses
+            && !BossUltimate.Active && !BossUltimate.ErosionPending) SpawnBoss();     // 1.2.5: 결계 · 공간 침식 중에는 다음 보스가 나오지 않음 (나오자마자 밀려나고 인트로가 결계 위에 떴음)
         if (!NoMobs && Time.time >= nextMidBoss && Time.timeScale > 0f && !stages.IsMenuOpen)
         {
             spawner.SpawnMidBoss();
@@ -277,7 +278,7 @@ public class EndlessMode : MonoBehaviour
         devSummoned = true;
         bool allDown = bosss.LiveCount == 0;
         if (finalStage < 2) finalStage = 2;
-        while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        while (PlayerController.Cinematic || Time.timeScale == 0f || BossUltimate.Active) yield return null;     // 1.2.5: 결계 · 공간 침식이 끝난 뒤
         spawner.ClearMobs();
         yield return new WaitForSeconds(0.5f);
         finalMusic = Mathf.Max(finalMusic, 1);      // 1.1.2~ 배너 1초 전: 보스 곡이 끊기고 무음 → 배너와 함께 개발자 곡 첫 타격 (MusicManager)
@@ -297,7 +298,7 @@ public class EndlessMode : MonoBehaviour
         if (finalStage < 2) finalStage = 2;
         bool together = !devSummoned;
         if (together) StartCoroutine(SummonDeveloper());
-        while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        while (PlayerController.Cinematic || Time.timeScale == 0f || BossUltimate.Active) yield return null;     // 1.2.5: 결계 · 공간 침식이 끝난 뒤
         spawner.ClearMobs();
         yield return new WaitForSeconds(together ? 3.5f : 0f);      // 함께면 개발자가 먼저 내려온 뒤
         finalMusic = 2;                                              // 1.1.2~ 배너 1초 전: 엄마 곡 (MusicManager)
