@@ -1,3 +1,26 @@
+@@@ v1.2.2
+# 1.2.2 업데이트
+
+- **피격 시 체력바에 효과가 추가됩니다!**
+- **탄이 더 잘 보입니다.** 내 탄과 적 탄에 어두운 테두리를 더하고 그림을 조금 키웠습니다. 특히 무한 모드 사막 맵에서 잘 보입니다. (맞는 판정 크기는 그대로입니다.)
+
+=== en
+# 1.2.2 Update
+
+- **Health bars now react when you take a hit!**
+- **Projectiles are easier to see.** Your shots and enemy shots now have a dark outline and are drawn slightly larger, especially noticeable on the Endless desert map. (Hitboxes are unchanged.)
+
+=== ja
+# 1.2.2 アップデート
+
+- **被弾時に体力バーへ演出が追加されます！**
+- **弾が見やすくなりました。** 自分の弾と敵の弾に暗い縁取りを加え、少し大きく描くようにしました。特にエンドレスの砂漠マップで見やすくなります。（当たり判定の大きさは変わりません。）
+
+=== zh
+# 1.2.2 更新
+
+- **受击时生命条会出现特效！**
+- **子弹更容易看清了。** 为自己和敌人的子弹加上了深色描边，并稍微放大了显示，尤其在无尽模式的沙漠地图中更加明显。（命中判定大小不变。）
 @@@ v1.2.1
 # 1.2.1 업데이트
 
