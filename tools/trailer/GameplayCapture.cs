@@ -26,6 +26,8 @@ public class GameplayCapture
     static readonly int Fps = int.TryParse(Environment.GetEnvironmentVariable("CAPTURE_FPS"), out int f) ? f : 30;
     static readonly string Quality = Environment.GetEnvironmentVariable("CAPTURE_QUALITY") ?? "Medium";
     static readonly string Lang = Environment.GetEnvironmentVariable("CAPTURE_LANG") ?? "en";   // ko · en · ja · zh
+    // 2026-10-18~ 상점 트레일러는 자막 없이 (사용자 지시). 자막을 넣고 싶을 때만 CAPTURE_CAPTIONS=1 (record.ps1 -Captions)
+    static readonly bool NoCaptions = Environment.GetEnvironmentVariable("CAPTURE_CAPTIONS") != "1";
 
     // 트레일러 자막 (언어별) — 0~9 는 옛 콘티(하이라이트 · 다시 쓰는 장면 함수가 읽음)라 그대로 두고, 새 콘티 줄은 10번부터 뒤에 덧붙임
     static readonly Dictionary<string, string[]> Captions = new Dictionary<string, string[]>
@@ -454,7 +456,7 @@ public class GameplayCapture
 
     static IEnumerator Caption(string text, float time)
     {
-        rec.caption.text = text;
+        rec.caption.text = NoCaptions ? "" : text;
         int n = Mathf.RoundToInt(time * Fps);
         for (int i = 0; i < n; i++)
         {
@@ -801,7 +803,7 @@ public class GameplayCapture
     // 녹화된 프레임으로 세는 자막 (불러오기처럼 녹화를 멈춘 동안에는 시간이 흐르지 않아, 여러 컷에 걸쳐도 이어 보임)
     static IEnumerator CaptionRec(string text, float time)
     {
-        rec.caption.text = text;
+        rec.caption.text = NoCaptions ? "" : text;
         int n = Mathf.RoundToInt(time * Fps), start = rec.frames;
         for (int guard = 0; rec.frames - start < n && guard < n * 8; guard++)
         {
@@ -1241,7 +1243,7 @@ public class GameplayCapture
         rec = host.AddComponent<Rec>();
         BuildOverlay();
         rec.showCursor = true;                     // 트레일러만 커서를 그림 (하이라이트 · 레딧은 숨김)
-        rec.sub.text = C(C_EndTag) + "\n" + C(C_FreeDemo);
+        rec.sub.text = NoCaptions ? "" : C(C_EndTag) + "\n" + C(C_FreeDemo);
         rec.sub.rectTransform.sizeDelta = new Vector2(1800f, 160f);
         rec.sub.rectTransform.anchoredPosition = new Vector2(0f, -190f);
 
