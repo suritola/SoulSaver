@@ -271,12 +271,17 @@ public static class GameSettings
         }
     }
 
+    // 1.2.5~ 모니터 옮기기가 끝나 화면 모드 · 크기가 자리 잡음 (전체 화면이면 다시 전체 화면이 된 뒤 한 프레임 더)
+    //   설정 화면 탭이 이때 다시 그려야 지나가는 창 모드 상태를 담지 않음
+    public static event System.Action DisplaySettled;
+    static void Settled() => MenuToast.RunLater(() => DisplaySettled?.Invoke(), 0.1f);
+
     static void ApplyDisplay()
     {
         System.Collections.Generic.List<DisplayInfo> list = Displays();
-        if (displayIndex >= list.Count) return;                // 모니터가 빠졌으면 그대로 (설정값은 남겨 다음에 꽂으면 다시)
+        if (displayIndex >= list.Count) { Settled(); return; }     // 모니터가 빠졌으면 그대로 (설정값은 남겨 다음에 꽂으면 다시)
         DisplayInfo d = list[displayIndex];
-        if (d.Equals(Screen.mainWindowDisplayInfo)) return;
+        if (d.Equals(Screen.mainWindowDisplayInfo)) { Settled(); return; }
         bool full = Screen.fullScreenMode != FullScreenMode.Windowed;
         int w = Screen.width, h = Screen.height;
         // 전체 화면은 모니터 사이 이동이 들쭉날쭉 → 창 모드로 잠깐 바꾸고 옮긴 뒤 그 모니터 해상도로 다시 전체 화면
@@ -289,7 +294,12 @@ public static class GameSettings
         Vector2Int at = new Vector2Int(Mathf.Max(0, (d.width - w) / 2), Mathf.Max(0, (d.height - h) / 2));
         AsyncOperation op;
         try { op = Screen.MoveMainWindowTo(d, at); } catch { op = null; }
-        if (full && op != null) op.completed += _ => Screen.SetResolution(d.width, d.height, FullScreenMode.FullScreenWindow);
+        if (op == null) { if (full) Screen.SetResolution(d.width, d.height, FullScreenMode.FullScreenWindow); Settled(); return; }      // 옮기지 못했으면 원래 화면 모드로
+        op.completed += _ =>
+        {
+            if (full) Screen.SetResolution(d.width, d.height, FullScreenMode.FullScreenWindow);
+            Settled();
+        };
     }
 
     static int B(bool v) => v ? 1 : 0;

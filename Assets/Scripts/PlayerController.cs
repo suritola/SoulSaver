@@ -386,7 +386,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool specialWeapon = special != null && special.WeaponActive;
-        GameInput.TickAttackLock(PointerOverUI());          // 1.1.9~ 설정 「공격 고정」: 공격 키를 누를 때마다 걸기 · 풀기
+        GameInput.TickAttackLock(PointerOverUIFn);          // 1.1.9~ 설정 「공격 고정」: 공격 키를 누를 때마다 걸기 · 풀기 (1.2.5~ 누른 프레임에만 UI 판정)
         CharacterKit kit = CharacterKit.Instance;
         if (kit != null)
         {
@@ -640,6 +640,8 @@ void Shoot()
     static UnityEngine.EventSystems.EventSystem uiPointerEs;
     static int uiCheckFrame = -1;
     static bool uiBlocked;
+
+    static readonly System.Func<bool> PointerOverUIFn = PointerOverUI;     // 1.2.5~ 매 프레임 대리자를 새로 만들지 않게
 
     static bool PointerOverUI()
     {

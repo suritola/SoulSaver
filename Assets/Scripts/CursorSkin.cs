@@ -91,7 +91,7 @@ public class CursorSkin : MonoBehaviour
     static void UpdateConfine()
     {
         bool want = GameSettings.ConfineCursor && Application.isFocused && Time.timeScale > 0f
-                    && SceneManager.GetActiveScene().name == "GameScene"
+                    && InGameScene()                        // 1.2.5~ 씬 이름을 매 프레임 읽지 않게 (아래 캐시)
                     && !ESCmenu.IsOpen && !SettingsUI.IsOpen && !GamePad.Active && !StoryDirector.Playing && !BossUltimate.CutscenePlaying;
         CursorLockMode m = want ? CursorLockMode.Confined : CursorLockMode.None;
         if (m == applied) return;
@@ -126,10 +126,10 @@ public class CursorSkin : MonoBehaviour
         shown = name;
     }
 
-    // 최적화: 씬 이름 글자(매 호출 새 문자열)를 씬이 바뀔 때만 읽음
-    int sceneHandle = -1;
-    bool sceneIsGame;
-    bool InGameScene()
+    // 최적화: 씬 이름 글자(매 호출 새 문자열)를 씬이 바뀔 때만 읽음 (1.2.5~ UpdateConfine 도 같이 쓰도록 static)
+    static int sceneHandle = -1;
+    static bool sceneIsGame;
+    static bool InGameScene()
     {
         Scene s = SceneManager.GetActiveScene();
         if (s.handle != sceneHandle) { sceneHandle = s.handle; sceneIsGame = s.name == "GameScene"; }

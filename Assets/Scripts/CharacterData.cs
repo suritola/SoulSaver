@@ -196,6 +196,9 @@ public static class CharacterData
         };
     }
 
+    // 1.2.5~ 이어하기 (RunSave.Restore): 이번 판 포인트 표시만 저장 값으로 (보유 포인트는 이미 저장돼 있어 더하지 않음)
+    public static void RestoreRunPoints(int n) => RunPoints = Mathf.Max(RunPoints, n);
+
     public static void AddPoints(int n)
     {
         if (n <= 0 || GameInput.Auto || TutorialRun.Active || (Application.isBatchMode && !Override.HasValue)) return;     // 튜토리얼은 포인트를 주지 않음

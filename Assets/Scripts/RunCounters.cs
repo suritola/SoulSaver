@@ -76,8 +76,29 @@ public static class RunCounters
     }
 
     // 지금 영웅을 붙인 열쇠 (누적 · 판 안 모두)
-    public static string Hero(string key) => key + "@" + (int)CharacterData.Selected;
-    public static string Hero(string key, CharacterId id) => key + "@" + (int)id;
+    // 1.2.5~ 열쇠 × 영웅마다 한 번만 만들어 다시 씀 (궁수 「완벽!」 화살마다 · 0.5초마다 부르므로 GC 없게 · 열쇠는 코드에 적힌 것뿐이라 판마다 쌓이지 않음)
+    static readonly Dictionary<string, string[]> heroKeys = new Dictionary<string, string[]>();
+    public static string Hero(string key) => Hero(key, CharacterData.Selected);
+    public static string Hero(string key, CharacterId id)
+    {
+        int i = (int)id;
+        if (i < 0) return key + "@" + i;
+        if (!heroKeys.TryGetValue(key, out string[] arr) || arr.Length <= i)
+        {
+            string[] n = new string[Mathf.Max(i + 1, 16)];
+            if (arr != null) arr.CopyTo(n, 0);
+            heroKeys[key] = arr = n;
+        }
+        return arr[i] ??= key + "@" + i;
+    }
+
+    // 1.2.5~ 누적 저장 열쇠 「life.<열쇠>」도 한 번만 만들어 다시 씀
+    static readonly Dictionary<string, string> lifeKeys = new Dictionary<string, string>();
+    static string LifeKey(string key)
+    {
+        if (!lifeKeys.TryGetValue(key, out string k)) { k = LifePrefix + key; lifeKeys[key] = k; }
+        return k;
+    }
 
     // 이어하기 저장: "열쇠=값|…" + 본 것은 "~열쇠" (열쇠는 영문 · 숫자 · . · @ 뿐)
     public static string Serialize()
@@ -114,7 +135,7 @@ public static class RunCounters
     }
 
     // ================================================================= 누적
-    public static int Life(string key) => Prefs.GetInt(LifePrefix + key, 0) + (lifePending.TryGetValue(key, out int p) ? p : 0);
+    public static int Life(string key) => Prefs.GetInt(LifeKey(key), 0) + (lifePending.TryGetValue(key, out int p) ? p : 0);
 
     public static void AddLife(string key, int n = 1)
     {
@@ -136,13 +157,13 @@ public static class RunCounters
     public static void LifeBit(string key, int bit)
     {
         if (!LifeCounting || bit < 0 || bit > 30) return;
-        int v = Prefs.GetInt(LifePrefix + key, 0);
+        int v = Prefs.GetInt(LifeKey(key), 0);
         if ((v & (1 << bit)) != 0) return;
-        Prefs.SetInt(LifePrefix + key, v | (1 << bit));
+        Prefs.SetInt(LifeKey(key), v | (1 << bit));
         Changed?.Invoke();
     }
 
-    public static int Bits(string key) => Prefs.GetInt(LifePrefix + key, 0);
+    public static int Bits(string key) => Prefs.GetInt(LifeKey(key), 0);
     public static int BitCount(string key)
     {
         int v = Bits(key), n = 0;
@@ -156,7 +177,7 @@ public static class RunCounters
         if (!LifeCounting) return;
         if (value <= Life(key)) return;
         lifePending.Remove(key);
-        Prefs.SetInt(LifePrefix + key, value);
+        Prefs.SetInt(LifeKey(key), value);
         Changed?.Invoke();
     }
 
@@ -164,7 +185,7 @@ public static class RunCounters
     {
         if (lifePending.Count == 0) return;
         foreach (KeyValuePair<string, int> kv in lifePending)
-            Prefs.SetInt(LifePrefix + kv.Key, Prefs.GetInt(LifePrefix + kv.Key, 0) + kv.Value);
+            Prefs.SetInt(LifeKey(kv.Key), Prefs.GetInt(LifeKey(kv.Key), 0) + kv.Value);
         lifePending.Clear();
         Prefs.Save();
     }

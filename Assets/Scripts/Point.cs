@@ -96,6 +96,16 @@ public class Point : MonoBehaviour
         UpdatePointText();
     }
 
+    // 1.2.5~ 이어하기 (RunSave.Restore): 이번 판 클리어 보너스 합 · 판 안 포인트 표시를 저장 값으로 (보유 포인트는 건드리지 않음)
+    public static void RestoreRun(int bonus, int shown)
+    {
+        RunBonus = Mathf.Max(RunBonus, bonus);
+        Point p = Cache<Point>.Get;
+        if (p == null || shown <= p.points) return;
+        p.points = shown;
+        p.UpdatePointText();
+    }
+
     // 1.1~ 클리어 보너스: 배율 없이 그대로 · 포인트 글자가 잠깐 금빛으로 커짐 (판 안에 Point 가 없으면 보유 포인트에만)
     // 1.2~ clearBonus = false: 영혼 계약 · 일일 도전 보상처럼 클리어가 아닌 보너스 (결과 화면 「클리어 보너스」 칸에 넣지 않음)
     public static void Bonus(int n, bool clearBonus = true)

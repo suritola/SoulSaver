@@ -66,13 +66,14 @@ public static class GameInput
     public static void ResetAttackLock() => attackLocked = false;
 
     // PlayerController.Update 의 발사 처리 앞에서 한 번: 공격 키를 누를 때마다 걸기 · 풀기 (UI 를 가리키며 누른 것은 무시)
+    // 1.2.5~ pointerOverUI 는 공격 키를 누른 프레임에만 부름 (UI 레이캐스트가 매 프레임 돌지 않게 · 넘기는 쪽은 대리자를 캐시)
     static int lockTickFrame = -1;
-    public static void TickAttackLock(bool pointerOverUI)
+    public static void TickAttackLock(System.Func<bool> pointerOverUI)
     {
         if (lockTickFrame == Time.frameCount) return;
         lockTickFrame = Time.frameCount;
         if (Auto || !GameSettings.AttackLock || GamePad.Active || TutorialRun.Active) { attackLocked = false; return; }
-        if (Time.timeScale <= 0f || pointerOverUI || !KeyBindings.Down(GameAction.Attack)) return;
+        if (Time.timeScale <= 0f || !KeyBindings.Down(GameAction.Attack) || (pointerOverUI != null && pointerOverUI())) return;
         attackLocked = !attackLocked;
     }
 

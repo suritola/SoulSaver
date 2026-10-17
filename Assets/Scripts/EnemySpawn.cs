@@ -44,6 +44,21 @@ public class EnemySpawner : MonoBehaviour
     public System.Action onMidBossDefeated;
     int midBossPhase = 1;
     int midBossCount = 0;
+    // 살아 있는 중간 보스 (RunSave 가 저장할 때 적 전부를 찾지 않게 · 나올 때 죽은 것을 덜어 내 쌓이지 않음)
+    readonly System.Collections.Generic.List<EnermyController> liveMidBosses = new System.Collections.Generic.List<EnermyController>();
+    public bool MidBossAlive
+    {
+        get
+        {
+            for (int i = liveMidBosses.Count - 1; i >= 0; i--)
+            {
+                EnermyController m = liveMidBosses[i];
+                if (m != null && !m.IsDead) return true;
+                liveMidBosses.RemoveAt(i);
+            }
+            return false;
+        }
+    }
     // 1.2.3~ 규칙 E: 개발자 · 엄마전 약한 잡몹 — 지금 살아 있는 수 (EnermyController.Death 가 뺌 · 상한은 이 수로만 · 보스 부하 · 죽는 연출 중인 다른 적과 따로)
     [System.NonSerialized] public int finalMobs;
     static readonly WaitForSeconds finalMobWait = new WaitForSeconds(EndlessMode.FinalMobEvery);
@@ -169,12 +184,18 @@ public class EnemySpawner : MonoBehaviour
     public int BossKillTarget => GameMode.ScaleKills(Chapters.BossKills(stageIndex, Stage.bossKills));
 
     // midBossAlive: 나갈 때 이 페이즈의 중간 보스가 살아 있었음 → 다음에 적이 나올 때 다시 나옴 (1.0.4~)
-    public void RestoreKills(int kills, bool midBossAlive = false)
+    // endlessSeconds: 무한 모드에서 저장한 경과 시간 (이어할 때는 시계가 아직 시작되지 않았으므로 넘겨받음 · 음수면 지금 시계 그대로)
+    //   판 중 UpdatePhase 와 같게 처치 수 · 시간 조건을 함께 봄 (처치 수만 넘고 시간이 모자란 페이즈의 중간 보스를 건너뛰지 않게)
+    public void RestoreKills(int kills, bool midBossAlive = false, float endlessSeconds = -1f)
     {
         killedEnemy = Mathf.Clamp(kills, 0, BossKillTarget);
+        float secs = endlessSeconds >= 0f ? endlessSeconds : GameMode.EndlessSeconds;
         int phase = 1;
         for (int i = 1; i < Stage.phases.Length; i++)
-            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter)) phase = i + 1;
+        {
+            if (killedEnemy >= GameMode.ScaleKills(Stage.phases[i].killsToEnter) && secs >= Stage.phases[i].minSeconds) phase = i + 1;
+            else break;
+        }
         paze = phase;
         midBossPhase = midBossAlive ? phase - 1 : phase;
     }
@@ -229,6 +250,8 @@ public class EnemySpawner : MonoBehaviour
             e.survivesContact = true;
             e.baseColor = midBossColor;
             e.onKilled += () => onMidBossDefeated?.Invoke();
+            _ = MidBossAlive;           // 죽은 것을 먼저 덜어 냄
+            liveMidBosses.Add(e);
             MidBossMark.Attach(go, CodexUI.EnemyName(prefab.name));
             e.MarkMidBoss();        // 중간 보스 여부 캐시를 다시 계산하게
         }

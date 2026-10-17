@@ -62,7 +62,7 @@ public static class ContractBoard
         // ---------------- 공용 첫 줄
         //   열다섯 상자 · 네 왕 · 두 번째 무게 = 영웅 해제 대체 루트(UnlockRoutes, Ladder.cs)와 같은 기록 하나를 봄 — 세는 곳 · 조건 · 해제는 UnlockRoutes 한 곳
         S("alleasy", 0, 3, 9, HeroesCleared, 3000);
-        S("brands12", 1, 3, 12, () => CountFound("brand.", ContentRegistry.SoulBrands.ConvertAll(b => b.saveCode)), 2000);
+        S("brands12", 1, 3, 12, () => CountFound(BrandKeys != null && BrandKeys.Length == ContentRegistry.SoulBrands.Count ? BrandKeys : (BrandKeys = ContentRegistry.SoulBrands.ConvertAll(sb => "brand." + sb.saveCode).ToArray())), 2000);
         S("events6", 2, 3, 6, () => L("events.onerun"), 2000, onerun: true);
         S("lanterns", 3, 3, 1, () => L("lanterns15"), 1500, onerun: true);
         S("roll10", 4, 3, 10, () => L("roll.dodge"), 1000);
@@ -72,10 +72,10 @@ public static class ContractBoard
         S("weight2", 8, 3, 1, () => GameMode.HasCleared(Difficulty.Hard) && UnlockRoutes.BestWeight >= UnlockRoutes.WeightGoal ? 1 : 0, 2000, route: CharacterData.Def(CharacterId.Ghost).condition, routeHero: CharacterId.Ghost);
         // ---------------- 공용 둘째 줄
         S("daily7", 0, 4, 7, () => Mathf.Max(L("daily.streak.best"), DailyRewards.Streak), 2000);
-        S("relics8", 1, 4, 8, () => CountFound("relic.", new List<string>(OriginalRelics)), 3000);
+        S("relics8", 1, 4, 8, () => CountFound(RelicKeys ??= System.Array.ConvertAll(OriginalRelics, r => "relic." + r)), 3000);
         S("endless5", 2, 4, 1, () => UnlockRoutes.MainRouteMet(CharUnlock.EndlessBosses5) ? 1 : 0, 2000);      // 시계공 대체 루트(quick4)로 켠 플래그는 빼고
-        S("codex50", 3, 4, 50, () => CodexSeen.Percent(), 2000);
-        S("codex100", 4, 4, 100, () => CodexSeen.Percent(), 5000);
+        S("codex50", 3, 4, 50, CodexPercent, 2000);
+        S("codex100", 4, 4, 100, CodexPercent, 5000);
         S("endlessclear", 5, 4, 1, () => EndlessMode.EverCleared ? 1 : 0, 5000, title: true);
         S("mastery9", 6, 4, 9, () => { int n = 0; for (int i = 0; i < Cols; i++) if (Mastery.Level((CharacterId)i) >= Mastery.Max) n++; return n; }, 5000, title: true);
         S("weight6", 7, 4, 1, () => BestWeight() >= SoulWeight.Max ? 1 : 0, 5000);
@@ -97,11 +97,21 @@ public static class ContractBoard
         return b;
     }
 
-    static int CountFound(string prefix, List<string> codes)
+    // 1.2.5~ 도감 열쇠(「brand.」 · 「relic.」 + saveCode)는 처음 한 번만 만듦 (판 안 2초마다 Refresh 가 새 목록 · 문자열을 만들지 않게)
+    static string[] BrandKeys, RelicKeys;
+    static int CountFound(string[] keys)
     {
         int n = 0;
-        foreach (string c in codes) if (CodexSeen.Found(prefix + c)) n++;
+        foreach (string k in keys) if (CodexSeen.Found(k)) n++;
         return n;
+    }
+
+    // 1.2.5~ 도감 수집률: 한 프레임에 한 번만 셈 (codex50 · codex100 · c.last 가 같은 Refresh 에서 도감 전체를 여러 번 훑지 않게)
+    static int codexPctFrame = -1, codexPct;
+    static int CodexPercent()
+    {
+        if (codexPctFrame != Time.frameCount) { codexPctFrame = Time.frameCount; codexPct = CodexSeen.Percent(); }
+        return codexPct;
     }
 
     static bool AllOthersDone()
@@ -178,10 +188,13 @@ public static class ContractBoard
     {
         if (!Available) return;
         HashSet<string> done = Set(DoneKey);
-        bool changed = false;
+        bool changed = false, someOpen = false;
         foreach (BoardCell c in Cells)
         {
-            if (done.Contains(c.key) || !IsDoneNow(c)) continue;
+            if (done.Contains(c.key)) continue;
+            // 1.2.5~ 마지막 칸은 다른 칸이 모두 채워졌을 때만 다시 셈 — 이번에 못 채운 칸이 있으면 AllOthersDone 으로 모든 칸을 한 번 더 돌지 않음
+            if (c.key == "c.last" && someOpen) continue;
+            if (!IsDoneNow(c)) { someOpen = true; continue; }
             done.Add(c.key);
             changed = true;
             if (c.title) Titles.Grant("board." + c.key, "board." + c.key + ".name");

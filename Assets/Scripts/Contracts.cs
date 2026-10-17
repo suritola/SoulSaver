@@ -320,8 +320,8 @@ public static class Contracts
         HashSet<string> taken = new HashSet<string>();
         foreach (Active o in run) if (o.def != null) taken.Add(o.def.id);
         SetSlot(a.def.kind, CharacterData.Selected, Draw(a.def.kind, CharacterData.Selected, taken), false);
+        RunSave.StageForSave();             // 1.2.5~ 판 저장의 「!」(이룸)를 보상 포인트와 같은 파일 쓰기에 (튕긴 뒤 이어해서 두 번 받지 않게)
         Prefs.Save();
-        RunSave.MarkDirty();                // 이야기 판 저장에도 「!」(이룸)를 곧 남김 (강제 종료 뒤 이어해서 두 번 받지 않게)
         Notice.Toast(NoticeIcon.Star, Loc.T("contract.done.toast").Replace("{0}", a.def.Name).Replace("{1}", a.def.Reward.ToString("N0")), 4f, new Color(0.96f, 0.83f, 0.47f));
         Hostile.Play("chime", 0.7f, 1.35f);
         Hud.Dirty = true;
@@ -385,6 +385,8 @@ public static class Contracts
     public static void SaveRun(RunSave.Data d)
     {
         d.counters = RunCounters.Serialize();        // 판 안 수 (이어해도 상자 · 상점 · 영웅 계약 진행이 남게)
+        d.contractPoints = PointsThisRun;            // 1.2.5~ 결과 화면 계약 포인트 · 이룬 수 (이어해도 판 전체로)
+        d.contractsDone = DoneThisRun;
         if (!RunOn) { d.contracts = ""; return; }
         List<string> parts = new List<string>();
         foreach (Active a in run) if (a.def != null) parts.Add(a.def.id + (a.carried ? "*" : "") + (a.done ? "!" : ""));
@@ -399,7 +401,9 @@ public static class Contracts
         if (!RunOn) return;
         runStory = true;                // 이어하기는 저장하는 판뿐 (이야기 · 무한 모드)
         runStartedAt = Time.realtimeSinceStartup - ShortRunSec;     // 이어한 판은 짧은 판으로 치지 않음
-        DoneThisRun = PointsThisRun = 0;
+        DoneThisRun = Mathf.Max(0, d.contractsDone);         // 1.2.5~ 옛 저장은 0
+        PointsThisRun = Mathf.Max(0, d.contractPoints);
+        RunLog.ContractsDone = Mathf.Max(RunLog.ContractsDone, DoneThisRun);
         foreach (string raw in d.contracts.Split(','))
         {
             string s = raw.Trim();

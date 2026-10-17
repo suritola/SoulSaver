@@ -959,7 +959,7 @@ public static class SettingsUI
     static Button resetButton;
     static float resetArmedAt = -99f;
     static Color resetLabelColor = Color.white;
-    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 10줄이라 48 · 화면 탭은 BuildDisplay 에서 10줄 48 · 11줄 44)
+    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭 7줄 64 · 접근성 탭 9줄 54 · 화면 탭은 BuildDisplay 에서 10줄 48 · 11줄 44)
 
     static float resetDoneAt = -99f;
     static bool ResetArmed => resetArmedAt > -99f;
@@ -1007,7 +1007,7 @@ public static class SettingsUI
     {
         tab = t;
         DisarmReset();                                  // 다른 탭으로 옮기면 무장 해제
-        rowH = tab == 1 || tab == 4 ? 54f : 64f;          // 1.1.9~ 화면 · 접근성 탭만 9줄 (나머지는 75 간격 · 64 높이 · 화면 탭은 BuildDisplay 가 줄 수에 맞춰 다시 정함)
+        rowH = tab == 1 || tab == 4 ? 54f : 64f;          // 화면 · 접근성 탭은 54 (접근성 9줄 · 화면 탭은 BuildDisplay 가 10줄 48 · 11줄 44 로 다시 정함) · 나머지(게임 탭 7줄 등)는 75 간격 · 64 높이
         capturing = -1;
         blocked = -1;
         keyLabels.Clear();
@@ -1111,7 +1111,7 @@ public static class SettingsUI
     // ================================================================= 화면
     // 1.1.9~ 화면 모드 · 모니터 · 해상도 · 최대 프레임 · 그래픽 품질 · UI 크기 · 안내 메시지 크기 · 수직 동기화 · 프레임 표시 · 화면 흔들림 · 번쩍임 효과
     //   1.2.4~ 해상도 · 최대 프레임 · 그래픽 품질 · 모니터는 드롭다운 (DropdownAssist · 「이 탭 기본값으로」는 탭을 다시 그려 드롭다운 표시도 새 값으로)
-    //   모니터가 둘 이상이면 11줄: 50 간격 · 높이 44 (RowsY11) · 모니터가 하나면 10줄: 53 간격 · 높이 48 (RowsY10, 게임 탭 10줄과 같은 범위) — 줄 목록에 y 를 차례로 배정
+    //   모니터가 둘 이상이면 11줄: 50 간격 · 높이 44 (RowsY11) · 모니터가 하나면 10줄: 53 간격 · 높이 48 (RowsY10) — 줄 목록에 y 를 차례로 배정
     static void BuildDisplay()
     {
         List<DisplayInfo> monitors = GameSettings.Displays();
@@ -1170,9 +1170,17 @@ public static class SettingsUI
         }, i =>
         {
             if (i < 0 || i >= monitors.Count) return;
+            // 1.2.5~ 정해진 0.4초 뒤가 아니라 옮기기가 끝나 전체 화면이 돌아온 뒤에 다시 그림 (지나가는 창 모드를 chosenMode 로 담지 않게)
+            GameSettings.DisplaySettled -= RedrawAfterMove;
+            GameSettings.DisplaySettled += RedrawAfterMove;
             GameSettings.DisplayIndex = i;
-            MenuToast.RunLater(() => { if (open != null && tab == 1) ShowTab(1); }, 0.4f);
         }, 22f, 7);
+    }
+
+    static void RedrawAfterMove()
+    {
+        GameSettings.DisplaySettled -= RedrawAfterMove;         // 한 번만 (구독이 쌓이지 않게)
+        if (open != null && tab == 1) ShowTab(1);
     }
 
     static void DisplayModeRow(float y)

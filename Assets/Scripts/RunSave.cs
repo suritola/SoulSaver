@@ -80,6 +80,9 @@ public static class RunSave
         // 1.2.3~ 보스 타이밍 「보스는 기다리지 않는다」 (EndlessMode.SaveRun · RestoreRun)
         public bool endlessStorm;                       // 15:00 을 보스 처치 0 으로 넘김 (모래 폭풍 국면 · 이 판에선 최후의 시간이 열리지 않음)
         public string endlessLiveBosses = "";           // 살아 있던 보스 (개발자 · 엄마 제외 · 최대 4): "종류,최대 체력,체력,살아 있은 초;…" — 비어 있으면 endlessBossAlive 로 예전처럼 (체력 가득)
+        // 1.2.5~ 이번 판 포인트 (결과 화면 「획득 포인트」 · 「클리어 보너스」 · balance_log points_run 이 이어한 판에서도 판 전체로)
+        //   보유 포인트는 그때그때 저장되므로 여기 값은 표시 · 기록용으로만 되살림 (옛 저장은 0 → 예전처럼 이어한 뒤 몫만)
+        public int runPoints, runBonus, contractPoints, contractsDone, pointsShown;
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -138,7 +141,7 @@ public static class RunSave
         get
         {
             StageManager sm = StageManager.Instance;
-            EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
+            EnemySpawner sp = Cache<EnemySpawner>.Get;
             if (sm == null || sp == null || GameMode.IsEndless || Chapters.Next(sm.CurrentStage) >= 0) return false;
             if (sp.bossCleared) return true;
             if (!sp.bossSpawned || bosss.LiveCount > 0) return false;
@@ -213,14 +216,40 @@ public static class RunSave
     // background: 1분 자동 저장 — 파일 쓰기만 백그라운드로 (저장 내용은 같음 · 끌 때 · 장 넘어갈 때 · 메뉴로 나갈 때는 바로 씀)
     static void Save(bool background)
     {
-        if (!Savable) return;
+        if (!Stage()) return;
+        if (background) Prefs.SaveInBackground();
+        else Prefs.Save();
+        dirty = false;
+        // 1.1.9~ 디스크가 꽉 찼거나 권한이 없으면 (예전엔 로그만 남기고 삼킴) — 같은 판에서 한 번만
+        //   백그라운드 저장은 쓰기가 끝나야 LastError 가 바뀌므로, 그 실패는 다음 저장 때 알림
+        if (Prefs.LastError != null)
+        {
+            if (!failNoticed) { failNoticed = true; Notice.Toast(NoticeIcon.Warn, Loc.T("저장하지 못했습니다. 저장 폴더를 확인해 주세요."), 5f); }
+            return;
+        }
+        LastSavedAt = Time.unscaledTime;
+        Saved?.Invoke();
+    }
+
+    // 1.2.5~ 판 저장 JSON 만 지금 값으로 갈아 둠 — 바로 뒤에 부르는 사람이 Prefs.Save() 로 함께 씀
+    //   영혼 계약 이룸: 보상 포인트와 「!」(이룸) 표시가 같은 파일 쓰기에 들어가게 (튕긴 뒤 이어해서 보상을 두 번 받지 않게)
+    public static void StageForSave()
+    {
+        if (Replaying) return;
+        if (Stage()) dirty = false;
+    }
+
+    // 판 상태를 Data 로 만들어 Prefs 에 넣음 (파일 쓰기는 하지 않음) · 저장하지 않는 때면 false
+    static bool Stage()
+    {
+        if (!Savable) return false;
         StageManager sm = StageManager.Instance;
         PlayerController p = Hostile.Player;
-        LevelShop shop = Object.FindFirstObjectByType<LevelShop>();
-        EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
-        if (sm == null || p == null || shop == null || sp == null || p.IsDying || p.PlayerHealth <= 0f) return;
-        if (!sm.Started) return;                                    // 시작 이야기 · 첫 카드를 고르기 전은 저장할 게 없음
-        if (FinalBossDown) return;                                  // 마지막 보스가 쓰러지는 연출 중에도 저장하지 않음 (1.0.4~, 예전엔 보스전이 다시 저장됐음)
+        LevelShop shop = Cache<LevelShop>.Get;
+        EnemySpawner sp = Cache<EnemySpawner>.Get;
+        if (sm == null || p == null || shop == null || sp == null || p.IsDying || p.PlayerHealth <= 0f) return false;
+        if (!sm.Started) return false;                              // 시작 이야기 · 첫 카드를 고르기 전은 저장할 게 없음
+        if (FinalBossDown) return false;                            // 마지막 보스가 쓰러지는 연출 중에도 저장하지 않음 (1.0.4~, 예전엔 보스전이 다시 저장됐음)
 
         Data d = new Data
         {
@@ -242,11 +271,15 @@ public static class RunSave
             log = new List<string>(log),
             needEvolution = NeedEvolution,
             weight = SoulWeight.Level,                  // 1.2~
+            runPoints = CharacterData.RunPoints,        // 1.2.5~ 이번 판 포인트 (표시 · 기록용)
+            runBonus = Point.RunBonus,
         };
+        Point pt = Cache<Point>.Get;
+        d.pointsShown = pt != null ? pt.points : 0;
         shop.SaveLevels(out d.earned, out d.pending);
-        Coin coin = Object.FindFirstObjectByType<Coin>();
+        Coin coin = Cache<Coin>.Get;
         d.coins = coin != null ? coin.coins : 0;
-        SkillGauge g = Object.FindFirstObjectByType<SkillGauge>();
+        SkillGauge g = Cache<SkillGauge>.Get;
         d.gauge = g != null ? g.SkillPoint : 0f;
         SpecialAbilities specials = SpecialAbilities.SharedInstance;
         d.rerolls = specials != null ? specials.Rerolls : 0;
@@ -264,11 +297,11 @@ public static class RunSave
         if (bossDown)
         {
             int next = Chapters.Next(stage);
-            if (next < 0) return;                                   // 마지막 보스를 쓰러뜨림 → 엔딩 (저장 안 함)
+            if (next < 0) return false;                             // 마지막 보스를 쓰러뜨림 → 엔딩 (저장 안 함)
             d.stage = next;
             d.kills = 0;
             // 1.0.4~: 안 연 보물 상자는 다음 장으로 가져감 (ChapterEvents 가 장을 바꿀 때와 같게)
-            ChapterEvents evNext = Object.FindFirstObjectByType<ChapterEvents>();
+            ChapterEvents evNext = Cache<ChapterEvents>.Get;
             if (evNext != null) d.chests = evNext.UnopenedChests;
             // 문에 들어갈 때 받는 것(첫 문의 특수 능력 · 포인트 +2 · 저주 제단) 과 보스 보상은 이어할 때 받음
             d.gatePending = true;
@@ -286,14 +319,13 @@ public static class RunSave
             d.kills = Mathf.Min(sp.killedEnemy, sp.BossKillTarget);
             d.altarPending = Curse.PendingStage == stage;
             d.lastStandUsed = LastStand.Used;
-            ChapterEvents ev = Object.FindFirstObjectByType<ChapterEvents>();
+            ChapterEvents ev = Cache<ChapterEvents>.Get;
             if (ev != null) d.chests = ev.UnopenedChests;
             // 습격 · 중간 보스는 보스가 나오기 전에만 (보스전이면 이어할 때 보스가 바로 다시 나옴)
             if (!sp.bossSpawned)
             {
                 if (ev != null) d.ambushLeft = ev.AmbushLeft;
-                foreach (EnermyController e in Object.FindObjectsByType<EnermyController>(FindObjectsSortMode.None))
-                    if (e != null && !e.IsDead && e.name.StartsWith("MidBoss_")) { d.midBossAlive = true; break; }
+                d.midBossAlive = sp.MidBossAlive;                   // 1.2.5~ 적 전부를 찾지 않고 스포너가 들고 있는 중간 보스로
             }
             // 장 시작점이 아니라 나갈 때 서 있던 곳에서 이어함 (보스가 나와 있으면 보스가 문에서 다시 나오므로 시작점에서)
             if (!sp.bossSpawned)
@@ -307,18 +339,7 @@ public static class RunSave
         RunContent.Save(d);                                         // 1.1~ 이벤트 계획 · 상자 전설 횟수
         if (GameMode.IsEndless && EndlessMode.Instance != null) EndlessMode.Instance.SaveRun(d);     // 1.2.3~ 무한 전용 상태
         Prefs.SetString(Key, JsonUtility.ToJson(d));
-        if (background) Prefs.SaveInBackground();
-        else Prefs.Save();
-        dirty = false;
-        // 1.1.9~ 디스크가 꽉 찼거나 권한이 없으면 (예전엔 로그만 남기고 삼킴) — 같은 판에서 한 번만
-        //   백그라운드 저장은 쓰기가 끝나야 LastError 가 바뀌므로, 그 실패는 다음 저장 때 알림
-        if (Prefs.LastError != null)
-        {
-            if (!failNoticed) { failNoticed = true; Notice.Toast(NoticeIcon.Warn, Loc.T("저장하지 못했습니다. 저장 폴더를 확인해 주세요."), 5f); }
-            return;
-        }
-        LastSavedAt = Time.unscaledTime;
-        Saved?.Invoke();
+        return true;
     }
 
     // 메인 메뉴 「이어하기」: 캐릭터 · 난이도를 맞추고 게임 씬으로
@@ -454,9 +475,12 @@ public static class RunSave
         EnemySpawner sp = Object.FindFirstObjectByType<EnemySpawner>();
         // 2장부터 페이즈마다 나오는 중간 보스가 살아 있었으면 다시 나오게 (1장 엘리트는 ChapterEvents 가)
         bool firstChapter = Chapters.SlotOf(d.stage) == 0;
-        if (sp != null) sp.RestoreKills(d.kills, d.midBossAlive && !firstChapter);
+        if (sp != null) sp.RestoreKills(d.kills, d.midBossAlive && !firstChapter, GameMode.IsEndless ? d.endlessSeconds : -1f);     // 1.2.5~ 무한 시계는 아직 안 돎 → 저장한 시간으로
         ChapterEvents.Resume(d.ambushLeft, d.midBossAlive && firstChapter, d.chests);
         RunContent.Restore(d);                                      // 1.1~ 이벤트 계획 · 상자 전설 횟수 (옛 저장은 30% · 55% 고정)
+        // 1.2.5~ 이번 판 포인트 표시 · 기록 (보유 포인트는 이미 저장돼 있으므로 더하지 않음) — 못 받은 장 보너스는 그 위에 더함
+        CharacterData.RestoreRunPoints(d.runPoints);
+        Point.RestoreRun(d.runBonus, d.pointsShown);
         if (d.chapterBonus > 0) Point.Bonus(d.chapterBonus);       // 1.1~ 보스가 쓰러지는 연출 중에 나가서 못 받은 장 클리어 보너스
         if (!d.gatePending) LastStand.Used = d.lastStandUsed;
         if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
@@ -487,6 +511,7 @@ public static class RunSave
 
         // 1.0.4~: 게임이 튕겨도 많이 잃지 않게 1분마다 조용히 저장 (멈춘 창 · 연출 · 장 넘어가는 중 · 쓰러지는 중은 건너뛰고 다음 기회에)
         const float AutoSaveEvery = 60f;
+        const float MinDirtyGap = 12f;
         float nextAutoSave;
 
         void Start()
@@ -529,7 +554,8 @@ public static class RunSave
         void Update()
         {
             // 1.1.9~ 선택 직후 저장: 창이 닫혀 시간이 다시 흐른 뒤 0.5초 (1분 자동 저장은 그대로)
-            if (dirty && Time.timeScale > 0f && !StoryDirector.Playing && Time.unscaledTime >= dirtySince + 0.5f)
+            // 1.2.5~ 지난 저장 뒤 최소 12초 — 레벨업이 잦은 후반에 저장(적 · 기록 복사 · JSON)이 몰려 끊기지 않게 여러 선택을 묶음
+            if (dirty && Time.timeScale > 0f && !StoryDirector.Playing && Time.unscaledTime >= Mathf.Max(dirtySince + 0.5f, LastSavedAt + MinDirtyGap))
             {
                 StageManager dsm = StageManager.Instance;
                 if (dsm != null && !dsm.IsMenuOpen && CanSaveNow) { Save(true); nextAutoSave = Time.unscaledTime + AutoSaveEvery; return; }
