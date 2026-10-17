@@ -1,3 +1,30 @@
+@@@ v1.2.4
+# 1.2.4 업데이트
+
+- **최적화:** 적과 탄이 많이 몰리는 후반 · 무한 모드 · 보스전에서 프레임이 더 안정적입니다. 오래 플레이할수록 조금씩 쌓이던 메모리도 정리했습니다.
+- **설정 「화면」 탭에 「그래픽 품질」을 추가했습니다.** 「낮음」은 잔상 · 불꽃 · 빛 번짐 같은 꾸밈 효과만 줄여 사양이 낮은 PC에서도 부드럽게 움직입니다.
+- 스킬 아이콘의 단계 칸 중 가운데 칸이 깨져 보이던 문제를 고쳤습니다.
+
+=== en
+# 1.2.4 Update
+
+- **Optimization:** Frame rate is more stable in the late game, Endless Mode, and boss fights when many enemies and projectiles pile up. Memory that slowly built up during long sessions is now cleaned up.
+- **Added "Graphics Quality" to the Display tab.** "Low" only reduces decorative effects such as trails, sparks, and glow, so the game runs smoothly on lower-end PCs.
+- Fixed the middle level pip on skill icons looking broken.
+
+=== ja
+# 1.2.4 アップデート
+
+- **最適化：** 敵や弾が多く集まる終盤・エンドレス・ボス戦で、フレームレートがより安定しました。長く遊ぶほど少しずつ溜まっていたメモリも整理しました。
+- **設定の「画面」タブに「グラフィック品質」を追加しました。** 「低」は残像・火花・光のにじみなどの装飾効果だけを減らし、低スペックのPCでも滑らかに動きます。
+- スキルアイコンの段階マスのうち、真ん中のマスが崩れて見える問題を修正しました。
+
+=== zh
+# 1.2.4 更新
+
+- **优化：** 在敌人和子弹大量聚集的后期、无尽模式和首领战中，帧率更加稳定。长时间游玩时逐渐累积的内存也已清理。
+- **在设置的「画面」页中新增「画质」选项。** 「低」只会减少残影、火花、光晕等装饰效果，让低配置电脑也能流畅运行。
+- 修复了技能图标的等级格中，中间一格显示异常的问题。
 @@@ v1.2.3
 # 1.2.3 업데이트
 
