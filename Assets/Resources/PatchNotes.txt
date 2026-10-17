@@ -1,118 +1,70 @@
-# 1.2.5 업데이트 — 한 판 더!
+# 1.2.6 업데이트 — 버그 수정 · 다듬기
 
-- **공간 침식**: 무한 모드에서 보스가 둘 이상이면 필살기 게이지가 하나로 합쳐집니다. 가득 차면 아레나 전체를 덮는 결계 「공간 침식」이 펼쳐지고, 모든 보스의 결계 공격이 더 짧은 간격으로 쏟아집니다. 개발자는 「디버그 모드」, 개발자 엄마는 「엄마의 대청소」 결계를 새로 씁니다.
-- **빈틈**: 보스와 중간 보스에게 빛나는 빈틈이 생깁니다. 직접 조준한 공격으로 맞히면 탄은 +75%, 근접 공격과 샷건은 +40%, 던진 공격의 직격은 +60% 피해를 줍니다. 궁수의 「완벽!」 화살과 시계공의 「정각」 톱니는 「완벽한 빈틈!」으로 더 크게 늘어납니다.
-- **기억하는 보스**: 보스의 체력이 정해진 값에 닿으면, 그때까지 가장 많이 맞은 공격을 기억하고 막아 냅니다. 다른 공격으로 기억을 깨면 보스가 잠시 휘청입니다.
-- **영혼 계약**: 판마다 목표 3개가 주어지고, 이루면 바로 포인트를 받습니다. 메인 메뉴의 계약 보드 45칸을 채우면 새 유물 9종과 칭호가 열립니다.
-- **망자의 전령 · 기억 조각**: 쓰러지면 상황에 맞는 한마디가 들려옵니다. 영웅마다 기억 조각 6장을 모아 도감 「기억」 탭에서 읽을 수 있습니다.
-- **열리는 순서 정리**: 무한 모드는 보통 클리어, 일일 도전은 쉬움 클리어로 열립니다. 지도 제작자 · 시계공 · 유령도 이야기 모드에서 여는 길이 생겼습니다.
-- **무한 모드 · 일일 도전 보상**: 무한 모드에서 5 · 10 · 15 · 20분 등을 처음 넘기면 포인트를 받습니다. 일일 도전에는 5 · 10 · 15분 보상, 연속 출석과 완주 보상이 생기고 규칙이 14종으로 늘었습니다.
-- **편의 기능**: ESC 메뉴에서 지금 가진 스킬을 볼 수 있고, 일시정지 중 아이콘에 마우스를 올리면 설명이 나옵니다. 빌드 자세히 보기 · 기록 창 · 로딩 화면 · 도감 검색 · 결과 복사도 추가했습니다.
-- **설정**: 접근성 · 표시 탭을 새로 만들었습니다. 공격 고정 · 필살기 토글 · 대사 속도 · 움직임 줄이기 · 빠른 연출 · 전투 통계 · 모니터 선택을 고를 수 있습니다.
-- 스팀 오버레이를 열거나 게임패드가 빠지면 자동으로 일시정지합니다. 전투 중에는 커서가 창 밖으로 나가지 않습니다.
-- 체험판이 초원 · 킹 슬라임으로 바뀌었고, 유령으로도 플레이할 수 있습니다.
-- 회전 표창이 일찍 꺾여 돌아오던 문제, 무한 모드 · 일일 도전의 배경음이 갑자기 바뀌던 문제, 개발자를 쓰러뜨린 뒤 적이 너무 많아 느려지던 문제, 오른쪽 위 알림이 영혼 트리 버튼에 가려지던 문제를 고쳤습니다.
-- 게임 안의 모든 설명 문구를 더 읽기 쉽게 다듬었습니다.
+- **왕들의 영토 수정**: 무한 모드에서 보스를 쓰러뜨려도 땅이 바뀌지 않던 문제를 고쳤습니다. 이제 영토가 번지고 용암 · 늪이 생깁니다.
+- 15분 「최후의 시간」이 결계 · 공간 침식 도중에 시작되던 문제를 고쳤습니다. 「고요의 눈」이 웅덩이 위에 생기지 않습니다.
+- 보스가 여럿일 때 체력바와 「기억」 글자가 겹치던 문제, 보스 넷의 체력바가 화면을 너무 가리던 문제를 고쳤습니다.
+- 엄마의 잔소리 글자가 체력바와 일시정지 화면을 가리던 문제를 고쳤습니다.
+- 메인 메뉴 · 결과 화면에서 일부 효과음이 나지 않던 문제와, 일시정지 메뉴에서 적 설명이 버튼을 가리던 문제를 고쳤습니다.
+- 이어하기 때 보스 위치가 어긋나거나 「풍화」 알림이 다시 뜨던 문제, 보스 등장 연출이 선택 창 위에 겹치던 문제, 드물게 적이 비정상적으로 커지던 문제를 고쳤습니다.
 
 ## 밸런스 조정
 
-- **개발자 체력**: 200,000 → **100,000**
-- **개발자 엄마 체력**: 400,000 → **200,000**
-- **개발자 엄마 강림에 필요한 영혼**: 3,000 → **1,000**
-- **보스 보상 가운데 칸**: 영혼 조각 +40~70 → **보물 상자 보상** (희귀 60% · 일반 25% · 전설 15%)
-- **초월 카드 간격 (이야기 모드)**: 막대 3번 → **2번** (무한 모드 · 일일 도전은 3번 그대로)
-- **무한 모드 잡몹 포인트**: 늘 ×1 → 2,000마리까지 ×1, 그 뒤 **×0.5**, 8,000마리 뒤 **×0.2**
-- **무한 모드 클리어 보너스**: 1,500P → **5,000P**
-- **영혼의 무게 포인트**: 무게마다 +5% → **+8%**
-- **영혼 정련 비용 (이야기 모드)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
-- **도적 진화 「환영 연막」**: 연막 안에서 적의 공격이 40% 확률로 빗나감 → 연막 안에서 **받는 피해 90% 감소** (늘 같은 효과)
+- **보스 보상 가운데 칸**: 「생명」 · 「회복」이 나옴 → **나오지 않음**
+- **보스 보상 가운데 칸 (이어하기)**: 이어할 때마다 새로 뽑음 → **처음 뽑은 칸 그대로**
+- **공간 침식 중 결계 공격이 아닌 피해의 한 대 상한**: 최대 체력 40% → **25%**
+- **결계 · 공간 침식 중 용암 웅덩이**: 0.6초마다 6 피해 → **피해 없음** (늪의 느려짐도 없음)
+- **시전 중인 보스의 결계**: 시전이 끝날 때까지 기다림 → **게이지가 찬 뒤 최대 3초 뒤 시전을 끊고 펼침**
 
 === en
-# 1.2.5 Update — One More Run!
+# 1.2.6 Update — Bug Fixes & Polish
 
-- **Spatial Erosion**: In Endless Mode, when two or more bosses are on the field, their ultimate gauges merge into one. When it fills, "Spatial Erosion" covers the whole arena in a single barrier, and every boss's barrier attacks pour down at shorter intervals. The Developer now casts "Debug Mode," and the Developer's Mom casts "Mom's Big Cleanup."
-- **Weak Points**: Bosses and mid-bosses now have a glowing weak point. Hit it with an aimed attack for +75% damage with shots, +40% with melee attacks and the shotgun, and +60% with a thrown attack's direct hit. The Archer's Perfect! arrows and the Clockmaker's O'Clock gears deal even more with PERFECT WEAK POINT!
-- **Bosses that remember**: When a boss's health reaches certain points, it remembers the attack that hit it most and blocks it. Break the memory with other attacks to make the boss stagger.
-- **Soul Contracts**: Every run gives you three goals, and you earn points as soon as you complete them. Fill the 45-slot Contract Board in the main menu to unlock 9 new relics and titles.
-- **Herald of the Dead · Memory Shards**: When you fall, you hear a line that fits the moment. Collect 6 Memory Shards per hero and read them in the new Codex "Memories" tab.
-- **New unlock order**: Endless Mode now unlocks by clearing Normal, and Daily Challenge by clearing Easy. The Cartographer, Clockmaker, and Ghost can also be unlocked through Story Mode.
-- **Endless and Daily rewards**: In Endless Mode, earn points the first time you pass 5, 10, 15, or 20 minutes and more. Daily Challenge adds 5, 10, and 15-minute rewards, login streak and completion rewards, and 14 rule sets instead of 7.
-- **Quality of life**: The pause menu shows the skills you currently have, and hovering over icons while paused shows their details. Also added a detailed build view, a run history window, a loading screen, Codex search, and Copy Results.
-- **Settings**: New Accessibility and HUD tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, Combat Stats, and monitor selection.
-- The game now pauses automatically when you open the Steam overlay or a gamepad disconnects. The cursor stays inside the window during combat.
-- The demo now takes place in the Meadow with the King Slime, and you can also play as the Ghost.
-- Fixed the Boomerang Star turning back too early, the Endless and Daily music suddenly switching tracks, slowdowns from too many enemies after defeating the Developer, and top-right notices being hidden behind the Soul Tree button.
-- All in-game descriptions have been rewritten to be easier to read.
+- **Realm of the Kings fixed**: The ground in Endless Mode now changes when you defeat a boss. Realms spread and lava pools and slime bogs appear as intended.
+- The 15-minute "Final Hour" no longer starts in the middle of a barrier or Spatial Erosion. The "Eye of Calm" no longer appears on top of pools.
+- Fixed health bars overlapping the "Memory" text when several bosses appear, and four boss health bars covering too much of the screen.
+- Fixed Mom's nagging text covering the health bar and the pause screen.
+- Fixed some sound effects not playing in the main menu and results screen, and enemy tooltips covering buttons in the pause menu.
+- Fixed bosses appearing in the wrong place or the "weathered" notice repeating after Continue, boss intros overlapping choice windows, and enemies rarely growing abnormally large.
 
 ## Balance Changes
 
-- **Developer HP**: 200,000 → **100,000**
-- **Developer's Mom HP**: 400,000 → **200,000**
-- **Souls needed for the Developer's Mom to descend**: 3,000 → **1,000**
-- **Middle boss reward**: Soul Shards +40–70 → **Treasure chest reward** (Rare 60% · Common 25% · Legendary 15%)
-- **Transcendence card interval (Story Mode)**: every 3 bars → **every 2 bars** (Endless and Daily stay at 3)
-- **Endless mob points**: always ×1 → ×1 up to 2,000 kills, then **×0.5**, then **×0.2** after 8,000 kills
-- **Endless clear bonus**: 1,500P → **5,000P**
-- **Soul Weight points**: +5% per weight → **+8%**
-- **Soul Refining cost (Story Mode)**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
-- **Rogue evolution "Phantom Smoke"**: enemy attacks had a 40% chance to miss inside the smoke → **damage taken reduced by 90%** inside the smoke (always active)
+- **Middle boss reward**: could offer "Life" and "Heal" → **no longer offered**
+- **Middle boss reward (Continue)**: rerolled every time you continued → **keeps the first roll**
+- **Max damage per hit from non-barrier attacks during Spatial Erosion**: 40% of max HP → **25%**
+- **Lava pools during barriers and Spatial Erosion**: 6 damage every 0.6s → **no damage** (bogs no longer slow you either)
+- **Barrier of a boss that is casting**: waited until the cast ended → **interrupts the cast up to 3s after the gauge fills**
 
 === ja
-# 1.2.5 アップデート — もう一回！
+# 1.2.6 アップデート — 不具合修正・調整
 
-- **空間侵食**: エンドレスでボスが2体以上いると、必殺技ゲージがひとつに合わさります。満タンになるとアリーナ全体を覆う結界「空間侵食」が展開され、すべてのボスの結界攻撃がより短い間隔で降り注ぎます。開発者は「デバッグモード」、開発者のママは「ママの大掃除」という結界を新たに使います。
-- **隙**: ボスと中ボスに光る隙が現れます。直接狙った攻撃で当てると、弾は+75%、近接攻撃とショットガンは+40%、投げた攻撃の直撃は+60%のダメージを与えます。弓使いの「パーフェクト！」の矢と時計職人の「正時」の歯車は、「完璧な隙！」でさらに大きく上がります。
-- **記憶するボス**: ボスの体力が決まった値に達すると、それまで最も多く受けた攻撃を覚えて防ぎます。ほかの攻撃で記憶を砕くと、ボスがしばらくよろめきます。
-- **魂の契約**: 毎回のプレイで目標が3つ与えられ、達成するとすぐにポイントを獲得します。メインメニューの契約ボード45マスを埋めると、新しい遺物9種と称号が解放されます。
-- **亡者の伝令・記憶のかけら**: 倒れると、状況に合ったひと言が聞こえます。英雄ごとに記憶のかけらを6枚集め、図鑑の「記憶」タブで読めます。
-- **解放の順番を整理**: エンドレスは「普通」クリア、デイリーチャレンジは「やさしい」クリアで解放されます。地図職人・時計職人・幽霊もストーリーモードで解放できるようになりました。
-- **エンドレス・デイリーの報酬**: エンドレスで5・10・15・20分などを初めて越えるとポイントを獲得します。デイリーチャレンジには5・10・15分の報酬、連続ログインと完走の報酬が加わり、ルールが14種類に増えました。
-- **便利機能**: ESCメニューで今持っているスキルを確認でき、一時停止中にアイコンへマウスを乗せると説明が出ます。ビルド詳細・記録ウィンドウ・ロード画面・図鑑検索・結果のコピーも追加しました。
-- **設定**: アクセシビリティ・表示タブを新設しました。攻撃固定・必殺技トグル・セリフ速度・動きを減らす・演出の高速化・戦闘統計・モニター選択を選べます。
-- Steamオーバーレイを開いたりゲームパッドが外れたりすると、自動で一時停止します。戦闘中はカーソルがウィンドウの外に出ません。
-- 体験版の舞台が草原・キングスライムに変わり、幽霊でも遊べるようになりました。
-- 回転手裏剣が早く折り返していた問題、エンドレス・デイリーのBGMが急に変わっていた問題、開発者を倒した後に敵が多すぎて重くなっていた問題、右上のお知らせが魂のツリーのボタンに隠れていた問題を修正しました。
-- ゲーム内のすべての説明文を、より読みやすく書き直しました。
+- **王たちの領土を修正**: エンドレスでボスを倒しても地形が変わらなかった問題を修正しました。領土が広がり、溶岩・沼が現れるようになりました。
+- 15分の「最後の時間」が結界・空間侵食の途中で始まる問題を修正しました。「静寂の目」が溜まりの上に現れなくなりました。
+- ボスが複数いるとき体力バーと「記憶」の文字が重なる問題、ボス4体の体力バーが画面を覆いすぎる問題を修正しました。
+- ママの小言の文字が体力バーと一時停止画面を隠す問題を修正しました。
+- メインメニュー・結果画面で一部の効果音が鳴らない問題と、一時停止メニューで敵の説明がボタンを隠す問題を修正しました。
+- 続きから再開したときボスの位置がずれる・「風化」の通知が再び出る問題、ボス登場演出が選択ウィンドウに重なる問題、まれに敵が異常に大きくなる問題を修正しました。
 
 ## バランス調整
 
-- **開発者の体力**: 200,000 → **100,000**
-- **開発者のママの体力**: 400,000 → **200,000**
-- **開発者のママの降臨に必要な魂**: 3,000 → **1,000**
-- **ボス報酬の中央の枠**: 魂のかけら +40～70 → **宝箱の報酬**（レア60%・ノーマル25%・伝説15%）
-- **超越カードの間隔（ストーリーモード）**: ゲージ3回 → **2回**（エンドレス・デイリーは3回のまま）
-- **エンドレスの雑魚のポイント**: 常に×1 → 2,000体までは×1、その後 **×0.5**、8,000体以降 **×0.2**
-- **エンドレスのクリアボーナス**: 1,500P → **5,000P**
-- **魂の重みのポイント**: 重み1ごとに+5% → **+8%**
-- **魂の精錬の費用（ストーリーモード）**: 40・200・1,000・5,000 → **60・180・540・1,620・4,860**
-- **盗賊の進化「幻影の煙幕」**: 煙幕の中で敵の攻撃が40%の確率で外れる → 煙幕の中で**受けるダメージ90%減少**（常に同じ効果）
+- **ボス報酬の中央の枠**: 「生命」・「回復」が出る → **出ない**
+- **ボス報酬の中央の枠（続きから）**: 再開するたびに引き直し → **最初に引いた枠のまま**
+- **空間侵食中、結界攻撃以外の被ダメージ1回の上限**: 最大体力の40% → **25%**
+- **結界・空間侵食中の溶岩の溜まり**: 0.6秒ごとに6ダメージ → **ダメージなし**（沼の減速もなし）
+- **詠唱中のボスの結界**: 詠唱が終わるまで待つ → **ゲージが満タンになってから最大3秒で詠唱を中断して展開**
 
 === zh
-# 1.2.5 更新 — 再来一局！
+# 1.2.6 更新 — 问题修复与打磨
 
-- **空间侵蚀**: 无尽模式中场上有两名以上首领时，必杀技槽会合而为一。充满后会展开覆盖整个竞技场的结界「空间侵蚀」，所有首领的结界攻击以更短的间隔倾泻而下。开发者会新使用「调试模式」，开发者的妈妈会新使用「妈妈的大扫除」结界。
-- **破绽**: 首领和中头目身上会出现发光的破绽。用亲手瞄准的攻击击中时，弹造成+75%伤害，近战攻击和霰弹枪+40%，投掷攻击的直击+60%。弓箭手的「完美！」之箭和钟表匠的「整点」齿轮会触发「完美破绽！」，伤害提高得更多。
-- **会记忆的首领**: 首领的生命降到特定数值时，会记住此前受到最多的攻击并将其挡下。用其他攻击打破记忆，首领会短暂踉跄。
-- **灵魂契约**: 每局都会给出3个目标，达成后立即获得点数。填满主菜单中45格的契约面板，即可解锁9种新遗物与称号。
-- **亡者信使 · 记忆碎片**: 倒下时会听到一句符合当时情况的话。每位英雄可收集6块记忆碎片，并在图鉴的「记忆」页阅读。
-- **调整解锁顺序**: 无尽模式改为通关「普通」解锁，每日挑战改为通关「简单」解锁。制图师 · 钟表匠 · 幽灵也可以通过故事模式解锁。
-- **无尽模式 · 每日挑战奖励**: 无尽模式中首次坚持到5 · 10 · 15 · 20分钟等时可获得点数。每日挑战新增5 · 10 · 15分钟奖励、连续签到与完成奖励，规则增加到14种。
-- **便利功能**: 可以在ESC菜单中查看当前拥有的技能，暂停时将鼠标移到图标上即可查看说明。还新增了构筑详情、记录窗口、加载画面、图鉴搜索和复制结果。
-- **设置**: 新增辅助功能与显示页。可以选择攻击锁定、必杀技切换、对话速度、减少动态效果、快速演出、战斗统计和显示器选择。
-- 打开Steam界面或游戏手柄断开时会自动暂停。战斗中鼠标不会移出窗口。
-- 试玩版的舞台改为草原 · 史莱姆王，并且可以使用幽灵游玩。
-- 修复了回旋飞镖过早折返、无尽模式 · 每日挑战的背景音乐突然切换、击败开发者后敌人过多导致卡顿，以及右上角通知被灵魂树按钮遮挡的问题。
-- 重新润色了游戏内的所有说明文字，使其更易阅读。
+- **修复王之领地**：修复了在无尽模式中击败首领后地形不变的问题。现在领地会扩散，并出现熔岩与沼泽。
+- 修复了15分钟「最后时刻」在结界 · 空间侵蚀途中开始的问题。「寂静之眼」不再出现在池子上。
+- 修复了多个首领同时出现时生命条与「记忆」文字重叠的问题，以及四个首领的生命条遮挡画面过多的问题。
+- 修复了妈妈的唠叨文字遮挡生命条与暂停画面的问题。
+- 修复了主菜单 · 结算画面部分音效不播放的问题，以及暂停菜单中敌人说明遮挡按钮的问题。
+- 修复了继续游戏后首领位置错乱或「风化」提示再次出现、首领登场演出与选择窗口重叠、敌人偶尔异常变大的问题。
 
 ## 平衡调整
 
-- **开发者生命**: 200,000 → **100,000**
-- **开发者的妈妈生命**: 400,000 → **200,000**
-- **开发者的妈妈降临所需灵魂**: 3,000 → **1,000**
-- **首领奖励中间格**: 灵魂碎片 +40～70 → **宝箱奖励**（稀有60% · 普通25% · 传说15%）
-- **超越卡间隔（故事模式）**: 3条 → **2条**（无尽模式 · 每日挑战仍为3条）
-- **无尽模式小怪点数**: 始终×1 → 2,000只以内×1，之后 **×0.5**，8,000只之后 **×0.2**
-- **无尽模式通关奖励**: 1,500P → **5,000P**
-- **灵魂之重点数**: 每重+5% → **+8%**
-- **灵魂精炼费用（故事模式）**: 40 · 200 · 1,000 · 5,000 → **60 · 180 · 540 · 1,620 · 4,860**
-- **盗贼进化「幻影烟幕」**: 烟幕中敌人的攻击有40%概率落空 → 烟幕中**受到的伤害降低90%**（效果始终不变）
+- **首领奖励中间格**：会出现「生命」 · 「回复」 → **不再出现**
+- **首领奖励中间格（继续游戏）**：每次继续都重新抽取 → **保持第一次抽到的格子**
+- **空间侵蚀中非结界攻击的单次伤害上限**：最大生命的40% → **25%**
+- **结界 · 空间侵蚀中的熔岩池**：每0.6秒6点伤害 → **无伤害**（沼泽也不再减速）
+- **正在施法的首领的结界**：等待施法结束 → **槽充满后最多3秒内打断施法并展开**
