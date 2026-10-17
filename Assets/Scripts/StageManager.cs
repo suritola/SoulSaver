@@ -30,6 +30,7 @@ public class StageManager : MonoBehaviour
     // 지하 묘역의 시작 자리 · 배경색 (2.1.1~ 묘역이 2장이 되어 나중에 다시 켤 때)
     Vector3 caveStart;
     Color caveBackground;
+    public Color CaveBackground => caveBackground;      // 1.2.3~ 무한 지형 변화 배경색 섞기
     GameObject[] endlessBosses;
 
     [Header("UI")]

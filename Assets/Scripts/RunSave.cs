@@ -71,6 +71,8 @@ public static class RunSave
         public int endlessMomKillBase = -1;             // 개발자를 쓰러뜨린 순간의 판 처치 수 (-1 = 아직)
         public int endlessTrophies;                     // 진화를 다 마친 뒤 받은 전리품 수 (효과는 기록 bt<번호> 로 다시 적용)
         public bool endlessStartGiven;                  // 레벨 10 시작 보너스를 받았음 (false 면 이어할 때 줌)
+        public int terrainSeed;                         // 지형 변화 시드 (0 = 옛 저장 → 사막으로 새로 시작 · EndlessTerrain.Save · Restore)
+        public string terrain = "";                     // 지형 변화 기록 (처치마다 한 항목, ';' 로 구분 · 형식은 EndlessTerrain.Save)
     }
 
     // 이번 판에서 지금까지 한 선택

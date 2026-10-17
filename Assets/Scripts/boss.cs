@@ -273,6 +273,7 @@ public class bosss : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        if (GameMode.IsEndless) EndlessTerrain.NoteBossDown(developer ? -1 : bossKind, transform.position);     // 1.2.3~ 쓰러진 왕의 영토가 이 자리에서 번짐
 
         bool lastOne = !IsSlime || SlimeRemaining() <= 0;
         if (lastOne && LiveCount == 0) bossbar.bossSpawn = false;      // 다른 보스가 남아 있으면 체력바는 그 보스로

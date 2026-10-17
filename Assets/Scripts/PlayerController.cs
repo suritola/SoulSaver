@@ -200,6 +200,7 @@ public class PlayerController : MonoBehaviour
         new List<GameObject>();
 
     private Vector3 move;
+    public Vector3 MoveInput => move;       // 1.2.3~ 지형 장애물 끼임 방지 (EndlessTerrain)
 
     private Animator animator;
 
@@ -708,7 +709,8 @@ void Shoot()
 
     public void Slow(float factor, float seconds)
     {
-        slowFactor = factor;
+        // 1.2.3~ 감속이 걸려 있는 동안은 더 센 쪽을 남김 (점액 늪이 매 프레임 불러도 보스 감속이 약해지지 않게)
+        slowFactor = Time.time < slowUntil ? Mathf.Min(slowFactor, factor) : factor;
         slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
     }
 

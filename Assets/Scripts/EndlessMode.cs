@@ -96,6 +96,8 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + FirstBossAt;
         nextMidBoss = Time.time + MidBossFrom;
         BuildHud();
+        // 1.2.3~ 지형 변화 「왕들의 영토」 시드 (일일 도전은 그날 시드 · 이어하기는 RestoreRun 이 저장한 시드로 Restore)
+        if (!resumed && EndlessTerrain.Instance != null) EndlessTerrain.Instance.Begin(daily ? DailyChallenge.RunSeed : EndlessTerrain.NewSeed());
         if (!resumed) StartCoroutine(StartAtLevel(10));     // 1.2.3~ 이어하기는 LevelShop.RestoreLevels 가 레벨 · 대기 레벨업을 이미 되살렸음 (다시 주면 두 번 쌓임)
     }
 
@@ -167,6 +169,7 @@ public class EndlessMode : MonoBehaviour
     void StartFinal()
     {
         finalStage = 1;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnFinalBegin();      // 1.2.3~ 지형 조각이 모두 꺼짐 (시각이 아니라 최종 국면 시작에 묶음)
         nextBoss = float.MaxValue;
         int made = 0;
         if (bossPrefabs != null)
@@ -306,6 +309,7 @@ public class EndlessMode : MonoBehaviour
         yield return new WaitForSecondsRealtime(5f);
         // 1.1.4~ 한계 돌파: 최종 보스 곡을 끄고(평소 · 보스 곡으로) 적 · 보스를 다시, 초월 카드도 다시 열림 (Cleared 는 finalStage 3 동안만)
         finalStage = 4;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnBeyond();          // 1.2.3~ 처치마다 다시 영토가 번짐
         finalMusic = 0;
         spawner.spawningEnabled = true;
         spawner.bossCleared = false;
@@ -334,6 +338,7 @@ public class EndlessMode : MonoBehaviour
         if (devDown && !devWas && !momSummoned) { momKillBase = RunStats.Kills; StartCoroutine(ForeshadowMom()); }
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnBossDefeated(BossesDefeated, finalStage);     // 1.2.3~ 쓰러진 왕의 영토가 번짐 (처치 연출 · 진화 창 뒤)
         if (SpecialAbilities.UsesEvolution)
         {
             // 보스마다 무기 진화: 1차 → 2차 → 각성 (최대 3번)
@@ -378,6 +383,7 @@ public class EndlessMode : MonoBehaviour
             for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
                 if (bossPrefabs[i] != null && bossPrefabs[i].TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind)) mask |= 1 << i;
         d.endlessFinalAlive = mask;
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.Save(out d.terrainSeed, out d.terrain);     // 1.2.3~ 지형 변화
     }
 
     // 1.2.3~ 이어하기 (StageManager.Opening): Init 바로 뒤 · 같은 프레임에 (Update 가 먼저 돌면 복원 전 상태로 StartFinal 이 잘못 걸림)
@@ -408,6 +414,8 @@ public class EndlessMode : MonoBehaviour
             devSummoned = d.endlessDevSummoned; momSummoned = d.endlessMomSummoned;
             if (d.endlessBossAlive) nextBoss = Time.time;            // 다음 Update 에서 SpawnBoss → 같은 보스가 바로 (체력 가득)
         }
+        // 1.2.3~ 지형 변화: 국면 · 플레이어 자리가 되살아난 뒤, 적이 나오기 전 — 기록대로 즉시 (파동 · 알림 없이)
+        if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.Restore(d.terrainSeed, d.terrain);
     }
 
     // 15분 최종 국면에서 살아 있던 종류만 다시 (StartFinal 과 같은 자리 · 같은 깃발 · 비트가 비어 있으면 모두)
@@ -542,6 +550,7 @@ public class EndlessMode : MonoBehaviour
         GameObject map = ReskinHellMap(hellMap, "DesertMap", "Desert", "_desert", out Dictionary<string, Sprite> desert, out int sorting, out int order);
         if (map == null) return null;
         ScatterProps(map.transform, desert, areaMin, areaMax, keepClear, sorting, order + 1);
+        map.AddComponent<EndlessTerrain>().Init(map, areaMin, areaMax, desert, sorting, order);     // 1.2.3~ 보스 처치마다 지형 변화
         map.AddComponent<DesertAmbience>();
         return map;
     }
@@ -657,7 +666,7 @@ public class FireFlicker : MonoBehaviour
     }
 }
 
-// 사막 전체: 화면 주변에 불티가 떠오르고 가끔 모래 바람이 스침
+// 사막 전체: 화면 주변에 불티가 떠오르고 가끔 모래 바람이 스침 (1.2.3~ 영토 위에서는 그 영토의 바람 색 · 불티는 사막 · 지옥만)
 public class DesertAmbience : MonoBehaviour
 {
     float nextEmber, nextGust;
@@ -668,8 +677,9 @@ public class DesertAmbience : MonoBehaviour
         if (cam == null || Time.timeScale == 0f) return;
         float h = cam.orthographicSize, w = h * cam.aspect;
         Vector3 c = cam.transform.position;
+        int realm = EndlessTerrain.Instance != null ? EndlessTerrain.Instance.RealmAt(c) : EndlessTerrain.Desert;
 
-        if (Time.time >= nextEmber)
+        if (Time.time >= nextEmber && EndlessTerrain.Embers(realm))
         {
             nextEmber = Time.time + 0.06f;
             Vector3 p = new Vector3(c.x + Random.Range(-w, w), c.y - h - 0.5f + Random.Range(0f, h * 0.6f), 0f);
@@ -679,7 +689,7 @@ public class DesertAmbience : MonoBehaviour
         {
             nextGust = Time.time + Random.Range(2.5f, 5f);
             Vector3 from = new Vector3(c.x - w - 2f, c.y + Random.Range(-h, h), 0f);
-            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), new Color(0.95f, 0.78f, 0.5f, 0.35f), 10f);
+            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), EndlessTerrain.Gust(realm), 10f);
         }
     }
 }

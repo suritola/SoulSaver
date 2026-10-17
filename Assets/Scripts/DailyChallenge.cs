@@ -44,6 +44,7 @@ public static class DailyChallenge
     public static DateTime Today => DateTime.UtcNow.Date;
     public static string Key(DateTime day) => day.ToString("yyyyMMdd");
     static int Seed(DateTime day) => day.Year * 10000 + day.Month * 100 + day.Day;
+    public static int RunSeed => Seed(runDay);      // 1.2.3~ 무한 지형 변화 시드 (같은 날 같은 얼룩 모양 · 난수 순서 · 얼룩 중심과 조각 자리는 보스가 쓰러진 자리 · 플레이에 따라 다름)
 
     // 그날의 캐릭터 (만들어진 캐릭터 중에서, 아직 사지 않은 캐릭터도 이날은 빌려 씀)
     public static CharacterId CharacterOf(DateTime day)
