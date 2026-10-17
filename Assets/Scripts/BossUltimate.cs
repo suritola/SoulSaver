@@ -53,8 +53,9 @@ public class BossUltimate : MonoBehaviour
         if (boss != null && (kind != 2 || boss.slimeGen == 1))
         {
             gauge[kind] = 0f;
-            refHp[kind] = Mathf.Max(1f, boss.setEnemyHP);
-            usedThisFight[kind] = false;
+            refHp[kind] = Mathf.Max(1f, boss.restoreMaxHp > 0 ? boss.restoreMaxHp : boss.setEnemyHP);
+            // 1.2.3~ 무한 이어하기로 되살린 보스: 저장 때 이미 체력 40% 아래였으면 결계를 썼던 것으로 (이어하자마자 4초 만에 다시 펼치지 않게 · 게이지는 저장하지 않음)
+            usedThisFight[kind] = boss.restoreMaxHp > 0 && boss.restoreHp > 0f && boss.restoreHp < boss.restoreMaxHp * 0.4f;
             lastHit[kind] = Time.time;
         }
     }
@@ -401,6 +402,20 @@ public class BossUltimate : MonoBehaviour
                 Fx.Spawn("fx_spark", to, 2.2f, Color.white, 18f);
             }
             e.transform.position = to;
+        }
+        // 1.2.3~ 무한 모드에서 겹쳐 나온 다른 보스도 결계 밖으로 (결계는 펼친 보스와 1:1 · 다른 보스의 기술 · 부하는 Active 동안 이미 멈춤, 이동 · 몸통만 남았었음)
+        float bossEdge = r + 2.2f;
+        foreach (bosss o in bosss.Live)
+        {
+            if (o == null || o == boss || o.IsDead) continue;
+            Vector3 pos = o.transform.position;
+            Vector3 d = pos - center;
+            d.z = 0f;
+            if (d.sqrMagnitude >= bossEdge * bossEdge) continue;
+            if (d.sqrMagnitude < 0.01f) d = Vector3.left;
+            Vector3 to = EdgeInArena(d, bossEdge);
+            to.z = pos.z;
+            o.transform.position = to;
         }
     }
 

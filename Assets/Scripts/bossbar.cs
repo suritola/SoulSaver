@@ -21,6 +21,7 @@ public class bossbar : MonoBehaviour
     public const int DeveloperKind = 9;       // 무한 모드 최종 보스 「개발자」 (이름만 · 1.0.2)
     public const int DeveloperMomKind = 10;   // 1.0.4~ 30분의 「개발자 엄마」 (이름만)
     public int bossKind = 0;            // 0 = 리치 왕, 1 = 지옥의 군주, 2 = 킹 슬라임, 3 = 거울의 군주 (보스가 매 프레임 알려줌)
+    public float erosion = 1f;          // 1.2.3~ 무한 모드 모래 폭풍 풍화 배율 (보스가 매 프레임 알려줌 · 이름 뒤 「풍화 +n%」)
 
     TMP_Text nameText;
     RectTransform barRect;
@@ -63,6 +64,10 @@ public class bossbar : MonoBehaviour
         public Color fillColor, backColor;
         public float shownFront = -1f, shownGhost = -1f, shownIgnite = -1f;
         public bosss drawnFor;                      // 지난번에 그린 보스 (바뀌면 지난 보스 값이 남지 않게 다시 그림)
+        // 1.2.3~ 이름 글자 캐시 (SetBar): 값이 바뀔 때만 문자열을 새로 (예전엔 여러 줄일 때 매 프레임 줄마다 문자열을 만들어 비교했음)
+        public bosss nameFor;
+        public int nameKind = -1, nameNow = -1, nameMax = -1, nameErode = -1;
+        public Loc.Lang nameLang;
     }
     static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
     static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
@@ -143,10 +148,10 @@ public class bossbar : MonoBehaviour
             if (split && liveSlimes.Count > 0)
             {
                 // 슬라임마다 자기 체력 (각자 따로 깎이고, 이름 번호는 그 개체에 고정)
-                SetBar(nameText, liveSlimes[0]);
+                SetBar(main, nameText, liveSlimes[0]);
                 Draw(main, liveSlimes[0]);
                 ShowExtraBars(liveSlimes.Count - 1);
-                for (int i = 1; i < liveSlimes.Count; i++) { SetBar(extraNames[i - 1], liveSlimes[i]); Draw(extraRows[i - 1], liveSlimes[i]); }
+                for (int i = 1; i < liveSlimes.Count; i++) { SetBar(extraRows[i - 1], extraNames[i - 1], liveSlimes[i]); Draw(extraRows[i - 1], liveSlimes[i]); }
                 wasMulti = true;
                 return;
             }
@@ -156,10 +161,10 @@ public class bossbar : MonoBehaviour
         {
             liveBosses.Clear();
             liveBosses.AddRange(bosss.Live);
-            SetBar(nameText, liveBosses[0]);
+            SetBar(main, nameText, liveBosses[0]);
             Draw(main, liveBosses[0]);
             ShowExtraBars(liveBosses.Count - 1);
-            for (int i = 1; i < liveBosses.Count; i++) { SetBar(extraNames[i - 1], liveBosses[i]); Draw(extraRows[i - 1], liveBosses[i]); }
+            for (int i = 1; i < liveBosses.Count; i++) { SetBar(extraRows[i - 1], extraNames[i - 1], liveBosses[i]); Draw(extraRows[i - 1], liveBosses[i]); }
             wasMulti = true;
             return;
         }
@@ -195,12 +200,21 @@ public class bossbar : MonoBehaviour
     readonly List<GameObject> extraBars = new List<GameObject>();
     readonly List<TMP_Text> extraNames = new List<TMP_Text>();
 
-    // 줄 이름 글자 (막대 길이는 Draw 가 그림)
-    void SetBar(TMP_Text label, bosss s)
+    // 줄 이름 글자 (막대 길이는 Draw 가 그림) · 1.2.3~ 보스 · 체력 숫자 · 풍화 · 언어가 바뀔 때만 글자를 새로
+    void SetBar(Row r, TMP_Text label, bosss s)
     {
-        string n = (s.bossKind == 2 && s.slimeGen >= 2 ? BossName(2) + " " + (s.barSlot + 1) : (s.developer ? BossName(s.developerMom ? DeveloperMomKind : DeveloperKind) : BossName(s.bossKind))) + "  " + Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth)) + " / " + s.setEnemyHP;
-        if (label != null && label.text != n) label.text = n;
+        if (r == null || label == null || s == null) return;
+        int kind = s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind == 2 && s.slimeGen >= 2 ? 100 + s.barSlot : s.bossKind;
+        int now = Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
+        int erode = s.developer ? 0 : ErodePct(s.erosionMul);
+        if (r.nameFor == s && r.nameKind == kind && r.nameNow == now && r.nameMax == s.setEnemyHP && r.nameErode == erode && r.nameLang == Loc.Current) return;
+        r.nameFor = s; r.nameKind = kind; r.nameNow = now; r.nameMax = s.setEnemyHP; r.nameErode = erode; r.nameLang = Loc.Current;
+        label.text = (kind >= 100 ? BossName(2) + " " + (s.barSlot + 1) : BossName(kind)) + "  " + now + " / " + s.setEnemyHP + ErodeTag(erode);
     }
+
+    // 1.2.3~ 모래 폭풍 풍화: 받는 피해가 몇 % 늘었는지 (10% 단위 내림 · 글자가 덜 바뀌게)
+    static int ErodePct(float mul) => mul <= 1f ? 0 : Mathf.FloorToInt((mul - 1f) * 10f + 0.001f) * 10;
+    static string ErodeTag(int pct) => pct > 0 ? "  <color=#F0C060>" + Loc.T("풍화") + " +" + pct + "%</color>" : "";
 
     // 위쪽 보스 체력바(배경 · 채움 · 이름)를 복제해 아래로 쌓음
     void ShowExtraBars(int count)
@@ -357,16 +371,19 @@ public class bossbar : MonoBehaviour
 
     // 보스가 한 마리일 때 이름 + 「현재 / 최대」 (1.0.4~: 예전엔 여러 마리일 때만 숫자가 보였음)
     // 숫자 · 보스 · 언어가 바뀔 때만 글자를 새로
-    int shownNow = -1, shownMax = -1;
+    int shownNow = -1, shownMax = -1, shownErode = -1;
     void WriteSingleName()
     {
         if (nameText == null) return;
         int now = Mathf.Max(0, NowHealth);
-        if (shownKind == bossKind && shownLang == Loc.Current && shownNow == now && shownMax == MaxHealth) return;
+        int erode = bossKind >= DeveloperKind ? 0 : ErodePct(erosion);
+        if (shownKind == bossKind && shownLang == Loc.Current && shownNow == now && shownMax == MaxHealth && shownErode == erode) return;
         shownKind = bossKind;
         shownLang = Loc.Current;
         shownNow = now;
         shownMax = MaxHealth;
-        nameText.text = BossName(bossKind) + (MaxHealth > 0 ? "  " + now + " / " + MaxHealth : "");
+        shownErode = erode;
+        nameText.text = BossName(bossKind) + (MaxHealth > 0 ? "  " + now + " / " + MaxHealth : "") + ErodeTag(erode);
+        if (main != null) main.nameFor = null;      // 여러 줄로 돌아가면 첫 줄 이름을 다시 씀
     }
 }

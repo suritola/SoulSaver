@@ -57,11 +57,11 @@ public class Point : MonoBehaviour
         }
     }
 
-    public void AddPoint(int point)
+    public void AddPoint(int point, float mul = 1f)       // 1.2.3~ mul: 적마다 따로 거는 배율 (무한 모드 개발자 · 엄마전 약한 잡몹 0.25)
     {
         // 1.1~ 포인트 배율 (1.2~ TotalMul) — 포인트를 주는 곳(boss.cs · EnermyController.cs)은 이 함수 하나만 부름
         // 소수는 확률로 반올림 (11.5 → 50% 확률로 12) · 게임 난수(UnityEngine.Random, 일일 도전 시드)는 건드리지 않게 따로 뽑음
-        float v = point * TotalMul;
+        float v = point * TotalMul * mul;
         point = Mathf.FloorToInt(v + 0.001f);
         if (v - point > 0.001f && Rng.NextDouble() < v - point) point++;
         points += point;

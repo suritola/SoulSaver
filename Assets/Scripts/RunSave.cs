@@ -61,9 +61,9 @@ public static class RunSave
         // 1.2.3~ 무한 모드 (EndlessMode.SaveRun · RestoreRun 이 적고 되살림 · 이야기 판 저장에는 모두 기본값)
         public float endlessSeconds;                    // GameMode.EndlessSeconds — 경과 시간
         public int endlessBosses;                       // 쓰러뜨린 보스 수
-        public int endlessTurn;                         // 다음에 나올 보스 차례 (보스가 살아 있었으면 1 뺀 값: 같은 보스가 다시 나오게)
+        public int endlessTurn;                         // 다음에 나올 보스 차례 (보스가 살아 있었는데 endlessLiveBosses 가 비었으면 1 뺀 값: 같은 보스가 다시 나오게)
         public bool endlessBossAlive;                   // 평소 · 한계 돌파의 보스가 살아 있었음 → 이어할 때 바로 다시 (체력 가득)
-        public float endlessNextBoss = -1f;             // 다음 보스까지 남은 초 (-1 = 예약 없음)
+        public float endlessNextBoss = -1f;             // 다음 보스까지 남은 초 (-1 = 예약 없음 · 1.2.3~ 보스가 살아 있으면 겹쳐 나올 때까지)
         public float endlessNextMid = -1f;              // 다음 중간 보스까지 남은 초
         public int endlessFinal;                        // finalStage 0 평소 · 1 모든 보스 · 2 개발자(· 엄마) · 4 한계 돌파 (3 클리어 연출 중은 4 로)
         public int endlessFinalAlive;                   // finalStage 1: 살아 있던 보스 종류 (bossPrefabs 번호 비트)
@@ -73,6 +73,9 @@ public static class RunSave
         public bool endlessStartGiven;                  // 레벨 10 시작 보너스를 받았음 (false 면 이어할 때 줌)
         public int terrainSeed;                         // 지형 변화 시드 (0 = 옛 저장 → 사막으로 새로 시작 · EndlessTerrain.Save · Restore)
         public string terrain = "";                     // 지형 변화 기록 (처치마다 한 항목, ';' 로 구분 · 형식은 EndlessTerrain.Save)
+        // 1.2.3~ 보스 타이밍 「보스는 기다리지 않는다」 (EndlessMode.SaveRun · RestoreRun)
+        public bool endlessStorm;                       // 15:00 을 보스 처치 0 으로 넘김 (모래 폭풍 국면 · 이 판에선 최후의 시간이 열리지 않음)
+        public string endlessLiveBosses = "";           // 살아 있던 보스 (개발자 · 엄마 제외 · 최대 4): "종류,최대 체력,체력,살아 있은 초;…" — 비어 있으면 endlessBossAlive 로 예전처럼 (체력 가득)
     }
 
     // 이번 판에서 지금까지 한 선택

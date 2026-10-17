@@ -91,6 +91,9 @@ public class EnermyController : MonoBehaviour
     [HideInInspector] public bool difficultyApplied;
     // 보스가 나오기 전에 생긴 적 (처치 수로 보스를 부름): 처치 수가 늘어난 만큼 보상 · 영혼 조각을 나눔
     [HideInInspector] public bool countsTowardBoss;
+    // 1.2.3~ 처치 포인트 배율 (무한 모드 개발자 · 엄마전 약한 잡몹 0.25 · 경험치 · 처치 수 · 영혼 조각은 그대로)
+    [System.NonSerialized] public float pointMul = 1f;
+    [System.NonSerialized] public bool finalMob;           // 1.2.3~ 규칙 E 잡몹 (EnemySpawner.finalMobs 로 따로 셈)
     // 1.1~ 영혼 부스러기 무리 (SwarmWave): 있으면 이동 · 몸통 닿기 · 죽은 뒤 처리를 부스러기가 맡음 (체력바 없음 · 한 화면 최대 수 · 보스까지 처치 수와 따로 셈)
     [HideInInspector] public SwarmMote swarm;
 
@@ -470,7 +473,7 @@ public class EnermyController : MonoBehaviour
             Point point = Cache<Point>.Get;
 
             // 1.0.4~: 중간 보스는 +100P (예전엔 일반 적과 같은 10P)
-            if (point != null) point.AddPoint(IsMidBoss ? 100 : 10);
+            if (point != null) point.AddPoint(IsMidBoss ? 100 : 10, pointMul);
 
             // 영혼 조각: 강한 적 · 중간 보스일수록 많이 (중간 보스는 크게 알림)
             SoulShards.Add(SoulShards.ForEnemy(this), transform.position, IsMidBoss);
@@ -492,6 +495,7 @@ public class EnermyController : MonoBehaviour
         yield return new WaitForSeconds(1f);
         EnemySpawner enemySpawner = Cache<EnemySpawner>.Get;
         enemySpawner.spawnedEnemys--;
+        if (finalMob && enemySpawner.finalMobs > 0) enemySpawner.finalMobs--;
         // 총알에 죽었을 때만 코인 생성
         if (a == 1)
         {

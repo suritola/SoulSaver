@@ -488,7 +488,7 @@ public static class Hints
     static readonly string[] Keys = { "move", "levelup", "swap", "skill", "ult", "shop", "laststand", "soultree_buy", "soultree_btn", "upgrade",
                                              "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
                                              "relic", "mapprop",         // 1.2~ 유물 · 맵 물체
-                                             "terrain" };                // 1.2.3~ 무한 지형 변화
+                                             "terrain", "endless.bossqueue" };   // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
 
     public static void ResetAll()
     {

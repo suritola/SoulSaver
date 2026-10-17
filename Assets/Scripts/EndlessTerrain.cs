@@ -185,7 +185,7 @@ public class EndlessTerrain : MonoBehaviour
 
     public static int NewSeed() => new System.Random().Next(1, int.MaxValue);
 
-    // bosss.Die: 쓰러진 보스 종류(-1 = 개발자 · 엄마) · 자리 (처치 처리는 1초 뒤 OnBossDefeated)
+    // bosss.Death: 쓰러진 보스 종류(-1 = 개발자 · 엄마) · 자리 — 바로 뒤 같은 호출 안에서 OnBossDefeated 가 읽고 비움
     public static void NoteBossDown(int kind, Vector3 at)
     {
         lastKind = kind;
@@ -195,9 +195,11 @@ public class EndlessTerrain : MonoBehaviour
     // ================================================================= 판 흐름
     public void OnBossDefeated(int bossesDefeated, int finalStage)
     {
+        int kind = lastKind;
+        lastKind = -1;               // 1.2.3~ 한 번 쓰면 비움 (다음 처치가 앞 보스 기록을 다시 쓰지 않게)
         if (!ready || (finalStage >= 1 && finalStage <= 3) || (final && !beyond)) return;      // 최종 국면 · 개발자 · 엄마 · 클리어 연출: 지형은 그대로
-        if (lastKind < 0 || lastKind > 3) return;
-        Pending p = new Pending { realm = lastKind + 1, c = ClampCenter(lastAt), r = finalStage == 4 ? RadiusBeyond : stage + pendings.Count + 1 <= 4 ? RadiusEarly : RadiusLate };
+        if (kind < 0 || kind > 3) return;
+        Pending p = new Pending { realm = kind + 1, c = ClampCenter(lastAt), r = finalStage == 4 ? RadiusBeyond : stage + pendings.Count + 1 <= 4 ? RadiusEarly : RadiusLate };
         pendings.Add(p);
         StartCoroutine(Live(p));
     }

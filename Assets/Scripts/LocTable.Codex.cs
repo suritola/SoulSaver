@@ -88,10 +88,10 @@ public static partial class LocTable
           "Condition met! Unlock them for {0} P in the Characters window.",
           "条件を達成しました！キャラクター画面で {0} P で解放できます。",
           "已达成条件！可在角色界面花费 {0} P 解锁。");
-        C("codex.hint.dev", "무한 모드 15분, 깨어난 보스를 모두 쓰러뜨리면 누군가 내려옵니다.",
-          "At 15 minutes in Endless, defeat every awakened boss and someone descends.",
-          "エンドレス15分、目覚めたボスをすべて倒すと誰かが降りてきます。",
-          "无尽模式15分钟时，击败所有苏醒的首领，就会有人降临。");
+        C("codex.hint.dev", "무한 모드에서 보스를 하나라도 쓰러뜨린 채 15분을 버티면 모든 보스가 깨어나고, 모두 쓰러뜨리면 누군가 내려옵니다.",
+          "Survive 15 minutes in Endless with at least one boss defeated and every boss awakens; defeat them all and someone descends.",
+          "エンドレスでボスを1体でも倒したまま15分耐えると全てのボスが目覚め、すべて倒すと誰かが降りてきます。",
+          "在无尽模式中至少击败一名首领并坚持到15分钟，所有首领将苏醒；全部击败后，就会有人降临。");
         C("codex.hint.mom", "개발자를 쓰러뜨린 뒤 영혼 3000개를 거두면, 개발자보다 더 무서운 누군가가 강림합니다.",
           "Reap 3,000 souls after defeating the Developer, and someone scarier descends.",
           "開発者を倒した後に魂を3000個集めると、開発者よりも恐ろしい誰かが降臨します。",
