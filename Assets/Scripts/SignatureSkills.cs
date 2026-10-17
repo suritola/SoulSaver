@@ -155,7 +155,6 @@ public partial class SignatureSkills : MonoBehaviour
     public static float Outgoing(GameObject target, float dmg) => Instance != null && target != null ? Instance.OutgoingMul(target, dmg) : dmg;
     public static void Hit(GameObject target, float dmg, bool killed) { if (Instance != null && target != null) Instance.OnHit(target, dmg, killed); }
     public static float Taken(float dmg) => Instance != null ? Instance.TakenMul(dmg) : dmg;
-    public static bool Evades() => Instance != null && Instance.who == CharacterId.Rogue && Instance.RogueEvade();      // 환영 연막: 맞기 전에 빗나감 판정
     public static void Hurt(float taken) { if (Instance != null) Instance.OnHurt(taken); }
     public static void Attacked(Vector3 start, Vector2 dir) { if (Instance != null) Instance.OnAttack(start, dir); }
     public static float MoveMul => Instance != null ? Instance.MoveMultiplier() : 1f;
@@ -198,6 +197,7 @@ public partial class SignatureSkills : MonoBehaviour
         switch (who)
         {
             case CharacterId.Swordsman: dmg = SwordTaken(dmg); break;
+            case CharacterId.Rogue: dmg = RogueTaken(dmg); break;
             case CharacterId.Cartographer: dmg = MapTaken(dmg); break;
             case CharacterId.Clockmaker: dmg = ClockTaken(dmg); break;
             case CharacterId.Postman: dmg = PostTaken(dmg); break;

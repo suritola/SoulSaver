@@ -220,21 +220,15 @@ public partial class SignatureSkills
         }
     }
 
-    // 환영 연막: 연막 안에 있으면 공격이 40% 확률로 빗나감
-    // 1.2.3~ 모두 빗나감(사실상 무적 — 돌진마다 연막이 깔려 그 안에 서 있으면 피해 0)이 너무 강하다는 의견 → 맞을 때마다 40% 확률
-    public const float PhantomMissChance = 0.4f;
-    //   1.2.3~ 피해 계산 뒤(무적 시간 · 피격 소리 · 맞음 처리 뒤)가 아니라 맞기 전에 판정 — 예전엔 빗나가도 맞은 것처럼 처리됐음 (PlayerController.TryHit → SignatureSkills.Evades)
-    bool RogueEvade()
+    // 환영 연막: 연막 안에 서 있는 동안 받는 피해 -90%
+    // 1.2.3 모두 빗나감(사실상 무적) → 40% 확률 빗나감 → 1.2.5~ 사용자 결정으로 확률 대신 받는 피해 90% 감소 (늘 같은 효과 · 피격 연출은 그대로)
+    public const float PhantomTakenMul = 0.1f;
+    float RogueTaken(float dmg)
     {
-        if (!E("re.phantom")) return false;
+        if (!E("re.phantom")) return dmg;
         foreach (SigZone z in smokes)
-            if (z != null && z.Contains(transform.position))
-            {
-                if (Random.value >= PhantomMissChance) return false;
-                SpecialAbilities.SharedFx?.FloatText(transform.position, Loc.T("빗나감"), new Color(0.8f, 0.7f, 1f), 3.5f, 0.4f);
-                return true;
-            }
-        return false;
+            if (z != null && z.Contains(transform.position)) return dmg * PhantomTakenMul;
+        return dmg;
     }
 
     void RogueTick()

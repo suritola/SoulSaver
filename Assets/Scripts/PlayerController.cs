@@ -1292,8 +1292,6 @@ void Shoot()
         if (TranscendRules.WardBlocks()) { invincibleUntil = Time.time + 0.5f; return false; }
         // 도적 회피 본능: 확률로 공격을 피함
         if (special != null && special.KitDodge()) return false;
-        // 도적 환영 연막: 연막 안이면 확률로 빗나감 (무적 시간 · 피격 소리 · 맞음 처리 전에)
-        if (SignatureSkills.Evades()) return false;
 
         invincibleUntil = Time.time + hurtInvincibleTime;
 

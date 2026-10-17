@@ -299,7 +299,7 @@ public static partial class LocTable
         A("영혼 회오리", "Soul Vortex", "魂の渦", "灵魂漩涡");
         A("잔향 베기가 흡수한 영혼만큼 커지고 강해지며, 쓴 영혼의 절반을 되돌려 줍니다.", "Echo Slash grows bigger and stronger with your stored souls, and refunds half of them.", "残響斬りが吸収した魂の分だけ大きく強くなり、使った魂の半分を返します。", "余响斩随储存的灵魂变大变强，并返还一半灵魂。");
         A("환영 연막", "Phantom Smoke", "幻影の煙幕", "幻影烟幕");
-        Entries["연막 안에 서 있는 동안 적의 공격이 모두 빗나갑니다."] = E("연막 안에 서 있는 동안 적의 공격이 40% 확률로 빗나갑니다.", "While you stand in your smoke, enemy attacks have a 40% chance to miss.", "煙幕の中にいる間、敵の攻撃が40%の確率で外れます。", "站在烟幕中时，敌人的攻击有40%的几率落空。");     // 1.2.3~ 모두 → 40%
+        Entries["연막 안에 서 있는 동안 적의 공격이 모두 빗나갑니다."] = E("연막 안에 서 있는 동안 받는 피해가 90% 줄어듭니다.", "While you stand in your smoke, damage taken is reduced by 90%.", "煙幕の中にいる間、受けるダメージが90%減少します。", "站在烟幕中时，受到的伤害降低90%。");     // 1.2.5~ 빗나감 → 받는 피해 -90%
         A("피바다", "Sea of Blood", "血の海", "血海");
         A("출혈 폭발이 주변 적에게도 같은 피해를 주고, 터질 때마다 체력을 회복합니다.", "Hemorrhage also hits nearby enemies for the same damage, and heals you each time.", "出血爆発が周りの敵にも同じダメージを与え、弾けるたびに体力を回復します。", "出血爆发对周围敌人造成同等伤害，并在每次爆发时恢复生命。");
         A("처형자의 길", "Executioner's Path", "処刑人の道", "处刑者之路");
