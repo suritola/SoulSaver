@@ -229,13 +229,16 @@ public partial class SignatureSkills
         }
     }
 
-    // 환영 연막: 연막 안에 있으면 공격이 빗나감
+    // 환영 연막: 연막 안에 있으면 공격이 40% 확률로 빗나감
+    // 1.2.3~ 모두 빗나감(사실상 무적 — 돌진마다 연막이 깔려 그 안에 서 있으면 피해 0)이 너무 강하다는 의견 → 맞을 때마다 40% 확률
+    public const float PhantomMissChance = 0.4f;
     float RogueTaken(float dmg)
     {
         if (!E("re.phantom")) return dmg;
         foreach (SigZone z in smokes)
             if (z != null && z.Contains(transform.position))
             {
+                if (Random.value >= PhantomMissChance) return dmg;
                 SpecialAbilities.SharedFx?.FloatText(transform.position, Loc.T("빗나감"), new Color(0.8f, 0.7f, 1f), 3.5f, 0.4f);
                 return 0f;
             }
