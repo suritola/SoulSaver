@@ -102,12 +102,11 @@ public class MusicManager : MonoBehaviour
         // 1.2.5~ 무한 모드는 「보스를 쓰러뜨릴 때마다」 다음 곡으로 (사막 → 동굴 → 지옥 → 초원 → 심연 → …)
         //   예전엔 판 시간 128초마다 바꿔서, 첫 보스(4분)가 나오기도 전인 2분 8초쯤 아무 일도 없는데 사막 곡이 곡 중간에서 1.2초 만에 동굴 곡으로 바뀌었음
         //   (판 시간은 레벨업 · 상점 · 일시정지 창에서 멈추지만 음악은 계속 흘러 곡 끝과도 맞지 않았음). 이제 곡은 보스 곡을 사이에 두고만 바뀌고,
-        //   처치 수는 이어하기에 저장되므로 이어해도 같은 곡. 일일 도전은 예전 그대로 시간마다
+        //   처치 수는 이어하기에 저장되므로 이어해도 같은 곡. 일일 도전도 같음
         int stage = StageManager.Instance != null ? StageManager.Instance.CurrentStage : 0;
         if (GameMode.IsEndless)
         {
-            if (DailyChallenge.Active || EndlessMode.Instance == null)
-                return EndlessTracks[((int)(Time.timeSinceLevelLoad / 128f)) % EndlessTracks.Length];
+            if (EndlessMode.Instance == null) return EndlessTracks[0];      // 일일 도전도 같은 규칙 (예전 128초 시간 순환은 곡 중간에 갑자기 바뀌었음)
             return EndlessTracks[EndlessMode.Instance.BossesDefeated % EndlessTracks.Length];
         }
         return stage == 0 ? "bgm_cave" : stage == 1 ? "bgm_hell" : stage == 2 ? "bgm_meadow" : "bgm_abyss";
