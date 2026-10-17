@@ -27,6 +27,7 @@ public class HPpack : MonoBehaviour
 
         // 같은 프레임에 두 번 닿아도 한 번만 회복
         used = true;
+        RunCounters.Add("meat");        // 1.2~ 영혼 계약 「든든한 한 끼」
         Destroy(pack);
         float before = playerC.PlayerHealth;
         playerC.PlayerHealth = Mathf.Min(playerC.PlayerMaxHealth, playerC.PlayerHealth + healAmount * SoulWeight.HealMul);     // 1.2~ 영혼의 무게 4: -40%

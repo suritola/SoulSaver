@@ -87,7 +87,7 @@ public static class SoulBrand
         bool cardsWere = cards != null && cards.activeSelf;
         if (cards != null) cards.SetActive(false);          // 첫 카드 창은 각인을 고른 뒤에
         float timeWas = Time.timeScale;                     // ChoiceUI 는 멈춤(0)이었으면 1 로 되돌리므로 닫은 뒤 다시 맞춤
-        yield return Pick("brand.pick.start");
+        yield return Pick("brand.pick.start", true);
         // 첫 카드 창을 다시 띄우면 창이 멈춰 둔 그대로 (0) · 카드 창이 없었으면 멈춘 채 굳지 않게 흐르는 시간으로
         if (cards != null && cardsWere)
         {
@@ -121,9 +121,21 @@ public static class SoulBrand
         }
     }
 
-    static IEnumerator Pick(string sub)
+    // 1.2~ 지난 판에 처음 고른 각인 (「지난 판 각인 그대로」 · 판 시작 1장만, 2 · 3장 보스 뒤 각인은 새로) — 각인 없는 판(일일 · 무한 · 첫 판)이면 없음
+    const string LastKey = "brand.last";
+    static SoulBrandDef LastStart
+    {
+        get
+        {
+            SoulBrandDef b = ContentRegistry.SoulBrandByCode(Prefs.GetString(LastKey, ""));
+            return b != null && b.Unlocked ? b : null;
+        }
+    }
+
+    static IEnumerator Pick(string sub, bool start = false)
     {
         if (picking || run.Count >= MaxPerRun) yield break;
+        SoulBrandDef same = start ? LastStart : null;
         List<SoulBrandDef> pool = new List<SoulBrandDef>();
         foreach (SoulBrandDef b in ContentRegistry.SoulBrands) if (b.Unlocked && !run.Contains(b)) pool.Add(b);
         if (pool.Count == 0) yield break;
@@ -137,9 +149,12 @@ public static class SoulBrand
         for (int i = 0; i < n; i++) options[i] = new ChoiceUI.Option(pool[i].NameKey, CardText(pool[i]), pool[i].color, pool[i].Icon);
         picking = true;
         int pick = 0;
+        if (same != null) { ChoiceUI.ExtraLabel = "brand.same"; ChoiceUI.ExtraTip = "brand.same.tip"; }
         try { yield return ChoiceUI.Run("brand.title", sub, options, k => pick = k); }
         finally { picking = false; }
-        Apply(pool[Mathf.Clamp(pick, 0, n - 1)]);
+        SoulBrandDef got = pick >= n && same != null ? same : pool[Mathf.Clamp(pick, 0, n - 1)];
+        if (start) { Prefs.SetString(LastKey, got.saveCode); Prefs.Save(); }
+        Apply(got);
     }
 
     // 카드 · 목록 설명: 효과 + 포인트 배율 (1보다 클 때만)

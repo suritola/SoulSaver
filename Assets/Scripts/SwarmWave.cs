@@ -79,10 +79,23 @@ public class SwarmWave : MonoBehaviour
         return true;
     }
 
+    // 1.2~ 무리 하나를 모두 쓰러뜨렸는지 (영혼 계약 「수확」): 무리마다 번호 · 남은 수 · 놓친 것
+    static int waveId, waveLeft;
+    static bool waveMissed;
+    public static void MoteDown(int wave, bool killed)
+    {
+        if (wave != waveId || waveLeft <= 0) return;
+        if (!killed) waveMissed = true;
+        if (--waveLeft == 0 && !waveMissed) RunCounters.Add("swarm");
+    }
+
     void Launch(EnemySpawner sp, StageManager sm, PlayerController p)
     {
         int count = Mathf.Min(Random.Range(MinCount, MaxCount + 1), PoolSize - Alive);
         if (count < MinCount / 2) return;       // 지난 무리가 아직 많이 남음
+        waveId++;
+        waveLeft = 0;
+        waveMissed = false;
 
         // 화면 대각선 밖에서 출발해 플레이어 쪽으로 (맵 안에서 출발하는 방향을 우선)
         float reach = 30f;
@@ -116,6 +129,8 @@ public class SwarmWave : MonoBehaviour
             SwarmMote m = Take();
             if (m == null) break;
             Vector2 at = start - dir * (i * Spacing) + side * (Mathf.Sin(i * 0.8f) * 0.5f);
+            m.Wave = waveId;
+            waveLeft++;
             m.Launch(at, dir, life, exp, i * 0.8f, layer, order);
         }
 

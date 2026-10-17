@@ -26,6 +26,7 @@ public static class GameSettings
     const string NoticeSizeKey = "settings.noticeSize";
     const string ConfineKey = "settings.confineCursor";
     const string OneClickKey = "settings.oneClickPick";
+    const string HeraldKey = "settings.herald";            // 1.2~ 망자의 전령 (쓰러진 뒤 한 줄)
     const string MaxFpsKey = "settings.maxFps";
     const string ShowFpsKey = "settings.showFps";
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
@@ -34,7 +35,7 @@ public static class GameSettings
     const float DefVolume = 0.5f, DefMusic = 1f, DefSfx = 1f, DefMouseSens = 1f;
     const bool DefMute = true, DefVSync = false, DefShowFps = false, DefShake = true, DefFlash = true;
     const int DefMaxFps = 1, DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
-    const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false;
+    const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false, DefHerald = true;
 
     static bool loaded;
     static float mouseSens = 1f;
@@ -47,7 +48,7 @@ public static class GameSettings
     static int damageNumbers;
     static int myFxAlpha;
     static int noticeSize = 1;
-    static bool confineCursor = DefConfine, oneClickPick = DefOneClick;
+    static bool confineCursor = DefConfine, oneClickPick = DefOneClick, herald = DefHerald;
     static int maxFps = DefMaxFps;
     static bool showFps;
 
@@ -133,6 +134,7 @@ public static class GameSettings
         noticeSize = Mathf.Clamp(Prefs.GetInt(NoticeSizeKey, DefNoticeSize), 0, 2);
         confineCursor = Prefs.GetInt(ConfineKey, B(DefConfine)) == 1;
         oneClickPick = Prefs.GetInt(OneClickKey, B(DefOneClick)) == 1;
+        herald = Prefs.GetInt(HeraldKey, B(DefHerald)) == 1;
     }
 
     static int B(bool v) => v ? 1 : 0;
@@ -151,6 +153,13 @@ public static class GameSettings
         set { Load(); oneClickPick = value; Prefs.SetInt(OneClickKey, B(value)); }
     }
 
+    // 1.2~ 망자의 전령: 쓰러진 뒤 결과 화면 전에 한 줄 (끄면 바로 결과 화면, Herald)
+    public static bool Herald
+    {
+        get { Load(); return herald; }
+        set { Load(); herald = value; Prefs.SetInt(HeraldKey, B(value)); }
+    }
+
     // 1.1.9~ 설정 「이 탭 기본값으로」: 속성을 거쳐 되돌려 부수 효과(볼륨 · UI 크기 · 커서 · 수직 동기화)가 그대로 따라옴
     public static void ResetGeneral()           // 언어는 그대로
     {
@@ -167,7 +176,7 @@ public static class GameSettings
     public static void ResetGameplay()
     {
         Hints = DefHints; DamageNumbers = DefDamageNumbers; MyFxAlphaIndex = DefMyFxAlpha; ColorBlind = DefColorBlind; GameCursor = DefGameCursor;
-        AutoLevelUp = DefAutoLevelUp; ConfineCursor = DefConfine; OneClickPick = DefOneClick; CodexSeen.ShowAll = false;
+        AutoLevelUp = DefAutoLevelUp; ConfineCursor = DefConfine; OneClickPick = DefOneClick; Herald = DefHerald; CodexSeen.ShowAll = false;
         Save();
     }
 

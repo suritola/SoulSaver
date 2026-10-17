@@ -187,6 +187,7 @@ public class StageManager : MonoBehaviour
         yield return StoryDirector.Intro(endless);
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
         if (endless && !Evo) yield return PickEndlessSpecials();
+        Contracts.BeginRun();                                   // 1.2~ 영혼 계약 세 장 (화면 아래 · 멈추지 않음)
         if (!endless) yield return SoulBrand.RunStart();        // 1.2~ 영혼 각인 3택 1 (쉬움을 클리어한 이야기 판만)
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;

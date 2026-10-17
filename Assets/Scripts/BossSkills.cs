@@ -969,6 +969,7 @@ public partial class BossSkills : MonoBehaviour
             if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f * Power);
             yield return null;
         }
+        if (!hit && p != null && !p.IsDying) RunCounters.AddLife("roll.dodge");      // 1.2~ 보드 「굴러오는 길」
         transform.rotation = Quaternion.identity;
         Fx.Spawn("fx_shock", transform.position, 6f * SlimeSize, Acid, 18f);
     }

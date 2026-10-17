@@ -21,8 +21,16 @@ public partial class SignatureSkills
     public static float InkSpreadMul() => Instance != null && Instance.IsMap && Instance.E("ke.blot") ? 2f : 1f;
     public static float CloseMul() => Instance != null && Instance.IsMap && Instance.E("ke.world") ? 1.5f : 1f;
     public static void Stroke(Vector3 a, Vector3 b, int hits) { if (Instance != null && Instance.IsMap) Instance.OnStroke(a, b, hits); }
-    public static void Closed(List<Vector3> poly, Vector3 center, float reach, List<Collider2D> inside) { if (Instance != null && Instance.IsMap) Instance.OnClosed(poly, center, reach, inside); }
-    public static void Folded(Vector3 center, Vector3 a, Vector3 b, List<Collider2D> caught, float dmg) { if (Instance != null && Instance.IsMap) Instance.OnFolded(center, a, b, caught, dmg); }
+    public static void Closed(List<Vector3> poly, Vector3 center, float reach, List<Collider2D> inside)
+    {
+        RunCounters.Both("shape");          // 1.2~ 영혼 계약 · 보드 (도형을 닫음)
+        if (Instance != null && Instance.IsMap) Instance.OnClosed(poly, center, reach, inside);
+    }
+    public static void Folded(Vector3 center, Vector3 a, Vector3 b, List<Collider2D> caught, float dmg)
+    {
+        RunCounters.Max("fold.pull", caught != null ? caught.Count : 0);       // 1.2~ 영혼 계약 「한 선 위의 열」
+        if (Instance != null && Instance.IsMap) Instance.OnFolded(center, a, b, caught, dmg);
+    }
 
     // ---------------- 상태
     float lastStroke = -99f;

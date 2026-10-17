@@ -155,7 +155,8 @@ public partial class CharacterKit
         if (depth == 0)
         {
             Deliveries++;
-            if (Deliveries % 10 == 0) PostBonus(at);
+            RunCounters.Both("letter");             // 1.2~ 영혼 계약 · 보드
+            if (Deliveries % 10 == 0) { PostBonus(at); RunCounters.Add("post.bonus"); }
         }
         if (card[2] > 0) stampStacks = Mathf.Min(StampMax, stampStacks + 1);
         Fx.Spawn("fx_sparkle", at, 1f, Letter, 24f);
@@ -326,6 +327,7 @@ public partial class CharacterKit
         expressRing.enabled = false;
         CancelUltAim();
         float dmg = Damage * (1.8f + 1.4f * expressCharge) * UltMul;       // 1.0.6~ 공격력 200 ~ 400% → 180 ~ 320%
+        RunCounters.Max("express.marks", expressMarks.Count);      // 1.2~ 영혼 계약 「여덟 장의 표식」
         if (expressMarks.Count > 0)
             SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.8f, Loc.T("속달") + " ×" + expressMarks.Count, PostRed, 4.5f, 0f);
         List<FxAnim> icons = new List<FxAnim>(expressIcons);

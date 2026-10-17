@@ -334,6 +334,9 @@ public class GamePad : MonoBehaviour
     // 확대(+) · 축소(-): RT · LT (영혼 트리)
     public static float ZoomAxis { get { if (!Usable) return 0f; Poll(); return !Active ? 0f : (rt ? 1f : 0f) - (lt ? 1f : 0f); } }
 
+    // 1.2~ X 를 방금 누름 (각인 고르기 창 「지난 판 각인 그대로」)
+    public static bool XDown { get { if (!Usable) return false; Poll(); return Active && Input.GetKeyDown(BtnX); } }
+
     // A 를 방금 누름 (대사 넘기기 · 연출 건너뛰기처럼 클릭 · 확정 어느 쪽이든 되는 곳)
     public static bool ADown { get { if (!Usable) return false; Poll(); return Input.GetKeyDown(BtnA); } }
 

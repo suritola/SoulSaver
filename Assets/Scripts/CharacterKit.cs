@@ -411,6 +411,8 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // canDraw: 지금 당길 수 있는지 (전용 무기 · 우클릭 중이면 아님), fullTime: 가득 당기는 데 걸리는 시간
+    int perfectRun;                     // 1.2~ 「완벽!」 연달아 (영혼 계약)
+
     public void UpdateBow(bool canDraw, float fullTime)
     {
         BowFired = false;
@@ -485,6 +487,9 @@ public partial class CharacterKit : MonoBehaviour
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
             power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
         if (Breathless && !autoRelease) power *= 0.5f;                          // 숨이 차면 절반
+        // 1.2~ 영혼 계약 · 보드: 「완벽!」 화살 · 연달아
+        if (perfect) { RunCounters.Both("perfect"); perfectRun++; RunCounters.Max("perfect.streak", perfectRun); }
+        else if (!autoRelease) perfectRun = 0;
         if (perfect)
         {
             RestoreBreath(PerfectBreath);                                       // 완벽한 사격은 숨을 되돌려 줌
@@ -544,6 +549,7 @@ public partial class CharacterKit : MonoBehaviour
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             if (unstable)
             {
+                RunCounters.Both("unstable");          // 1.2~ 영혼 계약 · 보드
                 // 불안정! 보라색 대폭발
                 Collider2D[] caught = Physics2D.OverlapCircleAll(p, r);
                 DamageCircle(p, r, hit, 2.2f);
@@ -838,6 +844,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         else
         {
+            if (Instability >= InstabilityMax - 0.001f) RunCounters.Add("alch.fullpour");       // 1.2~ 영혼 계약 「가득 채워 쏟기」
             float dmg = Damage * (4f + 8f * charge) * UltMul * SignatureSkills.BigFlaskMul() * ConsumeInstability();     // 증폭 용액 · 불안정도를 모두 쏟음
             PlayerMotion.Of(this).Throw(0.35f, (Vector2)(at - transform.position));     // 몸동작: 플라스크 던지기
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
@@ -916,6 +923,7 @@ public partial class CharacterKit : MonoBehaviour
         Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
+        RunCounters.Max("dash.hits", hit.Count);       // 1.2~ 영혼 계약 「한 번의 돌진, 여덟」
         DashMastery(to, mastery, hit.Count);
         SignatureSkills.DashEnd(from, to, hit);                  // 급습 · 궤적 칼날 · 그림자 매듭
     }

@@ -40,7 +40,7 @@ public static class ResultScreen
 
     // ================================================================= 다음 목표
     // 갈래마다(영웅 · 스킨 · 숙련 · 업적) 가장 가까운 것 하나씩 → 진행률 순으로 셋
-    static List<Goal> Goals()
+    static List<Goal> Goals(int max = 3)
     {
         List<Goal> all = new List<Goal>();
         if (Demo.On || TutorialRun.Active) return all;
@@ -94,17 +94,45 @@ public static class ResultScreen
         }
         if (ach != null) all.Add(ach.Value);
 
+        // 1.2~ 계약 보드: 지금 영웅 열 · 공용 줄에서 보이는 칸 중 가장 가까운 것 하나 (받을 보상이 있으면 그것을 먼저)
+        Goal? cell = BoardGoal();
+        if (cell != null) all.Add(cell.Value);
+
         all.Sort((a, b) => b.progress.CompareTo(a.progress));
-        if (all.Count > 3) all.RemoveRange(3, all.Count - 3);
+        if (all.Count > max) all.RemoveRange(max, all.Count - max);
         return all;
+    }
+
+    static Goal? BoardGoal()
+    {
+        if (!ContractBoard.Available) return null;
+        ContractBoard.Refresh(false);
+        HashSet<string> done = new HashSet<string>();
+        foreach (BoardCell c in ContractBoard.Cells) if (ContractBoard.IsDone(c.key)) done.Add(c.key);
+        Goal? best = null;
+        foreach (BoardCell c in ContractBoard.Cells)
+        {
+            if (c.heroRow && c.col != (int)CharacterData.Selected) continue;
+            if (!ContractBoard.Visible(c, done) || c.key == "c.last") continue;
+            bool isDone = done.Contains(c.key);
+            if (isDone && (ContractBoard.IsClaimed(c.key) || c.points <= 0)) continue;
+            float p = isDone ? 1f : (float)ContractBoard.Progress(c) / Mathf.Max(1, c.target);
+            string detail = isDone ? "<color=#7CFF9A>" + Loc.T("claim.badge").Replace("{0}", "1") + "</color>" : ContractBoard.Progress(c).ToString("N0") + " / " + c.target.ToString("N0");
+            Goal g = new Goal(Loc.T("board.open") + " · " + c.Name, p, detail, ContractBoard.RewardLine(c));
+            if (best == null || g.progress > best.Value.progress) best = g;
+        }
+        return best;
     }
 
     static string PointsLeft(int left) =>
         left > 0 ? Loc.T("해금까지") + " " + left.ToString("N0") + " P" : "<color=#7CFF9A>" + Loc.T("result.goal.ready") + "</color>";
 
     // 결과 화면 왼쪽 위 (이번 판 결과 글 위, 480 폭)
+    // 1.2~ 영혼 계약이 있던 판: 「이번 판 계약」 3줄 → 「영구 목표」 2줄 (BuildContracts) · 없던 판(튜토리얼 · 옛 저장)은 예전처럼 다음 목표 3줄
     public static void BuildGoals(Transform canvas)
     {
+        Contracts.EnsureEnded();
+        if (Contracts.LastRunOn && Contracts.LastRun.Count > 0) { BuildContracts(canvas); return; }
         List<Goal> goals = Goals();
         if (goals.Count == 0) return;
         UIKit.EnsureStyle();
@@ -159,6 +187,131 @@ public static class ResultScreen
         };
         write();
         panel.gameObject.AddComponent<LocRefresh>().refresh = write;
+    }
+
+    // ================================================================= 1.2~ 이번 판 계약 + 영구 목표
+    //   계약 한 줄 = 이름(달성 금빛 · 진행) + 아래 작은 글(달성 +P · 다음 판에 이어짐 · 접고 새로 뽑음) 44 높이
+    //   위 끝 y 515 · 아래 끝은 이번 판 결과 글 위끝(260) 위: 머리 28 + 계약 40×3 + 머리 28 + 목표 42×2 = 260 → 255 (목표 줄은 이름 · 수치 한 줄 + 얇은 막대 + 작은 설명)
+    static void BuildContracts(Transform canvas)
+    {
+        UIKit.EnsureStyle();
+        const float W = 480f, HeadH = 28f, RowH = 40f, GoalH = 42f;
+        List<Goal> goals = Goals(2);
+        float h = HeadH + RowH * Contracts.LastRun.Count + (goals.Count > 0 ? HeadH + GoalH * goals.Count : 0f);
+        RectTransform panel = UIKit.Rect("NextGoals", canvas, Vector2.zero, new Vector2(W, h));
+        panel.anchorMin = panel.anchorMax = new Vector2(0f, 0.5f);
+        panel.pivot = new Vector2(0f, 1f);
+        panel.anchoredPosition = new Vector2(60f, 515f);
+        float y = 0f;
+        TMP_Text head = UIKit.Text(panel, "contract.result.title", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        FixTop(head.rectTransform, -HeadH * 0.5f);
+        y -= HeadH;
+        int i = 0;
+        foreach (Contracts.Active a in Contracts.LastRun)
+        {
+            RectTransform row = UIKit.Rect("Contract", panel, Vector2.zero, new Vector2(W, RowH));
+            FixTop(row, y - RowH * 0.5f);
+            TMP_Text name = UIKit.Text(row, "", 18f, a.done ? Gold : Parch, new Vector2(0f, 10f), new Vector2(W, 24f), TextAlignmentOptions.Left);
+            TMP_Text sub = UIKit.Text(row, "", 14f, Dim, new Vector2(0f, -11f), new Vector2(W, 20f), TextAlignmentOptions.Left);
+            name.enableWordWrapping = sub.enableWordWrapping = false;
+            UIKit.Forget(name);
+            UIKit.Forget(sub);
+            System.Action write = null;
+            Contracts.Active ca = a;
+            write = () =>
+            {
+                name.text = "<size=80%><color=#A89C86>" + Contracts.KindTag(ca.def) + "</color></size>  " + ca.def.Name
+                          + (ca.done ? "" : "  <size=80%><color=#A89C86>" + Contracts.Progress(ca.def, ca.best) + "</color></size>");
+                sub.text = ca.done ? "<color=#7CFF9A>" + Loc.T("contract.result.done").Replace("{0}", ca.def.Reward.ToString("N0")) + "</color>"
+                         : Contracts.WillCarry(ca) ? Loc.T("contract.carry").Replace("{0}", Mathf.Min(ca.best, ca.def.target).ToString("N0")).Replace("{1}", ca.def.target.ToString("N0"))
+                         : Loc.T("contract.dropped");
+            };
+            write();
+            row.gameObject.AddComponent<LocRefresh>().refresh = write;
+            if (a.done) row.gameObject.AddComponent<ResultPop>().delay = 0.35f + 0.3f * i;
+            y -= RowH;
+            i++;
+        }
+        if (goals.Count == 0) return;
+        TMP_Text gh = UIKit.Text(panel, "contract.result.goals", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        FixTop(gh.rectTransform, y - HeadH * 0.5f);
+        y -= HeadH;
+        foreach (Goal g in goals)
+        {
+            RectTransform row = UIKit.Rect("Goal", panel, Vector2.zero, new Vector2(W, GoalH));
+            FixTop(row, y - GoalH * 0.5f);
+            TMP_Text label = UIKit.Text(row, "", 17f, Parch, new Vector2(-W * 0.18f, 10f), new Vector2(W * 0.64f, 24f), TextAlignmentOptions.Left);
+            TMP_Text detail = UIKit.Text(row, "", 15f, Dim, new Vector2(W * 0.32f, 10f), new Vector2(W * 0.36f, 24f), TextAlignmentOptions.Right);
+            TMP_Text hint = UIKit.Text(row, "", 13f, Dim, new Vector2(0f, -14f), new Vector2(W, 16f), TextAlignmentOptions.Left);
+            label.enableWordWrapping = detail.enableWordWrapping = hint.enableWordWrapping = false;
+            foreach (TMP_Text t in new[] { label, detail, hint }) UIKit.Forget(t);
+            label.text = g.label;
+            detail.text = g.detail;
+            bool almost = g.progress >= AlmostAt && g.progress < 1f;
+            hint.text = (almost ? "<color=#F5D478><b>" + Loc.T("result.goal.almost") + "</b></color>  " : "") + (g.hint ?? "");
+            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -3f), new Vector2(W, 4f));
+            Image bg = bar.gameObject.AddComponent<Image>();
+            bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
+            bg.raycastTarget = false;
+            RectTransform fill = UIKit.Rect("Fill", bar, Vector2.zero, Vector2.zero);
+            fill.anchorMin = Vector2.zero;
+            fill.anchorMax = new Vector2(Mathf.Max(0.01f, g.progress), 1f);
+            fill.offsetMin = fill.offsetMax = Vector2.zero;
+            Image fi = fill.gameObject.AddComponent<Image>();
+            fi.color = g.progress >= 1f ? Ready : g.progress >= AlmostAt ? Gold : Fill;
+            fi.raycastTarget = false;
+            y -= GoalH;
+        }
+    }
+
+    // 1.2~ 결과 화면 아래 한 줄: 「이번 판이 남긴 것: +4,720P · 계약 2 · 도감 +1 · 기억 +1」 (계약이 있던 판만 · 획득 포인트 줄 위)
+    public static void BuildLeftBehind(Transform canvas)
+    {
+        if (!Contracts.LastRunOn || DailyChallenge.Active) return;        // 일일 도전은 아래 기록 글(오늘 순위 3줄)이 이 자리까지 내려옴
+        UIKit.EnsureStyle();
+        TMP_Text t = UIKit.Text(canvas, "", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(1200f, 34f));
+        RectTransform r = t.rectTransform;
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+        r.anchoredPosition = new Vector2(0f, 132f);
+        System.Action write = () => t.text = Loc.T("contract.result.left").Replace("{0}", "+" + CharacterData.RunPoints.ToString("N0"))
+                                    .Replace("{1}", Contracts.DoneThisRun.ToString()).Replace("{2}", Contracts.CodexGained.ToString()).Replace("{3}", Contracts.MemoryGained.ToString())
+                                    + (Contracts.MemoryGained > 0 ? "\n<size=80%><color=#F5D478>" + Loc.T("memory.new") + "</color></size>" : "");
+        write();
+        UIKit.Forget(t);
+        t.gameObject.AddComponent<LocRefresh>().refresh = write;
+        if (Contracts.MemoryGained > 0) r.sizeDelta = new Vector2(1200f, 64f);
+    }
+
+    // 1.2~ 같은 영웅 · 난이도로 세 번 연달아 쓰러짐: 버튼 열 아래 한 줄 추천 (설계 3-5 ① e · 일일 도전 · 튜토리얼 · 체험판 · 무한 모드 기록 글 자리에는 없음)
+    public static void BuildRecommend(Transform canvas)
+    {
+        if (Herald.Streak < 3 || RunStats.Cleared || RunStats.GaveUp || DailyChallenge.Active || TutorialRun.Active || Demo.On || GameMode.IsEndless) return;
+        UIKit.EnsureStyle();
+        // 산 영웅 중 아직 숙련이 없는 다른 영웅 (얼굴 그림을 옆에 — 영웅 이름을 문장에 끼우면 조사가 틀려서) · 없으면 한 단계 낮은 난이도
+        CharacterId? pick = null;
+        for (int i = 0; i < CharacterData.All.Length; i++)
+        {
+            CharacterId id = (CharacterId)i;
+            if (id == CharacterData.Selected || !CharacterData.IsDeveloped(id) || !CharacterData.IsUnlocked(id) || Mastery.Level(id) > 0) continue;
+            pick = id;
+            break;
+        }
+        string line = pick != null ? "recommend.hero.noname" : GameMode.Current != Difficulty.Easy ? "recommend.diff" : null;
+        if (line == null && Herald.SameCause3) line = "recommend.hint";
+        if (line == null) return;
+        TMP_Text t = UIKit.Text(canvas, line, 19f, new Color(0.75f, 0.85f, 1f), new Vector2(0f, -318f), new Vector2(760f, 56f));
+        t.fontSizeMin = 14f;
+        if (pick != null)
+        {
+            Sprite face = CharacterUI.Portrait(pick.Value);
+            if (face != null)
+            {
+                Image fi = UIKit.Rect("RecommendHero", canvas, new Vector2(-410f, -318f), new Vector2(48f, 48f)).gameObject.AddComponent<Image>();
+                fi.sprite = face;
+                fi.preserveAspect = true;
+                fi.raycastTarget = false;
+            }
+        }
     }
 
     // 위쪽 가운데에 붙여 y 만큼 아래로
@@ -267,6 +420,30 @@ public static class ResultScreen
         t.fontSizeMin = 18f;
         t.fontSizeMax = font;
         t.fontSize = font;
+    }
+}
+
+// 1.2~ 결과 화면 계약 달성 줄: 차례로 커지며 나타나고 「달성」 소리 (1.2초 안)
+public class ResultPop : MonoBehaviour
+{
+    public float delay;
+    CanvasGroup g;
+    float t;
+
+    void Start()
+    {
+        g = gameObject.AddComponent<CanvasGroup>();
+        g.alpha = 0f;
+    }
+
+    void Update()
+    {
+        t += Time.unscaledDeltaTime;
+        float k = Mathf.Clamp01((t - delay) / 0.35f);
+        if (g != null) g.alpha = k;
+        transform.localScale = Vector3.one * Mathf.Lerp(1.25f, 1f, Mathf.SmoothStep(0f, 1f, k));
+        if (k > 0f && t - Time.unscaledDeltaTime - delay <= 0f) Hostile.Play("coin", 0.6f, 1.3f);
+        if (k >= 1f) { transform.localScale = Vector3.one; enabled = false; }
     }
 }
 

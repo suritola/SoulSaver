@@ -17,6 +17,7 @@ public static class DailyChallenge
     {
         public string name, desc;
         public (DailyStat stat, float mul)[] muls;
+        public int attack, maxHp;           // 1.2~ 영혼 각인 규칙의 공격력 · 최대 체력 % (판을 시작할 때 한 번, DailyRewards)
     }
 
     static readonly Rule[] Rules =
@@ -36,6 +37,21 @@ public static class DailyChallenge
         new Rule { name = "풍요", desc = "경험치 · 코인 +50%. 대신 적 체력 +25%",
                    muls = new[] { (DailyStat.Reward, 1.5f), (DailyStat.EnemyHp, 1.25f) } },
     };
+
+    // 1.2~ 규칙 7 → 14종: 영혼 각인의 규칙을 하루 빌려 씀 (각인을 아직 못 연 플레이어의 맛보기 · 수치는 ContentRegistry.SoulBrands 와 같게)
+    //   RulesFrom 이후 날짜만 14종에서 뽑음 — 그 전 날의 규칙(이미 겨룬 순위표)은 그대로
+    static readonly DateTime RulesFrom = new DateTime(2026, 10, 20);
+    static readonly Rule[] BrandRules =
+    {
+        new Rule { name = "daily.rule.glass.name", desc = "daily.rule.glass.desc", attack = 40, maxHp = -30, muls = new (DailyStat, float)[0] },
+        new Rule { name = "daily.rule.greed.name", desc = "daily.rule.greed.desc", muls = new[] { (DailyStat.Reward, 1.6f), (DailyStat.EnemyHp, 1.3f) } },
+        new Rule { name = "daily.rule.iron.name", desc = "daily.rule.iron.desc", attack = -15, muls = new[] { (DailyStat.EnemyDamage, 0.75f) } },
+        new Rule { name = "daily.rule.frenzy.name", desc = "daily.rule.frenzy.desc", attack = 25, muls = new[] { (DailyStat.EnemySpeed, 1.2f), (DailyStat.EnemySkill, 0.77f) } },
+        new Rule { name = "daily.rule.calm.name", desc = "daily.rule.calm.desc", muls = new[] { (DailyStat.EnemySpeed, 0.85f), (DailyStat.Gauge, 0.65f) } },
+        new Rule { name = "daily.rule.bulwark.name", desc = "daily.rule.bulwark.desc", attack = -20, maxHp = 40, muls = new (DailyStat, float)[0] },
+        new Rule { name = "daily.rule.dance.name", desc = "daily.rule.dance.desc", attack = 30, muls = new[] { (DailyStat.EnemyDamage, 1.5f), (DailyStat.Reward, 1.3f) } },
+    };
+    static bool IsBrandRule(Rule r) => r.name != null && r.name.StartsWith("daily.rule.");
 
     public static bool Active { get; private set; }
     static DateTime runDay;
@@ -58,7 +74,9 @@ public static class DailyChallenge
     {
         System.Random rng = new System.Random(Seed(day) * 31 + 7);
         rng.Next();
-        return Rules[rng.Next(Rules.Length)];
+        if (day < RulesFrom) return Rules[rng.Next(Rules.Length)];
+        int i = rng.Next(Rules.Length + BrandRules.Length);
+        return i < Rules.Length ? Rules[i] : BrandRules[i - Rules.Length];
     }
 
     // GameMode 배율에 곱하는 값 (일일 도전 중이 아니면 1)
@@ -72,7 +90,25 @@ public static class DailyChallenge
 
     public static bool Unlocked => !Demo.On && GameMode.IsUnlocked(Difficulty.Endless);
     public static string RunBoard => SteamLeaderboards.Daily(Key(runDay));
+    public static string RunDayKey => Key(runDay);      // 1.2~ 일일 보상 (DailyRewards: 자정을 넘겨도 시작한 날)
     public static string RunRuleName => runRule.name ?? "";
+
+    // 1.2~ 각인 규칙의 공격력 · 최대 체력 (판 시작 뒤 플레이어가 생기면 한 번 · 일일 도전은 저장하지 않으므로 기록 없이) — 적용했으면 true
+    public static bool ApplyPlayerRule()
+    {
+        if (!Active) return true;
+        PlayerController p = Hostile.Player;
+        if (p == null || StageManager.Instance == null || !StageManager.Instance.Started) return false;
+        if (runRule.attack != 0) p.damage *= 1f + runRule.attack / 100f;
+        if (runRule.maxHp != 0)
+        {
+            float delta = Mathf.Round(p.PlayerMaxHealth * runRule.maxHp / 100f);
+            if (p.PlayerMaxHealth + delta < 1f) delta = 1f - p.PlayerMaxHealth;
+            p.PlayerMaxHealth += delta;
+            p.PlayerHealth = Mathf.Clamp(p.PlayerHealth + Mathf.Max(0f, delta), 1f, p.PlayerMaxHealth);
+        }
+        return true;
+    }
 
     public static void Begin()
     {
@@ -179,9 +215,11 @@ public static class DailyChallenge
         info.fontSizeMax = 28f;
         float best = Best(day);
         info.text = "<color=#F5D478>" + Loc.T("오늘의 영웅") + "</color>\n<size=130%>" + Loc.T(CharacterData.Def(who).name) + "</size>\n\n"
-                  + "<color=#F5D478>" + Loc.T("오늘의 규칙") + "</color>\n<size=115%>" + Loc.T(rule.name) + "</size>\n" + Loc.T(rule.desc) + "\n\n"
+                  + "<color=#F5D478>" + Loc.T("오늘의 규칙") + "</color>\n<size=115%>" + Loc.T(rule.name) + "</size>\n" + Loc.T(rule.desc)
+                  + (IsBrandRule(rule) ? "\n<size=85%><color=#C9A2FF>" + Loc.T("daily.rule.taste") + "</color></size>" : "") + "\n\n"
                   + "<color=#A89C86>" + Loc.T("무한 모드 규칙으로 오래 버틸수록 높은 순위입니다. 몇 번이든 다시 도전할 수 있고 가장 좋은 기록만 남습니다.") + "</color>\n\n"
-                  + "<color=#F5D478>" + Loc.T("오늘 내 최고 기록") + "</color>  " + (best > 0f ? EndlessMode.Clock(best) : "-");
+                  + "<color=#F5D478>" + Loc.T("오늘 내 최고 기록") + "</color>  " + (best > 0f ? EndlessMode.Clock(best) : "-")
+                  + "\n\n" + DailyRewards.WindowLines();        // 1.2~ 오늘의 보상 (5 · 10 · 15분) · 연속 출석
 
         Button start = UIKit.MakeButton(win, "도전 시작", new Vector2(-300f, -265f), new Vector2(360f, 84f), () => { Close(); Begin(); }, 32f);
         start.interactable = Unlocked;
@@ -254,7 +292,7 @@ public static class DailyChallenge
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + 1f;
             TimeSpan left = Today.AddDays(1) - DateTime.UtcNow;
-            countdown.text = Loc.T("다음 도전까지") + " " + ((int)left.TotalHours).ToString("00") + ":" + left.Minutes.ToString("00");
+            countdown.text = Loc.T("다음 도전까지") + " " + ((int)left.TotalHours).ToString("00") + ":" + left.Minutes.ToString("00") + "  " + DailyRewards.ResetLocal();     // 1.2~ 현지 시각도
             if (entries == null)
             {
                 // 1.1~ 순위표를 못 받았거나 너무 오래 걸리면 「불러오는 중…」에 멈추지 않고 안내

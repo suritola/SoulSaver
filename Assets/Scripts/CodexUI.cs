@@ -24,8 +24,9 @@ public static class CodexUI
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
 
     // 1.2~ 발견형 도감: 유물 · 각인 · 비밀 탭을 더함 · 진화 · 유물 · 각인 · 비밀은 얻은 것만 자세히 (CodexSeen)
-    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점" };
-    const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11;
+    // 1.2~ 「기억」: 영웅마다 기억 조각 6장 (MemoryShards · 도감 수집률 밖)
+    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점", "memory.section" };
+    const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11, TabMemory = 12;
     static CodexSeen.Cat? CatOf(int t) => t == TabEvo ? CodexSeen.Cat.Evo : t == TabRelic ? CodexSeen.Cat.Relic : t == TabBrand ? CodexSeen.Cat.Brand : t == TabSecret ? CodexSeen.Cat.Secret : (CodexSeen.Cat?)null;
     static readonly List<GameObject> tabBadges = new List<GameObject>();
     static Transform openRoot;
@@ -47,6 +48,7 @@ public static class CodexUI
         "codex.tab.secret",
         "레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 무한 모드 80 (그 뒤로는 경험치 막대를 세 번 채울 때마다 초월 카드) · 재료를 모두 올리면 스킬 진화",     // 1.0.4~ 성장 카드 · 1.1~ 초월 카드
         "상점 제단(적을 처치하다 보면 나타남)에서 코인으로 강화합니다",
+        "memory.hint",
     };
 
     static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };
@@ -167,7 +169,7 @@ public static class CodexUI
 
         tabButtons.Clear();
         tabBadges.Clear();
-        float w = 122f;
+        float w = 112f;         // 1.2~ 13칸 (기억 탭) — 122 × 12 → 112 × 13 (창 1640 안)
         for (int i = 0; i < Tabs.Length; i++)
         {
             int t = i;
@@ -227,6 +229,7 @@ public static class CodexUI
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
         hint.text = Loc.T(Hints[tab]);
+        if (tab == TabMemory) hint.text = "<color=#F5D478>" + MemoryShards.HeaderLine + "</color>  " + hint.text;
         CodexSeen.Cat? cat = CatOf(tab);
         tabWasOpened = cat.HasValue && CodexSeen.TabOpenedThisVersion(cat.Value);
         if (cat.HasValue && CodexSeen.ShowAll) hint.text += "  <color=#F5D478>(" + Loc.T("codex.showall.on") + ")</color>";
@@ -247,6 +250,7 @@ public static class CodexUI
             case TabBrand: Brands(); break;
             case TabSecret: Secrets(); break;
             case TabLevelUp: LevelUpCards(data); break;
+            case TabMemory: MemoryShards.FillCodex(grid, CardH, openRoot); break;
             case TabShop:
                 // 1.1~ 떠돌이 상점은 게임 속 상인 제단 그림 그대로 (예전 fx_prompt 는 어두운 말풍선 막대라 빈칸처럼 보였음)
                 foreach (var s in Shops)

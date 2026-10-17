@@ -57,6 +57,8 @@ public static class RunSave
         // 옛 저장에는 없어 0 → 기록을 다시 적용하기 전(시작 공격력일 때) 기준을 정함
         public float baseAttack;
         public int baseMag;
+        // 1.2~ 영혼 계약 (Contracts): 이번 판 계약 열쇠 · 뒤에 * 이어진 계약 · ! 이룸 (옛 저장은 빈 글 = 계약 없는 판)
+        public string contracts = "";
     }
 
     // 이번 판에서 지금까지 한 선택

@@ -441,6 +441,22 @@ public class StoryDirector : MonoBehaviour
         ("거울의 군주", "심연 끝에 선 그림자", new[] { "...나는 네가 쓰러뜨린 모든 것의 메아리.", "네가 쌓아 온 그 힘으로, 너를 부숴 주마." }, "voice_lich", 0.7f),
     };
 
+    // 1.2~ 보스 재회 한 줄 (설계 3-2 ③): 이 보스를 전에 만났으면 등장 대사 뒤에 「또 너냐」류 한 줄 · 5번 넘게 쓰러뜨렸으면 다른 한 줄
+    //   만난 적 = boss.intro.seen.<종류> (등장 연출을 본 뒤) · 쓰러뜨린 수 = boss.down.<종류> (RunCountersHost) · 글 LocTable.Herald 의 boss.again(5).<보스>
+    const string SeenKey = "boss.intro.seen.";
+    static readonly string[] ReunionIds = { "lich", "demon", "slime", "mirror" };
+
+    static string[] ReunionLines(int kind, string[] lines)
+    {
+        if (kind < 0 || kind >= ReunionIds.Length || Prefs.GetInt(SeenKey + kind, 0) != 1) return lines;
+        string key = (Prefs.GetInt("boss.down." + kind, 0) >= 5 ? "boss.again5." : "boss.again.") + ReunionIds[kind];
+        if (!Loc.Has(key)) return lines;
+        string[] all = new string[lines.Length + 1];
+        lines.CopyTo(all, 0);
+        all[lines.Length] = key;
+        return all;
+    }
+
     // 한 판(무한 모드 포함)에서 보스마다 처음 나올 때 한 번만
     static readonly System.Collections.Generic.HashSet<int> introduced = new System.Collections.Generic.HashSet<int>();
 
@@ -495,8 +511,9 @@ public class StoryDirector : MonoBehaviour
 
         voice = info.voice;
         voicePitch = info.pitch;
-        if (!skip) yield return Lines(info.lines);
+        if (!skip) yield return Lines(ReunionLines(kind, info.lines));
         voice = null;
+        Prefs.SetInt(SeenKey + kind, 1);
 
         // 돌아오기
         if (fx != null) fx.ReleaseCamera();

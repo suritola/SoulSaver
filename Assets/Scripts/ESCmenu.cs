@@ -42,7 +42,7 @@ public class ESCmenu : MonoBehaviour
         if (!GameInput.EscDown) return;
 
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
-        if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing) return;
+        if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing || Herald.Playing) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
@@ -187,8 +187,15 @@ public class ESCmenu : MonoBehaviour
         CloseConfirm();
         RunStats.GaveUp = true;
         RunSave.Abandon();          // 무한 모드 · 일일 도전은 저장하지 않으므로 따로 남은 이야기 판 저장(「이어하기」)은 지우지 않음
-        Time.timeScale = 1f;
         IsOpen = false;
+        // 1.2~ 망자의 전령 짧은 한 줄 (멈춘 채 · 넘기면 바로) 뒤 결과 화면
+        if (Herald.Enabled)
+        {
+            if (escMenu != null) escMenu.SetActive(false);
+            Herald.RunThen(true, () => { Time.timeScale = 1f; SceneManager.LoadScene("GameOver"); });
+            return;
+        }
+        Time.timeScale = 1f;
         SceneManager.LoadScene("GameOver");
     }
 
