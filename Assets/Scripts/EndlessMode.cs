@@ -48,8 +48,8 @@ public class EndlessMode : MonoBehaviour
     public const float FinalAt = 900f;
     // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 3000마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/3000」)
     public const int MomSouls = 3000;
-    public const int DeveloperHp = 200000;      // 1.1.2~ 10만 → 20만 (1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
-    public const int MomHp = 400000;            // 1.1.2~ 30만 → 40만
+    public const int DeveloperHp = 100000;      // 1.2.5~ 20만 → 10만 (1.1.2~ 10만 → 20만 · 1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
+    public const int MomHp = 200000;            // 1.2.5~ 40만 → 20만 (1.1.2~ 30만 → 40만)
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
     int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 (· 엄마) · 3 클리어 · 4 클리어 뒤 한계 돌파 (1.1.4~ 엔딩 없이 죽을 때까지)
