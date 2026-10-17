@@ -1072,13 +1072,18 @@ public class HostileProjectile : MonoBehaviour
     void Start()
     {
         body = GetComponent<SpriteRenderer>();
-        orbSize = Mathf.Max(0.75f, radius * 2f + 0.35f);
+        orbSize = Mathf.Max(0.75f, radius * 2f + 0.35f) * LookMul;     // 1.1.9: 그림만 1.2배 (맞는 거리는 radius + 0.4 그대로)
         orb = Dress(gameObject, body != null ? body.color : Color.red, orbSize);
     }
 
     // 1.1~: 적 탄 구슬 · 심 · 그림자는 Effect 보다 위 레이어(HitScan, 다른 곳은 안 씀) — 내 스킬 이펙트 · 처치 폭발 · 피해 숫자 · 총알 빛 아래에 깔려 안 보였음
     //   (중간 보스 이름표 · 조준 표시의 TargetMark 보다는 아래)
     const string EnemyShotLayer = "HitScan";
+
+    // 1.1.9 핫픽스: 「무한 사막 맵에서 총알이 잘 안 보여」 — 밝은 모래(≈ 0.95, 0.78, 0.5) 위에선 주황 · 노랑 · 하늘색 탄의 빛 무리와 흰 심이 모래와 섞이고
+    //   그림자(지름 1.5배 · 0.7, 부드러운 빛 그림이라 구슬 가장자리에선 옅음)도 약해서 얇은 검은 테두리(반지름 0.7 바깥)만 남았음
+    //   → 그림 1.2배 · 그림자 1.5 → 1.85배 · 0.7 → 0.88 · 검은 테두리 0.7 → 0.6 바깥 (판정은 HostileProjectile.radius · DomainBall 거리 그대로)
+    public const float LookMul = 1.2f;
 
     // 탄 꾸미기 (산성 덩어리 같은 다른 적 탄도 같이 씀): 뿌연 빛은 작고 진하게 줄이고, 그 위에 테두리 구슬 · 하얀 심
     public static Transform Dress(GameObject go, Color color, float diameter)
@@ -1088,7 +1093,7 @@ public class HostileProjectile : MonoBehaviour
         go.transform.localScale = Vector3.one * (diameter * 2.3f / 8f);      // 빛 그림은 8칸 크기
         if (sr != null) sr.color = new Color(v.r, v.g, v.b, 0.8f);
         Vector3 at = go.transform.position;
-        GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.5f / 8f, new Color(0.02f, 0f, 0.04f, 0.7f), EnemyShotLayer, 7);
+        GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.85f / 8f, new Color(0.02f, 0f, 0.04f, 0.88f), EnemyShotLayer, 7);
         shadow.transform.SetParent(go.transform, true);
         GameObject ball = SpecialAbilities.MakeSprite("Orb", OrbSprite, at, diameter, v, EnemyShotLayer, 10);
         ball.transform.SetParent(go.transform, true);
@@ -1124,7 +1129,7 @@ public class HostileProjectile : MonoBehaviour
                 {
                     float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(half, half)) / half;
                     float a = Mathf.Clamp01((1f - d) * half * 0.5f);            // 바깥 가장자리 부드럽게
-                    float ink = Mathf.Clamp01((d - 0.7f) * half * 0.5f);         // 0.7 바깥은 검은 테두리
+                    float ink = Mathf.Clamp01((d - 0.6f) * half * 0.5f);         // 0.6 바깥은 검은 테두리 (1.1.9: 0.7 → 0.6, 밝은 모래에서도 윤곽)
                     byte g = (byte)(255f * (1f - ink));
                     px[y * S + x] = new Color32(g, g, g, (byte)(255f * a));
                 }

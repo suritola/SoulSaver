@@ -19,6 +19,7 @@ public class BulletGlow : MonoBehaviour
     [System.NonSerialized] public float haloMul = 1.5f;     // 빛 무리 지름 = 몸의 긴 쪽 × 이 값
 
     SpriteRenderer body, coreSr, tracerSr;
+    SpriteRenderer lookSr, outlineSr;       // 1.1.9: 몸 모드의 보이는 그림 자식 (LookMul 배) · 어두운 실루엣 테두리
     Transform halo;
     Sprite[] tracerFrames, tracerCore;
     int tier = 1, lastFrame = -1;
@@ -42,13 +43,18 @@ public class BulletGlow : MonoBehaviour
             {
                 lastFrame = i;
                 tracerSr.sprite = tracerFrames[i];
+                if (outlineSr != null) outlineSr.sprite = tracerFrames[i];
                 if (coreSr != null && i < tracerCore.Length) coreSr.sprite = tracerCore[i];
             }
         }
-        else if (coreSr != null && frames != null)
+        else
         {
-            int i = System.Array.IndexOf(frames, body.sprite);
-            if (i >= 0 && i != lastFrame && i < coreFrames.Length) { lastFrame = i; coreSr.sprite = coreFrames[i]; }
+            if (lookSr != null) SyncLook();
+            if (coreSr != null && frames != null)
+            {
+                int i = System.Array.IndexOf(frames, body.sprite);
+                if (i >= 0 && i != lastFrame && i < coreFrames.Length) { lastFrame = i; coreSr.sprite = coreFrames[i]; }
+            }
         }
 
         // 빛 무리: 두근거림 (번쩍임 효과를 끄면 그대로)
@@ -64,7 +70,7 @@ public class BulletGlow : MonoBehaviour
         trailT += Time.deltaTime;
         if (trailT < 0.035f) return;
         trailT = 0f;
-        SpriteRenderer src = tracerSr != null ? tracerSr : body;
+        SpriteRenderer src = tracerSr != null ? tracerSr : lookSr != null ? lookSr : body;
         if (src == null || src.sprite == null) return;
         FadeSprite f = FadeSprite.Spawn("AtkTrail", src.sprite, src.transform.position, 1f,
                                         new Color(tint.r, tint.g, tint.b, AttackLook.TrailAlpha(tier) * alpha), "Effect", AttackLook.TrailOrder, AttackLook.TrailLife(tier));
@@ -130,16 +136,63 @@ public class BulletGlow : MonoBehaviour
         FitTracerHit();
         Vector3 ps = transform.lossyScale;
         float h = TracerHeight(ps);
-        float k = h / tracerFrames[0].bounds.size.y;
+        // 1.1.9: 그림만 LookMul 배 (판정은 FitTracerHit 가 맞춘 높이 h 그대로 — 이 예광탄은 자식이라 총알 상자에 영향 없음)
+        float k = h / tracerFrames[0].bounds.size.y * AttackLook.LookMul;
         tracerSr = Child("AtkTracer", tracerFrames[0], new Color(tint.r, tint.g, tint.b, alpha * 0.97f), AttackLook.Order, new Vector3(k / Safe(ps.x), k / Safe(Mathf.Abs(ps.y)), 1f));
+        float len = tracerFrames[0].bounds.size.x * k;
+        outlineSr = Outline(tracerSr, len, tracerFrames[0].bounds.size.y * k, alpha);
         if (tracerCore != null && tracerCore.Length > 0)
         {
             coreSr = Child("AtkCore", tracerCore[0], new Color(1f, 1f, 1f, alpha), AttackLook.CoreOrder, Vector3.one);
             coreSr.transform.SetParent(tracerSr.transform, false);
         }
-        float len = tracerFrames[0].bounds.size.x * k;
         haloW = len * 1.25f;
-        haloH = h * 2.4f;
+        haloH = h * AttackLook.LookMul * 2.4f;
+    }
+
+    // 1.1.9: 같은 그림을 어두운 색으로 조금 크게 뒤에 깔아 실루엣 테두리 (밝은 모래 · 초원에서도 윤곽이 또렷하게)
+    //   기본 스프라이트 재질 그대로 (탄마다 새 재질 없음 · 배칭 유지), 두께는 월드 기준으로 가로 · 세로 같게
+    SpriteRenderer Outline(SpriteRenderer of, float w, float h, float a)
+    {
+        if (of == null || of.sprite == null || w <= 0.0001f || h <= 0.0001f) return null;
+        float t = AttackLook.OutlineWidth(w, h);
+        SpriteRenderer o = Child("AtkOutline", of.sprite, Ink(a), AttackLook.OutlineOrder, Vector3.one);
+        o.transform.SetParent(of.transform, false);
+        o.transform.localScale = new Vector3(1f + 2f * t / w, 1f + 2f * t / h, 1f);
+        o.flipX = of.flipX;
+        o.flipY = of.flipY;
+        return o;
+    }
+
+    static Color Ink(float a)
+    {
+        Color c = AttackLook.OutlineInk;
+        c.a *= a;
+        return c;
+    }
+
+    // 몸 모드: 꺼 둔 몸 그림을 보이는 자식이 따라감 (FrameLoop · FxAnim 이 바꾸는 그림, 끝날 때 흐려지는 색, 뒤집기)
+    void SyncLook()
+    {
+        Sprite s = body.sprite;
+        if (lookSr.sprite != s)
+        {
+            lookSr.sprite = s;
+            if (outlineSr != null) outlineSr.sprite = s;
+        }
+        Color c = body.color;
+        if (lookSr.color != c)
+        {
+            lookSr.color = c;
+            if (outlineSr != null) outlineSr.color = Ink(c.a);
+        }
+        if (lookSr.flipX != body.flipX || lookSr.flipY != body.flipY)
+        {
+            lookSr.flipX = body.flipX;
+            lookSr.flipY = body.flipY;
+            if (outlineSr != null) { outlineSr.flipX = body.flipX; outlineSr.flipY = body.flipY; }
+            if (coreSr != null) { coreSr.flipX = body.flipX; coreSr.flipY = body.flipY; }
+        }
     }
 
     // 몸 모드: 몸에 영웅색, 흰 심 층을 같은 크기로 겹침
@@ -149,17 +202,31 @@ public class BulletGlow : MonoBehaviour
         body.sortingOrder = AttackLook.Order;
         if (!keepColor) body.color = new Color(tint.r, tint.g, tint.b, alpha * 0.95f);
         else tint = AttackLook.HeroColor();        // 몸 색 · 투명도는 쏜 쪽(Fx.Play 가 이미 「내 이펙트 투명도」를 곱함) 그대로
+        // 1.1.9: 보이는 그림은 LookMul 배 자식으로 (판정 상자 · 원은 이 오브젝트 크기 그대로라 그림만 커짐), 몸 그림은 끄고 SyncLook 이 따라감
+        Vector3 ps = transform.lossyScale;
+        Vector2 size = body.sprite != null ? (Vector2)body.sprite.bounds.size : Vector2.one;
+        float mul = body.sprite != null ? AttackLook.LookMul : 1f;
+        float w = size.x * Mathf.Abs(ps.x) * mul, h = size.y * Mathf.Abs(ps.y) * mul;
+        Transform coreParent = transform;
+        if (body.sprite != null)
+        {
+            lookSr = Child("AtkBody", body.sprite, body.color, AttackLook.Order, new Vector3(mul, mul, 1f));
+            lookSr.sharedMaterial = body.sharedMaterial;
+            lookSr.flipX = body.flipX;
+            lookSr.flipY = body.flipY;
+            body.enabled = false;
+            outlineSr = Outline(lookSr, w, h, body.color.a);
+            coreParent = lookSr.transform;
+        }
         if (coreFrames != null && coreFrames.Length > 0)
         {
             int i = frames != null ? Mathf.Max(0, System.Array.IndexOf(frames, body.sprite)) : 0;
             coreSr = Child("AtkCore", coreFrames[Mathf.Min(i, coreFrames.Length - 1)], new Color(1f, 1f, 1f, alpha), AttackLook.CoreOrder, Vector3.one);
+            coreSr.transform.SetParent(coreParent, false);
             coreSr.flipX = body.flipX;
             coreSr.flipY = body.flipY;
         }
-        Vector3 ps = transform.lossyScale;
-        Vector2 size = body.sprite != null ? (Vector2)body.sprite.bounds.size : Vector2.one;
-        float big = Mathf.Max(size.x * Mathf.Abs(ps.x), size.y * Mathf.Abs(ps.y));
-        haloW = haloH = big * haloMul;
+        haloW = haloH = Mathf.Max(w, h) * haloMul;
     }
 
     // 가산 혼합 빛 무리 (셰이더가 없으면 반투명으로)
