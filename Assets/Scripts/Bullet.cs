@@ -2,7 +2,9 @@
 
 public class Bullet : MonoBehaviour
 {
-    readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
+    string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
+    // 날아가는 도중 피해 출처를 바꿈 (회전 표창: 평타 표창이 돌아올 때는 고유 스킬 피해)
+    public void SetSource(string source) => dmgSource = source;
     public float speed = 10f;
 
     // 일반 총알은 1
@@ -34,6 +36,8 @@ public class Bullet : MonoBehaviour
     public System.Collections.Generic.HashSet<int> hitOnce;
     // 채워 두면 벽에 닿아도 사라지지 않고 이걸 부름 (부메랑 낫: 벽에서 되돌아옴)
     public System.Action onHitWall;
+    // 채워 두면 관통 수가 다했을 때 이걸 부르고, true 면 사라지지 않음 (회전 표창: 그 자리에서 꺾여 돌아옴)
+    public System.Func<bool> onSpent;
     public float lifetime = 2f;
     // 치명타 총알 (맞힌 피해 숫자를 크게 · 금색으로)
     public bool isCrit;
@@ -52,6 +56,16 @@ public class Bullet : MonoBehaviour
             transform.rotation = Quaternion.Euler(0, 0, angle);
         }
     }
+
+    // 그림은 돌리지 않고 나는 방향만 바꿈 (도는 표창이 매 프레임 방향을 틀 때 · 밀어내는 방향도 이걸로)
+    public void Steer(Vector2 d) { if (d.sqrMagnitude > 0.0001f) dir = d.normalized; }
+
+    // 관통 수를 새로 채움 (회전 표창이 돌아올 때)
+    public void ResetPene(int n) { pene = n; remainPene = n; }
+
+    // 이번 프레임 스윕을 여기서 멈춤 (방향을 꺾었으니 같은 프레임 남은 길의 적은 맞히지 않게)
+    public void Halt() => halt = true;
+    bool halt;
 
     private int remainPene;
 
@@ -134,6 +148,7 @@ public class Bullet : MonoBehaviour
         Vector3 now = transform.position;
         Vector2 from = lastPos;
         lastPos = now;
+        halt = false;
         if (gone || sweepCol == null || !sweepCol.enabled) return;
 
         Vector2 d = (Vector2)now - from;
@@ -188,7 +203,7 @@ public class Bullet : MonoBehaviour
             touchingNext[next++] = id;
             if (was) continue;
             Hit(c);
-            if (gone || this == null) break;
+            if (gone || halt || this == null) break;
         }
         for (int i = 0; i < n; i++) { castBuf[i] = default; overlapBuf[i] = null; }       // 지운 콜라이더를 붙잡고 있지 않게
         if (touching != null)
@@ -202,6 +217,13 @@ public class Bullet : MonoBehaviour
     {
         gone = true;
         Destroy(gameObject);
+    }
+
+    // 관통 수가 다함: 붙은 훅이 살려 두면(onSpent → true) 그대로 둠
+    void Spent()
+    {
+        if (onSpent != null && onSpent()) return;
+        Gone();
     }
 
     private Camera mainCamera;
@@ -267,7 +289,7 @@ public class Bullet : MonoBehaviour
 
             // 총알 삭제
             if (remainPene < 1)
-            Gone();
+            Spent();
         }
         if (collision.CompareTag("boss"))
         {
@@ -309,7 +331,7 @@ public class Bullet : MonoBehaviour
 
             // 총알 삭제
             if (remainPene < 1)
-                Gone();
+                Spent();
         }
     }
     public void arisePene()

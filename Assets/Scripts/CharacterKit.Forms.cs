@@ -221,11 +221,21 @@ public partial class CharacterKit
     }
 
     // ================================================================= 도적
+    // 이번 평타에서 던진 가운데 표창 — 회전 표창(SignatureSkills.RogueAttack)이 이 표창을 그대로 되돌려 보냄
+    Bullet lastRogueThrow;
+    public Bullet TakeRogueThrow() { Bullet b = lastRogueThrow; lastRogueThrow = null; return b; }
+
     void RogueThrow(Vector3 start, Vector2 dir, float dmg, int shots)
     {
         if (augment == AugVolley) shots++;
         float step = form == SpecialAbilities.KitCards ? 9f : 8f;
-        foreach (Vector2 d in Spread(dir, shots, step)) ThrowOne(start, d, dmg, 1f);
+        lastRogueThrow = null;
+        int i = 0, mid = shots / 2;
+        foreach (Vector2 d in Spread(dir, shots, step))
+        {
+            Bullet b = ThrowOne(start, d, dmg, 1f);
+            if (i++ == mid) lastRogueThrow = b;
+        }
         Play("whoosh", 0.35f, form == SpecialAbilities.KitBlowgun ? 2.3f : 1.8f);
         if (augment == AugEcho) StartCoroutine(EchoThrow(dir, dmg, shots, step));
     }

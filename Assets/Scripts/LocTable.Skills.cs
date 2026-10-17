@@ -194,6 +194,8 @@ public static partial class LocTable
         A("급습 피해", "Ambush damage", "急襲ダメージ", "突袭伤害");
         A("회전 표창", "Boomerang Star", "回転手裏剣", "回旋飞镖");
         A("던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다.", "Thrown shuriken come back a moment later, cutting again.", "投げた手裏剣が少し後に戻ってきて、もう一度斬ります。", "掷出的飞镖片刻后折返，再斩一次。");
+        // 회전 표창: 새 표창이 나타나는 대신 던진 그 표창이 꺾여 돌아옴 (SignatureSkills.Rogue ReturningShuriken)
+        Entries["던진 표창이 잠시 뒤 되돌아오며 한 번 더 벱니다."] = E("던진 표창이 멀리 날아가거나 적을 다 꿰뚫으면 그 자리에서 꺾여 나에게 돌아오며, 오는 길의 적을 한 번 더 벱니다.", "Your thrown shuriken curves back to you once it flies far or runs out of pierce, cutting enemies again on the way.", "投げた手裏剣は遠くまで飛ぶか貫通し切るとその場で曲がって戻り、帰り道の敵をもう一度斬ります。", "掷出的飞镖飞远或穿透次数用尽后会就地折返回到你身边，沿途再斩一次敌人。");
         A("되돌아오는 표창 피해", "Returning star damage", "戻る手裏剣のダメージ", "折返飞镖伤害");
         A("궤적 칼날", "Blade Path", "軌跡の刃", "轨迹刀刃");
         A("필살기가 지나간 길에 칼날 자국이 남아 닿는 적을 벱니다.", "Bleed Dash leaves a trail of blades that cuts enemies touching it.", "必殺技の通り道に刃の跡が残り、触れた敵を斬ります。", "流血突进的路径上留下刀痕，斩击触碰的敌人。");
@@ -377,5 +379,6 @@ public static partial class LocTable
         A("모든 칸을 배웠습니다", "Every node learned", "すべてのマスを習得しました", "已学会所有节点");
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
         AddTranscend();     // 1.1~ 3장 각성 · 초월 카드 (LocTable.Transcend)
+        AddTerrain();       // 1.2.3~ 무한 모드 지형 변화 (LocTable.Terrain)
     }
 }

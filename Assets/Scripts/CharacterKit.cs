@@ -1200,6 +1200,15 @@ public partial class CharacterKit : MonoBehaviour
         return b;
     }
 
+    // 회전 표창 「귀환하는 칼날」: 돌아오는 표창이 둘로 갈라질 때 — 평타 표창과 같은 그림 · 판정 · 색
+    public Bullet TwinShuriken(Vector3 at, Vector2 dir, Bullet like)
+    {
+        if (like == null) return null;
+        Bullet b = Projectile(at, dir, like.damage, 2, like.speed, 0f, "fx_shuriken", 1.1f, Color.white, true);
+        if (b != null && like.TryGetComponent(out SpriteRenderer from) && b.TryGetComponent(out SpriteRenderer to)) to.color = from.color;
+        return b;
+    }
+
     // 도적 그림자 분신: 돌진을 시작한 자리에 분신이 남아 가까운 적에게 표창을 던짐
     IEnumerator ShadowClone(Vector3 at, float duration)
     {
