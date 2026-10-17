@@ -47,6 +47,7 @@ $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 $env:CAPTURE_FPS = "$Fps"
 $env:CAPTURE_QUALITY = $Quality
 $env:CAPTURE_CAPTIONS = $(if ($Captions) { "1" } else { "0" })
+$env:CAPTURE_LOGO = Join-Path $Project "steam_assets\library_logo.png"   # 끝 카드의 도트 로고
 foreach ($l in $Lang) {
     $Out = Join-Path $CaptureRoot $l
     if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }

@@ -1229,6 +1229,213 @@ public class GameplayCapture
         rec.baseZoom = 1f;
     }
 
+    // ================================================================= 끝 카드 (2026-10-18~ 자막 없이 · 진짜 게임 트레일러처럼)
+    // 검은 화면에 영혼 불씨가 떠오름 → 가운데서 가로 빛줄기가 번짐 → 「쾅」 흰 번쩍임과 함께 도트 로고(steam_assets/library_logo.png)가
+    // 크게 박혔다가 제자리로 · 충격파 고리 · 뒤에서 청록 · 금빛 후광 → 로고 위를 비스듬한 빛이 한 번 훑고 → 천천히 밀어 들어가며 소리 · 화면이 잦아듦
+    static Texture2D Radial(int size, bool ring)
+    {
+        Texture2D t = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        t.wrapMode = TextureWrapMode.Clamp;
+        Color32[] px = new Color32[size * size];
+        float h = (size - 1) * 0.5f;
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float d = Mathf.Sqrt((x - h) * (x - h) + (y - h) * (y - h)) / h;     // 0 가운데 · 1 가장자리
+                float a = ring ? Mathf.Clamp01(1f - Mathf.Abs(d - 0.9f) / 0.08f) : Mathf.Pow(Mathf.Clamp01(1f - d), 2.2f);
+                px[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+        t.SetPixels32(px);
+        t.Apply();
+        return t;
+    }
+
+    static T Ui<T>(string name, Transform parent, Vector2 size, Vector2 pos) where T : Graphic
+    {
+        GameObject g = new GameObject(name, typeof(RectTransform), typeof(T));
+        g.layer = 5;
+        g.transform.SetParent(parent, false);
+        T gr = g.GetComponent<T>();
+        gr.raycastTarget = false;
+        gr.rectTransform.sizeDelta = size;
+        gr.rectTransform.anchoredPosition = pos;
+        return gr;
+    }
+
+    static float BackOut(float x) { const float c = 1.9f; x -= 1f; return 1f + (c + 1f) * x * x * x + c * x * x; }
+
+    static IEnumerator EndCard()
+    {
+        Transform root = rec.captionCanvas.transform;
+        rec.logo.alpha = rec.sub.alpha = rec.caption.alpha = 0f;
+        Texture2D logoTex = null;
+        string logoPath = Environment.GetEnvironmentVariable("CAPTURE_LOGO");
+        if (!string.IsNullOrEmpty(logoPath) && File.Exists(logoPath))
+        {
+            logoTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            logoTex.LoadImage(File.ReadAllBytes(logoPath));
+            logoTex.filterMode = FilterMode.Point;                         // 도트가 뭉개지지 않게
+            logoTex.wrapMode = TextureWrapMode.Clamp;
+        }
+        if (logoTex == null)                                                // 로고 그림이 없으면 예전처럼 글자 로고
+        {
+            for (int i = 0; i <= Fps; i++) { float k = Mathf.SmoothStep(0f, 1f, i / (float)Fps); rec.logo.alpha = k; rec.logo.transform.localScale = Vector3.one * Mathf.Lerp(1.15f, 1f, k); yield return null; }
+            yield return F(3f);
+            yield break;
+        }
+
+        Texture2D soft = Radial(256, false), ringTex = Radial(512, true);
+        GameObject card = new GameObject("EndCard", typeof(RectTransform));
+        card.layer = 5;
+        card.transform.SetParent(root, false);
+        card.transform.SetSiblingIndex(rec.black.transform.GetSiblingIndex() + 1);   // 검은 막 바로 위 · 흰 번쩍임 아래
+        RectTransform cardRt = (RectTransform)card.transform;
+        cardRt.anchorMin = Vector2.zero; cardRt.anchorMax = Vector2.one; cardRt.offsetMin = cardRt.offsetMax = Vector2.zero;
+
+        // 바닥 안개 (아래쪽에서 올라오는 보랏빛)
+        RawImage fog = Ui<RawImage>("Fog", card.transform, new Vector2(2600f, 900f), new Vector2(0f, -620f));
+        fog.texture = soft; fog.color = new Color(0.36f, 0.2f, 0.62f, 0f);
+        // 후광 (청록 위 · 금빛 아래 — 로고의 두 줄 색)
+        Vector2 logoPos = new Vector2(0f, 30f), logoSize = new Vector2(1180f, 664f);
+        RawImage haloC = Ui<RawImage>("HaloCyan", card.transform, new Vector2(1500f, 900f), logoPos + new Vector2(0f, 120f));
+        haloC.texture = soft; haloC.color = new Color(0.35f, 0.85f, 1f, 0f);
+        RawImage haloG = Ui<RawImage>("HaloGold", card.transform, new Vector2(1600f, 900f), logoPos + new Vector2(0f, -140f));
+        haloG.texture = soft; haloG.color = new Color(1f, 0.72f, 0.3f, 0f);
+        // 충격파 고리
+        RawImage ring = Ui<RawImage>("Shock", card.transform, new Vector2(200f, 200f), logoPos);
+        ring.texture = ringTex; ring.color = new Color(0.85f, 0.95f, 1f, 0f);
+        // 가로 빛줄기 (가운데서 양옆으로 번짐)
+        RawImage streak = Ui<RawImage>("Streak", card.transform, new Vector2(10f, 14f), logoPos);
+        streak.texture = soft; streak.color = new Color(0.9f, 0.97f, 1f, 0f);
+        RawImage streakCore = Ui<RawImage>("StreakCore", card.transform, new Vector2(10f, 3f), logoPos);
+        streakCore.color = new Color(1f, 1f, 1f, 0f);
+
+        // 영혼 불씨 (도트 네모 · 청록과 금빛 · 아래에서 위로 흔들리며)
+        const int EmberN = 70;
+        RawImage[] emb = new RawImage[EmberN];
+        Vector2[] ePos = new Vector2[EmberN];
+        float[] eSpd = new float[EmberN], ePh = new float[EmberN];
+        var rnd = new System.Random(1018);
+        for (int i = 0; i < EmberN; i++)
+        {
+            float sz = 4f + 4f * rnd.Next(0, 3);                            // 4 · 8 · 12px (도트 느낌)
+            emb[i] = Ui<RawImage>("Ember", card.transform, new Vector2(sz, sz), Vector2.zero);
+            bool gold = rnd.NextDouble() < 0.45;
+            emb[i].color = gold ? new Color(1f, 0.78f, 0.38f, 0f) : new Color(0.5f, 0.9f, 1f, 0f);
+            ePos[i] = new Vector2((float)(rnd.NextDouble() * 2000.0 - 1000.0), (float)(rnd.NextDouble() * 1200.0 - 640.0));
+            eSpd[i] = 40f + (float)rnd.NextDouble() * 110f;
+            ePh[i] = (float)(rnd.NextDouble() * Math.PI * 2.0);
+        }
+
+        // 로고 + 박히는 순간 하얗게 탄 로고(실루엣) + 빛 훑기 — 둘 다 로고 알파를 그대로 따르는 작은 텍스처로 (UI Mask 는 투명 부분까지 네모로 칠해져서 쓰지 않음)
+        RawImage logoImg = Ui<RawImage>("LogoArt", card.transform, logoSize, logoPos);
+        logoImg.texture = logoTex; logoImg.color = new Color(1f, 1f, 1f, 0f);
+        const int SW = 320, SH = 180;
+        byte[] logoA = new byte[SW * SH];
+        Color32[] lp = logoTex.GetPixels32();
+        for (int y = 0; y < SH; y++)
+            for (int x = 0; x < SW; x++)
+                logoA[y * SW + x] = lp[(y * logoTex.height / SH) * logoTex.width + (x * logoTex.width / SW)].a;
+        Texture2D silTex = new Texture2D(SW, SH, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+        Texture2D shineTex = new Texture2D(SW, SH, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+        Color32[] sp = new Color32[SW * SH];
+        for (int i = 0; i < sp.Length; i++) sp[i] = new Color32(255, 255, 255, logoA[i]);
+        silTex.SetPixels32(sp); silTex.Apply();
+        RawImage burn = Ui<RawImage>("LogoBurn", logoImg.transform, logoSize, Vector2.zero);
+        burn.texture = silTex; burn.color = new Color(1f, 1f, 1f, 0f);
+        RawImage sweep = Ui<RawImage>("LogoShine", logoImg.transform, logoSize, Vector2.zero);
+        sweep.texture = shineTex; sweep.color = new Color(1f, 1f, 1f, 0f);
+        float lastSw = -1f;
+
+        AudioClip boom = Resources.Load<AudioClip>("Sounds/domain_break");
+        int total = Mathf.RoundToInt(5.2f * Fps), slam = Mathf.RoundToInt(0.75f * Fps);
+        for (int f = 0; f < total; f++)
+        {
+            float t = f / (float)Fps, ts = (f - slam) / (float)Fps;       // ts: 로고가 박힌 뒤 흐른 시간
+            float fadeOut = 1f - Mathf.Clamp01((t - 4.6f) / 0.6f);
+            rec.black.color = Color.black;
+            // 불씨: 처음부터 천천히 떠오름 (박힐 때 잠깐 바깥으로 밀림)
+            float push = ts >= 0f ? Mathf.Exp(-ts * 5f) * 260f * Mathf.Clamp01(ts * 6f) : 0f;
+            for (int i = 0; i < EmberN; i++)
+            {
+                Vector2 p = ePos[i] + new Vector2(Mathf.Sin(t * 1.3f + ePh[i]) * 18f, eSpd[i] * t);
+                p.y = Mathf.Repeat(p.y + 640f, 1280f) - 640f;
+                p += p.normalized * push;
+                emb[i].rectTransform.anchoredPosition = new Vector2(Mathf.Round(p.x / 4f) * 4f, Mathf.Round(p.y / 4f) * 4f);   // 4px 격자 (도트)
+                float tw = 0.55f + 0.45f * Mathf.Sin(t * 3.1f + ePh[i] * 2f);
+                Color c = emb[i].color; c.a = Mathf.Clamp01(t / 0.6f) * tw * (ts >= 0f ? 0.9f : 0.5f) * fadeOut;
+                emb[i].color = c;
+            }
+            fog.color = new Color(fog.color.r, fog.color.g, fog.color.b, 0.28f * Mathf.Clamp01(t / 1f) * fadeOut);
+
+            if (ts < 0f)
+            {
+                // 박히기 전: 빛줄기가 가운데서 양옆으로 번지며 밝아짐
+                float k = Mathf.Clamp01(t / (slam / (float)Fps));
+                float w = Mathf.Lerp(10f, 2400f, k * k);
+                streak.rectTransform.sizeDelta = new Vector2(w, Mathf.Lerp(14f, 60f, k));
+                streakCore.rectTransform.sizeDelta = new Vector2(w * 0.8f, Mathf.Lerp(2f, 6f, k));
+                streak.color = new Color(0.9f, 0.97f, 1f, 0.9f * k);
+                streakCore.color = new Color(1f, 1f, 1f, k);
+            }
+            else
+            {
+                if (f == slam)
+                {
+                    if (boom != null) rec.Sfx(boom, 0.9f);
+                    rec.musicVolume = 1f;
+                }
+                // 흰 번쩍임 (0.18초) · 빛줄기는 금방 사라짐
+                rec.flash.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - ts / 0.18f) * 0.85f);
+                float sk = Mathf.Clamp01(1f - ts / 0.25f);
+                streak.color = new Color(0.9f, 0.97f, 1f, 0.9f * sk);
+                streakCore.color = new Color(1f, 1f, 1f, sk);
+                streak.rectTransform.sizeDelta = new Vector2(2400f, Mathf.Lerp(4f, 60f, sk));
+                // 로고: 1.45배 → 1배로 튕기듯 · 박힌 직후 흔들림 · 이후 아주 천천히 밀어 들어감
+                float pop = Mathf.Clamp01(ts / 0.38f);
+                float scale = Mathf.Lerp(1.45f, 1f, BackOut(pop)) * (1f + 0.035f * Mathf.Clamp01((ts - 0.4f) / 4f));
+                float shakeAmp = 22f * Mathf.Exp(-ts * 9f);
+                Vector2 jitter = new Vector2(Mathf.Sin(ts * 91f) * shakeAmp, Mathf.Cos(ts * 77f) * shakeAmp * 0.6f);
+                logoImg.rectTransform.anchoredPosition = logoPos + jitter;
+                logoImg.rectTransform.localScale = Vector3.one * scale;
+                logoImg.color = new Color(1f, 1f, 1f, Mathf.Clamp01(ts / 0.06f) * fadeOut);
+                burn.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - ts / 0.32f) * 0.9f * fadeOut);
+                // 후광: 박힐 때 크게 번쩍였다가 숨 쉬듯 잔잔하게
+                float breathe = 0.5f + 0.5f * Mathf.Sin(ts * 2.2f);
+                float haloA = (0.55f * Mathf.Exp(-ts * 3f) + 0.22f + 0.06f * breathe) * fadeOut;
+                haloC.color = new Color(haloC.color.r, haloC.color.g, haloC.color.b, haloA);
+                haloG.color = new Color(haloG.color.r, haloG.color.g, haloG.color.b, haloA * 0.9f);
+                haloC.rectTransform.localScale = haloG.rectTransform.localScale = Vector3.one * (1f + 0.25f * Mathf.Exp(-ts * 4f));
+                // 충격파 고리: 빠르게 퍼지며 옅어짐
+                float rk = Mathf.Clamp01(ts / 0.7f);
+                float rs = Mathf.Lerp(300f, 3200f, 1f - (1f - rk) * (1f - rk));
+                ring.rectTransform.sizeDelta = new Vector2(rs, rs * 0.62f);
+                ring.color = new Color(0.85f, 0.95f, 1f, 0.75f * (1f - rk));
+                // 빛 훑기: 박히고 0.9초 뒤 왼쪽에서 오른쪽으로 0.7초 (비스듬한 띠 · 로고 안에서만)
+                float sw = Mathf.Clamp01((ts - 0.9f) / 0.7f);
+                if (sw > 0f && sw < 1f && sw != lastSw)
+                {
+                    lastSw = sw;
+                    float pos = Mathf.Lerp(-60f, SW + 60f, Mathf.SmoothStep(0f, 1f, sw));
+                    for (int y = 0; y < SH; y++)
+                        for (int x = 0; x < SW; x++)
+                        {
+                            float d = (x + y * 0.45f) - pos;                       // 비스듬히 (오른쪽 위로 기운 띠)
+                            float band = Mathf.Exp(-d * d / 180f);
+                            sp[y * SW + x] = new Color32(255, 255, 255, (byte)(logoA[y * SW + x] * band * 0.8f));
+                        }
+                    shineTex.SetPixels32(sp); shineTex.Apply();
+                }
+                sweep.color = new Color(1f, 1f, 1f, (sw > 0f && sw < 1f ? 1f : 0f) * fadeOut);
+                // 끝 무렵: 음악이 잦아듦
+                if (t > 3.4f) rec.musicVolume = Mathf.Lerp(1f, 0f, Mathf.Clamp01((t - 3.4f) / 1.8f));
+            }
+            yield return null;
+        }
+        rec.flash.color = new Color(1f, 1f, 1f, 0f);
+        UnityEngine.Object.Destroy(card);
+    }
+
     [UnityTest]
     public IEnumerator Capture()
     {
@@ -1293,21 +1500,11 @@ public class GameplayCapture
         yield return BarrierShatter("Alchemist", 4, 1, KitWeapon("Alchemist", 1));
         T("CharacterData").GetField("Override", Any).SetValue(null, null);
 
-        // ---------------- 40~45초) 로고 + 「조준 · 장전 · 진화 / 스팀에서 무료 체험판」
+        // ---------------- 40~45초) 끝 카드 — 도트 로고가 빛줄기 · 번쩍임 · 충격파와 함께 박힘 (EndCard)
         rec.autopilot = false;
         StopInput();
         yield return Fade(0f, 1f, 0.4f);
-        for (int i = 0; i <= Fps; i++)
-        {
-            float k = Mathf.SmoothStep(0f, 1f, i / (float)Fps);
-            rec.logo.alpha = k;
-            rec.sub.alpha = Mathf.Clamp01(k * 1.5f - 0.5f);
-            rec.logo.transform.localScale = Vector3.one * Mathf.Lerp(1.15f, 1f, k);
-            yield return null;
-        }
-        yield return F(0.6f);
-        int tail = Fps * 3;
-        for (int i = 0; i < tail; i++) { rec.musicVolume = 0.9f * (1f - i / (float)tail); yield return null; }
+        yield return EndCard();
 
         rec.End();
         Time.timeScale = 1f;
