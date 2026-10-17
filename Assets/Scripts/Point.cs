@@ -14,6 +14,15 @@ public class Point : MonoBehaviour
     // 1.1~ 장 클리어마다 200 × 장 번호, 한 판을 끝까지 깨면 1,500 (배율 없이 그대로)
     public const int ChapterBonusPer = 200;
     public const int FinalBonus = 1500;
+    // 1.2~ 무한 모드 클리어 보너스 1,500 → 5,000 (아래 처치 포인트 체감과 함께 「재배치」 · 이정표 EndlessMilestones 와 같은 패치)
+    public const int EndlessFinalBonus = 5000;
+
+    // 1.2~ 무한 모드(일일 도전 포함) 일반 적 처치 포인트 체감: 이번 판 처치 2,000 뒤 ×0.5 · 8,000 뒤 ×0.2
+    //   10~15분 판(≤ 2,000킬)은 그대로 · 최종 국면을 넘긴 30분 클리어 판(약 22,700킬)은 약 227,000 → 약 90,000P
+    //   보스 · 중간 보스 · 클리어 보너스 · 이정표는 체감 없음 (EnermyController 의 일반 적 10P 만 AddMobPoint 로)
+    public const int MobDecayFrom = 2000, MobDecayDeep = 8000;
+    public const float MobDecayMul = 0.5f, MobDecayDeepMul = 0.2f;
+    public static float MobKillMul => !GameMode.IsEndless ? 1f : RunStats.Kills >= MobDecayDeep ? MobDecayDeepMul : RunStats.Kills >= MobDecayFrom ? MobDecayMul : 1f;
 
     static readonly System.Random Rng = new System.Random();
     Coroutine pulse;
@@ -57,11 +66,16 @@ public class Point : MonoBehaviour
         }
     }
 
-    public void AddPoint(int point)
+    // 1.2~ 일반 적 한 마리 (무한 모드 처치 수 체감 MobKillMul 을 함께 곱함)
+    public void AddMobPoint(int point) => AddScaled(point, MobKillMul);
+
+    public void AddPoint(int point) => AddScaled(point, 1f);
+
+    void AddScaled(int point, float extra)
     {
         // 1.1~ 포인트 배율 (1.2~ TotalMul) — 포인트를 주는 곳(boss.cs · EnermyController.cs)은 이 함수 하나만 부름
         // 소수는 확률로 반올림 (11.5 → 50% 확률로 12) · 게임 난수(UnityEngine.Random, 일일 도전 시드)는 건드리지 않게 따로 뽑음
-        float v = point * TotalMul;
+        float v = point * TotalMul * extra;
         point = Mathf.FloorToInt(v + 0.001f);
         if (v - point > 0.001f && Rng.NextDouble() < v - point) point++;
         points += point;

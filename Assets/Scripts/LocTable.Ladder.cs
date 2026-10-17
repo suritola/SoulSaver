@@ -1,0 +1,118 @@
+using UnityEngine;
+
+// 1.2~ 난이도 사다리 · 무한 이정표 · 영웅 해금 대체 루트 · 받기 창 · 밸런스 결정 묶음(보스 보상 가운데 칸 · 초월 간격 · 무게 배율) 번역
+// 열쇠는 「ladder.」 「milestone.」 「claim.」 「route.」 접두어 · 설명은 완결 문장 (문구 다듬기 지침 2026-10-16) · 수치는 코드 상수와 같게 (바꾸면 같이)
+//   Ladder.cs (EndlessMilestones · UnlockRoutes · ClaimRewards) · MenuExtras 난이도 툴팁 · DailyChallenge · CharacterData · ResultScreen · ChestRewards.BossSlot · LevelShop.Transcend · CodexUI · SoulWeight
+public static partial class LocTable
+{
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void AddLadder()
+    {
+        void A(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
+
+        // ---------------- 잠금 안내 (예전 「어려움을 클리어하면 …」)
+        A("ladder.lock.daily", "쉬움을 클리어하면 일일 도전이 열립니다.",
+          "Clear Easy to unlock the Daily Challenge.",
+          "イージーをクリアするとデイリーチャレンジが解放されます。",
+          "通关简单难度后解锁每日挑战。");
+        A("ladder.lock.endless", "보통을 클리어하면 무한 모드가 열립니다.",
+          "Clear Normal to unlock Endless Mode.",
+          "ノーマルをクリアするとエンドレスモードが解放されます。",
+          "通关普通难度后解锁无尽模式。");
+        A("ladder.lock.endless.hard", "보통 또는 어려움을 클리어하면 무한 모드가 열립니다. 어려움을 클리어하면 영혼의 무게도 열립니다.",
+          "Clear Normal or Hard to unlock Endless Mode. Clearing Hard also unlocks Soul Weight.",
+          "ノーマルかハードをクリアするとエンドレスモードが解放されます。ハードをクリアすると魂の重みも解放されます。",
+          "通关普通或困难难度后解锁无尽模式。通关困难难度还会解锁灵魂之重。");
+
+        // ---------------- 난이도 버튼 툴팁 (클리어하면 열리는 것)
+        A("ladder.tip.easy", "클리어하면 보통 · 어려움 난이도와 영혼 각인, 일일 도전이 열립니다.",
+          "Clearing it unlocks Normal and Hard, Soul Brands and the Daily Challenge.",
+          "クリアするとノーマル・ハード、魂の刻印、デイリーチャレンジが解放されます。",
+          "通关后解锁普通 · 困难难度、灵魂烙印与每日挑战。");
+        A("ladder.tip.normal", "클리어하면 무한 모드가 열립니다.",
+          "Clearing it unlocks Endless Mode.",
+          "クリアするとエンドレスモードが解放されます。",
+          "通关后解锁无尽模式。");
+        A("ladder.tip.hard", "클리어하면 영혼의 무게가 열립니다. 무한 모드가 아직 잠겨 있으면 함께 열립니다.",
+          "Clearing it unlocks Soul Weight, along with Endless Mode if it is still locked.",
+          "クリアすると魂の重みが解放されます。エンドレスモードがまだなら一緒に解放されます。",
+          "通关后解锁灵魂之重。若无尽模式尚未解锁，也会一并解锁。");
+        A("ladder.tip.endless", "끝없이 버티는 모드입니다. 5 · 10 · 15 · 20분을 버티거나, 한 판에서 보스 5마리를 쓰러뜨리거나, 개발자를 쓰러뜨리면 처음 한 번 이정표 포인트를 얻습니다.",
+          "Survive for as long as you can. Survive 5, 10, 15 or 20 minutes, defeat 5 bosses in one run, or defeat the Developer to earn milestone points the first time.",
+          "どこまでも生き延びるモードです。5・10・15・20分生き延びる、1回のプレイでボスを5体倒す、開発者を倒すと、初回だけマイルストーンのポイントを獲得します。",
+          "坚持到底的模式。坚持5 · 10 · 15 · 20分钟、在一局中击败5个首领或击败开发者时，首次可获得里程碑点数。");
+        A("ladder.tip.endless.points", "처치 포인트는 이번 판 처치 2,000 뒤 절반, 8,000 뒤 5분의 1로 줄어듭니다. 보스 · 이정표 · 클리어 보너스는 그대로입니다.",
+          "Kill points drop to half after 2,000 kills in a run and to one fifth after 8,000. Boss, milestone and clear bonuses are unaffected.",
+          "撃破ポイントは1回のプレイで撃破2,000体以降は半分、8,000体以降は5分の1になります。ボス・マイルストーン・クリアボーナスはそのままです。",
+          "击杀点数在本局击杀2,000后减半，8,000后降为五分之一。首领、里程碑与通关奖励不受影响。");
+        A("ladder.tip.cleared", "이미 클리어했습니다.", "Already cleared.", "クリア済みです。", "已通关。");
+
+        // ---------------- 소급 해금 알림 (받기 창 맨 위, 한 번)
+        A("ladder.retro.endless", "무한 모드가 열렸습니다. 이제 보통 난이도를 클리어해도 무한 모드가 열리므로, 이미 보통을 클리어한 기록으로 열었습니다.",
+          "Endless Mode is now unlocked. Clearing Normal now unlocks Endless Mode, so your earlier Normal clear counts.",
+          "エンドレスモードが解放されました。ノーマルをクリアしても解放されるようになったため、これまでのノーマルクリアの記録で解放しました。",
+          "无尽模式已解锁。现在通关普通难度即可解锁无尽模式，因此已根据你之前通关普通难度的记录解锁。");
+
+        // ---------------- 무한 이정표
+        A("milestone.min", "무한 모드 {0}분 버티기", "Survive {0} minutes in Endless Mode", "エンドレスモードで{0}分生き延びる", "在无尽模式中坚持{0}分钟");
+        A("milestone.boss5", "무한 모드 한 판에서 보스 5마리 쓰러뜨리기", "Defeat 5 bosses in a single Endless run", "エンドレスモードの1回のプレイでボスを5体倒す", "在一局无尽模式中击败5个首领");
+        A("milestone.dev", "무한 모드에서 최종 보스 「개발자」 쓰러뜨리기", "Defeat the final boss, the Developer, in Endless Mode", "エンドレスモードで最終ボス「開発者」を倒す", "在无尽模式中击败最终首领「开发者」");
+        A("milestone.reached", "무한 모드 이정표 달성!", "Endless milestone reached!", "エンドレスのマイルストーン達成！", "达成无尽模式里程碑！");
+        A("milestone.claim", "무한 모드 이정표", "Endless Milestone", "エンドレスのマイルストーン", "无尽模式里程碑");
+        A("result.goal.milestone", "다음 이정표 · 무한 모드 {0}분", "Next Milestone · Endless {0} min", "次のマイルストーン・エンドレス{0}分", "下一个里程碑 · 无尽{0}分钟");
+        A("result.goal.milestone.left", "다음 이정표까지 {0}", "{0} to go", "あと{0}", "还差{0}");
+
+        // ---------------- 받기 창
+        A("claim.title", "받을 보상", "Rewards to Claim", "受け取れる報酬", "可领取的奖励");
+        A("claim.title.notice", "새로 열린 콘텐츠", "Newly Unlocked", "新たに解放された要素", "新解锁内容");
+        A("claim.sub", "이미 이룬 기록으로 열린 보상입니다. 눌러서 받으세요.",
+          "These rewards were unlocked by what you have already achieved. Click to claim them.",
+          "すでに達成した記録で解放された報酬です。押して受け取ってください。",
+          "这些是根据你已达成的记录解锁的奖励。点击领取。");
+        A("claim.take", "받기", "Claim", "受け取る", "领取");
+        A("claim.taken", "받음", "Claimed", "受け取り済み", "已领取");
+        A("claim.all", "모두 받기", "Claim All", "すべて受け取る", "全部领取");
+        A("claim.more", "나머지 {0}개는 「모두 받기」로 함께 받습니다.", "The other {0} are included in Claim All.", "残りの{0}件は「すべて受け取る」で一緒に受け取れます。", "其余{0}项可通过「全部领取」一并领取。");
+        A("claim.got", "포인트 {0}P를 받았습니다.", "You received {0} P.", "{0}Pを受け取りました。", "已领取{0}P。");
+
+        // ---------------- 영웅 해금 대체 루트
+        A("route.or", "또는", "or", "または", "或");
+        A("route.prereq", "먼저 「보통」을 클리어해 무한 모드 열기", "First clear Normal to unlock Endless", "まず「ノーマル」をクリアしてエンドレスを解放", "先通关「普通」以解锁无尽模式");
+        A("route.chests", "이야기 모드에서 보물 상자 15개 열기", "Open 15 treasure chests in Story Mode", "ストーリーモードで宝箱を15個開ける", "在故事模式中打开15个宝箱");
+        A("route.quick", "이야기 모드에서 장 보스 4종을 각각 결계가 펼쳐지기 전에 쓰러뜨리기", "Defeat each of the 4 chapter bosses in Story Mode before it raises its Barrier",
+          "ストーリーモードで4種の章ボスをそれぞれ結界を張られる前に倒す", "在故事模式中分别赶在4种章节首领展开结界前将其击败");
+        A("route.weight", "어려움에서 영혼의 무게 2 클리어", "Clear Soul Weight 2 on Hard", "ハードで魂の重み2をクリア", "在困难难度通关灵魂之重2");
+        A("route.chests.short", "보물 상자 {0}/{1}", "Chests {0}/{1}", "宝箱 {0}/{1}", "宝箱 {0}/{1}");
+        A("route.quick.short", "결계 전 보스 {0}/{1}", "Pre-Barrier bosses {0}/{1}", "結界前ボス {0}/{1}", "结界前首领 {0}/{1}");
+        A("route.weight.short", "영혼의 무게 {0}/{1}", "Soul Weight {0}/{1}", "魂の重み {0}/{1}", "灵魂之重 {0}/{1}");
+        A("route.quick.toast", "결계 전에 쓰러뜨렸다!  {1} 해금 길 {0}", "Defeated before its Barrier!  {1} route {0}", "結界の前に倒した！  {1}の解放ルート {0}", "在结界前击败！  {1}解锁路线 {0}");
+        A("route.retro", "{0}의 해금 조건을 이미 이루었습니다. 새로 더해진 길 「{1}」의 기록이 인정되어 이제 {2}P로 살 수 있습니다.",
+          "You have already met {0}'s unlock condition. Your record on the new route \"{1}\" counts, so {0} can now be bought for {2} P.",
+          "{0}の解放条件をすでに達成しています。新しく加わったルート「{1}」の記録が認められ、{2}Pで購入できるようになりました。",
+          "你已达成{0}的解锁条件。新增路线「{1}」的记录已被认可，现在可以用{2}P购买。");
+
+        // ---------------- 밸런스 결정 묶음
+        A("chest.boss.legend", "고르면 룰렛이 돌아 보상 3~5개를 한꺼번에 얻습니다.", "Pick this to spin the roulette and get 3–5 rewards at once.",
+          "選ぶとルーレットが回り、報酬を3〜5個まとめて獲得します。", "选择后转动轮盘，一次获得3~5个奖励。");
+        A("weight.subtitle2", "고른 무게까지의 항목이 모두 쌓입니다. 무게 1마다 포인트가 {0}% 늘어납니다.",
+          "All effects up to the chosen weight stack. Each weight adds {0}% points.",
+          "選んだ重みまでの効果がすべて重なります。重み1ごとにポイントが{0}%増えます。",
+          "所选重量及以下的效果全部叠加。每1重量点数增加{0}%。");
+        A("transcend.hint", "최대 레벨에 닿은 뒤에는 경험치 막대를 이야기 모드에서 두 번(첫 카드는 한 번), 무한 모드에서 세 번 채울 때마다 초월 카드로 판의 규칙 하나를 바꿉니다. 레벨은 오르지 않고, 같은 카드를 다시 고르면 다음 단계가 됩니다.",
+          "After reaching max level, a Transcendence card changes one rule of the run each time your XP bar fills twice in Story Mode (once for the first card) or three times in Endless Mode. Your level doesn't rise, and picking the same card again advances it to the next stage.",
+          "最大レベルに達した後は、経験値バーをストーリーモードで2回（最初のカードは1回）、エンドレスモードで3回満タンにするたびに、超越カードでこのプレイのルールを1つ変えます。レベルは上がらず、同じカードをもう一度選ぶと次の段階になります。",
+          "达到等级上限后，在故事模式中每填满经验条两次（第一张卡只需一次）、在无尽模式中每填满三次，就用超越卡改变本局的一条规则。等级不会提升，再次选择同一张卡会进入下一阶段。");
+        A("transcend.codex.levelhint", "레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 · 무한 모드 80 (그 뒤로는 경험치 막대를 이야기 모드 두 번 · 무한 모드 세 번 채울 때마다 초월 카드) · 재료를 모두 올리면 스킬 진화",
+          "Pick one of three cards or skip on each level-up · Max level 50 · Endless 80 (after that, a Transcendence card every 2 XP bars in Story · every 3 in Endless) · Max all ingredients to evolve a skill",
+          "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50・エンドレス80（その後は経験値バーをストーリー2回・エンドレス3回満タンにするたびに超越カード）・素材をすべて上げるとスキル進化",
+          "每次升级从三张中选一张或跳过 · 等级上限50 · 无尽80（之后故事模式每填满经验条两次、无尽模式每三次获得超越卡）· 素材全部升满即可技能进化");
+        A("transcend.codex.rule", "최대 레벨(50 · 무한 모드 80)에 닿은 뒤 경험치 막대를 이야기 모드에서 두 번(첫 카드는 한 번), 무한 모드에서 세 번 채울 때마다 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 레벨은 오르지 않습니다. 같은 카드를 다시 고르면 다음 단계가 됩니다. (최대 3단계 · 맵 지배는 2단계)",
+          "After reaching max level (50 · Endless 80), each time your XP bar fills twice in Story Mode (once for the first card) or three times in Endless Mode, you pick one of three gold-framed Transcendence cards to change a rule of the run. Your level doesn't rise. Picking the same card again advances it to the next stage. (Up to stage 3 · Dominion up to stage 2)",
+          "最大レベル（50・エンドレス80）に達した後、経験値バーをストーリーモードで2回（最初のカードは1回）、エンドレスモードで3回満タンにするたびに、金枠の超越カード3枚から1枚を選んでこのプレイのルールを変えます。レベルは上がりません。同じカードをもう一度選ぶと次の段階になります。（最大3段階・地の支配は2段階）",
+          "达到等级上限（50 · 无尽80）后，在故事模式中每填满经验条两次（第一张卡只需一次）、在无尽模式中每填满三次，就从三张金框超越卡中选择一张，改变本局的规则。等级不会提升。再次选择同一张卡会进入下一阶段。（最多3阶段 · 地图支配最多2阶段）");
+        A("transcend.codex.list", "메아리: 필살기 뒤 영혼 메아리 · 영혼 수확: 처치 수마다 영혼 파동 · 시간의 틈: 위기에 세상이 멈춤 · 연금 손: 코인이 경험치로 연성 · 그림자 분신: 따라오며 쏘는 분신 · 중력장: 멈춰 서면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체가 다시 생김 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터져 번짐 · 영혼 보호막: 맞지 않으면 한 번 막음 · 영혼불 발자국: 지나간 자리가 불탐",
+          "Echo: a soul echo after your ultimate · Reaping: a soul wave every so many kills · Time Rift: the world stops when you're in danger · Alchemist's Touch: coins transmute into XP · Shadow Clones: clones that follow you and shoot · Gravity Well: stand still to pull things in · Reversal: a huge explosion on Last Stand · Dominion: map objects reappear (Story mode) · Cascade: slain enemies burst and spread · Soul Ward: blocks one hit if you avoid damage · Soulfire Steps: your trail burns",
+          "残響：必殺技の後に魂の残響・魂の収穫：撃破数ごとに魂の波動・時の裂け目：危機に世界が止まる・錬金の手：コインが経験値に錬成・影分身：ついて来て撃つ分身・重力場：立ち止まると引き寄せる・逆転：最後の砦で大爆発・地の支配：マップの物体が再び現れる（ストーリーモード）・連鎖崩壊：倒れた敵が破裂して広がる・魂の障壁：被弾しなければ1回防ぐ・魂火の足跡：通った跡が燃える",
+          "回响：必杀技后的灵魂回响 · 灵魂收割：每击败一定数量敌人触发灵魂波动 · 时间裂隙：危急时世界静止 · 炼金之手：金币炼成经验 · 影分身：跟随并射击的分身 · 重力场：静止时吸引周围 · 逆转：最后的堡垒触发大爆炸 · 地图支配：地图物体重新出现（故事模式）· 连锁崩坏：被击败的敌人爆裂扩散 · 灵魂护盾：未受攻击时抵挡一次 · 魂火足迹：走过的地方燃烧");
+    }
+}

@@ -57,8 +57,12 @@ public static class ResultScreen
             Goal g;
             if (!CharacterData.ConditionMet(id))
             {
-                if (d.condition != CharUnlock.Endless10 || !GameMode.IsUnlocked(Difficulty.Endless)) continue;
-                g = new Goal(label, EndlessMode.BestSeconds / 600f, Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds) + " / 10:00");
+                // 1.2~ 잴 수 있는 길 중 가까운 쪽: 무한 모드 10분 · 이야기 모드 대체 루트(상자 15개 · 결계 전 보스 4종 · 무게 2)
+                float alt = UnlockRoutes.HasAlt(d.condition) ? UnlockRoutes.AltProgress(d.condition) : 0f;
+                float endless = d.condition == CharUnlock.Endless10 && GameMode.IsUnlocked(Difficulty.Endless) ? EndlessMode.BestSeconds / 600f : -1f;
+                if (endless < 0f && alt <= 0f) continue;
+                if (endless >= alt) g = new Goal(label, endless, Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds) + " / 10:00");
+                else g = new Goal(label, alt, UnlockRoutes.AltShort(d.condition));
             }
             else g = new Goal(label, (float)pts / d.price, PointsLeft(d.price - pts));
             if (hero == null || g.progress > hero.Value.progress) hero = g;
@@ -95,6 +99,15 @@ public static class ResultScreen
         if (ach != null) all.Add(ach.Value);
 
         all.Sort((a, b) => b.progress.CompareTo(a.progress));
+        // 1.2~ 무한 모드 판(일일 도전 제외)이면 다음 이정표를 맨 위에 (「다음 이정표까지 n:nn」)
+        int next = GameMode.IsEndless && !DailyChallenge.Active ? EndlessMilestones.NextTime() : -1;
+        if (next >= 0)
+        {
+            EndlessMilestones.Def m = EndlessMilestones.All[next];
+            float reach = Mathf.Min(EndlessMode.BestSeconds, m.seconds);
+            all.Insert(0, new Goal(Loc.T("result.goal.milestone").Replace("{0}", Mathf.RoundToInt(m.seconds / 60f).ToString()), reach / m.seconds,
+                                   Loc.T("result.goal.milestone.left").Replace("{0}", EndlessMode.Clock(m.seconds - reach)), "+" + m.points.ToString("N0") + " P"));
+        }
         if (all.Count > 3) all.RemoveRange(3, all.Count - 3);
         return all;
     }
@@ -200,6 +213,7 @@ public static class ResultScreen
             {
                 if (Time.unscaledTime < readyAt) return;
                 openHeroPick = true;
+                RunLog.NextKind = "hero";           // 1.2~ 판 기록 retry_kind (메인 메뉴를 거쳐 다음 판까지 남음)
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainMenu");
             }));

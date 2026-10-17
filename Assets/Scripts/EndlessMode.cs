@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-// 무한 모드 (어려움을 클리어하면 열림): 불타는 사막 맵에서 1 · 2 · 3장의 적이 모두 나오고
+// 무한 모드 (1.2~ 보통 또는 어려움을 클리어하면 열림): 불타는 사막 맵에서 1 · 2 · 3장의 적이 모두 나오고
 // 리치 왕 → 지옥의 군주 → 킹 슬라임이 번갈아 주기적으로 등장. 죽을 때까지 버팀
 public class EndlessMode : MonoBehaviour
 {
@@ -131,6 +131,7 @@ public class EndlessMode : MonoBehaviour
         }
 
         if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
+        if (!daily) EndlessMilestones.CheckTime(s);                         // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 제외)
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
         if (finalStage == 0 && s >= FinalAt && free) { StartFinal(); return; }
         // 1.1.2~ 개발자를 쓰러뜨린 뒤 잡몹 MomSouls 마리: 개발자 엄마
@@ -294,8 +295,8 @@ public class EndlessMode : MonoBehaviour
         // 최종 클리어 보너스: 1.1.4~ 엔딩(StoryDirector.RunEnding)을 거치지 않으므로 여기서 같은 조건으로 (일일 도전은 없음 · 판마다 한 번)
         // 결과 화면의 획득 포인트에 들어감 (Point.RunBonus 는 한계 돌파 뒤 죽을 때까지 남음)
         int bonusBefore = Point.RunBonus;
-        if (!DailyChallenge.Active) Point.Bonus(Point.FinalBonus);
-        string bonus = Point.RunBonus > bonusBefore ? "\n" + Loc.T("result.finalbonus").Replace("{0}", Point.FinalBonus.ToString("N0")) : "";
+        if (!DailyChallenge.Active) Point.Bonus(Point.EndlessFinalBonus);       // 1.2~ 1,500 → 5,000 (처치 포인트 체감과 함께)
+        string bonus = Point.RunBonus > bonusBefore ? "\n" + Loc.T("result.finalbonus").Replace("{0}", Point.EndlessFinalBonus.ToString("N0")) : "";
         PlayerController p = FindFirstObjectByType<PlayerController>();
         if (p != null) p.GrantInvincibility(30f);
         Notice.Big(Loc.T(momLast ? "개발자 엄마를 쓰러뜨렸다!" : "개발자를 쓰러뜨렸다!") + "\n" + Loc.T("무한 모드 클리어!") + "  " + Clock(GameMode.EndlessSeconds) + bonus, NoticeIcon.Star, 6f, NoticeLevel.Important);     // 1.0.4~ 해금 알림과 줄 서서 둘 다 보임
@@ -322,10 +323,12 @@ public class EndlessMode : MonoBehaviour
         if (finalStage == 3) return;
         BossesDefeated++;
         if (BossesDefeated >= 5) CharacterData.Achieve(CharUnlock.EndlessBosses5);
+        if (!daily && BossesDefeated >= 5) EndlessMilestones.Reach(EndlessMilestones.Bosses5);      // 1.2~ 이정표 (첫 달성 한 번)
         // 1.0.4~ 개발자를 쓰러뜨려도 끝나지 않음: 개발자와 엄마를 모두 쓰러뜨려야 클리어 (보스가 쓰러진 그 순간 불리므로 그때 표시)
         bool devWas = devDown, momWas = momDown;
         if (developer != null && developer.IsDead) devDown = true;
         if (mom != null && mom.IsDead) momDown = true;
+        if (!daily && devDown && !devWas && developer != null) EndlessMilestones.Reach(EndlessMilestones.Developer);     // 1.2~ 이정표: 개발자 처치 (엄마와 함께 쓰러져 바로 클리어로 가도)
         if (finalStage != 4 && devSummoned && momSummoned && devDown && momDown) { StartCoroutine(ClearEndless(momDown && !momWas)); return; }
         if (finalStage == 1 && bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());
         if (devDown && !devWas && !momSummoned) { momKillBase = RunStats.Kills; StartCoroutine(ForeshadowMom()); }

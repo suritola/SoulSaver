@@ -211,7 +211,18 @@ public static class CharacterData
     public static string ConditionText(CharUnlock c) => ConditionText(c, true);
 
     // 1.1~ prerequisite = false: 선행 조건(무한 모드 열기)은 빼고 조건만 (캐릭터 카드처럼 좁은 칸)
-    public static string ConditionText(CharUnlock c, bool prerequisite) => (prerequisite ? Prerequisite(c) : "") + c switch
+    // 1.2~ 무한 모드 조건 셋에는 이야기 모드 대체 루트(UnlockRoutes)가 「또는」으로 붙음
+    //   prerequisite = true(자세히 창 · 도감): 두 줄 「무한 모드 길 (선행 조건) / 또는 이야기 모드 길 (진행 수치)」
+    //   prerequisite = false(캐릭터 카드처럼 좁은 칸): 한 줄로 「A 또는 B」 (진행 수치 없이)
+    public static string ConditionText(CharUnlock c, bool prerequisite)
+    {
+        string main = MainConditionText(c);
+        if (!UnlockRoutes.HasAlt(c) || Demo.On) return (prerequisite ? Prerequisite(c) : "") + main;
+        if (!prerequisite) return main + " " + Loc.T("route.or") + " " + UnlockRoutes.AltText(c, false);
+        return Prerequisite(c) + main + "\n" + Loc.T("route.or") + " " + UnlockRoutes.AltText(c, true);
+    }
+
+    static string MainConditionText(CharUnlock c) => c switch
     {
         CharUnlock.Endless10 => Loc.T("무한 모드에서 10분 버티기"),
         CharUnlock.EndlessBosses5 => Loc.T("무한 모드 한 판에서 보스 5마리 처치"),
@@ -221,21 +232,25 @@ public static class CharacterData
     };
 
     // 1.0.4~: 무한 모드 조건인데 무한 모드가 아직 잠겨 있으면 그 선행 조건을 앞에 (예전엔 무한 모드가 잠긴 줄 모르고 조건만 보였음)
+    // 1.2~ 무한 모드는 「보통」 클리어로 열림 (GameMode.OnCleared)
     static string Prerequisite(CharUnlock c)
     {
         bool endless = c == CharUnlock.Endless10 || c == CharUnlock.EndlessBosses5 || c == CharUnlock.EndlessClear;
         if (!endless || Demo.On || GameMode.IsUnlocked(Difficulty.Endless)) return "";
-        return Loc.T("먼저 「어려움」을 클리어해 무한 모드 열기") + " → ";
+        return Loc.T("route.prereq") + " → ";
     }
 
     // 게임 중 조건을 처음 달성했을 때 (한 번만 알림)
-    public static void Achieve(CharUnlock c)
+    public static void Achieve(CharUnlock c) => Achieve(c, false);
+
+    // 1.2~ alt: 이야기 모드 대체 루트로 이룸 (알림에 그 길을 보여 줌 · 어느 길인지는 UnlockRoutes 가 따로 적음)
+    public static void Achieve(CharUnlock c, bool alt)
     {
         if (c == CharUnlock.None || ConditionMet(c) || GameInput.Auto || TutorialRun.Active || Demo.On || Application.isBatchMode) return;
         Prefs.SetInt(ConditionKey + (int)c, 1);
         Prefs.Save();
         if (StageManager.Instance != null)
-            Notice.Big(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + ConditionText(c), NoticeIcon.Unlock, 4.5f, NoticeLevel.Important);     // 1.0.4~ 보스 처치 등 다른 알림에 덮이지 않게
+            Notice.Big(Loc.T("새 캐릭터 해제 조건 달성!") + "\n" + (alt ? UnlockRoutes.AltText(c, false) : MainConditionText(c)), NoticeIcon.Unlock, 4.5f, NoticeLevel.Important);     // 1.0.4~ 보스 처치 등 다른 알림에 덮이지 않게
         Hostile.Play("chime", 0.9f, 1.1f);
     }
 

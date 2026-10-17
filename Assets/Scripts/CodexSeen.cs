@@ -175,7 +175,7 @@ public static class CodexSeen
             return CharacterData.ConditionMet((CharacterId)c);       // 해금 조건을 이룬 순간 만난 것 (사기 전이라도)
         }
         if (key == "sec.dev" || key == "sec.mom")
-            return EndlessMode.EverCleared || CharacterData.ConditionMet(CharUnlock.EndlessClear);       // 무한 모드 클리어 = 둘 다 쓰러뜨림
+            return EndlessMode.EverCleared || UnlockRoutes.MainRouteMet(CharUnlock.EndlessClear);       // 무한 모드 클리어 = 둘 다 쓰러뜨림 (1.2~ 유령을 이야기 모드 대체 루트로 열었으면 만난 것이 아님)
         return false;
     }
 

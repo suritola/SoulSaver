@@ -70,7 +70,9 @@ public static class DailyChallenge
         return m;
     }
 
-    public static bool Unlocked => !Demo.On && GameMode.IsUnlocked(Difficulty.Endless);
+    // 1.2~ 난이도 사다리: 쉬움 클리어로 열림 (예전 어려움 클리어 = 무한 모드) — 저장값이 아니라 클리어 기록으로 계산하므로 기존 저장은 저절로 소급
+    //   무한 모드가 아직 잠겨 있어도 일일 도전은 GameMode.Override 로 무한 규칙을 씀 (빌려 주는 영웅 · 시드 · 순위표 규칙은 그대로)
+    public static bool Unlocked => !Demo.On && GameMode.HasCleared(Difficulty.Easy);
     public static string RunBoard => SteamLeaderboards.Daily(Key(runDay));
     public static string RunRuleName => runRule.name ?? "";
 
@@ -194,7 +196,7 @@ public static class DailyChallenge
             start.colors = cb;
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
             if (startLabel != null) startLabel.color = Dim;
-            UIKit.Text(win, Demo.On ? "정식판에서 만날 수 있습니다" : "어려움을 클리어하면 일일 도전이 열립니다", 20f, Dim, new Vector2(-300f, -330f), new Vector2(560f, 30f));
+            UIKit.Text(win, Demo.On ? "정식판에서 만날 수 있습니다" : "ladder.lock.daily", 20f, Dim, new Vector2(-300f, -330f), new Vector2(560f, 30f));
         }
 
         // 오른쪽: 오늘의 순위표

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // 영혼의 무게 (1.2~ · 로드맵 2-1 누적 저주 계단): 어려움을 한 번이라도 클리어하면 열림 (이야기 모드 어려움 판에만)
-// 무게 0 ~ 6. 무게마다 항목이 하나씩 쌓임 (고른 무게까지의 항목이 모두 걸림) · 무게 1마다 포인트 +5% (Point.TotalMul)
+// 무게 0 ~ 6. 무게마다 항목이 하나씩 쌓임 (고른 무게까지의 항목이 모두 걸림) · 무게 1마다 포인트 +8% (1.2~, 예전 +5% · Point.TotalMul)
 //   1 적 체력 +15%                  — 보통 → 어려움 한 단계(+13%)만큼. 잡몹 · 엘리트만 (보스는 1~3분 안에 잡히게 그대로)
 //   2 한 화면 적 수 +3 (그 뒤 무게마다 +3 더, 무게 6 = +15) — 어려움 상한 26 → 최대 41 (무한 모드는 +90까지 버팀)
 //   3 보스 결계 게이지 +35% 빨리 참  — 보스전마다 결계를 한 번쯤 더 봄
@@ -24,7 +24,7 @@ public static class SoulWeight
     const int AlivePer = 3;
     const float BarrierRate = 1.35f;
     const float HealRate = 0.6f;
-    const float PointPer = 0.05f;
+    const float PointPer = 0.08f;       // 1.2~ (밸런스 결정 묶음) 무게 1마다 +5% → +8% (무게 6 = +48%)
 
     // 무게마다 새로 쌓이는 항목 (번호 = 무게 - 1)
     static readonly string[] Steps =
@@ -226,7 +226,7 @@ public static class SoulWeight
 
         UIKit.Text(win, "weight.title", 44f, gold, new Vector2(0f, top - 40f), new Vector2(W, 60f));
         TMP_Text sub = UIKit.Text(win, "", 20f, dim, new Vector2(0f, top - 86f), new Vector2(W - 40f, 30f));
-        sub.text = Loc.T(CharacterData.Def(hero).name) + " · " + Loc.T("weight.subtitle");
+        sub.text = Loc.T(CharacterData.Def(hero).name) + " · " + Loc.T("weight.subtitle2").Replace("{0}", Pct(PointPer));     // 1.2~ 수치를 PointPer 에서 (예전 weight.subtitle 은 +5% 가 글에 박혀 있었음)
 
         TMP_Text summary = UIKit.Text(win, "", 20f, parch, new Vector2(0f, -h * 0.5f + 120f), new Vector2(W - 40f, 56f));
         summary.enableWordWrapping = true;

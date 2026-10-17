@@ -292,6 +292,7 @@ public class bosss : MonoBehaviour
 
             // 1.0.4~: 보스도 일반 적과 같은 10P였음 → 보스전을 끝내는 마지막 한 마리는 +300P (슬라임 분열체는 그대로 10P)
             if (point != null) point.AddPoint(lastOne ? 300 : 10);
+            if (lastOne && !developer) UnlockRoutes.OnBossDown(bossKind);      // 1.2~ 시계공 대체 루트: 이야기 모드 장 보스를 결계 전에 (무한 모드 · 일일 도전은 세지 않음)
 
             // 영혼 조각: 보스전이 끝나는 마지막 한 마리는 크게, 슬라임 분열체는 조금
             if (lastOne) SoulShards.Add(SoulShards.ForBoss(expReward), transform.position, true);
