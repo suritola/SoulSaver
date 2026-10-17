@@ -118,6 +118,8 @@ public static class ChestRewards
     public static IEnumerator Open(PlayerController p, Vector3 at, bool elite)
     {
         Ctx c = MakeCtx(p, at);
+        RunCounters.Both("chest");                          // 1.2~ 영혼 계약 · 보드
+        if (elite) RunCounters.Add("chest.elite");
         float legend = Legends >= MaxLegends ? 0f : elite ? EliteLegendChance : LegendChance;
         if (Random.value < legend)
         {
@@ -197,6 +199,7 @@ public static class ChestRewards
     static IEnumerator Legend(Ctx c)
     {
         Legends++;
+        RunCounters.Both("chest.legend");
         int count = Random.Range(3, 6);
         List<RewardDef> picks = new List<RewardDef>();
         for (int i = 0; i < count; i++)

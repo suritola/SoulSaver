@@ -5,8 +5,8 @@ using UnityEngine;
 //     retry_kind     이 판을 어떻게 시작했나 — menu(메인 메뉴) · same(결과 화면 「같은 설정으로 다시」) · quick(결과 화면 [R])
 //                    · hero(「캐릭터 바꿔 다시」로 메뉴를 거침) · quit(ESC 「다시 시작」으로 하던 판을 버림) · continue(이어하기) · tutorial
 //     menu_gap_secs  지난 판이 끝난 순간 → 이 판 시작까지 (이번 실행의 첫 판은 빈 칸)
-//     contracts_done 이번 판에 이룬 영혼 계약 수 (3-1, 계약 쪽이 ContractsDone 을 올림 · 없으면 0)
-//     herald_shown   쓰러진 뒤 망자의 전령이 한 줄을 건넸는지 (3-2, 전령 쪽이 HeraldShown 을 켬 · 없으면 0)
+//     contracts_done 이번 판에 이룬 영혼 계약 수 (3-1, Contracts.Fulfil 이 ContractsDone 을 올림 · 없으면 0)
+//     herald_shown   쓰러진 뒤 망자의 전령이 한 줄을 건넸는지 (3-2, Herald 가 한 줄을 띄울 때 HeraldShown 을 켬 · 없으면 0)
 //     milestones     이번 판에 처음 넘긴 무한 이정표 "m5|m10|boss5" (EndlessMilestones)
 //     points_run     이번 판에 얻은 포인트 (보너스 포함)
 //   sessions.csv: 게임을 켠 시각 · 끈 시각 · 분 · 판 수 · 60초 안에 끝난 판 수 · 마지막 판 결과 · 버전 (끌 때 한 줄)

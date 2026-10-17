@@ -327,6 +327,7 @@ public partial class BossSkills
 
         if (lanterns.Count == 0)
         {
+            if (Time.time - (until - 22f) <= 15f) RunCounters.LifeMax("lanterns15", 1);      // 1.2~ 보드 「등불 셋, 열다섯 초」
             Banner("의식이 깨졌다! 리치 왕이 휘청인다!");
             Fx.Spawn("fx_soulburst", home, 8f, Color.white, 14f);
             ShockRing.Spawn(home, 0.5f, 6f, 0.5f, Soul, 0.4f);

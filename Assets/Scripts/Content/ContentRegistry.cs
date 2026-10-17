@@ -51,6 +51,9 @@ public sealed class RelicDef
     public string id, saveCode, since;
     public int abilityId;
     public float weight = 1f;
+    public System.Func<bool> unlocked;      // 1.2~ null = 처음부터 석관에 나옴 · 계약 보드 · 일일 도전 완주로 열리는 유물
+    public string flavor;                   // 1.2~ 보드 유물의 이름 · 한 줄 (relic.new.<flavor>.name · .desc) — 석관 카드 위에 한 줄
+    public bool Unlocked => unlocked == null || unlocked();
 }
 
 // 1.2~ 부서지는 맵 물체 하나 (MapProps): 장마다 6~8개 · 닿으면 부서져 DropDef 하나를 떨어뜨림
@@ -156,6 +159,16 @@ public static partial class ContentRegistry
         new RelicDef { id = "gale",      saveCode = "ga", since = "1.2", abilityId = SpecialAbilities.KitGale },
         new RelicDef { id = "giant",     saveCode = "gi", since = "1.2", abilityId = SpecialAbilities.KitGiant },
         new RelicDef { id = "skeletons", saveCode = "sk", since = "1.2", abilityId = SpecialAbilities.SkeletonsId },
+        // ---------------- 1.2~ 계약 보드 「탐색」 줄 (영웅마다 한 칸) · 일일 도전 완주 5회로 열림 — 열리기 전에는 석관에 나오지 않음 (전투력이 아니라 가짓수)
+        new RelicDef { id = "soulburst", saveCode = "sb", since = "1.2", abilityId = SpecialAbilities.SoulBurstId, flavor = "casing", unlocked = () => ContractBoard.IsDone("gunner.3") },
+        new RelicDef { id = "earthsplit", saveCode = "es", since = "1.2", abilityId = SpecialAbilities.KitEarthsplit, flavor = "scabbard", unlocked = () => ContractBoard.IsDone("sword.3") },
+        new RelicDef { id = "pickpocket", saveCode = "pp", since = "1.2", abilityId = SpecialAbilities.KitPickpocket, flavor = "seal", unlocked = () => ContractBoard.IsDone("rogue.3") },
+        new RelicDef { id = "mirror", saveCode = "mr", since = "1.2", abilityId = SpecialAbilities.MirrorId, flavor = "arrow", unlocked = () => ContractBoard.IsDone("archer.3") },
+        new RelicDef { id = "pact", saveCode = "pc", since = "1.2", abilityId = SpecialAbilities.PactId, flavor = "notebook", unlocked = () => ContractBoard.IsDone("alch.3") },
+        new RelicDef { id = "timewarp", saveCode = "tw", since = "1.2", abilityId = SpecialAbilities.TimeWarpId, flavor = "mapscrap", unlocked = () => ContractBoard.IsDone("carto.3") },
+        new RelicDef { id = "rewind", saveCode = "rw", since = "1.2", abilityId = SpecialAbilities.KitRewind, flavor = "clock", unlocked = () => ContractBoard.IsDone("clock.3") },
+        new RelicDef { id = "dash", saveCode = "da", since = "1.2", abilityId = SpecialAbilities.DashId, flavor = "letter", unlocked = () => ContractBoard.IsDone("post.3") },
+        new RelicDef { id = "firezone", saveCode = "fi", since = "1.2", abilityId = SpecialAbilities.FireZoneId, unlocked = () => DailyRewards.RelicUnlocked },
     };
 
     public static RelicDef RelicByCode(string code)
@@ -218,6 +231,7 @@ public static class RunContent
         ChestRewards.SaveRun(d);
         MapProps.SaveRun(d);
         SoulBrand.SaveRun(d);           // 1.2~ 영혼 각인
+        Contracts.SaveRun(d);           // 1.2~ 영혼 계약
     }
 
     public static void Restore(RunSave.Data d)
@@ -226,6 +240,7 @@ public static class RunContent
         ChestRewards.RestoreRun(d);
         MapProps.RestoreRun(d);
         SoulBrand.RestoreRun(d);        // 1.2~ 영혼 각인 (옛 저장은 각인 없는 판)
+        Contracts.RestoreRun(d);        // 1.2~ 영혼 계약 (옛 저장은 계약 없는 판)
     }
 }
 
@@ -280,7 +295,7 @@ public static partial class ContentRegistry
                            progress = () => Mathf.Min(SoulBrand.SkillEvoCount, 5) + " / 5" },
         new SoulBrandDef { id = "calm", saveCode = "st", since = "1.2", color = new Color(0.7f, 0.9f, 1f), pointMul = 1f,
                            muls = new[] { (DailyStat.EnemySpeed, 0.85f), (DailyStat.Gauge, 0.65f) },
-                           unlocked = () => CharacterData.ConditionMet(CharUnlock.EasyFast) },
+                           unlocked = () => CharacterData.ConditionMet(CharUnlock.EasyFast) || DailyRewards.CalmUnlocked },        // 1.2~ 또는 일일 도전 첫 완주
         new SoulBrandDef { id = "tyrant", saveCode = "tc", since = "1.2", color = new Color(0.8f, 0.5f, 0.9f), attack = 20, pointMul = 1.3f,
                            muls = new[] { (DailyStat.BossHp, 1.6f), (DailyStat.EnemyDamage, 1.2f) },
                            unlocked = () => GameMode.HasCleared(Difficulty.Hard) },

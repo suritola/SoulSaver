@@ -68,6 +68,8 @@ public class SwarmMote : MonoBehaviour
     }
 
     // 무리 안 한 자리에서 출발
+    public int Wave;                // 1.2~ 어느 무리인지 (SwarmWave.MoteDown — 영혼 계약 「수확」)
+
     public void Launch(Vector3 pos, Vector2 heading, float lifetime, float expGain, float wobblePhase, int sortingLayer, int sortingOrder)
     {
         transform.position = pos;
@@ -131,6 +133,7 @@ public class SwarmMote : MonoBehaviour
         Vector3 pos = transform.position;
         sr.enabled = false;
         col.enabled = false;
+        SwarmWave.MoteDown(Wave, killed);
         if (!killed) return;
 
         // 잡몹 처치와 같은 알림 (흡혈 · 고유 스킬 · 필살기 충전 · 이번 판 처치 수 · 업적), 보스까지 처치 수 · 코인 · 포인트 · 영혼 조각은 없음
@@ -150,6 +153,7 @@ public class SwarmMote : MonoBehaviour
     // 맞지 않고 화면을 다 지나감: 보상 없이 풀로
     void Vanish()
     {
+        if (!dead) SwarmWave.MoteDown(Wave, false);
         dead = true;
         sr.enabled = false;
         col.enabled = false;

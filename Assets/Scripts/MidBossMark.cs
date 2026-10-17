@@ -19,8 +19,11 @@ public class MidBossMark : MonoBehaviour
         go.AddComponent<MidBossMark>().Build(name, prefix);
     }
 
+    public float BornAt { get; private set; }      // 1.2~ 영혼 계약 「스무 초」
+
     void Build(string name, bool prefix)
     {
+        BornAt = Time.time;
         body = GetComponent<SpriteRenderer>();
         enemy = GetComponent<EnermyController>();
         if (white == null) white = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 4f, 4f), Vector2.one * 0.5f, 4f);

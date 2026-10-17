@@ -74,8 +74,14 @@ public class ChoiceUI : MonoBehaviour
         }
     }
 
+    // 1.2~ 카드 아래 작은 버튼 하나 (영혼 각인 「지난 판 각인 그대로」): 고르면 onPick(options.Length) · 다음 Run 에서 한 번만 쓰고 지움
+    //   숫자 키 [카드 수 + 1] · 패드 X 로도
+    public static string ExtraLabel, ExtraTip;
+
     public static IEnumerator Run(string title, string sub, Option[] options, System.Action<int> onPick)
     {
+        string extraLabel = ExtraLabel, extraTip = ExtraTip;
+        ExtraLabel = ExtraTip = null;
         Canvas canvas = UIKit.HudCanvas();
         if (canvas == null || options == null || options.Length == 0) { onPick?.Invoke(0); yield break; }
         while (Open) yield return null;                 // 다른 고르기 창이 떠 있으면 닫힐 때까지
@@ -162,6 +168,20 @@ public class ChoiceUI : MonoBehaviour
         }
         Hostile.Play("chime", 0.7f, 1.1f);
 
+        if (!string.IsNullOrEmpty(extraLabel))
+        {
+            Button extra = UIKit.MakeButton(r, extraLabel, new Vector2(0f, -394f), new Vector2(420f, 56f), () => { if (ui.ready) ui.confirmed = n; }, 24f);
+            extra.name = "ChoiceExtra";
+            TMP_Text et = extra.GetComponentInChildren<TMP_Text>();
+            if (et != null) { UIKit.Forget(et); et.text = Loc.T(extraLabel) + "  <size=70%><color=#A89C86>[" + (GamePad.Active ? "X" : (n + 1).ToString()) + "]</color></size>"; }
+            if (!string.IsNullOrEmpty(extraTip))
+            {
+                TooltipTrigger tip = extra.gameObject.AddComponent<TooltipTrigger>();
+                tip.titleProvider = () => Loc.T(extraLabel);
+                tip.bodyProvider = () => Loc.T(extraTip);
+            }
+        }
+
         // 1.0.4~ 입력 보호: 흐리게 시작해 0.6초 동안 밝아지고, 마우스 버튼을 떼야 고를 수 있음
         CanvasGroup group = go.GetComponent<CanvasGroup>();
         if (group == null) group = go.AddComponent<CanvasGroup>();
@@ -184,6 +204,7 @@ public class ChoiceUI : MonoBehaviour
                 yield return null;
                 continue;
             }
+            if (!string.IsNullOrEmpty(extraLabel) && n < 9 && (Input.GetKeyDown(KeyCode.Alpha1 + n) || Input.GetKeyDown(KeyCode.Keypad1 + n) || GamePad.XDown)) ui.confirmed = n;
             for (int i = 0; i < n && i < 9; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
                 {

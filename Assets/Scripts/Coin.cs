@@ -23,6 +23,7 @@ public TextMeshProUGUI TextInput;
     public void AddCoin(int coin)
     {
         coins += coin;
+        if (coin > 0) RunCounters.Add("coins", coin);       // 1.2~ 영혼 계약 (모은 코인)
         UpdateCoinText();
     }
 

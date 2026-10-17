@@ -188,6 +188,18 @@ public static class UnlockRoutes
         if (BestWeight >= WeightGoal) Achieve(CharUnlock.EndlessClear);
     }
 
+    // ContractBoard.Refresh: 보드의 「열다섯 상자」 · 「네 왕」 · 「두 번째 무게」 칸을 채웠을 때 (같은 기록이라 보통은 여기서 이미 열려 있음)
+    //   판 안이면 바로 알림 · 메인 메뉴(옛 기록으로 처음 채움)면 조용히 열고 받기 창에서 한 번 알림 (Retro 와 같음)
+    public static void FromBoard(CharUnlock c, bool inRun)
+    {
+        if (!HasAlt(c) || CharacterData.ConditionMet(c)) return;
+        if (inRun) { Achieve(c); return; }
+        Prefs.SetInt(AltKey + (int)c, 1);
+        Prefs.SetInt("char.cond." + (int)c, 1);
+        Prefs.SetInt(AltNoticeKey + (int)c, 1);
+        Prefs.Save();
+    }
+
     static void Achieve(CharUnlock c)
     {
         if (CharacterData.ConditionMet(c)) { Prefs.Save(); return; }
@@ -270,7 +282,7 @@ public static class ClaimRewards
         public System.Action ack;
     }
 
-    static readonly List<System.Func<IEnumerable<Claim>>> sources = new List<System.Func<IEnumerable<Claim>>> { EndlessMilestones.Claims };
+    static readonly List<System.Func<IEnumerable<Claim>>> sources = new List<System.Func<IEnumerable<Claim>>> { EndlessMilestones.Claims, ContractBoard.Claims };      // 1.2~ 계약 보드: 옛 기록으로 채운 칸 · 받지 않은 칸
     static readonly List<System.Func<IEnumerable<Note>>> notes = new List<System.Func<IEnumerable<Note>>> { LadderNotes, UnlockRoutes.Notes };
 
     public static void Register(System.Func<IEnumerable<Claim>> source) { if (source != null && !sources.Contains(source)) sources.Add(source); }

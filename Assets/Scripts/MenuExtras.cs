@@ -57,6 +57,8 @@ public static class MenuExtras
             canvas.gameObject.AddComponent<QuickRestart>();
             ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」 · 「메인 메뉴로」 (1.1.2~ 가운데 세로 한 줄)
             ResultScreen.FitTitle();
+            ResultScreen.BuildLeftBehind(canvas.transform);     // 1.2~ 「이번 판이 남긴 것」
+            ResultScreen.BuildRecommend(canvas.transform);      // 1.2~ 3연속 사망 추천 한 줄
         }
         // 이번 판에 얻은 캐릭터 포인트
         if (canvas != null && CharacterData.RunPoints > 0)
@@ -116,7 +118,7 @@ public static class MenuExtras
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialRun.Begin());
         if (!TutorialRun.Done) tutorial.AddComponent<NewGlow>();       // 1.0.4~: 시작만 해서는 꺼지지 않고 끝까지 마쳐야 꺼짐 (마치면 아래에서 완료 체크)
         GameObject codex = UIKit.CloneButton(start, "CodexButton", "도감", () => CodexUI.Open(sr.root));
-        if (CodexSeen.HasNew) codex.AddComponent<NewGlow>();          // 1.2~ 발견형 도감: NEW 탭 · 받을 수집 보상
+        if (CodexSeen.HasNew || MemoryShards.HasNew) codex.AddComponent<NewGlow>();      // 1.2~ 읽지 않은 기억 조각도          // 1.2~ 발견형 도감: NEW 탭 · 받을 수집 보상
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
@@ -174,6 +176,15 @@ public static class MenuExtras
         notes.name = "PatchNotesButton";
         SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
+        MenuContracts.Install(sr.parent, sr.root);             // 1.2~ 오른쪽 아래: 이번 판 계약 세 줄 · 계약 보드
+        DailyRewards.MenuCheck();                              // 1.2~ 연속 출석이 끊겼으면 한 번 알림
+        if (daily != null && !dailyLocked && DailyRewards.Streak > 0)
+        {
+            // 1.2~ 일일 도전 칸 아래: 「연속 n일」 (폰트에 없는 그림 글자는 쓰지 않음)
+            TMP_Text streak = UIKit.Text(daily.transform, "", 16f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -76f), new Vector2(176f, 24f));
+            streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
+            UIKit.Forget(streak);
+        }
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
@@ -660,7 +671,7 @@ public static class SettingsUI
     static Button resetButton;
     static float resetArmedAt = -99f;
     static Color resetLabelColor = Color.white;
-    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 9줄이라 54 · 화면 탭은 BuildDisplay 에서 52)
+    static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭은 10줄이라 48 · 화면 탭은 BuildDisplay 에서 52)
 
     static float resetDoneAt = -99f;
     static bool ResetArmed => resetArmedAt > -99f;
@@ -706,7 +717,7 @@ public static class SettingsUI
     {
         tab = t;
         DisarmReset();                                  // 다른 탭으로 옮기면 무장 해제
-        rowH = tab == 3 ? 54f : 64f;
+        rowH = tab == 3 ? 48f : 64f;
         capturing = -1;
         blocked = -1;
         keyLabels.Clear();
@@ -906,7 +917,8 @@ public static class SettingsUI
         // 1.0.4~ 줄마다 마우스를 올리면 한 줄 설명, 거의 효과가 없던 「키 아이콘」은 뺌 (줄 간격 75 → 80), 「투명도」 → 「불투명도」
         // 1.1.9~ 「커서를 창 안에 가두기」 · 「카드 한 번 클릭으로 확정」 두 줄을 더 넣어 9줄: 줄 간격 75 → 60, 버튼 높이 64 → 54 (rowH)
         //        위 끝 = 탭 버튼 아래(창 240) 밑, 아래 끝 = 「닫기」 위(창 -326) 위 (page 가운데가 창 -30)
-        float[] y = { 235f, 175f, 115f, 55f, -5f, -65f, -125f, -185f, -245f };
+        // 1.2~ 「망자의 전령」 한 줄을 더 넣어 10줄: 줄 간격 60 → 53, 버튼 높이 54 → 48
+        float[] y = { 238f, 185f, 132f, 79f, 26f, -27f, -80f, -133f, -186f, -239f };
         ToggleRow("도움말 안내", y[0], () => GameSettings.Hints, v => GameSettings.Hints = v,
                   "처음 보는 기능마다 짧은 도움말을 한 번씩 띄웁니다.");
         // 1.0.4~: 본 도움말을 처음부터 다시 볼 수 있게 (켜기 · 끄기 옆)
@@ -934,8 +946,9 @@ public static class SettingsUI
                   "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
         ToggleRow("카드 한 번 클릭으로 확정", y[7], () => GameSettings.OneClickPick, v => GameSettings.OneClickPick = v,
                   "켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 무기 진화는 늘 두 번 확인합니다.");
+        ToggleRow("herald.setting", y[8], () => GameSettings.Herald, v => GameSettings.Herald = v, "herald.setting.desc");
         // 1.2~ 발견형 도감의 스포일러 허용 (줄 간격 80 → 75 로 한 줄 더)
-        ToggleRow("도감 모두 보기", y[8], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
+        ToggleRow("도감 모두 보기", y[9], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,
                   "켜면 도감의 진화 · 유물 · 각인 · 비밀 탭에서 아직 못 얻은 것도 모두 보입니다 (스포일러). 수집률과 보상에는 들어가지 않습니다.");
     }
 

@@ -385,9 +385,23 @@ public class ChapterEvents : MonoBehaviour
         }
     }
 
+    // 1.2~ 이벤트를 해냄 (영혼 계약 「습격 막아 내기」 등 · 보드 「궁수로 이벤트 15개」 「유령으로 제단 10번」 · 「도적으로 고블린 10번」)
+    static void EventWon(string id)
+    {
+        RunCounters.Both("event." + id);
+        RunCounters.Both("event.done");
+    }
+
+    // 1.2~ 지금 진행 중인 이벤트 (망자의 전령 조건 · 없으면 null)
+    public static string ActiveId { get; private set; }
+
     void Begin(PlayerController p, StageManager sm, int slot)
     {
         started = true;
+        ActiveId = current.def.id;
+        RunCounters.Add("event.join");                  // 1.2~ 영혼 계약 · 보드 「여섯 가지 셈」
+        RunCounters.Saw("event." + current.def.id);
+        RunCounters.LifeMax("events.onerun", RunCounters.SeenCount("event."));
         ShowArrow(false, Vector3.zero, Vector3.zero, WarnColor);
         Vector3 me = p.transform.position;
         switch (current.def.id)
@@ -483,6 +497,7 @@ public class ChapterEvents : MonoBehaviour
         if (left == 0)
         {
             ambush = null;
+            EventWon("raid");
             chests.Add(TreasureChest.Spawn(me + (Vector3)(Random.insideUnitCircle.normalized * 2.5f)));
             Finish();
         }
@@ -498,6 +513,7 @@ public class ChapterEvents : MonoBehaviour
     {
         if (goblinCaught)
         {
+            EventWon("goblin");
             int coins = 40 + 20 * slot;
             Coin coin = FindFirstObjectByType<Coin>();
             if (coin != null) coin.AddCoin(coins);
@@ -560,6 +576,7 @@ public class ChapterEvents : MonoBehaviour
         labelText = Loc.T(labelKey).Replace("{0}", left.ToString()).Replace("{1}", SecondsLeft(groupUntil).ToString());
         if (left == 0)
         {
+            EventWon(current.def.id == ContentRegistry.CursedChest ? "cursed" : "pack");
             chests.Add(TreasureChest.Spawn(me + (Vector3)(Random.insideUnitCircle.normalized * 2.5f), true));
             Finish();
             return;
@@ -604,6 +621,7 @@ public class ChapterEvents : MonoBehaviour
                                               .Replace("{1}", SecondsLeft(altarUntil).ToString());
         if (altarProgress >= 1f)
         {
+            EventWon("altar");
             int shards = 25 + 10 * slot;
             SoulShards.Add(shards, where, true);
             chests.Add(TreasureChest.Spawn(where));
@@ -621,6 +639,7 @@ public class ChapterEvents : MonoBehaviour
     // 이벤트 끝: 연출 정리 (cancel: 보스 등장 · 장 바뀜 — 남은 고블린 · 안 연 저주받은 상자도 치움)
     void Finish(bool cancel = false)
     {
+        ActiveId = null;
         if (cancel)
         {
             if (goblin != null && goblin.TryGetComponent(out EnermyController e) && !e.IsDead) e.Purge();

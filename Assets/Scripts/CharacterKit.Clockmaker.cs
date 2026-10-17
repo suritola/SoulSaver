@@ -26,8 +26,9 @@ public partial class CharacterKit
     void ClockAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
         bool big = ClockReady;
-        if (big) clockTicks = 0;
+        if (big) { clockTicks = 0; RunCounters.Both("oclock"); }       // 1.2~ 영혼 계약 · 보드
         gearThrows++;
+        RunCounters.Add("gear");
         float d = dmg * (form == SpecialAbilities.KitGrandfather ? 1.4f : 1f);
         // 1.1.3: 이중 톱니 0.85 → 0.7 (두 톱니 합 1.7배 → 1.4배 — 괘종 1.4 · 분침과 곱으로 겹쳐 후반 단일 화력이 중앙값의 2배였음)
         foreach (Vector2 v in Spread(dir, shots + (augment == AugTwinGear ? 1 : 0), 10f))

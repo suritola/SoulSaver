@@ -87,13 +87,14 @@ public class Point : MonoBehaviour
     }
 
     // 1.1~ 클리어 보너스: 배율 없이 그대로 · 포인트 글자가 잠깐 금빛으로 커짐 (판 안에 Point 가 없으면 보유 포인트에만)
-    public static void Bonus(int n)
+    // 1.2~ clearBonus = false: 영혼 계약 · 일일 도전 보상처럼 클리어가 아닌 보너스 (결과 화면 「클리어 보너스」 칸에 넣지 않음)
+    public static void Bonus(int n, bool clearBonus = true)
     {
         if (n <= 0) return;
         int before = CharacterData.RunPoints;
         CharacterData.AddPoints(n);
         if (CharacterData.RunPoints == before) return;          // 튜토리얼 · 자동 플레이는 주지 않음
-        RunBonus += n;
+        if (clearBonus) RunBonus += n;
         Point p = Cache<Point>.Get;
         if (p == null) return;
         p.points += n;

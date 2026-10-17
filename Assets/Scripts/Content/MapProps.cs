@@ -212,10 +212,12 @@ public class MapProps : MonoBehaviour
         int slot = Chapters.SlotOf(Chapters.CurrentStage);
         if (prop.Def.sarcophagus)
         {
+            RunCounters.Both("sarco");          // 1.2~ 영혼 계약 · 보드
             StartCoroutine(OpenSarcophagus(slot, prop.Home));
             return;
         }
         brokenHere++;
+        RunCounters.Add("prop");
         TranscendRules.PropBroken(prop.Def, prop.Home);        // 1.2~ 초월 카드 「맵 지배」: 터지고 다시 생김
         DropDef drop = RollDrop();
         if (drop == null) return;
@@ -267,6 +269,7 @@ public class MapProps : MonoBehaviour
             int id = r.abilityId;
             if (id < 0 || id >= sa.abilities.Length || sa.abilities[id] == null || sa.abilities[id].kind != SpecialKind.Skill) continue;
             if (sa.Has(id) || CharacterData.InPool(id)) continue;     // 이미 가졌거나, 이 영웅이 보물 상자 「잠든 힘」으로 얻는 능력
+            if (!r.Unlocked) continue;                                // 1.2~ 계약 보드 · 일일 도전으로 여는 유물
             list.Add(r);
         }
         return list;
@@ -312,6 +315,7 @@ public class MapProps : MonoBehaviour
             SpecialDef def = sa.abilities[picks[i].abilityId];
             // 1.1.2~ 어느 칸 · 키로 들어가는지 (몇 번째 유물인지 · 같은 키를 나눠 쓰는지 · 마지막 칸이면 그 뒤엔 어떻게 되는지)
             string desc = "<color=#C9A2FF>" + sa.RelicSlotNote() + "</color>\n" + SpecialAbilities.BodyText(picks[i].abilityId, def.description);
+            if (picks[i].flavor != null) desc = "<color=#F5D478>「" + Loc.T("relic.new." + picks[i].flavor + ".name") + "」</color> <size=85%>" + Loc.T("relic.new." + picks[i].flavor + ".desc") + "</size>\n" + desc;     // 1.2~ 보드 유물
             options[i] = new ChoiceUI.Option(def.name, desc, SarcoColor, def.icon);
         }
         int chosen = 0;
@@ -380,6 +384,7 @@ public class MapProps : MonoBehaviour
         float heal = p.PlayerMaxHealth * MeatHeal * SoulWeight.HealMul;
         float before = p.PlayerHealth;
         p.PlayerHealth = Mathf.Min(p.PlayerMaxHealth, p.PlayerHealth + heal);
+        RunCounters.Add("meat");
         Fx.Spawn("fx_levelup", p.transform.position + Vector3.up, 3f, new Color(1f, 0.55f, 0.5f), 16f);
         Float(p.transform.position + Vector3.up * 1.5f, Loc.T("drop.meat.text").Replace("{0}", Mathf.RoundToInt(p.PlayerHealth - before).ToString()), new Color(1f, 0.55f, 0.5f), NoticeIcon.Meat);
         Hostile.Play("chime", 0.6f, 1.2f);
@@ -388,6 +393,7 @@ public class MapProps : MonoBehaviour
     public static void DropMagnet(DropCtx c)
     {
         if (c.player == null || c.host == null) return;
+        RunCounters.Add("magnet");
         c.host.StartCoroutine(Magnet(c.player));
         ShockRing.Spawn(c.player.transform.position, 0.5f, 16f, 0.6f, new Color(1f, 0.5f, 0.5f, 0.9f), 0.3f);
         Float(c.player.transform.position + Vector3.up * 1.5f, Loc.T("drop.magnet.text"), new Color(1f, 0.6f, 0.55f), NoticeIcon.Magnet);

@@ -451,6 +451,14 @@ public class EnermyController : MonoBehaviour
         }
         finally { KillCounts = true; }
         if (a == 1 && IsMidBoss) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
+        if (a == 1 && IsMidBoss)
+        {
+            // 1.2~ 영혼 계약 · 보드: 중간 보스 (20초 안 · 평타로)
+            RunCounters.Both("midboss");
+            MidBossMark mark = GetComponent<MidBossMark>();
+            if (mark != null && Time.time - mark.BornAt <= 20f) RunCounters.Add("midboss.fast");
+            if (DamageSource.Current == DamageSource.Basic) RunCounters.Add("midboss.basic");
+        }
         spriteRenderer.color = baseColor;
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음

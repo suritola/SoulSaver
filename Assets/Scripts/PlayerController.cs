@@ -876,6 +876,9 @@ void Shoot()
     void EndSkill()
     {
         if (!isSkillUsing) return;
+        // 1.2~ 영혼 계약 (거너 일제 사격): 한 번에 조준한 수 · 보스 명중
+        RunCounters.Max("volley.marks", targets.Count + bossTargets.Count);
+        RunCounters.Add("volley.boss", bossTargets.Count);
 
         isSkillUsing = false;
 
@@ -1356,6 +1359,8 @@ void Shoot()
             if (Time.timeScale > 0f) Time.timeScale = Mathf.Lerp(0.25f, 0.05f, t / 1.1f);
             yield return null;
         }
+        Herald.RecordDeath();       // 1.2~ 영웅별 · 장별 · 연속 사망 (기억 조각 · 결과 화면 추천 · 전령 조건)
+        yield return Herald.Play(false);        // 1.2~ 망자의 전령: 멈춘 채 한 줄 (넘기면 바로 · 설정에서 끔)
         Time.timeScale = 1f;
         SceneManager.LoadScene("GameOver");
     }

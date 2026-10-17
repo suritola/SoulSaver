@@ -34,6 +34,7 @@ public static class Curse
         PendingStage = -1;
         if (pick != 0) yield break;
         Active = true;
+        RunCounters.Add("curse");       // 1.2~ 영혼 계약
         RunSave.Record("k" + stage);
         Hostile.Play("roar", 0.5f, 1.3f);
         Fx.Spawn("fx_soulburst", Hostile.Player != null ? Hostile.Player.transform.position : Vector3.zero, 6f, new Color(0.75f, 0.4f, 1f), 16f);

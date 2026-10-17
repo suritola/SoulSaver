@@ -149,6 +149,7 @@ public partial class CharacterKit
             if (e != null) e.Slow(0f, FreezeTime);
             Fx.Spawn("fx_sparkle", g.transform.position, 1.6f, Chill, 20f);
             Play("freeze", 0.5f, 1f);
+            RunCounters.Both("freeze");             // 1.2~ 영혼 계약 · 보드
             SignatureSkills.Frozen(g);
         }
         chill[g] = have;
