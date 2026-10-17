@@ -459,10 +459,10 @@ public class EnemySkill : MonoBehaviour
         Fx.Spawn("fx_shock", transform.position, r * 2f, new Color(1f, 0.35f, 0.3f), 14f);
         ShockRing.Spawn(transform.position, 0.5f, r, 0.5f, new Color(1f, 0.4f, 0.35f, 0.9f), 0.35f);
         Hostile.Play("pulse", 0.7f, 0.8f);
-        foreach (Collider2D c in Physics2D.OverlapCircleAll(transform.position, r))
+        // 1.2.4: OverlapCircleAll(부를 때마다 새 배열) → 공용 버퍼 (같은 조건 · 같은 결과, 이 안에서 다시 질의하지 않음)
+        foreach (Collider2D c in Specials.Overlap(transform.position, r, Hostile.AreaBuf))
         {
-            EnermyController e = c.GetComponent<EnermyController>();
-            if (e == null || e.IsDead) continue;
+            if (!c.TryGetComponent(out EnermyController e) || e.IsDead) continue;
             e.Enrage(1.6f, 3.5f);
             Fx.Spawn("fx_spark", e.transform.position + Vector3.up, 1.2f, new Color(1f, 0.4f, 0.35f), 14f);
         }
@@ -716,23 +716,43 @@ public static class Hostile
         return lr;
     }
 
+    // 1.2.4: 점 개수별 좌표 버퍼 (SetPosition 을 점마다 부르던 것을 SetPositions 한 번으로 · 같은 좌표)
+    static readonly Dictionary<int, Vector3[]> arcBufs = new Dictionary<int, Vector3[]>();
+    public static Vector3[] PointBuffer(int count)
+    {
+        if (!arcBufs.TryGetValue(count, out Vector3[] buf)) arcBufs[count] = buf = new Vector3[count];
+        return buf;
+    }
+
+    // 1.2.4: 적 스킬이 쓰는 범위 질의 공용 버퍼 (울부짖음 · 이 안에서 다시 질의하지 않는 곳만)
+    public static readonly List<Collider2D> AreaBuf = new List<Collider2D>(64);
+
     public static void SetArc(LineRenderer lr, Vector3 center, float radius, float fromDeg, float toDeg)
     {
         int seg = Mathf.Max(4, Mathf.CeilToInt(Mathf.Abs(toDeg - fromDeg) / 6f));
-        lr.positionCount = seg + 1;
+        int n = seg + 1;
+        Vector3[] buf = PointBuffer(n);
         for (int i = 0; i <= seg; i++)
         {
             float a = Mathf.Lerp(fromDeg, toDeg, i / (float)seg) * Mathf.Deg2Rad;
-            lr.SetPosition(i, center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radius);
+            buf[i] = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radius;
         }
+        if (lr.positionCount != n) lr.positionCount = n;
+        lr.SetPositions(buf);
     }
 
     // 원형 경고: 테두리 + 안쪽이 차오르는 원 (다 차면 발동)
+    // 1.2.4: 끝난 경고는 꺼 두었다가 다시 씀 (원 · 직선 따로 · 자식 구성이 달라서)
     public static Telegraph Circle(Vector3 pos, float radius, float duration, Color color)
     {
-        GameObject go = new GameObject("WarnCircle");
-        go.transform.position = pos;
-        Telegraph t = go.AddComponent<Telegraph>();
+        Telegraph t = Telegraph.Take(true);
+        if (t == null)
+        {
+            GameObject go = new GameObject("WarnCircle");
+            go.transform.position = pos;
+            t = go.AddComponent<Telegraph>();
+        }
+        else t.transform.position = pos;
         t.InitCircle(radius, duration, color);
         return t;
     }
@@ -740,8 +760,12 @@ public static class Hostile
     // 직선 경고: 옅은 띠 + 앞으로 차오르는 띠
     public static Telegraph Line(Vector3 a, Vector3 b, float width, float duration, Color color)
     {
-        GameObject go = new GameObject("WarnLine");
-        Telegraph t = go.AddComponent<Telegraph>();
+        Telegraph t = Telegraph.Take(false);
+        if (t == null)
+        {
+            GameObject go = new GameObject("WarnLine");
+            t = go.AddComponent<Telegraph>();
+        }
         t.InitLine(a, b, width, duration, color);
         return t;
     }
@@ -775,14 +799,34 @@ public static class Hostile
     public static HostileProjectile Shoot(Vector3 pos, Vector2 dir, float speed, float damage, float radius, Color color, float scale, float life = 4f,
         [System.Runtime.CompilerServices.CallerMemberName] string caller = "", [System.Runtime.CompilerServices.CallerFilePath] string file = "")
     {
-        GameObject go = SpecialAbilities.MakeSprite("HostileShot", Glow, pos, scale, color, "Effect", 9);
-        HostileProjectile h = go.AddComponent<HostileProjectile>();
+        // 1.2.4: 사라진 탄(구슬 · 심 · 그림자 자식 포함)은 꺼 두었다가 다시 씀 — 개발자전 탄 400발 · 초당 수백 발 생성 · 파괴를 없앰
+        HostileProjectile h = HostileProjectile.Take();
+        bool reused = h != null;
+        if (!reused)
+        {
+            GameObject go = SpecialAbilities.MakeSprite("HostileShot", Glow, pos, scale, color, "Effect", 9);
+            h = go.AddComponent<HostileProjectile>();
+            h.body = go.GetComponent<SpriteRenderer>();
+        }
+        else
+        {
+            // 새로 만든 것과 같은 상태로 되돌림 (MakeSprite 가 넣던 값 · 지난 탄의 회전)
+            Transform tr = h.transform;
+            tr.position = pos;
+            tr.rotation = Quaternion.identity;
+            tr.localScale = Vector3.one * scale;
+            if (h.body != null) h.body.color = color;
+        }
         h.dir = dir.normalized;
         h.speed = speed * GameMode.ProjectileSpeedMul;     // 어려울수록 탄이 빠름
         h.damage = damage;
         h.radius = radius;
         h.life = life;
         h.label = AttackLabel.FromCaller(file, caller) ?? "적 탄환";
+        h.spin = false;
+        h.fiery = false;
+        h.pierceWalls = false;
+        h.Prepare(reused);
         return h;
     }
 
@@ -864,6 +908,36 @@ public class Telegraph : MonoBehaviour
     LineRenderer fillLine;
     SpriteRenderer fillDisc;
     SpriteRenderer glow;
+    FxAnim rune;
+
+    // 1.2.4: 끝난 경고는 꺼 두었다가 다시 씀 (원 · 직선은 자식 구성이 달라 따로)
+    static readonly Stack<Telegraph> circlePool = new Stack<Telegraph>();
+    static readonly Stack<Telegraph> linePool = new Stack<Telegraph>();
+    int spawnFrame = -1;
+    bool built;
+
+    public static Telegraph Take(bool circle)
+    {
+        Stack<Telegraph> pool = circle ? circlePool : linePool;
+        Telegraph t = null;
+        while (pool.Count > 0 && t == null) t = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        return t;
+    }
+
+    void Release()
+    {
+        gameObject.SetActive(false);
+        (circle ? circlePool : linePool).Push(this);
+    }
+
+    // 다시 쓰는 경고: 새로 만든 것처럼 켜진 그 프레임에는 움직이지 않음
+    void Reopen()
+    {
+        t = 0f;
+        blinkPhase = 0f;
+        spawnFrame = Time.frameCount;
+        gameObject.SetActive(true);
+    }
 
     public void InitCircle(float radius, float duration, Color color)
     {
@@ -872,16 +946,35 @@ public class Telegraph : MonoBehaviour
         this.radius = radius;
         this.duration = duration;
         this.color = color;
-        under = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.42f, 17));
-        under.loop = true;
+        bool reuse = built;
+        built = true;
+        if (!reuse)
+        {
+            under = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.42f, 17));
+            under.loop = true;
+        }
         Hostile.SetArc(under, transform.position, radius, 0f, 354f);
-        outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18));
-        outline.loop = true;
+        if (!reuse)
+        {
+            outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18));
+            outline.loop = true;
+        }
+        else outline.startColor = outline.endColor = color;
         Hostile.SetArc(outline, transform.position, radius, 0f, 354f);
-        closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19));
-        closing.loop = true;
-        // 바닥에 도는 도트 룬 마법진
-        FxAnim rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration);
+        if (!reuse)
+        {
+            closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19));
+            closing.loop = true;
+        }
+        else
+        {
+            // 새 선처럼 첫 프레임엔 고리 없음 (Update 가 그림)
+            closing.positionCount = 0;
+            closing.startColor = closing.endColor = Color.white;
+        }
+        // 바닥에 도는 도트 룬 마법진 (이펙트 단계 · 스킬 강조가 Play 에서 정해지므로 다시 쓸 때도 새로 만듦)
+        if (rune != null) Destroy(rune.gameObject);
+        rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration);
         if (rune != null)
         {
             rune.spin = 70f;
@@ -889,13 +982,30 @@ public class Telegraph : MonoBehaviour
         }
         if (Hostile.Glow != null)
         {
-            GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
-            g.transform.SetParent(transform, true);
-            glow = g.GetComponent<SpriteRenderer>();
-            GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
-            d.transform.SetParent(transform, true);
-            fillDisc = d.GetComponent<SpriteRenderer>();
+            if (glow == null)
+            {
+                GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
+                g.transform.SetParent(transform, true);
+                glow = g.GetComponent<SpriteRenderer>();
+            }
+            else
+            {
+                glow.transform.localScale = Vector3.one * (radius * 2.4f / 8f);
+                glow.color = new Color(color.r, color.g, color.b, 0.25f);
+            }
+            if (fillDisc == null)
+            {
+                GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
+                d.transform.SetParent(transform, true);
+                fillDisc = d.GetComponent<SpriteRenderer>();
+            }
+            else
+            {
+                fillDisc.transform.localScale = Vector3.one * 0.01f;
+                fillDisc.color = new Color(color.r, color.g, color.b, 0.8f);
+            }
         }
+        if (reuse) Reopen();
     }
 
     public void InitLine(Vector3 a, Vector3 b, float width, float duration, Color color)
@@ -906,12 +1016,32 @@ public class Telegraph : MonoBehaviour
         this.width = width;
         this.duration = duration;
         this.color = color;
+        bool reuse = built;
+        built = true;
+        Vector3 side = Vector3.Cross(b - a, Vector3.forward).normalized * width * 0.5f;
+        if (reuse)
+        {
+            outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.3f);
+            outline.startWidth = outline.endWidth = width;
+            outline.SetPosition(0, a);
+            outline.SetPosition(1, b);
+            underL.SetPosition(0, a + side); underL.SetPosition(1, b + side);
+            underR.SetPosition(0, a - side); underR.SetPosition(1, b - side);
+            edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = color;
+            edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
+            edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
+            fillLine.startColor = fillLine.endColor = new Color(color.r, color.g, color.b, 0.7f);
+            fillLine.startWidth = fillLine.endWidth = width * 0.7f;
+            fillLine.SetPosition(0, a);
+            fillLine.SetPosition(1, a);
+            Reopen();
+            return;
+        }
         outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.3f), width, 1));
         outline.positionCount = 2;
         outline.SetPosition(0, a);
         outline.SetPosition(1, b);
         // 양쪽 가장자리 선
-        Vector3 side = Vector3.Cross(b - a, Vector3.forward).normalized * width * 0.5f;
         underL = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
         underR = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
         underL.positionCount = underR.positionCount = 2;
@@ -936,6 +1066,7 @@ public class Telegraph : MonoBehaviour
 
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
         blinkPhase += Time.deltaTime * (4f + k * 14f);
@@ -962,7 +1093,7 @@ public class Telegraph : MonoBehaviour
         {
             // 발동 순간 짧은 섬광
             if (circle) ShockRing.Spawn(transform.position, radius * 0.9f, radius * 1.15f, 0.18f, Color.white, 0.18f);
-            Destroy(gameObject);
+            Release();
         }
     }
 }
@@ -1016,30 +1147,60 @@ public class ShockRing : MonoBehaviour
     Color color;
     LineRenderer lr;
 
+    // 1.2.4: 끝난 고리는 꺼 두었다가 다시 씀 (폭발 · 내려찍기 · 경고 발동마다 생성 · 파괴하던 것)
+    static readonly Stack<ShockRing> pool = new Stack<ShockRing>();
+    int spawnFrame = -1;
+
     public static void Spawn(Vector3 pos, float from, float to, float duration, Color color, float width)
     {
-        GameObject go = new GameObject("ShockRing");
-        go.transform.position = pos;
-        ShockRing s = go.AddComponent<ShockRing>();
+        ShockRing s = null;
+        while (pool.Count > 0 && s == null) s = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        bool reuse = s != null && s.lr != null;
+        if (!reuse)
+        {
+            if (s != null) Destroy(s.gameObject);
+            GameObject go = new GameObject("ShockRing");
+            go.transform.position = pos;
+            s = go.AddComponent<ShockRing>();
+        }
+        else s.transform.position = pos;
         s.from = from;
         s.to = to;
         s.duration = duration;
         s.color = color;
         s.width = width;
-        s.lr = Hostile.NewLine("Ring", color, width, 19);
-        s.lr.transform.SetParent(go.transform, false);
-        s.lr.loop = true;
+        s.t = 0f;
+        if (!reuse)
+        {
+            s.lr = Hostile.NewLine("Ring", color, width, 19);
+            s.lr.transform.SetParent(s.transform, false);
+            s.lr.loop = true;
+        }
+        else
+        {
+            // 새 선처럼: 첫 프레임엔 고리 없음 (Update 가 그림)
+            s.lr.positionCount = 0;
+            s.lr.startColor = s.lr.endColor = color;
+            s.lr.startWidth = s.lr.endWidth = width;
+            s.spawnFrame = Time.frameCount;
+            s.gameObject.SetActive(true);
+        }
     }
 
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;
         t += Time.deltaTime;
         float k = Mathf.Clamp01(t / duration);
         float ease = 1f - (1f - k) * (1f - k);
         Hostile.SetArc(lr, transform.position, Mathf.Lerp(from, to, ease), 0f, 354f);
         lr.startColor = lr.endColor = new Color(color.r, color.g, color.b, color.a * (1f - k));
         lr.startWidth = lr.endWidth = width * (1f - 0.6f * k);
-        if (k >= 1f) Destroy(gameObject);
+        if (k >= 1f)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
 
@@ -1057,7 +1218,7 @@ public class HostileProjectile : MonoBehaviour
     public string label;        // 받은 피해 출처 (AttackLabel, 쏜 스킬 이름)
     float puff;
     float trail;
-    SpriteRenderer body;
+    internal SpriteRenderer body;
 
     // 날고 있는 탄 목록 (쳐내기가 씬 전체를 뒤지지 않게)
     public static readonly System.Collections.Generic.List<HostileProjectile> Live = new System.Collections.Generic.List<HostileProjectile>();
@@ -1069,11 +1230,36 @@ public class HostileProjectile : MonoBehaviour
     Transform orb;
     float orbSize, age;
 
-    void Start()
+    // 1.2.4: 사라진 탄은 꺼 두었다가 Hostile.Shoot 가 다시 씀 (밖에서 Destroy 한 탄은 그냥 지워짐 · 동작 같음)
+    static readonly Stack<HostileProjectile> pool = new Stack<HostileProjectile>();
+    int spawnFrame = -1;
+
+    internal static HostileProjectile Take()
     {
-        body = GetComponent<SpriteRenderer>();
+        HostileProjectile h = null;
+        while (pool.Count > 0 && h == null) h = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+        return h;
+    }
+
+    void Release()
+    {
+        gameObject.SetActive(false);
+        pool.Push(this);
+    }
+
+    // Shoot 이 값을 다 넣은 뒤: 꾸밈(예전 Start) · 다시 쓰는 탄은 새로 만든 것처럼 켜진 그 프레임에는 움직이지 않음
+    internal void Prepare(bool reused)
+    {
+        puff = 0f;
+        trail = 0f;
+        age = 0f;
         orbSize = Mathf.Max(0.75f, radius * 2f + 0.35f) * LookMul;     // 1.1.9: 그림만 1.2배 (맞는 거리는 radius + 0.4 그대로)
         orb = Dress(gameObject, body != null ? body.color : Color.red, orbSize);
+        if (reused)
+        {
+            spawnFrame = Time.frameCount;
+            gameObject.SetActive(true);
+        }
     }
 
     // 1.1~: 적 탄 구슬 · 심 · 그림자는 Effect 보다 위 레이어(HitScan, 다른 곳은 안 씀) — 내 스킬 이펙트 · 처치 폭발 · 피해 숫자 · 총알 빛 아래에 깔려 안 보였음
@@ -1090,8 +1276,25 @@ public class HostileProjectile : MonoBehaviour
     {
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
         Color v = Vivid(color);
-        go.transform.localScale = Vector3.one * (diameter * 2.3f / 8f);      // 빛 그림은 8칸 크기
+        float s = diameter * 2.3f / 8f;
+        go.transform.localScale = Vector3.one * s;      // 빛 그림은 8칸 크기
         if (sr != null) sr.color = new Color(v.r, v.g, v.b, 0.8f);
+        // 1.2.4: 다시 쓰는 탄은 이미 있는 그림자 · 구슬 · 심의 크기 · 색만 다시 넣음 (새로 만든 것과 같은 월드 크기)
+        Transform tr = go.transform;
+        Transform oldShadow = tr.childCount >= 2 ? tr.Find("Shadow") : null;
+        Transform oldBall = oldShadow != null ? tr.Find("Orb") : null;
+        if (oldBall != null && s > 0f)
+        {
+            oldShadow.localPosition = Vector3.zero;
+            oldShadow.localRotation = Quaternion.identity;
+            oldShadow.localScale = Vector3.one * (diameter * 1.85f / 8f / s);
+            oldBall.localPosition = Vector3.zero;
+            oldBall.localRotation = Quaternion.identity;
+            oldBall.localScale = Vector3.one * (diameter / s);
+            SpriteRenderer ballSr = oldBall.GetComponent<SpriteRenderer>();
+            if (ballSr != null) ballSr.color = v;
+            return oldBall;
+        }
         Vector3 at = go.transform.position;
         GameObject shadow = SpecialAbilities.MakeSprite("Shadow", Hostile.Glow, at, diameter * 1.85f / 8f, new Color(0.02f, 0f, 0.04f, 0.88f), EnemyShotLayer, 7);
         shadow.transform.SetParent(go.transform, true);
@@ -1142,6 +1345,7 @@ public class HostileProjectile : MonoBehaviour
 
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;
         // 시간 왜곡에 같이 느려짐
         transform.position += (Vector3)(dir * speed * EnermyController.GlobalSpeedMultiplier * Time.deltaTime);
         if (spin) transform.Rotate(0f, 0f, 720f * Time.deltaTime);
@@ -1153,8 +1357,12 @@ public class HostileProjectile : MonoBehaviour
         if (!fiery && body != null && Hostile.Glow != null && trail >= 0.05f)
         {
             trail = 0f;
-            Color c = body.color;
-            FadeSprite.Spawn("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.6f, new Color(c.r, c.g, c.b, 0.75f), "Effect", 8, 0.25f);
+            // 1.2.4: 화면 밖 탄은 꼬리를 만들지 않음 (꼬리는 탄 자리에 탄보다 작게 생겨 그 자리에서 사라지므로 보이는 것은 같음)
+            if (body.isVisible)
+            {
+                Color c = body.color;
+                FadeSprite.Spawn("Trail", Hostile.Glow, transform.position, transform.localScale.y * 0.6f, new Color(c.r, c.g, c.b, 0.75f), "Effect", 8, 0.25f);
+            }
         }
 
         if (fiery && Hostile.Glow != null)
@@ -1173,12 +1381,12 @@ public class HostileProjectile : MonoBehaviour
         AttackLabel.Pending = null;
         if (hitPlayer)
         {
-            Hostile.Burst(transform.position, 1f, GetComponent<SpriteRenderer>().color);
-            Destroy(gameObject);
+            Hostile.Burst(transform.position, 1f, body != null ? body.color : GetComponent<SpriteRenderer>().color);
+            Release();
             return;
         }
 
         life -= Time.deltaTime;
-        if (life <= 0f || (!pierceWalls && Hostile.IsWall(transform.position))) Destroy(gameObject);
+        if (life <= 0f || (!pierceWalls && Hostile.IsWall(transform.position))) Release();
     }
 }

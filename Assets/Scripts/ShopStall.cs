@@ -91,6 +91,9 @@ public class ShopStall : MonoBehaviour
         return best;
     }
 
+    int shownLeft = int.MinValue;
+    string shownPrefix;
+
     void Update()
     {
         if (Time.timeScale == 0f) lastPausedAt = Time.unscaledTime;
@@ -108,7 +111,15 @@ public class ShopStall : MonoBehaviour
             sr.color = left < 3f && Mathf.PingPong(Time.time * 6f, 1f) < 0.5f ? new Color(1f, 1f, 1f, 0.4f) : Color.white;
         }
         if (glow != null) glow.transform.localScale = Vector3.one * (0.45f + Mathf.Sin(Time.time * 4f) * 0.05f);
-        label.text = Loc.T("상점  ") + Mathf.CeilToInt(left);
+        // 1.2.4: 매 프레임 글자를 넣으면 TMP 가 메시를 다시 만듦 → 보이는 숫자 · 언어 · 키 이름이 바뀔 때만 (같은 글자)
+        int shown = Mathf.CeilToInt(left);
+        string prefix = Loc.T("상점  ");
+        if (shown != shownLeft || prefix != shownPrefix)
+        {
+            shownLeft = shown;
+            shownPrefix = prefix;
+            label.text = prefix + shown;
+        }
 
         // 가까이 오면 안내가 나타나고, 상호작용 키로 상점 열기
         PlayerController p = Hostile.Player;

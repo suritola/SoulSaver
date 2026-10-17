@@ -491,7 +491,8 @@ public class EndlessTerrain : MonoBehaviour
         }
     }
 
-    static Tile TileFor(Sprite s)
+    // 최적화: EndlessMode.ReskinHellMap 도 이 캐시를 같이 씀 (판마다 같은 그림의 Tile 을 새로 만들지 않게)
+    internal static Tile TileFor(Sprite s)
     {
         if (tileCache.TryGetValue(s, out Tile t) && t != null) return t;
         t = ScriptableObject.CreateInstance<Tile>();

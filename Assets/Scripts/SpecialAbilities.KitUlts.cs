@@ -178,7 +178,7 @@ public partial class SpecialAbilities
                     fx.Play("hiss", 0.9f, 0.7f);
                     for (float t = 0f; t < 5f; t += 0.5f)
                     {
-                        foreach (Collider2D c in Physics2D.OverlapCircleAll(at, r))
+                        using (var ovl = PhysHits.Circle(at, r)) foreach (Collider2D c in ovl)
                         {
                             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                             Poison.Apply(c.gameObject, D * 0.3f, 12);
@@ -217,7 +217,7 @@ public partial class SpecialAbilities
                         if (tick <= 0f)
                         {
                             tick = 0.12f;
-                            foreach (Collider2D c in Physics2D.OverlapCircleAll(c0, r + 1f))
+                            using (var ovl = PhysHits.Circle(c0, r + 1f)) foreach (Collider2D c in ovl)
                             {
                                 if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                                 if (Mathf.Abs(Vector2.Distance(c.transform.position, c0) - r) > 1f) continue;

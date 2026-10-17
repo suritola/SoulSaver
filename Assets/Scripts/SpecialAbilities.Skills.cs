@@ -46,20 +46,20 @@ public partial class SpecialAbilities
             case DashId:
                 {
                     Vector3 end = ClampToArena(from + (Vector3)(dir * DashDistance));
-                    fx.SetLine(aimLine, from, end, new Color(0.5f, 0.95f, 1f, 0.7f), 0.1f);
-                    fx.SetRing(previewRing, end, 0.9f, new Color(0.5f, 0.95f, 1f, 0.8f), 0.1f);
+                    PreviewLine(aimLine, from, end, new Color(0.5f, 0.95f, 1f, 0.7f), 0.1f);
+                    PreviewRing(previewRing, end, 0.9f, new Color(0.5f, 0.95f, 1f, 0.8f), 0.1f);
                 }
                 break;
             case FireZoneId:
-                fx.SetRing(previewRing, mouse, FireZoneRadius, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
+                PreviewRing(previewRing, mouse, FireZoneRadius, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
                 break;
             case HookId:
                 {
                     HookTarget(from, dir, out Collider2D enemy, out float dist);
                     Vector3 end = from + (Vector3)(dir * dist);
-                    fx.SetLine(aimLine, from, end, new Color(0.85f, 0.15f, 0.2f, 0.8f), 0.1f);
-                    if (enemy != null) fx.SetRing(targetRing, enemy.transform.position, 1.6f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.14f);
-                    else fx.SetRing(previewRing, end, 0.8f, new Color(0.85f, 0.15f, 0.2f, 0.6f), 0.08f);
+                    PreviewLine(aimLine, from, end, new Color(0.85f, 0.15f, 0.2f, 0.8f), 0.1f);
+                    if (enemy != null) PreviewRing(targetRing, enemy.transform.position, 1.6f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.14f);
+                    else PreviewRing(previewRing, end, 0.8f, new Color(0.85f, 0.15f, 0.2f, 0.6f), 0.08f);
                 }
                 break;
         }
@@ -136,26 +136,22 @@ public partial class SpecialAbilities
         wasReady[id] = false;
     }
 
-    // 1.2~ 유물 칸 스킬도 쿨타임이 끝나면 알림
-    IEnumerable<int> ReadyChimeIds()
-    {
-        foreach (int id in skills) yield return id;
-        foreach (int id in relics) yield return id;
-    }
-
-    // 쿨타임이 끝나면 알림음과 HUD 반짝임
+    // 쿨타임이 끝나면 알림음과 HUD 반짝임 (1.2~ 유물 칸 스킬도) — 목록을 바로 돌아 매 프레임 이터레이터를 만들지 않음
     void UpdateReadyChimes()
     {
-        foreach (int id in ReadyChimeIds())
+        for (int i = 0; i < skills.Count; i++) ReadyChime(skills[i]);
+        for (int i = 0; i < relics.Count; i++) ReadyChime(relics[i]);
+    }
+
+    void ReadyChime(int id)
+    {
+        bool ready = Time.time >= CooldownUntil(id);
+        if (ready && wasReady.TryGetValue(id, out bool before) && !before)
         {
-            bool ready = Time.time >= CooldownUntil(id);
-            if (ready && wasReady.TryGetValue(id, out bool before) && !before)
-            {
-                fx.Play("chime", 0.45f);
-                rowFlashUntil[id] = Time.time + 0.5f;
-            }
-            wasReady[id] = ready;
+            fx.Play("chime", 0.45f);
+            rowFlashUntil[id] = Time.time + 0.5f;
         }
+        wasReady[id] = ready;
     }
 
     // 탄창 저주: 마지막 한 발이 장전되면 알림과 붉은 빛
@@ -195,13 +191,22 @@ public partial class SpecialAbilities
         }
     }
 
+    // 조준 미리보기는 그린 프레임 뒤에만 숨김 (예전엔 매 프레임 선 4개 · 점 전부를 끄는 쓰기를 했음)
+    bool previewsShown = true;
+
     void HidePreviews()
     {
+        if (!previewsShown) return;
+        previewsShown = false;
         SpecialFeedback.Hide(aimLine);
         SpecialFeedback.Hide(previewRing);
         SpecialFeedback.Hide(previewCone);
         SpecialFeedback.Hide(targetRing);
     }
+
+    void PreviewLine(LineRenderer lr, Vector3 a, Vector3 b, Color color, float width) { previewsShown = true; fx.SetLine(lr, a, b, color, width); }
+    void PreviewRing(LineRenderer lr, Vector3 center, float radius, Color color, float width) { previewsShown = true; fx.SetRing(lr, center, radius, color, width); }
+    void PreviewCone(LineRenderer lr, Vector3 origin, Vector2 dir, float halfAngle, float range, Color color, float width) { previewsShown = true; fx.SetCone(lr, origin, dir, halfAngle, range, color, width); }
 
     IEnumerator Dash()
     {
@@ -314,6 +319,8 @@ public partial class SpecialAbilities
     }
 
     const float HookRange = 14f;
+    static readonly List<RaycastHit2D> hookHits = new List<RaycastHit2D>(64);
+    static ContactFilter2D hookFilter;
 
     // 갈고리가 걸릴 대상: 벽보다 가까운 첫 적 (없으면 null). 반환값 = 벽까지 거리
     float HookTarget(Vector3 from, Vector2 dir, out Collider2D enemy, out float reach)
@@ -321,7 +328,12 @@ public partial class SpecialAbilities
         enemy = null;
         float enemyDist = HookRange;
         float wallDist = HookRange;
-        foreach (RaycastHit2D hit in Physics2D.CircleCastAll(from, 0.6f, dir, HookRange))
+        // CircleCastAll 과 같은 조건(기본 레이캐스트 층 · 트리거 설정 그대로) · 결과는 재사용 목록에 (가장 가까운 것만 고르므로 순서 무관)
+        hookFilter.useTriggers = Physics2D.queriesHitTriggers;
+        hookFilter.useLayerMask = true;
+        hookFilter.layerMask = Physics2D.DefaultRaycastLayers;
+        Physics2D.CircleCast(from, 0.6f, dir, hookFilter, hookHits, HookRange);
+        foreach (RaycastHit2D hit in hookHits)
         {
             if (hit.collider.CompareTag("enermy") || hit.collider.CompareTag("boss"))
             {

@@ -102,7 +102,7 @@ public partial class SignatureSkills
         //   예전엔 0.35초 뒤 그 자리에 새 표창을 만들어 날려 엉뚱한 데서 나타나 보였음
         Bullet thrown = Kit != null ? Kit.TakeRogueThrow() : null;
         int b = L("r.boomerang");
-        if (b > 0 && thrown != null && Alive)
+        if (b > 0 && thrown != null && thrown.isActiveAndEnabled && Alive)      // 풀로 돌아간 표창(꺼짐)에는 붙이지 않음 (다시 쓰일 때 남지 않게)
             thrown.gameObject.AddComponent<ReturningShuriken>().Throw(thrown, transform, start, RogueRange * 0.8f, Atk * V(b, 0.4f, 0.15f), E("re.return"));
         // 처형자의 길: 급습 시간 동안 꿰뚫는 그림자 표창이 함께
         if (E("re.executioner") && Time.time < ambushUntil)

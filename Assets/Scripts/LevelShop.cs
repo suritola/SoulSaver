@@ -197,6 +197,7 @@ public partial class LevelShop : MonoBehaviour
     GameObject pendingBadge;
     public GameObject PendingBadge => pendingBadge;        // 1.0.4~: 튜토리얼이 레벨업 배지를 짚어 줌
     TextMeshProUGUI pendingText;
+    Image pendingBadgeImg;                                  // 최적화: 매 프레임 GetComponent 대신 캐시
     int shownPending = -1;
     bool shownTree;
 
@@ -239,14 +240,20 @@ public partial class LevelShop : MonoBehaviour
             pendingText.fontSizeMax = 30f;
             pendingText.alignment = TextAlignmentOptions.Center;
             pendingText.raycastTarget = false;
+            pendingBadgeImg = bg;
+            // 최적화: 매 프레임 숨 쉬는 배지를 하위 캔버스로 — HUD 전체를 매 프레임 다시 묶지 않게 (클릭 없음)
+            UiScaler.Isolate(pendingBadge, false);
         }
         if (!pendingBadge.activeSelf) pendingBadge.SetActive(true);
         // 경험치 바 위 「특수 강화」 버튼(96 ~ 160)이 떠 있으면 그 위로 올려 겹치지 않게
         bool upgradeShown = StageManager.Instance != null && StageManager.Instance.UpgradeButtonAtBottom;
-        ((RectTransform)pendingBadge.transform).anchoredPosition = new Vector2(0f, upgradeShown ? 172f : 110f);
+        RectTransform badgeRect = (RectTransform)pendingBadge.transform;
+        Vector2 badgePos = new Vector2(0f, upgradeShown ? 172f : 110f);
+        if (badgeRect.anchoredPosition != badgePos) badgeRect.anchoredPosition = badgePos;
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
-        pendingBadge.GetComponent<Image>().color = Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
+        if (pendingBadgeImg == null) pendingBadgeImg = pendingBadge.GetComponent<Image>();
+        pendingBadgeImg.color = Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
         pendingBadge.transform.localScale = Vector3.one * (1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)

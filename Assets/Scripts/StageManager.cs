@@ -280,6 +280,11 @@ public class StageManager : MonoBehaviour
         transitioning = false;
     }
 
+    int shownUpPoints = -1;
+    KeyCode shownUpKey;
+    bool shownUpPad;
+    Loc.Lang shownUpLang;
+
     void Update()
     {
         if (Evo) { UpdateSoulTreeButton(); return; }
@@ -294,7 +299,14 @@ public class StageManager : MonoBehaviour
                 upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
                 upgradeGlowImage.color = new Color(1f, 0.72f, 0.3f, 0.3f + 0.45f * pulse);
                 upgradeText.color = Color.Lerp(Gold, Color.white, pulse);
-                upgradeText.text = Loc.T("특수 강화 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   포인트 ") + specialPoints;
+                // 최적화: 포인트 · 키 · 패드 · 언어가 바뀔 때만 글자를 새로 (예전엔 떠 있는 동안 매 프레임 문자열 4개 + TMP 재생성)
+                KeyCode upKey = KeyBindings.Get(GameAction.Upgrade);
+                bool upPad = GamePad.Active;
+                if (shownUpPoints != specialPoints || shownUpKey != upKey || shownUpPad != upPad || shownUpLang != Loc.Current)
+                {
+                    shownUpPoints = specialPoints; shownUpKey = upKey; shownUpPad = upPad; shownUpLang = Loc.Current;
+                    upgradeText.text = Loc.T("특수 강화 [") + KeyBindings.Name(GameAction.Upgrade) + Loc.T("]   포인트 ") + specialPoints;
+                }
             }
         }
         if (show && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Upgrade)) OpenUpgrade();
@@ -827,6 +839,7 @@ public class StageManager : MonoBehaviour
     {
         if (portal == null || player == null || CurrentStage != fromStage) yield break;
         EnsureCountdownUI();
+        shownCountSec = -1;
         // 포탈 판정 상자(문 아래쪽) 위치
         Vector3 target = portal.transform.position + new Vector3(0f, -3.8f, 0f);
         float left = portalTimeLimit;
@@ -837,10 +850,16 @@ public class StageManager : MonoBehaviour
             left -= Time.deltaTime;            // 멈춘 동안에는 줄지 않음
             bool urgent = left <= portalPullTime;
 
-            countdownText.gameObject.SetActive(true);
-            countdownText.text = urgent
-                ? Loc.T("지옥의 문이 당신을 끌어당긴다!  ") + Mathf.CeilToInt(left)
-                : Loc.T("신전 문으로 들어가세요  ") + Mathf.CeilToInt(left) + Loc.T("초");
+            if (!countdownText.gameObject.activeSelf) countdownText.gameObject.SetActive(true);
+            // 최적화: 표시 초 · 단계 · 언어가 바뀔 때만 글자를 새로 (예전엔 30초 동안 매 프레임)
+            int sec = Mathf.CeilToInt(left);
+            if (sec != shownCountSec || urgent != shownCountUrgent || Loc.Current != shownCountLang)
+            {
+                shownCountSec = sec; shownCountUrgent = urgent; shownCountLang = Loc.Current;
+                countdownText.text = urgent
+                    ? Loc.T("지옥의 문이 당신을 끌어당긴다!  ") + sec
+                    : Loc.T("신전 문으로 들어가세요  ") + sec + Loc.T("초");
+            }
             countdownText.color = urgent ? Color.Lerp(new Color(1f, 0.35f, 0.3f), Color.white, Mathf.PingPong(Time.unscaledTime * 4f, 1f)) : Gold;
 
             // 플레이어 → 문 안내선
@@ -873,6 +892,10 @@ public class StageManager : MonoBehaviour
         if (CurrentStage == fromStage && !transitioning) EnterPortal();
     }
 
+    int shownCountSec = -1;
+    bool shownCountUrgent;
+    Loc.Lang shownCountLang;
+
     void EnsureCountdownUI()
     {
         if (countdownText == null)
@@ -892,6 +915,8 @@ public class StageManager : MonoBehaviour
             countdownText.fontSize = 36f;
             countdownText.alignment = TextAlignmentOptions.Center;
             countdownText.raycastTarget = false;
+            // 최적화: 막바지에 매 프레임 색이 깜빡여도 HUD 전체를 다시 묶지 않게 하위 캔버스로 (클릭 없음)
+            UiScaler.Isolate(go, false);
         }
         if (portalGuide == null)
         {

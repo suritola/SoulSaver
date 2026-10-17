@@ -34,6 +34,7 @@ public class CursorSkin : MonoBehaviour
         SkinDef s = SkinData.Equipped(SkinKind.Cursor);
         skinId = s != null ? s.id : Default;
         animated = Load(skinId + "_aim_0") != null;
+        BuildNames();
         if (instance != null) instance.shown = null;
         if (!GameSettings.GameCursor) Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
@@ -48,12 +49,37 @@ public class CursorSkin : MonoBehaviour
         return t;
     }
 
+    // 최적화: 상태(조준 · 반짝임 프레임)별 텍스처 이름을 스킨이 바뀔 때 미리 만들어 둠 (예전엔 매 프레임 문자열 2~4개)
+    //   [0] 화살표 · [1] 조준점, 각각 [0..AnimFrames-1] 반짝임 프레임 · [AnimFrames] 반짝임 없음
+    static string[][] names;
+    static string namesFor;
+    static readonly string[] fallback = { Default + "_arrow", Default + "_aim" };
+
+    static void BuildNames()
+    {
+        names = new string[2][];
+        for (int a = 0; a < 2; a++)
+        {
+            string head = skinId + (a == 1 ? "_aim" : "_arrow");
+            names[a] = new string[AnimFrames + 1];
+            for (int f = 0; f < AnimFrames; f++) names[a][f] = head + "_" + f;
+            names[a][AnimFrames] = head;
+        }
+        namesFor = skinId;
+    }
+
+    static string NameFor(bool aim)
+    {
+        if (names == null || namesFor != skinId) BuildNames();
+        int f = animated ? (int)(Time.unscaledTime * AnimFps) % AnimFrames : AnimFrames;
+        return names[aim ? 1 : 0][f];
+    }
+
     // 1.0.5~ 패드 가상 커서 · 조준점 그림 (GamePad.OnGUI 가 직접 그림 — 게임 커서를 꺼 둬도 패드 커서는 이 모양)
     public static Texture2D PadTexture(bool aim, out Vector2 hot)
     {
-        string name = skinId + (aim ? "_aim" : "_arrow");
-        if (animated) name += "_" + (int)(Time.unscaledTime * AnimFps) % AnimFrames;
-        Texture2D tex = Load(name) ?? Load(Default + (aim ? "_aim" : "_arrow"));
+        string name = NameFor(aim);
+        Texture2D tex = Load(name) ?? Load(fallback[aim ? 1 : 0]);
         hot = tex == null ? Vector2.zero : aim ? (tex.width == 48 ? AimHot : new Vector2(tex.width * 0.5f, tex.height * 0.5f)) : ArrowHot;
         return tex;
     }
@@ -66,15 +92,24 @@ public class CursorSkin : MonoBehaviour
             return;
         }
         // 전투 중(게임 씬에서 시간이 흐를 때)만 조준점, 레벨업 · 영혼 트리 · 일시정지 · 메뉴는 화살표
-        bool aim = Time.timeScale > 0f && SceneManager.GetActiveScene().name == "GameScene";
-        string name = skinId + (aim ? "_aim" : "_arrow");
-        if (animated) name += "_" + (int)(Time.unscaledTime * AnimFps) % AnimFrames;
-        if (name == shown) return;
+        bool aim = Time.timeScale > 0f && InGameScene();
+        string name = NameFor(aim);
+        if (ReferenceEquals(name, shown)) return;
 
-        Texture2D tex = Load(name) ?? Load(Default + (aim ? "_aim" : "_arrow"));
+        Texture2D tex = Load(name) ?? Load(fallback[aim ? 1 : 0]);
         if (tex == null) return;
         // 1.0.4~ 32×32 이하 그림은 하드웨어 커서(마우스를 늦게 따라오지 않음), 그보다 크면 크기 제한이 없는 소프트웨어 커서
         Cursor.SetCursor(tex, aim ? (tex.width == 48 ? AimHot : new Vector2(tex.width * 0.5f, tex.height * 0.5f)) : ArrowHot, tex.width <= 32 && tex.height <= 32 ? CursorMode.Auto : CursorMode.ForceSoftware);
         shown = name;
+    }
+
+    // 최적화: 씬 이름 글자(매 호출 새 문자열)를 씬이 바뀔 때만 읽음
+    int sceneHandle = -1;
+    bool sceneIsGame;
+    bool InGameScene()
+    {
+        Scene s = SceneManager.GetActiveScene();
+        if (s.handle != sceneHandle) { sceneHandle = s.handle; sceneIsGame = s.name == "GameScene"; }
+        return sceneIsGame;
     }
 }

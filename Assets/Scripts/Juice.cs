@@ -21,8 +21,10 @@ public static class Juice
         // 1.1.9: 한꺼번에 많이 죽을 때(무한 모드 초반 · 범위 스킬) 처치 연출이 화면을 덮어 내장 그래픽에서 프레임이 무너졌음
         //   → 0.05초 동안 처치 폭발 8개 · 충격파 3개까지 (평소 처치 속도에서는 그대로 다 나옴)
         if (Time.time - burstWindow >= 0.05f) { burstWindow = Time.time; burstCount = 0; shockCount = 0; }
-        if (burstCount < 8 || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f); }
-        if (size > 1.2f && shockCount < 3) { shockCount++; Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f); }
+        // 그래픽 품질 낮음(L6): 0.05초에 폭발 4 · 충격파 1 (높음은 8 · 3 그대로)
+        bool low = GraphicsQuality.Low;
+        if (burstCount < (low ? 4 : 8) || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f); }
+        if (size > 1.2f && shockCount < (low ? 1 : 3)) { shockCount++; Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f); }
         // 한꺼번에 많이 죽어도 소리가 뭉개지지 않게
         if (Time.time - lastPop > 0.045f)
         {

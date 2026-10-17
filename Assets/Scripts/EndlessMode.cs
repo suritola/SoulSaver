@@ -713,7 +713,7 @@ public class EndlessMode : MonoBehaviour
 
         Dictionary<string, Sprite> desert = sprites;
         foreach (Sprite s in Resources.LoadAll<Sprite>(folder)) desert[s.name] = s;
-        Dictionary<Sprite, Tile> tiles = new Dictionary<Sprite, Tile>();
+        // 최적화: Tile 은 EndlessTerrain 의 정적 캐시를 같이 씀 (판마다 새로 만들지 않음 · 칸 플래그는 아래에서 None 으로 지정 · 이 맵엔 TilemapCollider2D 없음)
 
         foreach (Tilemap tm in map.GetComponentsInChildren<Tilemap>(true))
         {
@@ -724,12 +724,7 @@ public class EndlessMode : MonoBehaviour
             {
                 Sprite s = tm.GetSprite(pos);
                 if (s == null || !desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d)) continue;
-                if (!tiles.TryGetValue(d, out Tile tile))
-                {
-                    tile = ScriptableObject.CreateInstance<Tile>();
-                    tile.sprite = d;
-                    tiles[d] = tile;
-                }
+                Tile tile = EndlessTerrain.TileFor(d);
                 Matrix4x4 m = tm.GetTransformMatrix(pos);
                 Color c = tm.GetColor(pos);
                 tm.SetTile(pos, tile);

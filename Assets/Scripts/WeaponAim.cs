@@ -8,7 +8,11 @@ public class WeaponAim
     readonly SpecialAbilities owner;
     readonly List<GameObject> keep = new List<GameObject>();       // 조준이 끝날 때 지울 것
     readonly List<FxAnim> frame = new List<FxAnim>();              // 매 프레임 새로 그리는 것 (다시 씀)
-    readonly List<GameObject> bolts = new List<GameObject>();      // 매 프레임 새로 만드는 번개
+    // 최적화 16: 매 프레임 새로 만들고 지우던 번개를 다시 씀 (위치 · 길이만 다시)
+    readonly List<FxAnim> bolts = new List<FxAnim>();
+    readonly List<Color> boltColor = new List<Color>();             // 처음 만들 때 입힌 색 (끝날 때 흐려지며 바뀐 색을 되돌림)
+    readonly List<float> boltLenScale = new List<float>();          // 세로 크기 ÷ 길이 (만들 때 계산한 비율 그대로)
+    int boltUsed;
     readonly List<Collider2D> hits = new List<Collider2D>(32);
     readonly List<Vector3> pts = new List<Vector3>(16);
     int drawn;
@@ -109,8 +113,10 @@ public class WeaponAim
     {
         if (!active) return;
         age += Time.unscaledDeltaTime;
-        foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);
-        bolts.Clear();
+        // 지난 프레임 번개는 꺼 둠 (이번 프레임에 다시 쓰면 켬)
+        for (int i = 0; i < bolts.Count; i++)
+            if (bolts[i] != null && bolts[i].gameObject.activeSelf) bolts[i].gameObject.SetActive(false);
+        boltUsed = 0;
         drawn = 0;
         foreach (LineRenderer l in lines) l.enabled = false;
         DrawWeapon(targets, charge);
@@ -228,11 +234,11 @@ public class WeaponAim
                 for (int i = 1; i < targets.Count; i++)
                 {
                     if (targets[i - 1] == null || targets[i] == null) continue;
-                    if (Random.value < 0.35f) Bolt(Fx.Bolt(targets[i - 1].transform.position, targets[i].transform.position, 0.7f, C, 0.08f));
+                    if (Random.value < 0.35f) Bolt(targets[i - 1].transform.position, targets[i].transform.position, 0.7f);
                     n++;
                 }
                 if (targets.Count > 0 && targets[0] != null && Random.value < 0.3f)
-                    Bolt(Fx.Bolt(p + Vector3.up * 6f, targets[0].transform.position, 0.9f, C, 0.08f));
+                    Bolt(p + Vector3.up * 6f, targets[0].transform.position, 0.9f);
                 break;
             }
             case SpecialAbilities.ScytheId:
@@ -289,10 +295,40 @@ public class WeaponAim
         drawn++;
     }
 
-    // 번개는 짧게 살다 스스로 사라짐 (다음 프레임에 지움)
-    void Bolt(FxAnim a)
+    // 번개는 짧게 살다 스스로 사라짐 (다음 프레임에 끄거나 다시 씀)
+    //   다시 쓸 때는 Fx.Bolt 가 만드는 것과 같은 자리 · 각도 · 크기 · 색으로 (세로 크기는 길이에 비례하므로 만들 때의 비율을 씀)
+    //   프레임이 아주 길면(수명 0.08초를 넘기면) 번개가 스스로 지워질 수 있어 예전처럼 새로 만듦
+    void Bolt(Vector3 from, Vector3 to, float width)
     {
-        if (a != null) bolts.Add(a.gameObject);
+        Vector3 d = to - from;
+        float len = d.magnitude;
+        int i = boltUsed;
+        if (i < bolts.Count && bolts[i] != null && boltLenScale[i] > 0f && len > 0.0001f && Time.deltaTime < 0.07f)
+        {
+            FxAnim a = bolts[i];
+            Transform tr = a.transform;
+            Vector3 mid = (from + to) * 0.5f;
+            tr.SetPositionAndRotation(new Vector3(mid.x, mid.y, 0f), Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg - 90f));
+            Sprite first = a.frames != null && a.frames.Length > 0 ? a.frames[0] : a.sr.sprite;
+            a.sr.sprite = first;
+            a.sr.color = boltColor[i];
+            float w = first.bounds.size.x;
+            tr.localScale = new Vector3(width / w, boltLenScale[i] * len, 1f);
+            a.Restart();
+            a.gameObject.SetActive(true);
+            boltUsed++;
+            return;
+        }
+        FxAnim n = Fx.Bolt(from, to, width, C, 0.08f);
+        if (n == null) return;
+        float k = len > 0.0001f ? n.transform.localScale.y / len : -1f;
+        if (i < bolts.Count)
+        {
+            if (bolts[i] != null) Object.Destroy(bolts[i].gameObject);
+            bolts[i] = n; boltColor[i] = n.sr.color; boltLenScale[i] = k;
+        }
+        else { bolts.Add(n); boltColor.Add(n.sr.color); boltLenScale.Add(k); }
+        boltUsed++;
     }
 
     // a → b 방향을 가리키는 화살촉이 흘러가는 점선 (fx_trail_dot)
@@ -316,10 +352,13 @@ public class WeaponAim
         active = false;
         foreach (GameObject g in keep) if (g != null) Object.Destroy(g);
         foreach (FxAnim a in frame) if (a != null) Object.Destroy(a.gameObject);
-        foreach (GameObject g in bolts) if (g != null) Object.Destroy(g);
+        foreach (FxAnim b in bolts) if (b != null) Object.Destroy(b.gameObject);
         keep.Clear();
         frame.Clear();
         bolts.Clear();
+        boltColor.Clear();
+        boltLenScale.Clear();
+        boltUsed = 0;
         lines.Clear();
         orbs.Clear();
         rune = ghost = cloud = reticle = null;

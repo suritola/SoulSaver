@@ -117,12 +117,18 @@ public class SkillGauge : MonoBehaviour
             glow.color = new Color(1f, 0.85f, 0.35f, a);
             // 가로는 거의 그대로 (왼쪽 스킬 아이콘을 덮지 않게), 세로로 퍼짐
             float wave = flashes ? 0.08f * Mathf.Sin(t * 7f) : 0f;
-            glow.transform.localScale = full ? new Vector3(1f + 0.02f * burst, 1f + wave + 0.6f * burst + 0.15f * tick, 1f) : Vector3.one;
+            Vector3 glowScale = full ? new Vector3(1f + 0.02f * burst, 1f + wave + 0.6f * burst + 0.15f * tick, 1f) : Vector3.one;
+            if (glow.transform.localScale != glowScale) glow.transform.localScale = glowScale;     // 최적화: 같은 값이면 쓰지 않음
         }
         // 게이지 틀이 튀어 오름 (가득 찬 순간 크게, 그 뒤 작게)
         float pop = full && flashes ? 0.22f * Mathf.Sin(Mathf.Clamp01(since / 0.35f) * Mathf.PI) : 0f;
         if (gaugeImage != null && gaugeImage.transform.parent != null && !ParentIsCanvas(gaugeImage.transform.parent))
-            gaugeImage.transform.parent.localScale = frameScale * (1f + pop + 0.05f * tick);
+        {
+            // 최적화: 부모 틀(SkillFrame)은 HUD 루트 캔버스 소속 — 같은 값이라도 쓰면 HUD 전체가 매 프레임 다시 묶이므로 바뀔 때만
+            Transform parent = gaugeImage.transform.parent;
+            Vector3 want = frameScale * (1f + pop + 0.05f * tick);
+            if (parent.localScale != want) parent.localScale = want;
+        }
     }
 
     // 1.1.9: 매 프레임 GetComponent<Canvas>() 대신 부모가 바뀔 때만 찾음
@@ -156,8 +162,8 @@ public class SkillGauge : MonoBehaviour
         if (gaugeImage != null) baseColor = gaugeImage.color;
         MakeGlow();
         // 1.1.9: 차오르는 게이지 · 후광 색이 매 프레임 바뀌어도 HUD 전체(루트 캔버스)를 다시 묶지 않게 하위 캔버스로
-        if (gaugeImage != null) UiScaler.Isolate(gaugeImage.gameObject);
-        if (glow != null) UiScaler.Isolate(glow.gameObject);
+        if (gaugeImage != null) UiScaler.Isolate(gaugeImage.gameObject, false);
+        if (glow != null) UiScaler.Isolate(glow.gameObject, false);
 
         UpdateGauge();
     }

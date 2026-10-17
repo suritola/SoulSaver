@@ -738,9 +738,28 @@ public class PropShard : MonoBehaviour
         {
             Color c = i % 3 == 0 ? rim : i % 3 == 1 ? body : dark;
             float s = Random.Range(0.12f, 0.24f) * size;
-            GameObject go = SpecialAbilities.MakeSprite("PropShard", Square, at, s, c, "Effect", 10);
-            PropShard sh = go.AddComponent<PropShard>();
-            sh.sr = go.GetComponent<SpriteRenderer>();
+            // 1.2.4: 다 튄 조각은 꺼 두었다가 다시 씀 (부술 때마다 8~14개 생성 · 파괴하던 것 · 무작위 값을 뽑는 순서는 그대로)
+            PropShard sh = null;
+            while (pool.Count > 0 && sh == null) sh = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
+            GameObject go;
+            if (sh == null)
+            {
+                go = SpecialAbilities.MakeSprite("PropShard", Square, at, s, c, "Effect", 10);
+                sh = go.AddComponent<PropShard>();
+                sh.sr = go.GetComponent<SpriteRenderer>();
+            }
+            else
+            {
+                // MakeSprite 가 넣던 값으로 되돌림
+                go = sh.gameObject;
+                go.transform.position = at;
+                go.transform.localScale = Vector3.one * s;
+                sh.sr.sprite = Square;
+                sh.sr.color = c;
+                sh.age = 0f;
+                sh.bounced = false;
+                sh.spawnFrame = Time.frameCount;
+            }
             sh.color = c;
             sh.ground = at + Vector3.down * size * Random.Range(0.1f, 0.4f);
             sh.height = at.y - sh.ground.y;
@@ -748,11 +767,16 @@ public class PropShard : MonoBehaviour
             sh.up = Random.Range(5f, 9f);
             sh.spin = Random.Range(-720f, 720f);
             go.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 90f));
+            if (!go.activeSelf) go.SetActive(true);
         }
     }
 
+    static readonly System.Collections.Generic.Stack<PropShard> pool = new System.Collections.Generic.Stack<PropShard>();
+    int spawnFrame = -1;
+
     void Update()
     {
+        if (Time.frameCount == spawnFrame) return;      // 새로 만든 것처럼 켜진 그 프레임에는 움직이지 않음
         float dt = Time.deltaTime;
         age += dt;
         ground += (Vector3)(vel * dt);
@@ -768,7 +792,11 @@ public class PropShard : MonoBehaviour
         transform.Rotate(0f, 0f, spin * dt);
         float fade = Mathf.Clamp01((Life - age) / 0.3f);
         sr.color = new Color(color.r, color.g, color.b, color.a * fade);
-        if (age >= Life) Destroy(gameObject);
+        if (age >= Life)
+        {
+            gameObject.SetActive(false);
+            pool.Push(this);
+        }
     }
 }
 

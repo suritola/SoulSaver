@@ -476,21 +476,29 @@ public static class UIKit
     static readonly Dictionary<TMP_Text, string> labels = new Dictionary<TMP_Text, string>();
     static bool hooked;
     public static void Forget(TMP_Text t) => labels.Remove(t);
+    static int rememberCount;
     public static void Remember(TMP_Text t, string ko)
     {
         labels[t] = ko;
+        // 최적화: 창을 닫아 지워진 글자가 세션 내내 쌓이지 않게 256번마다 정리 (씬 로드 때도 GameSettings 가 부름)
+        if (++rememberCount >= 256) { rememberCount = 0; Prune(); }
         if (hooked) return;
         hooked = true;
         Loc.Changed += () =>
         {
-            List<TMP_Text> dead = new List<TMP_Text>();
-            foreach (KeyValuePair<TMP_Text, string> kv in labels)
-            {
-                if (kv.Key == null) dead.Add(kv.Key);
-                else kv.Key.text = Loc.T(kv.Value);
-            }
-            foreach (TMP_Text d in dead) labels.Remove(d);
+            Prune();
+            foreach (KeyValuePair<TMP_Text, string> kv in labels) kv.Key.text = Loc.T(kv.Value);
         };
+    }
+
+    // 지워진 글자 항목을 뺌 (살아 있는 글자는 그대로)
+    static readonly List<TMP_Text> deadLabels = new List<TMP_Text>();
+    public static void Prune()
+    {
+        foreach (KeyValuePair<TMP_Text, string> kv in labels)
+            if (kv.Key == null) deadLabels.Add(kv.Key);
+        for (int i = 0; i < deadLabels.Count; i++) labels.Remove(deadLabels[i]);
+        deadLabels.Clear();
     }
 
     public static void EnsureStyle()
@@ -746,7 +754,8 @@ public static class SettingsUI
     static void BuildDisplay()
     {
         // 1.1.9~ 「최대 프레임」 · 「프레임 표시」 두 줄을 더 넣으려고 줄 간격 75 → 56 · 버튼 높이 64 → 52 (9줄, y 216 ~ -232)
-        rowH = 52f;
+        // 「그래픽 품질」 한 줄을 더 넣으려고 버튼 높이 52 → 48 · UI 크기 아래 줄 간격 56 → 52 (10줄, y 216 ~ -256 · 아랫변 -280 이라 「닫기」와 겹치지 않음)
+        rowH = 48f;
         RowLabel("화면 모드", 216f);
         Button full = null, windowed = null;
         TMP_Text res = null;
@@ -808,17 +817,20 @@ public static class SettingsUI
         UIKit.MakeButton(page, ">", new Vector2(300f, 160f), new Vector2(80f, rowH), () => step(1), 30f);
 
         // 2.1.9: UI 크기 (모든 화면 글자 · 버튼 · HUD), 한 줄 더 넣으려고 줄 간격 90
-        CycleRow("UI 크기", 104f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
-        CycleRow("안내 메시지 크기", 48f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
+        CycleRow("UI 크기", 108f, GameSettings.UiScaleNames, () => GameSettings.UiScaleIndex, v => GameSettings.UiScaleIndex = v);
+        CycleRow("안내 메시지 크기", 56f, Notice.SizeNames, () => GameSettings.NoticeSize, v => GameSettings.NoticeSize = v,
                  "게임 중 뜨는 큰 알림 · 오른쪽 위 소식 · 도움말 글자의 크기입니다.");
-        CycleRow("최대 프레임", -8f, GameSettings.MaxFpsNames, () => GameSettings.MaxFpsIndex, v => GameSettings.MaxFpsIndex = v,
+        CycleRow("최대 프레임", 4f, GameSettings.MaxFpsNames, () => GameSettings.MaxFpsIndex, v => GameSettings.MaxFpsIndex = v,
                  "1초에 그리는 화면 수의 상한입니다. 낮추면 컴퓨터 부담과 발열이 줄어듭니다. 수직 동기화를 켜면 모니터 주사율을 따릅니다.");
-        ToggleRow("수직 동기화", -64f, () => GameSettings.VSync, v => GameSettings.VSync = v,
+        ToggleRow("수직 동기화", -48f, () => GameSettings.VSync, v => GameSettings.VSync = v,
                   "켜면 모니터 주사율에 맞춰 그려 화면 찢김이 사라집니다. 대신 입력이 조금 늦어질 수 있습니다.");
-        ToggleRow("프레임 표시", -120f, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
+        ToggleRow("프레임 표시", -100f, () => GameSettings.ShowFps, v => GameSettings.ShowFps = v,
                   "화면 오른쪽 위 구석에 초당 프레임 수(FPS)를 작게 표시합니다.");
-        ToggleRow("화면 흔들림", -176f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
-        ToggleRow("번쩍임 효과", -232f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
+        // 그래픽 품질: 낮음이면 꾸밈 효과만 줄임 (GraphicsQuality · 다음 이펙트부터 바로 적용)
+        CycleRow("그래픽 품질", -152f, GraphicsQuality.Names, () => GraphicsQuality.Index, v => GraphicsQuality.Index = v,
+                 "낮음으로 두면 잔상 · 불꽃 · 빛 번짐 같은 꾸밈 효과만 줄여 내장 그래픽에서도 부드럽게 움직입니다. 적 · 공격 · 경고 표시 · 피해 숫자는 그대로입니다.");
+        ToggleRow("화면 흔들림", -204f, () => GameSettings.ScreenShake, v => GameSettings.ScreenShake = v);
+        ToggleRow("번쩍임 효과", -256f, () => GameSettings.Flashes, v => GameSettings.Flashes = v);
     }
 
     // 모니터가 지원하는 해상도 (가로 · 세로가 같은 것은 하나로, 작은 것부터)

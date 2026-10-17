@@ -78,13 +78,189 @@ public class Bullet : MonoBehaviour
 
     void Start()
     {
+        if (!begun) Begin();
+    }
+
+    // 쏜 쪽이 값을 다 넣은 뒤 첫 갱신 전에 한 번 (새로 만든 탄은 Start, 다시 쓰는 탄은 첫 Update)
+    //   예전 Destroy(gameObject, lifetime) 대신 남은 수명을 직접 셈 (다 되면 풀로 돌려보냄)
+    void Begin()
+    {
+        begun = true;
         remainPene = pene;
         playerC = Hostile.Player;                  // 총알마다 씬 전체를 뒤지지 않게 (캐시)
         mainCamera = Camera.main;
-        Destroy(gameObject, lifetime);
+        lifeLeft = lifetime;
         lastPos = transform.position;
         if (TryGetComponent(out BulletGlow g)) g.FitTracerHit();      // 예광탄 판정을 첫 검사 전에 보이는 몸통으로
         RefreshSweepShape();
+    }
+
+    // =========================
+    // 풀링 (최적화 8): 평타 탄을 지우지 않고 꺼 두었다가 다시 씀
+    // =========================
+    // 꺼낼 때 프리팹에서 처음 만든 값으로 모두 되돌리고(Revive), 돌려보낼 때 쏜 쪽이 붙인 부속 컴포넌트 · 자식을 지움(Release)
+    // 돌려보낸 그 프레임에는 다시 꺼내지 않음 (지운 컴포넌트 · 자식은 프레임 끝에야 실제로 사라지므로)
+    // 밖에서 Destroy(gameObject) 해도 그냥 풀에 안 들어갈 뿐 (안전)
+    const int PoolMax = 256;
+    static readonly System.Collections.Generic.Queue<Bullet> pool = new System.Collections.Generic.Queue<Bullet>();
+    static readonly System.Collections.Generic.List<Component> compBuf = new System.Collections.Generic.List<Component>(16);
+    static GameObject poolPrefab;
+    static bool snapped;
+    // 프리팹 값 (처음 만든 탄에서 읽음)
+    static float pSpeed, pDamage, pBlood, pSkillCharge, pKnockBack, pLifetime;
+    static int pPene, pLayer, pSortLayer, pSortOrder;
+    static bool pIsSkill, pSrEnabled, pFlipX, pFlipY, pBoxEnabled, pBoxTrigger;
+    static Vector3 pScale;
+    static Sprite pSprite;
+    static Color pColor;
+    static Material pMat;
+    static SpriteDrawMode pDrawMode;
+    static Vector2 pBoxSize, pBoxOffset;
+    static RigidbodyType2D pBodyType;
+    static string pTag;
+
+    bool begun, pooled, inPool;
+    int reviveFrame = -1, releaseFrame = -1;
+    float lifeLeft;
+    SpriteRenderer ownSr;
+    BoxCollider2D ownBox;
+    Rigidbody2D ownBody;
+    BulletGlow ownGlow;
+    // 다시 쓸 때마다 늘어남 (프레임을 넘겨 탄을 붙잡는 쪽이 같은 탄인지 비교용)
+    [System.NonSerialized] public int generation;
+
+    // 평타 탄 하나 (풀에 있으면 다시 씀, 없으면 프리팹으로 새로)
+    public static Bullet Spawn(GameObject prefab, Vector3 pos)
+    {
+        if (prefab == null) return null;
+        if (prefab != poolPrefab)
+        {
+            // 프리팹이 바뀌면 꺼 둔 옛 탄은 지움 (풀에서만 빼면 꺼진 채로 장면에 남음)
+            while (pool.Count > 0) { Bullet old = pool.Dequeue(); if (old != null) Destroy(old.gameObject); }
+            poolPrefab = prefab; snapped = false;
+        }
+        while (pool.Count > 0)
+        {
+            Bullet b = pool.Peek();
+            if (b == null || !b.inPool) { pool.Dequeue(); continue; }     // 장면이 바뀌어 지워진 것은 건너뜀
+            if (b.releaseFrame >= Time.frameCount) break;               // 이번 프레임에 돌아온 것은 다음 프레임부터
+            pool.Dequeue();
+            b.Revive(pos);
+            return b;
+        }
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
+        Bullet nb = go.GetComponent<Bullet>();
+        if (nb == null) return null;
+        nb.Own();
+        if (!snapped) nb.Snap();
+        nb.pooled = true;
+        return nb;
+    }
+
+    void Own()
+    {
+        ownSr = GetComponent<SpriteRenderer>();
+        ownBox = GetComponent<BoxCollider2D>();
+        ownBody = GetComponent<Rigidbody2D>();
+    }
+
+    void Snap()
+    {
+        snapped = true;
+        pSpeed = speed; pDamage = damage; pBlood = blood; pSkillCharge = skillCharge; pKnockBack = knockBack; pLifetime = lifetime;
+        pPene = pene; pIsSkill = isSkill;
+        pLayer = gameObject.layer;
+        pTag = gameObject.tag;
+        pScale = transform.localScale;
+        if (ownSr != null)
+        {
+            pSprite = ownSr.sprite; pColor = ownSr.color; pMat = ownSr.sharedMaterial; pSrEnabled = ownSr.enabled;
+            pSortLayer = ownSr.sortingLayerID; pSortOrder = ownSr.sortingOrder; pFlipX = ownSr.flipX; pFlipY = ownSr.flipY;
+            pDrawMode = ownSr.drawMode;
+        }
+        if (ownBox != null) { pBoxSize = ownBox.size; pBoxOffset = ownBox.offset; pBoxEnabled = ownBox.enabled; pBoxTrigger = ownBox.isTrigger; }
+        if (ownBody != null) pBodyType = ownBody.bodyType;
+    }
+
+    // 꺼낼 때: 프리팹에서 막 만든 탄과 같게
+    void Revive(Vector3 pos)
+    {
+        inPool = false;
+        begun = false;
+        gone = halt = false;
+        reviveFrame = Time.frameCount;
+        dmgSource = DamageSource.Current;
+        speed = pSpeed; damage = pDamage; blood = pBlood; skillCharge = pSkillCharge; knockBack = pKnockBack; lifetime = pLifetime;
+        pene = pPene; remainPene = 0; isSkill = pIsSkill;
+        isCrit = critRolled = false;
+        dir = Vector2.zero;
+        onHitEnemy = null; onHitWall = null; onSpent = null; hitOnce = null;
+        touchCount = 0;
+        sweepCol = null;
+        lifeLeft = pLifetime;
+        Transform tr = transform;
+        if (tr.parent != null) tr.SetParent(null, false);       // 지난 삶에 어딘가에 붙었던 탄이면 떼어 냄 (새로 만든 탄은 부모 없음)
+        tr.SetPositionAndRotation(pos, Quaternion.identity);
+        tr.localScale = pScale;
+        lastPos = pos;
+        if (gameObject.layer != pLayer) gameObject.layer = pLayer;
+        if (pTag != null && !gameObject.CompareTag(pTag)) gameObject.tag = pTag;
+        if (ownSr != null)
+        {
+            ownSr.sprite = pSprite; ownSr.color = pColor; ownSr.sharedMaterial = pMat; ownSr.enabled = pSrEnabled;
+            ownSr.sortingLayerID = pSortLayer; ownSr.sortingOrder = pSortOrder; ownSr.flipX = pFlipX; ownSr.flipY = pFlipY;
+            if (ownSr.drawMode != pDrawMode) ownSr.drawMode = pDrawMode;
+        }
+        if (ownBox != null) { ownBox.size = pBoxSize; ownBox.offset = pBoxOffset; ownBox.isTrigger = pBoxTrigger; ownBox.enabled = pBoxEnabled; }
+        if (ownGlow != null) ownGlow.Rearm();
+        gameObject.SetActive(true);
+        if (ownBody != null)
+        {
+            if (ownBody.bodyType != pBodyType) ownBody.bodyType = pBodyType;
+            ownBody.velocity = Vector2.zero;
+            ownBody.angularVelocity = 0f;
+        }
+    }
+
+    // 사라질 때 (명중 · 벽 · 수명 끝): 풀로 돌려보냄 (풀에서 꺼낸 탄이 아니거나 풀이 가득이면 지움)
+    public void Release()
+    {
+        if (this == null) return;
+        gone = true;
+        if (inPool) return;
+        if (!pooled || poolPrefab == null || pool.Count >= PoolMax || !gameObject.activeSelf) { Destroy(gameObject); return; }
+        inPool = true;
+        releaseFrame = Time.frameCount;
+        generation++;
+        if (ownGlow == null) TryGetComponent(out ownGlow);
+        if (ownGlow != null) ownGlow.Recycle();      // 꾸밈 자식은 지우지 않고 꺼 둠
+        // 쏜 쪽이 붙인 부속 컴포넌트(유도 · 낫 · 회전 표창 · 프레임 넘김 · 원 판정 등)는 지움 — 지울 때의 정리(OnDestroy)도 예전처럼 돎
+        GetComponents(compBuf);
+        for (int i = 0; i < compBuf.Count; i++)
+        {
+            Component c = compBuf[i];
+            if (c == null || c is Transform || c == this || c == ownSr || c == ownBox || c == ownBody || c == ownGlow) continue;
+            Destroy(c);
+        }
+        compBuf.Clear();
+        // 쏜 쪽이 붙인 자식(낫 날 · 빛 등)도 지움
+        Transform tr = transform;
+        for (int i = tr.childCount - 1; i >= 0; i--)
+        {
+            Transform ch = tr.GetChild(i);
+            if (ownGlow != null && ownGlow.Owns(ch)) continue;
+            Destroy(ch.gameObject);
+        }
+        onHitEnemy = null; onHitWall = null; onSpent = null; hitOnce = null;     // 붙잡은 클로저 · 대상 놓기
+        sweepCol = null;
+        gameObject.SetActive(false);
+        pool.Enqueue(this);
+    }
+
+    // 쏜 쪽이 BulletGlow 를 붙인 뒤 (CreateBullet) — 다음에 다시 쓸 때 같이 되돌림
+    public BulletGlow Glow
+    {
+        get { if (ownGlow == null) TryGetComponent(out ownGlow); return ownGlow; }
     }
 
 
@@ -95,9 +271,15 @@ public class Bullet : MonoBehaviour
 
     void Update()
     {
+        // 다시 쓰는 탄: 새로 만든 오브젝트처럼 켜진 그 프레임에는 움직이지 않음
+        if (Time.frameCount == reviveFrame) return;
+        if (!begun) Begin();
         float slow = Time.time < SlowUntil ? SlowMul : 1f;
         transform.position += (Vector3)dir * speed * slow * Time.deltaTime;
         Sweep();
+        if (gone || inPool) return;
+        lifeLeft -= Time.deltaTime;
+        if (lifeLeft <= 0f) Release();
     }
 
     // =========================
@@ -216,7 +398,7 @@ public class Bullet : MonoBehaviour
     void Gone()
     {
         gone = true;
-        Destroy(gameObject);
+        Release();
     }
 
     // 관통 수가 다함: 붙은 훅이 살려 두면(onSpent → true) 그대로 둠

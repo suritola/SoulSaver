@@ -52,17 +52,18 @@ public class BulletGlow : MonoBehaviour
             if (lookSr != null) SyncLook();
             if (coreSr != null && frames != null)
             {
-                int i = System.Array.IndexOf(frames, body.sprite);
+                int i = FrameOf(body.sprite);
                 if (i >= 0 && i != lastFrame && i < coreFrames.Length) { lastFrame = i; coreSr.sprite = coreFrames[i]; }
             }
         }
 
-        // 빛 무리: 두근거림 (번쩍임 효과를 끄면 그대로)
+        // 빛 무리: 두근거림 (번쩍임 효과를 끄면 그대로) — 값이 같으면 쓰지 않음 (최적화 9)
         if (halo != null)
         {
             float pulse = GameSettings.Flashes ? 1f + 0.1f * Mathf.Sin(age * 26f) : 1f;
             Vector3 ps = transform.lossyScale;
-            halo.localScale = new Vector3(haloW * pulse / 8f / Safe(ps.x), haloH * pulse / 8f / Safe(ps.y), 1f);      // 빛 그림은 8칸 크기
+            Vector3 want = new Vector3(haloW * pulse / 8f / Safe(ps.x), haloH * pulse / 8f / Safe(ps.y), 1f);      // 빛 그림은 8칸 크기
+            if (want != haloShown) { haloShown = want; halo.localScale = want; }
         }
 
         // 잔상: 몸 그림 그대로 옅어지며 (0.035초마다, 다시 쓰는 FadeSprite)
@@ -72,6 +73,7 @@ public class BulletGlow : MonoBehaviour
         trailT = 0f;
         SpriteRenderer src = tracerSr != null ? tracerSr : lookSr != null ? lookSr : body;
         if (src == null || src.sprite == null) return;
+        if (Time.frameCount != initFrame && !src.isVisible) return;      // 최적화 9: 화면 밖 탄은 잔상을 만들지 않음 (보이지 않으니 겉모습 같음, 막 꾸민 프레임은 아직 그려지기 전이라 제외)
         FadeSprite f = FadeSprite.Spawn("AtkTrail", src.sprite, src.transform.position, 1f,
                                         new Color(tint.r, tint.g, tint.b, AttackLook.TrailAlpha(tier) * alpha), "Effect", AttackLook.TrailOrder, AttackLook.TrailLife(tier));
         Vector3 s = src.transform.lossyScale;
@@ -80,9 +82,82 @@ public class BulletGlow : MonoBehaviour
 
     static float Safe(float v) => Mathf.Abs(v) < 0.0001f ? 1f : v;
 
+    // 몸 그림이 frames 의 몇 번째인지: 지난 칸부터 차례로 (FrameLoop 이 순서대로 넘기므로 한두 번에 찾음, Array.IndexOf 대신)
+    int FrameOf(Sprite s)
+    {
+        int n = frames.Length;
+        if (n == 0) return -1;
+        int start = lastFrame >= 0 && lastFrame < n ? lastFrame : 0;
+        for (int k = 0; k < n; k++)
+        {
+            int i = (start + k) % n;
+            if (frames[i] == s) return i;
+        }
+        return -1;
+    }
+
+    Vector3 haloShown = new Vector3(float.NaN, 0f, 0f);
+
+    // ================================================================= 다시 쓰기 (최적화 8: Bullet 풀링)
+    // 탄이 풀로 돌아갈 때 (Recycle): 꾸밈 자식은 지우지 않고 꺼 둠 · 예전 모드 빛도 꺼 둠
+    // 다시 꺼낼 때 (Rearm): 쏜 쪽이 정하는 값 · 상태를 새로 붙인 것처럼 되돌림 — 다음 LateUpdate 의 Init 이 꺼 둔 자식을 다시 켜서 씀
+    static Material defaultMat;
+    readonly System.Collections.Generic.List<SpriteRenderer> made = new System.Collections.Generic.List<SpriteRenderer>(6);
+    readonly System.Collections.Generic.List<string> madeName = new System.Collections.Generic.List<string>(6);
+    readonly System.Collections.Generic.List<bool> madeBusy = new System.Collections.Generic.List<bool>(6);
+
+    public bool Owns(Transform t)
+    {
+        for (int i = 0; i < made.Count; i++) if (made[i] != null && made[i].transform == t) return true;
+        return false;
+    }
+
+    public void Recycle()
+    {
+        for (int i = 0; i < made.Count; i++)
+        {
+            madeBusy[i] = false;
+            SpriteRenderer sr = made[i];
+            if (sr == null) continue;
+            Transform t = sr.transform;
+            if (t.parent != transform) t.SetParent(transform, false);
+            if (sr.gameObject.activeSelf) sr.gameObject.SetActive(false);
+        }
+        if (lHalo != null) lHalo.SetActive(false);
+        if (lCore != null) lCore.SetActive(false);
+    }
+
+    public void Rearm()
+    {
+        tracerSprite = null;
+        tracerBaseScale = Vector3.zero;
+        frames = null;
+        coreFrames = null;
+        styled = false;
+        keepColor = false;
+        trail = true;
+        haloMul = 1.5f;
+        body = coreSr = tracerSr = lookSr = outlineSr = null;
+        halo = null;
+        tracerFrames = tracerCore = null;
+        tier = AttackLook.Tier;          // 쏜 순간의 단계 (Awake 와 같게)
+        lastFrame = -1;
+        ready = legacy = fitted = false;
+        tint = default;
+        alpha = 1f;
+        trailT = haloW = haloH = age = 0f;
+        lColor = default;
+        haloShown = new Vector3(float.NaN, 0f, 0f);
+        enabled = true;
+    }
+
+    int initFrame = -1;
+
     void Init()
     {
         ready = true;
+        initFrame = Time.frameCount;
+        if (TryGetComponent(out SkinTint skin)) skin.ApplyNow();       // 무기 스킨 색을 먼저 (다시 쓰는 탄은 SkinTint.Start 가 늦을 수 있음)
         body = GetComponent<SpriteRenderer>();
         // 그림을 꺼 둔 총알(화염 판정탄, 낫)은 꾸미지 않음
         if (body == null || !body.enabled || SpecialAbilities.GlowSprite == null) { enabled = false; return; }
@@ -242,12 +317,37 @@ public class BulletGlow : MonoBehaviour
 
     SpriteRenderer Child(string name, Sprite s, Color c, int order, Vector3 localScale)
     {
-        GameObject g = new GameObject(name);
-        g.transform.SetParent(transform, false);
+        // 꺼 둔 같은 이름의 자식이 있으면 다시 씀 (새로 만든 것과 같은 상태로)
+        SpriteRenderer sr = null;
+        for (int i = 0; i < made.Count; i++)
+        {
+            if (madeBusy[i] || made[i] == null || madeName[i] != name) continue;
+            sr = made[i];
+            madeBusy[i] = true;
+            break;
+        }
+        GameObject g;
+        if (sr != null)
+        {
+            g = sr.gameObject;
+            g.transform.SetParent(transform, false);
+            if (defaultMat != null) sr.sharedMaterial = defaultMat;
+            sr.flipX = sr.flipY = false;
+            g.SetActive(true);
+        }
+        else
+        {
+            g = new GameObject(name);
+            g.transform.SetParent(transform, false);
+            sr = g.AddComponent<SpriteRenderer>();
+            if (defaultMat == null) defaultMat = sr.sharedMaterial;
+            made.Add(sr);
+            madeName.Add(name);
+            madeBusy.Add(true);
+        }
         g.transform.localPosition = Vector3.zero;
         g.transform.localRotation = Quaternion.identity;
         g.transform.localScale = localScale;
-        SpriteRenderer sr = g.AddComponent<SpriteRenderer>();
         sr.sprite = s;
         sr.color = c;
         sr.sortingLayerID = AttackLook.Layer;
@@ -268,8 +368,24 @@ public class BulletGlow : MonoBehaviour
         lColor = body.color;
         body.sortingLayerName = "Effect";
         body.sortingOrder = LegacyOrder + 1;
-        lHalo = SpecialAbilities.MakeSprite("BulletHalo", glow, transform.position, LegacyHalo, new Color(lColor.r, lColor.g, lColor.b, 0.7f), "Effect", LegacyOrder);
-        lCore = SpecialAbilities.MakeSprite("BulletCore", glow, transform.position, 0.085f, new Color(1f, 1f, 1f, 1f), "Effect", LegacyOrder + 2);
+        lHalo = LegacySprite(lHalo, "BulletHalo", glow, LegacyHalo, new Color(lColor.r, lColor.g, lColor.b, 0.7f), LegacyOrder);
+        lCore = LegacySprite(lCore, "BulletCore", glow, 0.085f, new Color(1f, 1f, 1f, 1f), LegacyOrder + 2);
+    }
+
+    // 다시 쓰는 탄은 꺼 둔 빛을 다시 켬 (MakeSprite 와 같은 상태로)
+    GameObject LegacySprite(GameObject go, string name, Sprite glow, float scale, Color c, int order)
+    {
+        if (go == null || !go.TryGetComponent(out SpriteRenderer sr))
+            return SpecialAbilities.MakeSprite(name, glow, transform.position, scale, c, "Effect", order);
+        Transform t = go.transform;
+        t.SetPositionAndRotation(transform.position, Quaternion.identity);
+        t.localScale = Vector3.one * scale;
+        sr.sprite = glow;
+        sr.color = c;
+        sr.sortingLayerName = "Effect";
+        sr.sortingOrder = order;
+        go.SetActive(true);
+        return go;
     }
 
     void LegacyUpdate()
@@ -283,6 +399,7 @@ public class BulletGlow : MonoBehaviour
         if (trailT >= 0.025f)
         {
             trailT = 0f;
+            if (Time.frameCount != initFrame && !body.isVisible) return;     // 화면 밖은 꼬리 생략 (최적화 9)
             FadeSprite.Spawn("BulletTrail", SpecialAbilities.GlowSprite, transform.position, 0.09f,
                              new Color(lColor.r, lColor.g, lColor.b, 0.55f), "Effect", LegacyOrder - 1, 0.18f);
         }

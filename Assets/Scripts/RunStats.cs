@@ -517,7 +517,23 @@ public static class Hints
         return box != null;
     }
 
-    static string CloseText => GamePad.Active || !Notice.TipCloseKeyFree ? "" : Loc.T("notice.tip.close").Replace("{0}", "Tab");
+    // 최적화: 패드 · Tab 키 사용 여부 · 언어가 바뀔 때만 다시 만듦 (예전엔 도움말이 떠 있는 동안 매 프레임 Replace)
+    static string closeText;
+    static bool closePad, closeFree;
+    static Loc.Lang closeLang;
+    static string CloseText
+    {
+        get
+        {
+            bool pad = GamePad.Active, free = Notice.TipCloseKeyFree;
+            if (closeText == null || pad != closePad || free != closeFree || Loc.Current != closeLang)
+            {
+                closePad = pad; closeFree = free; closeLang = Loc.Current;
+                closeText = pad || !free ? "" : Loc.T("notice.tip.close").Replace("{0}", "Tab");
+            }
+            return closeText;
+        }
+    }
 
     public static void Tick()
     {

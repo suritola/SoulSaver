@@ -110,18 +110,38 @@ public class PotionBuffs : MonoBehaviour
         }
     }
 
+    // 최적화: 표시하는 초(올림) · 언어가 바뀔 때만 글자를 다시 조립 (예전엔 물약 지속 중 매 프레임)
+    readonly int[] shownSec = { -1, -1, -1 };
+    Loc.Lang shownLang;
+    string shownText;
+
     void Update()
     {
-        string text = "";
+        bool changed = shownText == null || shownLang != Loc.Current;
         for (int i = 0; i < left.Length; i++)
         {
-            if (left[i] <= 0f) continue;
-            left[i] -= Time.deltaTime;
-            if (left[i] <= 0f) { left[i] = 0f; Apply((Kind)i, false); continue; }
-            string name = i == 0 ? "축소 물약" : i == 1 ? "신속 물약" : "질풍 물약";
-            text += (text.Length > 0 ? "\n" : "") + Loc.T(name) + "  " + Mathf.CeilToInt(left[i]) + Loc.T("초");
+            int sec = 0;
+            if (left[i] > 0f)
+            {
+                left[i] -= Time.deltaTime;
+                if (left[i] <= 0f) { left[i] = 0f; Apply((Kind)i, false); }
+                else sec = Mathf.CeilToInt(left[i]);
+            }
+            if (sec != shownSec[i]) { shownSec[i] = sec; changed = true; }
         }
-        ShowHud(text);
+        if (changed)
+        {
+            shownLang = Loc.Current;
+            string text = "";
+            for (int i = 0; i < left.Length; i++)
+            {
+                if (shownSec[i] <= 0) continue;
+                string name = i == 0 ? "축소 물약" : i == 1 ? "신속 물약" : "질풍 물약";
+                text += (text.Length > 0 ? "\n" : "") + Loc.T(name) + "  " + shownSec[i] + Loc.T("초");
+            }
+            shownText = text;
+        }
+        ShowHud(shownText);
     }
 
     // 왼쪽 가운데에 남은 시간

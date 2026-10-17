@@ -368,6 +368,8 @@ public static class Notice
         CanvasGroup cg = go.GetComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
         cg.interactable = false;
+        // 최적화: 알림 묶음을 하위 캔버스로 — 토스트 · 큰 알림이 움직이는 동안 HUD 전체를 다시 묶지 않게 (클릭 없음 → 레이캐스터 없음)
+        UiScaler.Isolate(go, false);
         runner = go.AddComponent<NoticeRunner>();
         // 지난 판(이 판의 UI 가 사라짐)의 것은 버림
         toasts.Clear();
@@ -665,7 +667,11 @@ public static class Notice
         float breath = fx ? 0.5f + 0.5f * Mathf.Sin(bigT * 5f) : 1f;
         Color a = bigNow.accent;
         v.lineTop.color = v.lineBot.color = new Color(a.r, a.g, a.b, 0.7f + 0.3f * breath);
-        if (v.icon.gameObject.activeSelf) v.icon.localScale = Vector3.one * (fx ? 1f + 0.05f * Mathf.Sin(bigT * 4f) : 1f);
+        if (v.icon.gameObject.activeSelf)
+        {
+            Vector3 iconScale = Vector3.one * (fx ? 1f + 0.05f * Mathf.Sin(bigT * 4f) : 1f);
+            if (v.icon.localScale != iconScale) v.icon.localScale = iconScale;
+        }
         if (v.cap.gameObject.activeSelf)
         {
             bool pressed = bigT > 0.5f && Mathf.Repeat(bigT - 0.5f, 0.9f) < 0.12f;
@@ -804,13 +810,16 @@ public static class Notice
             }
             if (!t.placed) { t.y = y; t.placed = true; }
             t.y = Mathf.Lerp(t.y, y, 1f - Mathf.Exp(-14f * dt));
-            t.r.anchoredPosition = new Vector2(slide, -t.y);
-            t.cg.alpha = alpha;
+            // 최적화: 끝에 거의 다 온 Lerp 의 아주 작은 변화(0.01px 미만)는 쓰지 않음 · 같은 크기는 다시 쓰지 않음
+            Vector2 ap = new Vector2(slide, -t.y);
+            if ((ap - t.r.anchoredPosition).sqrMagnitude >= 0.0001f) t.r.anchoredPosition = ap;
+            if (t.cg.alpha != alpha) t.cg.alpha = alpha;
             // 들어온 순간 · 「×2」 때 바탕이 강조색으로 번쩍
             float f = fx ? Mathf.Clamp01(1f - Mathf.Min(t.age, t.bump) / 0.45f) : 0f;
             t.bg.color = Color.Lerp(BgDark, new Color(t.accent.r * 0.55f, t.accent.g * 0.55f, t.accent.b * 0.55f, 0.95f), f * 0.6f);
             float pop = fx && t.bump < 0.15f ? 1f + 0.06f * (1f - t.bump / 0.15f) : 1f;
-            t.r.localScale = Vector3.one * pop;
+            Vector3 ps = Vector3.one * pop;
+            if (t.r.localScale != ps) t.r.localScale = ps;
             y += (t.h + ToastGap) * room;
         }
     }

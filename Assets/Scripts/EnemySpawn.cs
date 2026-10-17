@@ -98,10 +98,14 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnLoop()
     {
+        // 간격이 매번 달라 WaitForSeconds 를 캐시할 수 없어 직접 시간을 잼 (스폰마다 할당 없음 · 프레임 단위로 깨는 것은 같음)
+        float next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);     // 앞쪽 장은 드물게 (2.1.5)
         while (true)
         {
-            yield return new WaitForSeconds(Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex));     // 앞쪽 장은 드물게 (2.1.5)
+            yield return null;
+            if (Time.time < next) continue;
             if (spawningEnabled) SpawnEnemy(false, transform.position);
+            next = Time.time + Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);
         }
     }
 
@@ -226,6 +230,7 @@ public class EnemySpawner : MonoBehaviour
             e.baseColor = midBossColor;
             e.onKilled += () => onMidBossDefeated?.Invoke();
             MidBossMark.Attach(go, CodexUI.EnemyName(prefab.name));
+            e.MarkMidBoss();        // 중간 보스 여부 캐시를 다시 계산하게
         }
         onMidBossSpawned?.Invoke();
     }

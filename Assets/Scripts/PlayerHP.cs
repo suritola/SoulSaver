@@ -73,6 +73,9 @@ public class PlayerHP : MonoBehaviour
         //   프레임마다 HPghost 가 하나씩 늘었음 (판이 갈수록 · 일시정지에도 렉) → HealthBarFeel.MakeGhost 는 스크립트를 복제하지 않음
         ghostImg = HealthBarFeel.MakeGhost(gaugeImg, "HPghost");
         ghost = ghostImg != null ? ghostImg.rectTransform : null;
+        // 최적화: 체력바 묶음(틀 · 채움 · 흰 게이지 · 숫자)을 하위 캔버스로 — 지속 회복 · 흰 게이지가 내려오는 동안 HUD 전체를 다시 묶지 않게
+        //   (자기 자신을 복제하지 않음 · Canvas 컴포넌트만 붙임. 형제 순서 · 겉모습 그대로)
+        if (self != null) UiScaler.Isolate(self.gameObject, false);
         feel.Reset(playerHP);
         lastHp = playerHP;
     }
@@ -117,12 +120,14 @@ public class PlayerHP : MonoBehaviour
 
         feel.Tick(playerHP, playerMaxHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         // 값이 같으면 안 씀 (예전엔 매 프레임 sizeDelta 를 썼음)
-        if (f.front != shownFront) { shownFront = f.front; gauge.sizeDelta = new Vector2(f.front * HPmaxWidth, gauge.sizeDelta.y); }
-        if (ghostImg != null && (f.ghost != shownGhost || ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
+        // 최적화: 1/300 단위로 맞춰(눈에 같은 값) 지속 회복 중 아주 작은 변화마다 쓰지 않음
+        float front = Mathf.Round(f.front * 300f) / 300f, ghostV = Mathf.Round(f.ghost * 300f) / 300f;
+        if (front != shownFront) { shownFront = front; gauge.sizeDelta = new Vector2(front * HPmaxWidth, gauge.sizeDelta.y); }
+        if (ghostImg != null && (ghostV != shownGhost || ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
         {
-            shownGhost = f.ghost;
+            shownGhost = ghostV;
             if (ghostImg.enabled != f.ghostShown) { ghostImg.enabled = f.ghostShown; shownIgnite = -1f; }
-            if (f.ghostShown) ghost.sizeDelta = new Vector2(f.ghost * HPmaxWidth, gauge.sizeDelta.y);
+            if (f.ghostShown) ghost.sizeDelta = new Vector2(ghostV * HPmaxWidth, gauge.sizeDelta.y);
         }
         if (self != null)
         {
@@ -147,7 +152,8 @@ public class PlayerHP : MonoBehaviour
         {
             hpTextPop -= Time.unscaledDeltaTime;
             hpTextPopped = hpTextPop > 0f;
-            hpText.transform.localScale = Vector3.one * (hpTextPopped ? 1.2f : 1f);
+            Vector3 ts = Vector3.one * (hpTextPopped ? 1.2f : 1f);
+            if (hpText.transform.localScale != ts) hpText.transform.localScale = ts;
         }
 
         // 숫자가 바뀔 때만 글자를 새로 (매 프레임 문자열을 만들지 않게)

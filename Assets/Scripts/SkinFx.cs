@@ -69,10 +69,12 @@ public class SkinFx : MonoBehaviour
         if (CharSkin != null && CharSkin.tier >= 2 && moving && Time.time >= ghostAt && body.enabled && body.sprite != null)
         {
             ghostAt = Time.time + 0.09f;
-            GameObject g = SpecialAbilities.MakeSprite("SkinGhost", body.sprite, p, 1f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.38f), "Character", -1);
-            g.transform.localScale = transform.lossyScale;
-            g.GetComponent<SpriteRenderer>().flipX = body.flipX;
-            g.AddComponent<FadeOut>().duration = 0.35f;
+            // 최적화 16: 새로 만들고 지우던 잔상(MakeSprite + FadeOut)을 다시 쓰는 FadeSprite 로 — 알파 1→0 · 크기 0.8→1.2 곡선이 같음
+            //   좌우 뒤집기는 가로 크기 부호로 (FadeSprite 는 flipX 를 되돌리지 않으므로)
+            FadeSprite f = FadeSprite.Spawn("SkinGhost", body.sprite, p, 1f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.38f), "Character", -1, 0.35f);
+            Vector3 ls = transform.lossyScale;
+            if (body.flipX) ls.x = -ls.x;
+            f.Shape(Quaternion.identity, ls);
         }
         // 전설: 오라 (작은 빛 셋이 천천히 돎)
         for (int i = 0; i < orbs.Count; i++)
@@ -185,8 +187,15 @@ public class SkinFx : MonoBehaviour
 // 총알 · 투사체 색: 만들어진 뒤(색이 다 정해진 다음) 무기 스킨 색으로 물들임
 public class SkinTint : MonoBehaviour
 {
-    void Start()
+    bool done;
+
+    void Start() => ApplyNow();
+
+    // 다시 쓰는 총알(풀링)은 Start 보다 BulletGlow 꾸미기가 먼저 올 수 있어 거기서도 부름 (한 번만)
+    public void ApplyNow()
     {
+        if (done) return;
+        done = true;
         if (SkinFx.WeaponSkin == null) { Destroy(this); return; }
         if (TryGetComponent(out SpriteRenderer sr) && sr.enabled) sr.color = SkinFx.Tint(sr.color);
         Destroy(this);

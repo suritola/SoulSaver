@@ -35,6 +35,7 @@ public class FpsCounter : MonoBehaviour
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920f, 1080f);
         cs.matchWidthOrHeight = 0.5f;
+        UiScaler.Fit(cs);               // UiScaler 가 1초마다 찾지 않으므로 만들 때 맞춤
 
         GameObject t = new GameObject("Fps", typeof(RectTransform));
         t.transform.SetParent(go.transform, false);

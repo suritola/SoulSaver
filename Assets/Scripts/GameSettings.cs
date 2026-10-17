@@ -288,7 +288,9 @@ public static class GameSettings
         {
             AudioListener.volume = Volume;
             Loc.ApplyFonts();
+            SceneLocalizer.Clear();         // 최적화: 지난 씬 글자의 원문이 세션 내내 쌓이지 않게 (이 씬 글자는 RefreshAll 이 다시 등록)
             SceneLocalizer.RefreshAll();
+            UIKit.Prune();                  // 지난 씬에서 만든 창 글자 항목 정리
             MenuExtras.Install();
         };
         MenuExtras.Install();
@@ -299,6 +301,8 @@ public static class GameSettings
 public static class SceneLocalizer
 {
     static readonly System.Collections.Generic.Dictionary<int, string> original = new System.Collections.Generic.Dictionary<int, string>();
+
+    public static void Clear() => original.Clear();
 
     public static void RefreshAll()
     {

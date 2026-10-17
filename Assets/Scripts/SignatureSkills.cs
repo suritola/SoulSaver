@@ -388,7 +388,8 @@ public partial class SignatureSkills : MonoBehaviour
     public int Circle(Vector3 pos, float r, float dmg, float knock, System.Action<Collider2D> each = null)
     {
         int n = 0;
-        List<Collider2D> list = new List<Collider2D>(Specials.Overlap(pos, r, hits));
+        // 빌린 목록으로 (Specials.Overlap 과 같은 조건 · 피해 · each 콜백 안에서 또 검색해도 안전 · 호출마다 복사본을 만들지 않음)
+        using var list = PhysHits.Circle(pos, r, true);
         foreach (Collider2D c in list)
         {
             if (c == null || !IsFoe(c)) continue;
@@ -406,7 +407,9 @@ public partial class SignatureSkills : MonoBehaviour
     // 가까운 적 (살아 있는) 여럿
     public static List<Transform> Nearest(Vector3 pos, float r, int count, GameObject except = null)
     {
-        List<(float d, Transform t)> all = new List<(float, Transform)>();
+        // 정렬용 목록 · 비교는 공용 (이 안에서는 다른 검색을 부르지 않음) — 결과 목록은 호출자가 들고 쓰므로 새로
+        List<(float d, Transform t)> all = nearestSort;
+        all.Clear();
         foreach (Collider2D c in Specials.Overlap(pos, r, hits))
         {
             if (c == null || !IsFoe(c) || c.gameObject == except) continue;
@@ -414,11 +417,15 @@ public partial class SignatureSkills : MonoBehaviour
             if (e != null && e.IsDead) continue;
             all.Add(((c.transform.position - pos).sqrMagnitude, c.transform));
         }
-        all.Sort((a, b) => a.d.CompareTo(b.d));
-        List<Transform> res = new List<Transform>();
+        all.Sort(ByDistance);
+        List<Transform> res = new List<Transform>(Mathf.Clamp(count, 0, all.Count));
         for (int i = 0; i < all.Count && res.Count < count; i++) res.Add(all[i].t);
+        all.Clear();
         return res;
     }
+
+    static readonly List<(float d, Transform t)> nearestSort = new List<(float d, Transform t)>(64);
+    static readonly System.Comparison<(float d, Transform t)> ByDistance = (a, b) => a.d.CompareTo(b.d);
 
     // 도트 그림을 입힌 투사체 (Bullet 판정 그대로, 스킬 총알이라 게이지를 채우지 않음)
     public Bullet Shot(Vector3 start, Vector2 dir, float dmg, int pene, float speed, float range, string fx, float size, Color tint, bool spin = false)

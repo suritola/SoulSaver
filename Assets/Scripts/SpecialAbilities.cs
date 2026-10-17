@@ -440,7 +440,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     player.FaceTowards(MouseWorld());
                     PlayerMotion.Of(player).Recoil(dir, 2f);            // 몸동작: 큰 반동 (1.0.1)
                     const float range = 11f, half = 35f;
-                    foreach (Collider2D col in Physics2D.OverlapCircleAll(start, range))
+                    using (var ovl = PhysHits.Circle(start, range)) foreach (Collider2D col in ovl)
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         Vector2 to = col.transform.position - start;
@@ -473,7 +473,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     {
                         Vector3 m = player.MuzzlePosition;
                         // 충전 중에는 화면 끝까지 닿는 점선 조준선
-                        fx.SetLine(aimLine, m, m + (Vector3)(AimDir() * ScreenEdgeDistance(m, AimDir())), new Color(c.r, c.g, c.b, 0.5f + t), 0.1f + t * 0.3f);
+                        PreviewLine(aimLine, m, m + (Vector3)(AimDir() * ScreenEdgeDistance(m, AimDir())), new Color(c.r, c.g, c.b, 0.5f + t), 0.1f + t * 0.3f);
                         Fx.Spawn("fx_orb", m, 0.8f + t * 2f, c, 20f);
                         yield return null;
                     }
@@ -484,7 +484,7 @@ public partial class SpecialAbilities : MonoBehaviour
                     Fx.Beam(from, to, 0.8f * wide, Color.white, 0.3f, 17);
                     // 광선 위의 적이 많을수록 강함
                     List<Collider2D> onLine = new List<Collider2D>();
-                    foreach (Collider2D col in Physics2D.OverlapCircleAll((from + to) * 0.5f, 23f))
+                    using (var ovl = PhysHits.Circle((from + to) * 0.5f, 23f)) foreach (Collider2D col in ovl)
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         if (Hostile.DistanceToSegment(col.transform.position, from, to) > 1.5f * wide) continue;
@@ -639,7 +639,7 @@ public partial class SpecialAbilities : MonoBehaviour
                         player.transform.position = to;
                         player.FaceTowards(t.transform.position);
                         Fx.Spawn("fx_slash", t.transform.position, 5f, c, 30f, Random.Range(0f, 360f), 16);
-                        foreach (Collider2D col in Physics2D.OverlapCircleAll(t.transform.position, 2.5f))
+                        using (var ovl = PhysHits.Circle(t.transform.position, 2.5f)) foreach (Collider2D col in ovl)
                             if (col.CompareTag("enermy") || col.CompareTag("boss"))
                                 Specials.Damage(col.gameObject, dmg * 1.2f, (col.transform.position - to).normalized, 1.5f);
                         fx.Play("slash", 1f, Random.Range(0.9f, 1.15f));
@@ -1041,4 +1041,39 @@ public partial class SpecialAbilities : MonoBehaviour
     // 들고 있는 무기의 강화가 반영된 피해
     float WDamage => Damage * WeaponDamageMul(CurrentWeapon) * InertBonus;      // 안 맞게 된 거너 카드 → 무기 피해 (SpecialAbilities.Fit)
     bool OverUI => !GameInput.Auto && !GamePad.Aiming && UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+}
+
+// 할당 없는 원 범위 검색 (Physics2D.OverlapCircleAll 과 같은 결과 · 같은 순서 — 기본 레이캐스트 층 · 트리거 여부는 물리 설정 그대로)
+// 부를 때마다 빌려 둔 목록 하나를 쓰고 using 이 끝나면 돌려놓음 → 피해 콜백 안에서 또 검색해도(처치 → 폭발 → 검색) 서로 다른 목록이라 안전
+//   using (var ovl = PhysHits.Circle(pos, r)) foreach (Collider2D c in ovl) { … }
+public readonly struct PhysHits : System.IDisposable
+{
+    static readonly Stack<List<Collider2D>> pool = new Stack<List<Collider2D>>();
+    static ContactFilter2D filter;
+    public readonly List<Collider2D> List;
+
+    PhysHits(List<Collider2D> list) { List = list; }
+
+    // allLayers: Specials.Overlap 과 같은 조건 (층 거르기 없음)
+    public static PhysHits Circle(Vector2 pos, float radius, bool allLayers = false)
+    {
+        List<Collider2D> l = pool.Count > 0 ? pool.Pop() : new List<Collider2D>(64);
+        l.Clear();
+        filter.useTriggers = Physics2D.queriesHitTriggers;
+        filter.useLayerMask = !allLayers;
+        filter.layerMask = Physics2D.DefaultRaycastLayers;
+        Physics2D.OverlapCircle(pos, radius, filter, l);
+        return new PhysHits(l);
+    }
+
+    public int Count => List.Count;
+    public Collider2D this[int i] => List[i];
+    public List<Collider2D>.Enumerator GetEnumerator() => List.GetEnumerator();
+
+    public void Dispose()
+    {
+        if (List == null) return;
+        List.Clear();
+        if (pool.Count < 32) pool.Push(List);
+    }
 }

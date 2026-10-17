@@ -673,12 +673,12 @@ void Shoot()
     {
         if (bulletPrefab == null) return null;
 
-        GameObject newBullet = Instantiate(bulletPrefab, startPosition, Quaternion.identity);
-
-        Bullet bullet = newBullet.GetComponent<Bullet>();
+        // 최적화 8: 사라진 탄을 지우지 않고 다시 씀 (Bullet.Spawn · Release, 꾸밈 자식도 BulletGlow 가 다시 씀)
+        Bullet bullet = Bullet.Spawn(bulletPrefab, startPosition);
+        if (bullet == null) return null;
+        GameObject newBullet = bullet.gameObject;
         if (SkinFx.WeaponSkin != null) newBullet.AddComponent<SkinTint>();        // 무기 스킨: 총알 · 투사체 색
 
-        if (bullet != null)
         {
             bullet.Dir = direction;
             bullet.pene = penes;
@@ -688,7 +688,8 @@ void Shoot()
             bullet.knockBack = knockBack * knockBackRate;
             // 1.1.2: 납작한 흰 실선 대신 금빛 예광탄 (보이는 크기 3~4배, BulletGlow 예광탄 모드)
             //   판정 = 보이는 예광탄 몸통 (BulletGlow.FitTracerHit, 피해는 그대로) · 터널링은 Bullet 의 스윕 검사가 막음
-            BulletGlow glow = newBullet.AddComponent<BulletGlow>();
+            BulletGlow glow = bullet.Glow;
+            if (glow == null) glow = newBullet.AddComponent<BulletGlow>();
             if (newBullet.TryGetComponent(out SpriteRenderer bodySr)) glow.tracerSprite = bodySr.sprite;
             glow.tracerBaseScale = newBullet.transform.localScale;
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참

@@ -50,6 +50,9 @@ public class bossbar : MonoBehaviour
         // 1.2.0: Instantiate(bar) 복제 대신 (PlayerHP 의 자기 복제 연쇄와 같은 일이 생기지 않게 · HealthBarFeel.MakeGhost 는 스크립트 · 자식을 복제하지 않음)
         Image gi = HealthBarFeel.MakeGhost(bar.GetComponent<Image>(), GhostName);
         main = MakeRow(backBar, barRect, gi != null ? gi.rectTransform : null);
+        // 최적화: 보스 체력바 묶음을 하위 캔버스로 — 타격마다 막대 · 흔들림 · 이름이 바뀌어도 HUD 전체를 다시 묶지 않게
+        //   (Canvas 컴포넌트만 붙임 · MonoBehaviour 아님 → 아래 줄 복제(ShowExtraBars)에도 그대로 따라가 각자 하위 캔버스)
+        UiScaler.Isolate(backBar, false);
     }
 
     // ================================================================= 체력바 타격감 (HealthBarFeel): 줄마다 흰색 지연 게이지 · 흔들림 · 두께 펀치 · 번쩍임 · 프레임 붉은 틴트
@@ -68,6 +71,7 @@ public class bossbar : MonoBehaviour
         public bosss nameFor;
         public int nameKind = -1, nameNow = -1, nameMax = -1, nameErode = -1;
         public Loc.Lang nameLang;
+        public float nameAt;                        // 체력 숫자만 바뀔 때 다음 갱신 시각 (0.1초)
     }
     static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
     static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
@@ -207,7 +211,12 @@ public class bossbar : MonoBehaviour
         int kind = s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind == 2 && s.slimeGen >= 2 ? 100 + s.barSlot : s.bossKind;
         int now = Mathf.CeilToInt(Mathf.Max(0f, s.EnemyHealth));
         int erode = s.developer ? 0 : ErodePct(s.erosionMul);
-        if (r.nameFor == s && r.nameKind == kind && r.nameNow == now && r.nameMax == s.setEnemyHP && r.nameErode == erode && r.nameLang == Loc.Current) return;
+        if (r.nameFor == s && r.nameKind == kind && r.nameMax == s.setEnemyHP && r.nameErode == erode && r.nameLang == Loc.Current)
+        {
+            // 최적화: 체력 숫자만 바뀐 것은 0.1초에 한 번만 글자를 새로 (초당 수십 타에서도 눈에 같음 · 막대는 매 타격 즉시)
+            if (r.nameNow == now || Time.unscaledTime < r.nameAt) return;
+        }
+        r.nameAt = Time.unscaledTime + 0.1f;
         r.nameFor = s; r.nameKind = kind; r.nameNow = now; r.nameMax = s.setEnemyHP; r.nameErode = erode; r.nameLang = Loc.Current;
         label.text = (kind >= 100 ? BossName(2) + " " + (s.barSlot + 1) : BossName(kind)) + "  " + now + " / " + s.setEnemyHP + ErodeTag(erode);
     }
@@ -269,6 +278,7 @@ public class bossbar : MonoBehaviour
     // ================================================================= 보스 필살기 게이지 (맨 위 체력바 바로 아래, 가득 차면 결계)
     RectTransform ultFill;
     Image ultFillImg;
+    float shownUlt = -1f;
     const float UltWidth = 596f;
 
     void UpdateUltGauge()
@@ -299,10 +309,13 @@ public class bossbar : MonoBehaviour
         if (gaugeObj.activeSelf != hasUlt) gaugeObj.SetActive(hasUlt);
         if (!hasUlt) return;
         float g = BossUltimate.Active ? 0f : BossUltimate.Gauge(bossKind);
-        ultFill.sizeDelta = new Vector2(UltWidth * g, 10f);
+        // 최적화: 1/300 단위로 맞춰 바뀔 때만 크기를 씀 (예전엔 매 프레임 같은 값을 썼음)
+        float gq = Mathf.Round(g * 300f) / 300f;
+        if (gq != shownUlt) { shownUlt = gq; ultFill.sizeDelta = new Vector2(UltWidth * gq, 10f); }
         UltLabel(g);
         float pulse = g > 0.85f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f) : 0f;
-        ultFillImg.color = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        Color uc = Color.Lerp(new Color(0.75f, 0.3f, 1f), new Color(1f, 0.35f, 0.35f), pulse);
+        if (ultFillImg.color != uc) ultFillImg.color = uc;
     }
 
     // 1.0.4~: 이름표 없는 보라색 막대라 뜻을 몰랐음 → 게이지 오른쪽 끝에 「결계」 글자 · 처음 찰 때 도움말 한 번
@@ -372,12 +385,18 @@ public class bossbar : MonoBehaviour
     // 보스가 한 마리일 때 이름 + 「현재 / 최대」 (1.0.4~: 예전엔 여러 마리일 때만 숫자가 보였음)
     // 숫자 · 보스 · 언어가 바뀔 때만 글자를 새로
     int shownNow = -1, shownMax = -1, shownErode = -1;
+    float singleNameAt;
     void WriteSingleName()
     {
         if (nameText == null) return;
         int now = Mathf.Max(0, NowHealth);
         int erode = bossKind >= DeveloperKind ? 0 : ErodePct(erosion);
-        if (shownKind == bossKind && shownLang == Loc.Current && shownNow == now && shownMax == MaxHealth && shownErode == erode) return;
+        if (shownKind == bossKind && shownLang == Loc.Current && shownMax == MaxHealth && shownErode == erode)
+        {
+            // 최적화: 체력 숫자만 바뀐 것은 0.1초에 한 번만 (막대는 매 타격 즉시)
+            if (shownNow == now || Time.unscaledTime < singleNameAt) return;
+        }
+        singleNameAt = Time.unscaledTime + 0.1f;
         shownKind = bossKind;
         shownLang = Loc.Current;
         shownNow = now;

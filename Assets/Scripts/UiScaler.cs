@@ -4,13 +4,12 @@ using UnityEngine.UI;
 
 // 설정 (2.1.9~): UI 크기 · 창이 비활성일 때 소리 끄기
 // UI 크기: 화면 크기에 맞춰 늘어나는 모든 캔버스(CanvasScaler · ScaleWithScreenSize)의 기준 해상도를 크기로 나눔 (작게 나누면 글자 · 버튼이 커짐)
-//   씬 캔버스 · 실행 중에 만든 캔버스(HUD · 창) 모두: 1초마다 새 캔버스를 찾아 맞춤 (처음 본 기준 해상도를 기억)
+//   씬 캔버스: 씬을 불러올 때 맞춤 · 실행 중에 만든 캔버스(CanvasScaler 를 단 것): 만드는 곳에서 Fit 을 부름 (처음 본 기준 해상도를 기억)
 // 소리: 창이 포커스를 잃으면 AudioListener.pause (음악 · 효과음 모두), 돌아오면 다시
 public class UiScaler : MonoBehaviour
 {
     static UiScaler instance;
     static readonly Dictionary<CanvasScaler, Vector2> baseRes = new Dictionary<CanvasScaler, Vector2>();
-    float nextScan;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
@@ -25,12 +24,24 @@ public class UiScaler : MonoBehaviour
 
     // 1.1.9: 자주 바뀌는 HUD 조각을 하위 캔버스로 떼어 냄 → 그 조각이 바뀌어도 HUD 전체(루트 캔버스)를 다시 묶지 않음
     // 순서 · 크기 · 겉모습은 그대로 (overrideSorting 끔 = 부모 순서대로 그림). 클릭 · 툴팁이 계속 되도록 GraphicRaycaster 도 붙임
-    public static void Isolate(GameObject g)
+    // clickable=false: 클릭 · 툴팁이 없는 조각(게이지 · 체력바 · 알림 · 번쩍임)은 GraphicRaycaster 를 붙이지 않음 (클릭마다 도는 검사 줄임)
+    public static void Isolate(GameObject g, bool clickable = true)
     {
         if (g == null || g.GetComponent<Canvas>() != null) return;
         if (g.GetComponentInParent<Canvas>(true) == null) return;          // 캔버스 밖이면 건드리지 않음
         g.AddComponent<Canvas>();
-        g.AddComponent<GraphicRaycaster>();
+        if (clickable || AnyRaycastTarget(g)) g.AddComponent<GraphicRaycaster>();
+    }
+
+    // raycastTarget 이 켜진 그림이 하나라도 있으면 레이캐스터를 둠 (마우스가 그 위에 있을 때 사격이 막히는 지금 동작을 그대로)
+    static readonly List<Graphic> graphicBuf = new List<Graphic>();
+    static bool AnyRaycastTarget(GameObject g)
+    {
+        g.GetComponentsInChildren(true, graphicBuf);
+        bool any = false;
+        for (int i = 0; i < graphicBuf.Count; i++) if (graphicBuf[i].raycastTarget) { any = true; break; }
+        graphicBuf.Clear();
+        return any;
     }
 
     // 실행 중에 만든 캔버스를 바로 맞춤 (다음 검사까지 크기가 튀지 않게)
@@ -58,16 +69,8 @@ public class UiScaler : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        // 창 · HUD 를 실행 중에 새로 만들므로 가끔 다시 찾음 (자주 하지 않음)
-        if (Time.unscaledTime < nextScan) return;
-        nextScan = Time.unscaledTime + 1f;
-        // 1.1.9: UI 크기가 기본(1배)이면 새 캔버스도 고칠 게 없으므로 씬 전체 검색을 건너뜀 (적 수백 마리일 때 1초마다 끊김)
-        // 크기를 바꾸면 GameSettings 가 ApplyAll 을 바로 부르고, 그 뒤로는 다시 1초마다 찾음
-        if (Mathf.Approximately(Mathf.Max(0.5f, GameSettings.UiScale), 1f)) return;
-        ApplyAll();
-    }
+    // 최적화: 1초마다 씬 전체를 뒤지던 검색을 없앰 — 씬 로드 때 ApplyAll, 실행 중에 만든 캔버스는 만드는 곳이 Fit 을 부름
+    //   (BossUltimate · StoryDirector · FpsCounter · TrailerDirector), UI 크기를 바꾸면 GameSettings 가 ApplyAll
 
     void OnApplicationFocus(bool focus)
     {

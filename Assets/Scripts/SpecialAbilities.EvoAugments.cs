@@ -162,7 +162,7 @@ public partial class SpecialAbilities
             {
                 tick = NetTick;
                 Vector3 mid = (pa + pb) * 0.5f;
-                foreach (Collider2D col in Physics2D.OverlapCircleAll(mid, d.magnitude * 0.5f + 1f))
+                using (var ovl = PhysHits.Circle(mid, d.magnitude * 0.5f + 1f)) foreach (Collider2D col in ovl)
                 {
                     if (col == null || (!col.CompareTag("enermy") && !col.CompareTag("boss"))) continue;
                     if (Hostile.DistanceToSegment(col.transform.position, pa, pb) > 0.7f) continue;

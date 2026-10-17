@@ -12,6 +12,7 @@ public class DamageFlash : MonoBehaviour
 
     Image image;
     float flash;
+    float shownAlpha;
     PlayerController player;
 
     public static void Show(float strength)
@@ -34,6 +35,8 @@ public class DamageFlash : MonoBehaviour
         r.anchorMin = Vector2.zero;
         r.anchorMax = Vector2.one;
         r.offsetMin = r.offsetMax = Vector2.zero;
+        // 최적화: 자기만 든 하위 캔버스로 — 저체력 맥박 · 피격 번쩍임 동안 HUD 전체를 다시 묶지 않게 (형제 0번 그대로 = HUD 뒤, 클릭 없음)
+        UiScaler.Isolate(go, false);
 
         instance = go.GetComponent<DamageFlash>();
         instance.image = go.GetComponent<Image>();
@@ -43,8 +46,11 @@ public class DamageFlash : MonoBehaviour
     }
 
     // 가운데는 투명하고 가장자리로 갈수록 붉은 테두리
+    // 최적화: 매번 같은 그림이라 한 번만 만들어 판끼리 같이 씀 (판마다 128² 텍스처를 새로 만들지 않음)
+    static Sprite vignette;
     static Sprite MakeVignette()
     {
+        if (vignette != null) return vignette;
         const int size = 128;
         Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
         tex.wrapMode = TextureWrapMode.Clamp;
@@ -62,7 +68,10 @@ public class DamageFlash : MonoBehaviour
         }
         tex.SetPixels(px);
         tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+        tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
+        vignette = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+        vignette.hideFlags = HideFlags.DontUnloadUnusedAsset;
+        return vignette;
     }
 
     void OnDestroy()
@@ -95,7 +104,13 @@ public class DamageFlash : MonoBehaviour
         }
 
         float alpha = Mathf.Max(flash, low);
-        image.color = new Color(1f, 1f, 1f, alpha);
-        image.enabled = alpha > 0.01f;
+        // 최적화: 눈에 보이는 만큼(1/255) 바뀔 때만 색을 씀 · 켜짐도 바뀔 때만
+        if (Mathf.Abs(alpha - shownAlpha) >= 1f / 255f || (alpha == 0f && shownAlpha != 0f))
+        {
+            shownAlpha = alpha;
+            image.color = new Color(1f, 1f, 1f, alpha);
+        }
+        bool on = alpha > 0.01f;
+        if (image.enabled != on) image.enabled = on;
     }
 }

@@ -132,8 +132,25 @@ public static class CharacterData
         CharacterDef d = Def(id);
         if (d.price < 0) return false;
         if (Demo.On) return Demo.CharacterAllowed(id);      // 체험판: 거너 · 검사만 (구매 없이)
-        return d.price == 0 || Prefs.GetInt(UnlockKey + (int)id, 0) == 1;
+        return d.price == 0 || Prefs.GetInt(UnlockKeyOf(id), 0) == 1;
     }
+
+    // 저장 키를 영웅마다 한 번만 만들어 둠 (예전엔 부를 때마다 문자열을 이어 붙였음 — 피해마다 · 프레임마다 불림)
+    static string[] unlockKeys;
+    static string UnlockKeyOf(CharacterId id)
+    {
+        if (unlockKeys == null)
+        {
+            unlockKeys = new string[All.Length];
+            for (int i = 0; i < unlockKeys.Length; i++) unlockKeys[i] = UnlockKey + i;
+        }
+        int k = (int)id;
+        return k >= 0 && k < unlockKeys.Length ? unlockKeys[k] : UnlockKey + k;
+    }
+
+    // 고른 캐릭터를 프레임마다 한 번만 저장값에서 읽음 (같은 프레임 안에서 바꾸면 setter · Buy 가 바로 지움)
+    static int selectedFrame = -1;
+    static CharacterId selectedCache;
 
     // 게임에서 고른 캐릭터 (트레일러 · 배치 모드 테스트는 거너)
     public static CharacterId Selected
@@ -142,14 +159,19 @@ public static class CharacterData
         {
             if (Override.HasValue) return Override.Value;
             if (GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return CharacterId.Gunner;
+            int frame = Application.isPlaying ? Time.frameCount : -2;      // 에디터(재생 전)에서는 캐시하지 않음
+            if (frame >= 0 && frame == selectedFrame) return selectedCache;
             CharacterId id = (CharacterId)Mathf.Clamp(Prefs.GetInt(SelectedKey, 0), 0, All.Length - 1);
-            return IsUnlocked(id) ? id : CharacterId.Gunner;
+            selectedCache = IsUnlocked(id) ? id : CharacterId.Gunner;
+            selectedFrame = frame;
+            return selectedCache;
         }
         set
         {
             if (!IsUnlocked(value)) return;
             Prefs.SetInt(SelectedKey, (int)value);
             Prefs.Save();
+            selectedFrame = -1;
         }
     }
 
@@ -196,8 +218,9 @@ public static class CharacterData
         CharacterDef d = Def(id);
         if (d.price <= 0 || IsUnlocked(id) || Points < d.price || Demo.On || !ConditionMet(id)) return false;
         Prefs.SetInt(PointsKey, Points - d.price);
-        Prefs.SetInt(UnlockKey + (int)id, 1);
+        Prefs.SetInt(UnlockKeyOf(id), 1);
         Prefs.Save();
+        selectedFrame = -1;
         return true;
     }
 

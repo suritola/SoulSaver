@@ -185,7 +185,10 @@ public static class RunSave
     }
 
     // 지금 판을 저장 (메인 메뉴로 나갈 때 · 게임을 끌 때 · 다음 장에 들어갈 때)
-    public static void Save()
+    public static void Save() => Save(false);
+
+    // background: 1분 자동 저장 — 파일 쓰기만 백그라운드로 (저장 내용은 같음 · 끌 때 · 장 넘어갈 때 · 메뉴로 나갈 때는 바로 씀)
+    static void Save(bool background)
     {
         if (!Savable) return;
         StageManager sm = StageManager.Instance;
@@ -281,7 +284,8 @@ public static class RunSave
         RunContent.Save(d);                                         // 1.1~ 이벤트 계획 · 상자 전설 횟수
         if (GameMode.IsEndless && EndlessMode.Instance != null) EndlessMode.Instance.SaveRun(d);     // 1.2.3~ 무한 전용 상태
         Prefs.SetString(Key, JsonUtility.ToJson(d));
-        Prefs.Save();
+        if (background) Prefs.SaveInBackground();
+        else Prefs.Save();
     }
 
     // 메인 메뉴 「이어하기」: 캐릭터 · 난이도를 맞추고 게임 씬으로
@@ -460,7 +464,7 @@ public static class RunSave
             StageManager sm = StageManager.Instance;
             if (sm == null || sm.IsMenuOpen || !CanSaveNow) { nextAutoSave = Time.unscaledTime + 5f; return; }     // 저장하지 않는 판이면 매 프레임 찾지 않게 잠시 뒤에
             nextAutoSave = Time.unscaledTime + AutoSaveEvery;
-            Save();
+            Save(true);             // 최적화: 디스크 쓰기는 백그라운드 (1분 경계의 끊김 방지)
         }
     }
 }

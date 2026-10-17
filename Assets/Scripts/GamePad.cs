@@ -70,7 +70,10 @@ public class GamePad : MonoBehaviour
         GameObject go = new GameObject("GamePad");
         DontDestroyOnLoad(go);
         instance = go.AddComponent<GamePad>();
-        instance.useGUILayout = false;          // OnGUI 는 커서 그림만 (배치 계산 생략)
+        // 최적화: OnGUI 는 따로 떼어 낸 작은 컴포넌트에 — 패드가 켜졌을 때만 켬 (OnGUI 가 있으면 매 프레임 IMGUI 이벤트를 처리함)
+        instance.gui = go.AddComponent<GamePadCursorGUI>();
+        instance.gui.useGUILayout = false;      // OnGUI 는 커서 그림만 (배치 계산 생략)
+        instance.gui.enabled = Active;
         SceneManager.sceneLoaded += (s, m) => SceneChanged();
         SceneManager.activeSceneChanged += (a, b) => SceneChanged();
         SceneChanged();
@@ -193,6 +196,7 @@ public class GamePad : MonoBehaviour
         if (on) cursor = ClampToScreen(Input.mousePosition);       // 마우스가 있던 자리에서 출발
         else if (clickHeld) { clickHeld = false; clickUpFrame = Time.frameCount; }
         Cursor.visible = !on;           // 패드 동안은 OS 커서를 숨기고 게임 커서 그림을 직접 그림 (OnGUI)
+        if (instance != null && instance.gui != null) instance.gui.enabled = on;     // 최적화: 패드를 쓰지 않을 땐 IMGUI(OnGUI)를 아예 돌리지 않음
         localeDirty = true;             // 안내 글자를 다음 LateUpdate 에서 새로 (다른 스크립트가 글자를 만드는 도중에 바꾸지 않게)
     }
 
@@ -422,8 +426,10 @@ public class GamePad : MonoBehaviour
         foreach (BaseInputModule m in es.GetComponents<BaseInputModule>()) m.inputOverride = p;
     }
 
-    // 게임 커서(CursorSkin) 모양을 직접 그림: 메뉴는 화살표, 전투는 가상 조준점에 조준점
-    void OnGUI()
+    GamePadCursorGUI gui;
+
+    // 게임 커서(CursorSkin) 모양을 직접 그림: 메뉴는 화살표, 전투는 가상 조준점에 조준점 (GamePadCursorGUI.OnGUI 가 부름)
+    internal static void DrawCursor()
     {
         if (!Active || Event.current.type != EventType.Repaint) return;
         bool menu = InMenu;
@@ -531,4 +537,11 @@ public class GamePadPointer : BaseInput
 
     // 기본 Horizontal · Vertical 축에는 패드 왼쪽 스틱도 들어 있어, 커서를 움직일 때 선택된 버튼이 같이 옮겨 다니지 않게 패드 동안은 0
     public override float GetAxisRaw(string axisName) => GamePad.Active ? 0f : base.GetAxisRaw(axisName);
+}
+
+// 최적화: 패드 가상 커서 그림만 그리는 작은 컴포넌트 (GamePad 오브젝트에 붙음 · 패드가 켜졌을 때만 enabled)
+//   OnGUI 를 가진 스크립트가 켜져 있으면 패드를 쓰지 않아도 매 프레임 IMGUI 이벤트를 처리하므로 따로 떼어 냄
+public class GamePadCursorGUI : MonoBehaviour
+{
+    void OnGUI() => GamePad.DrawCursor();
 }
