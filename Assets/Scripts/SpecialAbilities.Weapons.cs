@@ -207,6 +207,7 @@ public partial class SpecialAbilities
 
     void FireShotgun()
     {
+        using var aim = WeakHit.AimScope(1.4f);         // 빈틈: 총알이 없어 가운데 20° 부채꼴만 (Arc)
         Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         bool evo = IsEvolved(ShotgunId);
         float dmg = WDamage * (evo ? 3.2f : 2.5f) * (cursed ? 3f : 1f);
@@ -219,7 +220,7 @@ public partial class SpecialAbilities
             Vector2 to = (Vector2)(c.transform.position - start);
             if (Vector2.Angle(dir, to) > ShotgunHalfAngle) continue;
 
-            Specials.Damage(c.gameObject, dmg, to.normalized, 2.5f);
+            WeakHit.Damage(c.gameObject, WeakShape.Arc(start, dir, 10f, ShotgunRange, 1.4f), dmg, to.normalized, 2.5f);
             if (evo) Burn.Apply(c.gameObject, WDamage * 0.5f, 2f);
             GunCardHit(c, dmg, to.normalized, false, boom && !hitAny);
             hitAny = true;
@@ -248,6 +249,7 @@ public partial class SpecialAbilities
     void FireSniper(float charge)
     {
         if (player.IsSkillUsing || !WeaponHasAmmo(SniperId)) return;
+        using var aim = WeakHit.AimScope(1.75f);        // 빈틈: 커서 쪽으로 곧게
         Vector2 dir = BeginShot(1, out Vector3 start, out bool cursed);
         // 바로 떼면 약하고 완충할수록 강함 (연타가 완충 사격보다 초당 피해가 높지 않게)
         Bullet b = Shot(start, dir, WDamage * Mathf.Lerp(0.6f, 3.2f, charge), 999, 1.5f, cursed, new Color(0.5f, 0.95f, 1f), 1.6f, 1.4f, 1.5f);
@@ -264,6 +266,7 @@ public partial class SpecialAbilities
     void FireDual()
     {
         dualToggle = !dualToggle;
+        using var aim = WeakHit.AimScope(1.75f);        // 빈틈: 커서 쪽으로 곧게
         Vector2 dir = BeginShot(dualToggle ? 1 : 0, out Vector3 start, out bool cursed);
         Vector3 side = new Vector3(-dir.y, dir.x) * 0.35f;
         fx.Play("gunshot", 0.45f, dualToggle ? 1.05f : 1.2f);
@@ -392,6 +395,7 @@ public partial class SpecialAbilities
     void FireScythe()
     {
         nextScytheAt = Time.time + 0.35f;
+        using var aim = WeakHit.AimScope(1.75f);        // 빈틈: 가는 길만 (aimUntil)
         Vector3 target = MouseWorld();
         player.FaceTowards(target);
         bool evo = IsEvolved(ScytheId);
@@ -406,6 +410,7 @@ public partial class SpecialAbilities
         // 총알 대신 코드로 그린 낫을 보여줌 (판정은 그대로)
         AttachScytheVisual(b, (evo ? 1.7f : 1.3f) * grow);
         s.outTime = 0.45f * WeaponRateMul(ScytheId);
+        if (b.aimMul > 0f) b.aimUntil = Time.time + s.outTime;     // 돌아오는 길은 빈틈 후보가 아님
         s.owner = player.transform;
         s.direction = ((Vector2)(target - player.MuzzlePosition)).normalized;
         PlayerLook.Fired(ScytheId);
@@ -425,5 +430,6 @@ public partial class SpecialAbilities
         gr.damage = WDamage * 2f * (cursed ? 3f : 1f);
         gr.radius = GrenadeRadius;
         gr.cluster = IsEvolved(GrenadeId);
+        gr.weakMul = WeakHit.AimAllowed ? 1.6f : 0f;     // 빈틈: 커서 자리에 떨어진 직격점만
     }
 }

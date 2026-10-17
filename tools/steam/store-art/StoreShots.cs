@@ -42,6 +42,11 @@ public class StoreShots
         public float hpFrac = 0.82f, expFrac = 0.68f;
         float nextTap;
         bool held;
+        // 차별점 구현 4-4: 게임이 보여 주는 커서를 사진에도 겹쳐 그림 (자동 조종 중일 때만) · aimFixed 면 그 자리(빈틈 중심)를 겨눔
+        public bool aimFixed;
+        public Vector3 aimPoint, aim;
+        public Canvas cursorCanvas;
+        public RawImage cursor;
 
         void Update()
         {
@@ -56,10 +61,12 @@ public class StoreShots
                 float d = to.magnitude;
                 Vector2 side = new Vector2(-to.y, to.x).normalized;
                 float near = boss ? 7f : 3.5f, far = boss ? 10f : 7f;
-                In("AutoAim", target.Value);
+                aim = target.Value;
                 In("AutoMove", side * 0.6f + (d < near ? -to.normalized * 1.2f : d > far ? to.normalized * 0.7f : Vector2.zero));
             }
-            else { In("AutoMove", Vector2.zero); In("AutoAim", me + Vector3.right * 5f); }
+            else { In("AutoMove", Vector2.zero); aim = me + Vector3.right * 5f; }
+            if (aimFixed) aim = aimPoint;
+            In("AutoAim", aim);
             if (Time.time >= nextTap)
             {
                 held = !held;
@@ -97,6 +104,16 @@ public class StoreShots
             {
                 object sm = Find("StageManager");
                 if (sm != null && Get(sm, "banner") is GameObject b && b.activeSelf) b.SetActive(false);
+            }
+            // 커서: 지금 겨누는 월드 좌표를 화면 비율 앵커로 (씬이 바뀌면 카메라도 새로)
+            Camera cam = Camera.main;
+            if (cursorCanvas != null && cam != null && cursorCanvas.worldCamera != cam) cursorCanvas.worldCamera = cam;
+            if (cursor != null)
+            {
+                Vector3 v = autopilot && cam != null ? cam.WorldToViewportPoint(aim) : Vector3.zero;
+                bool on = autopilot && v.x > 0f && v.x < 1f && v.y > 0f && v.y < 1f;
+                cursor.enabled = on;
+                if (on) { cursor.rectTransform.anchorMin = cursor.rectTransform.anchorMax = new Vector2(v.x, v.y); cursor.rectTransform.anchoredPosition = Vector2.zero; }
             }
         }
 
@@ -473,20 +490,70 @@ public class StoreShots
         }
     }
 
-    // 체험판: 진화 전 거너 (체험판에서는 리치 왕을 쓰러뜨린 뒤에야 무기 진화) · 레벨업 카드
+    // 1) 새 1번 (빈틈 · 기억 빌드): 지옥의 군주 결계 안 · 기술 직후 「숨 고르기」에 커서 십자선이 가슴 비늘 빈틈 위 · 「빈틈!」 · 피해 숫자 · 적 30마리 이상
+    // WeakSpot(갈래 A)이 없으면 결계 안 보스 몸을 겨눈 사진으로 찍음
+    static IEnumerator AimBarrier(string shot)
+    {
+        if (!Wanted(shot)) yield break;
+        yield return Load("Gunner", 1);
+        Build("Gunner", 24, Picks(0, 6, 7, 3, 12, 16, 17, 18), 13, 15);
+        EvolveTwice();
+        Dress(16.2f, 2380, 1040);
+        object b = SpawnBoss(1, 0.7f, new Vector3(8f, 3.5f, 0f));
+        Swarm(1, 36, 8f, 14f, 220f, 180f, 12f);
+        keep.autopilot = true;
+        yield return F(1.4f);
+        Component bc = (Component)b;
+        Component ult = bc.GetComponent(T("BossUltimate"));
+        if (ult == null) ult = bc.gameObject.AddComponent(T("BossUltimate"));
+        yield return null;
+        ((MonoBehaviour)ult).StartCoroutine((IEnumerator)Call(ult, "Run"));
+        yield return Until(() => Time.timeScale == 0f, 3f);
+        yield return Until(() => Time.timeScale > 0f, 8f);   // 외침 화면(실제 시간) → 결계가 펼쳐짐
+        yield return F(1.0f);
+        // 기술이 끝난 순간(casting 참 → 거짓)부터 「숨 고르기」 — 최대 6초 기다림
+        FieldInfo casting = b.GetType().GetField("casting", Any);
+        if (casting != null)
+        {
+            yield return Until(() => (bool)casting.GetValue(b), 6f);
+            yield return Until(() => !(bool)casting.GetValue(b), 6f);
+        }
+        Type ws = T("WeakSpot");
+        Component spot = ws != null ? bc.GetComponent(ws) : null;
+        // WeakSpot.Center(int) (첫 빈틈) · 속성이면 그대로
+        MethodInfo centerFn = ws?.GetMethod("Center", Any, null, new[] { typeof(int) }, null);
+        PropertyInfo centerProp = centerFn == null ? ws?.GetProperty("Center", Any) : null;
+        FieldInfo dn = T("GameSettings").GetField("damageNumbers", Any);
+        dn?.SetValue(null, 0);                               // 이 장면만 피해 숫자 · 「빈틈!」을 켬
+        keep.aimFixed = true;
+        for (int i = 0; i < 12; i++)
+        {
+            object c = spot == null ? null : centerFn != null ? centerFn.Invoke(spot, new object[] { 0 }) : centerProp?.GetValue(spot);
+            keep.aimPoint = c is Vector2 v2 ? (Vector3)v2 : c is Vector3 v3 ? v3 : bc.transform.position + Vector3.up * 1.2f;
+            yield return null;
+        }
+        yield return F(0.2f);
+        Shot(shot);
+        keep.aimFixed = false;
+        dn?.SetValue(null, 2);
+        yield return F(0.3f);
+        Stop();
+    }
+
+    // 체험판 (1장 초원 · 킹 슬라임 · 거너 · 검사 · 유령): 진화 전 거너 (체험판에서는 킹 슬라임을 쓰러뜨린 뒤에야 무기 진화) · 레벨업 카드
     static IEnumerator DemoRun()
     {
         if (!Wanted("demo_01") && !Wanted("demo_02")) yield break;
-        yield return Load("Gunner", 0, "Easy");
+        yield return Load("Gunner", 2, "Easy");
         Build("Gunner", 14, new[] { 0, 0, 0, 6, 6, 7, 7, 3, 16, 16, 17, 4, 4, 5, 8, 9 }, 13, 15);
         Dress(7.6f, 1384, 520);
-        Swarm(0, 40, 9f, 16f, 150f, 0f, 10f);
-        Swarm(0, 16, 10f, 15f, 120f, 180f, 10f);
+        Swarm(2, 40, 9f, 16f, 150f, 0f, 10f);
+        Swarm(2, 16, 10f, 15f, 120f, 180f, 10f);
         keep.autopilot = true;
         yield return F(1.6f);
         yield return Ult(0.4f);
         yield return F(0.25f);
-        Shot("demo_01_gunner_catacombs");
+        Shot("demo_01_gunner_meadow");
         yield return F(1.0f);
         if (Wanted("demo_02"))
         {
@@ -621,6 +688,37 @@ public class StoreShots
         yield return F(0.2f);
     }
 
+    // 커서 그림 (게임의 금빛 조준 커서 · 없으면 기본) — 맨 위 정렬의 화면 캔버스 하나 (씬이 바뀌어도 남음)
+    static void BuildCursor()
+    {
+        Texture2D tex = Resources.Load<Texture2D>("Cursors/cursor_gold_aim_0");
+        if (tex == null) tex = Resources.Load<Texture2D>("Cursors/cursor_default_aim");
+        if (tex == null) return;
+        GameObject go = new GameObject("ShotCursor", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        UnityEngine.Object.DontDestroyOnLoad(go);
+        go.layer = 5;
+        Canvas c = go.GetComponent<Canvas>();
+        c.renderMode = RenderMode.ScreenSpaceCamera;
+        c.planeDistance = 1f;
+        c.overrideSorting = true;
+        SortingLayer[] layers = SortingLayer.layers;
+        c.sortingLayerName = layers[layers.Length - 1].name;
+        c.sortingOrder = 32600;
+        CanvasScaler cs = go.GetComponent<CanvasScaler>();
+        cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        cs.referenceResolution = new Vector2(W, H);
+        cs.matchWidthOrHeight = 1f;
+        RawImage img = new GameObject("Cursor", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+        img.gameObject.layer = 5;
+        img.transform.SetParent(go.transform, false);
+        img.texture = tex;
+        img.raycastTarget = false;
+        img.rectTransform.sizeDelta = new Vector2(64f, 64f);
+        img.enabled = false;
+        keep.cursorCanvas = c;
+        keep.cursor = img;
+    }
+
     static void Unlock()
     {
         // 촬영 복사본 전용 저장 (shoot.ps1 이 제품 이름을 바꿔 둠): 영웅 아홉 명 · 무한 모드 해금
@@ -643,6 +741,7 @@ public class StoreShots
         GameObject host = new GameObject("ShotKeeper");
         UnityEngine.Object.DontDestroyOnLoad(host);
         keep = host.AddComponent<Keeper>();
+        BuildCursor();
 
         foreach (string l in Langs)
         {
@@ -651,6 +750,7 @@ public class StoreShots
             Debug.Log("[SHOT] lang " + lang);
             UnityEngine.Random.InitState(1234);
 
+            yield return AimBarrier("01_aim_barrier");
             yield return GunnerRun();
             yield return BossFight("Swordsman", 0, 0, "06_swordsman_lich_king", 13.8f, Picks(0, 6, 7, 3, 12, 15, 16, 17), 23, 0f, new Vector3(10f, 3f, 0f));
             yield return Barrier("Archer", 1, "07_archer_demon_lord_barrier", 16.5f, Picks(0, 6, 7, 3, 12, 15, 16, 18), 24);
@@ -659,10 +759,11 @@ public class StoreShots
             yield return Endless("Postman", "10_endless_developer", Picks(0, 6, 7, 3, 12, 13, 15, 16, 17, 18));
             yield return Menu("CharacterButton", "11_nine_heroes");
             yield return Menu("SkinButton", "12_skin_shop");
-            // 체험판 전용 (1장 지하 묘역 · 거너 · 검사 · 진화 전)
+            // 체험판 전용 (1장 초원 · 킹 슬라임 · 거너 · 검사 · 유령 · 진화 전)
             yield return DemoRun();
-            yield return BossFight("Swordsman", 0, 0, "demo_06_swordsman_lich_king", 9.1f, new[] { 0, 0, 6, 6, 7, 3, 15, 16, 16, 17, 4, 5, 8, 9 }, 15, 0f, new Vector3(10f, 3f, 0f), 26, false);
-            yield return Barrier("Gunner", 0, "demo_07_gunner_lich_barrier", 9.6f, new[] { 0, 0, 0, 6, 6, 7, 7, 3, 16, 16, 17, 4, 4, 5, 8, 9 }, 16, false);
+            yield return BossFight("Swordsman", 2, 2, "demo_06_swordsman_king_slime", 9.1f, new[] { 0, 0, 6, 6, 7, 3, 15, 16, 16, 17, 4, 5, 8, 9 }, 15, 0f, new Vector3(10f, 3f, 0f), 26, false);
+            yield return Barrier("Gunner", 2, "demo_07_gunner_slime_barrier", 9.6f, new[] { 0, 0, 0, 6, 6, 7, 7, 3, 16, 16, 17, 4, 4, 5, 8, 9 }, 16, false);
+            yield return BossFight("Ghost", 2, 2, "demo_08_ghost_king_slime", 8.4f, new[] { 0, 0, 6, 6, 7, 3, 15, 16, 16, 17, 4, 5, 8, 9 }, 14, 0.4f, new Vector3(10f, 3f, 0f), 30, false);
         }
 
         Time.captureFramerate = 0;

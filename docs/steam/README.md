@@ -75,6 +75,8 @@ pwsh tools/steam/store-art/shoot.ps1 -Publish                 # 스크린샷 4�
 pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만 빨리 확인 (옮기지 않음)
 ```
 - 캡슐: 로고(게임 이름) 말고는 글자 없음 (수상 · 리뷰 · 할인 문구 금지 규칙). 체험판은 로고 아래 붉은 「DEMO」 리본.
+  - 그래서 「조준 · 장전 · 진화」는 글자가 아니라 그림으로 보여 줌 (차별점 구현 4-3 · `aim_scene`): 조준 = 커서 십자선과 금빛 조준선, 장전 = 허공에 흩어지는 탄피 셋, 진화 = 리볼버 총구에서 갈라지는 금빛 빛. 문구 「AIM. RELOAD. EVOLVE.」는 트레일러 끝 · 짧은 설명 · 본문 그림에만.
+  - 올리는 파일은 스팀 규격의 2배 크기(1232×706 · 920×430 · 462×174 · 748×896)이고, 확인은 보이는 크기(616×353 · 460×215 · 231×87 · 374×448, 검색 184×69)로 줄여서 봄.
 - 라이브러리 히어로: 글자 없음. 가운데 띠에 주인공 · 괴물 떼 · 보스, 왼쪽은 로고가 얹힐 자리라 비워 둠.
 - 스크린샷 촬영 도구는 메인 프로젝트 · 빌드 복사본이 아닌 `%LOCALAPPDATA%\SoulSaverStoreShots` 복사본(제품 이름 `Soul Saver StoreShots`)에서 돌아서 실제 저장과 섞이지 않음.
 
@@ -82,10 +84,10 @@ pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만
 
 | 파일 | 크기 | Steamworks 칸 | 그림 |
 |---|---|---|---|
-| `header_capsule.png` | 920×430 | 상점 페이지 관리 → 그래픽 에셋 → **헤더 캡슐** | 로고 왼쪽 위, 거너 · 검사 · 궁수 · 유령 vs 지하 묘역 괴물 떼 · 지옥의 군주 · 리치 왕 |
-| `small_capsule.png` | 462×174 | 그래픽 에셋 → **소형 캡슐** | 로고를 가장 크게, 아래에 사격하는 거너 vs 괴물 떼 |
-| `main_capsule.png` | 1232×706 | 그래픽 에셋 → **메인 캡슐** | 헤더와 같은 구도를 크게 |
-| `vertical_capsule.png` | 748×896 | 그래픽 에셋 → **세로 캡슐** | 두 줄 로고, 리치 왕 · 킹 슬라임 · 지옥의 군주, 영웅 다섯 |
+| `header_capsule.png` | 920×430 | 상점 페이지 관리 → 그래픽 에셋 → **헤더 캡슐** | 로고 왼쪽 위(가로 45%), 거너가 왼쪽 아래에서 겨눈 조준선이 결계 고리 안 지옥의 군주의 빛나는 빈틈에 닿는 순간 · 뒤에 어두운 괴물 떼 실루엣 |
+| `small_capsule.png` | 462×174 | 그래픽 에셋 → **소형 캡슐** | 로고(가로 60%) + 십자선 + 결계 안 보스 얼굴의 빈틈만 (인물은 이 크기에서 얼룩이라 뺌) |
+| `main_capsule.png` | 1232×706 | 그래픽 에셋 → **메인 캡슐** | 헤더와 같은 구도 · 거너 몸 높이 = 화면 높이 45% |
+| `vertical_capsule.png` | 748×896 | 그래픽 에셋 → **세로 캡슐** | 두 줄 로고 위, 결계 안 보스 가운데 뒤, 거너는 아래에서 위로 쏨 (조준선이 세로로 길게) |
 | `page_background.png` | 1438×810 | 그래픽 에셋 → **페이지 배경** (선택) | 영혼 화로가 놓인 어두운 묘역 바닥 (글자 · 인물 없음) |
 | `library_capsule.png` | 600×900 | 라이브러리 에셋 → **라이브러리 캡슐** | 세로 캡슐과 같은 구도 |
 | `library_header.png` | 920×430 | 라이브러리 에셋 → **라이브러리 헤더** | 헤더 캡슐과 같음 |
@@ -97,7 +99,8 @@ pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만
 | `art/screenshots/*.png` | 1920×1080 | 상점 페이지 관리 → **스크린샷** (영어 파일이 기본, `_koreana` · `_japanese` · `_schinese` 는 언어별 스크린샷 칸) | 아래 표 |
 
 ### 체험판 앱 (App ID 5369030) — `art/demo/`
-같은 이름 · 같은 칸에 올립니다 (체험판 앱의 Steamworks 페이지). 그림체는 정식판과 같고, 체험판에서 실제로 보이는 것만: 거너 · 검사 · 1장 지하 묘역 적(해골 · 좀비 · 망령) · 리치 왕, 로고 아래 「DEMO」.
+같은 이름 · 같은 칸에 올립니다 (체험판 앱의 Steamworks 페이지). 그림체는 정식판과 같고, 체험판에서 실제로 보이는 것만: 거너 · 검사 · 유령 · 1장 초원 적(슬라임 · 버섯 · 늑대 · 벌) · 킹 슬라임, 로고 아래 「DEMO」. 캡슐은 정식판과 같은 조준 구도에 초원 · 킹 슬라임(왕관 아래 핵이 빈틈).
+체험판 범위(차별점 구현 3-4~): 정식판과 같은 첫 장 — 1장 초원 · 킹 슬라임을 쓰러뜨리면 끝, 쉬움만, 영웅 거너 · 검사 · 유령. 상점의 체험판 설명도 이 범위로 씁니다.
 
 | 파일 | 크기 | Steamworks 칸 |
 |---|---|---|
@@ -110,7 +113,8 @@ pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만
 
 | 파일 | 장면 | 정식판 | 체험판 |
 |---|---|---|---|
-| `01_gunner_catacombs_horde` | 거너 · 지하 묘역, Lv 21 · 2차 진화 무기 · 카드 여럿, 몰려오는 괴물 떼에 필살기 | ✔ | |
+| `01_aim_barrier` | **새 1번** (빈틈 · 기억 빌드 촬영본): 지옥의 군주 결계 안 · 기술 직후 「숨 고르기」에 커서 십자선이 가슴 비늘 빈틈 위, 「빈틈!」 · 피해 숫자, 적 30마리 넘게. 그때까지는 `07_archer_demon_lord_barrier` 를 맨 앞으로 | ✔ | |
+| `01_gunner_catacombs_horde` | 거너 · 지하 묘역, Lv 21 · 2차 진화 무기 · 카드 여럿, 몰려오는 괴물 떼에 필살기 (순서는 뒤로) | ✔ | |
 | `02_level_up_cards` | 레벨업 카드 3택 (진화 재료 표시) | ✔ | |
 | `03_weapon_evolution` | 무기 진화 3택 화면 | ✔ | ✔ (같은 파일) |
 | `04_skill_evolution` | 스킬 진화 「천둥 장전」 연출 | ✔ | ✔ (같은 파일) |
@@ -122,10 +126,14 @@ pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06     # 일부 장면만
 | `10_endless_developer` | 무한 모드 25분 · 최종 보스 「개발자」 (우체부) | ✔ | |
 | `11_nine_heroes` | 캐릭터 선택: 영웅 아홉 명 | ✔ | |
 | `12_skin_shop` | 스킨 상점 | ✔ | |
-| `demo/screenshots/01_gunner_catacombs` | 체험판: 진화 전 거너 · 지하 묘역 | | ✔ |
+| `demo/screenshots/01_gunner_meadow` | 체험판: 진화 전 거너 · 초원 | | ✔ |
 | `demo/screenshots/02_level_up_cards` | 체험판: 레벨업 카드 | | ✔ |
-| `demo/screenshots/06_swordsman_lich_king` | 체험판: 검사 vs 리치 왕 | | ✔ |
-| `demo/screenshots/07_gunner_lich_barrier` | 체험판: 거너 · 리치 왕 결계 | | ✔ |
+| `demo/screenshots/06_swordsman_king_slime` | 체험판: 검사 vs 킹 슬라임 | | ✔ |
+| `demo/screenshots/07_gunner_slime_barrier` | 체험판: 거너 · 킹 슬라임 결계 | | ✔ |
+| `demo/screenshots/08_ghost_king_slime` | 체험판: 유령 vs 킹 슬라임 (빙의) | | ✔ |
+
+> 체험판 스크린샷은 `shoot.ps1 -Publish` 로 다시 찍어야 바뀝니다. 지금 `art/demo/screenshots/` 에 남아 있는 지하 묘역 · 리치 왕 파일(`01_gunner_catacombs` · `06_swordsman_lich_king` · `07_gunner_lich_barrier`)은 새로 찍은 뒤 지우고 Steamworks 체험판 앱에서도 바꿉니다.
+> 스크린샷 사진에는 게임이 보여 주는 조준 커서가 겹쳐 그려집니다(자동 조종 중일 때만 · `StoreShots.cs` `BuildCursor`).
 
 ### 그 밖
 | 파일 | 크기 | 칸 |

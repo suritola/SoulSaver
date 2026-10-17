@@ -25,6 +25,7 @@ public class MidBossMark : MonoBehaviour
             Color tint = GameSettings.ColorBlind ? new Color(1f, 0.62f, 0.2f) : new Color(1f, 0.4f, 0.35f);
             EdgeMarker.Attach(go.transform, body != null ? body.sprite : null, Color.Lerp(Color.white, tint, 0.45f), 0.9f, 0.35f, new Color(tint.r, tint.g, tint.b, 0.8f), 0.1f,
                               null, null, () => e == null || !e.IsDead);
+            WeakSpot.Attach(go, WeakKind.MidBoss);         // 빈틈: 머리 (보상 몹 · 고블린은 없음)
         }
     }
 

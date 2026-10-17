@@ -19,14 +19,19 @@ public class DamagePopup : MonoBehaviour
     static TMP_FontAsset font;
     static Material material, bossMaterial;
     static readonly Dictionary<int, DamagePopup> byTarget = new Dictionary<int, DamagePopup>();
+    // 빈틈 숫자도 대상마다 하나로 합침 (일반 숫자와는 따로 · 열린 빈틈을 연사로 맞히면 한 대마다 팝업이 생겨 MaxActive 를 채웠음)
+    static readonly Dictionary<int, DamagePopup> byWeak = new Dictionary<int, DamagePopup>();
     static int active;
 
     // 다음 피해가 치명타인지 (총알 · 피해 훅이 피해를 주기 직전에 켜 둠, Show 가 읽고 끔)
     public static bool NextCrit;
+    // 다음 피해가 빈틈 명중인 대상 (WeakHit.Apply 가 켜고 Show 가 그 대상일 때만 읽고 끔 · bool 이면 TakeDamage 안의 다른 적 숫자가 가로챔)
+    public static Transform NextWeakTarget;
+    public static bool NextWeakPerfect;     // 「완벽한 빈틈!」 (궁수 완벽 · 시계공 정각)
 
     TextMeshPro text;
     int key;
-    bool crit, boss, hurt;
+    bool crit, boss, hurt, weak, weakPerfect;
     int tierMax;                 // 합친 피해 중 가장 높은 등급 (올라만 감)
     float amount, t, lastAdd, firstAdd, size = 1f;     // firstAdd: 첫 합산 시각 (HealthBarFeel.WindowMax 가 지나면 새 숫자)
     // 1.1~: 합칠 때마다 t 를 0 으로 되돌려 떠오르던 숫자가 처음 자리로 툭 떨어지며 덜덜 떨렸음
@@ -38,12 +43,22 @@ public class DamagePopup : MonoBehaviour
     {
         bool isCrit = NextCrit;
         NextCrit = false;
+        bool isWeak = target != null && NextWeakTarget == target, weakPerf = isWeak && NextWeakPerfect;
+        if (isWeak) { NextWeakTarget = null; NextWeakPerfect = false; }
         if (target == null || damage <= 0f || GameSettings.DamageNumbers == 2) return;
         int k = target.GetInstanceID();
         bool isBoss = fromBoss;      // 보스 본체만 (같은 "boss" 태그인 등불 · 묘비는 일반 숫자)
-        // 치명타는 다른 숫자와 합치지 않고 따로 크게
-        if (!isCrit && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && !p.hurt && Time.time - p.lastAdd < (isBoss ? HealthBarFeel.WindowBoss : HealthBarFeel.WindowEnemy) && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
+        // 치명타 · 빈틈은 다른 숫자와 합치지 않고 따로 크게
+        float window = isBoss ? HealthBarFeel.WindowBoss : HealthBarFeel.WindowEnemy;
+        if (!isCrit && !isWeak && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && !p.weak && !p.hurt && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
         {
+            p.Add(damage, tier);
+            return;
+        }
+        // 빈틈 (치명타 아님): 같은 대상의 열린 빈틈 숫자에 합침 · 「완벽한 빈틈!」이 끼면 머리 글자만 올림
+        if (!isCrit && isWeak && byWeak.TryGetValue(k, out p) && p != null && p.live && p.weak && !p.crit && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
+        {
+            if (weakPerf) p.weakPerfect = true;
             p.Add(damage, tier);
             return;
         }
@@ -76,7 +91,10 @@ public class DamagePopup : MonoBehaviour
         p = Take(k, at, isBoss ? 45 : 40, isBoss && bossMaterial != null ? bossMaterial : material);
         p.crit = isCrit;
         p.boss = isBoss;
-        if (!isCrit) byTarget[k] = p;
+        p.weak = isWeak;
+        p.weakPerfect = weakPerf;
+        if (!isCrit && !isWeak) byTarget[k] = p;
+        else if (!isCrit) byWeak[k] = p;
         p.Add(damage, tier);
     }
 
@@ -131,6 +149,7 @@ public class DamagePopup : MonoBehaviour
         p.crit = false;
         p.boss = false;
         p.hurt = false;
+        p.weak = p.weakPerfect = false;
         p.live = true;
         p.gameObject.SetActive(true);
         active++;
@@ -147,6 +166,7 @@ public class DamagePopup : MonoBehaviour
         live = false;
         active--;
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
+        if (byWeak.TryGetValue(key, out p) && p == this) byWeak.Remove(key);
         gameObject.SetActive(false);
         pool.Push(this);
     }
@@ -197,7 +217,7 @@ public class DamagePopup : MonoBehaviour
             size = HurtSize * scale;
             return;
         }
-        text.text = (amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString()) + (crit ? "!" : "");
+        text.text = (weak ? WeakHead(weakPerfect) : "") + (amount < 10f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString()) + (crit ? "!" : "");
         // 큰 피해일수록 크고 붉은 금색
         PlayerController pl = Hostile.Player;
         float baseDmg = pl != null ? Mathf.Max(0.1f, pl.damage) : 1f;
@@ -221,6 +241,26 @@ public class DamagePopup : MonoBehaviour
         else size *= scale;      // 누적 등급별 크기 (1 / 1.2 / 1.55 / 2)
         // 치명 등급 누적 (치명타 아님): 더 진한 금빛
         if (!crit && tierMax >= (int)HealthBarFeel.Tier.Deadly) text.color = new Color(1f, 0.7f, 0.2f);
+        // 빈틈: 청록 흰색 · 1.15배 (치명타와 겹치면 금빛 그대로)
+        if (weak)
+        {
+            if (!crit) text.color = new Color(0.62f, 1f, 0.95f);
+            size *= 1.15f;
+        }
+    }
+
+    // 「빈틈!」 머리 글자: 언어가 바뀔 때만 다시 만듦
+    static string weakHead, weakHeadPerfect;
+    static int weakHeadLang = -1;
+    static string WeakHead(bool perfect)
+    {
+        if (weakHead == null || weakHeadLang != (int)Loc.Current)
+        {
+            weakHeadLang = (int)Loc.Current;
+            weakHead = "<size=55%>" + Loc.T("weak.popup") + "</size>\n";
+            weakHeadPerfect = "<size=55%>" + Loc.T("weak.popup.perfect") + "</size>\n";
+        }
+        return perfect ? weakHeadPerfect : weakHead;
     }
 
     void Update()
@@ -266,5 +306,6 @@ public class DamagePopup : MonoBehaviour
         live = false;
         active--;
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
+        if (byWeak.TryGetValue(key, out p) && p == this) byWeak.Remove(key);
     }
 }

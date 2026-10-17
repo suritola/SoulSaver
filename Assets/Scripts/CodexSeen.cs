@@ -78,7 +78,7 @@ public static class CodexSeen
         foreach (RelicDef r in ContentRegistry.Relics) Add("relic." + r.saveCode, Cat.Relic, false, r.since);
         foreach (SoulBrandDef b in ContentRegistry.SoulBrands) Add("brand." + b.saveCode, Cat.Brand, false, b.since);
         // ---------------- 비밀: 조건으로 만나는 영웅 · 무한 모드 최종 보스 둘 · 전설 상자 대박
-        foreach (CharacterId c in SecretHeroes()) Add("sec.hero." + (int)c, Cat.Secret, false);
+        foreach (CharacterId c in SecretHeroes()) Add("sec.hero." + (int)c, Cat.Secret, Demo.CharacterAllowed(c));      // 체험판에서 고를 수 있는 비밀 영웅(유령)은 체험판 칸
         Add("sec.dev", Cat.Secret, false);
         Add("sec.mom", Cat.Secret, false);
         Add("sec.jackpot", Cat.Secret, true);
@@ -172,6 +172,7 @@ public static class CodexSeen
         if (key.StartsWith("sec.hero."))
         {
             if (!int.TryParse(key.Substring(9), out int c) || c < 0 || c >= CharacterData.All.Length) return false;
+            if (Demo.On && Demo.CharacterAllowed((CharacterId)c)) return true;     // 체험판: 처음부터 고를 수 있는 영웅은 만난 것
             return CharacterData.ConditionMet((CharacterId)c);       // 해금 조건을 이룬 순간 만난 것 (사기 전이라도)
         }
         if (key == "sec.dev" || key == "sec.mom")

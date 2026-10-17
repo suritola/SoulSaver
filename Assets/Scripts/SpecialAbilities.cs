@@ -440,11 +440,12 @@ public partial class SpecialAbilities : MonoBehaviour
                     player.FaceTowards(MouseWorld());
                     PlayerMotion.Of(player).Recoil(dir, 2f);            // 몸동작: 큰 반동 (1.0.1)
                     const float range = 11f, half = 35f;
+                    using (WeakHit.AimScope(1.4f))          // 빈틈: 커서 쪽 부채꼴의 가운데 20° 만 (평타 샷건과 같은 Arc · 이 블록 안에 yield 없음)
                     using (var ovl = PhysHits.Circle(start, range)) foreach (Collider2D col in ovl)
                     {
                         if (!col.CompareTag("enermy") && !col.CompareTag("boss")) continue;
                         Vector2 to = col.transform.position - start;
-                        if (Vector2.Angle(dir, to) <= half) Specials.Damage(col.gameObject, dmg * 0.9f, to.normalized, 3.5f);
+                        if (Vector2.Angle(dir, to) <= half) WeakHit.Damage(col.gameObject, WeakShape.Arc(start, dir, 10f, range, 1.4f), dmg * 0.9f, to.normalized, 3.5f);
                     }
                     for (int i = -2; i <= 2; i++)
                         for (int k = 1; k <= 3; k++)
@@ -491,9 +492,10 @@ public partial class SpecialAbilities : MonoBehaviour
                         onLine.Add(col);
                     }
                     float power = 1.5f + 0.25f * onLine.Count;
+                    using var railAim = WeakHit.AimScope(1.75f);      // 빈틈: 커서 쪽으로 곧게 나가는 광선 (광선 가운데 줄기 반폭 0.6 · 이 블록 뒤 yield 없음)
                     foreach (Collider2D col in onLine)
                     {
-                        Specials.Damage(col.gameObject, dmg * power, (to - from).normalized, 2f);
+                        WeakHit.Damage(col.gameObject, WeakShape.Segment(from, to, 0.6f * wide, 1.75f), dmg * power, (to - from).normalized, 2f);
                         Fx.Spawn("fx_spark", col.transform.position, 2f, c, 20f);
                     }
                     Fx.Spawn("fx_shock", from, 6f, c, 22f);

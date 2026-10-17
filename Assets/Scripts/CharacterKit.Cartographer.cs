@@ -105,7 +105,7 @@ public partial class CharacterKit
             // 정밀 측량 (2차): 적 하나를 지날 때마다 +10% (최대 +50%)
             if (augment == AugSurvey) m *= 1f + 0.1f * Mathf.Min(5, stacks);
             stacks++;
-            Specials.Damage(c.gameObject, dmg * m, dir, 1f);
+            WeakHit.Damage(c.gameObject, WeakShape.Segment(a, b, half, 1.75f), dmg * m, dir, 1f);     // 빈틈: 평타 획만 (이중 인쇄는 나중 프레임이라 조준 범위 밖)
             if (card[5] > 0) surveyMarks[c.gameObject] = Time.time + 5f;
             Fx.Spawn("fx_spark", c.transform.position, 0.8f, Ink, 26f);
             n++;
@@ -244,6 +244,7 @@ public partial class CharacterKit
     // 나침반 바늘: 가까운 적에게 바늘이 날아감
     void CompassNeedles(Vector3 from, int count)
     {
+        using var noAim = WeakHit.AimScope(0f);       // 빈틈: 스스로 겨누는 자동 표적 탄이라 후보가 아님 (평타 조준 범위 안에서 불려도)
         List<Transform> targets = SignatureSkills.Nearest(from, 12f, count);
         foreach (Transform t in targets)
         {

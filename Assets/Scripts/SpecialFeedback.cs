@@ -197,6 +197,8 @@ public class SpecialFeedback : MonoBehaviour
         Make("sparkle", 0.22f, (t, d, r) => (t < 0.07f ? Sin(2093f, t) : Sin(2637f, t)) * Decay(t, d, 2f) * 0.25f);
         // 준비 알림 (두 음)
         Make("chime", 0.35f, (t, d, r) => (t < 0.12f ? Sin(880f, t) : Sin(1320f, t)) * Decay(t, d, 1.5f) * 0.5f);
+        // 빈틈 명중 (WeakHit): 짧은 2,640Hz 핑 + 딸깍 (0.12초)
+        Make("weakhit", 0.12f, (t, d, r) => (Sin(2640f, t) * 0.55f + Sin(5280f, t) * 0.12f) * Decay(t, d, 2.2f) + Noise(r) * 0.45f * Decay(t, 0.012f, 2f));
         // 경고 (쿨타임, 부족)
         Make("buzz", 0.16f, (t, d, r) => Mathf.Sign(Sin(110f, t)) * 0.25f * Decay(t, d, 1f));
         // 폭발

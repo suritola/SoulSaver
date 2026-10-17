@@ -3,13 +3,13 @@ using UnityEngine;
 // 장 순서 (2.1.1~): 초원 → 지하 묘역 → 불타는 지옥 → 영혼의 심연
 // 스테이지 번호(맵 · 적 구성 · 음악 · 도감)는 그대로 두고 "몇 번째 장인지"만 바꿈 (StageManager · EnemySpawner)
 // 원래 3장이던 초원이 1장으로 오면 너무 세므로, 적 체력 · 주는 피해 · 보상 · 보스 체력을 그 자리(몇 번째 장)의 원래 세기에 맞춤
-// 체험판(1장 리치 왕에서 끝) · 무한 모드는 예전 순서 그대로
+// 체험판(1장 초원 · 킹 슬라임에서 끝)은 정식판과 같은 순서 · 무한 모드는 예전 순서 그대로
 public static class Chapters
 {
     // 스테이지 번호: 0 지하 묘역 · 1 불타는 지옥 · 2 초원 · 3 영혼의 심연
     static readonly int[] Normal = { 2, 0, 1, 3 };
     static readonly int[] Classic = { 0, 1, 2, 3 };
-    public static bool IsClassic => Demo.On || GameMode.IsEndless || GameInput.TrailerRunning || Application.isBatchMode;     // 촬영 · 화면 점검 도구는 장을 직접 건너뜀
+    public static bool IsClassic => GameMode.IsEndless || GameInput.TrailerRunning || Application.isBatchMode;     // 촬영 · 화면 점검 도구는 장을 직접 건너뜀
     static int[] Order => IsClassic ? Classic : Normal;
 
     public static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };

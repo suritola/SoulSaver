@@ -99,6 +99,7 @@ public static class Contracts
         E("potion", true, 1, () => C("potion")),
         E("reroll", true, 1, () => C("reroll"), () => !SoulWeight.NoReroll),
         E("evo1", false, 1, () => EvoTier >= 1 ? 1 : 0),
+        E("weak30", true, 30, () => C("weak.hit")),          // 빈틈 30번 (WeakHit · 체험판에서도)
         // ---------------- 보통 800P
         N("bossquick", 1, () => C("boss.quick")),
         N("midboss20", 1, () => C("midboss.fast")),
@@ -154,7 +155,7 @@ public static class Contracts
         H(CharacterId.Postman, 3, false, 8, () => C("express.marks")),
         H(CharacterId.Postman, 4, false, 8, () => C("post.bonus")),
         H(CharacterId.Postman, 6, false, 300, () => C("letter")),
-        H(CharacterId.Ghost, 1, false, 4, () => C("ult")),
+        H(CharacterId.Ghost, 1, true, 4, () => C("ult")),          // 체험판 영웅 (2026-10-18~)
         H(CharacterId.Ghost, 2, false, 50, () => C("freeze")),
         H(CharacterId.Ghost, 4, false, 10, () => C("ult.wave")),
         // ---------------- 무한 모드 전용

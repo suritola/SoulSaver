@@ -137,13 +137,15 @@ public partial class SpecialAbilities
     }
 
     // ================================================================= shared effects
-    public void Explode(Vector3 pos, float radius, float damage, float knock, Color color)
+    // weakMul > 1: 직격점(pos) 빈틈 — 폭발 피해가 그 보스 · 중간 보스에게 들어갈 때 늘림 (따로 한 번 더 때리지 않음 · 거너 유탄)
+    public void Explode(Vector3 pos, float radius, float damage, float knock, Color color, float weakMul = 0f)
     {
         using (var ovl = PhysHits.Circle(pos, radius)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             Vector3 dir = (c.transform.position - pos).normalized;
-            Specials.Damage(c.gameObject, damage, dir, knock);
+            if (weakMul > 1f) WeakHit.Hit(c.gameObject, WeakShape.Point(pos, 0.4f, weakMul), damage, dir, knock);
+            else Specials.Damage(c.gameObject, damage, dir, knock);
         }
         Flash(pos, radius * 2f, color, 0.3f);
         Flash(pos, radius * 0.9f, new Color(1f, 1f, 1f, 0.9f), 0.12f);

@@ -34,17 +34,21 @@ public partial class CharacterKit
     {
         int n = Mathf.Max(1, shots) + (augment == AugBundle ? 2 : 0) + SignatureSkills.ExtraLetters();
         List<Transform> taken = new List<Transform>();
+        // 빈틈 지정: 편지는 받는 이를 따라가는 유도라, 던질 때 커서가 받는 이(보스 · 중간 보스)의 빈틈 위일 때만
+        bool aimed = WeakHit.InAim;
+        Vector3 cursor = aimed ? Mouse : Vector3.zero;
         for (int i = 0; i < n; i++)
         {
             Transform to = Addressee(start, dir, taken);
             if (to != null) { taken.Add(to); MarkAddressee(to); }
+            bool weak = aimed && to != null && WeakSpot.CursorOn(to.gameObject, cursor, 1.3f);
             float d = dmg * (i >= Mathf.Max(1, shots) ? ExtraLetterRate : 1f);
             // 1.0.2: 받는 이 쪽으로 출발 (앞 70° 밖 · 바로 옆의 적이면 마우스 쪽으로 출발한 편지가 받는 이 둘레를 맴돌기만 하던 것)
             Vector2 aim = to != null ? (Vector2)(to.position - start) : dir;
             if (aim.sqrMagnitude < 0.01f) aim = dir;
             Vector2 launch = Quaternion.Euler(0f, 0f, (i - (n - 1) * 0.5f) * 14f) * aim.normalized;
             bool pigeon = form == SpecialAbilities.KitPigeon && i == 0;
-            StartCoroutine(LetterFlight(start, launch, to, d, pigeon, 0));
+            StartCoroutine(LetterFlight(start, launch, to, d, pigeon, 0, weak));
         }
         SignatureSkills.LettersSent(start, dir, dmg);
         Play("flick", 0.6f, 1f);
@@ -70,8 +74,10 @@ public partial class CharacterKit
         return far != null ? far : any;
     }
 
-    IEnumerator LetterFlight(Vector3 from, Vector2 dir, Transform target, float dmg, bool pigeon, int depth)
+    //   weak: 던질 때 빈틈을 짚은 편지 — 처음 받는 이에게 닿았을 때 빈틈이 아직 열려 있으면 명중 (받는 이가 바뀌면 지정이 풀림)
+    IEnumerator LetterFlight(Vector3 from, Vector2 dir, Transform target, float dmg, bool pigeon, int depth, bool weak = false)
     {
+        Transform marked = weak ? target : null;
         bool parcel = form == SpecialAbilities.KitParcel;
         // 1.1.2: 새 편지 그림(흰 종이 · 금빛 테 · 붉은 봉인 · 어두운 외곽선) + 금빛 빛 무리 · 잔상, 보이는 크기 2.4 → 2.7 → 3배 (닿는 판정은 그대로)
         bool art = !pigeon && Fx.Frames("atk_letter").Length > 0;
@@ -115,7 +121,7 @@ public partial class CharacterKit
             // 받는 이 몸에 닿으면 배달 (예전엔 몸 크기와 상관없이 중심 0.74칸 안이어야 해서 큰 적 · 보스는 몸에 닿고도 지나쳤음)
             if (target != null && Touches(target, p, touchR) && Alive(target))
             {
-                Deliver(target, p, v, dmg, pigeon, depth);
+                Deliver(target, p, v, dmg, pigeon, depth, marked != null && target == marked);
                 break;
             }
             yield return null;
@@ -141,14 +147,15 @@ public partial class CharacterKit
     }
 
     // 배달 완료
-    void Deliver(Transform target, Vector3 at, Vector2 v, float dmg, bool pigeon, int depth)
+    void Deliver(Transform target, Vector3 at, Vector2 v, float dmg, bool pigeon, int depth, bool weak = false)
     {
         GameObject g = target.gameObject;
         // 1.0.6~ 우표 중첩당 +4/8/12% → +3/6/9% (맞으면 절반 떨어짐 · LoseStamps)
         float m = formPower * (1f + 0.03f * card[2] * stampStacks) * SignatureSkills.LetterMul(g, target == lastAddressee, (at - transform.position).magnitude);
         if (augment == AugThickEnvelope) m *= 1.25f;
         bool wasAlive = !(g.TryGetComponent(out EnermyController e) && e.IsDead);
-        Specials.Damage(g, dmg * m, v, 0.8f);
+        if (weak) WeakHit.Hit(g, WeakShape.Marked(1.75f), dmg * m, v, 0.8f);       // 빈틈 지정 편지 (열려 있을 때만 배율)
+        else Specials.Damage(g, dmg * m, v, 0.8f);
         if (pigeon) StartCoroutine(PigeonPeck(target, dmg * 0.5f));
         lastAddressee = target;
         // 1.0.6~ 배달 횟수 · 우편 보너스는 평타로 직접 보낸 편지(depth 0)만

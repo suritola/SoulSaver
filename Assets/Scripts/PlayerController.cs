@@ -570,6 +570,7 @@ public class PlayerController : MonoBehaviour
 void Shoot()
     {
         if (NowBullet <= 0 || isReloading) return;
+        using var aim = WeakHit.AimScope(1.75f);       // 빈틈: 직접 조준한 평타 (WeakSpot)
 
         nextShootTime = Time.time + ShootSpeed / fireRateMultiplier;
         // 탄창 저주: 마지막 한 발 강화
@@ -697,6 +698,15 @@ void Shoot()
             glow.tracerBaseScale = newBullet.transform.localScale;
             // 스킬 게이지는 화염 방사기 기준으로 천천히 참
             bullet.skillCharge = knockBackRate * GaugeRate;
+            // 빈틈 후보: 조준 범위 안에서, 그 순간 「플레이어 → 커서」 방향에서 25° 안으로 나간 탄만 (덤으로 흩뿌리는 탄 · 패드 보조 조준은 빠짐)
+            //   출발점이 아니라 플레이어 기준: 커서 자리에서 출발하는 탄(지도 제작자 획 끝 등)이 어느 쪽으로 날아가든 통과하지 않게 · 커서가 플레이어 위면 통과 없음
+            bullet.aimMul = 0f;
+            if (WeakHit.InAim && mainCamera != null)
+            {
+                Vector3 cursor = mainCamera.ScreenToWorldPoint(GameInput.MousePosition);
+                Vector2 toCursor = (Vector2)(cursor - transform.position);
+                if (toCursor.sqrMagnitude >= 0.0001f && Vector2.Angle(direction, toCursor) <= 25f) bullet.aimMul = WeakHit.ScopeMul;
+            }
         }
 
         return bullet;

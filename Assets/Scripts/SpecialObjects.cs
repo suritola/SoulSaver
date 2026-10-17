@@ -421,6 +421,7 @@ public class Grenade : MonoBehaviour
     public float radius = 3.5f;
     public bool cluster;        // 진화: 폭발 후 작은 용암탄 3개로 흩어짐
     public bool mini;           // 흩어진 작은 용암탄 (장판 없음)
+    public float weakMul;       // 빈틈: 떨어진 점이 보스 · 중간 보스 빈틈 위면 이 배율 (직격점만 · 0 = 없음, FireGrenade 가 넣음)
     public float flightTime = 0.5f;
     Vector3 start;
     float t;
@@ -483,7 +484,7 @@ public class Grenade : MonoBehaviour
 
     void Blast()
     {
-        owner.Explode(target, radius, damage, 1.5f, Lava);
+        owner.Explode(target, radius, damage, 1.5f, Lava, mini ? 0f : weakMul);     // 직격점 빈틈: 폭발 피해가 그 보스에게 들어갈 때 늘림 (한 대로 · 치명타 · 결계 게이지 · 소환 수 한 번)
         if (!mini) owner.GunAreaHit(target, radius, damage);
         Sprite glow = sr.sprite;
 

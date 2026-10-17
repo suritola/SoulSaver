@@ -62,6 +62,17 @@ public class bosss : MonoBehaviour
     [System.NonSerialized] public int restoreMaxHp;       // 이어하기: 저장할 때의 최대 체력 (0 = 평소대로 · 난이도 배율 뒤에 덮어씀)
     [System.NonSerialized] public float restoreHp;        // 이어하기: 저장할 때의 체력 (0 = 가득)
     [System.NonSerialized] public bool restoreDying;      // 이어하기: 쓰러지는 연출 중에 저장된 보스 (체력 1 로 다시 · 경험치 · 포인트 · 영혼 조각은 그때 이미 받아서 다시 주지 않음)
+    // 기억하는 보스 (BossMemory · 직렬화하지 않음 — 프리팹 · 복제에 섞이지 않게): 기억 · 깨진 뒤 휘청이는 동안 받는 피해 배율 (damageTakenMul 은 망자의 의식이 덮어써서 따로)
+    [System.NonSerialized] public BossMemory memory;
+    [System.NonSerialized] public float memoryTakenMul = 1f;
+    // 기억 연출: 몸 흰빛 (발동 0.6초 · 깨진 뒤 휘청 1.5초 깜빡) — SpriteOutline 의 _Flash 공유 재질 (Juice.SetFlash · 피격 빨강과 따로)
+    [System.NonSerialized] public float memWhiteUntil, memWhiteBlink;
+    bool memWhite;
+    public void MemoryWhite(float seconds, float blink)
+    {
+        memWhiteUntil = Time.time + seconds;
+        memWhiteBlink = blink;
+    }
     bool defeatHandled;                                   // Death 가 처치 처리(OnBossDefeated)를 불렀음
     // 1.2.3~ 쓰러졌지만 처치 처리가 아직 (연출 1초 중) — 저장이 이 보스를 빠뜨리면 처치가 사라져서 따로 적음 (EndlessMode.LiveBossesText)
     public bool DefeatPending => isDead && !defeatHandled && !developer;
@@ -164,6 +175,7 @@ public class bosss : MonoBehaviour
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();
         skills.kind = bossKind;
         if (GetComponent<BossUltimate>() == null) gameObject.AddComponent<BossUltimate>();     // 필살기 "결계"
+        memory = BossMemory.Attach(this);       // 기억하는 보스 (튜토리얼 제외 · 이미 붙어 있으면 그대로)
         if (IsSlime)
         {
             slimes.Clear();
@@ -231,16 +243,22 @@ public class bosss : MonoBehaviour
         }
         damage *= damageTakenMul;
         damage *= erosionMul;               // 1.2.3~ 모래 폭풍 풍화 (무한 모드 · 평소 1)
+        // 기억하는 보스: 기억한 공격은 방패(정면) · 결로 줄고, 기억이 깨져 휘청이는 동안은 더 아픔 (Unity 오브젝트라 ?. 대신 != null)
+        if (memory != null) damage *= memory.Incoming(DamageSource.Current, dir);
+        damage *= memoryTakenMul;
 
         // 치명타: 보스도 모든 캐릭터의 공격 · 스킬에 치명타를 맞음 (거너 평타 총알은 쏠 때 이미 굴림)
         if (!SpecialAbilities.CritRolled && SpecialAbilities.SharedInstance != null) damage = SpecialAbilities.SharedInstance.RollCrit(damage);
 
         damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (거인 사냥꾼 · 표식 …)
+        damage = WeakHit.Settle(gameObject, damage);               // 빈틈 몫 상한 · 기록 (모든 배율 뒤 · 이번 한 대가 빈틈일 때만)
 
         // 체력 감소
         RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)
+        if (memory != null) memory.Tally(DamageSource.Current, Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));     // 이번 보스전 · 이 보스 출처별 (같은 값)
         float before = EnemyHealth;
         EnemyHealth -= damage;
+        if (memory != null) memory.OnHealth(DamageSource.Current, before, EnemyHealth);      // 체력 값 넘음 · 깨기 누적
         // 1.1.9~ 「분노!」 (편의성 2차 12): 체력이 절반 아래로 처음 내려간 순간 한 번 — 지옥의 군주(66% · 33% 자기 배너) · 개발자 · 엄마는 제외
         if (!enragedFired && Enraged && before > setEnemyHP * 0.5f && EnemyHealth > 0f && !developer && bossKind != 1)
         {
@@ -282,6 +300,10 @@ public class bosss : MonoBehaviour
 
     void LateUpdate()
     {
+        // 기억 흰빛: 설정 「번쩍임 효과」가 꺼져 있으면 쓰지 않음 (이펙트는 그대로) · 쓰러지면 바로 거둠
+        bool white = !isDead && Time.time < memWhiteUntil && GameSettings.Flashes
+            && (memWhiteBlink <= 0f || Mathf.Repeat(Time.time, memWhiteBlink) < memWhiteBlink * 0.55f);
+        if (white != memWhite) { memWhite = white; Juice.SetFlash(spriteRenderer, white); }
         if (isDead) { flashing = false; return; }
         if (Time.time < flashUntil)
         {

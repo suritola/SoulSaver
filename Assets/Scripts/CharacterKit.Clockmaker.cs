@@ -56,6 +56,7 @@ public partial class CharacterKit
         Bullet b = Projectile(start, dir, dmg * (big ? 3f * SignatureSkills.BigGearMul() : 1f), big ? 9999 : player.pene, speed, 16f, "fx_shuriken", size, big ? Brass : new Color(0.85f, 0.8f, 0.7f), true);
         if (b == null) return null;
         if (big) b.hitOnce = new HashSet<int>();
+        if (big && b.aimMul > 0f) b.aimMul = 2f;         // 빈틈: 「정각」 금빛 톱니 ×2.0 (튕긴 톱니는 명중 콜백 안이라 조준 범위 밖)
         bool exploded = false;
         b.onHitEnemy += (s, c) =>
         {

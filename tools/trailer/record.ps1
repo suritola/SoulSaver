@@ -2,7 +2,8 @@
 # 에디터가 켜져 있어도 되도록 release.ps1 · steam-upload.ps1 과 같은 프로젝트 복사본에서 실행한다.
 # 복사본은 제품 이름을 바꿔서, 스킨 장착 같은 촬영용 저장값이 원래 에디터 저장 데이터와 섞이지 않게 한다.
 #
-# 사용법: pwsh tools/trailer/record.ps1                            (영어 · 30fps · Medium 화질)
+# 사용법: pwsh tools/trailer/record.ps1                            (영어 · 30fps · Medium 화질 · 상점 트레일러 45초: 「NO AUTO-AIM.」 커서 조준 → 영웅 9명 → 결계 · 빈틈 · 기억 → 「FREE DEMO ON STEAM」)
+#         pwsh tools/trailer/record.ps1 -Lang en                   (점검용 한 번 · 멈추면 2분 뒤 끄고 다시)
 #         pwsh tools/trailer/record.ps1 -Lang en,ko,ja,zh -Quality High   (언어마다 한 번씩, 게임 언어 · 자막이 바뀜)
 #         pwsh tools/trailer/record.ps1 -Mode highlight -Quality High     (2.2.1~ 자막 없는 하이라이트: 화려한 장면만 · 긴박한 음악 · 펀치 줌)
 #         pwsh tools/trailer/record.ps1 -Mode reddit -Quality High        (레딧 홍보 15초: 거리를 두고 싸우며 필살기 · 보스 궁극기만)

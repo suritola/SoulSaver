@@ -388,6 +388,7 @@ public class EnermyController : MonoBehaviour
 
         if (DamageHook != null) damage = DamageHook(this, damage);
         damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (위협 · 역습 · 표식 …)
+        damage = WeakHit.Settle(gameObject, damage);               // 중간 보스 빈틈 몫 상한 · 기록 (모든 배율 뒤)
 
         // 체력 감소
         RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));      // 이번 판 출처별 피해 (넘친 피해는 빼고)

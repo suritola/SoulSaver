@@ -16,7 +16,7 @@ public static class CodexUI
     static readonly List<Button> tabButtons = new List<Button>();
     // 1.1~ 카드 높이: 캐릭터 탭은 본문(설명 + 기본 무기 + 필살기 + 전용 무기)이 길어 더 큼 (영어 11줄도 14px 로 들어가게)
     static GridLayoutGroup gridLayout;
-    const float BaseCardH = 240f, HeroCardH = 300f;
+    const float BaseCardH = 240f, HeroCardH = 300f, BossCardH = 400f;     // 보스: 설명 + 빈틈 · 기억 · 결계 줄 (4~5문단)
     static float CardH = BaseCardH;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
@@ -59,12 +59,13 @@ public static class CodexUI
     {
         int[] use = { 0, 1, 3, TabEvo, TabRelic, TabBrand, TabSecret, TabLevelUp, TabShop };
         foreach (int i in use) if (i < Hints.Length) yield return Hints[i];
+        yield return "weak.tip";            // 빈틈 (WeakSpot)
     }
 
     static readonly string[] StageNames = { "지하 묘역", "불타는 지옥", "초원", "영혼의 심연" };
-    // 1.0.4~: 도감은 플레이 순서로 (예전엔 옛 순서 = 지하 묘역 먼저). 체험판은 예전 순서 그대로 (Chapters.IsClassic)
+    // 1.0.4~: 도감은 플레이 순서로 (예전엔 옛 순서 = 지하 묘역 먼저). 체험판도 정식판과 같은 초원 먼저 (2026-10-18~)
     static readonly int[] PlayOrder = { 2, 0, 1, 3 };
-    static int PlaySlot(int stage) => Demo.On ? stage : System.Array.IndexOf(PlayOrder, Mathf.Clamp(stage, 0, 3));
+    static int PlaySlot(int stage) => System.Array.IndexOf(PlayOrder, Mathf.Clamp(stage, 0, 3));
 
     // 적 이름 · 설명 (프리팹 이름으로 찾음)
     // 프리팹 이름으로 적 이름 (번역됨, 모르면 빈 문자열)
@@ -72,7 +73,23 @@ public static class CodexUI
 
     // 1.1.9~ 멈춘 동안 적 위에 마우스 (PauseInspect · 편의성 3차 1): 프리팹 이름으로 설명 (번역됨, 모르면 빈 문자열)
     internal static string EnemyDesc(string prefab) => EnemyText.TryGetValue(prefab, out var t) ? Loc.T(t.desc) : "";
-    internal static string BossDescOf(int kind) => kind >= 0 && kind < BossDesc.Length ? Loc.T(BossDesc[kind]) : "";
+    // 보스 설명 + 빈틈 줄 + 기억 줄 (기억하는 보스 문구가 있을 때만) — 도감 카드 · 멈춘 화면 · 보스바 툴팁이 같이 씀 (보여 줄 때 한 번)
+    internal static string BossDescOf(int kind)
+    {
+        if (kind < 0 || kind >= BossDesc.Length) return "";
+        string s = Loc.T(BossDesc[kind]) + "\n" + Loc.T("weak.boss." + kind);
+        string mem = "bossmem.codex." + kind;
+        if (Loc.Has(mem)) s += "\n" + Loc.T(mem);
+        return s;
+    }
+
+    // 개발자 · 엄마 카드 끝 줄 (BossDescOf 는 이 둘에 빈 글자)
+    static string DevExtra(string memKey)
+    {
+        string s = "\n" + Loc.T("weak.boss.dev");
+        if (Loc.Has(memKey)) s += "\n" + Loc.T(memKey);
+        return s;
+    }
 
     // 1.1.9~ 유물 이름 (메인 메뉴 기록 창 · 판 밖에서도)
     internal static string RelicName(RelicDef r)
@@ -288,7 +305,7 @@ public static class CodexUI
         CodexSeen.Cat? cat = CatOf(tab);
         tabWasOpened = cat.HasValue && CodexSeen.TabOpenedThisVersion(cat.Value);
         if (cat.HasValue && CodexSeen.ShowAll) hint.text += "  <color=#F5D478>(" + Loc.T("codex.showall.on") + ")</color>";
-        CardH = tab == 2 || tab == TabStory ? HeroCardH : BaseCardH;
+        CardH = tab == 1 ? BossCardH : tab == 2 || tab == TabStory ? HeroCardH : BaseCardH;
         if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
 
         Build(tab, CodexData.Load());
@@ -352,7 +369,7 @@ public static class CodexUI
         sec = Loc.T("보스 등장");
         for (int kind = 0; kind < StoryDirector.BossCount; kind++)
         {
-            if (Demo.On && kind > 0) break;          // 체험판은 1장 보스(리치 왕)만
+            if (Demo.On && kind != 2) continue;      // 체험판은 1장 보스(킹 슬라임)만
             var b = StoryDirector.BossLines(kind);
             Sprite icon = null;
             if (kind == AbyssStage.MirrorKind) icon = AbyssStage.Frames("mirrorlord")[0];
@@ -505,6 +522,9 @@ public static class CodexUI
         Card(FxIcon("fx_rune"), new Color(0.79f, 0.63f, 1f), Loc.T("결계 침식"), Loc.T("모든 보스의 필살기"),
              Loc.T("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.")
              + " " + Loc.T("보스전마다 적어도 한 번: 결계를 펼치기 전에 보스 체력이 40% 아래로 내려가면 게이지가 곧바로 가득 찹니다."));     // 1.0.4~: 40% 규칙도 적음
+        // 빈틈 (WeakSpot): 규칙 · 중간 보스
+        Card(FxIcon("fx_target_rune"), new Color(0.45f, 1f, 0.95f), Loc.T("weak.name"), Loc.T("weak.codex.tag"),
+             Loc.T("weak.rule") + " " + Loc.T("weak.midboss"));
         if (data == null || data.bosses == null) return;
         List<int> order = new List<int>();
         for (int i = 0; i < data.bosses.Length; i++) order.Add(i);
@@ -517,18 +537,18 @@ public static class CodexUI
             int kind = b != null ? b.bossKind : i;
             string tag = Loc.T(StageNames[Mathf.Clamp(i, 0, 2)]);
             if (b != null) tag += "  ·  " + Stats(b.setEnemyHP, b.speed, b.contactDamage);
-            Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, Loc.T(BossDesc[Mathf.Clamp(kind, 0, 2)]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
+            Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, BossDescOf(Mathf.Clamp(kind, 0, 2)) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
         }
         int mk = AbyssStage.MirrorKind;
         Card(AbyssStage.Frames("mirrorlord")[0], Color.white, bossbar.BossName(mk), Loc.T(StageNames[3]) + "  ·  " + Stats(AbyssStage.MirrorHp, 7.5f, 48f),
-             Loc.T(BossDesc[mk]) + "\n" + Accent.Tag(Loc.T(BarrierDesc[mk])));
+             BossDescOf(mk) + "\n" + Accent.Tag(Loc.T(BarrierDesc[mk])));
         // 1.0.4~ 무한 모드 최종 보스 「개발자」 · 「개발자 엄마」 (무한 모드가 열린 뒤에만 · 거울의 군주 몸 기준 속도 7.5 · 접촉 피해 48)
         if (!GameMode.IsUnlocked(Difficulty.Endless)) return;
         Sprite dev = AbyssStage.Frames("developer")[0];
         Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
-             Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다."));
+             Loc.T("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 모든 보스가 깨어나고, 그 보스들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다.") + DevExtra("bossmem.codex.dev"));
         Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 3000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
-             Loc.T("개발자를 쓰러뜨린 뒤 영혼 3000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다."));
+             Loc.T("개발자를 쓰러뜨린 뒤 영혼 3000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.") + DevExtra("bossmem.codex.mom"));
     }
 
     static void Specials(CodexData data, SpecialKind kind)
@@ -993,7 +1013,7 @@ public static class CodexUI
         g.text = tag;
         TMP_Text b = UIKit.Text(inner, "", 22f, Parch, new Vector2(90f, -38f), new Vector2(540f, 136f + extra), TextAlignmentOptions.TopLeft);
         b.fontSizeMin = 14f;
-        if (extra > 0f) b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표
+        b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표 (기본 높이 카드 · 검색 결과도)
         b.text = body;
         if (fresh) Badge(card, new Vector2(-40f, -18f));        // 1.2~ 새로 얻었거나 이번 업데이트 항목
     }

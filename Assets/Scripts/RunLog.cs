@@ -13,7 +13,9 @@ using UnityEngine;
 // 테스트 · 자동 플레이 · 트레일러 촬영 · 배치 모드는 기록하지 않음 (RunStats 와 같은 기준)
 public static class RunLog
 {
-    public const string Columns = "retry_kind,menu_gap_secs,contracts_done,herald_shown,milestones,points_run";
+    //   2026-10-18~ 끝에 넷: weak_hits(빈틈 명중 수) · weak_share(빈틈으로 더한 피해 ÷ 빈틈이 붙은 보스 · 중간 보스에게 준 피해, WeakSpot)
+    //                      · memory_trig · memory_break(기억하는 보스 발동 · 깨기 — 그 갈래가 RunCounters "bossmem.trig" · "bossmem.break" 로 셈)
+    public const string Columns = "retry_kind,menu_gap_secs,contracts_done,herald_shown,milestones,points_run,weak_hits,weak_share,memory_trig,memory_break";
 
     // 다른 갈래가 채우는 칸 (판이 시작될 때 0 으로)
     public static int ContractsDone;
@@ -67,15 +69,19 @@ public static class RunLog
         HeraldShown = false;
         points = 0;
         EndlessMilestones.ResetRun();
+        WeakSpot.ResetRun();
     }
 
     public static void NotePoints(int runPoints) => points = Mathf.Max(points, runPoints);
 
-    // balance_log 한 줄 끝 여섯 칸
+    // balance_log 한 줄 끝 열 칸
     public static string Row()
     {
         int pts = Mathf.Max(points, CharacterData.RunPoints);
-        return retryKind + "," + menuGap + "," + ContractsDone + "," + (HeraldShown ? 1 : 0) + "," + EndlessMilestones.RunCodes + "," + pts;
+        WeakSpot.FlushAll();        // 빈틈 칸은 판 저장으로 되살아나는 카운터 (weak.hit · weak.bonus ÷ weak.dealt) — 이어한 판도 판 전체 · 기억 칸 · 계약 weak30 과 같은 기준
+        return retryKind + "," + menuGap + "," + ContractsDone + "," + (HeraldShown ? 1 : 0) + "," + EndlessMilestones.RunCodes + "," + pts
+             + "," + RunCounters.Get("weak.hit") + "," + WeakSpot.Share.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)
+             + "," + RunCounters.Get("bossmem.trig") + "," + RunCounters.Get("bossmem.break");
     }
 
     public static void OnRunLogged(string result, float seconds)

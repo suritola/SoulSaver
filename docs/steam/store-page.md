@@ -5,6 +5,8 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 > 게임 이름은 v3.2부터 **Soul Saver** 입니다. (예전 이름 Gun Saver)
 > 1.7.3부터 제품 이름(productName)과 실행 파일 이름도 **`Soul Saver.exe`** 입니다. 옛 저장 데이터는 첫 실행 때 자동으로 옮겨지고(`SaveMigration.cs`), Steamworks 실행 옵션도 `Soul Saver.exe`로 바꿔야 합니다.
+> 빈틈 · 기억 빌드 기준으로 고쳤습니다(`docs/review/2026-10-18-차별점-구현.md` 4절): 한 줄을 「자동 조준이 없는 서바이버」로, 태그 · 컨트롤러 정정, 빈틈 · 기억 소개, 영웅 9명을 모두 꺼냄. **짧은 설명의 빈틈 · 기억 두 문장과 본문 「보스의 빈틈 · 기억하는 보스」 칸은 빈틈 · 기억 빌드를 올리는 날 넣습니다.** 그 전에 먼저 바꿀 때는 그 두 문장 대신 「내 빌드를 흉내 내는 거울의 군주」 문장(`docs/review/2026-10-17-차별점-전략.md` 4-A ②)을 씁니다.
+> 스크린샷 순서: 지금 바로 `07_archer_demon_lord_barrier`(4개 언어 모두)를 맨 앞으로, `01_gunner_catacombs_horde` 는 뒤로. 빈틈 · 기억 빌드 촬영본이 나오면 ① `01_aim_barrier` ② 유령 빙의 또는 시계공 되감기 ③ 궁수 「완벽!」 ④ 거울의 군주 되쏘기 ⑤ 진화 3택 ⑥ 영웅 9명 ⑦ 개발자 ⑧ 카드 · 트리 · 스킨 순서.
 > 1.0.7 기준으로 고쳤습니다: 거너 우클릭 이름 「일제 사격」, 장 중반 습격 · 보물 상자 · 보스 보상 · 저주 제단 · 최후의 보루 · 영웅 숙련 소개 추가.
 > 2.0.6 기준으로 고쳤습니다: 영웅별 고유 스킬 50종 · 스킬 진화 37종 · 보스 필살기 「결계 침식」 · 최대 레벨 50 · 레벨업 건너뛰기 · 모든 우클릭 스킬 조준. 스크린샷 12장 · 트레일러는 `tools/trailer/record.ps1` 로 다시 찍음.
 > 1.1.2 기준으로 고쳤습니다(대중성 조사 `docs/marketing/reports/서바이버류 게임 대중화 전략.md` 의 「지금 바로」): 짧은 설명을 차별점(보스 결계 1:1 → 쓰러뜨리면 그 자리에서 무기 진화) 앞세워 다시 씀, 태그 맨 앞에 Valve 공식 장르 태그 **Bullet Heaven**(2026-05 신설), 가벼운 손님을 밀어내는 Difficult 는 뺌, 본문 「그 밖에」에 방송 · 수익 창출 자유 한 줄.
@@ -17,12 +19,12 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 | 이름 | Soul Saver |
 | 개발사 · 배급사 | 박민근 |
 | 장르 | 액션, 인디, 로그라이트 |
-| 추천 태그 (앞에서부터 중요한 순) | Bullet Heaven, Action Roguelike, Roguelite, Pixel Graphics, Top-Down Shooter, Survival, 2D, Singleplayer, Dark Fantasy, Bullet Hell |
+| 추천 태그 (앞에서부터 중요한 순) | **보이는 5개**: Bullet Heaven, Top-Down Shooter, Action Roguelike, Twin Stick Shooter, Pixel Graphics · **6번째부터**: Roguelite, Dark Fantasy, Survival, Singleplayer, 2D, Controller, Shoot 'Em Up, Arcade, Fantasy, Indie, Action, Replay Value · **넣지 않음**: PvE(멀티 용어) · Bullet Hell(경고 뒤 발동 게임이라 거짓 기대) · Difficult · Boss Rush(그 모드가 생기기 전까지). 플레이어 투표가 가중치를 바꾸므로 2주 뒤 앞 5개를 다시 확인 |
 | 지원 언어 (인터페이스 · 자막) | 한국어, 영어, 일본어, 중국어 간체 — 음성 없음 |
 | 플랫폼 | Windows |
-| 컨트롤러 | 지원 안 함 (키보드 · 마우스) |
+| 컨트롤러 | 풀 컨트롤러 지원 — 엑스박스 배열 · 스팀 덱 · 플레이스테이션 패드(스팀 입력). 오른쪽 스틱으로 조준하고, 기울이면 평타가 자동으로 나갑니다. 스틱을 놓고 RT 만 누르면 가까운 적을 겨누는 보조 조준도 있습니다(빈틈은 직접 조준한 공격만 맞힘). (`GamePad.cs` · Steamworks 「Full controller support」) |
 | 플레이어 | 싱글플레이어 |
-| 스팀 기능 | 스팀 도전 과제(38개) |
+| 스팀 기능 | 스팀 도전 과제(38개) · 스팀 순위표(무한 · 일일 도전) |
 
 ---
 
@@ -31,24 +33,36 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **짧은 설명**
 
 ```
-보스의 결계에 갇혀 1:1로 맞서라. 쓰러뜨리는 순간, 그 자리에서 무기가 진화한다! 화면을 메운 망자들을 쓸어버리고, 영웅마다 다른 고유 스킬을 37가지 스킬 진화로 합치며, 100칸이 넘는 영혼 트리로 나만의 빌드를 완성하는 도트 그래픽 서바이버 액션 로그라이트.
+자동 조준이 없는 서바이버 액션. 마우스로 조준해 쏘고, 장전하고, 시위를 당긴다. 유령은 적에게 빙의하고 시계공은 3초를 되감는다 — 영웅 9명, 9개의 손. 보스의 빈틈은 직접 조준한 공격만 찌르고, 보스는 네가 가장 많이 쓴 공격을 기억해 막는다. 결계 안에서 쓰러뜨리는 순간 무기가 진화하는 도트 로그라이트.
 ```
 
 **상세 설명**
 
 ```
-[h2]영혼을 구할 영웅들[/h2]
+[h2]자동 조준이 없다[/h2]
+모든 탄은 마우스로 직접 겨누어 쏩니다. 탄창이 비면 장전하고, 활은 시위를 끝까지 당긴 순간에 놓아야 [b]「완벽!」[/b]이 됩니다. 패드는 오른쪽 스틱으로 조준하고, 스틱을 놓고 RT 만 누르면 가까운 적을 겨누는 보조 조준도 있습니다(빈틈은 직접 조준한 공격만 맞힙니다).
+
+[h2]영웅 9명, 9개의 손[/h2]
 킹 슬라임이 초원을 집어삼키자, 땅 밑에 잠든 망자들까지 깨어났다. 초원에서 지하 묘역, 불타는 지옥을 지나 영혼의 심연까지 내려갈 영웅을 고르세요.
-[b]10칸의 캐릭터 도감[/b]에는 저마다 다른 무기와 우클릭 기술을 가진 영웅들이 기다립니다. 처음에는 셋만 함께하고, 나머지는 적을 처치해 모은 포인트로 한 명씩 불러옵니다. 아직 모습을 드러내지 않은 [b]비밀 영웅[/b]도 있습니다.
+[b]10칸의 캐릭터 도감[/b]에는 저마다 다른 무기와 우클릭 기술을 가진 영웅들이 기다립니다. 처음에는 셋만 함께하고, 나머지는 적을 처치해 모은 포인트와 판에서 이룬 일로 한 명씩 불러옵니다.
 [list]
 [*][b]거너[/b] — 리볼버와 시간을 늦추고 여러 적을 한꺼번에 노리는 일제 사격
 [*][b]검사[/b] — 장검을 크게 휘둘러 적 무리를 직접 베고, 누를수록 강해지는 회전 베기
 [*][b]도적[/b] — 쉴 새 없는 표창 세례와 무적 출혈 돌진
 [*][b]궁수[/b] — 당길수록 강해지는 화살과 하늘을 덮는 화살비
 [*][b]연금술사[/b] — 터지는 플라스크와 누를수록 커지는 대폭발
-[*][b]???[/b] — 검은 실루엣 너머의 비밀 영웅들
+[*][b]지도 제작자[/b] — 깃펜으로 그은 선으로 적을 베고, 세 획마다 그려지는 도형으로 안쪽을 짓이김
+[*][b]시계공[/b] — 맞힐수록 차는 시계 눈금으로 정각의 큰 톱니를 던지고, 위기에는 3초 전으로 되감기
+[*][b]우체부[/b] — 가장 먼 적부터 찾아가는 편지와, 붙여 둔 표식을 한꺼번에 터뜨리는 속달
+[*][b]유령[/b] — 차가운 손길로 적을 얼리고, 적의 몸에 빙의해 끌고 다니다가 안에서 터뜨림
 [/list]
 영웅마다 시작과 엔딩 이야기도 다릅니다.
+
+[h2]보스의 빈틈 · 기억하는 보스[/h2]
+[list]
+[*][b]빈틈[/b] — 보스와 중간 보스의 몸에 빛나는 빈틈이 열립니다. 직접 조준한 탄 · 베기 · 투척만 빈틈을 찌르고, 유도탄이나 자동으로 겨누는 공격은 닿지 않습니다
+[*][b]기억하는 보스[/b] — 보스의 체력이 정해진 값에 닿으면, 이번 싸움에서 가장 많이 맞은 공격을 기억해 방패나 결로 막습니다. 다른 공격으로 몰아치면 기억이 깨지고 보스가 휘청입니다
+[/list]
 
 [h2]보스를 쓰러뜨리면 무기가 진화한다[/h2]
 스테이지 보스를 쓰러뜨릴 때마다 지금 무기가 부서지며 [b]진화 카드 3장[/b]이 펼쳐집니다. 판마다 두 번, 되돌릴 수 없는 선택입니다.
@@ -119,24 +133,36 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 **Short description**
 
 ```
-Get sealed in a boss's barrier and fight one-on-one — the moment it falls, your weapon evolves on the spot! Mow down screen-filling hordes of the dead, fuse each hero's unique skills into 37 skill evolutions and shape your build across a 100+ node Soul Tree in this pixel-art survivor roguelite.
+A survivors-like with no auto-aim. Aim, reload, draw the bow. Possess foes as the Ghost, rewind time as the Clockmaker: nine heroes, nine hands. Only aimed hits strike a boss's weak point, and bosses learn to block your top move. Beat one in its barrier and your weapon evolves on the spot.
 ```
 
 **About this game**
 
 ```
-[h2]Heroes to save the souls[/h2]
+[h2]No auto-aim[/h2]
+You aim and fire every shot with the mouse. Reload when the magazine runs dry, and release the bow the instant it is fully drawn for a [b]Perfect![/b] On a controller you aim with the right stick, and an optional assist aims at the nearest enemy when you let go of the stick and hold RT (only aimed hits can strike a weak point).
+
+[h2]Nine heroes, nine hands[/h2]
 When the King Slime swallowed the Meadow, even the dead sleeping beneath the earth began to stir. Choose the hero who will descend from the Meadow through the Catacombs and the Burning Hell, all the way to the Abyss of Souls.
-A [b]10-slot character codex[/b] holds heroes with their own weapons and right-click skills. Three join you from the start; the rest are unlocked one by one with points earned from defeating enemies. Some [b]secret heroes[/b] have yet to reveal themselves.
+A [b]10-slot character codex[/b] holds heroes with their own weapons and right-click skills. Three join you from the start; the rest are unlocked one by one with points earned from defeating enemies and with feats from your runs.
 [list]
 [*][b]Gunner[/b] — a revolver and Volley, a time-slowing shot at every enemy you mark
 [*][b]Swordsman[/b] — swing a longsword wide to cut through crowds, plus a spin slash that grows as you hold
 [*][b]Rogue[/b] — a nonstop hail of throwing stars and an invincible Bleeding Dash
 [*][b]Archer[/b] — arrows that grow stronger the longer you draw, and a sky-darkening arrow rain
 [*][b]Alchemist[/b] — exploding flasks and a mega blast that grows as you hold
-[*][b]???[/b] — secret heroes hidden behind black silhouettes
+[*][b]Cartographer[/b] — cut enemies with lines drawn by a quill; every third stroke closes a shape that crushes everything inside
+[*][b]Clockmaker[/b] — fill the clock with hits to throw a giant gear on the hour, and rewind three seconds when in danger
+[*][b]Postman[/b] — letters that seek out the farthest foe, and an Express delivery that bursts every marked letter at once
+[*][b]Ghost[/b] — a chilling touch that freezes foes, and possession: drag an enemy's body around, then burst it from inside
 [/list]
 Every hero also has their own opening and ending story.
+
+[h2]Weak points and bosses that remember[/h2]
+[list]
+[*][b]Weak points[/b] — glowing weak points open on bosses and mini-bosses. Only shots, slashes and throws you aim yourself can strike them; homing shots and auto-targeted attacks never do
+[*][b]Bosses that remember[/b] — when a boss's health reaches set marks, it remembers the attack that hit it most this fight and blocks it with a shield or a ward. Switch to other attacks to break the memory and stagger the boss
+[/list]
 
 [h2]Defeat a boss, evolve your weapon[/h2]
 Each time you defeat a stage boss, your weapon shatters and [b]three evolution cards[/b] appear. Twice per run, and there's no going back.
@@ -207,24 +233,36 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **短い説明**
 
 ```
-ボスの結界に閉じ込められ、一対一で挑め。倒したその瞬間、武器がその場で進化する！画面を埋め尽くす亡者をなぎ払い、英雄ごとの固有スキルを37のスキル進化に融合し、100以上のマスを持つ魂の樹で自分だけのビルドを完成させるドット絵サバイバー・アクションローグライト。
+オートエイムのないサバイバーアクション。マウスで狙って撃ち、装填し、弓を引き絞る。幽霊は敵に憑依し、時計職人は3秒を巻き戻す——9人の英雄、9つの手触り。ボスの隙を突けるのは狙った攻撃だけ。ボスはお前が一番使った攻撃を覚えて防ぐ。結界の中で倒した瞬間、武器がその場で進化するドット絵ローグライト。
 ```
 
 **このゲームについて**
 
 ```
-[h2]魂を救う英雄たち[/h2]
+[h2]オートエイムはない[/h2]
+すべての弾はマウスで自分で狙って撃つ。弾倉が空になれば装填し、弓は引き絞った瞬間に放てば[b]「パーフェクト！」[/b]になる。パッドでは右スティックで狙い、スティックを離してRTだけを押すと近くの敵を狙う補助照準もある（隙を突けるのは自分で狙った攻撃だけ）。
+
+[h2]9人の英雄、9つの手触り[/h2]
 キングスライムが草原を飲み込むと、地の底に眠る亡者までもが目覚め始めた。草原から地下墓所、燃える地獄を抜けて魂の深淵まで降りていく英雄を選ぼう。
-[b]10枠のキャラクター図鑑[/b]には、それぞれ異なる武器と右クリック技を持つ英雄たちが待っている。最初に仲間になるのは三人、残りは敵を倒して集めたポイントで一人ずつ解放。まだ姿を見せていない[b]秘密の英雄[/b]もいる。
+[b]10枠のキャラクター図鑑[/b]には、それぞれ異なる武器と右クリック技を持つ英雄たちが待っている。最初に仲間になるのは三人、残りは敵を倒して集めたポイントと、ランで成し遂げたことで一人ずつ解放。
 [list]
 [*][b]ガンナー[/b] — リボルバーと、時間を遅くして狙った敵へ一斉に撃つ一斉射撃
 [*][b]剣士[/b] — 長剣を大きく振るって敵の群れを直接斬り、押すほど強くなる回転斬り
 [*][b]盗賊[/b] — 絶え間ない手裏剣の雨と無敵の出血突進
 [*][b]弓使い[/b] — 引くほど強くなる矢と空を覆う矢の雨
 [*][b]錬金術師[/b] — 弾けるフラスコと押すほど大きくなる大爆発
-[*][b]???[/b] — 黒いシルエットに隠された秘密の英雄たち
+[*][b]地図職人[/b] — 羽ペンで引いた線で敵を斬り、三画ごとに描かれる図形で内側を押し潰す
+[*][b]時計職人[/b] — 当てるほど溜まる時計の目盛りで正時の大歯車を投げ、危機には3秒前へ巻き戻す
+[*][b]郵便配達人[/b] — 一番遠い敵から届く手紙と、付けた印をまとめて弾けさせる速達
+[*][b]幽霊[/b] — 冷たい手で敵を凍らせ、敵の体に憑依して引きずり回し、内側から弾けさせる
 [/list]
 英雄ごとにオープニングとエンディングの物語も異なる。
+
+[h2]ボスの隙・覚えるボス[/h2]
+[list]
+[*][b]隙[/b] — ボスと中ボスの体に光る隙が開く。自分で狙った弾・斬撃・投擲だけが隙を突き、追尾弾や自動で狙う攻撃は届かない
+[*][b]覚えるボス[/b] — ボスの体力が決まった値に達すると、この戦いで一番多く受けた攻撃を覚えて盾や結で防ぐ。別の攻撃で押し切れば記憶が砕け、ボスがよろめく
+[/list]
 
 [h2]ボスを倒すと武器が進化する[/h2]
 ステージボスを倒すたびに今の武器が砕け、[b]進化カード3枚[/b]が広がる。1回のプレイで2回、やり直しのきかない選択だ。
@@ -295,24 +333,36 @@ Spend your points on [b]20 character skins, 10 weapon skins and 4 effect skins[/
 **简短描述**
 
 ```
-被困在首领的结界中一对一决战——击败它的瞬间，武器当场进化！横扫铺满屏幕的亡者大军，将每位英雄的专属技能融合为37种技能进化，用超过100格的灵魂之树打造专属构筑——像素风割草动作肉鸽游戏。
+没有自动瞄准的幸存者动作游戏。用鼠标瞄准射击、换弹、拉弓。幽灵附身敌人，钟表匠倒回三秒——9位英雄，9种手感。只有亲手瞄准的攻击才能击中首领的破绽，首领还会记住你最常用的攻击并加以防御。在结界中击败首领的瞬间，武器当场进化。像素风肉鸽。
 ```
 
 **关于这款游戏**
 
 ```
-[h2]拯救灵魂的英雄们[/h2]
+[h2]没有自动瞄准[/h2]
+每一发子弹都由你用鼠标亲手瞄准射出。弹匣打空就要换弹，拉满弓弦的瞬间松手才是[b]「完美！」[/b]。手柄用右摇杆瞄准；松开摇杆只按RT时，也有瞄准最近敌人的辅助瞄准（只有亲手瞄准的攻击才能击中破绽）。
+
+[h2]9位英雄，9种手感[/h2]
 史莱姆王吞没了草原，连沉睡在地底的亡者也开始苏醒。选择一位英雄，从草原经地下墓穴、燃烧地狱，一路深入灵魂深渊。
-[b]10格角色图鉴[/b]中，拥有各自武器与右键技能的英雄们正在等待。开局有三位同伴，其余英雄需用击败敌人累积的点数逐一解锁。还有尚未现身的[b]秘密英雄[/b]。
+[b]10格角色图鉴[/b]中，拥有各自武器与右键技能的英雄们正在等待。开局有三位同伴，其余英雄需用击败敌人累积的点数和对局中达成的成就逐一解锁。
 [list]
 [*][b]枪手[/b] — 左轮手枪与让时间变慢、一次射向所有锁定敌人的齐射
 [*][b]剑士[/b] — 大幅挥舞长剑直接斩开敌群，按得越久越强的回旋斩
 [*][b]盗贼[/b] — 连绵不断的飞镖与无敌的出血突进
 [*][b]弓箭手[/b] — 拉得越久越强的箭矢与遮天箭雨
 [*][b]炼金术士[/b] — 爆炸烧瓶与按得越久越大的大爆炸
-[*][b]???[/b] — 隐藏在黑色剪影后的秘密英雄
+[*][b]制图师[/b] — 用羽毛笔划出的线斩敌，每三笔自动画成的图形把内部碾碎
+[*][b]钟表匠[/b] — 命中越多钟表刻度越满，整点掷出巨大齿轮，危急时倒回三秒前
+[*][b]邮差[/b] — 从最远的敌人寄起的信，以及让所有印记一齐爆开的速达
+[*][b]幽灵[/b] — 冰冷的手冻住敌人，附身敌人的身体拖着走，再从内部炸开
 [/list]
 每位英雄都有专属的开场与结局故事。
+
+[h2]首领的破绽 · 会记忆的首领[/h2]
+[list]
+[*][b]破绽[/b] — 首领和中头目身上会出现发光的破绽。只有亲手瞄准的子弹、斩击和投掷才能击中，追踪弹和自动锁定的攻击打不到
+[*][b]会记忆的首领[/b] — 首领体力降到特定值时，会记住这场战斗中受到最多的攻击，并用护盾或结界挡下。换用别的攻击猛攻，就能打碎记忆，让首领踉跄
+[/list]
 
 [h2]击败首领，武器进化[/h2]
 每击败一位关卡首领，当前的武器就会碎裂，展开[b]3张进化卡牌[/b]。每局两次，一旦选择无法反悔。

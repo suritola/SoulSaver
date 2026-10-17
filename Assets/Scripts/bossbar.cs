@@ -82,6 +82,12 @@ public class bossbar : MonoBehaviour
         public bool baseSet;
         public float enrage;
         public int kind;            // 이 줄의 보스 (툴팁)
+        // 기억하는 보스 (BossMemory): 기억 눈금(청록 마름모 · 지나면 회색) · 바 아래 「기억: … n초」 한 줄
+        public readonly List<Image> memTicks = new List<Image>();
+        public int memTickKind = -99;
+        public TMP_Text memLine;
+        public string memShown;
+        public bool memSearched;
     }
     static readonly Color FrameHit = new Color(1f, 0.72f, 0.72f);
     static readonly Color FrameHitCB = new Color(1f, 0.80f, 0.50f);   // 색각 모드: 빨강 대신 주황
@@ -145,7 +151,108 @@ public class bossbar : MonoBehaviour
         r.backColor = Color.Lerp(r.baseBack, EnragedBack, r.enrage * 0.7f);
     }
 
-    static int KindOf(bosss s) => s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind;
+    // ================================================================= 기억하는 보스: 기억 눈금 · 「기억: … n초」
+    static readonly Color MemTickColor = new Color(0.35f, 1f, 0.9f, 0.95f), MemTickPassed = new Color(0.55f, 0.58f, 0.6f, 0.8f);
+    static readonly Color MemLineColor = new Color(0.45f, 1f, 0.92f);
+    const string MemTickName = "BossMemTick", MemLineName = "BossMemLine";
+
+    void UpdateMemTicks(Row r, bosss s, int kind)
+    {
+        if (r == null || r.fill == null || s == null) return;
+        Transform parent = r.fill.parent;
+        int want = s.memory != null ? kind : -1;      // 기억이 없는 보스(튜토리얼)는 눈금 없음
+        if (r.memTickKind != want)
+        {
+            r.memTickKind = want;
+            // 줄을 복제하면 눈금도 같이 복제되므로 이름으로 다시 찾아 씀 (BossTick 과 따로)
+            r.memTicks.Clear();
+            List<Image> found = new List<Image>();
+            foreach (Transform c in parent) if (c.name == MemTickName) { Image im = c.GetComponent<Image>(); if (im != null) found.Add(im); }
+            float[] fr = want < 0 ? NoTicks : BossMemory.Thresholds(want);
+            for (int i = 0; i < found.Count; i++)
+            {
+                if (i < fr.Length) r.memTicks.Add(found[i]);
+                else Destroy(found[i].gameObject);
+            }
+            while (r.memTicks.Count < fr.Length)
+            {
+                GameObject g = new GameObject(MemTickName, typeof(RectTransform), typeof(Image));
+                g.transform.SetParent(parent, false);
+                g.transform.SetSiblingIndex(r.fill.GetSiblingIndex() + 1);
+                Image im = g.GetComponent<Image>();
+                im.raycastTarget = false;
+                r.memTicks.Add(im);
+            }
+            float size = Mathf.Clamp(BarY * 0.55f, 8f, 14f);
+            for (int i = 0; i < r.memTicks.Count; i++)
+            {
+                RectTransform t = r.memTicks[i].rectTransform;
+                t.anchorMin = r.fill.anchorMin;
+                t.anchorMax = r.fill.anchorMax;
+                t.pivot = new Vector2(0.5f, 0.5f);
+                t.sizeDelta = new Vector2(size, size);
+                t.localRotation = Quaternion.Euler(0f, 0f, 45f);       // 마름모
+                float left = r.fill.anchoredPosition.x - r.fill.pivot.x * r.fill.sizeDelta.x;
+                float topY = r.fill.anchoredPosition.y + (1f - r.fill.pivot.y) * BarY;
+                t.anchoredPosition = new Vector2(left + MaxBarX * fr[i], topY);
+            }
+        }
+        if (r.memTicks.Count == 0) return;
+        float frac = s.setEnemyHP > 0 ? s.EnemyHealth / s.setEnemyHP : 1f;
+        float[] at = BossMemory.Thresholds(want);
+        for (int i = 0; i < r.memTicks.Count && i < at.Length; i++)
+        {
+            Color c = frac <= at[i] ? MemTickPassed : MemTickColor;
+            if (r.memTicks[i].color != c) r.memTicks[i].color = c;
+        }
+    }
+
+    // 바 아래 오른쪽 「기억: 탄환 8초」 (글자는 BossMemory 가 미리 만든 것 · 바뀔 때만 다시 씀)
+    void UpdateMemLine(Row r, bosss s)
+    {
+        if (r == null || r.root == null) return;
+        if (r.memLine == null)
+        {
+            if (!r.memSearched)
+            {
+                r.memSearched = true;
+                Transform found = r.root.Find(MemLineName);       // 줄 복제에 같이 따라온 것
+                if (found != null) r.memLine = found.GetComponent<TMP_Text>();
+            }
+            if (r.memLine == null)
+            {
+                if (nameText == null) return;           // 보스 이름과 같은 글꼴을 씀
+                GameObject go = new GameObject(MemLineName, typeof(RectTransform), typeof(TextMeshProUGUI));
+                RectTransform rt = go.GetComponent<RectTransform>();
+                rt.SetParent(r.root, false);
+                rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(1f, 1f);
+                rt.sizeDelta = new Vector2(640f, 24f);
+                rt.anchoredPosition = new Vector2(-12f, -2f);
+                TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
+                t.font = nameText.font;
+                t.fontSharedMaterial = nameText.fontSharedMaterial;
+                t.fontSize = 19f;
+                t.color = MemLineColor;
+                t.alignment = TextAlignmentOptions.MidlineRight;
+                t.enableWordWrapping = false;
+                t.raycastTarget = false;
+                t.text = "";
+                t.enabled = false;
+                r.memLine = t;
+            }
+            r.memShown = null;
+            r.memLine.text = "";
+            r.memLine.enabled = false;
+        }
+        string text = s != null && s.memory != null ? s.memory.BarText : null;
+        if (ReferenceEquals(text, r.memShown)) return;
+        r.memShown = text;
+        r.memLine.enabled = text != null;
+        if (text != null) r.memLine.text = text;
+    }
+
+    static int KindOf(bosss s) =>s.developer ? (s.developerMom ? DeveloperMomKind : DeveloperKind) : s.bossKind;
 
     // 1.1.9~ 보스바 뒤판에 마우스 → 이름 · 도감 설명 · 단계 규칙 (전투 중엔 잠깐 머물러야 · 일시정지 중에는 바로)
     static void AddTip(GameObject back, Row r)
@@ -209,6 +316,8 @@ public class bossbar : MonoBehaviour
         if (r.drawnFor != s) { r.drawnFor = s; r.shownFront = r.shownGhost = -1f; }
         r.kind = KindOf(s);
         UpdateTicks(r, s, r.kind);
+        UpdateMemTicks(r, s, r.kind);
+        UpdateMemLine(r, s);
         s.BarFeel.Tick(s.EnemyHealth, s.setEnemyHP, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
         if (r.fill != null && f.front != r.shownFront) { r.shownFront = f.front; r.fill.sizeDelta = new Vector2(f.front * MaxBarX, BarY); }
         if (r.ghostImg != null && (f.ghost != r.shownGhost || r.ghostImg.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값이 그대로라 켜짐 여부도 같이 봄

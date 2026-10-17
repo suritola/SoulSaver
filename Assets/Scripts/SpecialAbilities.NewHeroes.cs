@@ -97,7 +97,8 @@ public partial class SpecialAbilities
                     for (int i = 0; i < 20; i++)
                     {
                         Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f)) * dir;
-                        Bullet b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_falcon", 1.1f, new Color(0.92f, 0.92f, 1f), false);
+                        Bullet b;
+                        using (WeakHit.AimScope(1.75f)) b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_falcon", 1.1f, new Color(0.92f, 0.92f, 1f), false);     // 빈틈: 커서 쪽으로 곧게 (±25° 라 CreateBullet 의 25° 규칙 안 · yield 앞에서 닫힘)
                         if (b != null) b.lifetime = (evo ? 20f : 16f) / 26f;
                         if (i % 4 == 0) fx.Play("pop", 0.3f, 1.8f);
                         yield return new WaitForSeconds(0.05f);

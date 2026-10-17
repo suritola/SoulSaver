@@ -208,8 +208,8 @@ public class GamePad : MonoBehaviour
         stickFire = right.magnitude > AimFireOn;
         if (p == null) { hasAim = false; return; }
         float m = right.magnitude;
-        if (m > AimOn) { aimDir = right / m; stickAimAt = Time.unscaledTime; }
         Vector3 from = p.transform.position;
+        if (m > AimOn) { aimDir = WeakPull(from, right / m); stickAimAt = Time.unscaledTime; AssistAiming = false; }
         Vector3 to = from + (Vector3)(aimDir * AimDistance);
         // 스틱을 놓고 RT · LT 만 누르고 있으면 가장 가까운 적을 겨눔 (없으면 마지막 방향)
         if (m <= AimOn && (rt || lt) && Time.unscaledTime - stickAimAt > AssistDelay)
@@ -218,12 +218,42 @@ public class GamePad : MonoBehaviour
             if (e != null)
             {
                 Vector2 d = e.position - from;
-                if (d.sqrMagnitude > 0.01f) { aimDir = d.normalized; to = e.position; }
+                if (d.sqrMagnitude > 0.01f) { aimDir = d.normalized; to = e.position; AssistAiming = true; }
             }
         }
         to.z = from.z;
         aimWorld = to;
         hasAim = true;
+    }
+
+    // 마지막으로 조준 방향(aimDir)을 정한 것이 RT 보조 조준인지 (자동 표적이라 빈틈 후보가 아님 · 스틱을 다시 기울이면 풀림)
+    public static bool AssistAiming { get; private set; }
+    // 지금 조준 방향 (단위 벡터 · 빈틈 「패드는 거리 대신 방향」 판정, WeakSpot.PadRayHits)
+    public static Vector2 AimDir { get { Poll(); return aimDir; } }
+
+    // 빈틈 끌림: 스틱을 기울인 방향 10° 안 · 14칸 안에 열린 빈틈이 있으면 그쪽으로 60% (사람이 그쪽으로 기울였을 때만 도움)
+    const float WeakPullDeg = 10f, WeakPullRange = 14f, WeakPullRate = 0.6f;
+    static Vector2 WeakPull(Vector3 from, Vector2 dir)
+    {
+        List<WeakSpot> list = WeakSpot.Active;
+        float best = WeakPullDeg;
+        float bestSigned = 0f;
+        bool found = false;
+        for (int i = 0; i < list.Count; i++)
+        {
+            WeakSpot w = list[i];
+            if (w == null || !w.Open) continue;
+            for (int j = 0; j < w.Count; j++)
+            {
+                Vector2 to = w.Center(j) - (Vector2)from;
+                if (to.sqrMagnitude > WeakPullRange * WeakPullRange || to.sqrMagnitude < 0.01f) continue;
+                float signed = Vector2.SignedAngle(dir, to);
+                float a = Mathf.Abs(signed);
+                if (a <= best) { best = a; bestSigned = signed; found = true; }
+            }
+        }
+        if (!found) return dir;
+        return Quaternion.Euler(0f, 0f, bestSigned * WeakPullRate) * dir;
     }
 
     static Vector2 Stick(float x, float y)

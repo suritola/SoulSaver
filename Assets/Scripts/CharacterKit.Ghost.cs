@@ -72,7 +72,9 @@ public partial class CharacterKit
             if (!HandTouches(c, start, end, halfW, tipR)) continue;
             GameObject g = c.gameObject;
             if (!ghostOnce.Add(g)) continue;        // 콜라이더가 여럿인 적도 손 하나에 한 번만
-            Specials.Damage(g, dmg * formPower, dir, 0.6f);
+            // 빈틈: 커서 쪽으로 뻗은 주 손길만 (그림자 손 · 영혼 사슬 번개는 제외)
+            if (main) WeakHit.Damage(g, WeakShape.Segment(start, end, halfW, 1.75f), dmg * formPower, dir, 0.6f);
+            else Specials.Damage(g, dmg * formPower, dir, 0.6f);
             AddChill(g, form == SpecialAbilities.KitIceGhost ? 2 : 1);
             SignatureSkills.Touched(c);
             if (first && form == SpecialAbilities.KitSoulChain)

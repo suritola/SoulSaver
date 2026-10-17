@@ -3,7 +3,7 @@
 # 복사본은 제품 이름을 「Soul Saver StoreShots」로 바꿔서 촬영용 저장값(영웅 해금 등)이 실제 저장과 섞이지 않게 한다.
 #
 # 사용법: pwsh tools/steam/store-art/shoot.ps1                         (4개 언어 · 모든 장면)
-#         pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06      (영어 · 01 · 06 장면만, 빨리 확인)
+#         pwsh tools/steam/store-art/shoot.ps1 -Lang en -Only 01,06      (영어 · 01 · 06 장면만, 빨리 확인 · 01 에는 새 1번 01_aim_barrier 도 들어감)
 #         pwsh tools/steam/store-art/shoot.ps1 -Publish                  (찍은 뒤 docs/steam/art 로 옮김: 정식판 + 체험판)
 # 결과:   <Work>\Shots\<언어>\*.png
 param(
@@ -56,7 +56,7 @@ if ($Publish) {
     $full = Join-Path $Project "docs\steam\art\screenshots"
     $demo = Join-Path $Project "docs\steam\art\demo\screenshots"
     New-Item -ItemType Directory -Force $full, $demo | Out-Null
-    # 체험판 범위(1장 지하 묘역 · 거너 · 검사)에 맞는 정식판 장면 + 체험판 전용 장면
+    # 체험판 범위(1장 초원 · 킹 슬라임 · 거너 · 검사 · 유령)에 맞는 정식판 장면 + 체험판 전용 장면 (demo_01 초원 거너 · demo_06 검사 · demo_07 결계 · demo_08 유령)
     $demoFromFull = @("03_weapon_evolution", "04_skill_evolution", "05_soul_tree")
     foreach ($l in $Lang) {
         foreach ($f in Get-ChildItem (Join-Path $ShotDir $l) -Filter *.png) {

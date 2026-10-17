@@ -234,13 +234,15 @@ public partial class CharacterKit : MonoBehaviour
     static void Play(string sound, float vol = 1f, float pitch = 1f) => Hostile.Play(sound, vol, pitch);
 
     // 반지름 안의 적 · 보스 모두에게
-    public static int DamageCircle(Vector3 pos, float radius, float damage, float knock)
+    //   weakMul > 0: 이 점이 빈틈 위면 그 보스 · 중간 보스만 배율 (연금술사 첫 병 직격점)
+    public static int DamageCircle(Vector3 pos, float radius, float damage, float knock, float weakMul = 0f)
     {
         int n = 0;
         using (var ovl = PhysHits.Circle(pos, radius)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
-            Specials.Damage(c.gameObject, damage, (c.transform.position - pos).normalized, knock);
+            if (weakMul > 1f) WeakHit.Hit(c.gameObject, WeakShape.Point(pos, 0.5f, weakMul), damage, (c.transform.position - pos).normalized, knock);
+            else Specials.Damage(c.gameObject, damage, (c.transform.position - pos).normalized, knock);
             n++;
         }
         return n;
@@ -292,6 +294,7 @@ public partial class CharacterKit : MonoBehaviour
     // ================================================================= 평타
     public void Attack()
     {
+        using var aim = WeakHit.AimScope(1.75f);       // 빈틈: 평타는 직접 조준 (WeakSpot · 1-3 표)
         Vector3 target = Mouse;
         player.FaceTowards(target);
         Vector3 start = player.MuzzlePosition;
@@ -321,7 +324,7 @@ public partial class CharacterKit : MonoBehaviour
                 for (int i = 0; i < shots; i++)
                 {
                     Vector3 land = ClampRange(start, target, def.range) + (i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 1.6f));
-                    ThrowReagent(start, land, dmg);
+                    ThrowReagent(start, land, dmg, 0, i == 0 && WeakHit.InAim ? 1.6f : 0f);     // 빈틈: 커서 자리로 던진 첫 병의 직격점만
                 }
                 Play("glassclink", 0.6f, Random.Range(0.9f, 1.15f));
                 Play("whoosh", 0.25f, 1.5f);
@@ -371,7 +374,8 @@ public partial class CharacterKit : MonoBehaviour
             Vector2 to = c.transform.position - origin;
             if (to.sqrMagnitude > 0.25f && Vector2.Angle(dir, to) > half) continue;
             // 근접 특성: 벤 적을 크게 밀쳐내 몸에 닿기 어렵게
-            Specials.Damage(c.gameObject, Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.1: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
+            // 빈틈: 부채꼴 전체가 아니라 휘두른 방향 가운데 20° 안 (WeakHit.Damage 는 조준 범위 밖이면 그냥 피해)
+            WeakHit.Damage(c.gameObject, WeakShape.Arc(origin, dir, 10f, reach, 1.4f), Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.1: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
             OnSwingHit(c, hits == 0);
             SignatureSkills.SwingHit(c);
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
@@ -412,6 +416,8 @@ public partial class CharacterKit : MonoBehaviour
 
     // canDraw: 지금 당길 수 있는지 (전용 무기 · 우클릭 중이면 아님), fullTime: 가득 당기는 데 걸리는 시간
     int perfectRun;                     // 1.2~ 「완벽!」 연달아 (영혼 계약)
+    // 트레일러 촬영용: 자동 조종에서도 손으로 놓는 활 (가득 차도 저절로 쏘지 않아 「완벽!」이 나올 수 있음 · 촬영 도구가 리플렉션으로 켬)
+    public static bool ManualBowInAuto;
 
     public void UpdateBow(bool canDraw, float fullTime)
     {
@@ -440,7 +446,7 @@ public partial class CharacterKit : MonoBehaviour
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
         // 1.1.9~ 설정 「공격 고정」이 걸려 있으면 가득 당겨진 순간 저절로 놓음 (「완벽!」 보너스 없음 · 숨 규칙은 그대로)
         bool lockRelease = GameInput.AttackLockNow && !GameInput.FireKeyHeld;
-        bool autoRelease = fullTime <= 0.05f || GameInput.Auto || GameInput.TrailerRunning || lockRelease;
+        bool autoRelease = fullTime <= 0.05f || ((GameInput.Auto || GameInput.TrailerRunning) && !ManualBowInAuto) || lockRelease;
         draw = Mathf.Min(1f, draw + Time.deltaTime / Mathf.Max(0.05f, fullTime));
         if (!GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();       // 숨 고르기: 당기는 동안 숨이 닳음
         float heldFull = draw >= 1f && fullPlayed ? Time.time - fullAt : 0f;
@@ -502,10 +508,12 @@ public partial class CharacterKit : MonoBehaviour
         float speed = 35f + 60f * draw;
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots) * power;
+        using (WeakHit.AimScope(1.75f))         // 빈틈: 시위를 놓는 순간 커서 쪽 화살 (완벽! 은 ×2.1)
         foreach (Vector2 d in Spread(dir, shots, 6f))
         {
             Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw + (perfect ? 0.15f : 0f), perfect ? new Color(1f, 0.8f, 0.25f) : draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
             if (b == null) continue;
+            b.perfect = perfect;
             ArrowForm(b, draw, start);
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
@@ -529,7 +537,8 @@ public partial class CharacterKit : MonoBehaviour
     static readonly Color[] ReagentColors = { new Color(1f, 0.55f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };
     public string NextReagentName => reagent switch { 0 => "화염 시약", 1 => "빙결 시약", _ => "산성 시약" };
 
-    void ThrowReagent(Vector3 from, Vector3 land, float dmg, int depth = 0)
+    //   weakMul > 0: 떨어진 점이 빈틈 위면 그 보스 · 중간 보스만 배율 (평타 첫 병 · 장판 · 덤 폭발은 제외)
+    void ThrowReagent(Vector3 from, Vector3 land, float dmg, int depth = 0, float weakMul = 0f)
     {
         int kind = reagent;
         reagent = (reagent + 1) % 3;
@@ -555,7 +564,7 @@ public partial class CharacterKit : MonoBehaviour
                 // 불안정! 보라색 대폭발
                 using var caughtHits = PhysHits.Circle(p, r);
                 List<Collider2D> caught = caughtHits.List;
-                DamageCircle(p, r, hit, 2.2f);
+                DamageCircle(p, r, hit, 2.2f, weakMul);
                 foreach (Collider2D c in caught)
                 {
                     if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
@@ -572,7 +581,7 @@ public partial class CharacterKit : MonoBehaviour
             }
             using var insideHits = PhysHits.Circle(p, r);
             List<Collider2D> inside = insideHits.List;
-            DamageCircle(p, r, hit, 1.2f);
+            DamageCircle(p, r, hit, 1.2f, weakMul);
             Fx.Spawn("fx_alchemyblast", p, r * 2.2f, SkinFx.Tint(ReagentColors[kind]), 18f, 0f, AttackLook.AreaOrder - 2);      // 1.1.2: 적 · 맵 물체 · 적 이펙트 위 (크기 = 판정 그대로)
             foreach (Collider2D c in inside)
             {

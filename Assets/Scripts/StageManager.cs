@@ -682,9 +682,9 @@ public class StageManager : MonoBehaviour
             return;
         }
         Point.Bonus(Point.ChapterBonusPer * Chapters.Number(stage));     // 1.1~ 장 클리어 보너스 200 × 장 번호 (체험판 1장 포함 · 무한 모드는 위에서 빠짐)
-        if (stage == 0 && Demo.On)
+        if (Demo.On && Chapters.SlotOf(stage) == 0)       // 체험판은 1장(초원 · 킹 슬라임)에서 끝
         {
-            StartCoroutine(DemoFinish());
+            StartCoroutine(DemoFinish(stage));
             return;
         }
         int next = Chapters.Next(stage);
@@ -728,11 +728,11 @@ public class StageManager : MonoBehaviour
         "꺼져 가는 불길 아래로 심연의 문이 열렸다",
     };
 
-    // 체험판: 리치 왕을 쓰러뜨리면 (거너는 무기 진화까지 맛본 뒤) 끝 화면 (Demo.cs)
-    IEnumerator DemoFinish()
+    // 체험판: 1장 보스(킹 슬라임)를 쓰러뜨리면 (거너는 무기 진화까지 맛본 뒤) 끝 화면 (Demo.cs)
+    IEnumerator DemoFinish(int stage)
     {
         if (spawner != null) spawner.spawningEnabled = false;
-        Notice.Big(Loc.T("리치 왕을 쓰러뜨렸다!"), NoticeIcon.Star, 3f, NoticeLevel.Important);
+        Notice.Big(Loc.T(Defeated[Mathf.Clamp(stage, 0, 3)]), NoticeIcon.Star, 3f, NoticeLevel.Important);
         if (Evo) yield return Evolution(true);
         yield return new WaitForSecondsRealtime(3f * GameSettings.FxTime);
         while (Time.timeScale == 0f) yield return null;     // 레벨업 · 상점 창이 열려 있으면 닫을 때까지

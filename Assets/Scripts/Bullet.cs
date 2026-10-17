@@ -4,7 +4,15 @@ public class Bullet : MonoBehaviour
 {
     string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
     // 날아가는 도중 피해 출처를 바꿈 (회전 표창: 평타 표창이 돌아올 때는 고유 스킬 피해)
-    public void SetSource(string source) => dmgSource = source;
+    //   출처가 바뀐 탄(돌아오는 표창 등)은 빈틈 후보가 아님
+    public void SetSource(string source) { dmgSource = source; aimMul = 0f; }
+
+    // 빈틈 (WeakSpot): 조준 범위 안에서 커서 쪽으로 쏜 탄만 배율을 받음 (0 = 후보 아님 · CreateBullet 이 채움)
+    [System.NonSerialized] public float aimMul;
+    [System.NonSerialized] public float aimUntil;       // 0 이 아니면 이 시각까지만 후보 (낫: 가는 길만)
+    [System.NonSerialized] public bool perfect;         // 궁수 「완벽!」 화살 (빈틈 ×2.1)
+    // 이번 명중의 지난 자리 · 나는 방향 (Sweep 이 Hit 직전에 채움 · 트리거 길은 지금 자리 − 방향)
+    Vector2 hitFrom, hitWay;
     public float speed = 10f;
 
     // 일반 총알은 1
@@ -193,6 +201,8 @@ public class Bullet : MonoBehaviour
         speed = pSpeed; damage = pDamage; blood = pBlood; skillCharge = pSkillCharge; knockBack = pKnockBack; lifetime = pLifetime;
         pene = pPene; remainPene = 0; isSkill = pIsSkill;
         isCrit = critRolled = false;
+        aimMul = aimUntil = 0f;
+        perfect = false;
         dir = Vector2.zero;
         onHitEnemy = null; onHitWall = null; onSpent = null; hitOnce = null;
         touchCount = 0;
@@ -372,6 +382,8 @@ public class Bullet : MonoBehaviour
         }
 
         int next = 0;
+        hitFrom = from;
+        hitWay = way;
         for (int i = 0; i < n; i++)
         {
             Collider2D c = cast ? castBuf[i].collider : overlapBuf[i];
@@ -414,7 +426,30 @@ public class Bullet : MonoBehaviour
     )
     {
         if (sweepCol != null) return;          // 스윕 검사가 맞힘 (Sweep)
+        hitWay = dir.sqrMagnitude > 0.0001f ? dir : (Vector2)transform.right;
+        hitFrom = (Vector2)transform.position - hitWay;
         Hit(collision);
+    }
+
+    // 빈틈 판정 모양 (없으면 배율 0 — WeakHit.Apply 가 그대로 돌려줌)
+    //   끝까지 쫓는 유도(유도탄 · 영혼 추적자, nearMiss 0)와 낫이 돌아오는 길은 제외 · 거너 카드 「유도 탄두」(nearMiss > 0)는 선 판정으로만 거름
+    WeakShape WeakRay()
+    {
+        float mul = aimMul > 0f ? (perfect ? 2.1f : aimMul) : 0f;
+        if (mul > 0f && aimUntil > 0f && Time.time > aimUntil) mul = 0f;
+        if (mul > 0f && TryGetComponent(out Homing h) && h.nearMiss <= 0f) mul = 0f;
+        float half = 0.1f;
+        if (sweepCol is BoxCollider2D box)
+        {
+            Vector3 ls = transform.lossyScale;
+            half = 0.5f * Mathf.Min(Mathf.Abs(box.size.x * ls.x), Mathf.Abs(box.size.y * ls.y));
+        }
+        else if (sweepCol is CircleCollider2D circle)
+        {
+            Vector3 ls = transform.lossyScale;
+            half = circle.radius * Mathf.Max(Mathf.Abs(ls.x), Mathf.Abs(ls.y));
+        }
+        return WeakShape.Ray(hitFrom, transform.position, hitWay, half, mul);
     }
 
     void Hit(Collider2D collision)
@@ -451,7 +486,9 @@ public class Bullet : MonoBehaviour
 
                 DamagePopup.NextCrit = isCrit;
                 SpecialAbilities.CritRolled = critRolled;
-                enemy.TakeDamage(damage, knockBack, dir);
+                float hit = aimMul > 0f ? WeakHit.Apply(enemy.gameObject, WeakRay(), damage) : damage;     // 중간 보스 빈틈 (WeakSpot 이 붙은 적만)
+                enemy.TakeDamage(hit, knockBack, dir);
+                WeakHit.End();
                 SpecialAbilities.CritRolled = false;
                 DamagePopup.NextCrit = false;
                 remainPene--;
@@ -487,7 +524,11 @@ public class Bullet : MonoBehaviour
 
                 DamagePopup.NextCrit = isCrit;
                 SpecialAbilities.CritRolled = critRolled;
-                enemy.TakeDamage(damage, knockBack, dir);
+                float hit = aimMul > 0f ? WeakHit.Apply(enemy.gameObject, WeakRay(), damage) : damage;     // 보스 빈틈
+                BossMemory.FromBullet = true;          // 거울의 군주 되쏘기는 탄만
+                enemy.TakeDamage(hit, knockBack, dir);
+                BossMemory.FromBullet = false;
+                WeakHit.End();
                 SpecialAbilities.CritRolled = false;
                 DamagePopup.NextCrit = false;
                 remainPene--;

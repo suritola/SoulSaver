@@ -7,6 +7,7 @@
 #
 # 도트 그림(영웅 · 적 · 보스 · 이펙트 · 타일 · 소품)은 모두 Assets 의 실제 게임 그림을 정수 배율 nearest 로 키움.
 # 빛 · 그림자 · 안개 · 비네트만 매끈하게 더함. 로고는 storeart_logo.py 의 손으로 찍은 도트 글자.
+import math
 import os
 import random
 import sys
@@ -29,8 +30,13 @@ GOLD_C = (255, 190, 80)
 FIRE_C = (255, 110, 40)
 VIOLET = (150, 80, 255)
 
-# 괴물 떼 (같은 이름을 여러 번 넣어 비율 조절) — 체험판은 1장 지하 묘역 적만
-HORDE_DEMO = ["skeleton", "skeleton", "zombie", "zombie", "wraith"]
+TEAL_C = (80, 235, 215)
+HELL = os.path.join(L.SPR, "tileset_hell_32.png")
+MEADOW = os.path.join(L.SPR, "tileset_meadow_32.png")
+CURSOR = os.path.join(L.RES, "Cursors", "cursor_gold_aim_0.png")
+
+# 괴물 떼 (같은 이름을 여러 번 넣어 비율 조절) — 체험판은 1장 초원 적만 (차별점 구현 3-4: 체험판이 초원 · 킹 슬라임으로)
+HORDE_DEMO = ["slime", "slime", "mushroom", "wolf", "bee"]
 HORDE_FULL = ["skeleton", "skeleton", "zombie", "zombie", "wraith", "imp", "imp", "hound", "knight", "flameskull",
               "slime", "mushroom", "wolf", "reaper", "wisp"]
 
@@ -113,7 +119,7 @@ def logo_on(cv, layout, scale, cx, top, demo=False, glow=True, badge_scale=None)
 def battle(cv, rnd, P):
     W, H = cv.w, cv.h
     s = P["s"]                                     # 기준 배율 (영웅)
-    floor(cv, P["floor"], 0.42, seed=P.get("seed", 3))
+    floor(cv, P["floor"], 0.42, seed=P.get("seed", 3), sheet=P.get("sheet", CAVE))
     # 위쪽은 어둠, 아래 바닥은 은은하게 (먼 곳일수록 짙게)
     yy = np.linspace(0, 1, H)[:, None, None]
     cv.a *= (0.35 + 0.65 * np.clip(yy * 1.4, 0, 1))
@@ -165,9 +171,160 @@ def battle(cv, rnd, P):
              [(255, 120, 40), (255, 180, 70), (120, 200, 255)], 1.0, 2.4 * s / 6)
 
 
+# ================================================================= 조준 장면 (차별점 구현 4-3): 글자 없이 세 동사를 그림으로
+# 조준 = 커서 십자선과 금빛 조준선 · 장전 = 허공에 흩어지는 탄피 셋 · 진화 = 리볼버 총구에서 갈라지는 금빛 빛
+# 거너(왼쪽 아래)가 오른쪽 위를 겨눔 → 결계 고리 안의 보스 몸에서 빛나는 빈틈에 조준선이 닿는 순간
+def barrier_ring(cv, cx, cy, rx, ry, s, rnd):
+    # 게임의 결계는 LineRenderer 라 그림이 없음 → 타원 띠 + 룬 + 빛으로 다시 그림 (바깥 어둠 · 청록 안쪽 빛)
+    yy, xx = np.mgrid[0:cv.h, 0:cv.w]
+    d = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+    outside = np.clip((d - 1.0) / 0.6, 0, 1) * 0.5
+    cv.a *= (1 - outside)[..., None]
+    cv.light(cx, cy, rx * 0.98, TEAL_C, 0.22, power=1.4, ry=ry * 0.98)
+    band = np.exp(-((d - 1.0) / (0.035 + 0.6 / max(rx, 1))) ** 2)
+    cv.a += band[..., None] * np.array(TEAL_C, np.float32) * 0.85
+    cv.a += np.exp(-((d - 1.0) / 0.012) ** 2)[..., None] * np.array((220, 255, 250), np.float32) * 0.5
+    rune = L.tint(L.fx("fx_rune", 0), (0.5, 1.0, 0.95))
+    f = max(0.3, s / 26)
+    small_rune = rune.resize((max(4, int(rune.width * f)), max(2, int(rune.height * f / 2))), Image.NEAREST)
+    n = 8
+    for i in range(n):
+        a = (i + 0.5 + rnd.uniform(-0.1, 0.1)) / n * 2 * math.pi
+        px, py = cx + math.cos(a) * rx, cy + math.sin(a) * ry
+        cv.center(small_rune, 1, px, py, alpha=0.4, add=True)
+
+
+def weak_point(cv, x, y, s):
+    # 빈틈 반짝임: fx_target_rune 첫 칸(청록) + 흰 심 (갈래 A 의 게임 그림과 같은 재료)
+    img = L.tint(L.fx("fx_target_rune", 0), (0.55, 1.0, 0.95))
+    k = max(1, s // 3)
+    cv.light(x, y, 14 * k, TEAL_C, 0.75)
+    cv.glow_layer(L.up(img, k), x - img.width * k / 2, y - img.height * k / 2, max(3, k * 2), TEAL_C, 0.6)
+    cv.center(img, k, x, y, alpha=0.95, add=True)
+    cv.light(x, y, 3.2 * k, (255, 255, 250), 1.0, power=1)
+
+
+def crosshair(cv, x, y, scale):
+    img = L.load(CURSOR)
+    s = L.up(img, scale)
+    cv.glow_layer(s, x - s.width / 2, y - s.height / 2, max(3, scale * 3), GOLD_C, 0.45)
+    cv.paste(s, x - s.width / 2, y - s.height / 2)
+
+
+def casings(cv, rnd, x, y, s):
+    # 탄피 그림은 게임에 없음 → 3×1 금빛 도트를 찍음 (총 뒤 위로 튀어 오르며 흩어짐)
+    for i in range(3):
+        cx = x - s * (1 + 5 * i) + rnd.uniform(-s * 0.5, s * 0.5)
+        cy = y - s * (5 + 3 * i) + rnd.uniform(-s * 0.5, s * 0.5)
+        vertical = i == 1
+        w, h = (s, 3 * s) if vertical else (3 * s, s)
+        piece = Image.new("RGBA", (w, h), (255, 205, 95, 255))
+        hi = Image.new("RGBA", (w if vertical else s, s if vertical else h), (255, 245, 200, 255))
+        piece.alpha_composite(hi, (0, 0))
+        cv.light(cx, cy, 5 * s, (255, 190, 80), 0.35)
+        cv.paste(piece, cx - w / 2, cy - h / 2)
+
+
+def evolve_rays(cv, x, y, ang, length, s, rnd):
+    # 진화: 총구에서 갈라지는 금빛 진화 빛 (가운데 조준선 양옆으로 갈래)
+    cv.light(x, y, 26 * s / 3, (255, 220, 120), 0.9)
+    for i, da in enumerate((-0.42, -0.24, 0.24, 0.42)):
+        a = ang + da + rnd.uniform(-0.04, 0.04)
+        ln = length * (0.55 if abs(da) > 0.3 else 0.8)
+        mx, my = x + math.cos(a) * ln * 0.55, y + math.sin(a) * ln * 0.55
+        ex, ey = x + math.cos(a + da * 0.4) * ln, y + math.sin(a + da * 0.4) * ln
+        cv.beam(x, y, mx, my, (255, 200, 90), width=max(1.2, s / 6), glow=max(5, s * 0.9), core=(255, 240, 190))
+        cv.beam(mx, my, ex, ey, (255, 200, 90), width=max(1.0, s / 8), glow=max(4, s * 0.7), core=(255, 240, 190))
+
+
+def aim_scene(w, h, demo=False, layout="wide", seed=11, logo=True):
+    cv = L.Canvas(w, h)
+    rnd = random.Random(seed)
+    boss_name = "slime_king" if demo else "hell_lord"
+    aura = (120, 255, 140) if demo else FIRE_C
+    sheet = MEADOW if demo else HELL
+    hero_img = L.rim(L.hero("gunner"), (150, 230, 255), "left,top", 0.55)
+    boss_img = L.outline(L.enemy(boss_name, 0), (12, 6, 24, 255))
+
+    if layout == "small":
+        # 231×87(보이는 크기) — 로고 + 십자선 + 보스 얼굴의 빈틈만 (인물은 이 크기에서 얼룩)
+        hs = 0
+        bs = max(2, int(h * 1.05 / boss_img.height))
+        bx, by = w * 0.80, h * 1.18                 # 몸 아래가 잘려 얼굴 · 빈틈이 크게
+        hx = hy = 0
+    elif layout == "tall":
+        hs = max(2, int(h * 0.30 / hero_img.height))
+        bs = max(2, int(h * 0.30 / boss_img.height))
+        bx, by = w * 0.58, h * 0.72                 # 결계 고리가 두 줄 로고에 닿지 않게
+        hx, hy = w * 0.30, h * 0.985
+    else:
+        hs = max(2, int(h * 0.45 / hero_img.height))                     # 인물 몸 높이 = 화면 높이 45%
+        bs = max(2, int(h * 0.50 / boss_img.height))
+        bx, by = w * 0.76, h * 0.80
+        hx, hy = w * 0.22, h * 1.0
+    k = max(hs, bs * 0.8)
+    fl = max(1, round(k / 6))
+    floor(cv, fl, 0.40, seed=seed, sheet=sheet)
+    yy = np.linspace(0, 1, h)[:, None, None]
+    cv.a *= (0.35 + 0.65 * np.clip(yy * 1.4, 0, 1))
+    cv.a += np.array((14, 8, 30), np.float32) * (1 - yy)
+
+    # 무리: 보스 뒤 실루엣 (어둡게 0.38배 안팎)
+    kinds = HORDE_DEMO if demo else HORDE_FULL
+    hsc = max(2, int(bs * 0.45))
+    if layout != "small":
+        horde(cv, rnd, kinds, max(10, int(w * h / 9000)), (w * 0.42, h * 0.28, w * 1.02, h * 0.72), [max(2, hsc - 2), max(2, hsc - 1), hsc],
+              dark=(0.16, 0.34), rim_c=None, avoid=[(0, 0, w * 0.45, h)])
+
+    # 결계 고리 안의 보스
+    bw, bh = boss_img.width * bs, boss_img.height * bs
+    ccx, ccy = bx, by - bh * 0.5
+    barrier_ring(cv, ccx, ccy, bw * 0.95, bh * 0.72, bs, rnd)
+    cv.light(ccx, ccy, bw * 1.1, aura, 0.45)
+    unit(cv, boss_img, bs, bx, by, face_left=True, dark=0.95, rim_c=(255, 190, 140), rim_side="left", shadow=layout != "small")
+    # 빈틈 자리 (그림 틀 비율 · 보스는 왼쪽을 봄 = 가로를 뒤집음): 지옥의 군주 가슴 비늘 (0.6, 0.55) · 킹 슬라임 왕관 아래 핵 (0.5, 0.78)
+    fx_, fy_ = (0.5, 0.78) if demo else (0.6, 0.55)
+    wx, wy = bx - bw / 2 + (1 - fx_) * bw, by - fy_ * bh
+    weak_point(cv, wx, wy, bs)
+
+    # 거너 · 조준선 · 총구 · 탄피 · 진화 빛
+    if hs:
+        gx, gy = hx + 9 * hs, hy - 10 * hs
+        ang = math.atan2(wy - gy, wx - gx)
+        cv.light(hx, hy - 12 * hs, 22 * hs, SOUL_C, 0.28)
+        unit(cv, hero_img, hs, hx, hy, rim_c=(255, 200, 120), rim_side="right")
+        cv.beam(gx, gy, wx, wy, GOLD_C, width=max(1.6, hs / 4), glow=max(7, hs * 1.1))
+        evolve_rays(cv, gx, gy, ang, min(w, h) * (0.26 if layout == "tall" else 0.22), hs, rnd)
+        cv.light(gx, gy, 16 * hs / 3, (255, 200, 90), 0.9)
+        fxs(cv, "fx_muzzle", 1, max(2, hs // 3), gx + 4 * max(2, hs // 3) * math.cos(ang), gy + 4 * max(2, hs // 3) * math.sin(ang))
+        casings(cv, rnd, gx - 3 * hs, gy - 2 * hs, max(2, hs // 2))
+    else:
+        cv.beam(-w * 0.05, h * 1.1, wx, wy, GOLD_C, width=2.0, glow=8)
+    crosshair(cv, wx, wy, max(1, int(bs / 9)) if layout != "small" else max(1, int(h / 110)))
+
+    L.sparks(cv, rnd, 30 if layout != "small" else 10, (w * 0.4, h * 0.1, w, h), [(255, 120, 40), (255, 180, 70), (120, 230, 220)], 1.0, 2.4 * max(hs, 4) / 6)
+    cv.vignette(0.55, 0.5)
+
+    if logo:
+        if layout == "tall":
+            sc = max(1, int(w * 0.80 / LG.logo("stack").width))
+            logo_on(cv, "stack", sc, w / 2, h * 0.035, demo=demo)
+        else:
+            frac = 0.60 if layout == "small" else 0.45
+            sc = max(1, int(w * frac / LG.logo("line").width))
+            lw = LG.logo("line").width * sc
+            logo_on(cv, "line", sc, w * 0.03 + lw / 2, h * 0.05, demo=demo, badge_scale=max(1, sc // 2) if layout == "small" else None)
+    return cv.image()
+
+
 # ================================================================= 가로 캡슐
 def wide(w, h, demo=False, seed=11):
-    # 헤더 920×430 기준 배치를 가로 kx · 세로 ky 로 늘림: 로고 왼쪽 위, 영웅 왼쪽 아래, 괴물 떼 · 보스 오른쪽
+    # 메인 1232×706 · 헤더 920×430 (보이는 크기 616×353 · 460×215): 조준 장면 · 로고 위 왼쪽
+    return aim_scene(w, h, demo, "wide", seed)
+
+
+def wide_old(w, h, demo=False, seed=11):
+    # (예전 그림 · 빈틈 · 기억 빌드 전) 헤더 920×430 기준 배치를 가로 kx · 세로 ky 로 늘림: 로고 왼쪽 위, 영웅 왼쪽 아래, 괴물 떼 · 보스 오른쪽
     cv = L.Canvas(w, h)
     rnd = random.Random(seed)
     kx, ky = w / 920, h / 430
@@ -208,7 +365,12 @@ def wide(w, h, demo=False, seed=11):
 
 
 def small(demo=False):
-    # 소형 캡슐 462×174: 로고를 최대한 크게, 아래에 영웅 vs 괴물 떼를 작게
+    # 소형 캡슐 462×174 (보이는 크기 231×87 · 검색 · 추천 목록): 로고 + 십자선 + 보스 얼굴의 빈틈만
+    return aim_scene(462, 174, demo, "small", seed=5)
+
+
+def small_old(demo=False):
+    # (예전 그림) 소형 캡슐 462×174: 로고를 최대한 크게, 아래에 영웅 vs 괴물 떼를 작게
     w, h = 462, 174
     cv = L.Canvas(w, h)
     rnd = random.Random(5)
@@ -230,7 +392,12 @@ def small(demo=False):
 
 # ================================================================= 세로 캡슐
 def tall(w, h, demo=False, seed=21):
-    # 세로 748×896 · 라이브러리 600×900: 두 줄 로고 위, 보스가 가운데 뒤, 영웅은 왼쪽 아래에서 오른쪽 위로 쏨
+    # 세로 748×896 · 라이브러리 600×900: 두 줄 로고 위, 결계 안 보스 가운데 뒤, 거너는 아래에서 위로 쏨 (조준선이 세로로 길게)
+    return aim_scene(w, h, demo, "tall", seed)
+
+
+def tall_old(w, h, demo=False, seed=21):
+    # (예전 그림) 세로 748×896 · 라이브러리 600×900: 두 줄 로고 위, 보스가 가운데 뒤, 영웅은 왼쪽 아래에서 오른쪽 위로 쏨
     cv = L.Canvas(w, h)
     rnd = random.Random(seed)
     kx, ky = w / 748, h / 896
@@ -278,14 +445,14 @@ def hero_art(demo=False):
     rnd = random.Random(31)
     s, f = 13, 5
     if demo:
-        heroes = [("swordsman", 12, 1760, 930), ("gunner", 13, 1460, 1010)]
-        bosses = [("lich", 22, 2860, 790, VIOLET)]
+        heroes = [("ghost", 10, 1420, 700), ("swordsman", 12, 1760, 930), ("gunner", 13, 1460, 1010)]
+        bosses = [("slime_king", 22, 2860, 790, (120, 255, 140))]
     else:
         heroes = [("cartographer", 9, 900, 690), ("clockmaker", 9, 1060, 800), ("postman", 9, 1210, 660), ("alchemist", 10, 1010, 1000),
                   ("ghost", 9, 1420, 600), ("rogue", 10, 1250, 880), ("archer", 10, 1560, 740), ("swordsman", 12, 1760, 930), ("gunner", 13, 1460, 1010)]
         bosses = [("mirrorlord", 13, 3140, 560, SOUL_C), ("slime_king", 14, 2380, 720, (120, 255, 140)), ("hell_lord", 16, 3500, 760, FIRE_C), ("lich", 20, 2860, 790, VIOLET)]
     gx, gy = 1460 + 9 * s, 1010 - 10 * s
-    P = dict(s=s, floor=3, kinds=HORDE_DEMO if demo else HORDE_FULL, n=120,
+    P = dict(s=s, floor=3, kinds=HORDE_DEMO if demo else HORDE_FULL, n=120, sheet=MEADOW if demo else CAVE,
              horde=(2050, 740, 3900, 1210), hscales=[6, 7, 8, 9],
              bosses=bosses, heroes=heroes,
              braziers=[(260, 520, 6), (760, 450, 6), (3720, 450, 6)],

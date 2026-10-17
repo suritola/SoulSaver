@@ -247,6 +247,7 @@ public partial class SpecialAbilities
                 PlayerMotion.Of(player).Throw(0.45f, dir);
                 {
                     Vector2 side = new Vector2(-dir.y, dir.x);
+                    using var aim = WeakHit.AimScope(1.75f);      // 빈틈: 커서 쪽으로 나란히 곧게 나가는 투창 (이 case 안에 yield 없음)
                     for (int i = -4; i <= 4; i++)
                     {
                         Bullet b = KitProjectile(player.transform.position + (Vector3)(side * i * 1.1f), dir, D * 4f, 9999, 36f, "fx_arrow", 1.4f, new Color(1f, 0.85f, 0.55f), false);
