@@ -185,7 +185,12 @@ public static class GameMode
     // 1.1.6~ 「전체적인 데미지 밸런스 하향」: 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물)에 공통으로 곱함
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     // 1.3.3~ 사용자 「모든 캐릭터들의 모든 데미지를 20% 정도 상향」: 0.8 → 0.96 (×1.2)
-    public const float PlayerDamageMul = 0.96f;
+    // 1.3.7~ 성장 곡선 (사용자 「초반엔 조금 더 약하게, 후반엔 조금 더 강하게, 평균은 지금 수치대로」):
+    //   판 진행도 p (무한 30분 · 이야기 14분 = 1) 에 따라 ×0.85 → ×1.15 로 고르게 오름 → 한 판 시간 평균 ×1.0 · 그 뒤(한계 돌파 등)는 ×1.15 그대로
+    const float CurveLow = 0.85f, CurveHigh = 1.15f, CurveEndlessSpan = 1800f, CurveStorySpan = 840f;
+    static float CurveT => IsEndless ? (endlessClockOn ? Mathf.Clamp01(EndlessSeconds / CurveEndlessSpan) : 0.5f)
+        : RunClock.Running ? Mathf.Clamp01(RunClock.Elapsed / CurveStorySpan) : 0.5f;      // 시계가 없는 판(튜토리얼 · 특수 판 등)은 가운데 = ×1.0
+    public static float PlayerDamageMul => 0.96f * Mathf.Lerp(CurveLow, CurveHigh, CurveT);     // 0.96 = 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt) * BeyondDamageMul;
     // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
     //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)

@@ -548,6 +548,7 @@ public class RunClock : MonoBehaviour
 
     // 지금 화면에 보이는 시간 (판 중간 저장이 적어 둠)
     public static float Elapsed => instance != null ? Time.time - instance.start : 0f;
+    public static bool Running => instance != null;      // 1.3.7~ 성장 곡선 (GameMode.PlayerDamageMul) 이 시계 없는 판을 가려냄
 
     // already: 이어하기면 저장할 때까지 흐른 시간부터 (1.0.4~, 예전엔 00:00 부터 다시 셈)
     public static void Create(float already = 0f)
