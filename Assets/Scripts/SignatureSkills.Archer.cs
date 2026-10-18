@@ -25,6 +25,21 @@ public partial class SignatureSkills
     public static void Rain(Vector3 center, float radius) { if (Instance != null && Instance.who == CharacterId.Archer) Instance.OnRain(center, radius); }
     // 폭풍의 길: 바람길 위에서는 순식간에 가득 당김
     public static bool InstantDraw => Instance != null && Instance.E("ae.storm") && Instance.OnWindPath();
+    // 2026-10-19~ 갈래 (Paths/Paths.Archer.cs · CharacterKit.Archer.cs 가 물음)
+    // 지금 바람길 위인가 (바람 공명 I · 극의)
+    public static bool OnWind => Instance != null && Instance.who == CharacterId.Archer && Instance.OnWindPath();
+    // 집중 호흡 중첩 (장궁 공명 II: 5중첩이면 관통 광선)
+    public static int FocusStacks => Instance != null && Instance.who == CharacterId.Archer ? Instance.breath : 0;
+    // 바람 걸음: 완벽 화살이 짧은 바람길을 남김 (바람 읽기가 있으면 그쪽이 이미 남기므로 건너뜀)
+    public static void PathWindTrail(Vector3 start, Vector2 dir)
+    {
+        SignatureSkills s = Instance;
+        if (s == null || s.who != CharacterId.Archer || s.L("a.wind") > 0 || dir.sqrMagnitude < 0.01f) return;
+        Vector3 end = start + (Vector3)(dir.normalized * 18f);
+        s.windPaths.Add((start, end, Time.time + 2.5f));
+        if (s.windPaths.Count > 6) s.windPaths.RemoveAt(0);
+        Fx.Beam(start, end, 0.7f, new Color(0.7f, 1f, 0.9f, 0.3f), 2.5f, 2);
+    }
 
     void OnArrow(Bullet b, float draw, bool split)
     {
@@ -59,7 +74,7 @@ public partial class SignatureSkills
             };
         }
         if (L("a.ring") > 0)
-            b.onHitEnemy += (bullet, col) => StartCoroutine(Ring(col.transform.position, bullet.damage * V(L("a.ring"), 0.25f, 0.1f) * P("a.ring"), E("ae.echo") ? 2 : 1));       // 1.1.2~ 천 개의 메아리: ×1.25
+            b.onHitEnemy += (bullet, col) => StartCoroutine(Ring(col.transform.position, bullet.damage * V(L("a.ring"), 0.25f, 0.1f) * P("a.ring"), E("ae.echo") ? 2 : 1, ArcherPaths.RingMul(col.gameObject)));       // 1.1.2~ 천 개의 메아리: ×1.25 · 2026-10-19~ 속사 공명 II: 같은 적 열 발이면 범위 2배
         if (full && L("a.spread") > 0)
             b.onHitEnemy += (bullet, col) =>
             {
@@ -113,15 +128,15 @@ public partial class SignatureSkills
         Flair("a.seed", at, r, Leaf);
     }
 
-    IEnumerator Ring(Vector3 at, float dmg, int times)
+    IEnumerator Ring(Vector3 at, float dmg, int times, float rMul = 1f)
     {
         for (int i = 0; i < times; i++)
         {
             yield return new WaitForSeconds(0.4f);
             using var tier = EvoFx("a.ring");
-            Circle(at, 1.9f, dmg, 0.3f);
-            ShockRing.Spawn(at, 0.2f, 2.2f * Fs("a.ring"), 0.3f, new Color(1f, 0.95f, 0.7f, 0.8f), 0.12f * Fs("a.ring"));
-            Flair("a.ring", at, 1.8f, new Color(1f, 0.95f, 0.7f));
+            Circle(at, 1.9f * rMul, dmg, 0.3f);
+            ShockRing.Spawn(at, 0.2f, 2.2f * Fs("a.ring") * rMul, 0.3f, new Color(1f, 0.95f, 0.7f, 0.8f), 0.12f * Fs("a.ring"));
+            Flair("a.ring", at, 1.8f * rMul, new Color(1f, 0.95f, 0.7f));
             if (i == 1)
                 foreach (Transform t in Nearest(at, 8f, 3))
                     Shot(at, ((Vector2)(t.position - at)).normalized, dmg, 1, 40f, 9f, "fx_arrow", 0.35f, Color.white);
@@ -164,6 +179,7 @@ public partial class SignatureSkills
         }
         if (!Alive) yield break;        // 1.3.8~ 쓰러진 뒤엔 위치를 바꾸지 않음
         transform.position = to;
+        ArcherPaths.Retreated(from);    // 2026-10-19~ 바람 공명 II (잠깐 무적) · 돌풍 덫 — 살아 있을 때만
         // 폭풍의 길: 물러난 자리에 돌풍
         if (E("ae.storm"))
         {
@@ -181,6 +197,7 @@ public partial class SignatureSkills
         if (h > 0) highZones.Add((center, radius, Time.time + 2f));
         int m = L("a.meteor");
         if (m > 0) StartCoroutine(Meteors(center, radius, Atk * V(m, 2f, 1f)));
+        ArcherPaths.Rained(center, radius);      // 2026-10-19~ 천공 공명 I · II (화살비 자리 기억 · 사냥감 표식)
     }
 
     IEnumerator Meteors(Vector3 center, float radius, float dmg)

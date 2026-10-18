@@ -424,6 +424,7 @@ public partial class CharacterKit : MonoBehaviour
     public void UpdateBow(bool canDraw, float fullTime)
     {
         BowFired = false;
+        if (BowPathRapid(canDraw, fullTime)) return;          // 2026-10-19~ 갈래 속사: 당기지 않고 연사 (CharacterKit.Archer)
         if (!drawing)
         {
             if (canDraw && GameInput.FireHeld)
@@ -445,6 +446,7 @@ public partial class CharacterKit : MonoBehaviour
         else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
         // 정조준: 늘 더 빨리 가득 당김 (예전 「가만히 서서」 조건은 없앰)
         else if (card[5] > 0) fullTime /= 1f + 0.25f * card[5];
+        fullTime = BowPathFrame(fullTime);                    // 2026-10-19~ 갈래 장궁 · 바람 (CharacterKit.Archer)
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
         // 1.1.9~ 설정 「공격 고정」이 걸려 있으면 가득 당겨진 순간 저절로 놓음 (「완벽!」 보너스 없음 · 숨 규칙은 그대로)
         bool lockRelease = GameInput.AttackLockNow && !GameInput.FireKeyHeld;
@@ -497,6 +499,7 @@ public partial class CharacterKit : MonoBehaviour
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
             power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
         if (Breathless && (!autoRelease || lockRelease)) power *= 0.5f;         // 숨이 차면 절반 (공격 고정도)
+        power *= BowPathPower(perfect);                                         // 2026-10-19~ 갈래 입문 · 대가 (CharacterKit.Archer)
         // 1.2~ 영혼 계약 · 보드: 「완벽!」 화살 · 연달아
         if (perfect) { RunCounters.Both("perfect"); perfectRun++; RunCounters.Max("perfect.streak", perfectRun); }
         else if (!autoRelease) perfectRun = 0;
@@ -523,8 +526,10 @@ public partial class CharacterKit : MonoBehaviour
             if (card[2] > 0 && draw >= 1f) GustArrow(b);
             SignatureSkills.Arrow(b, draw);
             b.onHitEnemy += (arrow, col) => arrow.damage *= PierceFalloff;     // 꿰뚫을 때마다 -15% (맨 마지막에: 다른 효과는 맞힌 그 피해로)
+            BowPathArrow(b, perfect);                           // 2026-10-19~ 갈래 (장궁 관통 · 덫 · 천공, CharacterKit.Archer)
         }
         SignatureSkills.BowRelease(start, dir, draw);
+        BowPathRelease(start, dir, perfect);
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -1021,6 +1026,7 @@ public partial class CharacterKit : MonoBehaviour
         Play("bowtwang", 0.8f, 0.85f);
         PlayerMotion.Of(this).Recoil(Vector2.up + (Vector2)(center - transform.position).normalized * 0.3f, 1.5f);     // 몸동작: 하늘로 쏘며 뒤로 젖혀짐 (1.0.1)
         float radius = 4f * UltMul;
+        radius *= BowPathRainRadius;                            // 2026-10-19~ 갈래 천공: 범위 ×1.4 (CharacterKit.Archer)
         Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         SignatureSkills.Rain(center, radius);
         Play("whoosh", 0.8f, 0.9f);
@@ -1067,7 +1073,7 @@ public partial class CharacterKit : MonoBehaviour
         if (aimRing == null) aimRing = Hostile.NewLine("RainAim", Color.white, 0.12f, 25);
         aimRing.loop = true;
         aimRing.enabled = true;
-        Hostile.SetArc(aimRing, at, 4f * UltMul, 0f, 360f);
+        Hostile.SetArc(aimRing, at, 4f * UltMul * BowPathRainRadius, 0f, 360f);
         aimRing.startColor = aimRing.endColor = new Color(0.6f, 1f, 0.5f, 0.5f + 0.3f * Mathf.Sin(Time.time * 14f));
         if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기 범위도
 
@@ -1076,6 +1082,7 @@ public partial class CharacterKit : MonoBehaviour
         aimRing.enabled = false;
         CancelUltAim();
         StartCoroutine(ArrowRain(at));
+        BowPathRainCast(at);                                    // 2026-10-19~ 갈래 천공 극의: 화살비 하나 더 (CharacterKit.Archer)
         KitUltAdd(0f);
         Spend(gauge);
     }
