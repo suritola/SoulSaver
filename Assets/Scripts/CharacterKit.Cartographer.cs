@@ -125,7 +125,7 @@ public partial class CharacterKit
         if (card[0] > 0 && Special != null)
         {
             // 번지는 잉크: 획을 따라 잉크 웅덩이 셋
-            float tick = Damage * (0.025f + 0.05f * card[0]) * SignatureSkills.InkSpreadMul();      // 1.3.5: 0.5초 틱이라 실제 초당 30/50/70% 였음 → 설명대로 초당 15/25/35%
+            float tick = Damage * (0.05f + 0.1f * card[0]) * SignatureSkills.InkSpreadMul();
             float rr = 0.9f * SignatureSkills.InkSpreadMul();
             for (int i = 0; i < 3; i++)
                 Special.SpawnZone(Vector3.Lerp(from, to, (i + 0.5f) / 3f), rr, 2f, tick, new Color(0.2f, 0.3f, 0.85f, 0.55f));

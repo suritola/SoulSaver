@@ -62,7 +62,7 @@ public partial class CharacterKit
         AugEcho => "던질 때마다 잠시 뒤 그림자가 같은 방향으로 한 번 더 던집니다. (피해 60%)",
         AugVenom => "모든 평타가 독을 쌓습니다. (최대 6중첩)",
         AugVolley => "한 번에 하나 더 던집니다.",
-        AugBlast => "화살이 맞은 자리에서 폭발합니다. (피해 30%)",
+        AugBlast => "화살이 맞은 자리에서 폭발합니다. (피해 60%)",
         AugSeek => "화살이 가까운 적을 쫓아갑니다.",
         AugGale => "화살이 적 셋을 더 꿰뚫고 30% 더 빠르게 날아갑니다.",
         AugDouble => "플라스크가 터진 자리에서 한 번 더 터집니다. (피해 60%)",
@@ -324,7 +324,7 @@ public partial class CharacterKit
         switch (augment)
         {
             case AugBlast:
-                float boom = b.damage * 0.3f;      // 1.3.5: 폭발 화살 60% → 30%
+                float boom = b.damage * 0.6f;
                 b.onHitEnemy += (s, c) =>
                 {
                     DamageCircle(c.transform.position, 2f, boom, 1.5f);
