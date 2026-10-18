@@ -205,8 +205,8 @@ public static partial class LocTable
         A("contract.h.clock.4.cond", "되감기로 체력 100 되찾기", "Recover 100 health with Rewind", "巻き戻しで体力を100取り戻す", "用倒带夺回100点生命");
         A("contract.h.clock.5.name", "지나온 길의 서른", "Thirty on the Way Back", "通った道の三十", "归途上的三十");
         A("contract.h.clock.5.cond", "되감기로 적 30마리 베기", "Cut 30 enemies with Rewind", "巻き戻しで敵を30体斬る", "用倒带斩击30名敌人");
-        A("contract.h.clock.6.name", "팔백 개의 톱니", "Eight Hundred Gears", "八百の歯車", "八百齿轮");
-        A("contract.h.clock.6.cond", "톱니 800개 던지기", "Throw 800 gears", "歯車を800個投げる", "掷出800枚齿轮");
+        A("contract.h.clock.6.name", "육백 개의 톱니", "Six Hundred Gears", "六百の歯車", "六百齿轮");
+        A("contract.h.clock.6.cond", "톱니 600개 던지기", "Throw 600 gears", "歯車を600個投げる", "掷出600枚齿轮");
         A("contract.h.post.1.name", "백 통", "A Hundred Letters", "百通", "百封信");
         A("contract.h.post.1.cond", "편지 100통 배달하기", "Deliver 100 letters", "手紙を100通配達する", "投递100封信");
         A("contract.h.post.2.name", "열 번의 속달", "Ten Express Deliveries", "十度の速達", "十次特快");

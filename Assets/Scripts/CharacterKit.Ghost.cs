@@ -25,7 +25,7 @@ public partial class CharacterKit
 
     // 영혼 (도깨비불)
     public int Wisps { get; private set; }
-    public int WispMax => 4 + card[5];         // 1.0.2 조정: 6 + 2 → 4 + 1 (카드 5 · 6 · 7)
+    public int WispMax => 3 + card[5];         // 1.3.5: 4 → 3 (카드 4 · 5 · 6) · 1.0.2 조정: 6 + 2 → 4 + 1
     readonly List<FxAnim> wispFx = new List<FxAnim>();
     static readonly List<Collider2D> ghostHits = new List<Collider2D>(64);
 
@@ -161,7 +161,7 @@ public partial class CharacterKit
     void GhostKill(Vector3 pos)
     {
         if (Id != CharacterId.Ghost) return;
-        float chance = 0.2f + SignatureSkills.WispChanceBonus();       // 1.0.2 조정: 35% → 20%
+        float chance = 0.1f + SignatureSkills.WispChanceBonus();       // 1.3.5: 20% → 10% (유령이 너무 안 죽음) · 1.0.2 조정: 35% → 20%
         if (Random.value < chance) AddWisps(1);
         if (card[2] > 0)
         {
@@ -323,7 +323,7 @@ public partial class CharacterKit
     // 1.0.4~: 빙의 지속 1초 → 3초. 들어간 동안 내가 움직이면 그 적의 몸이 따라오고, 이동 속도는 그 적의 속도(난이도 · 장 배율이 붙은 값) 그대로
     //         너무 느리거나 빠른 적에서 조작이 망가지지 않게 내 평소 이동 속도의 30% ~ 130% 사이로만 (평소 21쯤이면 6.3 ~ 27.3 · 잡몹 6 ~ 16은 거의 그대로, 보스 5 ~ 7은 6.3 ~ 7)
     //         보스 · 적이 스킬을 쓰는 동안(casting) · 움직이지 않는 것(보스가 만든 등불 · 묘비)은 예전처럼 그 몸에 붙어 따라감 (스킬 동작이 깨지지 않게)
-    const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.65f;
+    const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.3f;      // 1.3.5: 빙의 뒤 무적 0.65 → 0.3초
     const float PossessSpeedMin = 0.3f, PossessSpeedMax = 1.3f;
     float possessSpeed = -1f;           // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (MoveMul 이 씀)
 

@@ -149,7 +149,7 @@ public static class Contracts
         H(CharacterId.Cartographer, 4, false, 10, () => C("fold.pull")),
         H(CharacterId.Clockmaker, 1, false, 5, () => C("ult")),
         H(CharacterId.Clockmaker, 2, false, 20, () => C("oclock")),
-        H(CharacterId.Clockmaker, 6, false, 800, () => C("gear")),
+        H(CharacterId.Clockmaker, 6, false, 600, () => C("gear")),       // 1.3.5: 800 → 600 (판이 짧아짐)
         H(CharacterId.Postman, 1, false, 100, () => C("letter")),
         H(CharacterId.Postman, 2, false, 10, () => C("ult")),
         H(CharacterId.Postman, 3, false, 8, () => C("express.marks")),

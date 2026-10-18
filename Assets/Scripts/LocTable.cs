@@ -1535,7 +1535,7 @@ public static partial class LocTable
         { "던질 때마다 잠시 뒤 그림자가 같은 방향으로 한 번 더 던집니다. (피해 60%)", L("After each throw, a shadow throws again in the same direction. (60% damage)", "投げるたびに少し後で影が同じ方向にもう一度投げます。（ダメージ60%）", "每次投掷后，影子会朝同一方向再投一次。（伤害60%）") },
         { "모든 평타가 독을 쌓습니다. (최대 6중첩)", L("All basic attacks stack poison. (up to 6 stacks)", "全ての通常攻撃が毒を重ねます。（最大6重）", "所有普通攻击都会叠加毒。（最多6层）") },
         { "한 번에 하나 더 던집니다.", L("Throw one more at a time.", "一度にもう1つ多く投げます。", "每次多投一个。") },
-        { "화살이 맞은 자리에서 폭발합니다. (피해 60%)", L("Arrows explode where they hit. (60% damage)", "矢が命中した場所で爆発します。（ダメージ60%）", "箭矢在命中处爆炸。（伤害60%）") },
+        { "화살이 맞은 자리에서 폭발합니다. (피해 30%)", L("Arrows explode where they hit. (30% damage)", "矢が命中した場所で爆発します。（ダメージ30%）", "箭矢在命中处爆炸。（伤害30%）") },
         { "화살이 가까운 적을 쫓아갑니다.", L("Arrows chase nearby enemies.", "矢が近くの敵を追いかけます。", "箭矢会追踪附近的敌人。") },
         { "화살이 적 셋을 더 꿰뚫고 30% 더 빠르게 날아갑니다.", L("Arrows pierce three more enemies and fly 30% faster.", "矢がさらに3体を貫き、30%速く飛びます。", "箭矢额外穿透三个敌人，飞行速度加快30%。") },
         { "플라스크가 터진 자리에서 한 번 더 터집니다. (피해 60%)", L("Flasks explode a second time in the same spot. (60% damage)", "フラスコが爆発した場所でもう一度爆発します。（ダメージ60%）", "烧瓶在爆炸处再爆炸一次。（伤害60%）") },

@@ -1100,7 +1100,7 @@ public partial class CharacterKit : MonoBehaviour
     // 적이 받는 피해 배율 (SpecialAbilities.KitDamageHook): 도적 급소 노리기 · 궁수 사냥감 표식
     public float TargetDamageMul(EnermyController e)
     {
-        if (Id == CharacterId.Rogue && card[5] > 0 && e.GetComponent<Bleed>() != null) return 1f + 0.3f * card[5];
+        if (Id == CharacterId.Rogue && card[5] > 0 && e.GetComponent<Bleed>() != null) return 1f + 0.2f * card[5];     // 1.3.5: 급소 노리기 +30/60/90% → +20/40/60%
         if (Id == CharacterId.Archer && card[6] > 0 && HuntMark.Has(e.gameObject)) return 1.05f + 0.1f * card[6];
         return 1f;
     }
