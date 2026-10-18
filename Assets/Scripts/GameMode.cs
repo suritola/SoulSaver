@@ -178,7 +178,10 @@ public static class GameMode
     static int I => (int)Current;
     // 일일 도전의 그날 규칙 (DailyChallenge.Mul, 일일 도전이 아니면 1)
     static float D(DailyStat s) => DailyChallenge.Mul(s) * SoulBrand.Mul(s);     // 1.2~ 영혼 각인도 같은 배율 (각인 없는 판이면 1)
-    public static float EnemyHpMul => EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp);     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
+    // 1.3.3~ 사용자 「전체적인 적들의 체력을 40%씩 감소」: 모든 적(잡몹 · 엘리트 · 중간 보스 · 장 보스 · 개발자 · 엄마) 체력 공통 배율
+    //   EnemyHpMul · BossHpMul 에 곱하고, 고정 체력인 개발자 · 엄마는 EndlessMode.SummonDeveloper 에서 곱함 (이어하기로 되살린 보스는 저장한 체력 그대로)
+    public const float GlobalEnemyHpMul = 0.6f;
+    public static float EnemyHpMul => GlobalEnemyHpMul * EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp);     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
     // 1.1.6~ 「전체적인 데미지 밸런스 하향」: 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물)에 공통으로 곱함
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     public const float PlayerDamageMul = 0.8f;
@@ -193,7 +196,7 @@ public static class GameMode
     public static int ScaleKills(int kills) => kills >= int.MaxValue / 2 ? kills : Mathf.Max(1, Mathf.RoundToInt(kills * Kills[I]));
     // 무한 모드는 강도가 오를수록 한 번에 나오는 적도 늘어남
     public static int ExtraAliveCount => ExtraAlive[I] + (IsEndless ? Mathf.FloorToInt(Mathf.Max(0f, MobRamp - 1f) * 4f + (Surge - 1f) * 6f) : 0) + SoulWeight.ExtraAlive;     // 최종 국면 최대 +90 · 영혼의 무게 2~ (1.2~, 무한 모드는 0)
-    public static float BossHpMul => BossHp[I] * Ramp * Harder * D(DailyStat.BossHp) * Curse.HpMul * Early(EarlyBoss);
+    public static float BossHpMul => GlobalEnemyHpMul * BossHp[I] * Ramp * Harder * D(DailyStat.BossHp) * Curse.HpMul * Early(EarlyBoss);
     public static float GaugeMul => Gauge[I] * D(DailyStat.Gauge);
     // 일반 적 한 마리 보상 (처치 수가 늘어난 만큼 줄여 한 판 총량을 맞춤)
     public static float RewardMul => Reward[I] / Kills[I] * D(DailyStat.Reward) * Curse.RewardMul;

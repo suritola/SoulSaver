@@ -332,7 +332,7 @@ public class EndlessMode : MonoBehaviour
             CodexSeen.Mark(isMom ? "sec.mom" : "sec.dev", bossbar.BossName(isMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind));     // 1.2~ 발견형 도감 비밀
             boss.bossKind = AbyssStage.MirrorKind;
             boss.difficultyApplied = true;
-            boss.setEnemyHP = isMom ? MomHp : DeveloperHp;
+            boss.setEnemyHP = Mathf.RoundToInt((isMom ? MomHp : DeveloperHp) * GameMode.GlobalEnemyHpMul);     // 1.3.3~ 적 체력 공통 ×0.6 (개발자 10만 → 6만 · 엄마 20만 → 12만)
             boss.expReward *= isMom ? 10 : 5;
             boss.coinDrop *= isMom ? 10 : 5;
             boss.contactDamage *= 0.8f;        // 1.0.6~ 피해 -20% (접촉 48 → 38.4, 엄마 96 → 76.8)
