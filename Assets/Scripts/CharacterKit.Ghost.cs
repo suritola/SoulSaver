@@ -325,6 +325,14 @@ public partial class CharacterKit
     //         보스 · 적이 스킬을 쓰는 동안(casting) · 움직이지 않는 것(보스가 만든 등불 · 묘비)은 예전처럼 그 몸에 붙어 따라감 (스킬 동작이 깨지지 않게)
     const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.3f;      // 1.3.5: 빙의 뒤 무적 0.65 → 0.3초
     const float PossessSpeedMin = 0.3f, PossessSpeedMax = 1.3f;
+    float possessStartAt;
+    Color possessBodyColor = Color.white;
+    void ResetPossess()
+    {
+        possessing = false;
+        possessSpeed = -1f;
+        if (body != null) body.color = new Color(possessBodyColor.r, possessBodyColor.g, possessBodyColor.b, possessBodyColor.a < 0.5f ? 1f : possessBodyColor.a);
+    }
     float possessSpeed = -1f;           // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (MoveMul 이 씀)
 
     // 플레이어 이동 배율 (MoveMul): 내 속도(player.speed × 고유 스킬 배율)에 곱해 빙의한 적의 속도가 되게
@@ -363,6 +371,8 @@ public partial class CharacterKit
     void UpdatePossess(SkillGauge gauge, bool full)
     {
         DrawWisps();
+        // 1.3.8~ 빙의 루틴이 끊기면(예외 · 코루틴 중단) 이동 속도 · 반투명 · 빙의 상태가 남던 것 → 정해진 시간 + 여유가 지나면 되돌림
+        if (possessing && Time.time > possessStartAt + PossessEnter + PossessTime + 1.5f) ResetPossess();
         if (possessing) { if (possessAiming) HidePossessAim(); return; }
         if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.0.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
         if (!possessAiming && GameInput.UltDown && full && Time.timeScale > 0f) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
@@ -402,6 +412,8 @@ public partial class CharacterKit
     IEnumerator PossessRoutine(Transform target, float dmg)
     {
         possessing = true;
+        possessStartAt = Time.time;
+        possessBodyColor = body.color;
         // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.65초 (예전과 같은 여유)
         player.GrantInvincibility(PossessEnter + PossessGrace);
         Color before = body.color;

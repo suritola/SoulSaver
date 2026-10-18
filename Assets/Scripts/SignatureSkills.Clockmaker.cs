@@ -175,7 +175,7 @@ public partial class SignatureSkills
 
     IEnumerator TimelessHeal(float seconds)
     {
-        for (float t = 0f; t < seconds; t += 0.2f)
+        for (float t = 0f; t < seconds && Alive; t += 0.2f)        // 1.3.8~ 쓰러진 뒤엔 회복하지 않음
         {
             Heal(player.PlayerMaxHealth * 0.02f);
             yield return new WaitForSeconds(0.2f);

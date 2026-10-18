@@ -157,11 +157,12 @@ public partial class SignatureSkills
             to = p;
         }
         Fx.Spawn("fx_smoke", from, 2.2f, Wind, 18f);
-        for (float t = 0f; t < 0.12f; t += Time.deltaTime)
+        for (float t = 0f; t < 0.12f && Alive; t += Time.deltaTime)
         {
             transform.position = Vector3.Lerp(from, to, t / 0.12f);
             yield return null;
         }
+        if (!Alive) yield break;        // 1.3.8~ 쓰러진 뒤엔 위치를 바꾸지 않음
         transform.position = to;
         // 폭풍의 길: 물러난 자리에 돌풍
         if (E("ae.storm"))

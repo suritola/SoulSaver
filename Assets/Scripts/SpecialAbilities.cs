@@ -558,8 +558,8 @@ public partial class SpecialAbilities : MonoBehaviour
                             if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = c;
                             // 2.2.1: 총알 폭풍에도 총알 카드 · 고유 스킬 (영혼 탄환이면 푸른 영혼탄으로), 덤 총알 · 유도 · 폭발탄은 빼고
                             SignatureSkills.UltShots = true;
-                            ApplyGunCards(b, true, false);
-                            SignatureSkills.UltShots = false;
+                            try { ApplyGunCards(b, true, false); }
+                            finally { SignatureSkills.UltShots = false; }      // 1.3.8~ 예외가 나도 켜진 채 남지 않게
                             b.lifetime = Mathf.Max(0.05f, (range - 0.6f) / Mathf.Max(1f, b.speed));     // 카드로 바뀐 탄속까지 반영
                             Fx.Spawn("fx_muzzle", player.transform.position + (Vector3)(d * 0.7f), 1f, c, 30f, angle + arm * 180f, 15);
                         }

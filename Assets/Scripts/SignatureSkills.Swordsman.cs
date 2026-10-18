@@ -140,7 +140,7 @@ public partial class SignatureSkills
         }
         int ec = L("s.echo");
         if (ec > 0) StartCoroutine(EchoSpin(origin, radius, dmg * V(ec, 0.4f, 0.15f) * P("s.echo")));       // 1.1.2~ 영혼 회오리: ×1.4
-        if (E("se.eye")) StartCoroutine(EyeOfStorm(3f));
+        if (E("se.eye") && Time.time >= eyeOfStormUntil) { eyeOfStormUntil = Time.time + 3f; StartCoroutine(EyeOfStorm(3f)); }     // 1.3.8~ 겹쳐 실행되지 않게 (동시에 하나)
     }
 
     IEnumerator EchoSpin(Vector3 origin, float radius, float dmg)
@@ -163,6 +163,7 @@ public partial class SignatureSkills
         Hostile.Play("slash", 0.6f, 1.2f);
     }
 
+    float eyeOfStormUntil;
     IEnumerator EyeOfStorm(float seconds)
     {
         FxAnim t;

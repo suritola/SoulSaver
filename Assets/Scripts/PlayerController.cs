@@ -1045,8 +1045,8 @@ void Shoot()
                 Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
                 // 2.2.1: 필살기 총알에도 총알 카드 · 고유 스킬(영혼 탄환 · 총열 과열 · 소각탄 · 전기탄 …), 덤 총알 · 유도 · 폭발탄은 빼고(light)
                 SignatureSkills.UltShots = true;
-                special?.ApplyGunCards(shot, true, false);
-                SignatureSkills.UltShots = false;
+                try { special?.ApplyGunCards(shot, true, false); }
+                finally { SignatureSkills.UltShots = false; }      // 1.3.8~ 예외가 나도 켜진 채 남지 않게
                 if (shot != null)
                 {
                     // 카드로 바뀐 탄속까지 반영해 앞질러 조준
@@ -1087,8 +1087,8 @@ void Shoot()
                 Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized,
                     skillDamage * GunUltBossMul * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
                 SignatureSkills.UltShots = true;
-                special?.ApplyGunCards(shot, true, false);
-                SignatureSkills.UltShots = false;
+                try { special?.ApplyGunCards(shot, true, false); }
+                finally { SignatureSkills.UltShots = false; }      // 1.3.8~ 예외가 나도 켜진 채 남지 않게
                 yield return new WaitForSeconds(shootDelay);
             }
         }
