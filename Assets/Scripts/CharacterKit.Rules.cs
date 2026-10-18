@@ -119,7 +119,7 @@ public partial class CharacterKit
             int step = strokeCount % ShapeEvery;
             bool next = step == ShapeEvery - 1;
             Color c = next ? Color.Lerp(new Color(1f, 0.82f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(0.45f, 0.6f, 1f);
-            DrawRuleBar((step + 1f) / ShapeEvery, c, true, "다음 획", step + 1, ShapeEvery);     // 1.0.4~: 「다음 획 1/3」 — 시작부터 1/3 이 찬 까닭
+            DrawRuleBar((step + 1f) / ShapeEvery, c, !CartographerPaths.NoShapes, "다음 획", step + 1, ShapeEvery);     // 1.4~ 「일필」 갈래는 도형이 닫히지 않으므로 숨김     // 1.0.4~: 「다음 획 1/3」 — 시작부터 1/3 이 찬 까닭
         }
         else if (Id == CharacterId.Postman)
         {
