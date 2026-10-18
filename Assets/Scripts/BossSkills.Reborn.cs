@@ -489,7 +489,7 @@ public partial class BossSkills
         Fx.Spawn("fx_explosion", target, r * 2.4f, Color.white, 16f);
         Hostile.Burst(target, r, Fire, true);
         ShockRing.Spawn(target, 1f, r * 1.8f, 0.5f, Fire, 0.4f);
-        HazardZone.Spawn(target, r * 0.7f, 3f, 10f, Fire, "fx_puddle", 0.8f);
+        HazardZone.Spawn(target, r * 0.7f, 3f, 10f, Fire, "fire", 0.8f);     // 1.3.3~ 불 바닥 연출 (FireGround)
         Hostile.Play("boom", 0.9f, 0.7f);
         Hostile.Shake(0.2f);
     }

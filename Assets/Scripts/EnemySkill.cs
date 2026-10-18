@@ -643,6 +643,8 @@ public class HazardZone : MonoBehaviour
         z.tickDamage = tickDamage;
         z.slow = slow;
         z.label = AttackLabel.FromCaller(file, caller);
+        // 1.3.3~ fx "fire": 불 웅덩이 고품질 연출 (FireGround) — 예전엔 산성 웅덩이 그림을 주황으로 물들였음
+        if (fx == "fire") { FireGround.Attach(go, radius, life, 6); return z; }
         z.visual = Fx.Play(fx, pos, radius * (fx == "fx_puddle" ? 1.1f : 2.2f), color, z.fps, 0f, fx == "fx_puddle" ? 1 : 16, true, life);
         if (z.visual != null && fx == "fx_puddle")
         {

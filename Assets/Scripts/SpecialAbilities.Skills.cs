@@ -79,8 +79,7 @@ public partial class SpecialAbilities
                 DamageZone zone = SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
                 zone.lava = true;
                 ShockRing.Spawn(zone.transform.position, 0.3f, FireZoneRadius * 1.2f, 0.35f, new Color(1f, 0.55f, 0.2f, 0.9f), 0.3f);
-                FxAnim fireRune = Fx.Play("fx_rune", zone.transform.position, FireZoneRadius * 2f, new Color(1f, 0.55f, 0.2f, 0.7f), 1f, 0f, 2, true, evo ? 6f : 4f);
-                if (fireRune != null) fireRune.spin = 45f;
+                // 1.3.3~ 도는 마법진(fx_rune)은 뺌 — 불 바닥(FireGround)이 장판을 그림
                 Fx.Spawn("fx_explosion", zone.transform.position, FireZoneRadius * 1.6f, Color.white, 16f);
                 StartCooldown(id, evo ? 9f : 12f);
                 fx.Play("boom", 0.5f, 0.8f);

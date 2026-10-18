@@ -521,6 +521,7 @@ public class QaCapture
         yield return Safe("user_resume", UserResume, 300);
         yield return Safe("ddol_canvas", DdolCanvas, 240);
         yield return Safe("loading", LoadingScreen, 120);
+        yield return Safe("fire_ground", FireGroundShot, 180);
         yield return Safe("system2", System2, 240);
         yield return Safe("soak", Soak, 600);
         yield return Safe("ui_menu", UiMenu, 900);
@@ -1094,6 +1095,23 @@ public class QaCapture
         Log(tag + " 글자 " + tmps.Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length + " · 장면 " + SceneManager.GetActiveScene().name);
         foreach (var grp in tmps.Where(t => t.isActiveAndEnabled).GroupBy(t => t.gameObject.name + " @" + (t.transform.root != null ? t.transform.root.name : "-") + (t.gameObject.scene.name == "DontDestroyOnLoad" ? " [DDOL]" : "")).OrderByDescending(g => g.Count()).Take(12))
             Log("  " + grp.Key + " × " + grp.Count() + " (예: " + grp.First().text.Replace("\n", " ").Substring(0, Math.Min(50, grp.First().text.Length)) + ")");
+    }
+
+    // 1.3.3 불 장판 (화염 지대 · 지옥의 군주 불 웅덩이 · FireGround)
+    static IEnumerator FireGroundShot()
+    {
+        yield return LoadGame("Gunner");
+        yield return Secs(2f);
+        Transform p = ((Component)Find("PlayerController")).transform;
+        Type sa = T("SpecialAbilities");
+        object inst = sa.GetProperty("SharedInstance").GetValue(null);
+        object zone = sa.GetMethod("SpawnZone").Invoke(inst, new object[] { p.position + new Vector3(-5f, 1f, 0f), 3f, 8f, 0f, new Color(1f, 0.4f, 0.1f, 0.8f) });
+        zone.GetType().GetField("lava").SetValue(zone, true);
+        T("HazardZone").GetMethod("Spawn").Invoke(null, new object[] { p.position + new Vector3(5f, 1f, 0f), 2.8f, 8f, 0f, new Color(1f, 0.5f, 0.1f, 0.9f), "fire", 0f, "Qa", "Qa" });
+        yield return Secs(1.2f);
+        yield return Shot("fire_ground_a", 1920, 1080, false);
+        yield return Secs(0.35f);
+        yield return Shot("fire_ground_b", 1920, 1080, false);
     }
 
     // 1.3.3 로딩 화면 (배치 모드는 SceneFlow 가 바로 넘어가므로 막 · 로딩을 직접 띄워 찍음)

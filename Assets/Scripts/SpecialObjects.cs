@@ -556,6 +556,12 @@ public class DamageZone : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         baseColor = sr.color;
+        // 1.3.3~ 불 장판(화염 지대 · 유탄 불): 둥근 빛 덩어리 대신 그을린 땅 · 빛나는 금 · 불꽃 혀 (FireGround) — 빛 덩어리는 옅은 열기로만
+        if (lava)
+        {
+            FireGround.Attach(gameObject, radius, duration, 8);
+            baseColor.a *= 0.3f;
+        }
     }
 
     void Update()
@@ -564,17 +570,7 @@ public class DamageZone : MonoBehaviour
         t += Time.deltaTime;
         tick += Time.deltaTime;
         sr.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * (0.75f + Mathf.Sin(t * 8f) * 0.25f) * Mathf.Clamp01((duration - t) * 2f));
-        if (lava)
-        {
-            bubble += Time.deltaTime;
-            if (bubble >= 0.06f)
-            {
-                bubble = 0f;
-                Vector3 at = transform.position + (Vector3)(Random.insideUnitCircle * radius * 0.85f);
-                FlameParticle.Spawn(sr.sprite, at, new Vector2(Random.Range(-0.4f, 0.4f), Random.Range(2f, 4f)), Random.Range(0.35f, 0.55f), 0.04f, Random.Range(0.15f, 0.3f), false);
-                if (Random.value < 0.3f) FlameParticle.SpawnEmber(sr.sprite, at, new Vector2(Random.Range(-2f, 2f), Random.Range(4f, 8f)));
-            }
-        }
+        // 1.3.3~ 불 장판의 불꽃 · 불티는 FireGround 가 그림 (예전 둥근 빛 알갱이 대신)
         if (tick >= 0.5f)
         {
             tick = 0f;
