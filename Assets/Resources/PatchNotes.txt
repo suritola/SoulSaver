@@ -1,82 +1,214 @@
-# 1.3.2 업데이트 — 편의성 개선 · 버그 수정
+# V1.3.3 업데이트 — 개발자와 엄마의 새 공격
+개발자와 엄마가 자기만의 공격을 쓰기 시작합니다. 새 로딩 화면과 여러 버그 수정도 함께 담았습니다.
 
-## 편의성 개선
+무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
 
+## 💻 개발자의 새 공격
+- 라이브 코딩: 코드 한 줄이 탄이 되어 날아옵니다. 띄어쓰기 자리가 빈틈입니다.
+- 범위 선택: 사각형으로 드래그한 뒤 Del 키로 지웁니다. 체력이 줄면 Ctrl+V 로 한 번 더 붙여 넣습니다.
+- 빌드 실패: 빌드가 다 차면 실패하며 터집니다.
+- 오류 창: 경고 창이 뜨고, 「확인」 자리로 가야 안전합니다.
+- 로딩 중…: 빙글 도는 고리가 조여 듭니다.
+- 스택 오버플로: 블록 탑이 쌓였다가 무너집니다.
+
+## 🧹 엄마의 새 공격
+- 슬리퍼 투척: 슬리퍼가 날아와 벽에 튕깁니다.
+- 효자손: 효자손을 크게 휘두릅니다.
+- 타임 세일!: 할인 쿠폰을 따라 매장을 휘젓고 다닙니다.
+- 빗자루질: 화면을 가로질러 쓸어 버립니다. 빗자루 사이 빈틈으로 피하세요.
+- 엄친아: 엄친아 메달이 쫓아옵니다.
+- 불 끄고 자!: 불빛이 지나갈 때 움직이면 들킵니다. 자는 척하세요!
+
+모든 공격은 먼저 경고가 보이고, 결계 · 공간 침식이 시작되면 바로 멈춥니다.
+
+## ✨ 편의성 개선
+- 새 로딩 화면: 검은 화면 대신 로딩바와 함께 지금 영웅이 달립니다.
+- 불 장판을 그을린 땅 위에 불꽃이 넘실대는 모습으로 새로 그렸습니다. (영웅의 불 공격 · 지옥의 군주의 불 웅덩이)
+- 이펙트 스킨 · 전설 스킨의 연출이 훨씬 크고 잘 보입니다.
+- 쉬움을 클리어하면 보통 · 어려움과 함께 무한 모드까지 열립니다. 이미 쉬움을 클리어했다면 바로 열립니다.
+- 무한 모드에서 개발자가 나타난 뒤에도 떠돌이 상점이 1분마다 찾아옵니다.
+- 게임 안 패치노트를 스팀 공지와 똑같이 맞췄습니다.
+- 거너가 뇌운(사슬 번개 필살기)을 쓰는 동안에도 총을 쏠 수 있습니다.
 - 무한 모드 · 일일 도전 중에 게임을 끄면 지금까지의 기록이 순위표에 올라갑니다.
 - 빈틈이 금이 간 심장처럼 두근거리고 조준 표시가 조여 들어, 더 약점처럼 보입니다.
 
-## 버그 수정
-
+## 🛠️ 버그 수정
 - 결과 화면이 메인 메뉴와 다음 판까지 화면에 남아 겹쳐 보이던 문제를 고쳤습니다.
 - 무한 모드 이어하기에서 시간이 00:00에서 멈추던 문제를 고쳤습니다. 15분 「최후의 시간」과 적 증가도 제대로 진행됩니다.
 - 보스가 영원히 공격을 받지 않던 문제를 고쳤습니다.
 - 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
 - 보스가 기술 도중 끊겨 공중에 떠 있던 문제 등 보스전이 멈출 수 있던 문제를 더 막았습니다.
 
-## 밸런스 조정
+## ⚖️ 밸런스 조정
+- 모든 적의 체력: 40% 감소 (잡몹 · 엘리트 · 중간 보스 · 보스 모두)
+- 개발자 체력: 100,000 → 60,000
+- 개발자 엄마 체력: 200,000 → 120,000
+- 모든 영웅의 모든 피해: 20% 증가
+- 지도 제작자 피해: 약 9% 감소 (공격력 배율 ×1.1 → ×1.0)
+- 무한 모드 최대 레벨: 80 → 50 (이야기 모드와 같음 · 이제 무한 모드에서도 모든 스킬을 진화할 수는 없습니다)
+- 개발자 결계 게이지 차는 속도: ×1 → ×2.5
+- 개발자 엄마 결계 게이지 차는 속도: ×1 → ×4
 
-- **개발자 결계 게이지 차는 속도**: ×1 → **×2.5**
-- **개발자 엄마 결계 게이지 차는 속도**: ×1 → **×4**
+플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# 1.3.2 Update — Quality of Life & Bug Fixes
+# V1.3.3 Update — New Attacks for the Developer and Mom
+The Developer and Mom now have attacks all their own, plus a new loading screen and many bug fixes.
 
-## Quality of Life
+The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
 
+## 💻 The Developer's New Attacks
+- Live Coding: a line of code flies at you as projectiles. The spaces are your gaps.
+- Select & Delete: a box is dragged out, then erased with the Del key. At lower health, Ctrl+V pastes it once more.
+- Build Failed: when the build bar fills, it fails and explodes.
+- Error Popup: an error window appears, and the "OK" spot is the safe place.
+- Loading…: a spinning ring closes in.
+- Stack Overflow: a tower of blocks stacks up, then collapses.
+
+## 🧹 Mom's New Attacks
+- Slipper Toss: slippers fly at you and bounce off walls.
+- Back Scratcher: a big sweeping swing.
+- Time Sale!: she storms through the store following the coupons.
+- Broom Sweep: a sweep across the screen. Dodge through the gaps between the bristles.
+- Mom's Friend's Son: his medals chase you.
+- Lights Out!: move while the light passes and you're caught. Pretend to sleep!
+
+Every attack shows a warning first and stops the moment a barrier or Spatial Erosion begins.
+
+## ✨ Quality of Life
+- New loading screen: instead of a black screen, your hero runs along a loading bar.
+- Fire fields have been redrawn as flames dancing over scorched ground. (Hero fire attacks and the Demon Lord's fire pools)
+- Effect skins and Legendary skins now have much bigger, clearer effects.
+- Clearing Easy now unlocks Endless Mode along with Normal and Hard. If you've already cleared Easy, it unlocks right away.
+- In Endless Mode, the Wandering Shop keeps appearing every minute even after the Developer shows up.
+- In-game patch notes now match the Steam announcements exactly.
+- The Gunner can keep shooting while Thunderstorm (the Chain Lightning ultimate) is active.
 - Quitting the game during Endless Mode or the Daily Challenge now submits your run so far to the leaderboard.
 - Weak points now pulse like a cracked heart with a tightening target mark, so they look more like weak points.
 
-## Bug Fixes
-
+## 🛠️ Bug Fixes
 - Fixed the results screen staying on top of the main menu and the next run.
 - Fixed the timer stopping at 00:00 after continuing an Endless run. The 15-minute "Final Hour" and enemy scaling now progress correctly.
 - Fixed bosses becoming permanently immune to damage.
 - Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
 - Fixed more cases that could stall boss fights, such as bosses staying in the air after an interrupted attack.
 
-## Balance Changes
+## ⚖️ Balance Changes
+- All enemy health: −40% (mobs, elites, mid-bosses and bosses)
+- Developer health: 100,000 → 60,000
+- Developer's Mom health: 200,000 → 120,000
+- All damage from every hero: +20%
+- Cartographer damage: about −9% (attack multiplier ×1.1 → ×1.0)
+- Endless Mode max level: 80 → 50 (same as Story Mode, so you can no longer evolve every skill in Endless)
+- Developer barrier gauge fill speed: ×1 → ×2.5
+- Developer's Mom barrier gauge fill speed: ×1 → ×4
 
-- **Developer barrier gauge fill speed**: ×1 → **×2.5**
-- **Developer's Mom barrier gauge fill speed**: ×1 → **×4**
+Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
 
 === ja
-# 1.3.2 アップデート — 快適性の改善・不具合の修正
+# V1.3.3 アップデート — 開発者とママの新しい攻撃
+開発者とママが自分だけの攻撃を使い始めます。新しいロード画面と多くの不具合修正も含まれています。
 
-## 快適性の改善
+エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
 
+## 💻 開発者の新しい攻撃
+- ライブコーディング: コード1行が弾になって飛んできます。スペースの部分が隙間です。
+- 範囲選択: 四角形をドラッグしてDelキーで消します。体力が減るとCtrl+Vでもう一度貼り付けます。
+- ビルド失敗: ビルドが満タンになると失敗して爆発します。
+- エラーダイアログ: 警告ウィンドウが出て、「OK」の場所が安全です。
+- 読み込み中…: 回るリングが迫ってきます。
+- スタックオーバーフロー: ブロックの塔が積み上がって崩れます。
+
+## 🧹 ママの新しい攻撃
+- スリッパ投げ: スリッパが飛んできて壁で跳ね返ります。
+- 孫の手: 孫の手を大きく振り回します。
+- タイムセール！: クーポンを追って売り場を駆け回ります。
+- ほうき掃き: 画面を横切って掃いていきます。ほうきの隙間をくぐってよけましょう。
+- ママ友の息子: メダルが追いかけてきます。
+- 電気消して寝なさい！: 光が通るときに動くと見つかります。寝たふりをしましょう！
+
+すべての攻撃は先に警告が表示され、結界・空間侵食が始まるとすぐに止まります。
+
+## ✨ 快適性の改善
+- 新しいロード画面: 黒い画面の代わりに、ロードバーと一緒に今の英雄が走ります。
+- 炎の床を、焦げた地面の上で炎が揺らめく姿に描き直しました。（英雄の炎の攻撃・地獄の君主の炎の溜まり）
+- エフェクトスキン・伝説スキンの演出がずっと大きく見やすくなりました。
+- イージーをクリアすると、ノーマル・ハードと一緒にエンドレスモードまで解放されます。すでにイージーをクリアしていればすぐに解放されます。
+- エンドレスで開発者が現れた後も、さすらいのショップが1分ごとにやって来ます。
+- ゲーム内のパッチノートをSteamのお知らせと同じ内容にそろえました。
+- ガンナーが雷雲（連鎖雷撃の必殺技）を使っている間も銃を撃てるようになりました。
 - エンドレス・デイリーチャレンジ中にゲームを終了すると、ここまでの記録がランキングに登録されるようになりました。
 - 隙がひびの入った心臓のように脈打ち、狙いの印が締まっていくので、より弱点らしく見えます。
 
-## 不具合の修正
-
+## 🛠️ 不具合の修正
 - 結果画面がメインメニューや次のプレイまで画面に残って重なる問題を修正しました。
 - エンドレスの続きから再開すると時間が00:00で止まる問題を修正しました。15分の「最後の時間」と敵の増加も正しく進みます。
 - ボスがずっとダメージを受けなくなる問題を修正しました。
 - ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
 - 技の途中で中断されたボスが空中に浮いたままになるなど、ボス戦が止まりうる問題をさらに防ぎました。
 
-## バランス調整
+## ⚖️ バランス調整
+- すべての敵の体力: 40%減少（雑魚・エリート・中ボス・ボスすべて）
+- 開発者の体力: 100,000 → 60,000
+- 開発者のママの体力: 200,000 → 120,000
+- すべての英雄のすべてのダメージ: 20%増加
+- 地図職人のダメージ: 約9%減少（攻撃力倍率 ×1.1 → ×1.0）
+- エンドレスの最大レベル: 80 → 50（ストーリーモードと同じ・エンドレスでもすべてのスキルは進化できなくなりました）
+- 開発者の結界ゲージがたまる速さ: ×1 → ×2.5
+- 開発者のママの結界ゲージがたまる速さ: ×1 → ×4
 
-- **開発者の結界ゲージがたまる速さ**: ×1 → **×2.5**
-- **開発者のママの結界ゲージがたまる速さ**: ×1 → **×4**
+遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
 
 === zh
-# 1.3.2 更新 — 便利性改进 · 问题修复
+# V1.3.3 更新 — 开发者与妈妈的新攻击
+开发者与妈妈开始使用属于自己的攻击，同时带来新的加载画面与多项问题修复。
 
-## 便利性改进
+无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
 
+## 💻 开发者的新攻击
+- 现场编程：一行代码化作弹幕飞来，空格处就是空隙。
+- 框选删除：拖出方框后按 Del 键删除。生命降低后还会用 Ctrl+V 再粘贴一次。
+- 构建失败：构建进度条充满后失败并爆炸。
+- 错误弹窗：弹出警告窗口，「确定」的位置才安全。
+- 加载中…：旋转的圆环向内收紧。
+- 栈溢出：方块塔堆起后崩塌。
+
+## 🧹 妈妈的新攻击
+- 拖鞋飞袭：拖鞋飞来并在墙上反弹。
+- 痒痒挠：大幅挥舞痒痒挠。
+- 限时抢购！：追着优惠券在卖场里横冲直撞。
+- 扫帚横扫：横扫整个画面，从扫帚之间的空隙躲开。
+- 别人家的孩子：奖牌会追着你跑。
+- 关灯睡觉！：灯光扫过时一动就会被发现，快装睡！
+
+所有攻击都会先显示警告，结界 · 空间侵蚀开始时会立即停止。
+
+## ✨ 便利性改进
+- 新的加载画面：不再是黑屏，当前英雄会沿着加载条奔跑。
+- 重新绘制了火焰地带，现在是焦土上摇曳的火焰。（英雄的火焰攻击 · 地狱领主的火焰池）
+- 特效皮肤 · 传说皮肤的演出变得更大、更醒目。
+- 通关简单难度后，普通 · 困难与无尽模式会一并解锁。如果已经通关简单难度，会立即解锁。
+- 在无尽模式中，开发者出现后流浪商店仍会每分钟到来。
+- 游戏内的更新日志已与 Steam 公告内容完全一致。
+- 枪手在使用雷云（连锁闪电必杀技）期间也能继续射击。
 - 在无尽模式 · 每日挑战中关闭游戏时，至今的记录会上传排行榜。
 - 破绽会像裂开的心脏一样跳动，瞄准标记也会收紧，看起来更像弱点。
 
-## 问题修复
-
+## 🛠️ 问题修复
 - 修复了结算画面一直留在主菜单和下一局画面上重叠显示的问题。
 - 修复了无尽模式继续游戏后时间停在00:00的问题。15分钟「最后时刻」与敌人增长也会正常推进。
 - 修复了首领永远不受伤害的问题。
 - 修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
 - 进一步防止了首领招式被打断后停在空中等可能导致首领战停滞的问题。
 
-## 平衡调整
+## ⚖️ 平衡调整
+- 所有敌人的生命：降低40%（小怪 · 精英 · 中头目 · 首领全部）
+- 开发者生命：100,000 → 60,000
+- 开发者的妈妈生命：200,000 → 120,000
+- 所有英雄的所有伤害：提高20%
+- 制图师伤害：降低约9%（攻击力倍率 ×1.1 → ×1.0）
+- 无尽模式等级上限：80 → 50（与故事模式相同 · 无尽模式中也无法让所有技能进化）
+- 开发者结界槽充能速度：×1 → ×2.5
+- 开发者的妈妈结界槽充能速度：×1 → ×4
 
-- **开发者结界槽充能速度**：×1 → **×2.5**
-- **开发者的妈妈结界槽充能速度**：×1 → **×4**
+感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
