@@ -340,7 +340,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         bool holdingSpecial = special != null && special.WeaponActive;
-        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) if (NowBullet < MaxBullet) StartCoroutine(Reload());
+        if (KeyBindings.Down(GameAction.Reload) && !holdingSpecial && !PathNoAmmo && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) if (NowBullet < MaxBullet) StartCoroutine(Reload());
 
         // =========================
         // 이동 입력
@@ -487,7 +487,7 @@ public class PlayerController : MonoBehaviour
         // =========================
 
         DamageSource.Current = DamageSource.Basic;
-        if (NowBullet <= 0 && !isReloading && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) StartCoroutine(Reload());
+        if (NowBullet <= 0 && !isReloading && !PathNoAmmo && (CharacterKit.Instance == null || CharacterKit.Instance.UsesAmmo)) StartCoroutine(Reload());
 
         // =========================
         // 애니메이션
@@ -532,6 +532,15 @@ public class PlayerController : MonoBehaviour
     // 재장전
     // =====================================
 
+    // 2026-10-19~ 빌드 갈래 (거너 「과열 사격」): 탄이 줄지 않고 장전 키 · 자동 장전을 쓰지 않음 (과열이 장전을 대신함)
+    static bool PathNoAmmo => GunnerPaths.Live != null && GunnerPaths.Live.NoAmmo;
+
+    // 과열: 장전 코루틴으로 사격 불가 시간을 냄 (GunnerPaths.EndShot) — 장전 표시 · 장전 시작 · 끝 훅을 그대로 씀
+    public void ForceReload()
+    {
+        if (!isReloading && !IsDying && isActiveAndEnabled) StartCoroutine(Reload());
+    }
+
     IEnumerator Reload()
     {
         if (isReloading) yield break;
@@ -539,15 +548,18 @@ public class PlayerController : MonoBehaviour
         isReloading = true;
         reload = 0f;
         special?.ReloadShockwave(transform.position);
-        SignatureSkills.ReloadStart();          // 탄피 지뢰 · 빈 주머니의 비
+        SignatureSkills.ReloadStart();          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발
 
         if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
         else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
 
+        // 2026-10-19~ 빌드 갈래 (거너): 과열 시간 · 산탄 장전 40% 빠름 · 포탑 곁 2배 — 진행 값(reload)은 그대로 0 → reloadTime (장전 표시가 맞게)
+        GunnerPaths gp = GunnerPaths.Live;
+        float need = gp != null ? Mathf.Max(0.05f, gp.ReloadTime(reloadTime)) : reloadTime;
         while (reload < reloadTime)
         {
             // 필살기 조준의 느린 시간에도 제 속도로, 메뉴로 멈춘 동안에는 멈춤
-            if (!IsPaused) reload += Time.unscaledDeltaTime;
+            if (!IsPaused) reload += Time.unscaledDeltaTime * (gp != null ? reloadTime / need * gp.ReloadRate : 1f);
             yield return null;
         }
 
@@ -572,11 +584,15 @@ void Shoot()
     {
         if (NowBullet <= 0 || isReloading) return;
         using var aim = WeakHit.AimScope(1.75f);       // 빈틈: 직접 조준한 평타 (WeakSpot)
+        // 2026-10-19~ 빌드 갈래 (거너 · Paths/Paths.Gunner*.cs): 저격 · 난사 · 과열 · 산탄 · 포탑 — 갈래 규칙이 아니면 null (예전 그대로)
+        GunnerPaths gp = GunnerPaths.Live;
 
-        nextShootTime = Time.time + ShootSpeed / fireRateMultiplier;
+        nextShootTime = Time.time + ShootSpeed / fireRateMultiplier * (gp != null ? gp.IntervalMul : 1f);
         // 탄창 저주: 마지막 한 발 강화
         bool cursed = special != null && special.IsLastBulletCursed(NowBullet);
-        NowBullet--;
+        bool lastShell = NowBullet == 1;
+        if (gp != null && gp.NoAmmo) NowBullet = MaxBullet;       // 과열 사격: 탄 대신 열 게이지
+        else NowBullet--;
 
         // 서서 쏠 때는 쏠 때마다 사격 자세를 처음부터
         shootPoseUntil = Time.time + ShootPoseTime;
@@ -593,20 +609,24 @@ void Shoot()
         Vector3 startPosition = MuzzlePosition;
 
         Vector2 direction = (mousePosition - startPosition).normalized;
+        if (gp != null) direction = gp.Spread(direction);         // 난사: 퍼짐 ±8°
 
         // 멀티샷 퍼지는 각도
         float spreadAngle = 10f;
 
         float bulletDamage = damage * damageMultiplier * MultiShotDamageRate(multiShot) * (cursed ? 3f : 1f);
         SignatureSkills.Attacked(startPosition, direction);
+        if (gp != null) bulletDamage *= gp.BeginShot(move.sqrMagnitude > 0.01f, lastShell);     // 대가 · 저격탄 · 아슬아슬한 열
 
         float shotRate = MultiShotDamageRate(multiShot);
 
-        if (multiShot == 1)
+        if (gp != null && gp.FireOverride(this, startPosition, direction, bulletDamage, cursed)) { }     // 산탄 · 슬러그
+        else if (multiShot == 1)
         {
             Bullet one = CreateBullet(startPosition, direction, bulletDamage, pene, 0, false);
             special?.CurseBullet(one, cursed);
             special?.ApplyGunCards(one, false);
+            gp?.Dress(one);
         }
         else
         {
@@ -623,9 +643,11 @@ void Shoot()
                 Bullet b = CreateBullet(startPosition, shotDirection, bulletDamage, pene, 0, false, shotRate);
                 special?.CurseBullet(b, cursed);
                 special?.ApplyGunCards(b, false, i == 0);
+                gp?.Dress(b);
             }
         }
         special?.EvoExtraShots(startPosition, direction, bulletDamage / Mathf.Max(0.01f, cursed ? 3f : 1f));      // 쌍발 총구 · 산탄 총구
+        gp?.EndShot(this);          // 과열 사격: 열 (가득 차면 과열)
     }
 
 
@@ -1047,6 +1069,7 @@ void Shoot()
                 SignatureSkills.UltShots = true;
                 try { special?.ApplyGunCards(shot, true, false); }
                 finally { SignatureSkills.UltShots = false; }      // 1.3.8~ 예외가 나도 켜진 채 남지 않게
+                GunnerPaths.Live?.UltShot(shot);                   // 2026-10-19~ 관통 저격 극의: 일제 사격이 모두 저격탄
                 if (shot != null)
                 {
                     // 카드로 바뀐 탄속까지 반영해 앞질러 조준
@@ -1089,6 +1112,7 @@ void Shoot()
                 SignatureSkills.UltShots = true;
                 try { special?.ApplyGunCards(shot, true, false); }
                 finally { SignatureSkills.UltShots = false; }      // 1.3.8~ 예외가 나도 켜진 채 남지 않게
+                GunnerPaths.Live?.UltShot(shot);                   // 2026-10-19~ 관통 저격 극의
                 yield return new WaitForSeconds(shootDelay);
             }
         }

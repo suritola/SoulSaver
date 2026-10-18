@@ -37,7 +37,8 @@ public partial class SpecialAbilities
         b.onHitEnemy += (bullet, col) =>
         {
             GunCardHit(col, bullet.damage, bullet.Direction, light, firstHit && boom);
-            if (firstHit && !light && gunCard[GunRicochet] > 0) Ricochet(bullet, col);
+            // 2026-10-19~ 도탄 난사 갈래면 튕김은 갈래가 맡음 (카드 단계 = 튕김 횟수 · 피해, Paths/Paths.Gunner.Effects.cs)
+            if (firstHit && !light && gunCard[GunRicochet] > 0 && !GunnerPaths.OwnsRicochet) Ricochet(bullet, col);
             firstHit = false;
         };
     }

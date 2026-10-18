@@ -33,6 +33,7 @@ public partial class SignatureSkills
     {
         if (who == CharacterId.Rogue) { RogueEmpty(); return; }
         if (who != CharacterId.Gunner) return;
+        GunnerPaths.Live?.ReloadStarted();      // 2026-10-19~ 빌드 갈래: 산탄 돌격 돌진 · 화염 과열 폭발 (Paths/Paths.Gunner.Effects.cs)
         int m = L("g.mine");
         if (m <= 0) return;
         int n = m + 1;
@@ -44,6 +45,12 @@ public partial class SignatureSkills
             SpawnMine(at);
         }
         Hostile.Play("clank", 0.4f, 1.6f);
+    }
+
+    // 2026-10-19~ 포탑 설치 극의: 포탑이 까는 탄피 지뢰 (같은 지뢰 · 같은 상한 24)
+    public void PathMine(Vector3 at)
+    {
+        if (who == CharacterId.Gunner && Alive) SpawnMine(at);
     }
 
     void SpawnMine(Vector3 at)
@@ -69,6 +76,7 @@ public partial class SignatureSkills
     {
         using var source = DamageSource.As(DamageSource.Signature);
         if (who != CharacterId.Gunner) return;
+        GunnerPaths.Live?.ReloadEnded();        // 2026-10-19~ 빌드 갈래: 포탑 설치 · 과열이 풀림
         Vector3 p = transform.position;
         int f = L("g.flash");
         if (f > 0)
@@ -103,6 +111,7 @@ public partial class SignatureSkills
                 // 2.2.1: 자동으로 쏘는 총알에도 총알 카드 · 영혼 탄환 (덤 총알 · 유도 · 폭발탄은 빼고)
                 if (b != null) { if (Sp != null) Sp.ApplyGunCards(b, true, false); b.critRolled = true; }
             }
+            GunnerPaths.Live?.TurretVolley();       // 2026-10-19~ 포탑 설치 완성: 포탑도 가까운 적 여섯에게
             Hostile.Play("gunshot", 0.5f, 1.3f);
         }
     }
