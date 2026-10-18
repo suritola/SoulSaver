@@ -29,11 +29,18 @@ public partial class SignatureSkills
     public static void ReloadEnd() { if (Instance != null) Instance.OnReloadEnd(); }
     public static void GunBullet(Bullet b) { if (Instance != null && b != null && Instance.who == CharacterId.Gunner) Instance.OnGunBullet(b); }
 
+    // 2026-10-19~ 빌드 갈래 코드가 예외를 내도 장전 훅의 나머지(탄피 지뢰 · 섬광 장전 …)는 그대로 돌게 (기록만)
+    static void PathSafe(System.Action a)
+    {
+        try { a(); }
+        catch (System.Exception e) { Debug.LogException(e); }
+    }
+
     void OnReloadStart()
     {
         if (who == CharacterId.Rogue) { RogueEmpty(); return; }
         if (who != CharacterId.Gunner) return;
-        GunnerPaths.Live?.ReloadStarted();      // 2026-10-19~ 빌드 갈래: 산탄 돌격 돌진 · 화염 과열 폭발 (Paths/Paths.Gunner.Effects.cs)
+        PathSafe(() => GunnerPaths.Live?.ReloadStarted());      // 2026-10-19~ 빌드 갈래: 산탄 돌격 돌진 · 화염 과열 폭발 (Paths/Paths.Gunner.Effects.cs)
         int m = L("g.mine");
         if (m <= 0) return;
         int n = m + 1;
@@ -76,7 +83,7 @@ public partial class SignatureSkills
     {
         using var source = DamageSource.As(DamageSource.Signature);
         if (who != CharacterId.Gunner) return;
-        GunnerPaths.Live?.ReloadEnded();        // 2026-10-19~ 빌드 갈래: 포탑 설치 · 과열이 풀림
+        PathSafe(() => GunnerPaths.Live?.ReloadEnded());        // 2026-10-19~ 빌드 갈래: 포탑 설치 · 과열이 풀림
         Vector3 p = transform.position;
         int f = L("g.flash");
         if (f > 0)
@@ -111,7 +118,7 @@ public partial class SignatureSkills
                 // 2.2.1: 자동으로 쏘는 총알에도 총알 카드 · 영혼 탄환 (덤 총알 · 유도 · 폭발탄은 빼고)
                 if (b != null) { if (Sp != null) Sp.ApplyGunCards(b, true, false); b.critRolled = true; }
             }
-            GunnerPaths.Live?.TurretVolley();       // 2026-10-19~ 포탑 설치 완성: 포탑도 가까운 적 여섯에게
+            PathSafe(() => GunnerPaths.Live?.TurretVolley());       // 2026-10-19~ 포탑 설치 완성: 포탑도 가까운 적 여섯에게
             Hostile.Play("gunshot", 0.5f, 1.3f);
         }
     }

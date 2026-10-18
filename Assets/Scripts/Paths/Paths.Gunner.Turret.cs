@@ -145,24 +145,29 @@ sealed class GunHitTap : IEqualityComparer<int>
 {
     readonly GunnerPaths owner;
     public readonly bool snipe, burn;
+    // 원래 hitOnce 가 null 이던 탄 (Bullet 이 「한 번만」 검사를 안 하던 탄): 같은 값도 서로 다르다고 답해 Add 가 늘 성공 → 재명중 동작 그대로
+    //   (집합은 맞힐 때마다 한 칸씩 늘지만 탄이 사라지면 hitOnce 를 null 로 놓음)
+    readonly bool passThrough;
     public HashSet<int> set;
     bool busy;
 
-    public GunHitTap(GunnerPaths owner, bool snipe, bool burn)
+    public GunHitTap(GunnerPaths owner, bool snipe, bool burn, bool passThrough = false)
     {
         this.owner = owner;
         this.snipe = snipe;
         this.burn = burn;
+        this.passThrough = passThrough;
     }
 
-    public bool Equals(int a, int b) => a == b;
+    public bool Equals(int a, int b) => !passThrough && a == b;
 
     public int GetHashCode(int v)
     {
         if (!busy && set != null && owner != null)
         {
             busy = true;
-            try { if (!set.Contains(v)) owner.Tapped(this, v); }
+            try { if (passThrough || !set.Contains(v)) owner.Tapped(this, v); }
+            catch (System.Exception e) { Debug.LogException(e); }
             finally { busy = false; }
         }
         return v;
