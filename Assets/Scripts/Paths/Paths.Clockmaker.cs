@@ -161,7 +161,13 @@ public sealed class ClockmakerPaths : HeroPaths
     // ================================================================= 상태 (판마다 새 인스턴스 · 모두 시각 값)
     // 대시계
     int noonCount;                  // 정각 수 (대정각 = 세 번째마다)
-    sealed class NoonTrack { public Bullet b; public int gen; public float pullUntil, until, dmg; public bool grand, done; public Vector3 last; }
+    // 정각 톱니 하나의 「터짐」 깃발: 톱니 명중(CharacterKit.Gear)과 따라가기(NoonTick) 중 먼저 터뜨린 쪽이 켬 → 한 번만 터짐
+    public sealed class NoonFlag { public bool exploded; }
+    sealed class NoonTrack
+    {
+        public Bullet b; public int gen; public float pullUntil, until, dmg; public bool grand, done; public Vector3 last; public NoonFlag flag;
+        public bool Over => done || (flag != null && flag.exploded);
+    }
     readonly List<NoonTrack> noons = new List<NoonTrack>();
     // 잔상
     struct EchoJob { public float at; public Vector3 start; public Vector2 dir; public float dmg; public bool big, twin; public int gen; }
@@ -191,16 +197,22 @@ public sealed class ClockmakerPaths : HeroPaths
     }
 
     // 정각 톱니 따라가기: 공명 I 끌어당김 · 대정각이 적에게 못 닿으면 보스에 닿거나 날아간 끝에서 터짐
-    public void TrackNoon(Bullet b, bool grand)
+    public void TrackNoon(Bullet b, bool grand, NoonFlag flag)
     {
         if (b == null) return;
         bool pull = On(Grand) && Paths.Res(Grand) >= 1;
         if (!pull && !grand) return;
-        noons.RemoveAll(t => t.done && Time.time >= t.pullUntil);
-        if (noons.Count >= 8) noons.RemoveAt(0);
+        noons.RemoveAll(t => t.Over && Time.time >= t.pullUntil);
+        if (noons.Count >= 8)
+        {
+            // 넘치면 다 터진 것 → 끌어당기기만 하는 것 → 가장 오래된 것 순으로 지움 (아직 안 터진 대정각은 되도록 남김)
+            int drop = noons.FindIndex(t => t.Over);
+            if (drop < 0) drop = noons.FindIndex(t => !t.grand);
+            noons.RemoveAt(drop < 0 ? 0 : drop);
+        }
         noons.Add(new NoonTrack
         {
-            b = b, gen = b.generation, last = b.transform.position, dmg = b.damage, grand = grand, done = !grand,
+            b = b, gen = b.generation, last = b.transform.position, dmg = b.damage, grand = grand, done = !grand, flag = flag,
             pullUntil = pull ? Time.time + PullTime : 0f,
             until = Time.time + Mathf.Max(0.1f, b.lifetime) + 0.05f,
         });
@@ -228,13 +240,14 @@ public sealed class ClockmakerPaths : HeroPaths
             bool alive = t.b != null && t.b.gameObject.activeInHierarchy && t.b.generation == t.gen;
             if (alive) t.last = t.b.transform.position;
             if (alive && Time.time < t.pullUntil) Pull(t.last);
-            if (!t.done && (!alive || Time.time >= t.until || BossNear(t.last, 1.6f)))
+            if (!t.Over && (!alive || Time.time >= t.until || BossNear(t.last, 1.6f)))
             {
                 t.done = true;
+                if (t.flag != null) t.flag.exploded = true;        // 탄이 다음 적에 닿아도 또 터지지 않게
                 GrandNoonBlast(t.last, t.dmg, null);
                 SignatureSkills.BigGear(t.last);
             }
-            if (t.done && (!alive || Time.time >= t.pullUntil)) noons.RemoveAt(i);
+            if (t.Over && (!alive || Time.time >= t.pullUntil)) noons.RemoveAt(i);
         }
     }
 
@@ -247,7 +260,10 @@ public sealed class ClockmakerPaths : HeroPaths
             if (c == null || !c.CompareTag("enermy") || Paths.IsBoss(c.gameObject)) continue;
             Vector3 at = c.transform.position;
             if ((at - p).sqrMagnitude < 0.5f) continue;
-            c.transform.position = Vector3.MoveTowards(at, p, step);
+            Vector3 next = Vector3.MoveTowards(at, p, step);
+            // 벽 · 맵 밖으로 끌려가지 않게 (끌려갈 자리가 벽이거나, 맵 안에 있던 적이 밖으로 나가면 그 적은 이번 프레임 그대로)
+            if (Hostile.IsWall(next) || (Hostile.InArena(at) && !Hostile.InArena(next))) continue;
+            c.transform.position = next;
         }
     }
 

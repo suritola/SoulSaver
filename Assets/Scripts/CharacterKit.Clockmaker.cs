@@ -54,7 +54,6 @@ public partial class CharacterKit
                 bool gn = big && first && grandNoon;
                 Bullet g = Gear(start, vv, gd * echoCost, bounces, big, 0, gn);
                 if (g != null && k > 0) ClockmakerPaths.MarkTwin(g);              // 덧붙은 톱니 (보스에게 −55%)
-                if (big && g != null && cm != null) cm.TrackNoon(g, gn);
                 if (echo) cm.QueueEcho(start, vv, gd * (big ? 3f * SignatureSkills.BigGearMul() : 1f), big, k > 0, 1);
             }
             if (big) first = false;
@@ -83,7 +82,9 @@ public partial class CharacterKit
         if (b == null) return null;
         if (big) b.hitOnce = new HashSet<int>();
         if (big && b.aimMul > 0f) b.aimMul = 2f;         // 빈틈: 「정각」 금빛 톱니 ×2.0 (튕긴 톱니는 명중 콜백 안이라 조준 범위 밖)
-        bool exploded = false;
+        // 「터짐」 깃발 하나를 탄과 갈래 따라가기(NoonTick)가 같이 씀 — 보스 곁에서 먼저 터진 대정각이 관통으로 다음 적에 닿아 또 터지지 않게
+        ClockmakerPaths.NoonFlag boom = big ? new ClockmakerPaths.NoonFlag() : null;
+        if (big && hop == 0) ClockmakerPaths.Live?.TrackNoon(b, grandNoon, boom);
         b.onHitEnemy += (s, c) =>
         {
             if (c == null) return;
@@ -93,9 +94,9 @@ public partial class CharacterKit
             SignatureSkills.GearHit(c, s.damage, big);
             // 갈래 톱니 떼 공명 II: 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라짐
             if (!big && hop >= ClockmakerPaths.SplitHop && ClockmakerPaths.SplitOn) ClockmakerPaths.Live?.Split(c.transform.position, s.Direction, s.damage, c.gameObject);
-            if (big && !exploded)
+            if (big && !boom.exploded)
             {
-                exploded = true;
+                boom.exploded = true;
                 Vector3 p = c.transform.position;
                 ClockmakerPaths cmx = grandNoon ? ClockmakerPaths.Live : null;
                 if (cmx != null) cmx.GrandNoonBlast(p, s.damage, s);       // 대정각 (화면 1/3)
@@ -133,6 +134,8 @@ public partial class CharacterKit
                 Bullet r = Gear(c.transform.position, to, s.damage * 0.85f * SignatureSkills.BounceMul(), bounces - 1, false, hop + 1);
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (r != null && e != null) r.hitOnce = new HashSet<int> { e.GetInstanceID() };
+                // 덧붙은 톱니에서 튕긴 톱니도 덧붙은 톱니 (보스 −55% 대가가 튕김으로 빠지지 않게 · 탄 풀 출처 상속에 기대지 않고 직접 표시)
+                if (r != null && DamageSource.Current == ClockmakerPaths.TwinSrc) ClockmakerPaths.MarkTwin(r);
                 // 교차 톱니 메아리: 튕긴 톱니도 잔상 (덧붙은 톱니에서 튕긴 것이면 잔상도 덧붙은 톱니)
                 if (r != null && ClockmakerPaths.GearEchoOn) ClockmakerPaths.Live?.QueueEcho(c.transform.position, to, r.damage, false, DamageSource.Current == ClockmakerPaths.TwinSrc, 1);
             };

@@ -65,7 +65,7 @@ public sealed class CartographerPaths : HeroPaths
             color = new Color(1f, 0.85f, 0.45f) },
         new PathDef {
             key = "c.march", name = "행군 측량", tagline = "걸어간 길이 선 · 기동 생존",
-            seed = "행군 측량", seedDesc = "걸어간 길이 잉크 선이 되어 닿는 적을 0.3초마다 벱니다. (공격력 25%) 지나온 길이 고리로 닫히면 안쪽을 도형처럼 짓이깁니다. (공격력 200%)",
+            seed = "행군 측량", seedDesc = "걸어간 길이 잉크 선이 되어 닿는 적을 0.3초마다 벱니다. (공격력 25%) 지나온 길이 고리로 닫히면 안쪽을 도형처럼 짓이깁니다. (공격력 200% · 2초에 한 번)",
             cost = "평타 획 피해가 30% 줄어듭니다.", strong = "기동 · 생존 · 무리", weak = "보스 (계속 걸어야 함)",
             cards = new[] { B, S(5), S(6), S(7) }, evo = "ke.express",
             res1 = "닫힌 고리 안의 적 투사체를 지웁니다.",
@@ -92,7 +92,9 @@ public sealed class CartographerPaths : HeroPaths
     const float FoldGaugeBonus = 0.6f, FoldShapeGauge = 0.05f, CreaseLife = 3f, CreaseTick = 0.5f, CreaseRatio = 0.2f, FoldPairWindow = 8f;
     const float StarLife = 4f, StarTick = 0.6f, StarRatio = 0.4f, StarReach = 9f;
     const float TrailLife = 3f, TrailStep = 0.5f, TrailTick = 0.3f, TrailRatio = 0.25f, TrailHalf = 0.45f, LoopRatio = 2f;
-    const int TrailMax = 48, LoopMinPoints = 8;
+    // 고리: 최소 12점(둘레 약 6칸) · 넓이 6 이상(반지름 약 1.4칸 원) · 2초에 한 번 — 작은 원을 빙빙 돌아 도형 효과(고유 스킬 · 게이지 · 공명 II)를 연사하지 않게
+    const int TrailMax = 48, LoopMinPoints = 12;
+    const float LoopMinArea = 6f, LoopCooldown = 2f;
     const float MarchBuff = 1.5f, MarchMove = 1.3f, MarchTaken = 0.7f, InkWalkStep = 1.5f;
 
     static readonly Color InkPool = new Color(0.18f, 0.24f, 0.75f, 0.5f);
@@ -142,6 +144,7 @@ public sealed class CartographerPaths : HeroPaths
     bool sampled;
     float trailHitAt, inkWalk;
     float marchUntil = -99f;                                          // 고리를 닫은 뒤 빨라짐 · 단단해짐이 끝나는 시각
+    float loopReadyAt;                                                // 다음 고리를 닫을 수 있는 시각 (재사용 대기)
 
     static bool Alive => Hostile.Player != null && !Hostile.Player.IsDying;
 
@@ -379,7 +382,16 @@ public sealed class CartographerPaths : HeroPaths
         foreach (GameObject g in puddles)
         {
             if (g == null || !g.TryGetComponent(out SigZone z)) continue;
-            foreach (Collider2D c in s.Inside(z)) if (c != null) wet.Add(c.gameObject);
+            // SignatureSkills.Inside 와 같은 판정이지만 웅덩이마다 새 목록을 만들지 않음 (빌린 목록 PhysHits)
+            Vector3 c0 = z.segment ? (z.a + z.b) * 0.5f : z.transform.position;
+            float r = z.segment ? Vector3.Distance(z.a, z.b) * 0.5f + z.radius : z.radius;
+            using (PhysHits hits = PhysHits.Circle(c0, r, true))
+                foreach (Collider2D c in hits)
+                {
+                    if (c == null || !Paths.IsFoe(c)) continue;
+                    if (z.segment && Hostile.DistanceToSegment(c.transform.position, z.a, z.b) > z.radius) continue;
+                    wet.Add(c.gameObject);
+                }
         }
         if (wet.Count == 0) return;
         float dmg = Paths.Atk * PuddlePerSec * PuddleTick * Paths.Power(Ink);
@@ -457,17 +469,18 @@ public sealed class CartographerPaths : HeroPaths
         trailHit.Clear();
     }
 
-    // 새 점이 예전 점(8점 이상 앞) 가까이에 오면 고리가 닫힘 → 안쪽을 짓이기고 선을 새로 시작
+    // 새 점이 예전 점(12점 이상 앞) 가까이에 오면 고리가 닫힘 → 안쪽을 짓이기고 선을 새로 시작
     void TryLoop()
     {
         int n = trail.Count - 1;
-        if (n < LoopMinPoints) return;
+        if (n < LoopMinPoints || Time.time < loopReadyAt) return;
         Vector3 last = trail[n];
         for (int i = 0; i <= n - LoopMinPoints; i++)
         {
             if (((Vector2)(trail[i] - last)).sqrMagnitude > 1.1f * 1.1f) continue;
             List<Vector3> poly = trail.GetRange(i, n - i + 1);
-            if (Mathf.Abs(Area(poly)) < 2.5f) continue;     // 왔다 갔다 한 줄은 고리가 아님
+            if (Mathf.Abs(Area(poly)) < LoopMinArea) continue;     // 왔다 갔다 한 줄 · 아주 작은 원은 고리가 아님
+            loopReadyAt = Time.time + LoopCooldown;
             CloseLoop(poly);
             trail.RemoveRange(0, n);
             trailAt.RemoveRange(0, n);
@@ -523,6 +536,7 @@ public sealed class CartographerPaths : HeroPaths
         {
             trailLine = Hostile.NewLine("MarchTrail", TrailInk, 0.32f, AttackLook.AreaOrder - 2);
             trailLine.loop = false;
+            trailLine.gameObject.AddComponent<MarchTrailGuard>();      // 쓰러지는 중엔 Tick 이 안 불리므로 선이 스스로 숨음
         }
         int n = trail.Count;
         trailLine.enabled = n >= 1 && !PlayerController.Cinematic;
@@ -535,5 +549,21 @@ public sealed class CartographerPaths : HeroPaths
         trailLine.endColor = buff ? Gold : TrailInk;
         trailLine.startWidth = 0.18f;
         trailLine.endWidth = buff ? 0.42f : 0.34f;
+    }
+}
+
+// 행군 잉크 선 지킴이: 갈래 Tick(SignatureSkills.SignatureTick)은 쓰러지는 중 · 멈춤 동안 안 불려 선이 화면에 그대로 남던 것 —
+//   선 오브젝트 스스로 쓰러지는 중이면 숨음 (되살아나면 DrawTrail 이 다시 켬 · 새 오브젝트를 만들지 않음)
+public sealed class MarchTrailGuard : MonoBehaviour
+{
+    LineRenderer line;
+
+    void Awake() => line = GetComponent<LineRenderer>();
+
+    void LateUpdate()
+    {
+        if (line == null || !line.enabled) return;
+        PlayerController p = Hostile.Player;
+        if (p == null || p.IsDying) line.enabled = false;
     }
 }
