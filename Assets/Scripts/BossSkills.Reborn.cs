@@ -268,9 +268,13 @@ public partial class BossSkills
 
     // 망자의 의식 (절반 아래 한 번): 무적 + 영혼 등불 셋, 등불과 이어진 동안 나선 탄막
     // 22초 안에 등불을 다 부수면 무적이 풀리고 4초 휘청 (받는 피해 1.5배), 못 부수면 남은 등불이 터지고 무적만 풀림
+    // 1.2.7~ 의식이 도는 중 (공간 침식 · 결계가 스킬을 끊으면 CancelForErosion 이 무적을 풀고 의식을 다시 할 수 있게 함)
+    bool ritualRunning;
+
     IEnumerator LichRitual()
     {
         Banner("리치 왕이 망자의 의식을 시작한다! 영혼 등불을 부숴라!");
+        ritualRunning = true;
         boss.invulnerable = true;
         Vector3 home = transform.position;
         LineRenderer runeIn = Own(Hostile.NewLine("RuneRing", Curse, 0.14f, 2));
@@ -323,6 +327,7 @@ public partial class BossSkills
         transform.position = home;
         sr.color = Color.white;
         boss.invulnerable = false;
+        ritualRunning = false;
         if (!Alive) yield break;
 
         if (lanterns.Count == 0)

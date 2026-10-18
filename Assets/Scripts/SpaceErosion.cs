@@ -108,7 +108,8 @@ public class SpaceErosion : MonoBehaviour
             down[i] = false;
             members[i].domainHold = true;           // 제자리에 섬 (casting 과 따로 · 개발자 DevRun 이 casting 을 꺼도 걷지 않게)
             // 대기 3초가 지나도 돌던 스킬: 끊음 (침식 피해 배율 · 상한 밖에서 계속 때리거나 돌진으로 자리를 옮기지 않게)
-            if (!members[i].developer && members[i].casting && members[i].TryGetComponent(out BossSkills sk)) sk.CancelForErosion();
+            // 1.2.7~ 무적(의식) · 공중(점프)인 채로 남은 보스도 끊음 (CancelForErosion 이 무적 · 공중 · 받는 피해 배율을 되돌림)
+            if (!members[i].developer && members[i].TryGetComponent(out BossSkills sk) && (members[i].casting || members[i].invulnerable || sk.airborne)) sk.CancelForErosion();
         }
         started = true;
         BossUltimate.BeginErosion();
@@ -201,10 +202,13 @@ public class SpaceErosion : MonoBehaviour
         {
             bosss b = list[i];
             if (b == null || b.IsDead) continue;
-            if (Time.time - b.spawnedAt < 4f || b.invulnerable) return false;
+            if (Time.time - b.spawnedAt < 4f) return false;
+            // 1.2.7~ 무적(망자의 의식 · 최대 22초) · 공중도 대기 3초가 지나면 기다리지 않음 — 시작할 때 돌던 스킬과 함께 끊음 (Run)
+            //   예전엔 끝까지 기다려서, 의식이 끊겨 무적이 남은 리치가 있으면 게이지가 가득 차도 침식이 영원히 발동하지 않았음
+            if (overdue) continue;
+            if (b.invulnerable) return false;
             BossSkills sk = b.GetComponent<BossSkills>();
             if (sk != null && sk.airborne) return false;
-            if (overdue) continue;
             if (b.developer) { if (sk != null && sk.DevRunning > 0) return false; }
             else if (b.casting) return false;
         }

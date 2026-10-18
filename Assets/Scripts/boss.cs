@@ -161,9 +161,16 @@ public class bosss : MonoBehaviour
         EnemyHealth = restoreHp > 0f ? Mathf.Min(restoreHp, setEnemyHP) : setEnemyHP;
         if (!spawnTimed) { spawnTimed = true; spawnedAt = Time.time; }
         BarFeel.Reset(EnemyHealth);
+        // 1.2.7~ 아래 준비 중 하나라도 예외가 나면 ready 가 켜지지 않아 보스가 영원히 맞지 않았음 → 체력이 정해진 뒤에는 무조건 켬
+        try { StartSetup(); }
+        finally { ready = true; }
+    }
 
-        // 플레이어 찾기
-        player = FindFirstObjectByType<PlayerController>().transform;
+    void StartSetup()
+    {
+        // 플레이어 찾기 (못 찾으면 Update 가 다시 찾음 — 예전엔 여기서 예외가 나 보스가 무적이 될 수 있었음)
+        PlayerController pc = FindFirstObjectByType<PlayerController>();
+        player = pc != null ? pc.transform : null;
 
         // 컴포넌트 가져오기
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -184,7 +191,6 @@ public class bosss : MonoBehaviour
             slimeBossCleared = false;
             slimes.Add(this);
         }
-        ready = true;
     }
     bossbar bossbar;
     void Update()
@@ -203,7 +209,12 @@ public class bosss : MonoBehaviour
             Primary = this;
         }
 
-        if (player == null) return;
+        if (player == null)
+        {
+            PlayerController pc = Hostile.Player;
+            if (pc == null) return;
+            player = pc.transform;
+        }
 
         // 주기적으로 부하 소환 (필살기 결계 중에는 쉼)
         if (!BossUltimate.Active) summonTimer += Time.deltaTime;

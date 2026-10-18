@@ -51,6 +51,8 @@ public partial class BossSkills : MonoBehaviour
 
     void Update()
     {
+        // 1.2.7~ 안전장치: 무적 · 공중 · 휘청 배율은 스킬이 도는 동안에만 (스킬이 어떤 길로 끊겨도 남지 않게 · 개발자는 이 상태를 쓰지 않음)
+        if (!busy && boss != null && !boss.developer && (boss.invulnerable || airborne || boss.damageTakenMul != 1f)) ClearSkillState();
         if (Alive && kind != AbyssStage.MirrorKind) RebornTick();
         if (busy || !Alive || BossUltimate.Active || BossUltimate.DevHold || BossUltimate.ErosionPending) return;      // 필살기 결계 동안은 결계 공격만 · 개발자 · 엄마 결계 대기 중엔 새 필살기 없음
         PlayerController p = Hostile.Player;
@@ -95,17 +97,29 @@ public partial class BossSkills : MonoBehaviour
     // 스킬이 남기는 상태(시전 중 · 공중 · 몸 색 · 기울기 · 받는 피해 배율)를 되돌리고 스킬이 만든 오브젝트를 지움
     public void CancelForErosion()
     {
-        if (!busy || boss == null || boss.developer) return;
+        if (boss == null || boss.developer) return;
+        // 1.2.7~ 스킬이 남기는 상태는 스킬이 돌지 않아도 늘 되돌림 (예전엔 busy 일 때만이라, 상태만 남은 보스는 그대로였음)
+        ClearSkillState();
+        if (!busy) return;
         StopAllCoroutines();
         busy = false;
-        airborne = false;
         boss.casting = false;
-        boss.damageTakenMul = 1f;
         transform.rotation = Quaternion.identity;
         if (sr != null && Alive) sr.color = Color.white;
         foreach (GameObject g in owned) if (g != null) Destroy(g);
         owned.Clear();
         next = Mathf.Max(next, Time.time + 1.2f);
+    }
+
+    // 1.2.7~ 끊긴 스킬이 남긴 상태 되돌리기
+    //   리치 「망자의 의식」 도중에 끊기면 무적이 풀리지 않아 보스가 영원히 무적 · 공간 침식이 영원히 대기 · 15분 최후의 시간도 열리지 않았음
+    //   → 무적을 풀고 의식은 나중에 다시 · 대점프 공중에서 끊기면 14칸 위에 떠 있지 않게 떨어질 곳에 내려놓음 · 받는 피해 배율(휘청 1.5배)도 1로
+    void ClearSkillState()
+    {
+        boss.invulnerable = false;
+        if (ritualRunning) { ritualRunning = false; specialDone = false; }
+        if (airborne) { transform.position = landing; airborne = false; }
+        boss.damageTakenMul = 1f;
     }
 
     // 1.2.6~ 한국어면 이름 받침에 맞춰 「을」 · 「를」 (예전엔 「을(를)」이 그대로 보였음) · 다른 언어는 번역 그대로
