@@ -123,7 +123,8 @@ public static class RunSave
     }
 
     // 저장해도 되는 판인지
-    static bool Savable => !Disabled && !DailyChallenge.Active && !Demo.On
+    // 1.2.7~ 무한 모드 판이 끝난 뒤(게임을 끄며 순위표에 올림 · EndlessQuit)는 끌 때 저장(OnApplicationQuit)이 이어하기를 다시 만들지 않게
+    static bool Savable => !Disabled && !DailyChallenge.Active && !Demo.On && !EndlessMode.Ended
                            && !GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode
                            && SceneManager.GetActiveScene().name == "GameScene";
 

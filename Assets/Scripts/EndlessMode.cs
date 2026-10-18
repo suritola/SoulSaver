@@ -598,10 +598,20 @@ public class EndlessMode : MonoBehaviour
     void OnDestroy()
     {
         if (Instance != this) return;
-        // 이번 판 기록 (죽어서 게임 오버로 넘어갈 때)
+        if (!finished) Finish();        // 죽어서 게임 오버 · 포기하고 결과 보기로 넘어갈 때
+        Instance = null;
+    }
+
+    // 1.2.7~ 판을 끝냄: 이번 판 기록 · 최고 기록 · 순위표 제출 (한 판에 한 번 — 게임을 끄는 길(EndlessQuit)이 씬이 사라지기 전에 먼저 부름)
+    bool finished;
+    public static bool Ended => Instance != null && Instance.finished;
+    public static void EndRunNow() { if (Instance != null && !Instance.finished) Instance.Finish(); }
+
+    void Finish()
+    {
+        finished = true;
         LastSeconds = GameMode.EndlessSeconds;
         LastBosses = BossesDefeated;
-        Instance = null;
         // 일일 도전은 그날 기록 · 순위표에만 (규칙이 달라 무한 모드 최고 기록과 섞지 않음)
         if (!daily && LastSeconds > BestSeconds && !GameInput.Auto)
         {

@@ -149,6 +149,12 @@ public class ESCmenu : MonoBehaviour
     // 1.0.4~: 「게임 종료」 — 저장되는 판이면 저장하고 끔
     public void onPressQuit()
     {
+        // 1.2.7~ 무한 모드 · 일일 도전: 이어하기로 남기지 않고 판을 끝내 순위표에 올린 뒤 끔 (EndlessQuit)
+        if (GiveUpMode)
+        {
+            Confirm("ConfirmQuit", "정말로 게임을 종료하시겠습니까?", "지금 판을 끝내고 게임을 종료합니다. 지금까지의 생존 시간 · 보스 처치 수가 순위표에 올라갑니다.", "게임 종료", QuitGame, null, false);
+            return;
+        }
         Confirm("ConfirmQuit", "정말로 게임을 종료하시겠습니까?", SaveNote(), "게임 종료", QuitGame, LastSaveLine(), false);     // Enter 한 번에 게임이 꺼지지 않게 기본 버튼 없음
     }
 
@@ -232,6 +238,7 @@ public class ESCmenu : MonoBehaviour
     void QuitGame()
     {
         CloseConfirm();
+        if (GiveUpMode) { EndlessQuit.Quit(); return; }        // 1.2.7~ 판을 끝내 순위표에 올리고 다 올라가면 끔
         RunSave.Save();             // OnApplicationQuit 에서도 저장하지만, 에디터 · 끄기 실패에 대비해 먼저
         Application.Quit();
     }

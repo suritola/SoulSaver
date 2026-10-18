@@ -18,6 +18,7 @@ public partial class BossUltimate : MonoBehaviour
     // 게이지 칸 (0 ~ 1): 0 ~ 3 보스 종류 · 4 개발자 · 5 개발자 엄마
     // (개발자 · 엄마는 bossKind 가 거울의 군주와 같은 3이라, 종류 번호 그대로 쓰면 거울의 군주 칸 · 「거울의 군주를 결계 전에」 업적이 오염됨)
     public const int Slots = 6, DevSlot = 4, MomSlot = 5;
+    const float DevGaugeMul = 2.5f, MomGaugeMul = 4f;      // 1.2.7~ 개발자 · 엄마 결계 게이지 차는 속도 (OnBossHit)
     static readonly float[] gauge = new float[Slots];
     static readonly float[] refHp = new float[Slots];
     // 마지막으로 맞은 때 (3초 동안 안 맞으면 게이지가 아주 서서히 줄어듦) · 이번 보스전에 결계를 펼쳤는지
@@ -91,6 +92,9 @@ public partial class BossUltimate : MonoBehaviour
         float f = damage / Mathf.Max(1f, refHp[k] > 0f ? refHp[k] : b.setEnemyHP);
         // 약한 공격도 피해 비율의 3.5배는 채움 (1.2제곱만이면 평타가 거의 안 차서 · 보스 체력 3% 이상의 센 한 방은 그대로)
         float gain = Mathf.Max(7f * Mathf.Pow(f, 1.2f), 3.5f * f) * SoulWeight.BarrierGaugeMul;     // 1.2~ 영혼의 무게 3: 더 빨리 참
+        // 1.2.7~ 개발자 · 엄마는 체력이 10만 · 20만이라 비율로만 차면 결계가 너무 드묾 → 개발자 2.5배 · 엄마 4배 빨리
+        // (약한 공격 기준 한 번 차는 데 드는 피해: 보통 보스 체력 28.6% → 개발자 11.4% · 엄마 7.1%)
+        if (k == DevSlot) gain *= DevGaugeMul; else if (k == MomSlot) gain *= MomGaugeMul;
         if (shared) { SharedHit(b, k, Mathf.Min(0.5f, gain)); return; }      // 1.2.5~ 보스가 둘 이상이면 통합 게이지 (BossUltimate.Erosion.cs)
         gauge[k] = Mathf.Min(1f, gauge[k] + Mathf.Min(0.5f, gain));
         lastHit[k] = Time.time;
