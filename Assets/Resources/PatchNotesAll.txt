@@ -1,3 +1,118 @@
+@@@ v1.3.7
+# V1.3.7 업데이트 — 영웅 밸런스 대조정
+어떤 영웅으로도 무한 모드를 비슷한 시간에 클리어할 수 있도록 영웅들을 크게 조정했습니다.
+
+숙련된 플레이어 기준으로 무한 모드 클리어(개발자 엄마 처치)가 약 30분 안팎이 되도록 모든 영웅을 다시 맞췄습니다. 유령 · 지도 제작자에 비해 크게 뒤처지던 영웅들의 화력을 대폭 올렸습니다.
+
+## 📈 성장 곡선
+- 영웅이 주는 모든 피해가 판이 진행될수록 강해집니다: 시작 ×0.85 → 후반 ×1.15 (무한 모드 30분 · 이야기 모드 14분 기준, 한 판 평균은 그대로)
+- 초반은 조금 더 긴장감 있게, 후반은 성장한 만큼 더 강력하게 느껴집니다.
+
+## 🦸 영웅 밸런스
+
+고유 스킬과 지옥의 문 특수 능력에도 이제 영웅마다 위력 배율이 붙습니다. 체력과 생존력은 그대로입니다.
+- 거너: 공격력 ×1.7 → ×2.7 · 공격 속도 ×1.0 → ×1.25 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×2.0
+- 검사: 공격력 ×2.8 → ×4.75 · 공격 속도 ×0.55 → ×0.62 · 필살기 충전 더 빠르게 · 고유 스킬 위력 ×0.98 → ×1.85 · 특수 능력 위력 ×1.9
+- 도적: 공격력 ×1.6 → ×2.9 · 공격 속도 ×1.4 → ×1.5 · 고유 스킬 위력 ×0.85 → ×1.6 · 특수 능력 위력 ×1.9
+- 궁수: 공격력 ×1.8 → ×2.75 · 공격 속도 ×1.0 → ×1.18 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×1.8
+- 연금술사: 공격력 ×1.2 → ×1.9 · 공격 속도 ×0.8 → ×0.96 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×1.9
+- 시계공: 공격력 ×1.5 → ×2.65 · 공격 속도 ×0.85 → ×0.92 · 고유 스킬 · 특수 능력 위력 ×1.9
+- 우체부: 공격력 ×1.2 → ×1.95 · 공격 속도 ×1.0 → ×1.22 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×2.0
+- 유령: 공격력 ×1.0 → ×0.9 · 원한: 얼어붙은 적 5중첩 → 3중첩 · 동상 +15/22/29/36% → +10/15/20/25%
+- 지도 제작자: 공격력 ×1.15 → ×1.0 · 번지는 잉크 실제 피해를 설명대로 (초당 30/50/70% → 15/25/35%) · 닫힌 도형 피해 ×2.6 → ×2.2
+
+## ✨ 개선
+- 초월 「영혼불 발자국」이 푸른 영혼불로 새로 그려졌습니다.
+- 영웅 선택 화면의 공격력 막대가 거너를 기준(100%)으로 표시되어 영웅끼리 비교하기 쉬워졌습니다.
+
+플레이해 주시는 모든 분께 감사드립니다. 영웅별 클리어 시간 등 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
+
+=== en
+# V1.3.7 Update — Major Hero Rebalance
+Heroes have been heavily rebalanced so any of them can clear Endless Mode in a similar amount of time.
+
+All heroes have been retuned so that, for an experienced player, clearing Endless Mode (defeating the Developer's Mom) takes about 30 minutes. Heroes that fell far behind the Ghost and the Cartographer now deal far more damage.
+
+## 📈 Growth Curve
+- All damage dealt by heroes now grows as the run goes on: ×0.85 at the start → ×1.15 late (based on 30 minutes in Endless Mode and 14 minutes in Story Mode; the average over a run is unchanged)
+- The early game is a bit tenser, and the late game feels as powerful as you've grown.
+
+## 🦸 Hero Balance
+
+Signature skills and Gate of Hell special abilities now also get a per-hero power multiplier. Health and survivability are unchanged.
+- Gunner: attack ×1.7 → ×2.7 · attack speed ×1.0 → ×1.25 · faster Ultimate charge · signature skill & special ability power ×2.0
+- Swordsman: attack ×2.8 → ×4.75 · attack speed ×0.55 → ×0.62 · faster Ultimate charge · signature skill power ×0.98 → ×1.85 · special ability power ×1.9
+- Rogue: attack ×1.6 → ×2.9 · attack speed ×1.4 → ×1.5 · signature skill power ×0.85 → ×1.6 · special ability power ×1.9
+- Archer: attack ×1.8 → ×2.75 · attack speed ×1.0 → ×1.18 · faster Ultimate charge · signature skill & special ability power ×1.8
+- Alchemist: attack ×1.2 → ×1.9 · attack speed ×0.8 → ×0.96 · faster Ultimate charge · signature skill & special ability power ×1.9
+- Clockmaker: attack ×1.5 → ×2.65 · attack speed ×0.85 → ×0.92 · signature skill & special ability power ×1.9
+- Postman: attack ×1.2 → ×1.95 · attack speed ×1.0 → ×1.22 · faster Ultimate charge · signature skill & special ability power ×2.0
+- Ghost: attack ×1.0 → ×0.9 · Grudge: frozen enemies count as 5 stacks → 3 · Frostbite +15/22/29/36% → +10/15/20/25%
+- Cartographer: attack ×1.15 → ×1.0 · Spreading Ink now deals the damage its description says (30/50/70% → 15/25/35% per second) · closed shape damage ×2.6 → ×2.2
+
+## ✨ Improvements
+- Transcend "Soulfire Steps" has been redrawn as blue soulfire.
+- The attack bar on the hero select screen now uses the Gunner as the baseline (100%), making heroes easier to compare.
+
+Thank you to everyone who plays. Share your feedback, such as clear times per hero, on the Community Discussions board anytime!
+
+=== ja
+# V1.3.7 アップデート — 英雄バランス大調整
+どの英雄でもエンドレスモードを同じくらいの時間でクリアできるよう、英雄を大きく調整しました。
+
+熟練プレイヤー基準で、エンドレスモードのクリア（開発者のママ撃破）が約30分前後になるよう、すべての英雄を調整し直しました。幽霊・地図職人に大きく遅れていた英雄たちの火力を大幅に上げました。
+
+## 📈 成長曲線
+- 英雄が与えるすべてのダメージが、プレイが進むほど強くなります: 開始時 ×0.85 → 後半 ×1.15（エンドレス30分・ストーリー14分基準、1プレイの平均はそのまま）
+- 序盤は少し緊張感が増し、後半は成長した分だけ強く感じられます。
+
+## 🦸 英雄のバランス
+
+固有スキルと地獄の門の特殊能力にも、英雄ごとの威力倍率がかかるようになりました。体力と生存力はそのままです。
+- ガンナー: 攻撃力 ×1.7 → ×2.7・攻撃速度 ×1.0 → ×1.25・必殺技チャージが速く・固有スキル・特殊能力の威力 ×2.0
+- 剣士: 攻撃力 ×2.8 → ×4.75・攻撃速度 ×0.55 → ×0.62・必殺技チャージが速く・固有スキルの威力 ×0.98 → ×1.85・特殊能力の威力 ×1.9
+- 盗賊: 攻撃力 ×1.6 → ×2.9・攻撃速度 ×1.4 → ×1.5・固有スキルの威力 ×0.85 → ×1.6・特殊能力の威力 ×1.9
+- 弓使い: 攻撃力 ×1.8 → ×2.75・攻撃速度 ×1.0 → ×1.18・必殺技チャージが速く・固有スキル・特殊能力の威力 ×1.8
+- 錬金術師: 攻撃力 ×1.2 → ×1.9・攻撃速度 ×0.8 → ×0.96・必殺技チャージが速く・固有スキル・特殊能力の威力 ×1.9
+- 時計職人: 攻撃力 ×1.5 → ×2.65・攻撃速度 ×0.85 → ×0.92・固有スキル・特殊能力の威力 ×1.9
+- 郵便配達人: 攻撃力 ×1.2 → ×1.95・攻撃速度 ×1.0 → ×1.22・必殺技チャージが速く・固有スキル・特殊能力の威力 ×2.0
+- 幽霊: 攻撃力 ×1.0 → ×0.9・怨み: 凍った敵 5重扱い → 3重・凍傷 +15/22/29/36% → +10/15/20/25%
+- 地図職人: 攻撃力 ×1.15 → ×1.0・にじむインクの実際のダメージを説明どおりに（毎秒30/50/70% → 15/25/35%）・閉じた図形のダメージ ×2.6 → ×2.2
+
+## ✨ 改善
+- 超越「魂火の足跡」が青い魂の炎で新しく描き直されました。
+- 英雄選択画面の攻撃力バーがガンナー基準（100%）で表示され、英雄同士を比べやすくなりました。
+
+遊んでくださる皆さま、ありがとうございます。英雄ごとのクリア時間などのご意見は、いつでもコミュニティのディスカッションにお寄せください！
+
+=== zh
+# V1.3.7 更新 — 英雄平衡大调整
+大幅调整了英雄，让任何英雄都能以相近的时间通关无尽模式。
+
+以熟练玩家为基准，重新调整了所有英雄，使无尽模式通关（击败开发者的妈妈）约为30分钟左右。大幅提升了远远落后于幽灵与制图师的英雄们的火力。
+
+## 📈 成长曲线
+- 英雄造成的所有伤害会随着游戏进行而增强：开局 ×0.85 → 后期 ×1.15（以无尽模式30分钟、故事模式14分钟为基准，一局的平均值不变）
+- 前期更有紧张感，后期则能感受到成长带来的强大。
+
+## 🦸 英雄平衡
+
+固有技能与地狱之门特殊能力现在也会套用各英雄的威力倍率。生命与生存能力保持不变。
+- 枪手：攻击力 ×1.7 → ×2.7 · 攻击速度 ×1.0 → ×1.25 · 必杀技充能更快 · 固有技能与特殊能力威力 ×2.0
+- 剑士：攻击力 ×2.8 → ×4.75 · 攻击速度 ×0.55 → ×0.62 · 必杀技充能更快 · 固有技能威力 ×0.98 → ×1.85 · 特殊能力威力 ×1.9
+- 盗贼：攻击力 ×1.6 → ×2.9 · 攻击速度 ×1.4 → ×1.5 · 固有技能威力 ×0.85 → ×1.6 · 特殊能力威力 ×1.9
+- 弓箭手：攻击力 ×1.8 → ×2.75 · 攻击速度 ×1.0 → ×1.18 · 必杀技充能更快 · 固有技能与特殊能力威力 ×1.8
+- 炼金术士：攻击力 ×1.2 → ×1.9 · 攻击速度 ×0.8 → ×0.96 · 必杀技充能更快 · 固有技能与特殊能力威力 ×1.9
+- 钟表匠：攻击力 ×1.5 → ×2.65 · 攻击速度 ×0.85 → ×0.92 · 固有技能与特殊能力威力 ×1.9
+- 邮差：攻击力 ×1.2 → ×1.95 · 攻击速度 ×1.0 → ×1.22 · 必杀技充能更快 · 固有技能与特殊能力威力 ×2.0
+- 幽灵：攻击力 ×1.0 → ×0.9 · 怨恨：冻结视为5层 → 3层 · 冻伤 +15/22/29/36% → +10/15/20/25%
+- 制图师：攻击力 ×1.15 → ×1.0 · 晕染墨迹的实际伤害与说明一致（每秒30/50/70% → 15/25/35%）· 闭合图形伤害 ×2.6 → ×2.2
+
+## ✨ 改进
+- 超越「魂火足迹」重新绘制为蓝色魂火。
+- 英雄选择画面的攻击力条改为以枪手为基准（100%）显示，更方便比较英雄。
+
+感谢每一位游玩的玩家。欢迎随时在社区讨论区留下各英雄的通关时间等意见！
 @@@ v1.3.6
 # V1.3.6 업데이트 — 개발자와 엄마의 새 공격
 개발자와 엄마가 자기만의 공격을 쓰기 시작합니다. 새 로딩 화면과 여러 버그 수정도 함께 담았습니다.
