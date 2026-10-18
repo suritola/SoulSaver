@@ -186,7 +186,12 @@ public static class GameMode
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     // 1.3.3~ 사용자 「모든 캐릭터들의 모든 데미지를 20% 정도 상향」: 0.8 → 0.96 (×1.2)
     public const float PlayerDamageMul = 0.96f;
-    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt);
+    public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt) * BeyondDamageMul;
+    // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
+    //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)
+    public const float BeyondDamageGrowthPerMin = 1.12f;
+    static float BeyondDamageMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
+        ? Mathf.Pow(BeyondDamageGrowthPerMin, Mathf.Min(600f, EndlessMode.Instance.BeyondMinutes)) : 1f;
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
     public static float WindupMul => Windup[I];
     public static float ProjectileSpeedMul => ProjectileSpeed[I];

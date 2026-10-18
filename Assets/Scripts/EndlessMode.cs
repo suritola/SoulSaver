@@ -85,6 +85,9 @@ public class EndlessMode : MonoBehaviour
     public bool NoMobs => devSummoned && finalStage != 4;
     // 1.1.4~ 클리어 뒤 「한계 돌파」: 잡몹 · 습격 · 중간 보스 · 보스가 다시 나오고 시간이 갈수록 계속 강해짐 (기록은 죽을 때까지 늘어남)
     public bool Beyond => finalStage == 4;
+    // 1.3.4~ 한계 돌파가 시작된 뒤 흐른 분 (이어하기로 되살린 판은 이어한 때부터 다시 셈 · 저장 형식은 그대로)
+    float beyondAt;
+    public float BeyondMinutes => Beyond ? Mathf.Max(0f, Time.time - beyondAt) / 60f : 0f;
     // 1.1.2~ 개발자 · 엄마가 살아 있거나 내려오는 중이면 보스 말고는 어떤 적도 나오지 않음 (잡몹 포함 · 개발자를 잡은 뒤 엄마가 오기 전에만 잡몹 · 1.2.5~ 3배 부스트 없이 상한 AfterDevMaxAlive)
     public bool FinalBossAlive => finalStage < 3 && ((developer != null && !developer.IsDead) || (mom != null && !mom.IsDead) || FinalBossIncoming);
     // 1.2.3~ 규칙 E: 개발자 · 엄마가 실제로 서서 싸우는 중 (등장 연출 FinalBossIncoming 은 빼고 — 그 사이 ClearMobs 가 흩는 중) → 약한 잡몹만 조금씩
@@ -394,6 +397,7 @@ public class EndlessMode : MonoBehaviour
         yield return new WaitForSecondsRealtime(5f);
         // 1.1.4~ 한계 돌파: 최종 보스 곡을 끄고(평소 · 보스 곡으로) 적 · 보스를 다시, 초월 카드도 다시 열림 (Cleared 는 finalStage 3 동안만)
         finalStage = 4;
+        beyondAt = Time.time;          // 1.3.4~ 이때부터 몹 공격력이 끝없이 오름 (GameMode.BeyondDamageMul)
         if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnBeyond();          // 1.2.3~ 처치마다 다시 영토가 번짐
         finalMusic = 0;
         spawner.spawningEnabled = true;
@@ -545,6 +549,7 @@ public class EndlessMode : MonoBehaviour
         bossTurn = Mathf.Max(0, d.endlessTurn);
         trophies = d.endlessTrophies;
         finalStage = d.endlessFinal == 3 ? 4 : Mathf.Clamp(d.endlessFinal, 0, 4);
+        beyondAt = Time.time;          // 1.3.4~ 한계 돌파 판을 이어하면 몹 공격력 오름은 이어한 때부터 다시
         devDown = d.endlessDevDown; momDown = d.endlessMomDown;
         momKillBase = devDown ? d.endlessMomKillBase : -1;
         nextBoss = d.endlessNextBoss >= 0f ? Time.time + d.endlessNextBoss : float.MaxValue;
