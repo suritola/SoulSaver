@@ -17,20 +17,23 @@ public partial class CharacterKit
     // 냉기: 적마다 쌓인 수 · 얼어붙은 때까지
     readonly Dictionary<GameObject, int> chill = new Dictionary<GameObject, int>();
     readonly Dictionary<GameObject, float> frozenUntil = new Dictionary<GameObject, float>();
-    int FreezeNeed => Mathf.Max(2, 5 - card[1]);
-    float FreezeTime => augment == AugDeepChill ? 1.5f : 1f;
-    float HandReach => 4.5f + card[0];
+    public int FreezeNeed => Mathf.Max(2, 5 - card[1]);
+    // 갈래 산산조각(대가): 얼어붙는 시간 절반
+    float FreezeTime => (augment == AugDeepChill ? 1.5f : 1f) * (Paths.Has(GhostPaths.Shatter) ? GhostPaths.ShatterFreezeMul : 1f);
+    // 갈래 혹한: 손길 +1칸
+    float HandReach => 4.5f + card[0] + (Paths.Has(GhostPaths.Frost) ? GhostPaths.FrostReach : 0f);
     public bool IsFrozen(GameObject g) => g != null && frozenUntil.TryGetValue(g, out float t) && t > Time.time;
     public int ChillOf(GameObject g) => g != null && chill.TryGetValue(g, out int n) ? n : 0;
 
     // 영혼 (도깨비불)
     public int Wisps { get; private set; }
-    public int WispMax => 3 + card[5];         // 1.3.5: 4 → 3 (카드 4 · 5 · 6) · 1.0.2 조정: 6 + 2 → 4 + 1
+    public int WispMax => GhostPaths.WispCap(3 + card[5]);     // 갈래 영혼 군단: 공명 I +2 · 극의 10 | 1.3.5: 4 → 3 (카드 4 · 5 · 6) · 1.0.2 조정: 6 + 2 → 4 + 1
     readonly List<FxAnim> wispFx = new List<FxAnim>();
     static readonly List<Collider2D> ghostHits = new List<Collider2D>(64);
 
     void GhostAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
+        dmg *= GhostPaths.HandMul();            // 갈래 대가: 혹한 손길 −25% · 사령술 평타 −20%
         foreach (Vector2 d in Spread(dir, shots, 18f)) Hand(start, d, dmg, true);
         if (augment == AugTwoHands)
         {
@@ -72,6 +75,8 @@ public partial class CharacterKit
             if (!HandTouches(c, start, end, halfW, tipR)) continue;
             GameObject g = c.gameObject;
             if (!ghostOnce.Add(g)) continue;        // 콜라이더가 여럿인 적도 손 하나에 한 번만
+            // 갈래 산산조각: 얼어붙은 적을 손길로 치면 부서짐 (잡몹 즉사 · 큰 적 체력 비례 · 보스는 균열로 따로)
+            if (IsFrozen(g)) GhostPaths.TryShatter(this, g, dir);
             // 빈틈: 커서 쪽으로 뻗은 주 손길만 (그림자 손 · 영혼 사슬 번개는 제외)
             if (main) WeakHit.Damage(g, WeakShape.Segment(start, end, halfW, 1.75f), dmg * formPower, dir, 0.6f);
             else Specials.Damage(g, dmg * formPower, dir, 0.6f);
@@ -117,15 +122,16 @@ public partial class CharacterKit
     IEnumerator FrostTrail(Vector3 a, Vector3 b)
     {
         Vector3 d = b - a;
+        float life = 1.5f * GhostPaths.MistMul;         // 갈래 혹한 극의: 냉기 안개 2배
         FxAnim cloud = Fx.Play("fx_cloud", (a + b) * 0.5f, DecorSize(TrailHalfWidth * 2f), new Color(0.8f, 0.95f, 1f, 0.55f), 10f,
-                               Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 10, true, 1.5f);
+                               Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 10, true, life);
         if (cloud != null && cloud.sr != null && cloud.sr.sprite != null)
         {
             float unit = cloud.sr.sprite.bounds.size.x;
             Vector3 s = cloud.transform.localScale;
             if (unit > 0f) cloud.transform.localScale = new Vector3((d.magnitude + TrailHalfWidth * 2f) / unit, s.y, 1f);
         }
-        for (float t = 0f; t < 1.5f; t += 0.5f)
+        for (float t = 0f; t < life; t += 0.5f)
         {
             yield return new WaitForSeconds(0.5f);
             ghostOnce.Clear();
@@ -140,7 +146,10 @@ public partial class CharacterKit
     // 냉기 쌓기 → 다 차면 얼어붙음
     public void AddChill(GameObject g, int n)
     {
-        if (g == null || IsFrozen(g)) return;
+        if (g == null || n <= 0) return;
+        if (Paths.Has(GhostPaths.Frost)) n *= 2;            // 갈래 혹한: 냉기가 두 배로 쌓임
+        GhostPaths.CrackChill(this, g, n);                  // 갈래 산산조각: 보스 냉기 5중첩마다 균열 (얼어 있는 동안도 셈)
+        if (IsFrozen(g)) return;
         chill.TryGetValue(g, out int have);
         have += n;
         if (g.TryGetComponent(out EnermyController e)) e.Slow(1f - 0.1f * Mathf.Min(have, 5), 1.5f);
@@ -153,15 +162,46 @@ public partial class CharacterKit
             Play("freeze", 0.5f, 1f);
             RunCounters.Both("freeze");             // 1.2~ 영혼 계약 · 보드
             SignatureSkills.Frozen(g);
+            GhostPaths.Froze(g, Time.time + FreezeTime);    // 갈래 혹한 공명 II: 풀릴 때 냉기 파동
         }
         chill[g] = have;
     }
+
+    // ---------------- 갈래 효과가 쓰는 창구 (Paths/Paths.Ghost.cs)
+    // 얼음을 품 (산산조각으로 부순 뒤 같은 얼음으로 두 번 부서지지 않게)
+    public void Thaw(GameObject g) { if (g != null) frozenUntil.Remove(g); }
+
+    // 지금 얼어붙은 적 (최대 max 개 · into 를 비우고 채움)
+    public int FrozenNow(List<GameObject> into, int max)
+    {
+        into.Clear();
+        float now = Time.time;
+        foreach (var kv in frozenUntil)
+        {
+            if (into.Count >= max) break;
+            if (kv.Key != null && kv.Value > now && kv.Key.activeInHierarchy) into.Add(kv.Key);
+        }
+        return into.Count;
+    }
+
+    // 얼음 파편 n 개를 사방으로 (피해 = 평타 50% × mul)
+    public void IceShards(Vector3 pos, int n, float mul)
+    {
+        n = Mathf.Clamp(n, 0, 12);
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 d = Quaternion.Euler(0f, 0f, 360f / n * i + 22.5f) * Vector2.right;
+            Projectile(pos, d, Damage * 0.5f * mul, 1, 22f, 6f, "fx_spike", 0.6f, Chill, false);
+        }
+    }
+
+    public static float BodyRadiusOf(Collider2D c) => c != null ? BodyRadius(c) : 0f;
 
     // 처치: 영혼이 생김 · 원혼 · 얼음 파편
     void GhostKill(Vector3 pos)
     {
         if (Id != CharacterId.Ghost) return;
-        float chance = 0.1f + SignatureSkills.WispChanceBonus();       // 1.3.5: 20% → 10% (유령이 너무 안 죽음) · 1.0.2 조정: 35% → 20%
+        float chance = (0.1f + SignatureSkills.WispChanceBonus()) * (Paths.Has(GhostPaths.Legion) ? 2f : 1f);       // 갈래 영혼 군단: 2배 | 1.3.5: 20% → 10% (유령이 너무 안 죽음) · 1.0.2 조정: 35% → 20%
         if (Random.value < chance) AddWisps(1);
         if (card[2] > 0)
         {
@@ -220,6 +260,7 @@ public partial class CharacterKit
     public bool TryWispBlock()
     {
         if (Id != CharacterId.Ghost || Wisps <= 0) return false;
+        if (GhostPaths.WispBlockFails()) return false;      // 갈래 영혼 군단(대가): 막을 확률 50% (못 막으면 영혼은 그대로)
         Wisps--;
         Vector3 p = transform.position;
         Fx.Spawn("fx_soulburst", p, 3f, Wraith, 18f);
@@ -255,8 +296,29 @@ public partial class CharacterKit
             if (wispFx[i] == null) continue;
             float ang = Time.time * 120f + 360f / Mathf.Max(1, wispFx.Count) * i;
             float r = 1.3f + 0.1f * Mathf.Sin(Time.time * 3f + i);
-            wispFx[i].transform.position = transform.position + Quaternion.Euler(0f, 0f, ang) * Vector3.right * r + Vector3.up * 0.3f;
+            Vector3 orbit = transform.position + Quaternion.Euler(0f, 0f, ang) * Vector3.right * r + Vector3.up * 0.3f;
+            // 갈래 영혼 군단: 돌진 중인 영혼은 그 적까지 갔다가 돌아옴 (그림만 · 피해는 GhostPaths 가 닿는 순간에)
+            if (i < WispDashSlots && wispDashTo[i] != null && Time.time - wispDashAt[i] < WispDashTime)
+            {
+                float k = (Time.time - wispDashAt[i]) / WispDashTime;
+                orbit = Vector3.Lerp(orbit, wispDashTo[i].position, Mathf.Sin(k * Mathf.PI));
+            }
+            else if (i < WispDashSlots) wispDashTo[i] = null;
+            wispFx[i].transform.position = orbit;
         }
+    }
+
+    // 영혼 돌진 그림 (갈래 영혼 군단): 몇 번째 영혼이 어느 적에게 · 언제
+    public const float WispDashTime = 0.36f;
+    const int WispDashSlots = 16;
+    readonly Transform[] wispDashTo = new Transform[WispDashSlots];
+    readonly float[] wispDashAt = new float[WispDashSlots];
+
+    public void WispDash(int i, Transform to)
+    {
+        if (i < 0 || i >= WispDashSlots || to == null) return;
+        wispDashTo[i] = to;
+        wispDashAt[i] = Time.time;
     }
 
     // 냉기 표시 (1.0.2): 냉기가 쌓인 적 몸 둘레에 고리 — 쌓인 만큼(얼어붙기까지 필요한 수 중) 차오르고, 얼어붙으면 꽉 찬 고리가 깜빡
@@ -316,24 +378,42 @@ public partial class CharacterKit
     }
 
     // ================================================================= 우클릭: 빙의
-    bool possessAiming, possessing;
+    bool possessAiming;
+    // 2026-10-19~ 빙의 상태는 「끝나는 시각」 하나로 (사령술이 빙의를 늘림 · 기획서 6-3 (1) 5)
+    //   루틴이 끊겨도(예외 · 코루틴 중단 · 비활성) 그 시각이 지나면 저절로 풀림 → 켜고 끄는 bool 이 남지 않음
+    float possessUntil;
+    bool possessing => Time.time < possessUntil;
     Transform possessTarget;
-    LineRenderer possessRange;          // 빙의 미리 보기: 터질 범위 (반지름 PossessRadius)
+    LineRenderer possessRange;          // 빙의 미리 보기: 터질 범위 (반지름 PossessR)
     const float PossessRadius = 5f;
+    float PossessR => PossessRadius * GhostPaths.BlastMul;     // 갈래 사령술 공명 I: 1.5배
     // 1.0.4~: 빙의 지속 1초 → 3초. 들어간 동안 내가 움직이면 그 적의 몸이 따라오고, 이동 속도는 그 적의 속도(난이도 · 장 배율이 붙은 값) 그대로
     //         너무 느리거나 빠른 적에서 조작이 망가지지 않게 내 평소 이동 속도의 30% ~ 130% 사이로만 (평소 21쯤이면 6.3 ~ 27.3 · 잡몹 6 ~ 16은 거의 그대로, 보스 5 ~ 7은 6.3 ~ 7)
     //         보스 · 적이 스킬을 쓰는 동안(casting) · 움직이지 않는 것(보스가 만든 등불 · 묘비)은 예전처럼 그 몸에 붙어 따라감 (스킬 동작이 깨지지 않게)
     const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.3f;      // 1.3.5: 빙의 뒤 무적 0.65 → 0.3초
     const float PossessSpeedMin = 0.3f, PossessSpeedMax = 1.3f;
-    float possessStartAt;
     Color possessBodyColor = Color.white;
+    bool bodyFaded;                     // 빙의로 몸을 흐리게 해 둠 (빙의가 끝나면 UpdatePossess · 루틴 끝에서 되돌림)
     void ResetPossess()
     {
-        possessing = false;
+        possessUntil = 0f;
         possessSpeed = -1f;
+        RestoreBody();
+    }
+    void RestoreBody()
+    {
+        if (!bodyFaded) return;
+        bodyFaded = false;
         if (body != null) body.color = new Color(possessBodyColor.r, possessBodyColor.g, possessBodyColor.b, possessBodyColor.a < 0.5f ? 1f : possessBodyColor.a);
     }
-    float possessSpeed = -1f;           // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (MoveMul 이 씀)
+    // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (CharacterKit.MoveMul 이 씀)
+    // 2026-10-19~ 「끝나는 시각」 방식: 루틴이 매 프레임 다시 넣고, 끊기면 0.25초 뒤 저절로 -1 (예전엔 루틴 끝에서야 되돌림)
+    float possessSpeedValue = -1f, possessSpeedUntil;
+    float possessSpeed
+    {
+        get => Time.time < possessSpeedUntil ? possessSpeedValue : -1f;
+        set { possessSpeedValue = value; possessSpeedUntil = value >= 0f ? Time.time + 0.25f : 0f; }
+    }
 
     // 플레이어 이동 배율 (MoveMul): 내 속도(player.speed × 고유 스킬 배율)에 곱해 빙의한 적의 속도가 되게
     float PossessMoveMul()
@@ -372,7 +452,9 @@ public partial class CharacterKit
     {
         DrawWisps();
         // 1.3.8~ 빙의 루틴이 끊기면(예외 · 코루틴 중단) 이동 속도 · 반투명 · 빙의 상태가 남던 것 → 정해진 시간 + 여유가 지나면 되돌림
-        if (possessing && Time.time > possessStartAt + PossessEnter + PossessTime + 1.5f) ResetPossess();
+        // 2026-10-19~ 빙의 상태 · 이동 속도가 「끝나는 시각」 방식이 되어 저절로 풀림 (끝 시각 = 이번 빙의 길이 + 1.5초, 사령술 4.5초도 같이 늘어남)
+        //   여기서는 흐려 둔 몸만 되돌림
+        if (!possessing && bodyFaded) RestoreBody();
         if (possessing) { if (possessAiming) HidePossessAim(); return; }
         if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.0.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
         if (!possessAiming && GameInput.UltDown && full && Time.timeScale > 0f) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
@@ -389,7 +471,7 @@ public partial class CharacterKit
             Hostile.SetArc(ultAimRing, possessTarget.position, TargetRing(possessTarget), 0f, 360f);
             ultAimRing.startColor = ultAimRing.endColor = new Color(Chill.r, Chill.g, Chill.b, pulse);
             possessRange.enabled = true;
-            Hostile.SetArc(possessRange, possessTarget.position, PossessRadius, 0f, 360f);
+            Hostile.SetArc(possessRange, possessTarget.position, PossessR, 0f, 360f);
             possessRange.startColor = possessRange.endColor = new Color(Chill.r, Chill.g, Chill.b, 0.35f);
             possessRange.startWidth = possessRange.endWidth = 0.08f;
         }
@@ -404,78 +486,121 @@ public partial class CharacterKit
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         HidePossessAim();
         if (possessTarget == null) { Play("buzz", 0.4f); return; }          // 적이 없으면 게이지를 쓰지 않음
-        StartCoroutine(PossessRoutine(possessTarget, Damage * 6f * UltMul));
+        StartCoroutine(PossessRoutine(possessTarget, Damage * 6f * UltMul, false));
         // 1.0.4~: 무기 필살기 추가 발동은 터지는 순간에 터진 자리로 (PossessRoutine 끝 · 예전엔 1.2초 뒤 들어간 자리)
         Spend(gauge);
+        // 갈래 사령술: 빙의 게이지가 25% 덜 듦 (쓴 뒤 최대치의 25% 를 돌려줌)
+        if (gauge != null && Paths.Has(GhostPaths.Necro)) gauge.AddSkillPoint(gauge.MaxSkillPoint * GhostPaths.NecroRefund);
     }
 
-    IEnumerator PossessRoutine(Transform target, float dmg)
+    // chained: 사령술 극의 「터진 뒤 바로 다시 빙의」 (게이지를 쓰지 않음 · 한 번만 · 더 짧고 무적도 짧음)
+    IEnumerator PossessRoutine(Transform target, float dmg, bool chained)
     {
-        possessing = true;
-        possessStartAt = Time.time;
-        possessBodyColor = body.color;
-        // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.65초 (예전과 같은 여유)
-        player.GrantInvincibility(PossessEnter + PossessGrace);
-        Color before = body.color;
+        // 이번 빙의 길이 · 무적 길이 (사령술 4.5초 · 무적은 처음 2초만 — 대가)
+        float len = GhostPaths.PossessLength(PossessTime, chained);
+        float safe = GhostPaths.PossessSafeLength(len, chained);
+        // 상태 감시: 이번 빙의가 정상으로 끝날 시각 + 1.5초 여유 (빙의를 늘리면 감시 시각도 같이 늘어남)
+        possessUntil = Time.time + PossessEnter + len + 1.5f;
+        if (!bodyFaded) possessBodyColor = body.color;
+        // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.3초
+        // 2026-10-19~ 무적은 Paths.Invuln 으로만 (지금 끝 시각에 Max 로 합침 · 한 번에 최대 1.5초 · 쓰러지는 중엔 주지 않음)
+        Paths.Invuln(PossessEnter + PossessGrace);
+        Color before = possessBodyColor;
         Vector3 from = transform.position;
-        Play("possess", 0.9f, 1f);
+        FxAnim glow = null;
+        Play("possess", 0.9f, chained ? 1.2f : 1f);
         Play("whoosh", 0.7f, 0.5f);
-        for (float t = 0f; t < PossessEnter && target != null; t += Time.deltaTime)
+        try
         {
-            transform.position = Vector3.Lerp(from, target.position, t / PossessEnter);
-            yield return null;
+            for (float t = 0f; t < PossessEnter && target != null; t += Time.deltaTime)
+            {
+                transform.position = Vector3.Lerp(from, target.position, t / PossessEnter);
+                yield return null;
+            }
+            body.color = new Color(before.r, before.g, before.b, 0.12f);
+            bodyFaded = true;
+            glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, len) : null;
+            if (glow != null) glow.follow = target;
+            // 1.0.4~: 콜라이더가 자식에 있는 적 · 보스도 몸통(루트)을 찾아 끌고 다님
+            EnermyController host = target != null ? target.GetComponentInParent<EnermyController>() : null;
+            bosss bossHost = target != null && host == null ? target.GetComponentInParent<bosss>() : null;
+            Transform carry = host != null ? host.transform : bossHost != null ? bossHost.transform : null;
+            bool hostDiedEarly = false, exposed = false;
+            for (float t = 0f; t < len; t += Time.deltaTime)
+            {
+                // 1.0.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
+                if (target == null || (host != null && host.IsDead) || (bossHost != null && bossHost.IsDead)) { hostDiedEarly = true; break; }
+                if (player == null || player.IsDying) yield break;          // 쓰러지면 그만 (터지지 않음 · finally 가 되돌림)
+                // 무적: 정한 길이만큼만 (사령술은 처음 2초에서 딱 끊김 · 보통 빙의는 예전처럼 끝난 뒤 0.3초 여유까지)
+                if (t < safe) Paths.Invuln(safe < len ? Mathf.Min(PossessGrace, safe - t) : PossessGrace);
+                else if (!exposed)
+                {
+                    // 사령술: 무적이 끝남 → 몸이 다시 보임 (맞을 수 있다는 표시)
+                    exposed = true;
+                    body.color = new Color(before.r, before.g, before.b, 0.55f);
+                    Play("hum", 0.35f, 1.6f);
+                }
+                // 1.0.4~: 내가 움직이고 그 적의 몸이 따라옴 (이동 속도는 그 적의 속도) · 스킬을 쓰는 중이거나 움직이지 않는 것은 그 몸에 붙어 따라감
+                bool steer = carry != null && !(host != null ? host.casting : bossHost.casting);
+                possessSpeed = steer ? Mathf.Max(0f, host != null ? host.speed : bossHost.speed) : -1f;
+                if (steer) { Vector3 d = transform.position - target.position; d.z = 0f; carry.position += d; }
+                else transform.position = target.position;
+                // 갈래 사령술: 빙의한 몸이 부딪친 적에게 냉기 · 피해
+                GhostPaths.PossessBump(this, carry != null ? carry : target);
+                yield return null;
+            }
+            possessSpeed = -1f;
+            if (glow != null) { Destroy(glow.gameObject); glow = null; }
+            Vector3 at = transform.position;
+            RestoreBody();
+            if (player == null || player.IsDying) yield break;
+            bool boss = target != null && target.CompareTag("boss");
+            bool killed = false;
+            if (target != null && !hostDiedEarly)
+            {
+                Specials.Damage(target.gameObject, dmg * (boss ? 1.5f : 1f), Vector3.zero, 0f);
+                killed = host != null && host.IsDead;
+            }
+            float radius = PossessR;
+            bool innerFreeze = GhostPaths.InnerFreeze;          // 교차 「안에서 얼리기」: 둘레 적을 얼림
+            ghostOnce.Clear();
+            foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, radius, ghostHits)))
+            {
+                if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss")) || (target != null && c.transform == target)) continue;
+                if (!ghostOnce.Add(c.gameObject)) continue;
+                Specials.Damage(c.gameObject, dmg * 0.5f, (c.transform.position - at).normalized, 3f);
+                if (c == null) continue;
+                AddChill(c.gameObject, innerFreeze ? FreezeNeed : 3);
+                GhostPaths.BlastCurse(c.gameObject);              // 사령술 공명 I: 저주 기본 (보스 제외)
+            }
+            // 1.0.2: 영혼 폭발 그림이 장식 배율(1.45 × 스킬 1.4)로 지름 20칸쯤 보여 실제 범위(반지름 5칸)의 두 배였음 → 범위에 맞춤
+            Fx.Spawn("fx_soulburst", at, DecorSize(radius * 2f), Wraith, 16f);
+            Fx.Spawn("fx_shock", at, radius * 2f, Chill, 18f);
+            ShockRing.Spawn(at, 0.5f, radius, 0.4f, Chill, 0.25f);
+            Hostile.Shake(0.25f);
+            Play("boom", 0.8f, 0.8f);
+            Play("wail", 0.8f, 0.8f);
+            Play("freeze", 0.7f, 0.8f);
+            if (card[3] > 0) StartCoroutine(PossessMist(at, 1f + card[3]));
+            if (!chained) KitUltAdd(0.05f, at);
+            GhostPaths.PossessBlast(this, at, target);          // 사령술 공명 II: 원혼 셋
+            SignatureSkills.Possessed(at, killed);
+            possessUntil = 0f;
+            // 사령술 극의: 가까운 적에게 한 번 바로 다시 빙의 (이어진 빙의에서는 다시 잇지 않음)
+            if (!chained && GhostPaths.ChainPossess)
+            {
+                Transform next = GhostPaths.ChainTarget(at, target);
+                if (next != null) StartCoroutine(PossessRoutine(next, dmg * GhostPaths.ChainDamage, true));
+            }
         }
-        body.color = new Color(before.r, before.g, before.b, 0.12f);
-        FxAnim glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, PossessTime) : null;
-        if (glow != null) glow.follow = target;
-        // 1.0.4~: 콜라이더가 자식에 있는 적 · 보스도 몸통(루트)을 찾아 끌고 다님
-        EnermyController host = target != null ? target.GetComponentInParent<EnermyController>() : null;
-        bosss bossHost = target != null && host == null ? target.GetComponentInParent<bosss>() : null;
-        Transform carry = host != null ? host.transform : bossHost != null ? bossHost.transform : null;
-        bool hostDiedEarly = false;
-        for (float t = 0f; t < PossessTime; t += Time.deltaTime)
+        finally
         {
-            // 1.0.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
-            if (target == null || (host != null && host.IsDead) || (bossHost != null && bossHost.IsDead)) { hostDiedEarly = true; break; }
-            player.GrantInvincibility(PossessGrace);
-            // 1.0.4~: 내가 움직이고 그 적의 몸이 따라옴 (이동 속도는 그 적의 속도) · 스킬을 쓰는 중이거나 움직이지 않는 것은 그 몸에 붙어 따라감
-            bool steer = carry != null && !(host != null ? host.casting : bossHost.casting);
-            possessSpeed = steer ? Mathf.Max(0f, host != null ? host.speed : bossHost.speed) : -1f;
-            if (steer) { Vector3 d = transform.position - target.position; d.z = 0f; carry.position += d; }
-            else transform.position = target.position;
-            yield return null;
+            // 끝나거나 끊기면(예외 · 쓰러짐) 이동 속도 · 흐린 몸 · 빛을 되돌림 — 코루틴이 멈춰 여기까지 못 와도 「끝나는 시각」이 지나면 저절로 풀림
+            //   (빙의 상태 possessUntil 은 건드리지 않음: 정상 끝은 위에서 0 · 이어진 빙의가 방금 새로 넣었을 수 있음 · 끊기면 끝 시각에 저절로)
+            possessSpeed = -1f;
+            if (glow != null) Destroy(glow.gameObject);
+            RestoreBody();
         }
-        possessSpeed = -1f;
-        if (glow != null) Destroy(glow.gameObject);
-        Vector3 at = transform.position;
-        body.color = before;
-        bool boss = target != null && target.CompareTag("boss");
-        bool killed = false;
-        if (target != null && !hostDiedEarly)
-        {
-            Specials.Damage(target.gameObject, dmg * (boss ? 1.5f : 1f), Vector3.zero, 0f);
-            killed = host != null && host.IsDead;
-        }
-        ghostOnce.Clear();
-        foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(at, PossessRadius, ghostHits)))
-        {
-            if (c == null || (!c.CompareTag("enermy") && !c.CompareTag("boss")) || (target != null && c.transform == target)) continue;
-            if (!ghostOnce.Add(c.gameObject)) continue;
-            Specials.Damage(c.gameObject, dmg * 0.5f, (c.transform.position - at).normalized, 3f);
-            AddChill(c.gameObject, 3);
-        }
-        // 1.0.2: 영혼 폭발 그림이 장식 배율(1.45 × 스킬 1.4)로 지름 20칸쯤 보여 실제 범위(반지름 5칸)의 두 배였음 → 범위에 맞춤
-        Fx.Spawn("fx_soulburst", at, DecorSize(PossessRadius * 2f), Wraith, 16f);
-        Fx.Spawn("fx_shock", at, PossessRadius * 2f, Chill, 18f);
-        ShockRing.Spawn(at, 0.5f, PossessRadius, 0.4f, Chill, 0.25f);
-        Hostile.Shake(0.25f);
-        Play("boom", 0.8f, 0.8f);
-        Play("wail", 0.8f, 0.8f);
-        Play("freeze", 0.7f, 0.8f);
-        if (card[3] > 0) StartCoroutine(PossessMist(at, 1f + card[3]));
-        KitUltAdd(0.05f, at);
-        SignatureSkills.Possessed(at, killed);
-        possessing = false;
     }
 
     // 빙의 여운 (카드): 냉기 안개
@@ -512,5 +637,6 @@ public partial class CharacterKit
         chillMarks.Clear();
         chillShape.Clear();
         if (possessRange != null) Destroy(possessRange.gameObject);
+        ResetPossess();
     }
 }
