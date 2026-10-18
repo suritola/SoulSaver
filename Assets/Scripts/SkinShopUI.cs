@@ -15,7 +15,7 @@ public class SkinShopUI : MonoBehaviour
     static GameObject open;
     RectTransform win;
     TMP_Text pointsText, descText, titleText, newHeroNote;
-    Button actionButton, soundButton;
+    Button actionButton;
     TMP_Text actionLabel;
     readonly List<GameObject> dynamic = new List<GameObject>();
     readonly List<Button> tabButtons = new List<Button>(), whoButtons = new List<Button>();
@@ -90,10 +90,10 @@ public class SkinShopUI : MonoBehaviour
         // 아래 설명줄
         Image bar = UIKit.Rect("DetailBar", win, new Vector2(0f, -360f), new Vector2(1560f, 150f)).gameObject.AddComponent<Image>();
         bar.color = new Color(0.05f, 0.04f, 0.08f, 0.9f);
-        titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-280f, -318f), new Vector2(980f, 44f), TextAlignmentOptions.Left);
-        descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-280f, -382f), new Vector2(980f, 80f), TextAlignmentOptions.TopLeft);
+        // 1.3.3~ 「소리 듣기」 버튼을 없앰 (사용자 지시) → 설명 칸을 그 자리까지 넓힘
+        titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-170f, -318f), new Vector2(1200f, 44f), TextAlignmentOptions.Left);
+        descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-170f, -382f), new Vector2(1200f, 80f), TextAlignmentOptions.TopLeft);
         descText.fontSizeMin = 14f;         // 1.0.4~ 구매 확인 때 경고 한 줄이 붙어도 칸 안에 (자동 크기)
-        soundButton = UIKit.MakeButton(win, "소리 듣기", new Vector2(390f, -360f), new Vector2(200f, 64f), PlayPreview, 22f);
         actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -360f), new Vector2(260f, 64f), OnAction, 22f);
         actionLabel = actionButton.GetComponentInChildren<TMP_Text>();
 
@@ -228,7 +228,6 @@ public class SkinShopUI : MonoBehaviour
         titleText.text = s != null ? Loc.T(s.name) + "  <size=70%><color=#" + ColorUtility.ToHtmlStringRGB(SkinData.TierColors[s.tier]) + ">" + Loc.T(SkinData.TierNames[s.tier]) + "</color></size>"
                                    : Loc.T("기본");
         descText.text = s != null ? Loc.T(s.desc) : Loc.T("원래 모습 · 원래 소리");
-        soundButton.gameObject.SetActive(s != null);
         if (equipped) actionLabel.text = Loc.T("장착 중");
         else if (owned) actionLabel.text = Loc.T("장착");
         else if (confirm)

@@ -522,6 +522,7 @@ public class QaCapture
         yield return Safe("ddol_canvas", DdolCanvas, 240);
         yield return Safe("loading", LoadingScreen, 120);
         yield return Safe("fire_ground", FireGroundShot, 180);
+        yield return Safe("skin_fx", SkinFxShot, 180);
         yield return Safe("system2", System2, 240);
         yield return Safe("soak", Soak, 600);
         yield return Safe("ui_menu", UiMenu, 900);
@@ -1095,6 +1096,33 @@ public class QaCapture
         Log(tag + " 글자 " + tmps.Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length + " · 장면 " + SceneManager.GetActiveScene().name);
         foreach (var grp in tmps.Where(t => t.isActiveAndEnabled).GroupBy(t => t.gameObject.name + " @" + (t.transform.root != null ? t.transform.root.name : "-") + (t.gameObject.scene.name == "DontDestroyOnLoad" ? " [DDOL]" : "")).OrderByDescending(g => g.Count()).Take(12))
             Log("  " + grp.Key + " × " + grp.Count() + " (예: " + grp.First().text.Replace("\n", " ").Substring(0, Math.Min(50, grp.First().text.Length)) + ")");
+    }
+
+    // 1.3.3 이펙트 스킨 처치 연출 크기 (네 가지를 나란히)
+    static IEnumerator SkinFxShot()
+    {
+        yield return LoadGame("Gunner");
+        yield return Secs(2f);
+        Transform p = ((Component)Find("PlayerController")).transform;
+        Type sk = T("SkinFx"); Type sd = T("SkinData");
+        object fxInst = sk.GetProperty("Instance").GetValue(null);
+        if (fxInst == null) { Log("SkinFx 없음"); yield break; }
+        string[] ids = { "skin_bluefire", "skin_sakura", "skin_thunder", "skin_starlight" };
+        var all = (System.Collections.IEnumerable)sd.GetField("All", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null);
+        var kill = sk.GetMethod("OnKill", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        for (int round = 0; round < 3; round++)
+        {
+            for (int i = 0; i < ids.Length; i++)
+            {
+                object def = null;
+                foreach (object d in all) if ((string)d.GetType().GetField("id").GetValue(d) == ids[i]) def = d;
+                sk.GetField("EffectSkin").SetValue(null, def);
+                sk.GetField("killFxAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(fxInst, 0f);
+                kill.Invoke(fxInst, new object[] { p.position + new Vector3(-9f + i * 6f, 2f, 0f) });
+            }
+            yield return Secs(0.12f);
+        }
+        yield return Shot("skin_fx_kill", 1920, 1080, false);
     }
 
     // 1.3.3 불 장판 (화염 지대 · 지옥의 군주 불 웅덩이 · FireGround)

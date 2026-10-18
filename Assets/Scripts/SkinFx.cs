@@ -6,7 +6,8 @@ using UnityEngine.SceneManagement;
 //   캐릭터 스킨: 영웅부터 이동 잔상, 전설은 오라 · 처치 연출 · 필살기 소리
 //   무기 스킨:   총알 · 투사체 색 (SkinTint), 공격 소리 음높이 · 덧소리 (SkinAudio)
 //   이펙트 스킨: 명중 불꽃 색, 처치 효과 · 소리, 코인 반짝임
-// 효과는 모두 옅고 작게: 적의 붉은 경고보다 눈에 띄지 않게
+// 1.3.3~ 사용자 「연출 스킨들 훨씬 더 크고 잘 보이게」: 처치 · 명중 · 오라 · 잔상 · 필살기 연출을 2배 가까이 크고 진하게 (예전엔 적 경고보다 눈에 띄지 않게 옅고 작았음)
+//   판정 · 크기 · 소리 크기는 그대로, 겉모습만 · 처치 연출은 초당 최대 약 16번 그대로
 public class SkinFx : MonoBehaviour
 {
     public static SkinDef CharSkin, WeaponSkin, EffectSkin;
@@ -71,7 +72,7 @@ public class SkinFx : MonoBehaviour
             ghostAt = Time.time + 0.09f;
             // 최적화 16: 새로 만들고 지우던 잔상(MakeSprite + FadeOut)을 다시 쓰는 FadeSprite 로 — 알파 1→0 · 크기 0.8→1.2 곡선이 같음
             //   좌우 뒤집기는 가로 크기 부호로 (FadeSprite 는 flipX 를 되돌리지 않으므로)
-            FadeSprite f = FadeSprite.Spawn("SkinGhost", body.sprite, p, 1f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.38f), "Character", -1, 0.35f);
+            FadeSprite f = FadeSprite.Spawn("SkinGhost", body.sprite, p, 1f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.6f), "Character", -1, 0.45f);
             Vector3 ls = transform.lossyScale;
             if (body.flipX) ls.x = -ls.x;
             f.Shape(Quaternion.identity, ls);
@@ -81,9 +82,15 @@ public class SkinFx : MonoBehaviour
         {
             if (orbs[i] == null) continue;
             float a = Time.time * 1.6f + i * Mathf.PI * 2f / orbs.Count;
-            orbs[i].position = p + new Vector3(Mathf.Cos(a) * 1.1f, Mathf.Sin(a) * 0.55f + 0.6f, 0f);
+            orbs[i].position = p + new Vector3(Mathf.Cos(a) * 1.5f, Mathf.Sin(a) * 0.75f + 0.6f, 0f);
+            float pulse = 1f + 0.25f * Mathf.Sin(Time.time * 5f + i);
+            orbs[i].localScale = Vector3.one * 0.13f * pulse;
         }
-        if (groundGlow != null) groundGlow.transform.position = p + new Vector3(0f, -0.9f, 0f);
+        if (groundGlow != null)
+        {
+            groundGlow.transform.position = p + new Vector3(0f, -0.9f, 0f);
+            groundGlow.transform.localScale = Vector3.one * 0.5f * (1f + 0.08f * Mathf.Sin(Time.time * 3f));
+        }
     }
 
     void BuildAura()
@@ -93,10 +100,10 @@ public class SkinFx : MonoBehaviour
         Color c = CharSkin.color;
         for (int i = 0; i < 3; i++)
         {
-            GameObject o = SpecialAbilities.MakeSprite("SkinAura", glow, transform.position, 0.05f, new Color(c.r, c.g, c.b, 0.85f), "Effect", 2);
+            GameObject o = SpecialAbilities.MakeSprite("SkinAura", glow, transform.position, 0.13f, new Color(c.r, c.g, c.b, 1f), "Effect", 2);
             orbs.Add(o.transform);
         }
-        groundGlow = SpecialAbilities.MakeSprite("SkinGround", glow, transform.position, 0.25f, new Color(c.r, c.g, c.b, 0.24f), "Background", 50);
+        groundGlow = SpecialAbilities.MakeSprite("SkinGround", glow, transform.position, 0.5f, new Color(c.r, c.g, c.b, 0.42f), "Background", 50);
     }
 
     // 처치: 이펙트 스킨 · 전설 캐릭터 스킨의 연출 (초당 최대 약 16번)
@@ -112,21 +119,28 @@ public class SkinFx : MonoBehaviour
             switch (EffectSkin.id)
             {
                 case "skin_bluefire":
-                    for (int i = 0; i < 3; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.7f), 1f, EffectSkin.color, 16f);
+                    // 푸른 불꽃이 확 피어오름 (폭발 + 충격파 + 불꽃 넷)
+                    Fx.Spawn("fx_explosion", pos, 4.6f, EffectSkin.color, 20f);
+                    Fx.Spawn("fx_shock", pos, 5.6f, new Color(EffectSkin.color.r, EffectSkin.color.g, EffectSkin.color.b, 0.9f), 22f);
+                    for (int i = 0; i < 4; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 1.8f), 2.4f, EffectSkin.color, 16f);
                     break;
                 case "skin_sakura":
-                    // 꽃잎이 흩날림
-                    for (int i = 0; i < 6; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 1.1f), 1.1f, new Color(1f, 0.65f, 0.8f), 12f);
+                    // 꽃잎이 넓게 흩날림 + 분홍 충격파
+                    Fx.Spawn("fx_shock", pos, 5.2f, new Color(1f, 0.65f, 0.8f, 0.85f), 20f);
+                    for (int i = 0; i < 10; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 2.6f), 2.4f, new Color(1f, 0.65f, 0.8f), 12f);
                     break;
                 case "skin_thunder":
-                    // 하늘에서 작은 번개가 내리꽂히고 노란 충격파
-                    Vector3 sky = pos + new Vector3(Random.Range(-1.2f, 1.2f), Random.Range(3.5f, 4.5f), 0f);
-                    Fx.Bolt(sky, pos, 0.9f, new Color(1f, 0.95f, 0.45f), 0.16f);
-                    Fx.Spawn("fx_shock", pos, 3.2f, new Color(1f, 0.9f, 0.35f, 0.85f), 22f);
+                    // 하늘에서 굵은 번개가 내리꽂히고 큰 노란 충격파
+                    Vector3 sky = pos + new Vector3(Random.Range(-1.5f, 1.5f), Random.Range(5f, 6.5f), 0f);
+                    Fx.Bolt(sky, pos, 1.7f, new Color(1f, 0.95f, 0.45f), 0.2f);
+                    Fx.Spawn("fx_shock", pos, 6.6f, new Color(1f, 0.9f, 0.35f, 0.95f), 22f);
+                    Fx.Spawn("fx_sparkle", pos, 3.4f, new Color(1f, 0.97f, 0.7f), 18f);
                     break;
                 default:
-                    for (int i = 0; i < 6; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 1f), 1.1f, Color.HSVToRGB(Random.value, 0.5f, 1f), 16f);
-                    Fx.Spawn("fx_shock", pos, 3f, new Color(1f, 1f, 1f, 0.6f), 20f);
+                    // 별의 축복: 무지갯빛 별 여덟 + 가운데 큰 별 + 흰 충격파
+                    Fx.Spawn("fx_sparkle", pos, 4f, Color.white, 16f);
+                    for (int i = 0; i < 8; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 2.4f), 2.4f, Color.HSVToRGB(Random.value, 0.5f, 1f), 16f);
+                    Fx.Spawn("fx_shock", pos, 6.2f, new Color(1f, 1f, 1f, 0.85f), 20f);
                     break;
             }
             if (EffectSkin.killSound != null && Time.time >= killSoundAt)
@@ -135,7 +149,11 @@ public class SkinFx : MonoBehaviour
                 SpecialAbilities.SharedFx?.Play(EffectSkin.killSound, 0.55f, Random.Range(0.95f, 1.08f));
             }
         }
-        if (legend) Fx.Spawn("fx_sparkle", pos, 1.5f, CharSkin.color, 18f);
+        if (legend)
+        {
+            Fx.Spawn("fx_sparkle", pos, 2.6f, CharSkin.color, 18f);
+            Fx.Spawn("fx_shock", pos, 3f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.7f), 22f);
+        }
     }
 
     // 적이 맞았을 때 (모든 캐릭터 · 모든 공격): 이펙트 스킨 색 명중 불꽃 (초당 최대 20번)
@@ -148,10 +166,10 @@ public class SkinFx : MonoBehaviour
         if (EffectSkin == null || Time.time < hitFxAt) return;
         hitFxAt = Time.time + 0.05f;
         Vector3 at = pos + (Vector3)(Random.insideUnitCircle * 0.3f);
-        Fx.Spawn("fx_spark", at, 1.4f, HitColor(Color.white), 26f);
-        // 뇌전: 세 번에 한 번 작은 전기가 튐
+        Fx.Spawn("fx_spark", at, 2.4f, HitColor(Color.white), 26f);
+        // 뇌전: 세 번에 한 번 전기가 튐
         if (EffectSkin.id == "skin_thunder" && ++hitCount % 3 == 0)
-            Fx.Bolt(at + (Vector3)(Random.insideUnitCircle.normalized * 1.1f), at, 0.45f, new Color(1f, 0.95f, 0.5f), 0.1f);
+            Fx.Bolt(at + (Vector3)(Random.insideUnitCircle.normalized * 1.8f), at, 0.8f, new Color(1f, 0.95f, 0.5f), 0.12f);
     }
 
     // 기본 처치 효과(영혼 폭발) 색: 이펙트 스킨이 있으면 스킨 색 (Juice)
@@ -165,7 +183,8 @@ public class SkinFx : MonoBehaviour
     {
         if (CharSkin == null || CharSkin.tier < 3) return;
         SpecialAbilities.SharedFx?.Play(SkinAudio.UltSound(CharSkin.id), 0.6f);
-        Fx.Spawn("fx_shock", transform.position, 7f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.6f), 18f);
+        Fx.Spawn("fx_shock", transform.position, 11f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.85f), 18f);
+        Fx.Spawn("fx_sparkle", transform.position + Vector3.up * 0.6f, 4f, CharSkin.color, 16f);
     }
 
     // ================================================================= 게임 코드가 부르는 도우미
