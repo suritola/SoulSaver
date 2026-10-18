@@ -98,25 +98,38 @@ public partial class SignatureSkills
                  "fx_target_rune", Tint("t.loop", new Color(ClockBlue.r, ClockBlue.g, ClockBlue.b, 0.55f)), r * 2f, true);
         }
         // 스톱워치: 지난 3초 동안 준 피해의 일부를 한 번 더 (시간 빚: 두 배 · 게이지 30%)
-        if (L("t.stopwatch") > 0 && dealtSum > 0f)
+        // 2026-10-19~ 갈래 시간 빚 공명 II: 스톱워치가 없어도 1단계(20%)로 · 있으면 더 큰 값 (ClockmakerPaths.DebtStopwatchOn)
+        bool debtWatch = ClockmakerPaths.DebtStopwatchOn;
+        if ((L("t.stopwatch") > 0 || debtWatch) && dealtSum > 0f && Alive)
         {
-            float pct = V(L("t.stopwatch"), 0.2f, 0.1f) * (E("te.debt") ? 2f : 1f);
+            float pct = Mathf.Max(V(L("t.stopwatch"), 0.2f, 0.1f), debtWatch ? ClockmakerPaths.DebtStopwatch : 0f) * (E("te.debt") ? 2f : 1f);
             List<Transform> near = Nearest(to, 7f, 8);
             float each = near.Count > 0 ? dealtSum * pct / near.Count : 0f;
-            foreach (Transform t in near)
+            // 다시 준 피해는 다음 스톱워치의 「지난 3초 피해」에 넣지 않음 (되감기가 잦아지면 스스로 불어나던 고리 · 갈래가 되감기를 늘려서 막음)
+            stopwatchDealing = true;
+            try
             {
-                if (t == null) continue;
-                Deal(t.gameObject, each, (t.position - to).normalized, 0.5f);
-                Fx.Spawn("fx_sparkle", t.position, 1.2f, Tint("t.stopwatch", ClockBlue), 24f);
+                foreach (Transform t in near)
+                {
+                    if (t == null) continue;
+                    Deal(t.gameObject, each, (t.position - to).normalized, 0.5f);
+                    if (t != null) Fx.Spawn("fx_sparkle", t.position, 1.2f, Tint("t.stopwatch", ClockBlue), 24f);
+                }
             }
+            finally { stopwatchDealing = false; }
             Flair("t.stopwatch", to, 4f, ClockBlue);
         }
         if (E("te.debt") && player != null && player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * 0.3f);
+        // 2026-10-19~ 갈래: 시간 여행(되감은 뒤 무적 · 선 위 적 멈춤) · 교차 정각 되감기 (Paths/Paths.Clockmaker)
+        ClockmakerPaths.Live?.OnRewound(from, to, caught);
     }
 
     // ---------------- 공통 훅에서
+    bool stopwatchDealing;      // 스톱워치가 다시 주는 피해 중 (try/finally 로만 켬)
+
     void ClockHit(GameObject target, float dmg)
     {
+        if (stopwatchDealing) return;
         dealtLog.Enqueue((Time.time, dmg));
         dealtSum += dmg;
     }
