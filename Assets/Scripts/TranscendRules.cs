@@ -19,6 +19,7 @@ public class TranscendRules : MonoBehaviour
     static readonly Color AlchemyGreen = new Color(0.6f, 1f, 0.55f);
     static readonly Color ShadowTint = new Color(0.32f, 0.18f, 0.5f, 0.62f);
     static readonly Color EmberOrange = new Color(1f, 0.55f, 0.25f, 0.85f);
+    static readonly Color SoulBlue = new Color(0.55f, 0.88f, 1f, 0.9f);       // 1.3.7~ 영혼불 발자국 불똥
 
     // ---------------- 수치 (카드 단계마다, [단계 - 1])
     const float EchoRadius = 9f, EchoMul = 6f, EchoFreeze = 1.5f, EchoDelay = 1.2f;
@@ -580,9 +581,11 @@ public class TranscendRules : MonoBehaviour
             lastEmber = pos;
             if (embers.Count >= EmberMax) { EmberPatch old = embers[0]; if (old.fx != null) Destroy(old.fx.gameObject); embers.RemoveAt(0); }
             float life = EmberLife[lv - 1];
-            FxAnim fx = Fx.Play("fx_puddle", pos + Vector3.down * 0.3f, EmberRadius[lv - 1] * 1.8f, EmberOrange, 12f, 0f, 2, true, life);
+            // 1.3.7~ 전용 그림 fx_soulstep (푸른 영혼불 · tools/pixelart/make_soulstep.py) — 예전엔 산성 웅덩이를 주황으로 물들여 씀 · 판정 반지름은 그대로
+            float size = EmberRadius[lv - 1] * 2.3f;
+            FxAnim fx = Fx.Play("fx_soulstep", pos + Vector3.down * 0.3f + Vector3.up * (size * 0.125f), size, Color.white, 10f, 0f, 2, true, life);     // 그을린 자국 가운데가 그림 가운데보다 4/32 아래
             embers.Add(new EmberPatch { at = pos, until = Time.time + life, fx = fx });
-            if (Random.value < 0.35f) Fx.Spawn("fx_spark", pos, 0.9f, EmberOrange, 20f);
+            if (Random.value < 0.35f) Fx.Spawn("fx_spark", pos, 0.9f, SoulBlue, 20f);
         }
         if (Time.time < emberTick) return;
         emberTick = Time.time + 0.25f;
