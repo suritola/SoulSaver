@@ -110,6 +110,7 @@ public static partial class LocTable
         { "어려움", L("Hard", "ハード", "困难") },
         { "무한", L("Endless", "エンドレス", "无尽") },
         { "보통 · 어려움", L("Normal · Hard", "ノーマル・ハード", "普通 · 困难") },
+        { "보통 · 어려움 · 무한", L("Normal · Hard · Endless", "ノーマル・ハード・エンドレス", "普通 · 困难 · 无尽") },      // 1.3.3~ 쉬움 클리어 해금 알림
         { "쉬움을 클리어하면 보통 · 어려움이 열립니다", E("쉬움을 클리어하면 보통 · 어려움이 열립니다.", "Clear Easy to unlock Normal and Hard.", "イージーをクリアするとノーマル・ハードが解放されます。", "通关简单难度后解锁普通 · 困难。") },
         { "어려움을 클리어하면 무한 모드가 열립니다", E("어려움을 클리어하면 무한 모드가 열립니다.", "Clear Hard to unlock Endless Mode.", "ハードをクリアするとエンドレスモードが解放されます。", "通关困难难度后解锁无尽模式。") },
         { "Space 대사 넘기기 · ESC 건너뛰기", L("Space Next line · ESC Skip", "Space セリフ送り · ESC スキップ", "Space 下一句 · ESC 跳过") },

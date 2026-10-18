@@ -63,7 +63,8 @@ public static class GameMode
         unlocked = Mathf.Clamp(Prefs.GetInt(UnlockKey, 0), 0, 2);
         // 1.2~ 난이도 사다리: 무한 모드는 「보통」 클리어로도 열림 → 이미 보통을 깼지만 어려움은 못 깬 저장은 소급 해금 + 메인 메뉴에서 한 번 알림
         //   (mode.unlocked 0 · 1 · 2 의 뜻은 그대로, 올리는 조건만 바뀜 · 체험판은 쉬움만이라 해당 없음)
-        if (unlocked < 2 && !Demo.On && Prefs.GetInt(ClearedKey + (int)Difficulty.Normal, 0) == 1)
+        // 1.3.3~ 쉬움만 클리어해도 무한까지 열리므로 쉬움을 깬 저장도 소급 해금
+        if (unlocked < 2 && !Demo.On && (Prefs.GetInt(ClearedKey + (int)Difficulty.Easy, 0) == 1 || Prefs.GetInt(ClearedKey + (int)Difficulty.Normal, 0) == 1))
         {
             unlocked = 2;
             Prefs.SetInt(UnlockKey, unlocked);
@@ -115,8 +116,9 @@ public static class GameMode
         if (GameInput.Auto || (Application.isBatchMode && !Override.HasValue)) return null;
         Prefs.SetInt(ClearedKey + (int)d, 1);
         string opened = null;
-        if (d == Difficulty.Easy && unlocked < 1) { unlocked = 1; opened = "보통 · 어려움"; }
-        // 1.2~ 난이도 사다리: 보통 클리어로도 무한 모드 (어려움 클리어의 보상은 영혼의 무게 · 포인트 ×1.5 로 그대로)
+        // 1.3.3~ 쉬움을 클리어하면 보통 · 어려움 · 무한이 한꺼번에 열림 (예전 1.2: 쉬움 → 보통 · 어려움, 보통 → 무한)
+        if (d == Difficulty.Easy && unlocked < 2) { opened = unlocked < 1 ? "보통 · 어려움 · 무한" : "무한"; unlocked = 2; }
+        // 보통 · 어려움 클리어도 그대로 무한을 엶 (옛 저장 · 어려움 클리어의 보상은 영혼의 무게 · 포인트 ×1.5)
         if ((d == Difficulty.Normal || d == Difficulty.Hard) && unlocked < 2) { unlocked = 2; opened = "무한"; }
         Prefs.SetInt(UnlockKey, unlocked);
         Prefs.Save();

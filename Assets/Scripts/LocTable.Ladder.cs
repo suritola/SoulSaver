@@ -15,28 +15,29 @@ public static partial class LocTable
           "Clear Easy to unlock the Daily Challenge.",
           "イージーをクリアするとデイリーチャレンジが解放されます。",
           "通关简单难度后解锁每日挑战。");
-        A("ladder.lock.endless", "보통을 클리어하면 무한 모드가 열립니다.",
-          "Clear Normal to unlock Endless Mode.",
-          "ノーマルをクリアするとエンドレスモードが解放されます。",
-          "通关普通难度后解锁无尽模式。");
-        A("ladder.lock.endless.hard", "보통 또는 어려움을 클리어하면 무한 모드가 열립니다. 어려움을 클리어하면 영혼의 무게도 열립니다.",
-          "Clear Normal or Hard to unlock Endless Mode. Clearing Hard also unlocks Soul Weight.",
-          "ノーマルかハードをクリアするとエンドレスモードが解放されます。ハードをクリアすると魂の重みも解放されます。",
-          "通关普通或困难难度后解锁无尽模式。通关困难难度还会解锁灵魂之重。");
+        // 1.3.3~ 쉬움 클리어로 보통 · 어려움 · 무한이 한꺼번에 열림 (GameMode.OnCleared)
+        A("ladder.lock.endless", "쉬움을 클리어하면 무한 모드가 열립니다.",
+          "Clear Easy to unlock Endless Mode.",
+          "イージーをクリアするとエンドレスモードが解放されます。",
+          "通关简单难度后解锁无尽模式。");
+        A("ladder.lock.endless.hard", "쉬움을 클리어하면 무한 모드가 열립니다. 어려움을 클리어하면 영혼의 무게도 열립니다.",
+          "Clear Easy to unlock Endless Mode. Clearing Hard also unlocks Soul Weight.",
+          "イージーをクリアするとエンドレスモードが解放されます。ハードをクリアすると魂の重みも解放されます。",
+          "通关简单难度后解锁无尽模式。通关困难难度还会解锁灵魂之重。");
 
         // ---------------- 난이도 버튼 툴팁 (클리어하면 열리는 것)
-        A("ladder.tip.easy", "클리어하면 보통 · 어려움 난이도와 영혼 각인, 일일 도전이 열립니다.",
-          "Clearing it unlocks Normal and Hard, Soul Brands and the Daily Challenge.",
-          "クリアするとノーマル・ハード、魂の刻印、デイリーチャレンジが解放されます。",
-          "通关后解锁普通 · 困难难度、灵魂烙印与每日挑战。");
-        A("ladder.tip.normal", "클리어하면 무한 모드가 열립니다.",
-          "Clearing it unlocks Endless Mode.",
-          "クリアするとエンドレスモードが解放されます。",
-          "通关后解锁无尽模式。");
-        A("ladder.tip.hard", "클리어하면 영혼의 무게가 열립니다. 무한 모드가 아직 잠겨 있으면 함께 열립니다.",
-          "Clearing it unlocks Soul Weight, along with Endless Mode if it is still locked.",
-          "クリアすると魂の重みが解放されます。エンドレスモードがまだなら一緒に解放されます。",
-          "通关后解锁灵魂之重。若无尽模式尚未解锁，也会一并解锁。");
+        A("ladder.tip.easy", "클리어하면 보통 · 어려움 난이도와 무한 모드, 영혼 각인, 일일 도전이 열립니다.",
+          "Clearing it unlocks Normal and Hard, Endless Mode, Soul Brands and the Daily Challenge.",
+          "クリアするとノーマル・ハード、エンドレスモード、魂の刻印、デイリーチャレンジが解放されます。",
+          "通关后解锁普通 · 困难难度、无尽模式、灵魂烙印与每日挑战。");
+        A("ladder.tip.normal", "클리어하면 영혼 각인 「광란」이 열립니다.",
+          "Clearing it unlocks the Soul Brand \"Frenzy\".",
+          "クリアすると魂の刻印「狂乱」が解放されます。",
+          "通关后解锁灵魂烙印「狂乱」。");
+        A("ladder.tip.hard", "클리어하면 영혼의 무게가 열립니다.",
+          "Clearing it unlocks Soul Weight.",
+          "クリアすると魂の重みが解放されます。",
+          "通关后解锁灵魂之重。");
         A("ladder.tip.endless", "끝없이 버티는 모드입니다. 5 · 10 · 15 · 20분을 버티거나, 한 판에서 보스 5마리를 쓰러뜨리거나, 개발자를 쓰러뜨리면 처음 한 번 이정표 포인트를 얻습니다.",
           "Survive for as long as you can. Survive 5, 10, 15 or 20 minutes, defeat 5 bosses in one run, or defeat the Developer to earn milestone points the first time.",
           "どこまでも生き延びるモードです。5・10・15・20分生き延びる、1回のプレイでボスを5体倒す、開発者を倒すと、初回だけマイルストーンのポイントを獲得します。",
@@ -48,10 +49,10 @@ public static partial class LocTable
         A("ladder.tip.cleared", "이미 클리어했습니다.", "Already cleared.", "クリア済みです。", "已通关。");
 
         // ---------------- 소급 해금 알림 (받기 창 맨 위, 한 번)
-        A("ladder.retro.endless", "무한 모드가 열렸습니다. 이제 보통 난이도를 클리어해도 무한 모드가 열리므로, 이미 보통을 클리어한 기록으로 열었습니다.",
-          "Endless Mode is now unlocked. Clearing Normal now unlocks Endless Mode, so your earlier Normal clear counts.",
-          "エンドレスモードが解放されました。ノーマルをクリアしても解放されるようになったため、これまでのノーマルクリアの記録で解放しました。",
-          "无尽模式已解锁。现在通关普通难度即可解锁无尽模式，因此已根据你之前通关普通难度的记录解锁。");
+        A("ladder.retro.endless", "무한 모드가 열렸습니다. 이제 쉬움을 클리어하면 무한 모드까지 열리므로, 이미 클리어한 기록으로 열었습니다.",
+          "Endless Mode is now unlocked. Clearing Easy now unlocks Endless Mode, so your earlier clear counts.",
+          "エンドレスモードが解放されました。イージーをクリアするとエンドレスまで解放されるようになったため、これまでのクリア記録で解放しました。",
+          "无尽模式已解锁。现在通关简单难度即可解锁无尽模式，因此已根据你之前的通关记录解锁。");
 
         // ---------------- 무한 이정표
         A("milestone.min", "무한 모드 {0}분 버티기", "Survive {0} minutes in Endless Mode", "エンドレスモードで{0}分生き延びる", "在无尽模式中坚持{0}分钟");
@@ -77,7 +78,7 @@ public static partial class LocTable
 
         // ---------------- 영웅 해금 대체 루트
         A("route.or", "또는", "or", "または", "或");
-        A("route.prereq", "먼저 「보통」을 클리어해 무한 모드 열기", "First clear Normal to unlock Endless", "まず「ノーマル」をクリアしてエンドレスを解放", "先通关「普通」以解锁无尽模式");
+        A("route.prereq", "먼저 「쉬움」을 클리어해 무한 모드 열기", "First clear Easy to unlock Endless", "まず「イージー」をクリアしてエンドレスを解放", "先通关「简单」以解锁无尽模式");
         A("route.chests", "이야기 모드에서 보물 상자 15개 열기", "Open 15 treasure chests in Story Mode", "ストーリーモードで宝箱を15個開ける", "在故事模式中打开15个宝箱");
         A("route.quick", "이야기 모드에서 장 보스 4종을 각각 결계가 펼쳐지기 전에 쓰러뜨리기", "Defeat each of the 4 chapter bosses in Story Mode before it raises its Barrier",
           "ストーリーモードで4種の章ボスをそれぞれ結界を張られる前に倒す", "在故事模式中分别赶在4种章节首领展开结界前将其击败");
