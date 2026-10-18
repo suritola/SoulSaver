@@ -122,6 +122,8 @@ public class AbilityHUD : MonoBehaviour
 
     public void SetAbility(int id, int level)
     {
+        // 2026-10-19~ 외길로 진화 재료를 한 단계 더 올려도 진화 칸에 합쳐진 재료 칸을 다시 만들지 않음
+        if (merged.Contains(id)) return;
         if (!slots.TryGetValue(id, out Slot slot))
         {
             slot = CreateSlot(id, slots.Count);
@@ -133,7 +135,7 @@ public class AbilityHUD : MonoBehaviour
         slot.level = level;
         slot.label.text = "Lv." + level;
         // 1.1.2~ 최대 단계가 있으면 단계 칸 (몇 단계 중 몇인지 한눈에, 최대면 금빛 + MAX) · 없으면 예전처럼 「Lv.n」
-        int max = LevelShop.MaxLevelOf(CharacterData.Selected, id);
+        int max = Shop != null ? Shop.CapOf(id) : LevelShop.MaxLevelOf(CharacterData.Selected, id);      // 외길이면 늘어난 단계까지
         if (max > 0)
         {
             if (slot.pips == null)
@@ -166,6 +168,12 @@ public class AbilityHUD : MonoBehaviour
     void UpdateBadge(Slot slot)
     {
         string key = null;
+        // 2026-10-19~ 입문 칸 = 갈래 칸: 갈래 효과의 숫자(열 게이지 · 중첩 …)가 없으면 공명 단계 I · II · 극의
+        if (Paths.IsSeed(slot.id))
+        {
+            SetBadge(slot, Paths.HudBadge(slot.id - Paths.SeedFirstId));
+            return;
+        }
         if (LevelShop.IsSig(slot.id)) key = LevelShop.SigKey(slot.id);
         else if (slot.id >= 1000 && Shop != null)
         {
@@ -174,7 +182,11 @@ public class AbilityHUD : MonoBehaviour
                 foreach (int p in e.parts)
                     if (LevelShop.IsSig(p) && SignatureSkills.StackText(LevelShop.SigKey(p)) != null) { key = LevelShop.SigKey(p); break; }
         }
-        string text = key != null ? SignatureSkills.StackText(key) : null;
+        SetBadge(slot, key != null ? SignatureSkills.StackText(key) : null);
+    }
+
+    void SetBadge(Slot slot, string text)
+    {
         if (text == slot.shown) return;
         slot.shown = text;
         if (slot.badge == null)
@@ -229,8 +241,11 @@ public class AbilityHUD : MonoBehaviour
     }
 
     // 스킬 진화: 재료 칸들을 지우고 그 자리에 진화 칸 하나 (빛나는 테두리)
+    readonly HashSet<int> merged = new HashSet<int>();      // 진화 칸에 합쳐진 재료 (다시 칸을 만들지 않음)
+
     public void Merge(int[] parts, int evoId)
     {
+        foreach (int p in parts) merged.Add(p);
         // 진화 칸은 첫 재료가 있던 자리에 (없으면 맨 끝)
         int at = -1;
         foreach (int p in parts)

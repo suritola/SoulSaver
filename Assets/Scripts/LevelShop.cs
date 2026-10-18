@@ -53,11 +53,13 @@ public partial class LevelShop : MonoBehaviour
 
         bul = FindFirstObjectByType<PlayerController>();
         lv = FindFirstObjectByType<Level>();
+        PathsBegin();               // 2026-10-19~ 빌드 갈래: 이번 판 갈래 상태를 새로 (LevelShop.Paths · Paths)
         for (int i = 0; i< Total_abilitys; i++)
         {
             // 11번(처치 시 회복)은 더 이상 나오지 않음 (도적은 사냥의 기세), 12 · 13번은 캐릭터 카드, 14번은 비상 보급 전용
             // 2번(재활용 에너지)은 스킬 강화라 빠짐: 필살기는 영혼 트리 · 특수 능력에서만 강화
-            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId || i == RecycleId;
+            // 25 ~ 30 입문 · 외길은 입문 · 갈림길 창에서만, 31 새 카드는 그 카드가 있는 영웅만 (LevelShop.Paths)
+            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId || i == RecycleId || PathIdClosed(i);
         }
         CompactLevelUp();
         CompactTitle();
@@ -86,6 +88,7 @@ public partial class LevelShop : MonoBehaviour
         ability_content[SupplyId] = SharedCardText(SupplyId);
         KitSetAbilitys();
         SigSetAbilitys();
+        PathSetAbilitys();          // 입문 · 외길 · 31 새 카드 (LevelShop.Paths)
     }
     void Update()
     {
@@ -351,7 +354,8 @@ public partial class LevelShop : MonoBehaviour
             if (card == null) continue;
             bool on = i == pendingSlot;
             card.localScale = Vector3.one * (on ? 1.08f : 1f);
-            if (card.TryGetComponent(out Image img)) img.color = on ? new Color(1f, 0.88f, 0.55f) : Color.white;
+            // 갈림길의 외길 카드는 고르지 않아도 옅은 금빛 (LevelShop.Paths)
+            if (card.TryGetComponent(out Image img)) img.color = on ? new Color(1f, 0.88f, 0.55f) : IsSingleSlot(i) ? new Color(1f, 0.95f, 0.72f) : Color.white;
         }
 
         if (selectHint == null && LvshopPanel != null)
@@ -543,8 +547,8 @@ public partial class LevelShop : MonoBehaviour
         {
             if (Total_abilitys <= 0 || ability_selected == null) return false;
             for (int i = 0; i < Total_abilitys && i < ability_selected.Length; i++)
-                if (!ability_selected[i] && KitFits(i) && !SigLocked(i)) return false;
-            return true;
+                if (Learnable(i)) return false;         // 갈래 규칙이면 고른 갈래 · 공용 카드만 셈 (LevelShop.Paths)
+            return PathWindowDue() == PathWindow.None;   // 입문 · 갈림길이 남아 있으면 아직 배울 것이 있음
         }
     }
 
@@ -574,11 +578,39 @@ public partial class LevelShop : MonoBehaviour
     void closeLevelShop()
     {
         if (LvshopPanel != null) LvshopPanel.SetActive(false);
+        HidePathWindow();           // 입문 · 갈림길 머리말 (LevelShop.Paths)
         Time.timeScale = 1f;
     }
     private int first = 0, second = 1, third = 2;
     void UpdateLvShopContent(bool reroll = false)
     {
+        // 2026-10-19~ 빌드 갈래 규칙 판이면 입문 · 갈림길 · 「갈래 카드 최대 2 + 공용 최소 1」 (LevelShop.Paths) · 구판 규칙 판은 예전 뽑기
+        if (Paths.Active) PathsDraw(reroll);
+        else LegacyDraw(reroll);
+
+        // 2026-10-16: 카드 설명을 완결 문장으로 다듬어 영어 · 일본어가 길어짐 — 씬의 최소 18pt 로는 칸 밖으로 넘칠 수 있어 15pt 까지 줄어들게
+        foreach (TextMeshProUGUI ab in new[] { FirstAbility, SecondAbility, ThirdAbility })
+            if (ab != null && ab.fontSizeMin > 15f) ab.fontSizeMin = 15f;
+
+        FirstTitle.text = CardTitleOf(first);
+        FirstAbility.text = CardBodyOf(first);
+        SecondTitle.text = CardTitleOf(second);
+        SecondAbility.text = CardBodyOf(second);
+        ThirdTitle.text = CardTitleOf(third);
+        ThirdAbility.text = CardBodyOf(third);
+
+        SetCardIcon(FirstIcon, first);
+        SetCardIcon(SecondIcon, second);
+        SetCardIcon(ThirdIcon, third);
+        ShowEvoHints();
+
+        Time.timeScale = 0f;
+    }
+
+    // 예전 뽑기 (구판 규칙 판 · 갈래가 없는 영웅)
+    void LegacyDraw(bool reroll)
+    {
+        HidePathWindow();
         // 아직 고를 수 있는 카드 중에서 세 장 (모자라면 성장 카드, 1.0.4~ — 예전엔 비상 보급)
         System.Collections.Generic.List<int> open = new System.Collections.Generic.List<int>();
         // 최대 레벨이면 성장 카드만 (1.0.4~, LevelShop.Growth)
@@ -590,7 +622,7 @@ public partial class LevelShop : MonoBehaviour
         if (!growthOnly)
             for (int i = 0; i < Total_abilitys; i++)
             {
-                if (ability_selected[i] || !KitFits(i) || SigLocked(i)) continue;
+                if (!Learnable(i)) continue;
                 if (reroll && (i == first || i == second || i == third)) spare.Add(i);
                 else open.Add(i);
             }
@@ -614,34 +646,9 @@ public partial class LevelShop : MonoBehaviour
             return id;
         }
 
-        // 2026-10-16: 카드 설명을 완결 문장으로 다듬어 영어 · 일본어가 길어짐 — 씬의 최소 18pt 로는 칸 밖으로 넘칠 수 있어 15pt 까지 줄어들게
-        foreach (TextMeshProUGUI ab in new[] { FirstAbility, SecondAbility, ThirdAbility })
-            if (ab != null && ab.fontSizeMin > 15f) ab.fontSizeMin = 15f;
-
-        //첫번째 능력 선택
         first = Draw();
-
-        FirstTitle.text = CardTitleOf(first);
-        FirstAbility.text = CardBodyOf(first);
-
-        //두번째 능력 선택
         second = Draw();
-
-        SecondTitle.text = CardTitleOf(second);
-        SecondAbility.text = CardBodyOf(second);
-
-        //세번째 능력 선택
         third = Draw();
-
-        ThirdTitle.text = CardTitleOf(third);
-        ThirdAbility.text = CardBodyOf(third);
-
-        SetCardIcon(FirstIcon, first);
-        SetCardIcon(SecondIcon, second);
-        SetCardIcon(ThirdIcon, third);
-        ShowEvoHints();
-
-        Time.timeScale = 0f;
     }
 
     SkillGauge skill;
@@ -657,7 +664,8 @@ public partial class LevelShop : MonoBehaviour
 
     // 밀어내기 표시용 기본 넉백 값 (PlayerController.knockBack 초기값)
     const float BaseKnockBack = 0.3f;
-    const int AbilityCount = SigFirstId + SigCount;      // 공용 · 전용 15장 + 고유 스킬 10장
+    // 공용 · 전용 15장 + 고유 스킬 10장 (0 ~ 24) + 2026-10-19~ 입문 25 ~ 29 · 외길 30 · 새 카드 31 (Paths, 배열은 Start 에서 늘림 · 씬 수정 없음)
+    const int AbilityCount = Paths.IdEnd;
     // 끝없이 고를 수 있던 카드의 상한
     const int CoinMaxLevel = 4, ExpMaxLevel = 4, HeartMaxLevel = 4, GlareMaxLevel = 3;
     const float RegenStep = 0.5f;       // 생명의 샘 1회당 초당 회복량
@@ -676,6 +684,7 @@ public partial class LevelShop : MonoBehaviour
         if (bul == null) return "";
         // 1.1.2~ 카드 · 진화 재료 칸은 단계를 칸(LevelPips)으로만 보여 주므로 정확한 숫자는 마우스를 올린 설명에만
         string lvLine = HudView ? "" : StepTip(id);
+        if (PathTooltip(id, out string pathTip)) return pathTip;         // 입문 · 외길 (LevelShop.Paths)
         if (KitTooltip(id, out string kitTip)) return kitTip + lvLine;
         return SharedCardText(id) + lvLine;
     }
@@ -683,7 +692,7 @@ public partial class LevelShop : MonoBehaviour
     // 「Lv 2 · 최대 3」 (최대 단계가 없는 카드는 빈 줄)
     string StepTip(int id)
     {
-        int max = MaxLevelOf(CharacterData.Selected, id);
+        int max = CapOf(id);            // 외길이면 늘어난 단계까지 (LevelShop.Paths)
         return max > 0 ? "\n<color=#A89C86>Lv " + LevelOf(id) + "  ·  " + Loc.T("최대") + " " + max + "</color>" : "";
     }
 
@@ -776,6 +785,7 @@ public partial class LevelShop : MonoBehaviour
         bul = FindFirstObjectByType<PlayerController>();
         closeLevelShop();
         RunSave.Record((freePick ? "f" : "c") + what);         // 판 중간 저장 (2.1.9): 고른 카드를 순서대로
+        Paths.NoteCard(what);                                   // 판 기록 cards_seq (2026-10-19~)
         // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외) · 최대 레벨에서 멈춤 (그 뒤는 성장 카드, 1.0.4~)
         if (freePick) freePick = false;
         else if (bul != null && bul.level < LevelCap) bul.level++;
@@ -801,12 +811,14 @@ public partial class LevelShop : MonoBehaviour
         }
         ApplyPick(what);
         CheckEvolutions();          // 재료가 모두 최대면 스킬 진화
+        PathsAfterPick(what);       // 갈래 단계 · 공명 · 완성 · 극의 · 교차 (LevelShop.Paths)
     }
 
     // ================================================================= 판 중간 저장 (RunSave, 2.1.9~)
     // 기록한 카드를 연출 없이 다시 고름 (free: 판을 시작할 때 준 카드라 레벨이 오르지 않음)
     public void ReplayPick(int what, bool free)
     {
+        Paths.NoteCard(what);
         if (IsGrowth(what))
         {
             // 성장 카드 (1.0.4~): 고를 때와 같이 최대 레벨에서는 레벨이 오르지 않음
@@ -827,6 +839,7 @@ public partial class LevelShop : MonoBehaviour
         if (what == SupplyId) return;
         ApplyPick(what);
         CheckEvolutions();
+        PathsAfterPick(what);
     }
 
     // 판을 시작할 때 뜨는 첫 카드 창을 닫음 (이어하기는 기록한 첫 카드로 대신)
@@ -859,6 +872,7 @@ public partial class LevelShop : MonoBehaviour
 
     void ApplyPick(int what)
     {
+        if (PathApply(what)) return;        // 입문 · 외길 · 31 새 카드 (LevelShop.Paths)
         if (SigApply(what)) return;
         if (KitApply(what)) return;
         if (what == 0) bul.pene++;

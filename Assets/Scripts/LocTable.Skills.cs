@@ -392,5 +392,6 @@ public static partial class LocTable
         AddHeroes();        // 1.0.2 새 캐릭터 (LocTable.Heroes)
         AddTranscend();     // 1.1~ 3장 각성 · 초월 카드 (LocTable.Transcend)
         AddTerrain();       // 1.2.3~ 무한 모드 지형 변화 (LocTable.Terrain)
+        AddPaths();         // 2026-10-19~ 빌드 갈래 공통 문구 + 영웅 아홉 (LocTable.Paths · Paths/LocTable.Paths.<영웅>)
     }
 }

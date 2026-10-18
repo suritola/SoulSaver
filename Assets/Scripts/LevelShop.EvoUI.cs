@@ -129,7 +129,7 @@ public partial class LevelShop
         for (int slot = 0; slot < 3; slot++)
         {
             if (ids[slot] == SupplyId) continue;
-            float s = EvoProgressAfter(ids[slot]);
+            float s = Mathf.Max(EvoProgressAfter(ids[slot]), PathProgressAfter(ids[slot]));        // 갈래 규칙: 공명 · 완성에 닿게 하는 카드도 (LevelShop.Paths)
             if (s > bestScore) { bestScore = s; best = slot; }
         }
         recommendedSlot = best;
@@ -280,7 +280,7 @@ public partial class LevelShop
     {
         if (IsOpen) EvoRowPulse();
         if (skipButton == null) return;
-        bool show = IsOpen && !freePick;            // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드)
+        bool show = IsOpen && !freePick && !PathWindowShown;        // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드) · 입문 · 갈림길 창에도 없음 (건너뛰면 갈래가 비어 버림)
         if (skipButton.gameObject.activeSelf != show) skipButton.gameObject.SetActive(show);
         if (!show) return;
         skipButton.interactable = selectReady;
@@ -293,7 +293,7 @@ public partial class LevelShop
 
     void SkipLevel()
     {
-        if (!selectReady || !IsOpen || freePick) return;
+        if (!selectReady || !IsOpen || freePick || PathWindowShown) return;
         if (!SkipArmed)
         {
             skipArmedAt = Time.unscaledTime;

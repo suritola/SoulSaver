@@ -305,6 +305,8 @@ public partial class CharacterKit : MonoBehaviour
         float veil = Special != null ? Special.KitConsumeVeil() : 1f;
         dmg *= veil;
         PlayerLook.Fired(-1);
+        // 2026-10-19~ 평타 모양을 바꾸는 갈래 입문 (Paths.<영웅>.KitAttack 이 true 면 원래 평타 대신)
+        if (Paths.KitAttack(this, start, dir, dmg, shots)) return;
 
         switch (Id)
         {

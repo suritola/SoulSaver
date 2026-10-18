@@ -78,18 +78,21 @@ public partial class LevelShop
                 if (rim != null) rim.raycastTarget = true;
                 int idx = slot;
                 TooltipTrigger tip = r.gameObject.AddComponent<TooltipTrigger>();
-                tip.titleProvider = () => Loc.T("시너지");
-                tip.bodyProvider = () => Loc.T("이미 가진 카드와 잘 어울리는 카드입니다. 함께 키우면 서로의 효과를 살려 줍니다.")
+                // 2026-10-19~ 갈래 규칙 판: 「공명 I까지 N」 · 갈림길 「교차 ○○」 배지 (LevelShop.Paths) — 자리 · 툴팁 코드는 그대로
+                tip.titleProvider = () => Paths.Active ? Loc.T("갈래") : Loc.T("시너지");
+                tip.bodyProvider = () => Paths.Active
+                    ? Loc.T("갈래 단계(입문 1 + 갈래 카드 단계)가 4에 닿으면 공명 I, 8에 닿으면 공명 II가 열립니다. 두 갈래가 모두 공명 I에 닿으면 교차가 열립니다.")
+                    : Loc.T("이미 가진 카드와 잘 어울리는 카드입니다. 함께 키우면 서로의 효과를 살려 줍니다.")
                                          + (synergyPartners[idx] != null ? "\n<color=#B6FF9E>" + Loc.T("어울리는 카드") + "  " + synergyPartners[idx] + "</color>" : "");
             }
             // 카드 아래 테두리에 걸침 (그 아래는 확정 안내 줄) · 추천 카드면 「★ 추천」 알약이 그 자리라 바로 위 카드 안쪽으로
             RectTransform tr = synergyTags[slot].transform.parent as RectTransform;
             tr.pivot = new Vector2(0.5f, slot == recommendedSlot ? 0f : 0.5f);
             tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 10f);
-            string partner = ShowSynergyIntro ? SynergyPartner(ids[slot]) : null;
+            string partner = !ShowSynergyIntro ? null : Paths.Active ? PathBadge(ids[slot]) : SynergyPartner(ids[slot]);
             synergyPartners[slot] = partner;
             synergyTags[slot].transform.parent.gameObject.SetActive(partner != null);
-            if (partner != null) synergyTags[slot].text = "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
+            if (partner != null) synergyTags[slot].text = Paths.Active ? "<color=#B6FF9E>" + partner + "</color>" : "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
             LiftAbilityAbove(slot, partner != null && slot == recommendedSlot);
         }
     }

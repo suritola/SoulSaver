@@ -27,7 +27,7 @@ public partial class LevelShop
         // 1.1~ 진화 첫 안내 줄(LevelShop.EvoUI, y 448)이 떠 있으면 그 위로 (같은 자리에 겹쳐 둘 다 읽을 수 없었음)
         if (show)
         {
-            float y = evoIntroShowing && evoIntroText != null && evoIntroText.gameObject.activeSelf ? 496f : 445f;
+            float y = (evoIntroShowing && evoIntroText != null && evoIntroText.gameObject.activeSelf) || PathHeaderShown ? 496f : 445f;      // 입문 · 갈림길 머리말도 같은 자리 (LevelShop.Paths)
             RectTransform cr = chainText.rectTransform;
             if (!Mathf.Approximately(cr.anchoredPosition.y, y)) cr.anchoredPosition = new Vector2(0f, y);
         }

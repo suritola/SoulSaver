@@ -20,6 +20,7 @@ public partial class LevelShop
         public string[] values;         // 레벨 1 ~ 최대의 수치 ("앞말|숫자|단위", 앞말 · 단위는 번역 키)
         public int icon;                // Resources/Icons/ability_<icon>
         public string zero;             // 1.0.4~: 배우기 전 기본 수치 (줄어드는 수치는 「없음 → 10」이 거꾸로 읽혀서, 있으면 「12 → 10」)
+        public string iconPath;         // 2026-10-19~ 갈래 새 카드 그림 (Resources/Icons/Paths/<이름>, 없으면 icon 번호 그림)
         public int max => values.Length;    // 최대 선택 횟수
     }
 
@@ -104,6 +105,8 @@ public partial class LevelShop
     static KitCard KitCardOf(CharacterId who, int id)
     {
         if (IsSig(id)) return SigCardOf(who, id);       // 새 고유 스킬 10종 (LevelShop.Signature)
+        if (id == Paths.ExtraId) return PathExtraCard(who);     // 2026-10-19~ 갈래 새 카드 31번 (LevelShop.Paths · 연금술사 「서리 장막」)
+        if (Paths.IsPathId(id)) return null;                    // 입문 · 외길은 카드 모양이 달라 LevelShop.Paths 가 맡음
         switch (who)
         {
             case CharacterId.Gunner:
@@ -170,8 +173,16 @@ public partial class LevelShop
     public static Sprite KitIcon(int id)
     {
         if (id == SupplyId) return Resources.Load<Sprite>("Icons/ability_85");
+        if (Paths.IsSeed(id) || id == Paths.SingleId) return PathCardIcon(CharacterData.Selected, id);     // 입문 · 외길 (그림이 없으면 기존 아이콘)
         KitCard c = KitCardOf(id);
-        return c != null ? Resources.Load<Sprite>("Icons/ability_" + c.icon) : null;
+        return c != null ? KitCardIcon(c) : null;
+    }
+
+    // 카드 그림: 갈래 새 카드는 Icons/Paths 의 그림이 있으면 그것 (없으면 기존 아이콘 번호)
+    static Sprite KitCardIcon(KitCard c)
+    {
+        Sprite s = c.iconPath != null ? Paths.Icon(c.iconPath) : null;
+        return s != null ? s : Resources.Load<Sprite>("Icons/ability_" + c.icon);
     }
 
     void KitSetAbilitys()
@@ -181,7 +192,7 @@ public partial class LevelShop
             KitCard c = KitCardOf(id);
             if (c == null || id >= ability_name.Length) continue;
             ability_name[id] = Loc.T(c.name);
-            ability_content[id] = KitText(c, ability_level[id]);
+            ability_content[id] = KitText(Extend(c, id), ability_level[id]);        // 외길이면 늘어난 단계 수치까지 (LevelShop.Paths)
         }
     }
 
@@ -190,7 +201,7 @@ public partial class LevelShop
         tip = null;
         KitCard c = KitCardOf(id);
         if (c == null) return false;
-        tip = KitText(c, ability_level[id]);
+        tip = KitText(Extend(c, id), ability_level[id]);
         SkillEvo evo = EvoUsing(id);
         if (evo != null) tip += "\n<color=#C9A0FF>" + Loc.T("진화") + " ◆ " + Loc.T(evo.name) + "</color>";
         if (CharacterData.IsGunner && ability_level[id] > 0 && !KitFits(id))
@@ -218,7 +229,7 @@ public partial class LevelShop
             int g = id == PierceId ? SpecialAbilities.GunRicochet : id == MultiId ? SpecialAbilities.GunExplosive : id == KnockId ? SpecialAbilities.GunIncendiary
                   : id == GlareId ? SpecialAbilities.GunHoming : id == ExtraAId ? SpecialAbilities.GunShock : SpecialAbilities.GunReloadWave;
             sp.gunCard[g]++;
-            if (ability_level[id] >= c.max) ability_selected[id] = true;
+            if (ability_level[id] >= CapOf(id)) ability_selected[id] = true;       // 외길이면 한 단계 더 (LevelShop.Paths)
             return true;
         }
         CharacterKit kit = CharacterKit.Instance;
@@ -228,7 +239,7 @@ public partial class LevelShop
         int slot = id == PierceId ? 0 : id == MultiId ? 1 : id == KnockId ? 2 : id == HungerId ? 4 : id == ExtraAId ? 5 : id == ExtraBId ? 6 : 3;
         kit.card[slot]++;
         kit.CardPicked(slot);
-        if (ability_level[id] >= c.max) ability_selected[id] = true;
+        if (ability_level[id] >= CapOf(id)) ability_selected[id] = true;
         return true;
     }
 }

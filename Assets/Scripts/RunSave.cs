@@ -84,6 +84,9 @@ public static class RunSave
         // 1.2.5~ 이번 판 포인트 (결과 화면 「획득 포인트」 · 「클리어 보너스」 · balance_log points_run 이 이어한 판에서도 판 전체로)
         //   보유 포인트는 그때그때 저장되므로 여기 값은 표시 · 기록용으로만 되살림 (옛 저장은 0 → 예전처럼 이어한 뒤 몫만)
         public int runPoints, runBonus, contractPoints, contractsDone, pointsShown;
+        // 2026-10-19~ 빌드 갈래 규칙 판 (1) · 옛 저장 · 구판 규칙 판 (0 → 이어해도 끝까지 예전 뽑기 · 진화 재료, LevelShop.SetPathRules)
+        //   입문 · 외길 · 새 카드는 다른 카드처럼 c<25 ~ 31> · f<25 ~ 29> 기록으로 다시 적용 (Version 은 그대로 — 올리면 진행 중인 판이 모두 버려짐)
+        public int paths;
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -281,6 +284,7 @@ public static class RunSave
         };
         Point pt = Cache<Point>.Get;
         d.pointsShown = pt != null ? pt.points : 0;
+        d.paths = Paths.Active ? 1 : 0;                             // 2026-10-19~ 갈래 규칙 판인지
         shop.SaveLevels(out d.earned, out d.pending);
         Coin coin = Cache<Coin>.Get;
         d.coins = coin != null ? coin.coins : 0;
@@ -390,6 +394,7 @@ public static class RunSave
         if (shop == null || p == null) yield break;
 
         shop.CancelOpening();                                       // 판을 시작할 때 뜨는 첫 카드 창은 닫음 (기록에 있는 첫 카드로 대신)
+        shop.SetPathRules(d.paths == 1);                            // 2026-10-19~ 옛 저장 · 구판 규칙 판은 끝까지 예전 규칙 (기록을 다시 적용하기 전에)
         if (!GameMode.IsEndless) sm.JumpToStage(d.stage);           // 1.2.3~ 무한 모드 맵 · 스테이지는 StageManager.PrepareEndless 가 먼저 맡음
         RunStats.Seconds = d.seconds;                               // 다시 적용하는 진화의 시각이 00:00 으로 찍히지 않게 먼저 (1.0.4~)
         // 기준 공격력을 기록 재생 전에 고정: 실제 판은 시작 직후 첫 프레임(영혼 트리 버튼)에 시작 공격력으로 정해지는데,

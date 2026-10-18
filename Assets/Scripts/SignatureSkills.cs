@@ -45,6 +45,7 @@ public partial class SignatureSkills : MonoBehaviour
         EnermyController.Killed -= OnKilled;
         PlayerController.UltUsed -= OnUlt;
         Dealing = DotTick = false;
+        Paths.End();            // 2026-10-19~ 갈래 효과가 바꿔 둔 값 되돌림 (Paths.<영웅>.End)
     }
 
     // 레벨업 · 진화가 바뀔 때마다 단계를 다시 읽음
@@ -149,6 +150,7 @@ public partial class SignatureSkills : MonoBehaviour
     //   고유 스킬 배율은 1.3.7~ CharacterDef.sig (영웅마다 · 30분 밸런스)
     float Atk => player != null ? player.damage * player.damageMultiplier / Mathf.Max(0.1f, CharacterData.Current.damage) * SigPower : 1f;
     float SigPower => CharacterData.Def(who).sig;     // 1.3.7~ 영웅 데이터로 옮김 (예전: 검사 0.98 · 도적 0.85 · 나머지 1)
+    public float BaseAtk => Atk;                       // 2026-10-19~ 갈래 효과도 같은 기준 (Paths.Atk)
     bool Alive => player != null && !player.IsDying;
 
     // ================================================================= 훅 (게임 코드가 부름 · 없으면 아무것도 안 함)
@@ -175,6 +177,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Postman: mul *= PostOutgoing(target); break;
             case CharacterId.Ghost: mul *= GhostOutgoing(target); break;
         }
+        mul *= Paths.Outgoing(target, dmg);         // 2026-10-19~ 갈래 효과 (모든 영웅 · Paths.<영웅>.cs)
         return dmg * mul;
     }
 
@@ -190,6 +193,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Alchemist: AlchemistHit(target, dmg, killed, proc); break;
             case CharacterId.Clockmaker: ClockHit(target, dmg); break;
         }
+        Paths.Hit(target, dmg, killed, proc);
     }
 
     float TakenMul(float dmg)
@@ -203,7 +207,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Postman: dmg = PostTaken(dmg); break;
             case CharacterId.Ghost: dmg = GhostTaken(dmg); break;
         }
-        return dmg;
+        return Paths.Taken(dmg);
     }
 
     void OnHurt(float taken)
@@ -211,12 +215,14 @@ public partial class SignatureSkills : MonoBehaviour
         if (who == CharacterId.Gunner) GunnerHurt(taken);
         else if (who == CharacterId.Swordsman) SwordHurt(taken);
         else if (who == CharacterId.Postman) PostHurt(taken);       // 1.0.6~ 맞으면 우표 절반
+        Paths.Hurt(taken);
     }
 
     void OnAttack(Vector3 start, Vector2 dir)
     {
         if (who == CharacterId.Gunner) GunnerAttack();
         else if (who == CharacterId.Rogue) RogueAttack(start, dir);
+        Paths.Attacked(start, dir);
     }
 
     void OnKilled(Vector3 pos)
@@ -226,12 +232,14 @@ public partial class SignatureSkills : MonoBehaviour
         else if (who == CharacterId.Swordsman) SwordKilled(pos);
         else if (who == CharacterId.Cartographer) MapKilled(pos);
         else if (who == CharacterId.Clockmaker) ClockKilled(pos);
+        Paths.Killed(pos);
     }
 
     void OnUlt()
     {
         if (!Alive) return;
         if (who == CharacterId.Gunner) GunnerUlt();
+        Paths.Ult();
     }
 
     float MoveMultiplier()
@@ -243,10 +251,10 @@ public partial class SignatureSkills : MonoBehaviour
         else if (who == CharacterId.Cartographer) m *= MapMove();
         else if (who == CharacterId.Postman) m *= PostMove();
         else if (who == CharacterId.Ghost) m *= GhostMove();
-        return m;
+        return m * Paths.MoveMul();
     }
 
-    float RateMultiplier() => who == CharacterId.Swordsman ? SwordRate() : who == CharacterId.Clockmaker ? ClockRate() : 1f;
+    float RateMultiplier() => (who == CharacterId.Swordsman ? SwordRate() : who == CharacterId.Clockmaker ? ClockRate() : 1f) * Paths.RateMul();
 
     // 2.1.3: 고유 스킬이 그리는 이펙트 · 코루틴도 출처를 이어 감 (Fx 가 스킬 이펙트를 눈에 띄게)
     public new Coroutine StartCoroutine(System.Collections.IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
@@ -273,6 +281,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Ghost: GhostTick(); break;
         }
         CommonTick();
+        Paths.Tick();               // 2026-10-19~ 갈래 효과 (멈춘 동안 · 쓰러지는 중은 위에서 걸러짐)
     }
 
     // ================================================================= 쌓이는 스킬의 지금 상태 (HUD 칸 오른쪽 위 숫자)

@@ -245,12 +245,31 @@ public partial class LevelShop
         Evo("ce.body", "불멸의 육체", "체력이 가득 차 있으면 3초마다 심장 박동 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", 206, 8, 9, 10),
     };
 
-    // 이 캐릭터가 노릴 수 있는 진화 (캐릭터 7종 + 공통 2종)
-    public static List<SkillEvo> EvosFor(CharacterId who)
+    // 2026-10-19~ 빌드 갈래 규칙에서 재료가 바뀌는 진화 6종 (기획서 3장 「재료 변경」 · 효과 코드는 그대로, 재료만)
+    //   완성 진화의 재료가 한 갈래 안에 모이게: 천둥 장전 · 총잡이의 춤 · 폭풍의 눈 · 우표 수집가 · 망령 / 교차 진화: 처형자의 길
+    //   구판 규칙 판(옛 저장 이어하기)은 예전 재료 그대로
+    static readonly Dictionary<string, int[]> PathEvoParts = new Dictionary<string, int[]>
+    {
+        { "ge.thunder", new[] { ExtraBId, S(4), S(7) } },          // 천둥 장전: 장전 충격파 · 섬광 장전 · 달리며 장전 (산탄 돌격)
+        { "ge.dance", new[] { S(6), S(0), S(5) } },                 // 총잡이의 춤: 속사 장전 · 탄피 지뢰 · 반격 사격 (포탑 설치)
+        { "se.eye", new[] { GlareId, S(4), S(8) } },                // 폭풍의 눈: 칼바람 · 강철 의지 · 잔향 베기 (회오리)
+        { "re.executioner", new[] { ExtraAId, S(3) } },             // 처형자의 길: 급소 노리기 · 급습 표창 (출혈 × 질주 암살)
+        { "pe.collector", new[] { KnockId, S(8) } },                // 우표 수집가: 우표 수집 · 정확한 주소 (장거리 배송)
+        { "he.specter", new[] { S(4), S(3) } },                     // 망령: 실체 없음 · 생기 흡수 (유체 이탈)
+    };
+
+    // 이 캐릭터가 노릴 수 있는 진화 (캐릭터 7종 + 공통 2종) — 도감 · 기록: 그 영웅이 갈래 규칙이면 바뀐 재료로
+    public static List<SkillEvo> EvosFor(CharacterId who) => EvosFor(who, Paths.RulesFor(who));
+
+    // paths: 갈래 규칙 판 (재료가 바뀐 진화는 복사본으로 — 원래 표는 건드리지 않음)
+    public static List<SkillEvo> EvosFor(CharacterId who, bool paths)
     {
         List<SkillEvo> list = new List<SkillEvo>();
         int w = (int)who;
-        if (w >= 0 && w < CharEvos.Length) list.AddRange(CharEvos[w]);
+        if (w >= 0 && w < CharEvos.Length)
+            foreach (SkillEvo e in CharEvos[w])
+                list.Add(paths && PathEvoParts.TryGetValue(e.key, out int[] parts)
+                    ? new SkillEvo { key = e.key, name = e.name, desc = e.desc, icon = e.icon, parts = parts } : e);
         list.AddRange(CommonEvos);
         for (int i = 0; i < list.Count; i++) list[i].Id = 1000 + i;
         return list;
@@ -260,6 +279,7 @@ public partial class LevelShop
     // 레벨업 카드 번호의 이름 (진화 재료 표시 · 도감용, 캐릭터마다 다름)
     public static string CardName(CharacterId who, int id)
     {
+        if (Paths.IsSeed(id) || id == Paths.SingleId) return PathCardName(who, id);        // 입문 · 외길 (LevelShop.Paths)
         KitCard c = IsSig(id) ? SigCardOf(who, id) : KitCardOf(who, id);
         if (c != null) return Loc.T(c.name);
         return id switch
@@ -272,8 +292,9 @@ public partial class LevelShop
 
     public static Sprite CardIcon(CharacterId who, int id)
     {
+        if (Paths.IsSeed(id) || id == Paths.SingleId) return PathCardIcon(who, id);        // 입문 · 외길 (LevelShop.Paths)
         KitCard c = IsSig(id) ? SigCardOf(who, id) : KitCardOf(who, id);
-        if (c != null) return Resources.Load<Sprite>("Icons/ability_" + c.icon);
+        if (c != null) return KitCardIcon(c);
         if (id == 5) return Resources.Load<Sprite>("Icons/ability_104");
         CodexData data = CodexData.Load();
         return data != null && data.abilityIcons != null && id >= 0 && id < data.abilityIcons.Length ? data.abilityIcons[id] : null;
@@ -301,6 +322,7 @@ public partial class LevelShop
     public static int MaxLevelOf(CharacterId who, int id)
     {
         if (IsSig(id)) return SigMaxLevel;
+        if (Paths.IsSeed(id) || id == Paths.SingleId) return Paths.Supported(who) ? 1 : 0;     // 입문 · 외길: 한 번 (LevelShop.Paths)
         KitCard c = KitCardOf(who, id);
         if (c != null) return c.max;
         return id switch
@@ -325,7 +347,7 @@ public partial class LevelShop
             KitCard c = SigCardOf(CharacterData.Selected, id);
             if (c == null) continue;
             ability_name[id] = Loc.T(c.name);
-            ability_content[id] = KitText(c, ability_level[id]);
+            ability_content[id] = KitText(Extend(c, id), ability_level[id]);        // 외길이면 늘어난 단계 수치까지 (LevelShop.Paths)
         }
     }
 
@@ -339,7 +361,7 @@ public partial class LevelShop
     bool SigApply(int id)
     {
         if (!IsSig(id)) return false;
-        if (ability_level[id] >= SigMaxLevel) ability_selected[id] = true;
+        if (ability_level[id] >= CapOf(id)) ability_selected[id] = true;          // 외길이면 5단계까지 (LevelShop.Paths)
         SignatureSkills.Ensure()?.Refresh(this);
         return true;
     }
@@ -350,7 +372,7 @@ public partial class LevelShop
     // 1.1.2~ 이번 판에 진화한 순서 · 플레이 시각 (결과 화면 · balance_log 의 skill_evos)
     public readonly List<KeyValuePair<SkillEvo, float>> EvoLog = new List<KeyValuePair<SkillEvo, float>>();
     List<SkillEvo> myEvos;
-    public List<SkillEvo> MyEvos => myEvos ??= EvosFor(CharacterData.Selected);
+    public List<SkillEvo> MyEvos => myEvos ??= EvosFor(CharacterData.Selected, Paths.Active);     // 갈래 규칙이 바뀌면 (이어하기) LevelShop.Paths 가 비움
 
     // 고른 카드로 재료가 모두 최대가 된 진화를 차례로
     void CheckEvolutions()
@@ -409,6 +431,7 @@ public partial class LevelShop
         {
             if (evolved.Contains(e.key) || System.Array.IndexOf(e.parts, id) < 0) continue;
             if (EvoBlocked(e, id)) continue;        // 1.0.4~ (거너): 지금 무기로는 다른 재료가 뽑히지 않는 진화는 추천하지 않음
+            if (!EvoReachable(e)) continue;         // 갈래 규칙: 고르지 않은 갈래의 재료가 필요한 진화는 추천하지 않음 (LevelShop.Paths)
             int have = 0, need = 0;
             foreach (int p in e.parts)
             {
@@ -448,10 +471,11 @@ public partial class LevelShop
     }
 
     // 카드에 붙는 진화 미리보기: 이 카드가 재료인 (아직 안 된) 진화
+    // 갈래 규칙에서는 이번 판에 이룰 수 있는 진화만 (고르지 않은 갈래의 재료가 필요하면 띠를 보이지 않음)
     public SkillEvo EvoUsing(int id)
     {
         foreach (SkillEvo e in MyEvos)
-            if (!evolved.Contains(e.key) && System.Array.IndexOf(e.parts, id) >= 0) return e;
+            if (!evolved.Contains(e.key) && System.Array.IndexOf(e.parts, id) >= 0 && EvoReachable(e)) return e;
         return null;
     }
 

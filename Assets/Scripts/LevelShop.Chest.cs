@@ -23,7 +23,7 @@ public partial class LevelShop
         for (int i = 0; i < n; i++)
         {
             if (i == SupplyId || IsGrowth(i) || ability_level[i] <= 0 || ability_selected[i]) continue;
-            if (!KitFits(i) || SigLocked(i)) continue;
+            if (!KitFits(i) || SigLocked(i) || !PathAllows(i)) continue;        // 갈래 규칙: 고른 갈래 · 공용 카드만 (LevelShop.Paths)
             open.Add(i);
         }
         return open.Count > 0 ? open[Random.Range(0, open.Count)] : -1;

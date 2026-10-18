@@ -24,7 +24,7 @@ public partial class LevelShop
                 r.anchoredPosition = new Vector2(0f, CardPipsY);
             }
             int id = ids[slot];
-            int max = id == SupplyId || IsGrowth(id) ? 0 : MaxLevelOf(CharacterData.Selected, id);
+            int max = id == SupplyId || IsGrowth(id) ? 0 : CapOf(id);      // 외길이면 늘어난 단계까지 (LevelShop.Paths)
             cardPips[slot].Set(LevelOf(id), max, 1);
         }
     }
