@@ -53,6 +53,7 @@ public partial class BossUltimate
         ErosionPending = false;
         restUntil = 0f;
         DomainStrikes.Clear();
+        BossSkills.ResetOwnStatics();       // 개발자 · 엄마 고유 공격의 정적 상태 (둘 합쳐 하나 · BossSkills.OwnKit)
     }
 
     // 통합 모드에서 맞음 (OnBossHit 이 개별 공식으로 gain 을 구한 뒤)

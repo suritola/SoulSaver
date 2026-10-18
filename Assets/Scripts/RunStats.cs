@@ -577,7 +577,8 @@ public static class Hints
                                              "bossult.gauge", "growth", "laststand.hud", "targetmark", "transcend",     // 1.1~ 빠져 있던 키
                                              "relic", "mapprop",         // 1.2~ 유물 · 맵 물체
                                              "terrain", "endless.bossqueue",     // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
-                                             "bossult.shared" };                 // 1.2.5~ 통합 결계 게이지 · 공간 침식
+                                             "bossult.shared",                   // 1.2.5~ 통합 결계 게이지 · 공간 침식
+                                             "dev.code", "dev.popup", "mom.medal", "mom.lights" };     // 개발자 · 엄마 고유 기본 공격
 
     public static void ResetAll()
     {

@@ -164,6 +164,8 @@ public partial class BossUltimate : MonoBehaviour
     {
         running = true;
         Active = true;
+        // 개발자 · 엄마: 돌던 고유 공격을 끊고 표시 · 경고 · 메달 · 멈춘 Ctrl+Z 탄을 정리 (컷신 뒤 결계 안에 남지 않게 · BossSkills.OwnKit)
+        if (boss != null && boss.developer && boss.TryGetComponent(out BossSkills ownSk)) ownSk.CancelOwn();
         SetWindowPending();         // 컷신 · 펼침 동안 보스바는 가득 (BossUltimate.Erosion.cs)
         gauge[kind] = 0f;
         usedThisFight[kind] = true;

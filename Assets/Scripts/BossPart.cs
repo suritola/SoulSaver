@@ -6,6 +6,7 @@ using UnityEngine;
 public class BossPart : MonoBehaviour
 {
     public float hp = 50f;
+    public float maxHp = 50f;       // 일시정지 설명의 남은 체력 줄 (엄친아 메달)
     public bool Broken { get; private set; }
 
     SpriteRenderer sr;
@@ -23,6 +24,7 @@ public class BossPart : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Kinematic;
         BossPart part = go.AddComponent<BossPart>();
         part.hp = hp;
+        part.maxHp = hp;
         part.sr = go.GetComponent<SpriteRenderer>();
         part.baseColor = color;
         part.baseScale = scale;

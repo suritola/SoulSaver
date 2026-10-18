@@ -36,6 +36,7 @@ public static partial class Herald
     sealed class Facts
     {
         public string hero, ch, stage, cause, boss;
+        public string causeHead, skill;     // 「개발자 · 라이브 코딩」 → 「개발자」 · 「라이브 코딩」 (조건이 「 · 」로 나뉘어 원인 전체를 조건에 쓸 수 없음)
         public int chNum;
         public readonly HashSet<string> extra = new HashSet<string>();
     }
@@ -52,6 +53,9 @@ public static partial class Herald
         int stageIdx = Mathf.Clamp(Chapters.CurrentStage, 0, Chapters.StageNames.Length - 1);
         f.stage = Chapters.StageNames[stageIdx];
         f.cause = RunStats.LastHurtBy ?? "";
+        int dot = f.cause.IndexOf(" · ");
+        f.causeHead = dot > 0 ? f.cause.Substring(0, dot) : f.cause;
+        f.skill = dot > 0 ? f.cause.Substring(dot + 3) : "";
         // 보스전 중: 살아 있는 장 보스 (개발자 · 엄마는 원인 이름으로 따로)
         foreach (bosss b in bosss.Live)
         {
@@ -169,7 +173,9 @@ public static partial class Herald
                 case "hero": if (v != "*" && v != f.hero) return false; score += 3; break;
                 case "ch": if (v != "*" && v != f.ch) return false; score += v == "*" ? 0 : 2; break;
                 case "stage": if (v != f.stage) return false; score += 2; break;
-                case "cause": if (v != "*" && v != f.cause) return false; score += v == "*" ? 1 : 8; break;
+                // 원인이 정확히 같으면 8점 · 「 · 」 앞(보스 이름)만 같으면 6점 (개발자 · 엄마 줄이 고유 공격 사망에도 나옴)
+                case "cause": if (v != "*" && v != f.cause && v != f.causeHead) return false; score += v == "*" ? 1 : v == f.cause ? 8 : 6; break;
+                case "skill": if (string.IsNullOrEmpty(f.skill) || v != f.skill) return false; score += 8; break;
                 case "boss": if (f.boss == null || (v != "*" && v != f.boss)) return false; score += v == "*" ? 2 : 4; break;
                 case "extra": if (!f.extra.Contains(v)) return false; score += 6; break;
                 default: return false;

@@ -837,7 +837,9 @@ public static class Hostile
         h.spin = false;
         h.fiery = false;
         h.pierceWalls = false;
+        h.noTrail = false;          // 개발자 고유 공격(라이브 코딩)이 켬 · 다시 쓰는 탄은 늘 꺼 둠
         h.Prepare(reused);
+        h.SetGlyph(null, Color.clear);
         return h;
     }
 
@@ -927,6 +929,16 @@ public class Telegraph : MonoBehaviour
     int spawnFrame = -1;
     bool built;
 
+    // 개발자 · 엄마 고유 공격(BossSkills.OwnKit)이 끊길 때 자기가 띄운 경고만 거두려고: 띄울 때마다 +1 되는 쓰임 번호
+    int useId;
+    public int UseId => useId;
+    // 번호가 같을 때만(= 그 뒤 다른 공격이 다시 쓰지 않았을 때만) 다 찬 것처럼 풀로 돌림 · 이미 돌아간 경고는 그대로
+    public void EndEarly(int id)
+    {
+        if (id != useId || !gameObject.activeSelf) return;
+        Release();
+    }
+
     public static Telegraph Take(bool circle)
     {
         Stack<Telegraph> pool = circle ? circlePool : linePool;
@@ -952,6 +964,7 @@ public class Telegraph : MonoBehaviour
 
     public void InitCircle(float radius, float duration, Color color)
     {
+        useId++;
         color = Hostile.Accessible(color);
         circle = true;
         this.radius = radius;
@@ -1021,6 +1034,7 @@ public class Telegraph : MonoBehaviour
 
     public void InitLine(Vector3 a, Vector3 b, float width, float duration, Color color)
     {
+        useId++;
         color = Hostile.Accessible(color);
         this.a = a;
         this.b = b;
@@ -1116,7 +1130,8 @@ public class SkillTag : MonoBehaviour
     float height;
     TMPro.TextMeshPro text;
 
-    public static GameObject Show(Transform target, string label, float height)
+    // color: 없으면 빨강 (개발자 금색 · 엄마 분홍 고유 공격이 색을 줌)
+    public static GameObject Show(Transform target, string label, float height, Color? color = null)
     {
         if (target == null || string.IsNullOrEmpty(label) || label == "!") return null;
         GameObject go = new GameObject("SkillTag", typeof(TMPro.TextMeshPro));
@@ -1127,7 +1142,7 @@ public class SkillTag : MonoBehaviour
         t.text = label;
         t.fontSize = 9f;            // 4.5 는 화면에서 너무 작아 안 보였음
         t.fontStyle = TMPro.FontStyles.Bold;
-        t.color = Hostile.Accessible(new Color(1f, 0.35f, 0.3f));
+        t.color = Hostile.Accessible(color ?? new Color(1f, 0.35f, 0.3f));
         t.alignment = TMPro.TextAlignmentOptions.Center;
         t.outlineWidth = 0.3f;
         t.outlineColor = new Color32(0, 0, 0, 255);
@@ -1227,6 +1242,7 @@ public class HostileProjectile : MonoBehaviour
     public bool fiery;
     public bool pierceWalls;
     public string label;        // 받은 피해 출처 (AttackLabel, 쏜 스킬 이름)
+    public bool noTrail;        // 색깔 꼬리 없음 (개발자 「라이브 코딩」 글자 탄 · 오류 조각 — 줄이 많아 꼬리가 글자를 덮음)
     float puff;
     float trail;
     internal SpriteRenderer body;
@@ -1240,6 +1256,45 @@ public class HostileProjectile : MonoBehaviour
     //   어떤 바닥(밝은 초원 · 어두운 묘역 · 붉은 지옥)에서도 테두리 대비로 바로 보이고, 두근거려 눈에 띔
     Transform orb;
     float orbSize, age;
+    SpriteRenderer orbSr, glyph;
+
+    // 개발자 고유 공격(BossSkills.DevOwn): 쏜 순서 번호 (Ctrl+Z 가 자기가 쏜 탄인지 · 그 사이 풀에서 다시 쓰이지 않았는지 확인) · 쏜 뒤 지난 시간
+    static int serialCounter;
+    public int Serial { get; private set; }
+    internal float Age => age;
+
+    // 구슬 위에 글자 그림 (코드 글꼴 fx_codefont) · null 이면 숨김 (Shoot 이 늘 숨김)
+    public void SetGlyph(Sprite s, Color c)
+    {
+        if (s == null || orb == null)
+        {
+            if (glyph != null) glyph.enabled = false;
+            return;
+        }
+        if (glyph == null)
+        {
+            GameObject g = SpecialAbilities.MakeSprite("Glyph", s, orb.position, 1f, c, EnemyShotLayer, 12);
+            g.transform.SetParent(orb, true);
+            glyph = g.GetComponent<SpriteRenderer>();
+        }
+        glyph.sprite = s;
+        glyph.color = c;
+        glyph.enabled = true;
+        Transform gt = glyph.transform;
+        gt.localPosition = Vector3.zero;
+        gt.localRotation = Quaternion.identity;
+        float h = s.bounds.size.y;
+        float parent = orb.lossyScale.x;
+        // 월드 크기 = 구슬 지름 × 0.6 (구슬의 두근거림은 부모라 함께 받음)
+        if (h > 0f && parent > 0f) gt.localScale = Vector3.one * (orbSize * 0.6f / h / parent);
+    }
+
+    // 구슬 색을 잠깐 바꿈 (Ctrl+Z 깜빡임) · null 이면 원래 색 (다시 쓸 때 Dress 가 늘 원래 색으로 되돌림)
+    internal void Flash(Color? c)
+    {
+        if (orbSr == null) return;
+        orbSr.color = c ?? Vivid(body != null ? body.color : Color.red);
+    }
 
     // 1.2.4: 사라진 탄은 꺼 두었다가 Hostile.Shoot 가 다시 씀 (밖에서 Destroy 한 탄은 그냥 지워짐 · 동작 같음)
     static readonly Stack<HostileProjectile> pool = new Stack<HostileProjectile>();
@@ -1266,6 +1321,8 @@ public class HostileProjectile : MonoBehaviour
         age = 0f;
         orbSize = Mathf.Max(0.75f, radius * 2f + 0.35f) * LookMul;     // 1.1.9: 그림만 1.2배 (맞는 거리는 radius + 0.4 그대로)
         orb = Dress(gameObject, body != null ? body.color : Color.red, orbSize);
+        if (orb != null && orbSr == null) orbSr = orb.GetComponent<SpriteRenderer>();
+        Serial = ++serialCounter;
         if (reused)
         {
             spawnFrame = Time.frameCount;
@@ -1365,7 +1422,7 @@ public class HostileProjectile : MonoBehaviour
 
         // 색깔 꼬리
         trail += Time.deltaTime;
-        if (!fiery && body != null && Hostile.Glow != null && trail >= 0.05f)
+        if (!fiery && !noTrail && body != null && Hostile.Glow != null && trail >= 0.05f)
         {
             trail = 0f;
             // 1.2.4: 화면 밖 탄은 꼬리를 만들지 않음 (꼬리는 탄 자리에 탄보다 작게 생겨 그 자리에서 사라지므로 보이는 것은 같음)

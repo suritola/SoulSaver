@@ -278,7 +278,8 @@ public class bossbar : MonoBehaviour
         t.titleProvider = () => BossName(r.kind);
         t.bodyProvider = () =>
         {
-            if (r.kind >= DeveloperKind) return "";
+            if (r.kind >= DeveloperKind)
+                return CodexUI.DevDescOf(r.kind == DeveloperMomKind) + "\n\n<color=#F5D478>" + Loc.T("codex.dev.rule") + "</color>";
             string desc = CodexUI.BossDescOf(r.kind);
             string rule = Loc.T(r.kind == 1 ? "체력 66% · 33%에서 단계가 오르고, 결계 게이지가 차면 결계를 펼칩니다." : "체력이 절반 아래로 내려가면 특수 스킬을 쓰고, 결계 게이지가 차면 결계를 펼칩니다.");
             return (desc.Length > 0 ? desc + "\n\n" : "") + "<color=#F5D478>" + rule + "</color>";

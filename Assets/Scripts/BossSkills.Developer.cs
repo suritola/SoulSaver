@@ -28,9 +28,15 @@ public partial class BossSkills
     int devRunning;
     float devBannerAt, devFxAt;
     // 결계 「디버그 모드」 · 「엄마의 대청소」(BossUltimate.Developer.cs)가 씀: 도는 영웅 필살기 수 · 피해 배율 · 결계 뒤 쉬는 시간
-    public int DevRunning => devRunning;
+    // 고유 공격(BossSkills.OwnKit)이 돌면 +1 → 결계 대기(DevReady) · 침식 대기(SpaceErosion.Ready)가 고유 공격도 기다림 (둘 다 3초 상한)
+    public int DevRunning => devRunning + (ownRunning ? 1 : 0);
     public float DevPower => DevPow;
-    public void AfterDomain(float seconds) => next = Mathf.Max(next, Time.time + seconds);
+    // 결계 · 침식이 끝남: 영웅 필살기는 seconds 뒤 · 고유 공격은 0.5초 더 뒤 (자리 잡기 · 영웅 멈춤 초기화 · 첫 고유 공격은 가벼운 것만)
+    public void AfterDomain(float seconds)
+    {
+        next = Mathf.Max(next, Time.time + seconds);
+        OwnAfterDomain(seconds);
+    }
 
     // 1.1.9~ 예고(경고 원 · 선 · Windup · 판정 전 대기)를 짧게: 개발자 ×0.6 · 엄마 ×0.5 (엄마가 더 빠름)
     //   경고 표시 시간과 판정 시각은 같은 값에서 나오므로 계속 맞음 · 한 번의 경고는 최소 DevTeleFloor 초는 보임
@@ -46,27 +52,49 @@ public partial class BossSkills
 
     void DeveloperTurn(PlayerController p)
     {
+        // 고유 공격 차례 (BossSkills.OwnKit) — 예외가 나도 영웅 줄 · 판 진행이 멈추지 않게 여기서 잡음
+        try { OwnTurn(p); }
+        catch (System.Exception ex) { Debug.LogException(ex); CancelOwn(); ownNext = Time.time + 5f; }
+        if (OwnHoldsHero) return;           // 자리 잡기 · 영웅 멈춤 (끝 시각으로만 · 저절로 풀림)
         if (Time.time < next || devRunning >= DevMaxRunning) return;
         next = Time.time + DevInterval;
         int who = devTurn++ % DevHeroes.Length;
         if (who == (int)CharacterId.Ghost) who = devTurn++ % DevHeroes.Length;       // 1.0.7~ 유령(빙의)은 쓰지 않음
+        // 고유 공격이 도는 동안 · 엄친아 메달이 쫓는 동안 거너(플레이어 감속 최대 0.2배)는 건너뜀 — 감속이 고유 공격의 회피 거리를 무너뜨림
+        //   (메달 속도 6 > 감속된 플레이어 20 × 0.2 = 4 → 메달을 따돌릴 수 없음)
+        if ((ownRunning || medals.Count > 0) && who == (int)CharacterId.Gunner)
+        {
+            who = devTurn++ % DevHeroes.Length;
+            if (who == (int)CharacterId.Ghost) who = devTurn++ % DevHeroes.Length;
+        }
         // 알림은 1.8초에 한 번만 (0.2초마다 덮이면 읽을 수 없음)
         if (StageManager.Instance != null && Time.time >= devBannerAt)
         {
             devBannerAt = Time.time + 1.8f;
             Notice.Big(Loc.T(boss.developerMom ? "개발자 엄마가 「{0}」의 최종 진화 필살기를 쓴다!" : "개발자가 「{0}」의 최종 진화 필살기를 쓴다!").Replace("{0}", Loc.T(DevHeroes[who])), NoticeIcon.Boss, 1.8f, NoticeLevel.Urgent);
         }
-        StartCoroutine(DevRun(DeveloperUlt((CharacterId)who, boss.Enraged)));
+        // 보스 위치를 옮기는 흉내 (검사 회전 베기 · 도적 출혈 돌진 · 유령 빙의): 타임 세일 · 효자손 다가서기가 겹쳐 옮기지 않게 셈
+        CharacterId c = (CharacterId)who;
+        bool mover = c == CharacterId.Swordsman || c == CharacterId.Rogue || c == CharacterId.Ghost;
+        StartCoroutine(DevRun(DeveloperUlt(c, boss.Enraged), mover));
     }
 
     // Run 과 같지만 겹쳐 돌 수 있음 (busy 를 켜지 않음) · 하나라도 도는 동안은 걷지 않음
-    IEnumerator DevRun(IEnumerator routine)
+    // 주의: 앞으로 개발자에게 StopAllCoroutines 를 쓰게 되면 반드시 CancelOwn() 을 먼저 + devRunning = heroMovers = 0
+    IEnumerator DevRun(IEnumerator routine, bool mover)
     {
         devRunning++;
+        if (mover) heroMovers++;
         boss.casting = true;
         yield return StartCoroutine(routine);
         devRunning = Mathf.Max(0, devRunning - 1);
-        if (devRunning > 0) yield break;
+        if (mover) heroMovers = Mathf.Max(0, heroMovers - 1);
+        if (devRunning == 0)
+        {
+            heroMovers = 0;                 // 영웅 흉내가 예외로 죽어 -- 가 빠져도 타임 세일이 영원히 막히지 않게
+            lastHeroEndAt = Time.time;      // 불 끄고 자! 의 「조용한 시간」
+        }
+        if (devRunning > 0 || ownRunning) yield break;
         if (boss != null) boss.casting = false;
         if (sr != null && Alive) sr.color = Color.white;
         owned.RemoveAll(g => g == null);

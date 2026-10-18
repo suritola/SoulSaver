@@ -721,6 +721,8 @@ void Shoot()
     // 꽃가루 구름 등으로 잠깐 느려짐
     float slowUntil;
     float slowFactor = 1f;
+    // 지금 이동 감속 배율 (읽기 전용 · 개발자 · 엄마 고유 공격이 「피하려면 움직여야 하는 공격」을 감속 중에 시작하지 않으려고)
+    public float MoveSlowNow => Time.time < slowUntil ? slowFactor : 1f;
 
     public void Slow(float factor, float seconds)
     {

@@ -513,6 +513,7 @@ public class QaCapture
         yield return Safe("system1", System1, 240);
         yield return Safe("mom_domain", MomDomain, 300);
         yield return Safe("dev_domain", DevDomain, 200);
+        yield return Safe("own_attacks", OwnAttacks, 300);
         yield return Safe("mem_shield", MemShield, 300);
         yield return Safe("ttk", Ttk, 600);
         yield return Safe("reward_slot", RewardSlot, 240);
@@ -903,6 +904,60 @@ public class QaCapture
         }
         var hs = pilot.hits;
         Log("개발자 결계 (거너 · 거리 두기): 피격 " + hs.Count + "번 · 합 " + hs.Sum(h => h.dmg).ToString("0") + " / " + max.ToString("0") + " · 최대 한 대 " + (hs.Count > 0 ? hs.Max(h => h.dmg) : 0).ToString("0"));
+    }
+
+    // ================================================================= 7-2) 개발자 · 엄마 고유 기본 공격 12종 (공격마다 한 장 · 결계 · 영웅 흉내는 끔)
+    static IEnumerator OwnAttacks()
+    {
+        string[][] names = {
+            new[] { "LiveCoding", "SelectDelete", "BuildFail", "ErrorPopup", "Loading", "StackOverflow" },
+            new[] { "Slipper", "Scratcher", "TimeSale", "Broom", "Medal", "LightsOut" } };
+        float[][] when = { new[] { 1.7f, 0.75f, 1.0f, 0.9f, 0.9f, 1.25f }, new[] { 1.0f, 0.55f, 0.45f, 1.25f, 0.15f, 1.25f } };
+        Type atk = T("BossSkills").GetNestedType("OwnAtk", BindingFlags.NonPublic);
+        for (int m = 0; m < 2; m++)
+        {
+            bool mom = m == 1;
+            yield return LoadGame("Gunner", "Endless", false);
+            pilot.on = false;
+            In("AutoMove", Vector2.zero); In("AutoFire", false);
+            Component b = FinalBoss(mom, new Vector3(9f, 3f, 0f));
+            if (b == null) { Log("XX 보스 없음"); yield break; }
+            if (b.GetComponent(T("BossUltimate")) is Behaviour ult) ult.enabled = false;
+            yield return Secs(1f);
+            Component sk = b.GetComponent(T("BossSkills"));       // bosss.Start 에서 붙음
+            if (sk == null) { Log("XX BossSkills 없음"); yield break; }
+            for (int i = 0; i < names[m].Length; i++)
+            {
+                Call(sk, "CancelOwn");
+                Set(sk, "next", Time.time + 999f);
+                Set(sk, "ownNext", Time.time + 999f);
+                Set(sk, "ownPhase", mom ? 3 : 2);
+                Call(Player(), "GrantInvincibility", 30f);
+                b.transform.position = PPos() + new Vector3(9f, 3f, 0f);
+                yield return Secs(0.4f);
+                bool ok = false;
+                for (int t = 0; t < 20 && !ok; t++)
+                {
+                    ok = (bool)Call(sk, "StartOwn", Enum.Parse(atk, names[m][i]), Player());
+                    if (!ok) yield return null;
+                }
+                Log("고유 " + names[m][i] + " 시작 " + ok);
+                if (!ok) continue;
+                yield return Secs(when[m][i]);
+                yield return Shot("own_" + (mom ? "mom_" : "dev_") + (i + 1) + "_" + names[m][i]);
+                foreach (object md in (System.Collections.IEnumerable)Get(sk, "medals"))
+                {
+                    Component part = Get(md, "part") as Component;
+                    SpriteRenderer msr = part != null ? part.GetComponent<SpriteRenderer>() : null;
+                    Log("메달 " + (part != null ? part.transform.position.ToString() + " 크기 " + part.transform.lossyScale.x.ToString("0.00") : "없음") + " 그림 " + (msr != null && msr.sprite != null ? msr.sprite.name + " 색 " + msr.color + " 층 " + msr.sortingLayerName + "/" + msr.sortingOrder + " 켬 " + msr.enabled + " 경계 " + msr.bounds.size : "없음") + " · 플레이어 " + PPos());
+                }
+                for (int f = 0; f < 600 && (bool)Get(sk, "ownRunning"); f++) yield return null;
+                Log("고유 " + names[m][i] + " 끝 · 돌고 있음 " + Get(sk, "ownRunning") + " · 경고 " + Get(sk, "teleCount") + " · 탄 " + ((System.Collections.ICollection)SGet("HostileProjectile", "Live")).Count);
+            }
+            Call(sk, "CancelOwn");
+            yield return Secs(0.5f);
+            Log((mom ? "엄마" : "개발자") + " 정리 뒤 돌고 있음 " + Get(sk, "ownRunning") + " · 메달 " + ((System.Collections.ICollection)Get(sk, "medals")).Count + " · 시전 " + Get(b, "casting"));
+        }
     }
 
     // ================================================================= 8) 기억의 방패 · 근접 (검사 · 유령 vs 지옥의 군주)

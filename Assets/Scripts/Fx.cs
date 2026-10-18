@@ -78,6 +78,7 @@ public static class Fx
         "fx_shock", "fx_explosion", "fx_rune", "fx_reticle", "fx_warn", "fx_target_rune", "fx_puddle", "fx_vortex",
         "fx_alchemyblast", "fx_fissure", "fx_geyser", "fx_firepillar", "fx_meteor", "fx_net", "fx_arrowrain", "fx_tornado",
         "fx_beam", "fx_bolt", "fx_orb", "fx_slash", "fx_swordswing", "fx_spinslash", "fx_bigsword", "fx_swordwave",
+        "fx_slipper", "fx_scratcher", "fx_broom", "fx_codeblock",       // 개발자 · 엄마 고유 공격 (그림 크기 = 판정 크기)
     };
     static float Visible(string name, float size) => AreaFx.Contains(name) ? size : size * DecorScale;
 

@@ -85,6 +85,13 @@ public static partial class Herald
         ("herald.sit.barrier.h", "cause=보스 결계 · boss=*", true),
         ("herald.sit.lowhp.h", "extra=lowhp_boss", true),
         ("herald.sit.lowhp2", "extra=lowhp_boss", true),
+        // 개발자 · 엄마 고유 기본 공격 (원인 「개발자 · 라이브 코딩」 → cause 6 + skill 8 = 14점이라 일반 줄보다 먼저)
+        ("herald.boss.dev.code.h", "cause=개발자 · skill=라이브 코딩", false),
+        ("herald.boss.dev.popup.h", "cause=개발자 · skill=오류 창", false),
+        ("herald.boss.dev.build.h", "cause=개발자 · skill=빌드 실패", false),
+        ("herald.boss.mom.slipper.h", "cause=개발자 엄마 · skill=슬리퍼 투척", false),
+        ("herald.boss.mom.medal.h", "cause=개발자 엄마 · skill=엄친아", false),
+        ("herald.boss.mom.lights.h", "cause=개발자 엄마 · skill=불 끄고 자!", false),
         ("herald.sit.dev.h", "cause=개발자", false),
         ("herald.sit.dev2", "cause=개발자", false),
         ("herald.sit.mom.h", "cause=개발자 엄마", false),

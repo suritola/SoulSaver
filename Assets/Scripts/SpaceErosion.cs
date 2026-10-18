@@ -110,6 +110,8 @@ public class SpaceErosion : MonoBehaviour
             // 대기 3초가 지나도 돌던 스킬: 끊음 (침식 피해 배율 · 상한 밖에서 계속 때리거나 돌진으로 자리를 옮기지 않게)
             // 1.2.7~ 무적(의식) · 공중(점프)인 채로 남은 보스도 끊음 (CancelForErosion 이 무적 · 공중 · 받는 피해 배율을 되돌림)
             if (!members[i].developer && members[i].TryGetComponent(out BossSkills sk) && (members[i].casting || members[i].invulnerable || sk.airborne)) sk.CancelForErosion();
+            // 개발자 · 엄마: 고유 공격을 끊음 (CancelForErosion 은 개발자에게 돌지 않음 · 영웅 필살기는 지금처럼 계속)
+            if (members[i].developer && members[i].TryGetComponent(out BossSkills devSk)) devSk.CancelOwn();
         }
         started = true;
         BossUltimate.BeginErosion();

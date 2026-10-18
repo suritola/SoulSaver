@@ -159,6 +159,9 @@ public class PauseInspect : MonoBehaviour
         {
             Collider2D c = found[i];
             if (c == null) continue;
+            // 엄마 「엄친아」 메달 (BossPart · 보스 자식이 아님 — BossSkills.MomOwn) — 다른 BossPart(리치 등불 · 묘비 · 영혼구)는 지금처럼 지나감
+            if (c.name == "DevOwnMedal" && c.TryGetComponent(out BossPart medal) && !medal.Broken)
+                return (Loc.T("devown.medal.name"), Loc.T("devown.medal.peek") + "\n\n" + HpLine(medal.hp, medal.maxHp));
             bosss b = c.GetComponentInParent<bosss>();
             if (b != null && !b.IsDead) { bestBoss = b; break; }
             EnermyController e = EnermyController.FromCollider(c);
@@ -169,7 +172,7 @@ public class PauseInspect : MonoBehaviour
         if (bestBoss != null)
         {
             int kind = bestBoss.developer ? (bestBoss.developerMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind) : bestBoss.bossKind;
-            string desc = bestBoss.developer ? "" : CodexUI.BossDescOf(bestBoss.bossKind);
+            string desc = bestBoss.developer ? CodexUI.DevDescOf(bestBoss.developerMom) : CodexUI.BossDescOf(bestBoss.bossKind);
             return (bossbar.BossName(kind), (desc.Length > 0 ? desc + "\n\n" : "") + HpLine(bestBoss.EnemyHealth, bestBoss.setEnemyHP));
         }
         if (best == null) return null;

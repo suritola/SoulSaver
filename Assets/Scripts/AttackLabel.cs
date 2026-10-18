@@ -23,6 +23,11 @@ public static class AttackLabel
         // 4장 거울의 군주
         { "MirrorStrike", "거울 공격" }, { "MirrorSkill", "흉내 낸 스킬" }, { "MirrorClones", "분신술" }, { "BrandCross", "십자 낙인" },
         { "ShardRings", "거울 조각 고리" }, { "MirrorUlt", "흉내 낸 필살기" }, { "ReflectedMemory", "되비친 기억" },
+        // 개발자 · 엄마 고유 기본 공격 (BossSkills.DevOwn · MomOwn — 보통은 Pending 「개발자 · 라이브 코딩」이 먼저, 이건 빠졌을 때의 대비)
+        { "LiveCoding", "라이브 코딩" }, { "SelectDelete", "범위 선택" }, { "SelDelete", "범위 선택" }, { "BuildFail", "빌드 실패" }, { "BuildOnce", "빌드 실패" },
+        { "ErrorPopup", "오류 창" }, { "PopupOnce", "오류 창" }, { "LoadingRing", "로딩 중…" }, { "StackOverflow", "스택 오버플로" },
+        { "SlipperToss", "슬리퍼 투척" }, { "BackScratcher", "효자손" }, { "TimeSale", "타임 세일!" }, { "BroomSweep", "빗자루질" },
+        { "FriendsSon", "엄친아" }, { "TickMedals", "엄친아" }, { "LightsOut", "불 끄고 자!" },
     };
 
     // 투사체 · 장판을 만든 함수 이름으로 (컴파일러가 채운 값, 1.0.1: 탄을 만들 때마다 호출 스택을 뒤지면 보스 탄막에서 렉이 생길 수 있었음)

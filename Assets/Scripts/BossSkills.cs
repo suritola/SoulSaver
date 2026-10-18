@@ -40,13 +40,15 @@ public partial class BossSkills : MonoBehaviour
     {
         foreach (GameObject g in owned) if (g != null) Destroy(g);
         owned.Clear();
+        OwnOnDisable();         // 개발자 · 엄마 고유 공격 상태 (ownRoot 는 위에서 지워짐 · BossSkills.OwnKit)
     }
 
     void Start()
     {
         boss = GetComponent<bosss>();
         sr = GetComponent<SpriteRenderer>();
-        next = Time.time + 3f;
+        // 개발자 · 엄마는 첫 고유 공격(1.6 · 1.2초)이 먼저 읽히게 첫 영웅 필살기를 4.5초 뒤로 (BossSkills.OwnKit)
+        next = Time.time + (boss != null && boss.developer ? HeroFirstFinal : 3f);
     }
 
     void Update()
@@ -55,6 +57,8 @@ public partial class BossSkills : MonoBehaviour
         if (!busy && boss != null && !boss.developer && (boss.invulnerable || airborne || groundAt.HasValue || boss.damageTakenMul != 1f)) ClearSkillState();
         if (busy && boss != null && !boss.developer && Time.time - busySince > BusyWatchdog) CancelForErosion();
         if (Alive && kind != AbyssStage.MirrorKind) RebornTick();
+        // 개발자 · 엄마 고유 공격 안전장치 (위 두 줄은 개발자에게 돌지 않음): 결계 · 쓰러짐에 끊기 · 감시 12초 · 메달 (안에서 try/catch)
+        if (boss != null && boss.developer) OwnGuard();
         if (busy || !Alive || BossUltimate.Active || BossUltimate.DevHold || BossUltimate.ErosionPending) return;      // 필살기 결계 동안은 결계 공격만 · 개발자 · 엄마 결계 대기 중엔 새 필살기 없음
         PlayerController p = Hostile.Player;
         if (p == null) return;
