@@ -38,28 +38,28 @@ public static partial class LocTable
         // ================================================================= 받아치기
         PA("받아치기", "Parry", "受け返し", "招架反击");
         PA("막기 0.25초 · 반격", "0.25s block · Counter", "0.25秒の受け · 反撃", "0.25秒格挡 · 反击");
-        PA("우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0 · 0.6초 무적 · 다음 베기 ×3. 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
-           "The first 0.25s after pressing right-click is a block. If you're hit during it: 0 damage · 0.6s invincibility · next slash ×3. Missing costs nothing, but you can block once per 1.2s (once per 2s after a success).",
-           "右クリックを押した最初の0.25秒が受けになります。その間に攻撃を受けるとダメージ0 · 0.6秒無敵 · 次の斬撃×3。失敗しても損はありませんが、受けは1.2秒に1回（成功すると2秒に1回）です。",
-           "按下右键后的前0.25秒为格挡。期间受到攻击时伤害为0 · 无敌0.6秒 · 下一次斩击×3。失败也没有损失，但格挡每1.2秒只能一次（成功后每2秒一次）。");
+        PA("우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
+           "The first 0.25s after pressing right-click is a block. If you're hit during it, you take 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility · next slash ×3. (Once per 3s · enemy body contact is only blocked) Missing costs nothing, but you can block once per 1.2s (once per 2s after a success).",
+           "右クリックを押した最初の0.25秒が受けになります。その間に攻撃を受けるとダメージ0。弾やボスの攻撃を受けると、0.6秒無敵 · 次の斬撃×3も得ます。（3秒に1回 · 雑魚の体当たりはダメージを防ぐだけ）失敗しても損はありませんが、受けは1.2秒に1回（成功すると2秒に1回）です。",
+           "按下右键后的前0.25秒为格挡。期间受到攻击时伤害为0。格挡弹幕或首领攻击时，还会获得无敌0.6秒 · 下一次斩击×3。（每3秒一次 · 小怪的身体碰撞只挡伤害）失败也没有损失，但格挡每1.2秒只能一次（成功后每2秒一次）。");
         PA("회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.",
            "Charging Spin Slash to full takes 30% longer.",
            "回転斬りを最大までためる時間が30%長くなります。",
            "回旋斩蓄满所需时间增加30%。");
         PA("보스 탄막 · 생존", "Boss barrages · Survival", "ボスの弾幕 · 生存", "首领弹幕 · 生存");
         PA("무리 · 손 기술", "Hordes · Execution skill", "群れ · 操作技術", "敌群 · 操作技巧");
-        PA("막기에 성공하면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
-           "A successful block sends every nearby enemy projectile back.",
-           "受けに成功すると、周りの敵の弾をすべて打ち返します。",
-           "格挡成功时，将周围所有敌方弹幕反弹回去。");
+        PA("투사체 · 보스 공격을 막으면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
+           "Blocking a projectile or boss attack sends every nearby enemy projectile back.",
+           "弾やボスの攻撃を受けると、周りの敵の弾をすべて打ち返します。",
+           "格挡弹幕或首领攻击时，将周围所有敌方弹幕反弹回去。");
         PA("3초 안에 두 번 막으면 4초 동안 역습 자세가 됩니다. (사거리 ×1.4 · 피해 ×1.5)",
            "Block twice within 3s to enter Counter Stance for 4s. (Range ×1.4 · Damage ×1.5)",
            "3秒以内に2回受けると、4秒間逆襲の構えになります。（射程×1.4 · ダメージ×1.5）",
            "3秒内格挡两次，进入4秒反击架势。（范围×1.4 · 伤害×1.5）");
-        PA("막기가 0.4초로 늘고, 성공할 때마다 필살기 게이지가 20% 찹니다.",
-           "The block lasts 0.4s, and each success fills 20% of the Ultimate Gauge.",
-           "受けが0.4秒に伸び、成功するたびに必殺技ゲージが20%たまります。",
-           "格挡延长至0.4秒，每次成功充能20%必杀技槽。");
+        PA("막기가 0.4초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
+           "The block lasts 0.4s, and each projectile or boss attack you block fills 20% of the Ultimate Gauge. (Once per 3s)",
+           "受けが0.4秒に伸び、弾やボスの攻撃を受けるたびに必殺技ゲージが20%たまります。（3秒に1回）",
+           "格挡延长至0.4秒，每次格挡弹幕或首领攻击时充能20%必杀技槽。（每3秒一次）");
         PA("막기!", "Parry!", "受け！", "招架！");
         PA("역습 자세!", "Counter Stance!", "逆襲の構え！", "反击架势！");
 
@@ -84,10 +84,10 @@ public static partial class LocTable
            "While your Blood Guard shield is full, slashes become a far-reaching blood wave. (9 tiles · 50% of slash damage)",
            "血甲のシールドが満タンの間、斬撃が血の波動となって長く伸びます。（9マス · 斬撃ダメージの50%）",
            "血甲护盾充满时，斩击化为血之波动远远延伸。（9格 · 斩击伤害的50%）");
-        PA("장마다 한 번 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
-           "Once per chapter, survive with 1 health and triple your lifesteal for 3s.",
-           "章ごとに1回、体力1で耐え、3秒間吸血が3倍になります。",
-           "每章一次，以1点生命撑住，并在3秒内吸血变为3倍。");
+        PA("장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
+           "Once per chapter (in Endless, once per boss defeated), survive with 1 health and triple your lifesteal for 3s.",
+           "章ごとに1回（エンドレスモードではボスを倒すたびに）、体力1で耐え、3秒間吸血が3倍になります。",
+           "每章一次（无尽模式中每击败一个首领一次），以1点生命撑住，并在3秒内吸血变为3倍。");
 
         // ================================================================= 검무
         PA("검무", "Sword Dance", "剣舞", "剑舞");
@@ -111,10 +111,10 @@ public static partial class LocTable
            "At max Sword Dance stacks, every fifth swing unleashes a Spin Slash on its own. (30% strength)",
            "剣舞が最大スタックの間、5回目の振りごとに回転斬りが自動で出ます。（30%の威力）",
            "剑舞叠满时，每第五次挥砍自动释放回旋斩。（30%威力）");
-        PA("미끄러질 때 0.1초 무적이 되고, 2.5칸을 미끄러집니다.",
-           "Gliding grants 0.1s of invincibility, and you glide 2.5 tiles.",
-           "滑る時に0.1秒無敵になり、2.5マス滑ります。",
-           "滑行时获得0.1秒无敌，并滑行2.5格。");
+        PA("미끄러질 때 0.1초 무적이 되고(0.6초에 한 번), 2.5칸을 미끄러집니다.",
+           "Gliding grants 0.1s of invincibility (once per 0.6s), and you glide 2.5 tiles.",
+           "滑る時に0.1秒無敵になり（0.6秒に1回）、2.5マス滑ります。",
+           "滑行时获得0.1秒无敌（每0.6秒一次），并滑行2.5格。");
 
         // ================================================================= 회오리
         PA("회오리", "Whirlwind", "旋風", "旋风");

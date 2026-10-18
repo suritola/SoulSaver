@@ -17,6 +17,10 @@ using UnityEngine;
 // 밸런스 (1.3.7 기준 · 보스 화력 지수 ±8% 목표, 1차안): 기획서 수치에서 바꾼 것
 //   검기 방출 70% → 60%(+「날아가는 검기」 단계마다 5% · 카드 검기를 대신함) · 피의 맹세 피해 +45% → +35%
 //   받아치기: 막기는 1.2초에 한 번 · 성공하면 2초에 한 번 (마구 눌러 늘 막히지 않게 — 긴장감)
+//   받아치기 보상(0.6초 무적 · 다음 베기 ×3 · 극의 게이지 20%): 투사체 · 보스 공격을 막았을 때만 · 3초에 한 번
+//     (잡몹 무리 속 몸통 접촉 막기로 10초마다 필살기 · 시간의 30% 무적이 되던 것 — 몸통 막기는 피해만 0)
+//   검무 극의 미끄러지기 무적 0.1초는 0.6초에 한 번 (공속이 높으면 늘 무적이던 것)
+//   피의 맹세 극의: 무한 모드는 보스를 쓰러뜨릴 때마다 다시 · 보스 한 방 상한을 적용한 피해로 죽는지 판정 · 최후의 보루가 남았으면 아껴 둠
 //   회오리: 「모으며 60% 속도로 걷기」 → 지금도 모으며 걸을 수 있어 뜻이 없음 → 「모으는 동안 0.5초마다 둘레 베기(50%)」
 //   회오리 극의 「계속 돌기」 → 회전 베기 뒤 3초 동안 0.3초마다 둘레 베기(25%)
 public sealed class SwordsmanPaths : HeroPaths
@@ -44,12 +48,12 @@ public sealed class SwordsmanPaths : HeroPaths
             color = new Color(0.6f, 0.8f, 1f), form = "채찍검" },
         new PathDef {
             key = "s.parry", name = "받아치기", tagline = "막기 0.25초 · 반격",
-            seed = "받아치기", seedDesc = "우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0 · 0.6초 무적 · 다음 베기 ×3. 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
+            seed = "받아치기", seedDesc = "우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
             cost = "회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.", strong = "보스 탄막 · 생존", weak = "무리 · 손 기술",
             cards = new[] { K, S(0), A, S(7) }, evo = "se.counter",
-            res1 = "막기에 성공하면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
+            res1 = "투사체 · 보스 공격을 막으면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
             res2 = "3초 안에 두 번 막으면 4초 동안 역습 자세가 됩니다. (사거리 ×1.4 · 피해 ×1.5)",
-            mastery = "막기가 0.4초로 늘고, 성공할 때마다 필살기 게이지가 20% 찹니다.",
+            mastery = "막기가 0.4초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
             color = new Color(1f, 0.9f, 0.5f) },
         new PathDef {
             key = "s.blood", name = "피의 맹세", tagline = "체력을 바쳐 흡혈 · 근접 지속",
@@ -58,7 +62,7 @@ public sealed class SwordsmanPaths : HeroPaths
             cards = new[] { M, S(2), S(9) }, evo = "se.blood",
             res1 = "체력이 50% 아래면 피해 +25%, 25% 아래면 +50%입니다.",
             res2 = "혈갑 보호막이 가득 차면 베기가 피의 파동이 되어 길게 뻗습니다. (9칸 · 베기 피해 50%)",
-            mastery = "장마다 한 번 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
+            mastery = "장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
             color = new Color(0.95f, 0.25f, 0.3f) },
         new PathDef {
             key = "s.dance", name = "검무", tagline = "미끄러지며 베기 · 기동",
@@ -67,7 +71,7 @@ public sealed class SwordsmanPaths : HeroPaths
             cards = new[] { B, S(5), S(3) }, evo = "se.dance",
             res1 = "미끄러진 길에 칼날 잔상이 1초 동안 남습니다. (0.25초마다 베기 피해 20%)",
             res2 = "검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 저절로 나갑니다. (30% 세기)",
-            mastery = "미끄러질 때 0.1초 무적이 되고, 2.5칸을 미끄러집니다.",
+            mastery = "미끄러질 때 0.1초 무적이 되고(0.6초에 한 번), 2.5칸을 미끄러집니다.",
             color = new Color(0.55f, 1f, 0.75f), form = "기창" },
         new PathDef {
             key = "s.whirl", name = "회오리", tagline = "원형 베기 · 모으며 베기",
@@ -93,7 +97,7 @@ public sealed class SwordsmanPaths : HeroPaths
     const float WaveMul = 0.6f, WavePerCard = 0.05f, WaveRange = 9f, WaveSpeed = 22f, WaveReach = 0.8f;
     const float XWaveMul = 0.7f, XBurstMul = 0.3f, XBurstR = 2.4f, XOffset = 1.5f, XMeet = 4.5f, ReturnMul = 0.8f;
     // 받아치기
-    const float ParryWindow = 0.25f, ParryWindowM = 0.4f, ParryInvuln = 0.6f, ParryCounter = 3f, ParryCd = 1.2f, ParryCdHit = 2f, ParryChargeSlow = 1.3f;
+    const float ParryWindow = 0.25f, ParryWindowM = 0.4f, ParryInvuln = 0.6f, ParryCounter = 3f, ParryCd = 1.2f, ParryCdHit = 2f, ParryChargeSlow = 1.3f, ParryRewardCd = 3f;
     const float StanceWithin = 3f, StanceTime = 4f, StanceReach = 1.4f, StanceDmg = 1.5f, ReflectR = 6f, ReflectMul = 0.6f, MasteryGauge = 0.2f;
     const int ReflectMax = 12;
     // 피의 맹세
@@ -101,7 +105,7 @@ public sealed class SwordsmanPaths : HeroPaths
     const float PotionHealRate = 0.4f;          // Shop.Potions 의 회복 물약 (최대 체력 40% × 영혼의 무게) — 물약으로 오른 체력의 상한
     // 검무
     const float SlideDist = 1.5f, SlideDistM = 2.5f, SlideTime = 0.12f, SlideTimeM = 0.15f, MoveRate = 1.15f, StillRate = 0.8f;
-    const float TrailMul = 0.2f, TrailLife = 1f, TrailWidth = 1.1f, DanceSpin = 0.3f, SlideInvuln = 0.1f;
+    const float TrailMul = 0.2f, TrailLife = 1f, TrailWidth = 1.1f, DanceSpin = 0.3f, SlideInvuln = 0.1f, SlideInvulnCd = 0.6f, SlideStep = 0.2f;
     // 회오리
     const float WhirlReach = 0.85f, WhirlDmg = 0.8f, SweepMul = 0.5f, SweepGap = 0.5f, SweepR = 4f, PullR = 4f;
     const float VortexTime = 2f, VortexR = 3.5f, VortexMul = 0.15f, SpinOnTime = 3f, SpinOnGap = 0.3f, SpinOnMul = 0.25f;
@@ -126,7 +130,7 @@ public sealed class SwordsmanPaths : HeroPaths
     struct Later { public float at; public Vector3 pos; public float dmg; public bool back; }
     readonly List<Later> later = new List<Later>();
     // 받아치기
-    float parryUntil, parryReadyAt, lastParryAt = -99f, stanceUntil;
+    float parryUntil, parryReadyAt, lastParryAt = -99f, stanceUntil, parryRewardAt;
     bool counterSwing;
     SkillGauge gauge;
     // 피의 맹세
@@ -134,7 +138,7 @@ public sealed class SwordsmanPaths : HeroPaths
     int rageStage = int.MinValue, potionSeen = -1;
     // 검무
     bool sliding, hasLast;
-    float slideUntil, ghostAt, slideReach;
+    float slideUntil, ghostAt, slideReach, slideInvulnAt;
     Vector3 slideFrom, slideVel, lastPos;
     Vector2 moveDir;
     int danceSwings;
@@ -376,7 +380,12 @@ public sealed class SwordsmanPaths : HeroPaths
         slideReach = reach;
         sliding = true;
         ghostAt = 0f;
-        if (m) Paths.Invuln(SlideInvuln);           // 극의: 미끄러질 때 0.1초 무적
+        // 극의: 미끄러질 때 0.1초 무적 — 0.6초에 한 번 (공속이 높으면 휘두를 때마다 무적이 이어져 늘 무적이 되지 않게)
+        if (m && Time.time >= slideInvulnAt)
+        {
+            slideInvulnAt = Time.time + SlideInvulnCd;
+            Paths.Invuln(SlideInvuln);
+        }
         Hostile.Play("whoosh", 0.4f, 1.6f);
     }
 
@@ -384,9 +393,19 @@ public sealed class SwordsmanPaths : HeroPaths
     {
         if (Time.time >= slideUntil) { EndSlide(kit, p); return; }
         Vector3 pos = p.transform.position;
-        Vector3 next = pos + slideVel * Time.deltaTime;
-        if (Hostile.IsWall(next) || !Hostile.InArena(next)) { EndSlide(kit, p); return; }
+        Vector3 step = slideVel * Time.deltaTime;
+        // 낮은 프레임에서 한 번에 크게 움직여 얇은 벽을 넘지 않게: 0.2칸씩 나눠 벽 · 경기장을 검사하고, 막히면 그 앞에서 멈춤
+        int n = Mathf.Clamp(Mathf.CeilToInt(step.magnitude / SlideStep), 1, 32);
+        Vector3 next = pos;
+        bool blocked = false;
+        for (int i = 1; i <= n; i++)
+        {
+            Vector3 q = pos + step * ((float)i / n);
+            if (Hostile.IsWall(q) || !Hostile.InArena(q)) { blocked = true; break; }
+            next = q;
+        }
         p.transform.position = next;
+        if (blocked) { EndSlide(kit, p); return; }
         if (Time.time >= ghostAt)
         {
             ghostAt = Time.time + 0.04f;
@@ -533,13 +552,21 @@ public sealed class SwordsmanPaths : HeroPaths
             kit.SwordCharge = kit.SwordCharge - Time.deltaTime / 1.5f * (1f - 1f / ParryChargeSlow);
     }
 
+    // 막기 성공: 피해 0 은 언제나 · 보상(0.6초 무적 · 다음 베기 ×3 · 역습 진화 · 극의 게이지)은 투사체 · 보스 공격을 막았을 때만, 3초에 한 번
+    //   (잡몹 무리 속에서 1.2초마다 우클릭하면 몸통 접촉으로 늘 막혀 10초마다 필살기 · 시간의 30% 무적이 되던 것)
     void ParrySuccess(PlayerController p)
     {
         parryUntil = 0f;
         parryReadyAt = Time.time + ParryCdHit;
-        Paths.Invuln(ParryInvuln);
-        counterSwing = true;
-        SignatureSkills.PathParried();          // 역습 · 완벽한 반격
+        bool body = MobTouching(p);
+        bool reward = Time.time >= parryRewardAt && !body;
+        if (reward)
+        {
+            parryRewardAt = Time.time + ParryRewardCd;
+            Paths.Invuln(ParryInvuln);
+            counterSwing = true;
+            SignatureSkills.PathParried();      // 역습 · 완벽한 반격
+        }
         if (Paths.Res(Parry) >= 2 && Time.time - lastParryAt <= StanceWithin) stanceUntil = Time.time + StanceTime;
         lastParryAt = Time.time;
 
@@ -552,12 +579,28 @@ public sealed class SwordsmanPaths : HeroPaths
         Hostile.Shake(0.08f);
         SpecialAbilities.SharedFx?.FloatText(at + Vector3.up * 1.6f, Loc.T(Time.time < stanceUntil ? "역습 자세!" : "막기!"), Gold, 4.5f, 0.2f);
 
-        if (Paths.Res(Parry) >= 1) Reflect(at);
-        if (Paths.Mastered(Parry))
+        if (Paths.Res(Parry) >= 1 && !body) Reflect(at);     // 몸통 막기로 2초마다 둘레 탄을 지우지 않게 — 투사체 · 보스 공격을 막았을 때만
+        if (reward && Paths.Mastered(Parry))
         {
             if (gauge == null) gauge = Object.FindFirstObjectByType<SkillGauge>();
             if (gauge != null && !gauge.IsFull()) gauge.AddSkillPoint(gauge.MaxSkillPoint * MasteryGauge);
         }
+    }
+
+    // 잡몹(보스 · 중간 보스 제외)의 몸이 영웅 몸에 닿아 있음 → 이번 피해를 몸통 접촉으로 봄 (Paths.Ghost.Touching 과 같은 기준)
+    //   Taken 은 피해 값만 받아 출처를 모름 → 겹친 잡몹이 있으면 보상 없이 피해만 막음 (잡몹에 둘러싸여 투사체를 막아도 보상 없음)
+    static bool MobTouching(PlayerController p)
+    {
+        Vector3 at = p.transform.position;
+        Collider2D mine = p.GetComponent<Collider2D>();
+        float myR = mine != null ? CharacterKit.BodyRadiusOf(mine) : 0.5f;
+        using var hits = PhysHits.Circle(at, myR + 2.5f, true);
+        foreach (Collider2D c in hits)
+        {
+            if (c == null || !c.CompareTag("enermy") || Paths.IsBoss(c.gameObject)) continue;
+            if ((c.bounds.center - at).magnitude <= myR + CharacterKit.BodyRadiusOf(c) + 0.35f) return true;
+        }
+        return false;
     }
 
     // 공명 I: 둘레 적 투사체를 되돌려 보냄 (가까운 적에게 · 없으면 온 방향으로)
@@ -592,16 +635,19 @@ public sealed class SwordsmanPaths : HeroPaths
         if (dmg <= 0f) return dmg;
         PlayerController p = Player;
         if (!Alive(p)) return dmg;
-        // 받아치기: 막기 판정 중이면 피해 0 · 0.6초 무적 (무적은 Paths.Invuln 으로만, 시간이 지나면 저절로 풀림)
+        // 받아치기: 막기 판정 중이면 피해 0 · 보상(0.6초 무적 등)은 ParrySuccess 가 가려 줌 (무적은 Paths.Invuln 으로만, 시간이 지나면 저절로 풀림)
         if (Paths.Has(Parry) && Time.time < parryUntil)
         {
             ParrySuccess(p);
             return 0f;
         }
-        // 피의 맹세 극의: 장마다 한 번 체력 1로 버티고 3초 흡혈 3배
-        if (Paths.Mastered(Blood) && dmg >= p.PlayerHealth && p.PlayerHealth > 1f && rageStage != Chapters.CurrentStage)
+        // 피의 맹세 극의: 장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고 3초 흡혈 3배
+        //   죽는지는 PlayerController.TryHit 이 이 뒤에 거는 보스전 한 방 상한을 미리 적용한 값으로 판정 (실제로 안 죽을 피해에 쓰지 않게)
+        //   최후의 보루(LastStand)가 남아 있으면 그쪽이 체력 1로 버티므로 극의는 아껴 둠
+        int rageKey = RageKey();
+        if (Paths.Mastered(Blood) && CappedHit(p, dmg) >= p.PlayerHealth && p.PlayerHealth > 1f && rageStage != rageKey && !LastStand.Ready)
         {
-            rageStage = Chapters.CurrentStage;
+            rageStage = rageKey;
             rageUntil = Time.time + RageTime;
             Vector3 at = p.transform.position;
             Fx.Spawn("fx_bleed", at, 5f, Color.white, 16f);
@@ -611,6 +657,21 @@ public sealed class SwordsmanPaths : HeroPaths
             return Mathf.Max(0f, p.PlayerHealth - 1f);
         }
         return dmg;
+    }
+
+    // 피의 맹세 극의 충전 번호: 이야기 판은 장 번호 · 무한 모드(장이 바뀌지 않음)는 쓰러뜨린 보스 수 (음수 쪽 · 장 번호와 겹치지 않게)
+    static int RageKey()
+    {
+        if (GameMode.IsEndless && EndlessMode.Instance != null) return -1000 - EndlessMode.Instance.BossesDefeated;
+        return Chapters.CurrentStage;
+    }
+
+    // PlayerController.TryHit 의 보스전 한 방 상한 (보스가 살아 있으면 최대 체력 40% · 공간 침식 중엔 25%) — 같은 식을 공용 파일을 고치지 않고 미리 계산
+    static float CappedHit(PlayerController p, float dmg)
+    {
+        if (bosss.LiveCount <= 0) return dmg;
+        float share = BossUltimate.Active && BossUltimate.ErosionActive ? Mathf.Min(PlayerController.BossHitShare, SpaceErosion.HitShare) : PlayerController.BossHitShare;
+        return Mathf.Min(dmg, p.PlayerMaxHealth * share);
     }
 
     public override void Hit(GameObject target, float dmg, bool killed, bool proc)
