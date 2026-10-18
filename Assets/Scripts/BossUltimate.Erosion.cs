@@ -37,6 +37,11 @@ public partial class BossUltimate
     // 장면 시작 (bossbar.Start): 통합 게이지 · 대기 · 쉬는 시간 · 땅 타격 대기열을 비움 (cutSeen 은 「이번 실행에서 본 적 있음」이라 그대로)
     public static void ResetStatics()
     {
+        // 1.2.8~ 결계 · 침식 · 연출 · 개발자 대기도 비움 (예전엔 OnDestroy → EndNow 에서만 풀려서, 장면 정리 중 예외가 나면 다음 판 내내 보스 스킬 · 새 보스 · 15분이 막힐 수 있었음)
+        Active = false;
+        ErosionActive = false;
+        CutscenePlaying = false;
+        devHolder = null;
         shared = false;
         sharedGauge = sharedLastHit = 0f;
         sharedCount = 0;

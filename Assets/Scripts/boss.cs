@@ -173,24 +173,25 @@ public class bosss : MonoBehaviour
         player = pc != null ? pc.transform : null;
 
         // 컴포넌트 가져오기
+        // 1.2.7~ 순서: 진행에 꼭 필요한 것(체력바 · 스킬 · 결계 · 슬라임 목록)을 먼저, 실패해도 진행이 막히지 않는 것(히트박스 맞추기 · 기억 · 인트로)을 뒤에
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
-        EnemyHitbox.Fit(gameObject);        // 히트박스를 그림 가운데에 맞추고 넉넉하게
         KilledEnemy = 0;
         bossbar = FindFirstObjectByType<bossbar>();
-        // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)
-        if (!developer) StoryDirector.PlayBossIntro(transform, bossKind);
         BossSkills skills = GetComponent<BossSkills>();
         if (skills == null) skills = gameObject.AddComponent<BossSkills>();
         skills.kind = bossKind;
         if (GetComponent<BossUltimate>() == null) gameObject.AddComponent<BossUltimate>();     // 필살기 "결계"
-        memory = BossMemory.Attach(this);       // 기억하는 보스 (튜토리얼 제외 · 이미 붙어 있으면 그대로)
         if (IsSlime)
         {
             slimes.Clear();
             slimeBossCleared = false;
             slimes.Add(this);
         }
+        EnemyHitbox.Fit(gameObject);        // 히트박스를 그림 가운데에 맞추고 넉넉하게
+        memory = BossMemory.Attach(this);       // 기억하는 보스 (튜토리얼 제외 · 이미 붙어 있으면 그대로)
+        // 처음 등장: 게임을 멈추고 카메라가 보스 쪽으로 이동한 뒤 대사 (보스마다 한 판에 한 번)
+        if (!developer) StoryDirector.PlayBossIntro(transform, bossKind);
     }
     bossbar bossbar;
     void Update()
@@ -199,6 +200,11 @@ public class bosss : MonoBehaviour
         if (isDead) return;
 
         if (IsPrimary)
+        {
+            if (bossbar == null) bossbar = FindFirstObjectByType<bossbar>();      // 1.2.7~ 못 찾았으면 다시 (예전엔 매 프레임 예외로 아래 처리가 모두 멈췄음)
+            Primary = this;
+        }
+        if (IsPrimary && bossbar != null)
         {
             bossbar.bossSpawn = true;
             bossbar.bossKind = developer ? (developerMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind) : bossKind;     // 1.0.4~ 엄마
@@ -341,7 +347,7 @@ public class bosss : MonoBehaviour
         if (!dyingCounted) { dyingCounted = true; Dying++; }
 
         bool lastOne = !IsSlime || SlimeRemaining() <= 0;
-        if (lastOne && LiveCount == 0) bossbar.bossSpawn = false;      // 다른 보스가 남아 있으면 체력바는 그 보스로
+        if (lastOne && LiveCount == 0 && bossbar != null) bossbar.bossSpawn = false;      // 다른 보스가 남아 있으면 체력바는 그 보스로
         spriteRenderer.color = Color.white;
         if (a == 1 && !restoreDying)
         {
@@ -380,13 +386,18 @@ public class bosss : MonoBehaviour
     {
         // 죽음 애니메이션 시간
         yield return new WaitForSeconds(1f);
+        // 1.2.7~ 아래 처치 처리 중 예외가 나도 보스는 반드시 지움 (남으면 bosss.Dying 이 0 으로 안 돌아와 다음 보스 · 최종 국면이 영원히 멈춤)
+        try { DeathAfterFall(a); }
+        finally { Destroy(gameObject); }
+    }
+
+    void DeathAfterFall(int a)
+    {
         EnemySpawner enemySpawner = Cache<EnemySpawner>.Get;
         // 총알에 죽었을 때만 코인 생성
         if (a == 1)
         {
-
-
-            enemySpawner.killedEnemy++;
+            if (enemySpawner != null) enemySpawner.killedEnemy++;
             if (Random.Range(0, 100) < chanceofHP) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
             // 1.0.4~: 한 번에 수십 ~ 수백 개를 따로 만들던 것을 값이 큰 코인 최대 40개로 나눔 (줍는 양은 그대로)
             CoinTag.Drop(coin, transform.position, coinDrop, new Vector2(5f, 5f), false, CoinTag.BossPieces);
@@ -407,8 +418,6 @@ public class bosss : MonoBehaviour
         if (allDown && GameMode.IsEndless && EndlessMode.Instance != null && (LiveCount > 0 || (enemySpawner != null && !enemySpawner.bossSpawned)))     // 거의 같이 쓰러져 연출이 이미 시작됐을 때도
             EndlessMode.Instance.OnExtraBossDown();
         else if (enemySpawner != null && allDown) enemySpawner.OnBossDefeated();
-
-        Destroy(gameObject);
     }
 
 

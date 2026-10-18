@@ -124,10 +124,18 @@ public static class GameMode
     }
 
     // ================================================================= 무한 모드 경과
-    static float endlessStart = -1f;
-    public static void StartEndlessClock(float elapsed = 0f) => endlessStart = Time.time - Mathf.Max(0f, elapsed);      // 1.2.3~ 이어하기는 저장한 경과 시간부터
+    static float endlessStart;
+    static bool endlessClockOn;
+    // 1.2.3~ 이어하기는 저장한 경과 시간부터
+    // 1.2.8~ 시작 시각은 음수일 수 있음 (게임을 켜자마자 이어하면 Time.time < 저장한 경과 시간) — 예전엔 「시작 시각 ≥ 0」으로 켜짐을 봐서
+    //   실제 시간이 저장한 시간을 따라잡을 때까지 시계가 00:00 에 멈췄고 15분 · 적 증가 · 이정표도 0초로 계산됐음 → 켜짐은 따로 플래그로
+    public static void StartEndlessClock(float elapsed = 0f)
+    {
+        endlessStart = Time.time - Mathf.Max(0f, elapsed);
+        endlessClockOn = true;
+    }
     // 무한 모드 판이 진행 중일 때만 (메뉴에서는 0)
-    public static float EndlessSeconds => IsEndless && endlessStart >= 0f && EndlessMode.Instance != null ? Time.time - endlessStart : 0f;
+    public static float EndlessSeconds => IsEndless && endlessClockOn && EndlessMode.Instance != null ? Mathf.Max(0f, Time.time - endlessStart) : 0f;
     static float Ramp
     {
         get

@@ -96,7 +96,7 @@ public partial class BossSkills
 
     void LichTurn(PlayerController p)
     {
-        if (!specialDone && boss.Enraged) { specialDone = true; StartCoroutine(Run(LichRitual())); return; }
+        if (!specialDone && boss.Enraged && Time.time >= ritualRetryAt) { specialDone = true; StartCoroutine(Run(LichRitual())); return; }
         if (Time.time < next) return;
         next = Time.time + Cool(boss.Enraged ? 2.8f : 3.6f);
         step = (step + 1) % 4;
@@ -269,7 +269,12 @@ public partial class BossSkills
     // 망자의 의식 (절반 아래 한 번): 무적 + 영혼 등불 셋, 등불과 이어진 동안 나선 탄막
     // 22초 안에 등불을 다 부수면 무적이 풀리고 4초 휘청 (받는 피해 1.5배), 못 부수면 남은 등불이 터지고 무적만 풀림
     // 1.2.7~ 의식이 도는 중 (공간 침식 · 결계가 스킬을 끊으면 CancelForErosion 이 무적을 풀고 의식을 다시 할 수 있게 함)
+    //   끊긴 의식은 RitualRetryDelay 초 뒤에 다시 (결계 · 침식이 끝나는 바로 그 프레임에 다시 무적이 되지 않게)
     bool ritualRunning;
+    float ritualRetryAt;
+    const float RitualRetryDelay = 8f;
+    // 몸을 띄우는 스킬(의식 · 공중 탄막 · 내려찍기)이 끊기면 돌아갈 땅 자리 (ClearSkillState)
+    Vector3? groundAt;
 
     IEnumerator LichRitual()
     {
@@ -277,6 +282,7 @@ public partial class BossSkills
         ritualRunning = true;
         boss.invulnerable = true;
         Vector3 home = transform.position;
+        groundAt = home;
         LineRenderer runeIn = Own(Hostile.NewLine("RuneRing", Curse, 0.14f, 2));
         LineRenderer runeOut = Own(Hostile.NewLine("RuneRing", Soul, 0.1f, 2));
         List<BossPart> lanterns = new List<BossPart>();
@@ -325,6 +331,7 @@ public partial class BossSkills
         Destroy(runeOut.gameObject);
         foreach (LineRenderer t in tethers) if (t != null) Destroy(t.gameObject);
         transform.position = home;
+        groundAt = null;
         sr.color = Color.white;
         boss.invulnerable = false;
         ritualRunning = false;
@@ -421,6 +428,7 @@ public partial class BossSkills
     IEnumerator AirBarrage()
     {
         Vector3 home = transform.position;
+        groundAt = home;        // 1.2.7~ 끊기면 여기로 (ClearSkillState)
         Hostile.Play("whoosh", 0.8f, 0.5f);
         for (float t = 0f; t < 0.4f; t += Time.deltaTime)
         {
@@ -449,6 +457,7 @@ public partial class BossSkills
             yield return null;
         }
         transform.position = home;
+        groundAt = null;
     }
 
     // 내려찍기: 플레이어 자리에 큰 원 → 솟구쳐 내려찍고 불길이 잠시 남음
@@ -460,6 +469,7 @@ public partial class BossSkills
         yield return Windup(Fire, 0.5f);
         if (!Alive) yield break;
         Vector3 start = transform.position;
+        groundAt = target;      // 1.2.7~ 솟구친 채 끊기면 내려찍을 자리로 (12칸 위에 떠 있지 않게 · ClearSkillState)
         Hostile.Play("whoosh", 0.8f, 0.5f);
         for (float t = 0f; t < 0.3f; t += Time.deltaTime)
         {
@@ -473,6 +483,7 @@ public partial class BossSkills
             yield return null;
         }
         transform.position = target;
+        groundAt = null;
         if (!Alive) yield break;
         Hostile.HitCircle(target, r, 32f * Power);
         Fx.Spawn("fx_explosion", target, r * 2.4f, Color.white, 16f);

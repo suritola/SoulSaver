@@ -52,7 +52,8 @@ public partial class BossSkills : MonoBehaviour
     void Update()
     {
         // 1.2.7~ 안전장치: 무적 · 공중 · 휘청 배율은 스킬이 도는 동안에만 (스킬이 어떤 길로 끊겨도 남지 않게 · 개발자는 이 상태를 쓰지 않음)
-        if (!busy && boss != null && !boss.developer && (boss.invulnerable || airborne || boss.damageTakenMul != 1f)) ClearSkillState();
+        if (!busy && boss != null && !boss.developer && (boss.invulnerable || airborne || groundAt.HasValue || boss.damageTakenMul != 1f)) ClearSkillState();
+        if (busy && boss != null && !boss.developer && Time.time - busySince > BusyWatchdog) CancelForErosion();
         if (Alive && kind != AbyssStage.MirrorKind) RebornTick();
         if (busy || !Alive || BossUltimate.Active || BossUltimate.DevHold || BossUltimate.ErosionPending) return;      // 필살기 결계 동안은 결계 공격만 · 개발자 · 엄마 결계 대기 중엔 새 필살기 없음
         PlayerController p = Hostile.Player;
@@ -83,6 +84,7 @@ public partial class BossSkills : MonoBehaviour
     IEnumerator Run(IEnumerator routine)
     {
         busy = true;
+        busySince = Time.time;
         boss.casting = true;
         yield return StartCoroutine(routine);
         if (boss != null) boss.casting = false;
@@ -117,10 +119,16 @@ public partial class BossSkills : MonoBehaviour
     void ClearSkillState()
     {
         boss.invulnerable = false;
-        if (ritualRunning) { ritualRunning = false; specialDone = false; }
+        if (ritualRunning) { ritualRunning = false; specialDone = false; ritualRetryAt = Time.time + RitualRetryDelay; }
         if (airborne) { transform.position = landing; airborne = false; }
+        if (groundAt.HasValue) { transform.position = groundAt.Value; groundAt = null; }     // 지옥의 군주 내려찍기 · 공중 탄막 · 리치 의식
         boss.damageTakenMul = 1f;
     }
+
+    // 1.2.7~ 스킬 감시: 스킬 코루틴이 예외로 죽으면 Run 이 끝나지 않아 busy · casting · 무적이 영원히 남음 (안전장치는 !busy 일 때만 봄)
+    //   가장 긴 스킬은 의식 22초 + 휘청 4초 → BusyWatchdog 초가 넘게 도는 스킬은 끊고 정리
+    const float BusyWatchdog = 40f;
+    float busySince;
 
     // 1.2.6~ 한국어면 이름 받침에 맞춰 「을」 · 「를」 (예전엔 「을(를)」이 그대로 보였음) · 다른 언어는 번역 그대로
     static string MirrorLine(string name)
