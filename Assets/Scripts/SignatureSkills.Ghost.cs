@@ -22,6 +22,12 @@ public partial class SignatureSkills
     public static void Frozen(GameObject g) { if (Instance != null && Instance.IsGhost) Instance.OnFrozen(g); }
     public static void WispBlocked(Vector3 p) { if (Instance != null && Instance.IsGhost) Instance.OnWispBlocked(p); }
     public static void Possessed(Vector3 at, bool killed) { if (Instance != null && Instance.IsGhost) Instance.OnPossessed(at, killed); }
+    // 갈래 사령술 공명 I (Paths.Ghost): 빙의 폭발에 휘말린 적에게 저주 기본 — 저주 카드가 있으면 그 세기, 없으면 1단계 (+20%) · 5초
+    public static void PathCurse(GameObject g)
+    {
+        if (Instance == null || !Instance.IsGhost || g == null) return;
+        Instance.Mark(g, 5f, 1f + Mathf.Max(0.2f, V(Instance.L("h.curse"), 0.2f, 0.05f)));
+    }
 
     float drainAt, polterAt, underworldReady;
 
@@ -81,7 +87,7 @@ public partial class SignatureSkills
         if (Kit == null) return m;
         bool frozen = Kit.IsFrozen(target);
         if (L("h.grudge") > 0) m *= 1f + V(L("h.grudge"), 0.03f, 0.01f) * (frozen ? 3 : Kit.ChillOf(target));
-        if (L("h.wisp") > 0) m *= 1f + V(L("h.wisp"), 0.04f, 0.01f) * Kit.Wisps;
+        if (L("h.wisp") > 0) m *= 1f + V(L("h.wisp"), 0.04f, 0.01f) * Mathf.Min(Kit.Wisps, 6);     // 2026-10-19~ 영혼 6까지 (갈래 영혼 군단이 상한을 8 · 10 으로 올려도 보스 화력이 튀지 않게 · 원래 상한은 6)
         if (L("h.frostbite") > 0 && frozen) m *= 1f + V(L("h.frostbite"), 0.1f, 0.05f);
         return m;
     }
@@ -131,7 +137,9 @@ public partial class SignatureSkills
         if (L("h.polter") > 0 && Time.time >= polterAt)
         {
             polterAt = Time.time + 3f;
-            foreach (Transform t in Nearest(p, 8f, E("he.house") ? 3 : 1)) StartCoroutine(Poltergeist(t));
+            int n = E("he.house") ? 3 : 1;
+            // 갈래 유체 이탈 공명 II: 내가 통과한 적을 먼저 (Paths.Ghost · 아니면 null → 가까운 적)
+            foreach (Transform t in GhostPaths.PolterTargets(p, n) ?? Nearest(p, 8f, n)) StartCoroutine(Poltergeist(t));
         }
     }
 
