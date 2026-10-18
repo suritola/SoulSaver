@@ -1,4 +1,4 @@
-# V1.3.3 업데이트 — 개발자와 엄마의 새 공격
+# V1.3.4 업데이트 — 개발자와 엄마의 새 공격
 개발자와 엄마가 자기만의 공격을 쓰기 시작합니다. 새 로딩 화면과 여러 버그 수정도 함께 담았습니다.
 
 무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
@@ -45,14 +45,14 @@
 - 개발자 엄마 체력: 200,000 → 120,000
 - 모든 영웅의 모든 피해: 20% 증가
 - 지도 제작자 피해: 약 9% 감소 (공격력 배율 ×1.1 → ×1.0)
-- 무한 모드 최대 레벨: 80 → 50 (이야기 모드와 같음 · 이제 무한 모드에서도 모든 스킬을 진화할 수는 없습니다)
+- 한계 돌파(개발자 엄마까지 처치한 뒤) 적의 공격력: 그대로 → 1분마다 ×1.12씩 끝없이 강해짐 (이야기 모드와 같음 · 이제 무한 모드에서도 모든 스킬을 진화할 수는 없습니다)
 - 개발자 결계 게이지 차는 속도: ×1 → ×2.5
 - 개발자 엄마 결계 게이지 차는 속도: ×1 → ×4
 
 플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.3.3 Update — New Attacks for the Developer and Mom
+# V1.3.4 Update — New Attacks for the Developer and Mom
 The Developer and Mom now have attacks all their own, plus a new loading screen and many bug fixes.
 
 The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
@@ -99,14 +99,14 @@ Every attack shows a warning first and stops the moment a barrier or Spatial Ero
 - Developer's Mom health: 200,000 → 120,000
 - All damage from every hero: +20%
 - Cartographer damage: about −9% (attack multiplier ×1.1 → ×1.0)
-- Endless Mode max level: 80 → 50 (same as Story Mode, so you can no longer evolve every skill in Endless)
+- Enemy attack after Beyond the Limit (after defeating the Developer's Mom): unchanged → grows ×1.12 every minute, without limit (same as Story Mode, so you can no longer evolve every skill in Endless)
 - Developer barrier gauge fill speed: ×1 → ×2.5
 - Developer's Mom barrier gauge fill speed: ×1 → ×4
 
 Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
 
 === ja
-# V1.3.3 アップデート — 開発者とママの新しい攻撃
+# V1.3.4 アップデート — 開発者とママの新しい攻撃
 開発者とママが自分だけの攻撃を使い始めます。新しいロード画面と多くの不具合修正も含まれています。
 
 エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
@@ -153,14 +153,14 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - 開発者のママの体力: 200,000 → 120,000
 - すべての英雄のすべてのダメージ: 20%増加
 - 地図職人のダメージ: 約9%減少（攻撃力倍率 ×1.1 → ×1.0）
-- エンドレスの最大レベル: 80 → 50（ストーリーモードと同じ・エンドレスでもすべてのスキルは進化できなくなりました）
+- 限界突破（開発者のママまで倒した後）の敵の攻撃力: そのまま → 1分ごとに×1.12ずつ際限なく強くなる（ストーリーモードと同じ・エンドレスでもすべてのスキルは進化できなくなりました）
 - 開発者の結界ゲージがたまる速さ: ×1 → ×2.5
 - 開発者のママの結界ゲージがたまる速さ: ×1 → ×4
 
 遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.3.3 更新 — 开发者与妈妈的新攻击
+# V1.3.4 更新 — 开发者与妈妈的新攻击
 开发者与妈妈开始使用属于自己的攻击，同时带来新的加载画面与多项问题修复。
 
 无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
@@ -207,7 +207,7 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - 开发者的妈妈生命：200,000 → 120,000
 - 所有英雄的所有伤害：提高20%
 - 制图师伤害：降低约9%（攻击力倍率 ×1.1 → ×1.0）
-- 无尽模式等级上限：80 → 50（与故事模式相同 · 无尽模式中也无法让所有技能进化）
+- 突破极限（击败开发者的妈妈之后）敌人攻击力：不变 → 每分钟×1.12，无限增强（与故事模式相同 · 无尽模式中也无法让所有技能进化）
 - 开发者结界槽充能速度：×1 → ×2.5
 - 开发者的妈妈结界槽充能速度：×1 → ×4
 
