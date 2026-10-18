@@ -1,4 +1,4 @@
-# V1.3.4 업데이트 — 개발자와 엄마의 새 공격
+# V1.3.5 업데이트 — 개발자와 엄마의 새 공격
 개발자와 엄마가 자기만의 공격을 쓰기 시작합니다. 새 로딩 화면과 여러 버그 수정도 함께 담았습니다.
 
 무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
@@ -39,6 +39,19 @@
 - 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
 - 보스가 기술 도중 끊겨 공중에 떠 있던 문제 등 보스전이 멈출 수 있던 문제를 더 막았습니다.
 
+## 🦸 영웅 밸런스
+
+모든 영웅의 화력 · 성장 속도 · 성장 폭을 유령에 맞췄습니다. 유령은 너무 쉽게 버티던 생존력을 낮췄습니다.
+- 유령: 처치할 때 영혼이 생길 확률 20% → 10% · 최대 영혼 4 → 3 (영혼 수호 5 · 6 · 7 → 4 · 5 · 6) · 빙의가 끝난 뒤 무적 0.65초 → 0.3초
+- 거너: 공격력 ×1.15 → ×1.05
+- 검사: 필살기 충전 ×0.85 → ×1.0
+- 도적: 공격력 ×1.0 → ×0.9 · 급소 노리기 +30/60/90% → +20/40/60%
+- 궁수: 공격력 ×1.25 → ×1.05 · 폭발 화살 피해 60% → 30%
+- 연금술사: 필살기 충전 ×1.2 → ×1.1
+- 지도 제작자: 공격력 ×1.0 → ×0.95 · 번지는 잉크 초당 30/50/70% → 15/25/35% (설명과 같게)
+- 우체부: 공격력 ×0.8 → ×0.95
+- 시계공 계약 「팔백 개의 톱니」 → 「육백 개의 톱니」 (톱니 800개 → 600개)
+
 ## ⚖️ 밸런스 조정
 - 모든 적의 체력: 40% 감소 (잡몹 · 엘리트 · 중간 보스 · 보스 모두)
 - 개발자 체력: 100,000 → 60,000
@@ -52,7 +65,7 @@
 플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.3.4 Update — New Attacks for the Developer and Mom
+# V1.3.5 Update — New Attacks for the Developer and Mom
 The Developer and Mom now have attacks all their own, plus a new loading screen and many bug fixes.
 
 The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
@@ -93,6 +106,19 @@ Every attack shows a warning first and stops the moment a barrier or Spatial Ero
 - Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
 - Fixed more cases that could stall boss fights, such as bosses staying in the air after an interrupted attack.
 
+## 🦸 Hero Balance
+
+Every hero's firepower, growth speed and growth size now matches the Ghost. The Ghost's survivability, which was far too forgiving, has been lowered.
+- Ghost: soul chance on kill 20% → 10% · max souls 4 → 3 (Soul Guard 5 · 6 · 7 → 4 · 5 · 6) · invincibility after Possession 0.65s → 0.3s
+- Gunner: attack ×1.15 → ×1.05
+- Swordsman: Ultimate charge ×0.85 → ×1.0
+- Rogue: attack ×1.0 → ×0.9 · Go for the Vitals +30/60/90% → +20/40/60%
+- Archer: attack ×1.25 → ×1.05 · Exploding Arrows damage 60% → 30%
+- Alchemist: Ultimate charge ×1.2 → ×1.1
+- Cartographer: attack ×1.0 → ×0.95 · Spreading Ink 30/50/70% → 15/25/35% per second (now matches its description)
+- Postman: attack ×0.8 → ×0.95
+- Clockmaker contract "Eight Hundred Gears" → "Six Hundred Gears" (800 → 600 gears)
+
 ## ⚖️ Balance Changes
 - All enemy health: −40% (mobs, elites, mid-bosses and bosses)
 - Developer health: 100,000 → 60,000
@@ -106,7 +132,7 @@ Every attack shows a warning first and stops the moment a barrier or Spatial Ero
 Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
 
 === ja
-# V1.3.4 アップデート — 開発者とママの新しい攻撃
+# V1.3.5 アップデート — 開発者とママの新しい攻撃
 開発者とママが自分だけの攻撃を使い始めます。新しいロード画面と多くの不具合修正も含まれています。
 
 エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
@@ -147,6 +173,19 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
 - 技の途中で中断されたボスが空中に浮いたままになるなど、ボス戦が止まりうる問題をさらに防ぎました。
 
+## 🦸 英雄のバランス
+
+すべての英雄の火力・成長の速さ・成長の幅を幽霊に合わせました。幽霊は耐えすぎていた生存力を下げました。
+- 幽霊: 撃破時に魂が生まれる確率 20% → 10%・最大の魂 4 → 3（魂の守り 5・6・7 → 4・5・6）・憑依が終わった後の無敵 0.65秒 → 0.3秒
+- ガンナー: 攻撃力 ×1.15 → ×1.05
+- 剣士: 必殺技チャージ ×0.85 → ×1.0
+- 盗賊: 攻撃力 ×1.0 → ×0.9・急所狙い +30/60/90% → +20/40/60%
+- 弓使い: 攻撃力 ×1.25 → ×1.05・爆発の矢のダメージ 60% → 30%
+- 錬金術師: 必殺技チャージ ×1.2 → ×1.1
+- 地図職人: 攻撃力 ×1.0 → ×0.95・にじむインク 毎秒30/50/70% → 15/25/35%（説明どおりに）
+- 郵便配達人: 攻撃力 ×0.8 → ×0.95
+- 時計職人の契約「八百の歯車」→「六百の歯車」（歯車800個 → 600個）
+
 ## ⚖️ バランス調整
 - すべての敵の体力: 40%減少（雑魚・エリート・中ボス・ボスすべて）
 - 開発者の体力: 100,000 → 60,000
@@ -160,7 +199,7 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.3.4 更新 — 开发者与妈妈的新攻击
+# V1.3.5 更新 — 开发者与妈妈的新攻击
 开发者与妈妈开始使用属于自己的攻击，同时带来新的加载画面与多项问题修复。
 
 无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
@@ -200,6 +239,19 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - 修复了首领永远不受伤害的问题。
 - 修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
 - 进一步防止了首领招式被打断后停在空中等可能导致首领战停滞的问题。
+
+## 🦸 英雄平衡
+
+所有英雄的火力、成长速度与成长幅度都已与幽灵看齐。幽灵过于耐打的生存能力已被降低。
+- 幽灵：击败敌人时生成灵魂的几率 20% → 10% · 灵魂上限 4 → 3（灵魂守护 5 · 6 · 7 → 4 · 5 · 6）· 附身结束后的无敌 0.65秒 → 0.3秒
+- 枪手：攻击力 ×1.15 → ×1.05
+- 剑士：必杀技充能 ×0.85 → ×1.0
+- 盗贼：攻击力 ×1.0 → ×0.9 · 直取要害 +30/60/90% → +20/40/60%
+- 弓箭手：攻击力 ×1.25 → ×1.05 · 爆炸箭伤害 60% → 30%
+- 炼金术士：必杀技充能 ×1.2 → ×1.1
+- 制图师：攻击力 ×1.0 → ×0.95 · 晕染墨迹 每秒30/50/70% → 15/25/35%（与说明一致）
+- 邮差：攻击力 ×0.8 → ×0.95
+- 钟表匠契约「八百齿轮」→「六百齿轮」（齿轮800枚 → 600枚）
 
 ## ⚖️ 平衡调整
 - 所有敌人的生命：降低40%（小怪 · 精英 · 中头目 · 首领全部）
