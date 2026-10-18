@@ -146,9 +146,9 @@ public partial class SignatureSkills : MonoBehaviour
     // 기준 공격력 (캐릭터 평타와 같은 값)
     // 고유 스킬은 공격 속도와 상관없이 터지므로 캐릭터 공격력 배율(느린 평타 보상) 대신 공통 기준을 씀
     //   지금 공격력 ÷ 캐릭터 배율 × 고유 스킬 배율 (레벨업 · 영혼 트리 강화는 그대로 반영)
-    //   검사는 2 (2.1.8: 3 → 2, 체력 · 공격력 · 충전 · 생존기를 다 가져 너무 셌음), 도적은 후반 하향으로 0.85, 나머지는 1
+    //   고유 스킬 배율은 1.3.7~ CharacterDef.sig (영웅마다 · 30분 밸런스)
     float Atk => player != null ? player.damage * player.damageMultiplier / Mathf.Max(0.1f, CharacterData.Current.damage) * SigPower : 1f;
-    float SigPower => who == CharacterId.Swordsman ? 0.98f : who == CharacterId.Rogue ? 0.85f : 1f;     // 1.1.3: 검사 2 → 1.7 (밸런스 점검 · CharacterData 주석)
+    float SigPower => CharacterData.Def(who).sig;     // 1.3.7~ 영웅 데이터로 옮김 (예전: 검사 0.98 · 도적 0.85 · 나머지 1)
     bool Alive => player != null && !player.IsDying;
 
     // ================================================================= 훅 (게임 코드가 부름 · 없으면 아무것도 안 함)

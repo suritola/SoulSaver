@@ -80,9 +80,9 @@ public partial class SignatureSkills
         float m = MarkMul(target);
         if (Kit == null) return m;
         bool frozen = Kit.IsFrozen(target);
-        if (L("h.grudge") > 0) m *= 1f + V(L("h.grudge"), 0.03f, 0.01f) * (frozen ? 5 : Kit.ChillOf(target));
+        if (L("h.grudge") > 0) m *= 1f + V(L("h.grudge"), 0.03f, 0.01f) * (frozen ? 3 : Kit.ChillOf(target));
         if (L("h.wisp") > 0) m *= 1f + V(L("h.wisp"), 0.04f, 0.01f) * Kit.Wisps;
-        if (L("h.frostbite") > 0 && frozen) m *= 1f + V(L("h.frostbite"), 0.15f, 0.07f);
+        if (L("h.frostbite") > 0 && frozen) m *= 1f + V(L("h.frostbite"), 0.1f, 0.05f);
         return m;
     }
 

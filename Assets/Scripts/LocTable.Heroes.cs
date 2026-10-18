@@ -448,7 +448,7 @@ public static partial class LocTable
 
         // ---------------- 고유 스킬
         A("원한", "Grudge", "怨み", "怨恨");
-        A("냉기가 쌓인 적에게 주는 피해가 쌓인 냉기만큼 늘어납니다. (얼어붙은 적은 5중첩으로)", "Deal more damage to enemies the more chill they carry. (Frozen counts as 5 stacks)", "冷気がたまった敵へのダメージが、たまった冷気の分だけ増えます。（凍った敵は5重扱い）", "对累积寒气的敌人造成的伤害随寒气层数提升。（冻结视为5层）");
+        A("냉기가 쌓인 적에게 주는 피해가 쌓인 냉기만큼 늘어납니다. (얼어붙은 적은 3중첩으로)", "Deal more damage to enemies the more chill they carry. (Frozen counts as 3 stacks)", "冷気がたまった敵へのダメージが、たまった冷気の分だけ増えます。（凍った敵は3重扱い）", "对累积寒气的敌人造成的伤害随寒气层数提升。（冻结视为3层）");
         A("냉기 하나당", "Per chill", "冷気1つごと", "每层寒气");
         A("곡소리", "Wail", "嘆きの声", "哀嚎");
         K("영혼이 피해를 막을 때 곡소리가 퍼져 둘레 적을 밀치고 다치게 합니다.", "영혼이 피해를 막을 때 곡소리가 퍼져 둘레의 적을 밀치고 다치게 합니다.","When a soul blocks a hit, a wail knocks back and damages nearby enemies.", "魂がダメージを防ぐとき、嘆きの声が広がり周りの敵を押しのけて傷つけます。", "灵魂抵挡伤害时，哀嚎扩散，击退并伤害周围敌人。");
