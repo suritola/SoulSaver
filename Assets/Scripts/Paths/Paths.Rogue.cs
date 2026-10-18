@@ -198,10 +198,12 @@ public sealed class RoguePaths : HeroPaths
         }
     }
 
-    // 질주 암살: 게이지로 돌진할 때마다 30% 를 돌려받음 (= 돌진 게이지 −30%) · 그림자의 모아 둔 돌진도 같음
+    // 질주 암살: 게이지로 돌진할 때마다 30% 를 돌려받음 (= 돌진 게이지 −30%) · 그림자의 모아 둔 돌진은 게이지를 쓰지 않으므로 빼고
     public override void Ult()
     {
         if (!Paths.Has(Dash)) return;
+        CharacterKit k = CharacterKit.Instance;
+        if (k != null && k.RpStoredUlt) return;
         SkillGauge g = Cache<SkillGauge>.Get;
         if (g != null) g.AddSkillPoint(g.MaxSkillPoint * DashGaugeBack);
     }
@@ -284,7 +286,7 @@ public sealed class RoguePaths : HeroPaths
         {
             if (c == null) continue;
             GameObject g = c.gameObject;
-            if (!g.TryGetComponent(out RogueBleed rb) || rb.Stacks < BleedCap) continue;
+            if (!g.TryGetComponent(out RogueBleed rb) || rb.Stacks < BleedCapFor(g)) continue;     // 그 적의 상한 (극의 보스 10중첩)
             float burst = 0f;
             if (g.TryGetComponent(out global::Bleed b))
             {

@@ -70,8 +70,14 @@ public partial class CharacterKit
         rpStored--;
         KitUltAdd(0.25f, Mouse);
         lastUlt = Time.time;
-        player.RaiseUltUsed();
+        rpStoredUlt = true;                 // 게이지를 쓰지 않은 돌진: 질주 암살의 30% 환급은 받지 않음 (RoguePaths.Ult)
+        try { player.RaiseUltUsed(); }
+        finally { rpStoredUlt = false; }
     }
+
+    // 지금 필살기 사용 알림이 모아 둔 돌진(게이지를 쓰지 않음)에서 왔나 — RaiseUltUsed 안에서만 true
+    bool rpStoredUlt;
+    public bool RpStoredUlt => rpStoredUlt;
 
     // 질주 암살 극의: 돌진 중 처치하면 커서 쪽으로 바로 다시 돌진
     public void RpChainDash()

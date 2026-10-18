@@ -27,7 +27,7 @@ public partial class SignatureSkills
 
     void OnDashStart(Vector3 from)
     {
-        RoguePaths.Cur?.DashStart(from);        // 2026-10-19~ 갈래: 미끼 분신 · 모아 둔 돌진 · 폭풍 질주 (Paths.Rogue)
+        Paths.Safe(() => RoguePaths.Cur?.DashStart(from));        // 2026-10-19~ 갈래: 미끼 분신 · 모아 둔 돌진 · 폭풍 질주 (Paths.Rogue)
         int s = L("r.smoke");
         if (s <= 0) return;
         smokes.RemoveAll(z => z == null);
@@ -84,7 +84,7 @@ public partial class SignatureSkills
                 if (c != null) knots[c.gameObject] = Time.time + 4f;
             DrawKnots(cut);
         }
-        RoguePaths.Cur?.DashEnd(from, to, cut);     // 2026-10-19~ 갈래: 출혈 즉시 폭발 · 게이지 반환 · 길 교차 폭발 · 연속 돌진 (맨 끝 — 다시 돌진할 수 있음)
+        Paths.Safe(() => RoguePaths.Cur?.DashEnd(from, to, cut));     // 2026-10-19~ 갈래: 출혈 즉시 폭발 · 게이지 반환 · 길 교차 폭발 · 연속 돌진 (맨 끝 — 다시 돌진할 수 있음)
     }
 
     void DrawKnots(HashSet<Collider2D> cut)

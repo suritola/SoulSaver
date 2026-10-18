@@ -238,7 +238,7 @@ public partial class SignatureSkills
         int k = tinkerKind;
         tinkerKind = (tinkerKind + 1) % 3;
         // 2026-10-19~ 조수 공방(갈래): 조수가 내가 마지막에 던진 시약을 따라 던짐
-        if (Paths.Has(AlchemistPaths.Twins) && Kit != null && Kit.AlchLastKind >= 0) k = Kit.AlchLastKind;
+        if (Paths.Has(CharacterId.Alchemist, AlchemistPaths.Twins) && Kit != null && Kit.AlchLastKind >= 0) k = Kit.AlchLastKind;      // 영웅 확인 (조수 개조는 영웅 확인 없이 불림)
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(q, 1.6f, hits)))
         {
             if (c == null || !IsFoe(c)) continue;
@@ -267,7 +267,7 @@ public partial class SignatureSkills
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n + Random.Range(-10f, 10f)) * Vector2.right;
                 Bullet b = Shot(p, d, Atk * 0.5f * P("l.frost"), 2, 22f, 7f, "fx_spark", 0.7f * Fs("l.frost"), Tint("l.frost", Ice));       // 1.1.2~ 영구 동토: ×1.6
-                if (b != null && Paths.Res(AlchemistPaths.Frost) >= 2) b.onHitEnemy += (bullet, col) => AlchemistPaths.ShardHit(col);     // 빙결 공명 II: 10% 로 다시 얼림
+                if (b != null && Paths.Res(AlchemistPaths.Frost) >= 2) b.onHitEnemy += (bullet, col) => Paths.Safe(() => AlchemistPaths.ShardHit(col));     // 빙결 공명 II: 10% 로 다시 얼림
                 if (b != null && E("le.frost"))
                     b.onHitEnemy += (bullet, col) =>
                     {

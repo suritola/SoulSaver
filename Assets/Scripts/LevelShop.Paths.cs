@@ -22,7 +22,8 @@ public partial class LevelShop
     // 새 판 (Start): 지난 판 상태를 버리고 이 영웅의 갈래 규칙으로
     void PathsBegin()
     {
-        Paths.BeginRun(this, CharacterData.Selected);
+        Paths.BeginRun(this, CharacterData.Selected);      // 영웅 데이터 예외는 안에서 잡아 구판 규칙으로
+        if (TutorialRun.Active) Paths.Disable();            // 튜토리얼(거너 고정): 입문 창이 안내 문구와 겹치지 않게 구판 규칙 · 최근 갈래 기록도 남지 않음
         myEvos = null;
         pathWindow = PathWindow.None;
         pathRerolls = 0;

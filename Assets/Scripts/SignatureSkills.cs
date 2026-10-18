@@ -269,6 +269,7 @@ public partial class SignatureSkills : MonoBehaviour
     void SignatureTick()
     {
         if (!Alive || Time.timeScale == 0f) return;
+        try {   // 영웅 Tick 예외가 같은 프레임 갈래 Tick 까지 건너뛰지 않게 (예외는 그대로 위로)
         switch (who)
         {
             case CharacterId.Gunner: GunnerTick(); break;
@@ -281,7 +282,8 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Ghost: GhostTick(); break;
         }
         CommonTick();
-        Paths.Tick();               // 2026-10-19~ 갈래 효과 (멈춘 동안 · 쓰러지는 중은 위에서 걸러짐)
+        }
+        finally { Paths.Tick(); }   // 2026-10-19~ 갈래 효과 (멈춘 동안 · 쓰러지는 중은 위에서 걸러짐)
     }
 
     // ================================================================= 쌓이는 스킬의 지금 상태 (HUD 칸 오른쪽 위 숫자)
@@ -575,14 +577,14 @@ public class SigZone : MonoBehaviour
         age += Time.deltaTime;
         if (age >= life)
         {
-            onEnd?.Invoke(this);
+            if (onEnd != null) Paths.Safe(() => onEnd(this));      // 예외여도 장판은 사라짐 (매 프레임 onEnd 반복 방지)
             Destroy(gameObject);
             return;
         }
         if (tick > 0f && age >= next)
         {
             next = age + tick;
-            onTick?.Invoke(this);
+            if (onTick != null) Paths.Safe(() => onTick(this));    // 갈래 장판 람다 예외를 잡음 (Paths.Zone)
         }
     }
 
