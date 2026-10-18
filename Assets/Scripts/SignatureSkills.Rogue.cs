@@ -27,6 +27,7 @@ public partial class SignatureSkills
 
     void OnDashStart(Vector3 from)
     {
+        RoguePaths.Cur?.DashStart(from);        // 2026-10-19~ 갈래: 미끼 분신 · 모아 둔 돌진 · 폭풍 질주 (Paths.Rogue)
         int s = L("r.smoke");
         if (s <= 0) return;
         smokes.RemoveAll(z => z == null);
@@ -83,6 +84,7 @@ public partial class SignatureSkills
                 if (c != null) knots[c.gameObject] = Time.time + 4f;
             DrawKnots(cut);
         }
+        RoguePaths.Cur?.DashEnd(from, to, cut);     // 2026-10-19~ 갈래: 출혈 즉시 폭발 · 게이지 반환 · 길 교차 폭발 · 연속 돌진 (맨 끝 — 다시 돌진할 수 있음)
     }
 
     void DrawKnots(HashSet<Collider2D> cut)
@@ -102,7 +104,8 @@ public partial class SignatureSkills
         //   예전엔 0.35초 뒤 그 자리에 새 표창을 만들어 날려 엉뚱한 데서 나타나 보였음
         Bullet thrown = Kit != null ? Kit.TakeRogueThrow() : null;
         int b = L("r.boomerang");
-        if (b > 0 && thrown != null && thrown.isActiveAndEnabled && Alive)      // 풀로 돌아간 표창(꺼짐)에는 붙이지 않음 (다시 쓰일 때 남지 않게)
+        // 회귀 칼날 갈래면 이미 모든 표창이 돌아옴 (CharacterKit.RpShot 이 회전 표창 피해까지 실어 붙임) — 두 번 붙이지 않음
+        if (b > 0 && thrown != null && thrown.isActiveAndEnabled && Alive && thrown.GetComponent<ReturningShuriken>() == null)      // 풀로 돌아간 표창(꺼짐)에는 붙이지 않음 (다시 쓰일 때 남지 않게)
             thrown.gameObject.AddComponent<ReturningShuriken>().Throw(thrown, transform, start, RogueRange * 0.8f, RogueRange * ReturningShuriken.FarMul, Atk * V(b, 0.4f, 0.15f), E("re.return"));
         // 처형자의 길: 급습 시간 동안 꿰뚫는 그림자 표창이 함께
         if (E("re.executioner") && Time.time < ambushUntil)
@@ -253,6 +256,49 @@ public partial class SignatureSkills
         }
         gaugeWasFull = full;
     }
+
+    // ================================================================= 갈래 효과가 쓰는 도적 도우미 (2026-10-19 · Paths/Paths.Rogue.cs · CharacterKit.Rogue.cs)
+    // 그림자 공명 I: 미끼 분신이 사라진 자리에 연막 (적 느리게 · 환영 연막 · 공명 II 치명 판정에 같이 셈)
+    public void RoguePathSmoke(Vector3 at)
+    {
+        if (!Alive) return;
+        smokes.RemoveAll(z => z == null);
+        while (smokes.Count >= 12) { if (smokes[0] != null) Destroy(smokes[0].gameObject); smokes.RemoveAt(0); }     // 연막 상한
+        SigZone z = Zone(at, 3f * Fs("r.smoke"), 2.5f, 0.2f, zone =>
+        {
+            foreach (Collider2D c in Inside(zone))
+            {
+                EnermyController e = c.GetComponent<EnermyController>();
+                if (e != null) e.Slow(0.3f, 0.35f);
+            }
+        }, "fx_cloud", new Color(0.4f, 0.32f, 0.55f, 0.7f), 7.5f * Fs("r.smoke"));
+        smokes.Add(z);
+        Fx.Spawn("fx_smoke", at, 4f, new Color(0.5f, 0.45f, 0.6f), 14f);
+    }
+
+    // 이 자리가 연막 안인가 (그림자 공명 II)
+    public bool RogueInSmoke(Vector3 p)
+    {
+        foreach (SigZone z in smokes)
+            if (z != null && z.Contains(p)) return true;
+        return false;
+    }
+
+    // 회귀 칼날 공명 I: 왕복으로 같은 적을 맞힘 → 던지기 연습 중첩을 더 (명중 피해 훅의 +1 과 합쳐 2)
+    public void RoguePracticeBump(GameObject target, int n)
+    {
+        if (target == null || L("r.practice") <= 0) return;
+        if (target == practiceTarget && Time.time - practiceAt < 2f) practiceStacks = Mathf.Min(5, practiceStacks + n);
+        else { practiceTarget = target; practiceStacks = Mathf.Min(5, n); }
+        practiceAt = Time.time;
+    }
+
+    // 광란 공명 II: 10처치마다 빈 주머니의 비 (고유 스킬이 없으면 아무것도 안 함)
+    public void RoguePathRain() { if (Alive && who == CharacterId.Rogue) RogueEmpty(); }
+
+    // 회전 표창 카드의 돌아오는 피해 (카드가 없으면 0) · 진화 여부
+    public float RogueSpinBack => L("r.boomerang") > 0 ? Atk * V(L("r.boomerang"), 0.4f, 0.15f) : 0f;
+    public bool RogueEvolved(string key) => E(key);
 }
 
 // 회전 표창: 던진 평타 표창에 붙어, 날아가다 꺾여 주인에게 그대로 돌아옴 (SignatureSkills.RogueAttack)
@@ -263,6 +309,8 @@ public partial class SignatureSkills
 //            벽은 지나침, 매 프레임 주인 쪽으로 방향을 틂(트는 빠르기가 점점 빨라져 주인 둘레를 맴돌지 않음), 주인에게 닿으면 사라짐
 //   귀환하는 칼날(re.return): 꺾이는 순간 하나 더 갈라져 둘이 양쪽으로 휘어 돌아옴, 처음 표창이 끝나면 탄창에 한 발 (평타 한 번에 한 발 — 예전과 같음)
 //   안전: 돌아오는 길은 최대 3초 (그 뒤 사라짐) · 매 프레임 할당 없음 · 복제(Instantiate) 없음 (갈라지는 표창도 평타 표창처럼 새로 만듦)
+//   회귀 칼날 갈래(ThrowPath, 2026-10-19~): 모든 평타 표창이 8칸에서 꺾임 · 몸으로 받으면 탄창 한 발(던진 묶음마다 한 번)
+//            공명 I 가는 길에 벤 적을 오는 길에 또 베면 던지기 연습 +1 더 · 공명 II 받기 전에 몸 둘레를 한 바퀴 · 극의 받은 뒤 처음 방향으로 한 번 더 왕복
 public class ReturningShuriken : MonoBehaviour
 {
     const float BackSpeed = 26f, CatchDist = 1.2f, MaxBack = 3f, BaseTurn = 540f, TurnGrow = 1440f, Split = 40f, Curl = 20f;
@@ -278,6 +326,15 @@ public class ReturningShuriken : MonoBehaviour
     Vector3 origin;
     float minDistSq, outDistSq, backDmg, backAge;
     bool returning, twin, refund;
+    // 회귀 칼날 갈래
+    const float OrbitR = 2.4f, OrbitTime = 0.45f;
+    const int OrbitPene = 4;
+    bool pathMode, practice, orbit, orbiting, orbited;
+    RogueVolley volley;
+    int trips, outPene;
+    float orbitT, orbitAng, outDmg, outSpeed;
+    Vector2 outDir0;
+    System.Collections.Generic.HashSet<int> outHits;
 
     // 던진 평타 표창에 (가는 길부터) — minDist 보다 일찍은 안 꺾이고, 화면 끝에 닿거나 maxDist 를 날면 꺾임
     public void Throw(Bullet b, Transform owner, Vector3 from, float minDist, float maxDist, float dmg, bool twin)
@@ -292,6 +349,40 @@ public class ReturningShuriken : MonoBehaviour
         refund = twin;
         b.onSpent = Spent;          // 관통 수가 다해도 사라지지 않고 그 자리에서 꺾임
         b.onHitWall = TurnBack;     // 벽에 닿으면 거기서 꺾임
+    }
+
+    // 회귀 칼날 갈래: 모든 평타 표창 (dist 에서 꺾임 · 받으면 묶음마다 탄창 한 발 · trips 번 왕복)
+    public void ThrowPath(Bullet b, Transform owner, Vector3 from, float dist, float dmg, bool twin, RogueVolley volley, bool practice, bool orbit, int trips)
+    {
+        Throw(b, owner, from, dist, dist, dmg, twin);
+        refund = false;             // 예전 「사라져도 한 발」 대신 몸으로 받을 때만
+        pathMode = true;
+        this.volley = volley;
+        this.practice = practice;
+        this.orbit = orbit;
+        this.trips = Mathf.Clamp(trips, 1, 2);
+        outDmg = b.damage;
+        outSpeed = b.speed;
+        outPene = Mathf.Max(1, b.pene);
+        outDir0 = b.Direction;
+        if (practice)
+        {
+            outHits = new System.Collections.Generic.HashSet<int>();
+            b.onHitEnemy += RecordOut;
+        }
+    }
+
+    void RecordOut(Bullet s, Collider2D c)
+    {
+        if (!returning && c != null && outHits != null) outHits.Add(c.gameObject.GetInstanceID());
+    }
+
+    // 오는 길: 가는 길에 벤 적이면 던지기 연습 +1 더 (명중 피해 훅의 +1 과 합쳐 2중첩)
+    void BackHit(Bullet s, Collider2D c)
+    {
+        if (c == null || outHits == null || !outHits.Contains(c.gameObject.GetInstanceID())) return;
+        SignatureSkills sig = SignatureSkills.Instance;
+        if (sig != null) sig.RoguePracticeBump(c.gameObject, 1);
     }
 
     // 갈라진 표창 (처음부터 돌아오는 길)
@@ -325,6 +416,7 @@ public class ReturningShuriken : MonoBehaviour
         if (bullet.hitOnce != null) bullet.hitOnce.Clear();
         else bullet.hitOnce = new System.Collections.Generic.HashSet<int>();
         bullet.onHitEnemy = null;           // 카드 효과(출혈 · 도탄 · 독 등)는 가는 길에만
+        if (pathMode && practice) bullet.onHitEnemy = BackHit;
         bullet.onSpent = null;              // 오는 길에 관통 수가 다하면 사라짐
         bullet.onHitWall = PassWall;        // 오는 길엔 벽을 지나침 (벽 앞에서 막혀 못 돌아오지 않게)
         bullet.isCrit = false;
@@ -351,10 +443,11 @@ public class ReturningShuriken : MonoBehaviour
             if (d >= outDistSq || (d >= minDistSq && OffScreen(p))) TurnBack();
             return;
         }
+        if (orbiting) { Orbit(); return; }
         backAge += Time.deltaTime;
         if (owner == null || backAge > MaxBack) { Finish(false); return; }
         Vector2 to = owner.position - transform.position;
-        if (to.sqrMagnitude <= CatchDist * CatchDist) { Finish(true); return; }
+        if (to.sqrMagnitude <= CatchDist * CatchDist) { Caught(); return; }
         float max = (BaseTurn + TurnGrow * backAge) * Time.deltaTime;
         float a = Mathf.Clamp(Vector2.SignedAngle(bullet.Direction, to), -max, max);
         bullet.Steer(Quaternion.Euler(0f, 0f, a) * bullet.Direction);
@@ -367,6 +460,68 @@ public class ReturningShuriken : MonoBehaviour
         if (cam == null) return false;
         Vector3 v = cam.WorldToViewportPoint(p);
         return v.x < EdgeInset || v.x > 1f - EdgeInset || v.y < EdgeInset || v.y > 1f - EdgeInset;
+    }
+
+    // 주인에게 닿음: 갈래면 한 바퀴(공명 II) → 탄창 한 발 → 한 번 더 왕복(극의), 아니면 예전처럼 사라짐
+    void Caught()
+    {
+        if (!pathMode) { Finish(true); return; }
+        if (orbit && !orbited) { StartOrbit(); return; }
+        PathRefund();
+        if (trips > 1) { Relaunch(); return; }
+        Finish(true);
+    }
+
+    void StartOrbit()
+    {
+        orbiting = orbited = true;
+        orbitT = 0f;
+        Vector2 rel = transform.position - owner.position;
+        orbitAng = rel.sqrMagnitude > 0.0001f ? Mathf.Atan2(rel.y, rel.x) : 0f;
+        if (bullet.hitOnce != null) bullet.hitOnce.Clear();
+        bullet.ResetPene(OrbitPene);
+    }
+
+    // 몸 둘레 한 바퀴 (주인이 움직여도 따라감 · OrbitTime 뒤 받음)
+    void Orbit()
+    {
+        if (owner == null) { Finish(false); return; }
+        orbitT += Time.deltaTime;
+        if (orbitT >= OrbitTime) { orbiting = false; Caught(); return; }
+        float ang = orbitAng + orbitT / OrbitTime * Mathf.PI * 2f;
+        Vector3 want = owner.position + new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * OrbitR;
+        Vector2 d = want - transform.position;
+        bullet.speed = Mathf.Clamp(d.magnitude / Mathf.Max(Time.deltaTime, 0.001f), 4f, 90f);
+        bullet.Steer(d);
+    }
+
+    // 극의: 받은 자리에서 처음 던진 방향으로 한 번 더 (가는 길 피해 · 관통 그대로)
+    void Relaunch()
+    {
+        trips--;
+        returning = orbiting = orbited = false;
+        backAge = 0f;
+        origin = transform.position;
+        bullet.damage = outDmg;
+        bullet.speed = outSpeed;
+        bullet.ResetPene(outPene);
+        if (bullet.hitOnce != null) bullet.hitOnce.Clear();
+        bullet.isCrit = bullet.critRolled = false;
+        bullet.onSpent = Spent;
+        bullet.onHitWall = TurnBack;
+        bullet.onHitEnemy = null;
+        if (practice && outHits != null) { outHits.Clear(); bullet.onHitEnemy = RecordOut; }
+        bullet.Steer(outDir0);
+        Fx.Spawn("fx_spark", transform.position, 1.2f, new Color(0.6f, 0.9f, 1f), 26f);
+    }
+
+    // 회귀 칼날: 몸으로 받으면 탄창 한 발 (같이 던진 묶음에서 한 번만)
+    void PathRefund()
+    {
+        if (volley == null || volley.refunded) return;
+        volley.refunded = true;
+        SignatureSkills s = SignatureSkills.Instance;
+        if (s != null) s.ShurikenBack();
     }
 
     void Finish(bool caught)

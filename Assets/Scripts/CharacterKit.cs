@@ -653,6 +653,7 @@ public partial class CharacterKit : MonoBehaviour
                 UpdateCharged(gauge, full);
                 break;
             case CharacterId.Rogue:
+                RpUlt(gauge);                               // 갈래 그림자: 모아 둔 돌진 (CharacterKit.Rogue)
                 // 출혈 돌진: 누르고 있는 동안 돌진 경로를 보여 주고 떼면 돌진
                 bool recast = Time.time < recastUntil;
                 if (GameInput.UltDown && !Dashing && (full || recast)) ultAiming = true;
@@ -885,7 +886,7 @@ public partial class CharacterKit : MonoBehaviour
     // 출혈 돌진이 멈출 자리 (벽 · 경기장 끝 앞). 조준 미리보기와 실제 돌진이 같은 값을 씀
     Vector3 DashEnd(Vector2 dir)
     {
-        float dist = RogueMastery >= 3 ? 32f : 25f;          // 그림자 숙련 3단계: 더 멀리 · 더 오래 무적
+        float dist = (RogueMastery >= 3 ? 32f : 25f) * RogueDashDist;          // 그림자 숙련 3단계: 더 멀리 · 더 오래 무적 · 갈래 질주 암살 ×1.5
         Vector3 from = transform.position;
         float len = dist;
         for (float d = 0.5f; d <= dist; d += 0.5f)
@@ -1007,7 +1008,7 @@ public partial class CharacterKit : MonoBehaviour
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
             Specials.Damage(c.gameObject, Damage * 2.2f * UltMul, dir, 1f);
-            Bleed.Apply(c.gameObject, Damage * 1.5f * UltMul, 4f);
+            RpCutBleed(c.gameObject, Damage * 1.5f * UltMul, dir);       // 출혈 (갈래: 질주 암살은 직접 피해 · 그림자는 −30%, CharacterKit.Rogue)
             Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
@@ -1257,7 +1258,7 @@ public partial class CharacterKit : MonoBehaviour
                     Vector2 d = ((Vector2)(e.position - at)).normalized;
                     sr.flipX = d.x < 0f;
                     // 2.2.1: 분신 표창도 내 표창과 같게 (갈고리 표창 출혈 · 도탄 표창 · 진화 형태의 독 · 도박 카드 · 와이어)
-                    ThrowOne(at, d, Damage * 0.7f, 0.75f);
+                    RpCloneShot(ThrowOne(at, d, Damage * 0.7f, 0.75f));        // 갈래 교차 「그림자 출혈」 (CharacterKit.Rogue)
                     Play("whoosh", 0.2f, 2f);
                 }
             }
