@@ -165,7 +165,7 @@ public partial class CharacterKit : MonoBehaviour
         if (Id != CharacterId.Alchemist || body == null) return;
         if (reagentTag == null && !BuildReagentTag()) return;
 
-        bool unstable = (Special != null && Special.KitStoneActive) || NextForcedUnstable;
+        bool unstable = ((Special != null && Special.KitStoneActive) || NextForcedUnstable) && !Paths.Has(AlchemistPaths.Catalyst);     // 원소 촉매 갈래는 불안정 플라스크가 없음
         int show = unstable ? 3 : reagent;
         if (show != shownReagent || shownReagentLang != Loc.Current)
         {
@@ -1410,6 +1410,7 @@ public partial class CharacterKit : MonoBehaviour
                     {
                         DamageCircle(q, 1.4f, dmg, 1f);
                         SignatureSkills.HomunculusLand(q, dmg);
+                        AlchAideLand(q, dmg, false);      // 2026-10-19~ 조수 갈래: 내 시약 따라 · 폭탄 조수 (CharacterKit.Alchemist)
                         Fx.Spawn("fx_alchemyblast", q, 3f, new Color(0.6f, 1f, 0.45f), 18f);
                         Play("shatter", 0.3f, 1.4f);
                     });
