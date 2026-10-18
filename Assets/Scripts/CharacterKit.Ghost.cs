@@ -144,10 +144,11 @@ public partial class CharacterKit
     static readonly HashSet<GameObject> ghostOnce = new HashSet<GameObject>();
 
     // 냉기 쌓기 → 다 차면 얼어붙음
-    public void AddChill(GameObject g, int n)
+    //   frostDouble: false 면 혹한 2배를 받지 않음 (혹한 공명 I 오라 — 언 무리가 서로를 계속 다시 얼리지 않게)
+    public void AddChill(GameObject g, int n, bool frostDouble = true)
     {
         if (g == null || n <= 0) return;
-        if (Paths.Has(GhostPaths.Frost)) n *= 2;            // 갈래 혹한: 냉기가 두 배로 쌓임
+        if (frostDouble && Paths.Has(GhostPaths.Frost)) n *= 2;            // 갈래 혹한: 냉기가 두 배로 쌓임
         GhostPaths.CrackChill(this, g, n);                  // 갈래 산산조각: 보스 냉기 5중첩마다 균열 (얼어 있는 동안도 셈)
         if (IsFrozen(g)) return;
         chill.TryGetValue(g, out int have);
@@ -503,8 +504,9 @@ public partial class CharacterKit
         possessUntil = Time.time + PossessEnter + len + 1.5f;
         if (!bodyFaded) possessBodyColor = body.color;
         // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.3초
-        // 2026-10-19~ 무적은 Paths.Invuln 으로만 (지금 끝 시각에 Max 로 합침 · 한 번에 최대 1.5초 · 쓰러지는 중엔 주지 않음)
-        Paths.Invuln(PossessEnter + PossessGrace);
+        // 2026-10-19~ 무적은 지금 끝 시각에 Max 로만 합침 · 한 번에 최대 1.5초(Paths.InvulnCap) · 쓰러지는 중엔 주지 않음
+        //   Paths.Invuln 은 Hostile.Player 를 거치므로, 갈래 아닌 판 빙의 무적까지 그 값에 묶이지 않게 내 player 로 직접 (PossessInvuln)
+        PossessInvuln(PossessEnter + PossessGrace);
         Color before = possessBodyColor;
         Vector3 from = transform.position;
         FxAnim glow = null;
@@ -526,19 +528,28 @@ public partial class CharacterKit
             bosss bossHost = target != null && host == null ? target.GetComponentInParent<bosss>() : null;
             Transform carry = host != null ? host.transform : bossHost != null ? bossHost.transform : null;
             bool hostDiedEarly = false, exposed = false;
+            hostIgnoreAt = 0f;
             for (float t = 0f; t < len; t += Time.deltaTime)
             {
                 // 1.0.2: 들어간 적이 먼저 쓰러지면(다른 공격 · 사라짐) 기다리지 않고 바로 그 자리에서 터짐
                 if (target == null || (host != null && host.IsDead) || (bossHost != null && bossHost.IsDead)) { hostDiedEarly = true; break; }
                 if (player == null || player.IsDying) yield break;          // 쓰러지면 그만 (터지지 않음 · finally 가 되돌림)
                 // 무적: 정한 길이만큼만 (사령술은 처음 2초에서 딱 끊김 · 보통 빙의는 예전처럼 끝난 뒤 0.3초 여유까지)
-                if (t < safe) Paths.Invuln(safe < len ? Mathf.Min(PossessGrace, safe - t) : PossessGrace);
+                if (t < safe) PossessInvuln(safe < len ? Mathf.Min(PossessGrace, safe - t) : PossessGrace);
                 else if (!exposed)
                 {
                     // 사령술: 무적이 끝남 → 몸이 다시 보임 (맞을 수 있다는 표시)
                     exposed = true;
                     body.color = new Color(before.r, before.g, before.b, 0.55f);
                     Play("hum", 0.35f, 1.6f);
+                }
+                // 2026-10-19 검토: 무적이 끝나는 빙의(사령술 · 이어진 빙의)는 빙의한 그 몸(보스면 보스 몸통)과 겹쳐 접촉 피해를 계속 받던 것
+                //   → 그 몸과의 접촉만 무시 (다른 적의 접촉 · 투사체 · 패턴은 그대로 맞음 = 대가 유지) · 끝나거나 끊기면 finally 에서 되돌림
+                //   0.2초마다 다시 걸어 둠 (유체 이탈이 그 사이 같은 쌍을 되돌려도 다시 끔 · 무적이 끝나는 순간 이미 꺼져 있게 처음부터)
+                if (safe < len && Time.time >= hostIgnoreAt)
+                {
+                    hostIgnoreAt = Time.time + 0.2f;
+                    IgnoreHostBody(carry != null ? carry : target);
                 }
                 // 1.0.4~: 내가 움직이고 그 적의 몸이 따라옴 (이동 속도는 그 적의 속도) · 스킬을 쓰는 중이거나 움직이지 않는 것은 그 몸에 붙어 따라감
                 bool steer = carry != null && !(host != null ? host.casting : bossHost.casting);
@@ -584,7 +595,8 @@ public partial class CharacterKit
             if (card[3] > 0) StartCoroutine(PossessMist(at, 1f + card[3]));
             if (!chained) KitUltAdd(0.05f, at);
             GhostPaths.PossessBlast(this, at, target);          // 사령술 공명 II: 원혼 셋
-            SignatureSkills.Possessed(at, killed);
+            // 고유 스킬의 빙의 효과(망령의 행렬 · 저주)는 직접 한 빙의에서만 — 사령술 극의 이어진 빙의는 빼서 두 번 걸리지 않게 (2026-10-19 검토)
+            if (!chained) SignatureSkills.Possessed(at, killed);
             possessUntil = 0f;
             // 사령술 극의: 가까운 적에게 한 번 바로 다시 빙의 (이어진 빙의에서는 다시 잇지 않음)
             if (!chained && GhostPaths.ChainPossess)
@@ -600,7 +612,50 @@ public partial class CharacterKit
             possessSpeed = -1f;
             if (glow != null) Destroy(glow.gameObject);
             RestoreBody();
+            RestoreHostBody();
         }
+    }
+
+    // 빙의 무적: player 를 직접 (Paths.Invuln 과 같은 규칙 — 끝 시각에 Max 로 합침 · 최대 1.5초 · 쓰러지는 중엔 주지 않음)
+    void PossessInvuln(float seconds)
+    {
+        if (player == null || player.IsDying || seconds <= 0f) return;
+        player.GrantInvincibility(Mathf.Min(seconds, Paths.InvulnCap));
+    }
+
+    // 무적이 끝나는 빙의 동안: 빙의한 몸(자식 콜라이더 포함 · 보스 부품 제외)과 내 몸의 접촉을 끔 — 이미 꺼져 있던 쌍(유체 이탈)은 건드리지 않고, 내가 끈 쌍만 기억해 되돌림
+    readonly List<(Collider2D mine, Collider2D theirs)> possessIgnored = new List<(Collider2D, Collider2D)>(8);
+    float hostIgnoreAt;
+    void IgnoreHostBody(Transform hostBody)
+    {
+        if (hostBody == null || player == null) return;
+        try
+        {
+            Collider2D[] mine = player.GetComponents<Collider2D>();
+            foreach (Collider2D c in hostBody.GetComponentsInChildren<Collider2D>())
+            {
+                if (c == null || c.GetComponent<BossPart>() != null) continue;
+                foreach (Collider2D m in mine)
+                {
+                    if (m == null || Physics2D.GetIgnoreCollision(m, c)) continue;
+                    Physics2D.IgnoreCollision(m, c, true);
+                    possessIgnored.Add((m, c));
+                }
+            }
+        }
+        catch (System.Exception e) { Debug.LogException(e); }
+    }
+
+    void RestoreHostBody()
+    {
+        for (int i = 0; i < possessIgnored.Count; i++)
+        {
+            (Collider2D m, Collider2D c) = possessIgnored[i];
+            if (m == null || c == null) continue;
+            try { Physics2D.IgnoreCollision(m, c, false); }
+            catch (System.Exception e) { Debug.LogException(e); }
+        }
+        possessIgnored.Clear();
     }
 
     // 빙의 여운 (카드): 냉기 안개
@@ -637,6 +692,7 @@ public partial class CharacterKit
         chillMarks.Clear();
         chillShape.Clear();
         if (possessRange != null) Destroy(possessRange.gameObject);
+        RestoreHostBody();
         ResetPossess();
     }
 }

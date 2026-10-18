@@ -129,6 +129,9 @@ public sealed class GhostPaths : HeroPaths
         Unghost();
         pendingDash.Clear();
         thaws.Clear();
+        chillGuard.Clear();
+        chainFrozen.Clear();
+        inAura = inWave = false;
         passed.Clear();
         crack.Clear();
     }
@@ -160,41 +163,81 @@ public sealed class GhostPaths : HeroPaths
     public static float ChainDamage => ChainShare * Paths.Power(Necro);
 
     // ================================================================= 혹한
+    // 2026-10-19 검토 반영: 언 무리가 서로를 계속 다시 얼리던 것(오라 0.6초마다 · 혹한 2배 · 해빙 파동의 연쇄) 막음
+    //   ① 오라 냉기는 혹한 2배를 받지 않음 (AddChill frostDouble=false)
+    //   ② 얼음이 풀린 적은 2초 동안 오라 · 파동의 냉기를 받지 않음 (재빙결 면역 — 손길 · 카드 냉기는 그대로)
+    //   ③ 오라 · 파동으로 언 적은 오라를 내지 않고, 풀릴 때 파동도 내지 않음 (연쇄 차단)
+    const float FrostRefreezeGuard = 2f;             // 해빙 뒤 오라 · 파동 냉기 면역 2초
     readonly List<GameObject> frozenNow = new List<GameObject>(16);
     readonly List<(GameObject g, float at)> thaws = new List<(GameObject g, float at)>(32);
     readonly List<Vector3> waveAt = new List<Vector3>(8);
-    float auraAt, waveBudgetAt;
+    readonly Dictionary<GameObject, float> chillGuard = new Dictionary<GameObject, float>();     // 오라 · 파동 냉기를 받지 않는 끝 시각 (= 풀리는 시각 + 2초)
+    readonly HashSet<GameObject> chainFrozen = new HashSet<GameObject>();                         // 오라 · 파동으로 언 적 (오라 · 파동을 내지 않음)
+    readonly List<GameObject> guardStale = new List<GameObject>(16);
+    float auraAt, waveBudgetAt, guardPruneAt;
     int waveBudget;
+    bool inAura, inWave;                             // 지금 오라 · 파동의 냉기를 쌓는 중 (그 안에서 언 적 = 연쇄로 언 적)
 
-    // 얼어붙음 (CharacterKit.AddChill): 공명 II 면 풀리는 시각을 기억
+    // 얼어붙음 (CharacterKit.AddChill): 면역 시각 · 연쇄 여부 · 공명 II 면 풀리는 시각을 기억
     public static void Froze(GameObject g, float until)
     {
         GhostPaths me = Me;
-        if (me == null || g == null || !Paths.Has(Frost) || Paths.Res(Frost) < 2) return;
+        if (me == null || g == null || !Paths.Has(Frost)) return;
+        if (me.chillGuard.Count >= 128) me.PruneGuard(true);
+        me.chillGuard[g] = until + FrostRefreezeGuard;
+        if (me.inAura || me.inWave)
+        {
+            // 연쇄로 언 적: 오라를 내지 않고 풀릴 때 파동도 없음 (기다리던 파동이 있으면 지움)
+            me.chainFrozen.Add(g);
+            for (int i = me.thaws.Count - 1; i >= 0; i--) if (me.thaws[i].g == g) me.thaws.RemoveAt(i);
+            return;
+        }
+        me.chainFrozen.Remove(g);                    // 손길 · 카드로 다시 얼림 = 원래 얼음
+        if (Paths.Res(Frost) < 2) return;
         for (int i = 0; i < me.thaws.Count; i++)
             if (me.thaws[i].g == g) { me.thaws[i] = (g, until); return; }
         if (me.thaws.Count >= 64) me.thaws.RemoveAt(0);         // 상한 (가장 오래된 것부터)
         me.thaws.Add((g, until));
     }
 
+    // 오라 · 파동 냉기를 받을 수 있나 (해빙 뒤 2초 면역 · 얼어 있는 동안도 면역 시각 안이라 쌓이지 않음)
+    bool Guarded(GameObject g) => g != null && chillGuard.TryGetValue(g, out float t) && Time.time < t;
+
+    void PruneGuard(bool force)
+    {
+        float now = Time.time;
+        if (!force && now < guardPruneAt) return;
+        guardPruneAt = now + 2f;
+        guardStale.Clear();
+        foreach (var kv in chillGuard) if (kv.Key == null || kv.Value <= now) guardStale.Add(kv.Key);
+        foreach (GameObject g in guardStale) { chillGuard.Remove(g); chainFrozen.Remove(g); }
+        guardStale.Clear();
+        chainFrozen.RemoveWhere(g => g == null);
+    }
+
     void FrostTick(CharacterKit kit)
     {
         float now = Time.time;
-        // 공명 I: 얼어붙은 적 둘레에 냉기 오라 (얼어붙은 적 12마리까지)
+        PruneGuard(false);
+        // 공명 I: 얼어붙은 적 둘레에 냉기 오라 (얼어붙은 적 12마리까지 · 연쇄로 언 적은 오라를 내지 않음)
         if (Paths.Res(Frost) >= 1 && now >= auraAt)
         {
             auraAt = now + FrostAuraEvery;
             int n = kit.FrozenNow(frozenNow, 12);
-            for (int i = 0; i < n; i++)
+            inAura = true;
+            try
             {
-                GameObject src = frozenNow[i];
-                if (src == null) continue;
-                using var hits = PhysHits.Circle(src.transform.position, FrostAuraR, true);
-                foreach (Collider2D c in hits)
-                    if (c != null && Paths.IsFoe(c) && c.gameObject != src) kit.AddChill(c.gameObject, 1);
-                Fx.Spawn("fx_sparkle", src.transform.position, 1.1f, new Color(Ice.r, Ice.g, Ice.b, 0.5f), 14f);
+                for (int i = 0; i < n; i++)
+                {
+                    GameObject src = frozenNow[i];
+                    if (src == null || chainFrozen.Contains(src)) continue;
+                    using var hits = PhysHits.Circle(src.transform.position, FrostAuraR, true);
+                    foreach (Collider2D c in hits)
+                        if (c != null && Paths.IsFoe(c) && c.gameObject != src && !Guarded(c.gameObject)) kit.AddChill(c.gameObject, 1, false);
+                    Fx.Spawn("fx_sparkle", src.transform.position, 1.1f, new Color(Ice.r, Ice.g, Ice.b, 0.5f), 14f);
+                }
             }
-            frozenNow.Clear();
+            finally { inAura = false; frozenNow.Clear(); }
         }
         // 공명 II: 얼음이 풀릴 때 냉기 파동 (0.5초에 6번까지 · 연쇄로 화면이 뒤덮이지 않게)
         if (thaws.Count == 0) return;
@@ -218,7 +261,10 @@ public sealed class GhostPaths : HeroPaths
     void ColdWave(CharacterKit kit, Vector3 p)
     {
         float dmg = Paths.Atk * FrostWaveAtk * Paths.Power(Frost);
-        Paths.Circle(p, FrostWaveR, dmg, 1f, "냉기 파동", c => { if (kit != null && c != null) kit.AddChill(c.gameObject, 2); });
+        // 냉기는 해빙 뒤 2초 면역인 적(방금 풀린 그 적 포함)에겐 쌓지 않음 · 파동으로 언 적은 다시 파동을 내지 않음 (inWave)
+        inWave = true;
+        try { Paths.Circle(p, FrostWaveR, dmg, 1f, "냉기 파동", c => { if (kit != null && c != null && !Guarded(c.gameObject)) kit.AddChill(c.gameObject, 2); }); }
+        finally { inWave = false; }
         ShockRing.Spawn(p, 0.3f, FrostWaveR, 0.35f, Ice, 0.2f);
         Fx.Spawn("fx_cloud", p, FrostWaveR * 1.1f, new Color(0.8f, 0.95f, 1f, 0.45f), 14f);
         Hostile.Play("freeze", 0.3f, 1.5f);
@@ -243,9 +289,9 @@ public sealed class GhostPaths : HeroPaths
             }
             else
             {
-                // 잡몹: 즉사 (남은 체력보다 크게 · 그래도 남으면 스스로 터진 것으로)
+                // 잡몹: 남은 체력보다 큰 피해로 즉사 — 피해로만 처리 (2026-10-19 검토: 강제 처치(KillBySkill)는 보호막 · 불사 · 보스 소환물 기믹까지 즉사시켰음)
+                //   보호막 · 불사 같은 기믹이 피해를 막으면 그대로 살아남음
                 Paths.Deal(g, Mathf.Max(1f, e.EnemyHealth) * 4f + 10f, dir, 0.5f, "산산조각");
-                if (e != null && !e.IsDead) e.KillBySkill();
             }
             // 공명 I: 부서질 때 얼음 파편 4개 (얼음 파편 카드가 있으면 잡몹은 카드 파편이 이미 튐)
             if (Paths.Res(Shatter) >= 1 && (big || kit.card[6] <= 0)) kit.IceShards(pos, 4, Paths.Power(Shatter));
@@ -409,12 +455,18 @@ public sealed class GhostPaths : HeroPaths
     }
 
     // 극의: 다시 빙의할 가까운 적 (방금 터진 몸은 빼고 · 8칸 안)
+    //   보스 부품(등불 · 묘비 · 영혼구) · 부스러기 · 방금 터진 몸의 다른 콜라이더는 고르지 않음 (몸통만)
     public static Transform ChainTarget(Vector3 at, Transform host)
     {
-        PlayerController p = Hostile.Player;
-        if (p == null || p.IsDying) return null;
-        List<Transform> near = Paths.Nearest(at, ChainRange, 1, host != null ? host.gameObject : null);
-        return near.Count > 0 ? near[0] : null;
+        // (쓰러짐 확인은 부르는 쪽 PossessRoutine 이 player 로 직접 함 — Hostile.Player 가 비어도 막히지 않게)
+        foreach (Transform t in Paths.Nearest(at, ChainRange, 8, host != null ? host.gameObject : null))
+        {
+            if (t == null || (host != null && (t.IsChildOf(host) || host.IsChildOf(t)))) continue;
+            if (t.GetComponent<BossPart>() != null || t.GetComponent<SwarmMote>() != null) continue;
+            if (t.GetComponentInParent<EnermyController>() == null && t.GetComponentInParent<bosss>() == null) continue;
+            return t;
+        }
+        return null;
     }
 
     // ================================================================= 유체 이탈
@@ -442,7 +494,7 @@ public sealed class GhostPaths : HeroPaths
     {
         phaseOn = PhaseActive(kit, p);
         if (!phaseOn) { if (ghosted.Count > 0) Unghost(); return; }
-        if (own == null || ownOf != p) { own = p.GetComponents<Collider2D>(); ownOf = p; }
+        RefreshOwn(p);
         Vector3 at = p.transform.position;
         float now = Time.time;
         bool chillPass = Paths.Res(Phase) >= 1;
@@ -485,6 +537,30 @@ public sealed class GhostPaths : HeroPaths
             foreach (GameObject g in passedStale) passed.Remove(g);
             passedStale.Clear();
         }
+    }
+
+    // 내 콜라이더: 처음 · 플레이어가 바뀌면 · 사라진 것이 있으면 · 1초마다 다시 읽음 (바뀌었으면 옛 것으로 먼저 모두 되돌린 뒤)
+    float ownAt;
+    void RefreshOwn(PlayerController p)
+    {
+        bool stale = own == null || ownOf != p;
+        if (!stale) for (int i = 0; i < own.Length; i++) if (own[i] == null) { stale = true; break; }
+        if (!stale && Time.time < ownAt) return;
+        ownAt = Time.time + 1f;
+        Collider2D[] now = p.GetComponents<Collider2D>();
+        if (!stale)
+        {
+            if (now.Length == own.Length)
+            {
+                bool same = true;
+                for (int i = 0; i < now.Length; i++) if (now[i] != own[i]) { same = false; break; }
+                if (same) return;
+            }
+        }
+        if (ghosted.Count > 0) Unghost();           // 옛 콜라이더 기준으로 되돌림 (남는 무시 상태 없음)
+        own = now;
+        ownOf = p;
+        phaseOn = true;                             // Unghost 가 끈 표시를 되살림 (이번 틱에 다시 켬)
     }
 
     static bool IsBody(Collider2D c)
