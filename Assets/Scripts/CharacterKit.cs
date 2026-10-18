@@ -165,7 +165,7 @@ public partial class CharacterKit : MonoBehaviour
         if (Id != CharacterId.Alchemist || body == null) return;
         if (reagentTag == null && !BuildReagentTag()) return;
 
-        bool unstable = ((Special != null && Special.KitStoneActive) || NextForcedUnstable) && !Paths.Has(AlchemistPaths.Catalyst);     // 원소 촉매 갈래는 불안정 플라스크가 없음
+        bool unstable = ((Special != null && Special.KitStoneActive) || NextForcedUnstable) && !Paths.Has(CharacterId.Alchemist, AlchemistPaths.Catalyst);     // 원소 촉매 갈래는 불안정 플라스크가 없음
         int show = unstable ? 3 : reagent;
         if (show != shownReagent || shownReagentLang != Loc.Current)
         {
@@ -369,7 +369,7 @@ public partial class CharacterKit : MonoBehaviour
 
         Vector3 origin = transform.position;
         float sig = SignatureSkills.BeforeSwing(origin, dir);      // 영혼 흡수 · 반격 검기
-        SwordPathPre(dir, ref reach, ref half, ref sig);           // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman)
+        Paths.Safe(() => SwordPathPre(dir, ref reach, ref half, ref sig));     // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman · 예외는 Paths.Safe 가 잡음)
         int hits = 0;
         using (var ovl = PhysHits.Circle(origin, reach)) foreach (Collider2D c in ovl)
         {
@@ -387,7 +387,7 @@ public partial class CharacterKit : MonoBehaviour
         SwingCards(origin, dir, reach, half, hits);
         SwingFormAfter(origin, reach);
         SignatureSkills.AfterSwing(origin, dir, reach, hits);
-        SwordPathPost(origin, dir, reach, hits);                   // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman)
+        Paths.Safe(() => SwordPathPost(origin, dir, reach, hits));     // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman)
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         // 1.1.2: 굵은 칼날 그림(흰 날 · 하늘색 테 · 어두운 외곽선, make_attacks.py) — 바깥 크기 = 판정 반지름 그대로
@@ -426,7 +426,7 @@ public partial class CharacterKit : MonoBehaviour
     public void UpdateBow(bool canDraw, float fullTime)
     {
         BowFired = false;
-        if (BowPathRapid(canDraw, fullTime)) return;          // 2026-10-19~ 갈래 속사: 당기지 않고 연사 (CharacterKit.Archer)
+        if (Paths.Safe(() => BowPathRapid(canDraw, fullTime), false)) return;          // 2026-10-19~ 갈래 속사: 당기지 않고 연사 (CharacterKit.Archer · 예외면 평소 활)
         if (!drawing)
         {
             if (canDraw && GameInput.FireHeld)
@@ -448,7 +448,7 @@ public partial class CharacterKit : MonoBehaviour
         else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
         // 정조준: 늘 더 빨리 가득 당김 (예전 「가만히 서서」 조건은 없앰)
         else if (card[5] > 0) fullTime /= 1f + 0.25f * card[5];
-        fullTime = BowPathFrame(fullTime);                    // 2026-10-19~ 갈래 장궁 · 바람 (CharacterKit.Archer)
+        fullTime = Paths.Safe(() => BowPathFrame(fullTime), fullTime);       // 2026-10-19~ 갈래 장궁 · 바람 (CharacterKit.Archer)
         // 순식간에 가득 당기는 버프 · 자동 조작은 예전처럼 가득 차면 저절로 쏨
         // 1.1.9~ 설정 「공격 고정」이 걸려 있으면 가득 당겨진 순간 저절로 놓음 (「완벽!」 보너스 없음 · 숨 규칙은 그대로)
         bool lockRelease = GameInput.AttackLockNow && !GameInput.FireKeyHeld;
@@ -501,7 +501,7 @@ public partial class CharacterKit : MonoBehaviour
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
             power = Mathf.Max(MinHeldPower, power - 0.4f * (heldFull - TrembleAfter));
         if (Breathless && (!autoRelease || lockRelease)) power *= 0.5f;         // 숨이 차면 절반 (공격 고정도)
-        power *= BowPathPower(perfect);                                         // 2026-10-19~ 갈래 입문 · 대가 (CharacterKit.Archer)
+        power *= Paths.Safe(() => BowPathPower(perfect), 1f);                   // 2026-10-19~ 갈래 입문 · 대가 (CharacterKit.Archer)
         // 1.2~ 영혼 계약 · 보드: 「완벽!」 화살 · 연달아
         if (perfect) { RunCounters.Both("perfect"); perfectRun++; RunCounters.Max("perfect.streak", perfectRun); }
         else if (!autoRelease) perfectRun = 0;
@@ -528,10 +528,10 @@ public partial class CharacterKit : MonoBehaviour
             if (card[2] > 0 && draw >= 1f) GustArrow(b);
             SignatureSkills.Arrow(b, draw);
             b.onHitEnemy += (arrow, col) => arrow.damage *= PierceFalloff;     // 꿰뚫을 때마다 -15% (맨 마지막에: 다른 효과는 맞힌 그 피해로)
-            BowPathArrow(b, perfect);                           // 2026-10-19~ 갈래 (장궁 관통 · 덫 · 천공, CharacterKit.Archer)
+            Paths.Safe(() => BowPathArrow(b, perfect));         // 2026-10-19~ 갈래 (장궁 관통 · 덫 · 천공, CharacterKit.Archer)
         }
         SignatureSkills.BowRelease(start, dir, draw);
-        BowPathRelease(start, dir, perfect);
+        Paths.Safe(() => BowPathRelease(start, dir, perfect));
         if (draw >= 1f && Special != null && Special.KitFreeDraws > 0) Special.KitFreeDraws--;
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
@@ -660,7 +660,7 @@ public partial class CharacterKit : MonoBehaviour
                 UpdateCharged(gauge, full);
                 break;
             case CharacterId.Rogue:
-                RpUlt(gauge);                               // 갈래 그림자: 모아 둔 돌진 (CharacterKit.Rogue)
+                { SkillGauge rg = gauge; Paths.Safe(() => RpUlt(rg)); }     // 갈래 그림자: 모아 둔 돌진 (CharacterKit.Rogue · 복사본을 잡아 도적일 때만 람다를 만듦)
                 // 출혈 돌진: 누르고 있는 동안 돌진 경로를 보여 주고 떼면 돌진
                 bool recast = Time.time < recastUntil;
                 if (GameInput.UltDown && !Dashing && (full || recast)) ultAiming = true;
@@ -1015,7 +1015,7 @@ public partial class CharacterKit : MonoBehaviour
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
             Specials.Damage(c.gameObject, Damage * 2.2f * UltMul, dir, 1f);
-            RpCutBleed(c.gameObject, Damage * 1.5f * UltMul, dir);       // 출혈 (갈래: 질주 암살은 직접 피해 · 그림자는 −30%, CharacterKit.Rogue)
+            Paths.Safe(() => RpCutBleed(c.gameObject, Damage * 1.5f * UltMul, dir));       // 출혈 (갈래: 질주 암살은 직접 피해 · 그림자는 −30%, CharacterKit.Rogue)
             Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
@@ -1085,7 +1085,7 @@ public partial class CharacterKit : MonoBehaviour
         aimRing.enabled = false;
         CancelUltAim();
         StartCoroutine(ArrowRain(at));
-        BowPathRainCast(at);                                    // 2026-10-19~ 갈래 천공 극의: 화살비 하나 더 (CharacterKit.Archer)
+        Paths.Safe(() => BowPathRainCast(at));                  // 2026-10-19~ 갈래 천공 극의: 화살비 하나 더 (CharacterKit.Archer)
         KitUltAdd(0f);
         Spend(gauge);
     }
@@ -1267,7 +1267,8 @@ public partial class CharacterKit : MonoBehaviour
                     Vector2 d = ((Vector2)(e.position - at)).normalized;
                     sr.flipX = d.x < 0f;
                     // 2.2.1: 분신 표창도 내 표창과 같게 (갈고리 표창 출혈 · 도탄 표창 · 진화 형태의 독 · 도박 카드 · 와이어)
-                    RpCloneShot(ThrowOne(at, d, Damage * 0.7f, 0.75f));        // 갈래 교차 「그림자 출혈」 (CharacterKit.Rogue)
+                    Bullet cs = ThrowOne(at, d, Damage * 0.7f, 0.75f);
+                    Paths.Safe(() => RpCloneShot(cs));        // 갈래 교차 「그림자 출혈」 (CharacterKit.Rogue)
                     Play("whoosh", 0.2f, 2f);
                 }
             }
@@ -1411,7 +1412,7 @@ public partial class CharacterKit : MonoBehaviour
                     {
                         DamageCircle(q, 1.4f, dmg, 1f);
                         SignatureSkills.HomunculusLand(q, dmg);
-                        AlchAideLand(q, dmg, false);      // 2026-10-19~ 조수 갈래: 내 시약 따라 · 폭탄 조수 (CharacterKit.Alchemist)
+                        Paths.Safe(() => AlchAideLand(q, dmg, false));      // 2026-10-19~ 조수 갈래: 내 시약 따라 · 폭탄 조수 (CharacterKit.Alchemist)
                         Fx.Spawn("fx_alchemyblast", q, 3f, new Color(0.6f, 1f, 0.45f), 18f);
                         Play("shatter", 0.3f, 1.4f);
                     });

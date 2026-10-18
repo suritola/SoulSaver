@@ -432,7 +432,7 @@ public sealed class ArcherPaths : HeroPaths
             GameObject g = c.gameObject;
             bool boss = Paths.IsBoss(g);
             EnermyController e = c.GetComponent<EnermyController>();
-            if (e != null && !e.IsDead && (!boss || master)) { e.Slow(0f, boss ? TrapBossRoot : TrapRoot); rooted++; }
+            if (e != null && !e.IsDead && (!boss || master) && RootFree(g, boss ? TrapBossRoot : TrapRoot)) { e.Slow(0f, boss ? TrapBossRoot : TrapRoot); rooted++; }
             else if (boss && master && e == null) snares[g] = Time.time + TrapSnareTime;     // 보스 (몸을 묶을 수 없음): 받는 피해 +
             Fx.Spawn("fx_net", c.transform.position, 2f, new Color(0.8f, 1f, 0.6f, 0.9f), 16f);
         });
@@ -456,6 +456,25 @@ public sealed class ArcherPaths : HeroPaths
             if (bursts.Count >= 10) bursts.RemoveAt(0);
             bursts.Add((p, now + LineLife));
         }
+    }
+
+    // 속박 뒤 짧은 면역: 묶임이 풀린 뒤 RootImmune 초 동안은 다시 묶지 않음 (가시줄 감속 + 줄 위 덫으로 계속 묶이는 것 방지 · 피해는 그대로)
+    const float RootImmune = 2f;
+    readonly Dictionary<GameObject, float> rootFreeAt = new Dictionary<GameObject, float>();
+
+    bool RootFree(GameObject g, float root)
+    {
+        float now = Time.time;
+        if (g == null || (rootFreeAt.TryGetValue(g, out float t) && now < t)) return false;
+        if (rootFreeAt.Count >= 64)
+        {
+            scratch.Clear();
+            foreach (var kv in rootFreeAt) if (kv.Key == null || kv.Value <= now) scratch.Add(kv.Key);
+            foreach (GameObject k in scratch) rootFreeAt.Remove(k);
+            scratch.Clear();
+        }
+        rootFreeAt[g] = now + root + RootImmune;
+        return true;
     }
 
     void ThornLine(Vector3 a, Vector3 b)

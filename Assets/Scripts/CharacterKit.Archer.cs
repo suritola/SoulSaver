@@ -13,6 +13,8 @@ public partial class CharacterKit
     //   평타 화력: 4발 × 35% ≈ 완벽 화살을 계속 쏘는 궁수의 95~100% (관통 없음 · 보스는 조금 약하게)
     const float RapidStep = 0.185f, RapidMasterStep = 0.123f;
     const float RapidPower = 0.35f, RapidMasterPower = 0.25f;
+    // 한 발 간격 하한 (초당 최대 10번 놓음) — 공격 속도를 쌓아도 멀티 샷과 곱해져 초당 수십 발 · 명중 효과 폭주가 되지 않게 (예전 0.06초)
+    const float RapidMinStep = 0.1f;
     float rapidNext;                    // 다음 화살을 쏠 수 있는 시각
     int rapidCount;                     // 쏜 수 (다섯 발마다 「가득 당긴 화살」)
     int bowPathFrame = -1;              // 한 번 놓을 때 덫이 화살마다 겹쳐 놓이지 않게
@@ -34,7 +36,7 @@ public partial class CharacterKit
         if (!canDraw || !GameInput.FireHeld || Time.time < rapidNext) return true;
 
         bool master = Paths.Mastered(ArcherPaths.Rapid);
-        rapidNext = Time.time + Mathf.Max(0.06f, fullTime * (master ? RapidMasterStep : RapidStep));
+        rapidNext = Time.time + Mathf.Max(RapidMinStep, fullTime * (master ? RapidMasterStep : RapidStep));
         rapidCount = (rapidCount + 1) % 60;
         bool full = rapidCount % ArcherPaths.RapidFullEvery == 0;                 // 「가득 당긴 화살」 효과는 다섯 발마다
         int echoEvery = Paths.Res(ArcherPaths.Rapid) >= 1 ? ArcherPaths.RapidEchoRes : ArcherPaths.RapidFullEvery;
@@ -49,9 +51,11 @@ public partial class CharacterKit
         PlayerLook.Fired(-1);
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots) * (master ? RapidMasterPower : RapidPower) * BowPathPower(full, k, true);
+        int shotIndex = 0, mid = shots / 2;
         using (WeakHit.AimScope(1.75f))
         foreach (Vector2 d in Spread(dir, shots, 6f))
         {
+            bool main = shotIndex++ == mid;     // 가운데 화살 — 덤 화살(멀티 샷 양옆)은 고유 스킬 명중 효과를 「가득 당긴 화살」(다섯 발마다)에만 (검토 2026-10-19)
             Bullet b = Projectile(start, d, dmg, 1, 70f, 0f, "fx_arrow", full ? 0.5f : 0.38f, full ? new Color(1f, 0.9f, 0.5f) : new Color(1f, 0.97f, 0.8f), false);
             if (b == null) continue;
             ArrowForm(b, k, start);
@@ -61,8 +65,8 @@ public partial class CharacterKit
                 if (card[6] > 0) b.onHitEnemy += (arrow, c) => HuntMark.Apply(c.gameObject, 4f);
                 if (card[2] > 0) GustArrow(b);
             }
-            b.onHitEnemy += (arrow, c) => ArcherPaths.CountHit(c);         // 울림 범위 2배 (공명 II) — 울림보다 먼저 셈
-            SignatureSkills.Arrow(b, k);
+            b.onHitEnemy += (arrow, c) => Paths.Safe(() => ArcherPaths.CountHit(c));         // 울림 범위 2배 (공명 II) — 울림보다 먼저 셈
+            SignatureSkills.Arrow(b, k, !main && !full);      // 덤 화살은 쪼개진 화살처럼 (울림 · 씨앗 같은 명중 효과 없이)
             b.onHitEnemy += (arrow, col) => arrow.damage *= PierceFalloff;
             BowPathArrow(b, full);
         }

@@ -140,7 +140,10 @@ public static class Paths
     }
 
     // 갈래 5개가 모두 카드를 갖고 있어야 켬 (입문 카드가 없는 영웅은 예전 규칙 — 진행 막힘 방지)
-    public static bool Supported(CharacterId who)
+    // 영웅 데이터(BuildPaths)에서 예외가 나면 false (구판 규칙 · 레벨업 창 · 최대 단계 계산이 죽지 않게)
+    public static bool Supported(CharacterId who) => Safe(() => SupportedRaw(who), false);
+
+    static bool SupportedRaw(CharacterId who)
     {
         HeroPaths h = Data(who);
         if (h == null || h.Defs.Length != Count) return false;
@@ -185,8 +188,8 @@ public static class Paths
     internal static void BeginRun(LevelShop s, CharacterId who)
     {
         shop = s;
-        Hero = Create(who);
-        Active = RulesFor(who);
+        Hero = null;
+        Active = false;
         A = B = -1;
         Single = false;
         System.Array.Clear(rank, 0, Count);
@@ -194,10 +197,24 @@ public static class Paths
         System.Array.Clear(complete, 0, Count);
         System.Array.Clear(mastered, 0, Count);
         crossOn.Clear();
-        if (Hero != null) for (int i = 0; i < Hero.Crosses.Length; i++) crossOn.Add(false);
+        // 영웅 데이터(BuildPaths · BuildCrosses)에 버그가 있어도 레벨업 창이 죽지 않게: 실패하면 이번 판은 구판 규칙
+        try
+        {
+            Hero = Create(who);
+            Active = RulesFor(who);
+            if (Hero != null) for (int i = 0; i < Hero.Crosses.Length; i++) crossOn.Add(false);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+            Hero = null;
+            Active = false;
+            crossOn.Clear();
+        }
         tierLog.Clear();
         crossLog.Clear();
         cardSeq.Clear();
+        endP1 = endP2 = "";
     }
 
     // 이어하기: 저장한 판의 규칙으로 (구판 저장은 false)
@@ -206,6 +223,8 @@ public static class Paths
     // ---------------- 묻기 (영웅 효과 코드가 씀)
     public static PathDef Def(int path) => Hero != null && path >= 0 && path < Hero.Defs.Length ? Hero.Defs[path] : null;
     public static bool Has(int path) => Active && path >= 0 && (path == A || path == B);     // 이 갈래에 들어왔나 (입문 효과가 켜져 있나)
+    // 영웅까지 확인 (공용 코드가 특정 영웅의 갈래 상수를 물을 때 — 갈래 번호 0 ~ 4 는 영웅마다 겹침)
+    public static bool Has(CharacterId who, int path) => Hero != null && Hero.Who == who && Has(path);
     public static int Rank(int path) => path >= 0 && path < Count ? rank[path] : 0;           // 갈래 단계 (입문 1 + 갈래 카드 단계 합)
     public static int Res(int path) => Active && path >= 0 && path < Count ? tier[path] : 0;  // 0 · 1 공명 I · 2 공명 II
     public static bool Complete(int path) => Active && path >= 0 && path < Count && complete[path];
@@ -342,7 +361,7 @@ public static class Paths
 
     static void Remember(int path)
     {
-        if (GameInput.Auto || Hero == null) return;
+        if (GameInput.Auto || Hero == null || TutorialRun.Active) return;      // 튜토리얼(거너 고정) 판은 최근 기록에 남기지 않음
         PathDef d = Def(path);
         if (d == null) return;
         List<string> keys = new List<string>(Prefs.GetString(RecentKey(Hero.Who), "").Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries));
@@ -362,10 +381,19 @@ public static class Paths
     static void Log(string what) => tierLog.Add(what + "@" + RunStats.Seconds.ToString("0"));
     internal static void NoteCard(int id) { if (cardSeq.Count < 400) cardSeq.Add(id); }
 
+    // 판이 끝나면(End) Hero · Active 를 비우므로 갈래 열쇠를 그 순간 적어 둠 (기록은 씬이 바뀐 뒤 sceneLoaded 에서 씀)
+    static string endP1 = "", endP2 = "";
+
+    static void LiveKeys(out string p1, out string p2)
+    {
+        p1 = Active && Def(A) != null ? Def(A).key : "";
+        p2 = !Active ? "" : Single ? "single" : Def(B) != null ? Def(B).key : "";
+    }
+
     public static string LogRow()
     {
-        string p1 = Active && Def(A) != null ? Def(A).key : "";
-        string p2 = !Active ? "" : Single ? "single" : Def(B) != null ? Def(B).key : "";
+        string p1 = endP1, p2 = endP2;
+        if (Hero != null) LiveKeys(out p1, out p2);
         return p1 + "," + p2 + "," + string.Join("|", tierLog) + "," + string.Join("|", crossLog) + "," + string.Join("|", cardSeq);
     }
 
@@ -428,10 +456,18 @@ public static class Paths
         Debug.LogException(e);
     }
 
-    static void Safe(System.Action a)
+    // 공용 코드(CharacterKit · SignatureSkills · SigZone)가 영웅 갈래 함수를 직접 부를 때도 이것으로 감쌈 — 영웅 코드 버그가 평타 · 필살기 · 매 프레임 흐름을 끊지 않게
+    public static void Safe(System.Action a)
     {
         try { a(); }
         catch (System.Exception e) { Report(e); }
+    }
+
+    // 값을 돌려주는 갈래 함수 (예외면 fallback = 갈래가 없을 때의 원래 값, 예 배율 1f)
+    public static T Safe<T>(System.Func<T> f, T fallback)
+    {
+        try { return f(); }
+        catch (System.Exception e) { Report(e); return fallback; }
     }
 
     public static float Outgoing(GameObject target, float dmg)
@@ -460,7 +496,17 @@ public static class Paths
     public static void Killed(Vector3 pos) { if (Live) Safe(() => Hero.Killed(pos)); }
     public static void Ult() { if (Live) Safe(() => Hero.Ult()); }
     public static void Tick() { if (Live) Safe(() => Hero.Tick()); }
-    public static void End() { if (Hero != null) Safe(() => Hero.End()); }
+    // 판이 끝남: 되돌린 뒤 규칙 · 효과를 끔 (다음 판 BeginRun 전까지 지난 판 갈래가 묻기에 걸리지 않게 — 판 기록 LogRow 는 A · B 를 그대로 둬 지난 판 값이 남음)
+    public static void End()
+    {
+        if (Hero != null) Safe(() => Hero.End());
+        if (Hero != null) LiveKeys(out endP1, out endP2);
+        Active = false;
+        Hero = null;
+    }
+
+    // 갈래 규칙을 이번 판 끔 (튜토리얼 · 영웅 데이터를 못 읽음 → 구판 규칙)
+    internal static void Disable() => Active = false;
 
     public static float MoveMul()
     {

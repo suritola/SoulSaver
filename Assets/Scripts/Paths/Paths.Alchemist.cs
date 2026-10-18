@@ -451,19 +451,20 @@ public sealed class AlchemistPaths : HeroPaths
     }
 
     // 조수 플라스크가 떨어진 뒤 (호문쿨루스 · 갈래 조수 · 재투척 모두, 유리 비 · 쌍둥이 조수는 빼고)
-    public void AideLanded(Vector3 q, float dmg)
+    // own: 갈래 조수 · 재투척 플라스크 — dmg 에 이미 갈래 배율(Power(Twins) 0.85)이 들어 있음 → 한 번만 곱하게 (호문쿨루스 플라스크만 여기서 곱함)
+    public void AideLanded(Vector3 q, float dmg, bool own)
     {
         if (!Paths.Has(Twins)) return;
-        float pw = Paths.Power(Twins);
+        if (!own) dmg *= Paths.Power(Twins);
         CharacterKit kit = CharacterKit.Instance;
         int k = kit != null ? kit.AlchLastKind : -1;
         // 조수 공방: 내가 마지막에 던진 시약을 따라 (조수 개조를 배웠으면 SignatureSkills.TinkerLand 가 같은 순서로 맡음 — 두 번 붙지 않게)
         if (k >= 0 && !SignatureSkills.AlchTinker)
         {
-            if (k == 0) Paths.Circle(q, 1.4f, 0f, 0f, null, c => Burn.Apply(c.gameObject, dmg * 0.3f * pw, 2f));
+            if (k == 0) Paths.Circle(q, 1.4f, 0f, 0f, null, c => Burn.Apply(c.gameObject, dmg * 0.3f, 2f));
             else if (k == 1) Paths.Circle(q, 1.4f, 0f, 0f, null, c => { if (c.TryGetComponent(out EnermyController e) && !e.IsDead) e.Slow(0.5f, 1.2f); });
             else if (Paths.Has(Swamp)) Puddle(q, 1.1f, 2f, dmg * 0.15f, true);
-            else if (SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.SpawnZone(q, 1.2f, 2.5f, dmg * 0.2f * pw, new Color(0.45f, 1f, 0.3f, 0.6f));
+            else if (SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.SpawnZone(q, 1.2f, 2.5f, dmg * 0.2f, new Color(0.45f, 1f, 0.3f, 0.6f));
         }
         // 폭탄 조수 (교차): 세 번에 한 번 불안정 — 연쇄 방지 피해라 다른 폭발을 부르지 않음
         if (Paths.CrossOn(XBombHelper))
@@ -471,7 +472,7 @@ public sealed class AlchemistPaths : HeroPaths
             aideFlasks = (aideFlasks + 1) % 3;
             if (aideFlasks == 0)
             {
-                Paths.Circle(q, 2.4f, dmg * 0.6f * pw, 2f, "폭탄 조수");
+                Paths.Circle(q, 2.4f, dmg * 0.6f, 2f, "폭탄 조수");
                 Fx.Spawn("fx_alchemyblast", q, 5.6f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f);
                 Fx.Spawn("fx_shock", q, 5f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
                 Hostile.Play("boom", 0.45f, 1.25f);

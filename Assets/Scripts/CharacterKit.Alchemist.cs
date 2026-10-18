@@ -61,7 +61,7 @@ public partial class CharacterKit
         bool swamp = Paths.Has(AlchemistPaths.Swamp), frost = Paths.Has(AlchemistPaths.Frost);
         bool chain = Paths.Has(AlchemistPaths.Chain), catalyst = Paths.Has(AlchemistPaths.Catalyst);
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
-        if (ForceUnstable()) unstable = true;
+        if (!catalyst && ForceUnstable()) unstable = true;     // 촉매 판은 과부하 증강 횟수를 쓰지 않음 (어차피 아래에서 꺼짐)
         if (catalyst) unstable = false;                 // 정밀 조제의 대가: 불안정 플라스크가 나오지 않음
         float instR = InstRadiusMul, instD = InstDamageMul;
         AlchAddInstability(unstable ? 12f : 5f);
@@ -168,7 +168,7 @@ public partial class CharacterKit
             Fx.Spawn("fx_alchemyblast", q, 3f, AlchemistPaths.AideTint, 18f);
             Play("shatter", 0.3f, 1.4f);
         }
-        AlchemistPaths.Live?.AideLanded(q, dmg);
+        AlchemistPaths.Live?.AideLanded(q, dmg, own);
     }
 
     // ================================================================= 연쇄 폭발: 불안정도 2배 · 갈래 자폭

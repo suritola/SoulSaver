@@ -128,5 +128,10 @@ public static partial class LocTable
            "Backstep Shots, or Perfect arrows fired while running away, set a trap at your feet.",
            "後退射撃で下がるか、後ろへ走りながらパーフェクトの矢を放つと、足元に罠を仕掛けます。",
            "后撤射击后退时，或边向后跑边射出完美之箭时，会在脚下布设陷阱。");
+
+        // ================================================================= 피해 출처 이름 (판 결과 「준 피해」)
+        PA("하늘 화살", "Sky Arrow", "天空の矢", "天穹之箭");
+        PA("가시줄", "Thorn Line", "茨の線", "荆棘线");
+        PA("관통 광선", "Piercing Beam", "貫通光線", "穿透光束");
     }
 }
