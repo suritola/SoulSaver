@@ -1331,7 +1331,7 @@ public static class SettingsUI
         ToggleRow("레벨업 바로 열기", y[3], () => GameSettings.AutoLevelUp, v => GameSettings.AutoLevelUp = v,
                   "켜면 레벨이 오르자마자 카드 창이 열립니다. 끄면 포인트가 쌓이고 [{INTERACT}]로 원할 때 고릅니다.");
         ToggleRow("카드 한 번 클릭으로 확정", y[4], () => GameSettings.OneClickPick, v => GameSettings.OneClickPick = v,
-                  "켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 무기 진화는 늘 두 번 확인합니다.");
+                  "켜면 레벨업 · 보물 상자 · 보스 보상 카드와 영혼 트리 칸을 한 번만 눌러도 바로 확정됩니다. 끄면 카드는 누른 뒤 [{INTERACT}] · 더블클릭으로, 영혼 트리 칸은 두 번 눌러 확정합니다. 무기 진화는 늘 두 번 확인합니다.");
         ToggleRow("herald.setting", y[5], () => GameSettings.Herald, v => GameSettings.Herald = v, "herald.setting.desc");
         // 1.2~ 발견형 도감의 스포일러 허용 (줄 간격 80 → 75 로 한 줄 더)
         ToggleRow("도감 모두 보기", y[6], () => CodexSeen.ShowAll, v => CodexSeen.ShowAll = v,

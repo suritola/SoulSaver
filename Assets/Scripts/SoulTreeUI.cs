@@ -352,7 +352,7 @@ public class SoulTreeUI : MonoBehaviour
             v.line = lines[n.key];
             views.Add(v);
         }
-        footText.text = Loc.T(TutorialRun.Active ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "칸을 두 번 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
+        footText.text = Loc.T(TutorialRun.Active || GameSettings.OneClickPick ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "칸을 두 번 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
                       + "  ·  " + Loc.T(GamePad.Active ? "오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기"      // 1.0.5~ 패드 안내
                                                        : "끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
                       + (GamePad.Active ? "" : "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기"));      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름 · 1.1~ 패드엔 없는 조합(「[Shift]+[View]」)이라 패드일 땐 뺌
@@ -430,7 +430,8 @@ public class SoulTreeUI : MonoBehaviour
             TooltipUI.Show(v.node.name, Tip(v.node));
             return;
         }
-        if (!TutorialRun.Active && (armed != v || Time.unscaledTime > armedUntil))
+        // 1.3.3~ 설정 「한 번 클릭으로 확정」(기본 켜짐)이면 영혼 트리 칸도 한 번에 배움 · 끄면 예전처럼 두 번
+        if (!TutorialRun.Active && !GameSettings.OneClickPick && (armed != v || Time.unscaledTime > armedUntil))
         {
             armed = v;
             armedUntil = Time.unscaledTime + 4f;

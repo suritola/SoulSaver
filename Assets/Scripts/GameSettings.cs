@@ -25,7 +25,7 @@ public static class GameSettings
     const string MouseSensKey = "settings.mouseSensitivity";
     const string NoticeSizeKey = "settings.noticeSize";
     const string ConfineKey = "settings.confineCursor";
-    const string OneClickKey = "settings.oneClickPick";
+    const string OneClickKey = "settings.oneClickPick2";      // 1.3.3~ 기본 켜짐으로 바꾸며 새 키 (예전 키에 남은 「꺼짐」이 이어지지 않게)
     const string HeraldKey = "settings.herald";            // 1.2~ 망자의 전령 (쓰러진 뒤 한 줄)
     const string MaxFpsKey = "settings.maxFps";
     const string ShowFpsKey = "settings.showFps";
@@ -40,7 +40,7 @@ public static class GameSettings
     const float DefVolume = 0.5f, DefMusic = 1f, DefSfx = 1f, DefMouseSens = 1f;
     const bool DefMute = true, DefVSync = false, DefShowFps = false, DefShake = true, DefFlash = true;
     const int DefMaxFps = 1, DefUiScale = 2, DefNoticeSize = 1, DefDamageNumbers = 0, DefMyFxAlpha = 0;
-    const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = false, DefHerald = true;
+    const bool DefHints = true, DefColorBlind = false, DefGameCursor = true, DefAutoLevelUp = false, DefConfine = true, DefOneClick = true, DefHerald = true;
     const bool DefBossIntroAlways = false, DefAttackLock = false, DefUltToggle = false, DefReduceMotion = false, DefFastFx = false;
     const int DefDialogueSpeed = 0, DefCombatStats = 0, DefDisplay = 0;
     const bool DefShowPickupRange = false, DefEdgeMarkers = true;
