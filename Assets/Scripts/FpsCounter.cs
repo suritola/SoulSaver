@@ -28,6 +28,14 @@ public class FpsCounter : MonoBehaviour
     {
         GameObject go = new GameObject("FpsCounter");
         DontDestroyOnLoad(go);
+        // 1.2.9~ 장면마다 FPS 글자 말고 다른 자식은 지움 (예전엔 결과 화면 UI 가 이 캔버스에 붙어 메인 메뉴 · 다음 판까지 맨 위에 남았음 · UIKit.HudCanvas)
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) =>
+        {
+            if (instance == null) return;
+            Transform root = instance.transform;
+            for (int i = root.childCount - 1; i >= 0; i--)
+                if (root.GetChild(i).name != "Fps") Destroy(root.GetChild(i).gameObject);
+        };
         Canvas canvas = go.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 32000;

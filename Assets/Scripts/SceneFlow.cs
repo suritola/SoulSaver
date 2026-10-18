@@ -47,6 +47,17 @@ public class SceneFlow : MonoBehaviour
         DontDestroyOnLoad(go);
         instance = go.AddComponent<SceneFlow>();
         instance.Build();
+        // 1.2.9~ 장면마다 막 · 로딩 말고 다른 자식은 지움 (다른 UI 가 이 캔버스에 붙으면 장면이 바뀌어도 남았음 · UIKit.HudCanvas)
+        SceneManager.sceneLoaded += (s, m) =>
+        {
+            if (instance == null) return;
+            Transform root = instance.transform;
+            for (int i = root.childCount - 1; i >= 0; i--)
+            {
+                string n = root.GetChild(i).name;
+                if (n != "Curtain" && n != "Loading") Destroy(root.GetChild(i).gameObject);
+            }
+        };
         return instance;
     }
 

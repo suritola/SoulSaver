@@ -508,16 +508,21 @@ public static class UIKit
     // 화면 UI를 붙일 캔버스: 탄약 패널이 있는 HUD 캔버스 > 화면용 최상위 캔버스.
     // UIKit.HudCanvas()는 적 이름표 같은 월드 캔버스를 고를 수 있어서
     // (그 적이 죽으면 붙어 있던 창까지 같이 사라짐) 쓰지 않음
+    // 1.2.9~ 지금 장면의 캔버스만: 장면이 바뀌어도 남는 캔버스(FPS 표시 · 장면 전환 막, 정렬 32000)를 고르면
+    //   결과 화면처럼 탄약 패널이 없는 장면의 UI 가 거기 붙어 메인 메뉴 · 다음 판까지 맨 위에 남고 판마다 쌓였음
     public static Canvas HudCanvas()
     {
-        Canvas best = null;
+        Scene active = SceneManager.GetActiveScene();
+        Canvas best = null, any = null;
         foreach (Canvas cv in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
         {
+            if (cv.gameObject.scene != active) continue;
+            if (any == null) any = cv;
             if (!cv.isRootCanvas || cv.renderMode == RenderMode.WorldSpace) continue;
             if (cv.transform.Find("AmmoPanel") != null) return cv;
             if (best == null) best = cv;
         }
-        return best != null ? best : Object.FindFirstObjectByType<Canvas>();
+        return best != null ? best : any;
     }
 
     public static TMP_FontAsset Font;

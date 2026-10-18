@@ -517,6 +517,8 @@ public class QaCapture
         yield return Safe("ttk", Ttk, 600);
         yield return Safe("reward_slot", RewardSlot, 240);
         yield return Safe("save_resume", SaveResume, 420);
+        yield return Safe("user_resume", UserResume, 300);
+        yield return Safe("ddol_canvas", DdolCanvas, 240);
         yield return Safe("system2", System2, 240);
         yield return Safe("soak", Soak, 600);
         yield return Safe("ui_menu", UiMenu, 900);
@@ -1029,6 +1031,71 @@ public class QaCapture
     }
 
     // ================================================================= 11) 무한 판 저장 → 이어하기 · system-3 풍화 토스트 · 엄마 남은 수
+    // 1.2.8 제보 재현: 사용자 실제 저장(qa.ps1 -UserSave 가 QA 데이터 폴더에 복사)으로 이어하기 → 화면 · 글자 · 메인 메뉴로 나간 뒤
+    static void LogTexts(string tag)
+    {
+        var tmps = UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None);
+        Log(tag + " 글자 " + tmps.Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length + " · 장면 " + SceneManager.GetActiveScene().name);
+        foreach (var grp in tmps.Where(t => t.isActiveAndEnabled).GroupBy(t => t.gameObject.name + " @" + (t.transform.root != null ? t.transform.root.name : "-") + (t.gameObject.scene.name == "DontDestroyOnLoad" ? " [DDOL]" : "")).OrderByDescending(g => g.Count()).Take(12))
+            Log("  " + grp.Key + " × " + grp.Count() + " (예: " + grp.First().text.Replace("\n", " ").Substring(0, Math.Min(50, grp.First().text.Length)) + ")");
+    }
+
+    // 1.2.9 제보: FPS 표시(장면이 바뀌어도 남는 정렬 32000 캔버스)를 켜면 결과 화면 UI 가 거기 붙어 메인 메뉴까지 남음
+    static IEnumerator DdolCanvas()
+    {
+        var made = new List<Canvas>();
+        foreach (string n in new[] { "QaDdolA", "QaDdolB" })
+        {
+            GameObject go = new GameObject(n);
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            Canvas c = go.AddComponent<Canvas>();
+            c.renderMode = RenderMode.ScreenSpaceOverlay;
+            c.sortingOrder = 32000;
+            made.Add(c);
+        }
+        yield return LoadGame("Rogue");
+        yield return Secs(2f);
+        SSet("RunStats", "GaveUp", true);
+        SceneManager.LoadScene("GameOver");
+        yield return Real(3f);
+        LogTexts("결과 화면");
+        Log("결과 화면: 남는 캔버스 자식 " + string.Join(", ", made.Select(c => c.name + " " + c.transform.childCount)));
+        yield return Shot("ddol_gameover", 1920, 1080, false);
+        SceneManager.LoadScene("MainMenu");
+        yield return Real(3f);
+        LogTexts("메인 메뉴");
+        int ddolTexts = UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Count(t => t.gameObject.scene.name == "DontDestroyOnLoad");
+        Log("메인 메뉴: 남는 캔버스 자식 " + string.Join(", ", made.Select(c => c.name + " " + c.transform.childCount)) + " · 장면 밖 글자 " + ddolTexts + (ddolTexts == 0 && made.All(c => c.transform.childCount == 0) ? " → 통과" : " → 실패"));
+        yield return Shot("ddol_menu", 1920, 1080, false);
+        foreach (var c in made) UnityEngine.Object.Destroy(c.gameObject);
+    }
+
+    static IEnumerator UserResume()
+    {
+        In("Auto", false);
+        SceneManager.LoadScene("MainMenu");
+        yield return Frames(30);
+        Log("이어하기 저장 있음 " + SGet("RunSave", "Has"));
+        SCall("RunSave", "Continue");
+        for (int i = 0; i < 900; i++)
+        {
+            yield return null;
+            object sm = Find("StageManager");
+            if (sm != null && (bool)Get(sm, "Started") && EM() != null) break;
+        }
+        yield return Real(2f);
+        LogTexts("이어한 뒤 2초");
+        yield return Shot("user_resume_2s", 1920, 1080, false);
+        yield return Real(8f);
+        LogTexts("이어한 뒤 10초");
+        yield return Shot("user_resume_10s", 1920, 1080, false);
+        SceneManager.LoadScene("MainMenu");
+        yield return Real(3f);
+        LogTexts("메인 메뉴로 나간 뒤");
+        yield return Shot("user_resume_menu", 1920, 1080, false);
+        In("Auto", true);
+    }
+
     static IEnumerator SaveResume()
     {
         if (T("QaFlags") == null) { Log("QaFlags 없음 — 저장 시험 건너뜀"); yield break; }
@@ -1085,6 +1152,18 @@ public class QaCapture
         toast2.AddRange(TextsWith(L("모래 폭풍에 풍화되어").Trim()));
         Log("풍화 토스트 (이어한 뒤) " + toast2.Count + " " + string.Join(" | ", toast2.Distinct()));
         yield return Shot("save_after_resume");
+        // 1.2.8 제보: 이어하기 뒤 UI 도배 — 자동 조종을 끄고(실제 플레이처럼 알림이 켜짐) 화면 · 글자 수를 봄
+        Log("이어한 뒤 글자 수 (자동 켬) " + UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Length);
+        In("Auto", false);
+        yield return Secs(3f);
+        Log("이어한 뒤 3초 글자 수 (자동 끔) " + UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None).Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length);
+        yield return Shot("resume_noauto_3s", 1920, 1080, false);
+        yield return Secs(5f);
+        var tmps = UnityEngine.Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None);
+        Log("이어한 뒤 8초 글자 수 (자동 끔) " + tmps.Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length);
+        foreach (var grp in tmps.GroupBy(t => t.gameObject.name).OrderByDescending(g => g.Count()).Take(8)) Log("  글자 오브젝트 " + grp.Key + " × " + grp.Count() + " (예: " + grp.First().text.Replace("\n", " ").Substring(0, Math.Min(40, grp.First().text.Length)) + ")");
+        yield return Shot("resume_noauto_8s", 1920, 1080, false);
+        In("Auto", true);
 
         // 개발자 처치 → 영혼 모으는 중 저장 · 이어하기 → 남은 수
         foreach (var x in Bosses()) UnityEngine.Object.Destroy(x.gameObject);
