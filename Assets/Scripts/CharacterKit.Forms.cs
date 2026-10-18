@@ -234,8 +234,10 @@ public partial class CharacterKit
         foreach (Vector2 d in Spread(dir, shots, step))
         {
             Bullet b = ThrowOne(start, d, dmg, 1f);
+            RpShot(b, i == mid);                        // 갈래 (회귀 칼날 · 광란 · 그림자 연막 치명, CharacterKit.Rogue)
             if (i++ == mid) lastRogueThrow = b;
         }
+        RpVolley(start, dir, dmg, shots, step);         // 갈래 광란 공명 I: 10중첩이면 두 개씩
         Play("whoosh", 0.35f, form == SpecialAbilities.KitBlowgun ? 2.3f : 1.8f);
         if (augment == AugEcho) StartCoroutine(EchoThrow(dir, dmg, shots, step));
     }
