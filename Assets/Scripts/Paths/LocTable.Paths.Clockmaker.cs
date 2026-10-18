@@ -1,11 +1,167 @@
-// 번역표: 시계공 갈래 문구 4개 언어 (LocTable.Paths 의 AddPaths 가 부름) — 시계공 담당이 채움
+// 번역표: 시계공 갈래 문구 4개 언어 (LocTable.Paths 의 AddPaths 가 부름)
 // 넣을 것: 갈래 이름 · 한 줄 성격(tagline) · 입문 카드 이름 · 바뀌는 것 · 대가 · 강점 · 약점 · 공명 I · II · 극의 · 새 교차 이름 · 설명
 //   (Paths/Paths.Clockmaker.cs 의 PathDef · CrossDef 에 쓴 한국어 문장 그대로가 키 — 문장을 고치면 여기 키도 같이)
 // 형식: PA(한국어, 영어, 일본어, 중국어) · 화면에 보일 한국어만 바꿀 때 PK(키, 한국어, 영어, 일본어, 중국어)
 // 문구 지침: docs/review/2026-10-16-문구-다듬기-지침.md (완결 문장 · 수치는 카드 글이 금색으로)
+// 용어: 정각 O'Clock · 正時 · 整点 / 눈금 ticks · 目盛り · 刻度 / 되감기 Rewind · 巻き戻し · 倒带 / 톱니 gear · 歯車 · 齿轮
 public static partial class LocTable
 {
     static void AddPathsClockmaker()
     {
+        // ================================================================= 갈래 이름 · 입문 카드 이름 · 한 줄 성격
+        PA("톱니 떼", "Gear Swarm", "歯車の群れ", "齿轮群");
+        PA("대시계", "Grand Clock", "大時計", "大钟表");
+        PA("시간 여행", "Time Travel", "時間旅行", "时间旅行");
+        PA("잔상", "Afterimage", "残像", "残影");
+        PA("잔상 장인", "Afterimage Artisan", "残像の匠", "残影匠人");
+        PA("시간 빚", "Time Debt", "時の借り", "时间之债");
+        PA("시간 저당", "Time Mortgage", "時間の抵当", "时间抵押");
+
+        PA("두 개씩 튕기기 · 무리", "Gears in pairs, ricocheting · Crowds", "2つずつ跳ねる · 群れ", "成双弹跳 · 群敌");
+        PA("거대 정각 톱니 · 보스 폭딜", "Giant O'Clock gears · Boss burst", "巨大な正時の歯車 · ボス瞬間火力", "巨型整点齿轮 · 首领爆发");
+        PA("잦은 되감기 · 무적 · 생존", "Frequent Rewinds · Invincibility · Survival", "頻繁な巻き戻し · 無敵 · 生存", "频繁倒带 · 无敌 · 生存");
+        PA("모든 톱니가 두 번 · 균형", "Every gear flies twice · Balanced", "すべての歯車が2回 · バランス", "每个齿轮飞两次 · 均衡");
+        PA("필살기 두 배 · 맞으면 손해", "Double Ultimate · Hits cost you", "必殺技2倍 · 被弾で損", "必杀技双倍 · 受击吃亏");
+
+        // ================================================================= 강점 · 약점
+        PA("무리", "Crowds", "群れ", "群敌");
+        PA("보스", "Bosses", "ボス", "首领");
+        PA("보스 · 폭딜", "Bosses · Burst", "ボス · 瞬間火力", "首领 · 爆发");
+        PA("주기 공백", "Gaps between cycles", "周期の空白", "周期空档");
+        PA("생존", "Survival", "生存", "生存");
+        PA("화력", "Firepower", "火力", "火力");
+        PA("무리 · 보스 균형", "Crowds · Bosses, balanced", "群れ · ボスのバランス", "群敌 · 首领均衡");
+        PA("빠른 적 (지연)", "Fast enemies (delay)", "速い敵（遅延）", "快速敌人（延迟）");
+        PA("필살기 회전 · 보스", "Ultimate cycling · Bosses", "必殺技の回転 · ボス", "必杀技循环 · 首领");
+        PA("피격", "Getting hit", "被弾", "受击");
+
+        // ================================================================= 톱니 떼
+        PA("톱니를 두 개씩 던지고 (한 개당 피해 65%), 튕김이 1회 늘어납니다.",
+           "Throws gears in pairs (65% damage each), and they ricochet 1 more time.",
+           "歯車を2つずつ投げ（1つあたりダメージ65%）、跳ね返りが1回増えます。",
+           "齿轮每次投出两个（每个伤害65%），弹跳次数增加1次。");
+        PA("정각까지 필요한 눈금이 4 늘어나고, 덧붙은 톱니는 보스에게 피해가 55% 줄어듭니다.",
+           "O'Clock needs 4 more ticks, and the extra gears deal 55% less damage to bosses.",
+           "正時までに必要な目盛りが4増え、追加の歯車はボスへのダメージが55%減ります。",
+           "达到整点所需刻度增加4，追加的齿轮对首领的伤害降低55%。");
+        PA("튕길 때마다 맞은 적에게 녹이 쌓여 받는 피해가 4%씩 늘어납니다. (최대 5중첩 · 4초)",
+           "Each ricochet rusts the enemy it bounced off, making it take 4% more damage per stack. (Up to 5 stacks · 4s)",
+           "跳ね返るたびに当たった敵に錆がたまり、受けるダメージが4%ずつ増えます。（最大5重 · 4秒）",
+           "每次弹跳都会使被击中的敌人积累锈蚀，受到的伤害每层提高4%。（最多5层 · 4秒）");
+        PA("튕김이 2회 더 늘고, 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라집니다. (피해 50%)",
+           "Gears ricochet 2 more times, and a gear that has bounced three or more times splits into two small gears on hit. (50% damage)",
+           "跳ね返りがさらに2回増え、3回以上跳ねた歯車は当たると小さな歯車2つに分かれます。（ダメージ50%）",
+           "弹跳次数再增加2次，弹跳三次及以上的齿轮命中时分裂为两个小齿轮。（伤害50%）");
+        PA("톱니를 세 개씩 던집니다. (한 개당 피해 55%)",
+           "Throws gears in threes. (55% damage each)",
+           "歯車を3つずつ投げます。（1つあたりダメージ55%）",
+           "齿轮每次投出三个。（每个伤害55%）");
+
+        // ================================================================= 대시계
+        PA("정각 톱니의 크기와 폭발 범위가 2배, 피해가 1.5배가 됩니다.",
+           "O'Clock gears become twice as large with twice the blast radius, and deal 1.5x damage.",
+           "正時の歯車の大きさと爆発範囲が2倍、ダメージが1.5倍になります。",
+           "整点齿轮的大小和爆炸范围变为2倍，伤害变为1.5倍。");
+        PA("보통 톱니의 피해가 25% 줄어듭니다.",
+           "Regular gears deal 25% less damage.",
+           "通常の歯車のダメージが25%減ります。",
+           "普通齿轮的伤害降低25%。");
+        PA("정각 톱니가 날아가는 0.5초 동안 둘레 적을 끌어당깁니다. (보스 제외)",
+           "For 0.5s of its flight, an O'Clock gear pulls in nearby enemies. (Except bosses)",
+           "正時の歯車が飛ぶ0.5秒の間、周りの敵を引き寄せます。（ボスを除く）",
+           "整点齿轮飞行的0.5秒内会吸引周围的敌人。（首领除外）");
+        PA("세 번째 정각마다 대정각이 터집니다. (화면 1/3을 덮는 폭발 · 보스에 닿아도 터짐)",
+           "Every third O'Clock becomes a Grand O'Clock. (A blast covering a third of the screen · Also bursts on touching a boss)",
+           "3回目の正時ごとに大正時が炸裂します。（画面の1/3を覆う爆発 · ボスに触れても炸裂）",
+           "每第三次整点触发大整点。（覆盖画面1/3的爆炸 · 碰到首领也会爆炸）");
+        PA("세 번째 톱니마다 정각이 됩니다.",
+           "Every third gear becomes an O'Clock gear.",
+           "3つ目の歯車ごとに正時になります。",
+           "每第三个齿轮成为整点齿轮。");
+
+        // ================================================================= 시간 여행
+        PA("되감기 재사용 대기 −40%, 3초 전 대신 2초 전으로 돌아가고, 되감은 뒤 1초 동안 무적입니다. (무적은 4초에 한 번)",
+           "Rewind cooldown −40%. You return to 2s ago instead of 3s ago, and are invincible for 1s after rewinding. (Invincibility at most once per 4s)",
+           "巻き戻しの再使用待ち−40%、3秒前の代わりに2秒前へ戻り、巻き戻した後1秒間無敵になります。（無敵は4秒に1回）",
+           "倒带冷却−40%，回到2秒前而不是3秒前，倒带后无敌1秒。（无敌每4秒一次）");
+        PA("되감기가 주는 피해와 되갚는 피해가 40% 줄어듭니다.",
+           "Rewind damage and payback damage are reduced by 40%.",
+           "巻き戻しのダメージと仕返しのダメージが40%減ります。",
+           "倒带造成的伤害和反击伤害降低40%。");
+        PA("출발점에서 도착점까지 선 위의 적이 0.5초 멈춥니다.",
+           "Enemies on the line from your start point to your landing point freeze for 0.5s.",
+           "出発点から到着点までの線上の敵が0.5秒止まります。",
+           "从出发点到到达点连线上的敌人停住0.5秒。");
+        PA("체력이 낮을수록 되감기 게이지가 빨리 찹니다. (체력이 바닥에 가까우면 최대 +60%)",
+           "The lower your HP, the faster the Rewind gauge fills. (Up to +60% near 0 HP)",
+           "体力が低いほど巻き戻しゲージが速くたまります。（体力がほぼ尽きると最大+60%）",
+           "生命越低，倒带槽充能越快。（生命接近见底时最多+60%）");
+        PA("되감기를 2번 모아 둡니다. (게이지가 가득 찬 뒤 한 번 더 찹니다)",
+           "Stores 2 Rewinds. (The gauge fills once more after it is full)",
+           "巻き戻しを2回ためておけます。（ゲージが満タンになった後もう1回たまります）",
+           "可储存2次倒带。（充满后会再充能一次）");
+
+        // ================================================================= 잔상
+        PA("모든 톱니가 0.6초 뒤 던진 자리에서 잔상으로 한 번 더 날아갑니다. (피해 35%)",
+           "Every gear flies once more as an afterimage from where it was thrown, 0.6s later. (35% damage)",
+           "すべての歯車が0.6秒後、投げた場所から残像としてもう一度飛びます。（ダメージ35%）",
+           "每个齿轮在0.6秒后从投出的位置以残影再飞一次。（伤害35%）");
+        PA("본 톱니의 피해가 30% 줄어듭니다.",
+           "The original gears deal 30% less damage.",
+           "本体の歯車のダメージが30%減ります。",
+           "本体齿轮的伤害降低30%。");
+        PA("잔상도 정각 눈금을 채웁니다.",
+           "Afterimages also fill O'Clock ticks.",
+           "残像も正時の目盛りをためます。",
+           "残影也会填充整点刻度。");
+        PA("잔상이 한 번 더 잔상을 남깁니다. (피해 절반)",
+           "Afterimages leave one more afterimage. (Half damage)",
+           "残像がもう1回残像を残します。（ダメージ半分）",
+           "残影会再留下一次残影。（伤害减半）");
+        PA("잔상 피해가 50%가 됩니다.",
+           "Afterimage damage becomes 50%.",
+           "残像のダメージが50%になります。",
+           "残影伤害变为50%。");
+
+        // ================================================================= 시간 빚
+        PA("필살기 게이지가 2배로 찹니다.",
+           "Your Ultimate gauge fills twice as fast.",
+           "必殺技ゲージが2倍の速さでたまります。",
+           "必杀技槽充能速度变为2倍。");
+        PA("맞으면 필살기 게이지를 10% 잃습니다.",
+           "Getting hit loses 10% of your Ultimate gauge.",
+           "被弾すると必殺技ゲージを10%失います。",
+           "受击时失去10%的必杀技槽。");
+        PA("게이지가 가득 차 있으면 공격 속도가 20% 오릅니다.",
+           "While the gauge is full, attack speed is increased by 20%.",
+           "ゲージが満タンの間、攻撃速度が20%上がります。",
+           "必杀技槽充满时，攻击速度提高20%。");
+        PA("되감기가 지난 3초 동안 준 피해의 20%를 둘레 적에게 다시 줍니다. (스톱워치 1단계 · 이미 있으면 더 큰 값)",
+           "Rewind deals 20% of the damage you dealt in the last 3s again to nearby enemies. (Same as Stopwatch Lv1 · The higher value if you already have it)",
+           "巻き戻しが直前3秒間に与えたダメージの20%を周りの敵にもう一度与えます。（ストップウォッチ1段階 · すでにあれば大きい方）",
+           "倒带会将过去3秒内造成伤害的20%再次施加给周围敌人。（相当于秒表1级 · 已拥有时取较大值）");
+        PA("맞아도 게이지를 잃지 않습니다.",
+           "You no longer lose gauge when hit.",
+           "被弾してもゲージを失いません。",
+           "受击时不再失去必杀技槽。");
+
+        // ================================================================= 새 교차
+        PA("톱니 메아리", "Gear Echo", "歯車のこだま", "齿轮回响");
+        PA("튕기거나 갈라진 톱니도 잔상을 남깁니다.",
+           "Ricocheting and split gears also leave afterimages.",
+           "跳ね返った歯車や分かれた歯車も残像を残します。",
+           "弹跳和分裂的齿轮也会留下残影。");
+        PA("정각 되감기", "O'Clock Rewind", "正時の巻き戻し", "整点倒带");
+        PA("되감은 자리에서 정각 톱니가 터집니다. (공격력 200%)",
+           "An O'Clock gear bursts where you rewind to. (200% attack)",
+           "巻き戻した場所で正時の歯車が炸裂します。（攻撃力200%）",
+           "在倒带到达的位置引爆整点齿轮。（攻击力200%）");
+
+        // ================================================================= 효과 글 · 피해 출처 이름 (피해 표 · 판 기록)
+        PA("대정각!", "Grand O'Clock!", "大正時！", "大整点！");
+        PA("대정각", "Grand O'Clock", "大正時", "大整点");
+        PA("덧붙은 톱니", "Extra Gear", "追加の歯車", "追加齿轮");
+        PA("잔상 톱니", "Afterimage Gear", "残像の歯車", "残影齿轮");
+        PA("갈라진 톱니", "Split Gear", "分かれた歯車", "分裂齿轮");
     }
 }

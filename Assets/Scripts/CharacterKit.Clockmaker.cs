@@ -20,21 +20,45 @@ public partial class CharacterKit
     LineRenderer clockRing, clockDial;
     bool clockDialDrawn;
     float clockRingK = -1f;
-    public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0));
+    // 2026-10-19~ 갈래 톱니 떼 대가: +4 (ClockmakerPaths.ExtraNeed)
+    public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0)) + ClockmakerPaths.ExtraNeed;
     public bool ClockReady => clockTicks >= ClockNeed;
     public void AddClockTicks(float n) { clockTickFrac += n; while (clockTickFrac >= 1f) { clockTickFrac -= 1f; if (clockTicks < ClockNeed) clockTicks++; } }
     float clockTickFrac;
 
     void ClockAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
-        bool big = ClockReady;
-        if (big) { clockTicks = 0; RunCounters.Both("oclock"); }       // 1.2~ 영혼 계약 · 보드
+        // 2026-10-19~ 갈래 (Paths/Paths.Clockmaker): 톱니 떼 두 개씩 · 대시계 큰 정각 · 잔상 · 대시계 극의(세 번째마다 정각)
+        ClockmakerPaths cm = ClockmakerPaths.Live;
+        bool ready = ClockReady;
+        bool big = ready || (cm != null && cm.ForceNoon(gearThrows + 1));
+        if (big) { if (ready) clockTicks = 0; RunCounters.Both("oclock"); }       // 1.2~ 영혼 계약 · 보드 (극의로 터진 정각은 눈금을 남김)
+        bool grandNoon = big && cm != null && cm.NextNoonIsGrand();            // 대시계 공명 II: 세 번째 정각마다 대정각
         gearThrows++;
         RunCounters.Add("gear");
         float d = dmg * (form == SpecialAbilities.KitGrandfather ? 1.4f : 1f);
+        int per = big ? 1 : ClockmakerPaths.GearsPer;                          // 정각 톱니는 언제나 하나
+        float gain = ClockmakerPaths.GainMul(big, per);
+        float costMul = ClockmakerPaths.GrandCost(big);
+        float echoCost = ClockmakerPaths.EchoCost;
+        bool echo = cm != null && ClockmakerPaths.EchoOn;
+        int bounces = card[0] + ClockmakerPaths.ExtraBounce;
+        bool first = true;
         // 1.1.3: 이중 톱니 0.85 → 0.7 (두 톱니 합 1.7배 → 1.4배 — 괘종 1.4 · 분침과 곱으로 겹쳐 후반 단일 화력이 중앙값의 2배였음)
         foreach (Vector2 v in Spread(dir, shots + (augment == AugTwinGear ? 1 : 0), 10f))
-            Gear(start, v, d * (augment == AugTwinGear && shots > 0 ? 0.7f : 1f), card[0], big);
+        {
+            float gd = d * (augment == AugTwinGear && shots > 0 ? 0.7f : 1f) * gain * costMul;      // 잔상 대가를 빼기 전
+            for (int k = 0; k < per; k++)
+            {
+                Vector2 vv = per > 1 ? (Vector2)(Quaternion.Euler(0f, 0f, (k - (per - 1) * 0.5f) * ClockmakerPaths.SwarmSpread) * v) : v;
+                bool gn = big && first && grandNoon;
+                Bullet g = Gear(start, vv, gd * echoCost, bounces, big, 0, gn);
+                if (g != null && k > 0) ClockmakerPaths.MarkTwin(g);              // 덧붙은 톱니 (보스에게 −55%)
+                if (big && g != null && cm != null) cm.TrackNoon(g, gn);
+                if (echo) cm.QueueEcho(start, vv, gd * (big ? 3f * SignatureSkills.BigGearMul() : 1f), big, k > 0, 1);
+            }
+            if (big) first = false;
+        }
         SignatureSkills.GearThrown(start, dir, d, big);
         if (card[2] > 0 && gearThrows % 5 == 0) StartCoroutine(Pendulum(dir));
         if (big)
@@ -48,10 +72,12 @@ public partial class CharacterKit
     }
 
     // 톱니 하나: 맞히면 눈금 · 튕기는 톱니 · 녹슨 톱니 · 정각 폭발
-    Bullet Gear(Vector3 start, Vector2 dir, float dmg, int bounces, bool big)
+    // hop: 몇 번 튕겨 나온 톱니인지 (갈래 톱니 떼 공명 II 갈라짐 · 깊이 상한 ClockmakerPaths.MaxHop) · grandNoon: 대정각 (대시계 공명 II)
+    Bullet Gear(Vector3 start, Vector2 dir, float dmg, int bounces, bool big, int hop = 0, bool grandNoon = false)
     {
         bool grand = form == SpecialAbilities.KitGrandfather;
-        float size = (big ? 1.9f : 1.05f) * (grand ? 1.3f : 1f);
+        float bigSize = big ? ClockmakerPaths.BigSize : 1f;          // 갈래 대시계: 정각 톱니 크기 · 폭발 범위 ×2
+        float size = (big ? 1.9f : 1.05f) * (grand ? 1.3f : 1f) * bigSize;
         float speed = (big ? 30f : 38f) * (grand ? 0.8f : 1f);
         Bullet b = Projectile(start, dir, dmg * (big ? 3f * SignatureSkills.BigGearMul() : 1f), big ? 9999 : player.pene, speed, 16f, "fx_shuriken", size, big ? Brass : new Color(0.85f, 0.8f, 0.7f), true);
         if (b == null) return null;
@@ -65,13 +91,20 @@ public partial class CharacterKit
             if (card[6] > 0 && c.TryGetComponent(out EnermyController e)) e.Slow(1f - (0.05f + 0.1f * card[6]), 2f);
             if (form == SpecialAbilities.KitHourglass && c.TryGetComponent(out EnermyController e2)) e2.Slow(0.5f, 1f);
             SignatureSkills.GearHit(c, s.damage, big);
+            // 갈래 톱니 떼 공명 II: 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라짐
+            if (!big && hop >= ClockmakerPaths.SplitHop && ClockmakerPaths.SplitOn) ClockmakerPaths.Live?.Split(c.transform.position, s.Direction, s.damage, c.gameObject);
             if (big && !exploded)
             {
                 exploded = true;
                 Vector3 p = c.transform.position;
-                DamageCircle(p, 2.6f, s.damage * 0.6f, 2f);
-                Fx.Spawn("fx_explosion", p, 5f, Brass, 18f);
-                ShockRing.Spawn(p, 0.4f, 3.2f, 0.3f, Brass, 0.2f);
+                ClockmakerPaths cmx = grandNoon ? ClockmakerPaths.Live : null;
+                if (cmx != null) cmx.GrandNoonBlast(p, s.damage, s);       // 대정각 (화면 1/3)
+                else
+                {
+                    DamageCircle(p, 2.6f * bigSize, s.damage * 0.6f, 2f);
+                    Fx.Spawn("fx_explosion", p, 5f * bigSize, Brass, 18f);
+                    ShockRing.Spawn(p, 0.4f, 3.2f * bigSize, 0.3f, Brass, 0.2f);
+                }
                 if (card[5] > 0)
                 {
                     // 정각의 종: 멈추는 범위(4칸)를 종소리 고리로 보여 줌 (예전엔 범위가 안 보였음)
@@ -85,7 +118,7 @@ public partial class CharacterKit
                 Play("bell", 0.7f, 1f);
             }
         };
-        if (bounces > 0)
+        if (bounces > 0 && hop < ClockmakerPaths.MaxHop)
         {
             bool bounced = false;
             b.onHitEnemy += (s, c) =>
@@ -95,9 +128,13 @@ public partial class CharacterKit
                 if (next == null) return;
                 bounced = true;
                 SignatureSkills.GearBounced();
-                Bullet r = Gear(c.transform.position, (next.position - c.transform.position).normalized, s.damage * 0.85f * SignatureSkills.BounceMul(), bounces - 1, false);
+                ClockmakerPaths.Live?.Rust(c.gameObject);                   // 갈래 톱니 떼 공명 I: 녹
+                Vector2 to = (next.position - c.transform.position).normalized;
+                Bullet r = Gear(c.transform.position, to, s.damage * 0.85f * SignatureSkills.BounceMul(), bounces - 1, false, hop + 1);
                 EnermyController e = c.GetComponent<EnermyController>();
                 if (r != null && e != null) r.hitOnce = new HashSet<int> { e.GetInstanceID() };
+                // 교차 톱니 메아리: 튕긴 톱니도 잔상 (덧붙은 톱니에서 튕긴 것이면 잔상도 덧붙은 톱니)
+                if (r != null && ClockmakerPaths.GearEchoOn) ClockmakerPaths.Live?.QueueEcho(c.transform.position, to, r.damage, false, DamageSource.Current == ClockmakerPaths.TwinSrc, 1);
             };
         }
         return b;
@@ -193,7 +230,9 @@ public partial class CharacterKit
     GameObject rewindGhost;
     LineRenderer rewindPath, rewindPathCore, rewindRing;
     Vector3 lastLogPos;
-    const float RewindSeconds = 3f;
+    // 2026-10-19~ 갈래 시간 여행이면 2초 전 (ClockmakerPaths.RewindBack) — 기록은 넉넉히 4초를 그대로 둠
+    float RewindSeconds => ClockmakerPaths.RewindBack;
+    const float RewindLogSeconds = 3f;
     const float RewindPathHalf = 1.6f, RewindArriveRadius = 5f;      // 지나온 길 판정 폭(반) · 도착 둘레 반경 (미리 보기도 같은 값)
 
     void LogTime()
@@ -204,7 +243,7 @@ public partial class CharacterKit
         if (timeLog.Count > 0 && (transform.position - lastLogPos).sqrMagnitude > 6f * 6f) timeLog.Clear();
         lastLogPos = transform.position;
         timeLog.Enqueue((Time.time, transform.position, player.PlayerHealth));
-        while (timeLog.Count > 0 && Time.time - timeLog.Peek().t > RewindSeconds + 1f) timeLog.Dequeue();
+        while (timeLog.Count > 0 && Time.time - timeLog.Peek().t > RewindLogSeconds + 1f) timeLog.Dequeue();
     }
 
     // 3초 전 (기록이 그보다 짧으면 가장 오래된 것) · 지금 벽인 자리(결계가 끝나 되살아난 벽 등)는 건너뜀
@@ -322,7 +361,7 @@ public partial class CharacterKit
         transform.position = to;
         timeLog.Clear();            // 되감은 뒤엔 기록을 새로 (다음 되감기가 되감기 전 자리로 튀지 않게)
         lastLogPos = to;
-        float dmg = Damage * 5f * UltMul;       // 1.1.3: 4 → 5 (되감기가 전체 피해의 4~10% 뿐 · 다른 영웅 궁극기 6~12배)
+        float dmg = Damage * 5f * UltMul * ClockmakerPaths.RewindDmgMul;       // 1.1.3: 4 → 5 (되감기가 전체 피해의 4~10% 뿐 · 다른 영웅 궁극기 6~12배) · 갈래 시간 여행 대가 −40%
         // 지나온 길의 적
         Vector3 mid = (from + to) * 0.5f;
         List<Collider2D> caught = new List<Collider2D>();
@@ -334,7 +373,7 @@ public partial class CharacterKit
             caught.Add(c);
         }
         // 도착: 둘레 적이 잠깐 멈추고, 잃은 체력의 세 배를 되갚음
-        float payback = lost * 3f * UltMul;
+        float payback = lost * 3f * UltMul * ClockmakerPaths.RewindDmgMul;
         List<Collider2D> near = new List<Collider2D>();
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(to, RewindArriveRadius, clockHits)))
             if (c != null && (c.CompareTag("enermy") || c.CompareTag("boss"))) near.Add(c);
