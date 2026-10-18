@@ -10,6 +10,8 @@ using UnityEngine;
 //                   떼면 선 양쪽 띠 안의 적을 선 위로 끌어당겨 짓이김 (오래 누를수록 넓고 길게)
 // 레벨업 카드 (card): 0 번지는 잉크 · 1 굵은 펜촉 · 2 나침반 바늘 · 3 접힌 자국 · 5 측량 표식 · 6 끊기지 않는 선
 // 형태 (무기 진화 1차): 측량 사슬 · 잉크병 · 지구본 / 강화 (2차): 정밀 측량 · 이중 인쇄 · 판화
+// 2026-10-19~ 빌드 갈래 (Paths/Paths.Cartographer.cs): 도형 각 수 · 주기 · 넓이 · 획 길이 · 굵기 · 피해 배율을 CartographerPaths 에 물음
+//   정밀 측량 사각형(극의 오각형) · 일필 도형 없음 · 먹물 웅덩이 · 접지술 게이지 · 행군 고리 — 갈래 규칙이 아니면 모두 기본값(삼각형 · 세 획)
 public partial class CharacterKit
 {
     public bool IsCartographer => Id == CharacterId.Cartographer;
@@ -21,28 +23,32 @@ public partial class CharacterKit
     int strokeCount;
     float shapeAngle;                  // 다음 도형(삼각형)의 방향 — 미리 보기와 실제가 같게 미리 정해 둠
     LineRenderer mapCloseRing;
+    // 정밀 측량 공명 II: 직전 도형 (겹친 곳 피해 2배)
+    List<Vector3> mapPrevShape;
+    float mapPrevShapeAt = -99f;
     // 측량 표식: 획에 맞은 적 (도형 안에서 피해 +)
     readonly Dictionary<GameObject, float> surveyMarks = new Dictionary<GameObject, float>();
 
     // 그리는 중: 마지막 획 뒤 잠깐 (지름길 · 직행로)
     public bool MapChainActive => IsCartographer && Time.time < mapChainUntil;
     const float MapChainTime = 1.4f;
-    const int ShapeEvery = 3;          // 이 획마다 도형이 저절로 닫힘
-    // 도형(삼각형) 반지름: 지구본 1.5배, 끊기지 않는 선 단계마다 +15%
-    float ShapeRadius => 2.4f * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f) * (1f + 0.15f * card[6]);
-    bool ShapeNext => strokeCount % ShapeEvery == ShapeEvery - 1;
+    int ShapeEvery => CartographerPaths.ShapeEvery;     // 이 획마다 도형이 저절로 닫힘 (기본 3 · 정밀 측량 4)
+    // 도형 반지름: 지구본 1.5배, 끊기지 않는 선 단계마다 +15%, 정밀 측량 사각형 · 오각형은 넓이에 맞춰
+    float ShapeRadius => 2.4f * (form == SpecialAbilities.KitGlobe ? 1.5f : 1f) * (1f + 0.15f * card[6]) * CartographerPaths.ShapeRadiusMul;
+    bool ShapeNext => !CartographerPaths.NoShapes && strokeCount % ShapeEvery == ShapeEvery - 1;
 
-    float StrokeRange => def.range * SignatureSkills.StrokeRangeMul();
+    float StrokeRange => def.range * SignatureSkills.StrokeRangeMul() * CartographerPaths.StrokeLenMul;
 
-    float StrokeWidth => 0.75f * (1f + 0.3f * card[1]) * SignatureSkills.StrokeWidthMul();
+    float StrokeWidth => 0.75f * (1f + 0.3f * card[1]) * SignatureSkills.StrokeWidthMul() * CartographerPaths.StrokeWidthMul;
 
     void MapAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
+        bool margin = SignatureSkills.MarginReady;      // 이번 획이 여백 획인가 (긋기 전에 봄 · 대형 도면)
         Vector3 from = start;
         Vector3 to = StrokeEnd(from, dir);
 
         float width = StrokeWidth;
-        float lenMul = SignatureSkills.StrokeMul((to - from).magnitude, StrokeRange);
+        float lenMul = SignatureSkills.StrokeMul((to - from).magnitude, StrokeRange) * CartographerPaths.StrokeDmgMul;     // 갈래 획 배율 (일필 ×1.7 · 대가)
         int hits = Stroke(from, to, width, dmg * lenMul);
         // 여러 발: 옆으로 나란한 획을 더 그음
         Vector2 sd = ((Vector2)(to - from)).normalized;
@@ -54,16 +60,19 @@ public partial class CharacterKit
         }
         SignatureSkills.Stroke(from, to, hits);
         StrokeExtras(from, to, dmg);
+        CartographerPaths.Stroked(this, from, to, width, dmg * lenMul);      // 먹물 웅덩이 · 먹 튀김 · 왕복 획
 
         strokeCount++;
         if (card[2] > 0 && strokeCount % 4 == 0) CompassNeedles(to, card[2]);
         if (augment == AugReprint) StartCoroutine(Reprint(from, to, width, dmg * lenMul * 0.5f));
 
         // 자동 도형: 세 번째 획마다 획 끝(마우스 자리)을 감싸는 삼각형이 저절로 닫힘
-        if (strokeCount % ShapeEvery == 0)
+        //   갈래: 정밀 측량 네 번째 획 · 사각형(극의 오각형) / 일필 닫히지 않음 / 대형 도면(교차) 여백 획이면 바로 닫힘
+        bool blueprint = margin && CartographerPaths.BlueprintOn;
+        if ((!CartographerPaths.NoShapes && strokeCount % ShapeEvery == 0) || blueprint)
         {
-            CloseShape(Triangle(to, ShapeRadius, shapeAngle), dmg);
-            shapeAngle = Random.Range(0f, 120f);
+            CloseShape(MapPolygon(to, ShapeRadius, shapeAngle, CartographerPaths.ShapeSides), dmg * CartographerPaths.ShapeDmgMul);
+            shapeAngle = Random.Range(0f, 360f / CartographerPaths.ShapeSides);
         }
         mapChainUntil = Time.time + MapChainTime;
         PlayerMotion.Of(this).Recoil(-sd, 0.4f);
@@ -76,6 +85,9 @@ public partial class CharacterKit
     Vector3 StrokeEnd(Vector3 from, Vector2 dir)
     {
         Vector3 to = ClampRange(transform.position, Mouse, StrokeRange);
+        // 일필: 획 길이 ×1.4 (마우스 너머로 · 늘어난 사거리 안)
+        if (CartographerPaths.StrokeLenMul > 1f)
+            to = from + Vector3.ClampMagnitude((to - from) * CartographerPaths.StrokeLenMul, StrokeRange);
         if ((to - from).magnitude < 1f) to = from + (Vector3)(((Vector2)(to - from)).sqrMagnitude > 0.01f ? ((Vector2)(to - from)).normalized : dir);
         return to;
     }
@@ -160,6 +172,10 @@ public partial class CharacterKit
 
         float mul = 2.2f * formPower * SignatureSkills.CloseMul();
         if (form == SpecialAbilities.KitGlobe) mul *= 1.3f;
+        // 정밀 측량 공명 I: 표식 단계가 없어도 1단계처럼 · 공명 II: 직전 도형(6초 안)과 겹친 곳 2배 (보스 제외)
+        bool autoMark = CartographerPaths.AutoMark;
+        int markLv = Mathf.Max(card[5], autoMark ? 1 : 0);
+        List<Vector3> prev = CartographerPaths.Overlap && mapPrevShape != null && Time.time - mapPrevShapeAt <= 6f ? mapPrevShape : null;
         List<Collider2D> inside = new List<Collider2D>();
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(center, reach + 0.5f, mapHits)))
         {
@@ -174,10 +190,17 @@ public partial class CharacterKit
             if (form == SpecialAbilities.KitGlobe && c.CompareTag("enermy"))
                 c.transform.position = Vector3.Lerp(c.transform.position, center, 0.6f);
             float m = mul;
-            if (card[5] > 0 && surveyMarks.TryGetValue(c.gameObject, out float until) && until > Time.time) m *= 1f + 0.3f * card[5];
+            if (markLv > 0 && surveyMarks.TryGetValue(c.gameObject, out float until) && until > Time.time) m *= 1f + 0.3f * markLv;
+            bool twice = prev != null && !Paths.IsBoss(c.gameObject) && InShape(c, prev);
+            if (twice) m *= 2f;
             Specials.Damage(c.gameObject, dmg * m, (c.transform.position - center).normalized, 1.5f);
-            Fx.Spawn("fx_sparkle", c.transform.position, 1.2f, InkGold, 24f);
+            if (c != null) Fx.Spawn("fx_sparkle", c.transform.position, twice ? 1.7f : 1.2f, twice ? Color.white : InkGold, 24f);
         }
+        if (autoMark)
+            foreach (Collider2D c in inside)
+                if (c != null) surveyMarks[c.gameObject] = Time.time + 5f;
+        mapPrevShape = poly;
+        mapPrevShapeAt = Time.time;
         // 그림: 닫힌 테두리를 금색으로 한 번 더 · 가운데 섬광
         for (int i = 0; i < poly.Count; i++)
             Fx.Beam(poly[i], poly[(i + 1) % poly.Count], 0.5f, InkGold, 0.6f, 16);
@@ -203,14 +226,17 @@ public partial class CharacterKit
         if (inside.Count >= 4) Hostile.Shake(0.1f);
         SpecialAbilities.SharedFx?.FloatText(center + Vector3.up, Loc.T("측량 완료!"), InkGold, 4f, 0.4f);
         SignatureSkills.Closed(poly, center, reach, inside);
+        CartographerPaths.ShapeClosed();        // 접지술: 도형마다 게이지
     }
 
-    static List<Vector3> Triangle(Vector3 c, float r, float a0)
+    // 정다각형 (기본 삼각형 · 정밀 측량 사각형 · 극의 오각형)
+    static List<Vector3> MapPolygon(Vector3 c, float r, float a0, int sides)
     {
-        List<Vector3> poly = new List<Vector3>(3);
-        for (int i = 0; i < 3; i++)
+        sides = Mathf.Max(3, sides);
+        List<Vector3> poly = new List<Vector3>(sides);
+        for (int i = 0; i < sides; i++)
         {
-            float a = (a0 + 120f * i) * Mathf.Deg2Rad;
+            float a = (a0 + 360f / sides * i) * Mathf.Deg2Rad;
             poly.Add(c + new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * r);
         }
         return poly;
@@ -218,6 +244,25 @@ public partial class CharacterKit
 
     // 적 몸 반지름 (작은 쪽 기준, 판정이 너무 후하지 않게)
     static float MapBody(Collider2D c) => Mathf.Min(c.bounds.extents.x, c.bounds.extents.y) * 0.7f;
+
+    // ---------------- 갈래 효과(CartographerPaths)가 쓰는 공개 래퍼
+    public static float MapBodyOf(Collider2D c) => c != null ? MapBody(c) : 0f;
+    public static bool MapInShape(Collider2D c, List<Vector3> poly) => c != null && poly != null && poly.Count >= 3 && InShape(c, poly);
+    public static bool MapInPolygon(Vector3 p, List<Vector3> poly) => poly != null && poly.Count >= 3 && InPolygon(p, poly);
+
+    // 일필 극의: 0.15초 뒤 획이 끝에서 처음으로 되돌아오며 한 번 더 벰 (쓰러진 뒤에는 안 함)
+    public void PathReturnStroke(Vector3 from, Vector3 to, float width, float dmg)
+    {
+        if (!isActiveAndEnabled) return;
+        StartCoroutine(MapReturnStroke(from, to, width, dmg));
+    }
+
+    IEnumerator MapReturnStroke(Vector3 from, Vector3 to, float width, float dmg)
+    {
+        yield return new WaitForSeconds(0.15f);
+        if (player == null || player.IsDying) yield break;
+        Stroke(to, from, width, dmg);
+    }
 
     // 도형 안: 몸 가운데가 안쪽이거나 몸이 테두리에 걸침
     static bool InShape(Collider2D c, List<Vector3> poly)
@@ -270,10 +315,12 @@ public partial class CharacterKit
             mapCloseRing = Hostile.NewLine("MapClose", InkGold, 0.14f, 57);
             mapCloseRing.loop = true;
         }
-        mapCloseRing.enabled = IsCartographer && ShapeNext && !PlayerController.Cinematic && Time.timeScale > 0f;
+        // 대형 도면(교차): 여백 획이 준비되면 다음 획에 닫힐 도형을 미리 보여 줌
+        bool next = ShapeNext || (CartographerPaths.BlueprintOn && SignatureSkills.MarginReady);
+        mapCloseRing.enabled = IsCartographer && next && !PlayerController.Cinematic && Time.timeScale > 0f;
         if (!mapCloseRing.enabled) return;
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 10f);
-        List<Vector3> tri = Triangle(StrokeEnd(player.MuzzlePosition, body.flipX ? Vector2.left : Vector2.right), ShapeRadius, shapeAngle);
+        List<Vector3> tri = MapPolygon(StrokeEnd(player.MuzzlePosition, body.flipX ? Vector2.left : Vector2.right), ShapeRadius, shapeAngle, CartographerPaths.ShapeSides);
         mapCloseRing.positionCount = tri.Count;
         for (int i = 0; i < tri.Count; i++) mapCloseRing.SetPosition(i, tri[i]);
         mapCloseRing.startColor = mapCloseRing.endColor = new Color(InkGold.r, InkGold.g, InkGold.b, pulse);
