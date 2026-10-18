@@ -882,10 +882,10 @@ public static class CodexUI
     {
         // 1.1~ 종 수는 실제 진화 정의에서 셈 (예전 「37」 고정은 캐릭터 5명 시절 숫자) · 최대 레벨은 LevelShop.LevelCap 과 같은 80
         Card(Resources.Load<Sprite>("Icons/ability_205"), Color.white, Loc.T("스킬 진화"), Loc.T("모든 캐릭터") + " · " + SkillEvoCount() + Loc.T("종"),
-             Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50 (무한 모드 80) 이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
+             Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
         // 끝없는 성장 (1.0.4~, LevelShop.Growth)
         Card(Resources.Load<Sprite>("Icons/ability_85"), Color.white, Loc.T("성장 카드"), Loc.T("모든 캐릭터") + " · 4" + Loc.T("종"),
-             Loc.T("최대 레벨(50 · 무한 모드 80) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%"));
+             Loc.T("최대 레벨(50) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%"));
         // 초월 카드 (1.1~, LevelShop.Transcend)
         Card(Resources.Load<Sprite>("Icons/choice_tr_echo"), Color.white, Loc.T("초월 카드"), Loc.T("모든 캐릭터") + " · " + LevelShop.TranscendCount + Loc.T("종"),
              Loc.T("transcend.codex.rule") + " " + Loc.T("transcend.codex.list"));       // 1.2~ 초월 간격 이야기 모드 2번 · 무한 모드 3번

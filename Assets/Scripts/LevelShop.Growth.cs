@@ -135,5 +135,5 @@ public partial class LevelShop
     }
 
     // 성장 카드를 처음 볼 때 한 번 안내
-    void GrowthHint() => Hints.Show("growth", "최대 레벨(50 · 무한 모드 80) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.");
+    void GrowthHint() => Hints.Show("growth", "최대 레벨(50) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.");
 }

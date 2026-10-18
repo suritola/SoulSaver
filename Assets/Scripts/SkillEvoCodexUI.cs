@@ -64,7 +64,7 @@ public static class SkillEvoCodexUI
             tabs.Add(b);
         }
         TMP_Text hint = UIKit.Text(win, "", 21f, Dim, new Vector2(0f, 282f), new Vector2(1500f, 56f));
-        hint.text = Loc.T("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50 (무한 모드 80) 까지라 모두 올릴 수는 없습니다.");
+        hint.text = Loc.T("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지라 모두 올릴 수는 없습니다.");
         hint.enableWordWrapping = true;
 
         BuildScroll(win);
