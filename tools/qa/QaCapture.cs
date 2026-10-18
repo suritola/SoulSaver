@@ -519,6 +519,7 @@ public class QaCapture
         yield return Safe("save_resume", SaveResume, 420);
         yield return Safe("user_resume", UserResume, 300);
         yield return Safe("ddol_canvas", DdolCanvas, 240);
+        yield return Safe("loading", LoadingScreen, 120);
         yield return Safe("system2", System2, 240);
         yield return Safe("soak", Soak, 600);
         yield return Safe("ui_menu", UiMenu, 900);
@@ -1038,6 +1039,31 @@ public class QaCapture
         Log(tag + " 글자 " + tmps.Length + " · 캔버스 " + UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None).Length + " · 장면 " + SceneManager.GetActiveScene().name);
         foreach (var grp in tmps.Where(t => t.isActiveAndEnabled).GroupBy(t => t.gameObject.name + " @" + (t.transform.root != null ? t.transform.root.name : "-") + (t.gameObject.scene.name == "DontDestroyOnLoad" ? " [DDOL]" : "")).OrderByDescending(g => g.Count()).Take(12))
             Log("  " + grp.Key + " × " + grp.Count() + " (예: " + grp.First().text.Replace("\n", " ").Substring(0, Math.Min(50, grp.First().text.Length)) + ")");
+    }
+
+    // 1.3.3 로딩 화면 (배치 모드는 SceneFlow 가 바로 넘어가므로 막 · 로딩을 직접 띄워 찍음)
+    static IEnumerator LoadingScreen()
+    {
+        In("Auto", false);
+        SceneManager.LoadScene("MainMenu");
+        yield return Frames(20);
+        Type sf = T("SceneFlow");
+        const System.Reflection.BindingFlags BF = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static;
+        object inst = sf.GetMethod("Ensure", BF).Invoke(null, null);
+        ((Canvas)sf.GetField("canvas", BF).GetValue(inst)).enabled = true;
+        ((UnityEngine.UI.Image)sf.GetField("curtain", BF).GetValue(inst)).color = Color.black;
+        sf.GetMethod("ShowLoading", BF).Invoke(inst, new object[] { "GameScene" });
+        foreach (float target in new[] { 0.35f, 0.8f })
+        {
+            sf.GetField("targetProgress", BF).SetValue(inst, target);
+            float end = Time.realtimeSinceStartup + 1.2f;
+            while (Time.realtimeSinceStartup < end) { sf.GetMethod("Dots", BF).Invoke(inst, null); sf.GetMethod("Tick", BF).Invoke(inst, null); yield return null; }
+            yield return Shot("loading_" + Mathf.RoundToInt(target * 100), 1920, 1080, false);
+        }
+        ((RectTransform)sf.GetField("loadingBox", BF).GetValue(inst)).gameObject.SetActive(false);
+        ((UnityEngine.UI.Image)sf.GetField("curtain", BF).GetValue(inst)).color = Color.clear;
+        ((Canvas)sf.GetField("canvas", BF).GetValue(inst)).enabled = false;
+        In("Auto", true);
     }
 
     // 1.2.9 제보: FPS 표시(장면이 바뀌어도 남는 정렬 32000 캔버스)를 켜면 결과 화면 UI 가 거기 붙어 메인 메뉴까지 남음

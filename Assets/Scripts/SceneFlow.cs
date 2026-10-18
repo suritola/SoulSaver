@@ -84,19 +84,111 @@ public class SceneFlow : MonoBehaviour
         loadingBox = UIKit.Rect("Loading", transform, Vector2.zero, new Vector2(1920f, 1080f));
         loadingBox.anchorMin = Vector2.zero; loadingBox.anchorMax = Vector2.one;
         loadingBox.offsetMin = loadingBox.offsetMax = Vector2.zero;
-        title = UIKit.Text(loadingBox, "", 36f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 30f), new Vector2(600f, 54f));
+        // 1.3.3~ 검은 화면 대신: 짙은 보라 배경 · 떠오르는 영혼 불빛 · 로딩바 · 바 끝을 달리는 영웅
+        RectTransform bgr = UIKit.Rect("Backdrop", loadingBox, Vector2.zero, Vector2.zero);
+        bgr.anchorMin = Vector2.zero; bgr.anchorMax = Vector2.one; bgr.offsetMin = bgr.offsetMax = Vector2.zero;
+        Image bg = bgr.gameObject.AddComponent<Image>();
+        bg.color = new Color(0.07f, 0.045f, 0.1f, 1f);
+        bg.raycastTarget = false;
+        Sprite glow = SoftDot();        // 메인 메뉴에서 처음 만들어질 때는 SpecialAbilities.GlowSprite 가 아직 없어서 직접 만듦
+        {
+            RectTransform hr = UIKit.Rect("Halo", loadingBox, new Vector2(0f, -40f), new Vector2(1400f, 700f));
+            Image halo = hr.gameObject.AddComponent<Image>();
+            halo.sprite = glow;
+            halo.color = new Color(0.45f, 0.3f, 0.75f, 0.22f);
+            halo.raycastTarget = false;
+            for (int i = 0; i < motes.Length; i++)
+            {
+                RectTransform mr = UIKit.Rect("Mote", loadingBox, Vector2.zero, new Vector2(18f, 18f));
+                Image mi = mr.gameObject.AddComponent<Image>();
+                mi.sprite = glow;
+                mi.color = new Color(0.55f, 0.9f, 1f, 0.5f);
+                mi.raycastTarget = false;
+                motes[i] = mr;
+            }
+        }
+        title = UIKit.Text(loadingBox, "", 36f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 290f), new Vector2(600f, 54f));      // 바 위를 달리는 영웅(높이 240)보다 위
         UIKit.Forget(title);
-        tip = UIKit.Text(loadingBox, "", 24f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, -30f), new Vector2(1200f, 70f));
+        // 로딩바: 금빛 테두리 · 어두운 칸 · 금 → 주황 채움 (왼쪽부터)
+        RectTransform frame = UIKit.Rect("BarFrame", loadingBox, new Vector2(0f, 0f), new Vector2(BarW + 8f, 30f));
+        Image fi = frame.gameObject.AddComponent<Image>();
+        fi.color = new Color(0.96f, 0.83f, 0.47f, 1f);
+        fi.raycastTarget = false;
+        RectTransform well = UIKit.Rect("BarWell", frame, Vector2.zero, new Vector2(BarW, 22f));
+        Image wi = well.gameObject.AddComponent<Image>();
+        wi.color = new Color(0.1f, 0.06f, 0.13f, 1f);
+        wi.raycastTarget = false;
+        barFill = UIKit.Rect("BarFill", well, Vector2.zero, new Vector2(0f, 22f));
+        barFill.anchorMin = barFill.anchorMax = barFill.pivot = new Vector2(0f, 0.5f);
+        barFill.anchoredPosition = Vector2.zero;
+        Image bi = barFill.gameObject.AddComponent<Image>();
+        bi.color = new Color(1f, 0.72f, 0.3f, 1f);
+        bi.raycastTarget = false;
+        RectTransform shine = UIKit.Rect("BarShine", barFill, Vector2.zero, Vector2.zero);
+        shine.anchorMin = new Vector2(0f, 0.55f); shine.anchorMax = Vector2.one; shine.offsetMin = shine.offsetMax = Vector2.zero;
+        Image si = shine.gameObject.AddComponent<Image>();
+        si.color = new Color(1f, 0.9f, 0.6f, 0.7f);
+        si.raycastTarget = false;
+        pct = UIKit.Text(loadingBox, "", 22f, new Color(0.92f, 0.88f, 0.8f), new Vector2(BarW * 0.5f + 50f, 0f), new Vector2(90f, 30f));
+        UIKit.Forget(pct);
+        tip = UIKit.Text(loadingBox, "", 24f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, -70f), new Vector2(1200f, 70f));
         tip.fontSizeMin = 16f;
         UIKit.Forget(tip);
-        RectTransform pr = UIKit.Rect("Portrait", loadingBox, Vector2.zero, new Vector2(120f, 120f));
-        pr.anchorMin = pr.anchorMax = pr.pivot = Vector2.zero;
-        pr.anchoredPosition = new Vector2(40f, 40f);
-        portrait = pr.gameObject.AddComponent<Image>();
+        // 바 위를 달리는 영웅 (발이 바 위끝에 닿게 · 바 채움 끝을 따라감)
+        runner = UIKit.Rect("Runner", loadingBox, Vector2.zero, new Vector2(RunnerSize, RunnerSize));
+        runner.pivot = new Vector2(0.5f, 0f);
+        portrait = runner.gameObject.AddComponent<Image>();
         portrait.preserveAspect = true;
         portrait.raycastTarget = false;
         loadingBox.gameObject.SetActive(false);
         canvas.enabled = false;
+    }
+
+    // 가운데가 밝고 가장자리로 사라지는 둥근 빛 (64×64, 한 번만)
+    static Sprite SoftDot()
+    {
+        const int N = 64;
+        Texture2D tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+        Color32[] px = new Color32[N * N];
+        for (int y = 0; y < N; y++)
+            for (int x = 0; x < N; x++)
+            {
+                float dx = (x + 0.5f) / N * 2f - 1f, dy = (y + 0.5f) / N * 2f - 1f;
+                float a = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
+                px[y * N + x] = new Color32(255, 255, 255, (byte)(a * a * 255f));
+            }
+        tex.SetPixels32(px);
+        tex.Apply(false, true);
+        return Sprite.Create(tex, new Rect(0f, 0f, N, N), Vector2.one * 0.5f, N);
+    }
+
+    const float BarW = 900f, RunnerSize = 240f;
+    RectTransform barFill, runner;
+    TMP_Text pct;
+    readonly RectTransform[] motes = new RectTransform[14];
+    Sprite[] runFrames;
+    float shownProgress, targetProgress;
+
+    // 진행률 (0 ~ 1): 바는 목표를 부드럽게 따라가고, 영웅은 바 끝에서 6프레임으로 걸음 · 영혼 불빛은 아래에서 위로 떠오름 (멈춘 시간과 상관없이 실제 시간)
+    void Tick()
+    {
+        float dt = Time.unscaledDeltaTime, now = Time.unscaledTime;
+        shownProgress = Mathf.MoveTowards(shownProgress, targetProgress, dt * 1.6f);
+        shownProgress = Mathf.Lerp(shownProgress, targetProgress, 1f - Mathf.Exp(-dt * 6f));
+        barFill.sizeDelta = new Vector2(BarW * shownProgress, barFill.sizeDelta.y);
+        pct.text = Mathf.RoundToInt(shownProgress * 100f) + "%";
+        float bob = Mathf.Abs(Mathf.Sin(now * 9f)) * 6f;
+        runner.anchoredPosition = new Vector2(-BarW * 0.5f + BarW * shownProgress, 15f + bob);
+        if (runFrames != null && runFrames.Length > 0) portrait.sprite = runFrames[Mathf.FloorToInt(now * 10f) % runFrames.Length];
+        for (int i = 0; i < motes.Length; i++)
+        {
+            if (motes[i] == null) continue;
+            float speed = 40f + (i * 37 % 50), x = -880f + (i * 131 % 1760);
+            float y = Mathf.Repeat(now * speed + i * 97f, 1200f) - 600f;
+            motes[i].anchoredPosition = new Vector2(x + Mathf.Sin(now * 0.8f + i) * 30f, y);
+            float s = 10f + (i % 4) * 6f;
+            motes[i].sizeDelta = new Vector2(s, s);
+        }
     }
 
     IEnumerator Run(string scene)
@@ -118,14 +210,18 @@ public class SceneFlow : MonoBehaviour
                 break;
             }
             op.allowSceneActivation = false;
-            float t0 = Time.unscaledTime;
-            bool shown = false;
+            // 1.3.3~ 막이 내려오면 바로 로딩 화면 (예전엔 0.4초 넘게 걸릴 때만 글자 · 짧으면 검은 막뿐이었음)
+            ShowLoading(scene);
             while (op.progress < 0.9f)
             {
-                if (!shown && Time.unscaledTime - t0 > 0.4f) { ShowLoading(scene); shown = true; }     // 0.4초 넘게 걸릴 때만 글자 (짧으면 검은 막만)
-                if (shown) Dots();
+                targetProgress = Mathf.Clamp01(op.progress / 0.9f) * 0.95f;
+                Dots();
+                Tick();
                 yield return null;
             }
+            // 다 불렀으면 바를 끝까지 채우고 넘어감 (최대 0.35초 · 이어서 부르는 씬이면 0 부터 다시)
+            targetProgress = 1f;
+            for (float w = 0f; w < 0.35f && shownProgress < 0.995f; w += Time.unscaledDeltaTime) { Dots(); Tick(); yield return null; }
             Time.timeScale = 1f;                             // 새 씬은 늘 1 로 시작 (호출처들이 각자 1 로 두던 것을 한곳에)
             activated = true;                                // 새 씬의 sceneLoaded · Awake · Start 가 부르는 Go 는 이어서 받음
             op.allowSceneActivation = true;
@@ -161,10 +257,26 @@ public class SceneFlow : MonoBehaviour
         Dots();
         string[] pool = TipPool();
         tip.text = pool.Length > 0 ? Loc.T(pool[Random.Range(0, pool.Length)]) : "";
-        bool game = scene == "GameScene";
-        Sprite s = game ? CharacterUI.Portrait(CharacterData.Selected) : null;
+        // 1.3.3~ 어느 씬이든 지금 영웅이 바 위를 달림 (스킨 시트 6프레임 · 없으면 초상 한 장)
+        Sprite s = CharacterUI.Portrait(CharacterData.Selected);
+        runFrames = RunFrames(s);
         portrait.sprite = s;
         portrait.enabled = s != null;
+        shownProgress = targetProgress = 0f;
+        Tick();
+    }
+
+    static Sprite[] RunFrames(Sprite first)
+    {
+        if (first == null) return null;
+        string n = first.name;
+        int cut = n.LastIndexOf('_');
+        if (cut <= 0) return new[] { first };
+        string sheet = n.Substring(0, cut);
+        Sprite[] all = Resources.LoadAll<Sprite>("Characters/" + sheet);
+        if (all == null || all.Length == 0) return new[] { first };
+        System.Array.Sort(all, (a, b) => string.CompareOrdinal(a.name, b.name));
+        return all;
     }
 
     // 「불러오는 중」 + 점 세 개가 0.4초마다 하나씩
