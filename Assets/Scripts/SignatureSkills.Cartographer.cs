@@ -34,7 +34,9 @@ public partial class SignatureSkills
 
     // ---------------- 상태
     float lastStroke = -99f;
-    bool marginReady => Time.time - lastStroke >= 3f;
+    bool marginReady => Time.time - lastStroke >= CartographerPaths.MarginWait;     // 3초 (일필 공명 I: 1.5초)
+    // 이번 획이 여백 획인가 (갈래 「대형 도면」 · 카드가 없어도 쉰 시간으로만 봄)
+    public static bool MarginReady => Instance != null && Instance.IsMap && Instance.marginReady;
     int legendStacks;
     float legendUntil;
     // 나침도 (느리게 · 보물): 자리 · 반지름 · 끝나는 때
@@ -126,6 +128,7 @@ public partial class SignatureSkills
 
     void OnFolded(Vector3 center, Vector3 a, Vector3 b, List<Collider2D> caught, float dmg)
     {
+        CartographerPaths.Folded(center, a, b);        // 2026-10-19~ 접지술 갈래: 남는 접힌 선 · 북극성
         // 북극성: 접힌 선 가운데에 별 (별자리: 셋)
         if (L("c.northstar") > 0)
         {
