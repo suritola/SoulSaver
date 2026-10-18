@@ -563,7 +563,7 @@ public class TranscendRules : MonoBehaviour
     {
         public Vector3 at;
         public float until;
-        public FxAnim fx;
+        public GameObject fx;      // 1.3.5~ 불 바닥 연출(FireGround)을 단 빈 오브젝트 (예전 주황 웅덩이 그림 fx_puddle)
     }
 
     readonly List<EmberPatch> embers = new List<EmberPatch>();
@@ -578,9 +578,13 @@ public class TranscendRules : MonoBehaviour
         if ((pos - lastEmber).sqrMagnitude >= EmberStep * EmberStep)
         {
             lastEmber = pos;
-            if (embers.Count >= EmberMax) { EmberPatch old = embers[0]; if (old.fx != null) Destroy(old.fx.gameObject); embers.RemoveAt(0); }
+            if (embers.Count >= EmberMax) { EmberPatch old = embers[0]; if (old.fx != null) Destroy(old.fx); embers.RemoveAt(0); }
             float life = EmberLife[lv - 1];
-            FxAnim fx = Fx.Play("fx_puddle", pos + Vector3.down * 0.3f, EmberRadius[lv - 1] * 1.8f, EmberOrange, 12f, 0f, 2, true, life);
+            // 1.3.5~ 고품질 불 바닥 (그을린 땅 · 빛나는 금 · 불꽃 혀) — 판정 반지름 그대로 · 불티는 끔 (최대 26개가 깔림)
+            GameObject fx = new GameObject("SoulfireStep");
+            fx.transform.position = pos + Vector3.down * 0.3f;
+            FireGround.Attach(fx, EmberRadius[lv - 1], life, 6, false);
+            Destroy(fx, life);
             embers.Add(new EmberPatch { at = pos, until = Time.time + life, fx = fx });
             if (Random.value < 0.35f) Fx.Spawn("fx_spark", pos, 0.9f, EmberOrange, 20f);
         }

@@ -13,13 +13,16 @@ public class FireGround : MonoBehaviour
     Sprite[] floorFrames, flameFrames;
     float emberAt;
 
-    public static FireGround Attach(GameObject host, float radius, float life, int sortingBase = 6)
+    // embers: 불티를 올릴지 (영혼불 발자국처럼 한꺼번에 수십 개 깔리는 곳은 끔 — 불티 풀이 넘치지 않게)
+    public static FireGround Attach(GameObject host, float radius, float life, int sortingBase = 6, bool embers = true)
     {
         if (host == null) return null;
         FireGround g = host.AddComponent<FireGround>();
+        g.withEmbers = embers;
         g.Build(radius, life, sortingBase);
         return g;
     }
+    bool withEmbers = true;
 
     void Build(float r, float l, int order)
     {
@@ -109,7 +112,7 @@ public class FireGround : MonoBehaviour
                 f.color = new Color(1f, 1f, 1f, a);
             }
         // 불티: 0.12초마다 하나 (FlameParticle 풀 · 끝날 즈음엔 멈춤)
-        if (age < life - 0.4f && now >= emberAt && SpecialAbilities.GlowSprite != null)
+        if (withEmbers && age < life - 0.4f && now >= emberAt && SpecialAbilities.GlowSprite != null)
         {
             emberAt = now + 0.12f;
             Vector3 at = transform.position + (Vector3)(Random.insideUnitCircle * radius * 0.8f);
