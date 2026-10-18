@@ -1028,8 +1028,9 @@ public static class CodexUI
         if (fresh) Badge(card, new Vector2(-40f, -18f));        // 1.2~ 새로 얻었거나 이번 업데이트 항목
     }
 
+    // 1.3.3~ 적 체력 공통 ×0.6 (GameMode.GlobalEnemyHpMul) 을 도감 숫자에도
     static string Stats(float hp, float speed, float damage) =>
-        Loc.T("체력") + " " + Mathf.RoundToInt(hp * GameMode.GlobalEnemyHpMul).ToString("0") + "  ·  "      // 1.3.3~ 적 체력 공통 ×0.6 을 도감 숫자에도 + Loc.T("속도") + " " + speed.ToString("0.#") + "  ·  " + Loc.T("접촉 피해") + " " + damage.ToString("0");
+        Loc.T("체력") + " " + Mathf.RoundToInt(hp * GameMode.GlobalEnemyHpMul).ToString("0") + "  ·  " + Loc.T("속도") + " " + speed.ToString("0.#") + "  ·  " + Loc.T("접촉 피해") + " " + damage.ToString("0");
 
     static string Tag(this Color c, string s) => "<color=#" + ColorUtility.ToHtmlStringRGB(c) + ">" + s + "</color>";
 

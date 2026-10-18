@@ -71,7 +71,7 @@ public static class CharacterData
             description = "깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 세 획마다 저절로 그려지는 도형으로 안쪽을 통째로 짓이깁니다.",
             weapon = "깃펜", attack = "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
             skill = "지도 접기", skillDesc = "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
-            hp = 0.95f, damage = 1.1f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,
+            hp = 0.95f, damage = 1.0f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,     // 1.3.3: 피해 1.1 → 1.0 (사용자 「지도제작자 조금만 너프」)
             pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f) },
         new CharacterDef {
             name = "시계공", title = "멈춘 시간의 장인", body = "clockmaker", held = "gear",
