@@ -163,7 +163,7 @@ public partial class CharacterKit
             Play("freeze", 0.5f, 1f);
             RunCounters.Both("freeze");             // 1.2~ 영혼 계약 · 보드
             SignatureSkills.Frozen(g);
-            GhostPaths.Froze(g, Time.time + FreezeTime);    // 갈래 혹한 공명 II: 풀릴 때 냉기 파동
+            Paths.Safe(() => GhostPaths.Froze(g, Time.time + FreezeTime));    // 갈래 혹한 공명 II: 풀릴 때 냉기 파동 (예외가 나도 빙결 흐름은 끊기지 않게)
         }
         chill[g] = have;
     }
