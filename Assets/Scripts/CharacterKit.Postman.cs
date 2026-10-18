@@ -180,7 +180,7 @@ public partial class CharacterKit
         if (augment == AugThickEnvelope) m *= 1.25f;
         m *= PostPathMul(dist, traveled, route, out bool crit);
         bool wasAlive = !(g.TryGetComponent(out EnermyController e) && e.IsDead);
-        if (heavy) PostParcelBlast(g, at, v, dmg * m, route.big, weak);       // 무거운 소포: 받는 이 + 둘레 폭발
+        if (heavy) PostParcelBlast(g, at, v, dmg * m, route.big, weak, route.hop);       // 무거운 소포: 받는 이 + 둘레 폭발 (순회로 이어 간 소포는 감쇠)
         else
         {
             if (crit) DamagePopup.NextCrit = true;      // 장거리 배송 공명 I: 먼 편지 치명타 (금색 숫자)
@@ -363,10 +363,13 @@ public partial class CharacterKit
     }
 
     // 무거운 소포가 받는 이에게 닿음: 받는 이(빈틈 지정이면 빈틈 배율) + 둘레 적 모두 같은 피해 (평타 피해라 명중 효과가 그대로 붙음)
-    void PostParcelBlast(GameObject target, Vector3 at, Vector2 v, float dmg, bool big, bool weak)
+    //   hop: 순회 배달로 몇 번째 이어 간 소포인지 (0 = 처음) — 이어 간 소포는 폭발 · 우표 조각이 ×0.5^hop 이고 둘레 폭발 · 조각이 보스를 치지 않음
+    void PostParcelBlast(GameObject target, Vector3 at, Vector2 v, float dmg, bool big, bool weak, int hop = 0)
     {
         float r = PostParcelRadius(big);
         float d = dmg * PostmanPaths.ParcelDamage * (1f + PostmanPaths.ParcelCardDamage * card[1]) * Paths.Power(PostmanPaths.Parcel) * (big ? PostmanPaths.ParcelBigDamage : 1f);
+        bool relayed = hop > 0;
+        if (relayed) d *= Mathf.Pow(PostmanPaths.ParcelRouteFalloff, Mathf.Min(hop, 8));
         float knock = big ? 2.5f : 1.5f;
         if (target != null)
         {
@@ -377,16 +380,18 @@ public partial class CharacterKit
             foreach (Collider2D c in hits)
             {
                 if (c == null || c.gameObject == target || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
+                if (relayed && Paths.IsBoss(c.gameObject)) continue;       // 이어 간 소포의 둘레 폭발은 보스 · 중간 보스 제외
                 Specials.Damage(c.gameObject, d, (c.transform.position - at).normalized, knock);
             }
         Fx.Spawn("fx_explosion", at, r * 2f, ParcelTint, 20f);
         if (big) { Fx.Spawn("fx_sparkle", at, r * 1.6f, new Color(1f, 0.85f, 0.55f), 22f); Hostile.Shake(0.12f); Play("boom", 0.5f, 1.05f); }
         else Play("thump", 0.45f, 1.1f);
         // 공명 I: 터진 자리 둘레에서 우표 조각 둘 (받는 이는 빼고 · 갈래 효과 피해라 다시 명중 효과를 부르지 않음)
-        if (Paths.Res(PostmanPaths.Parcel) >= 1) StartCoroutine(PostStampShards(at, r, d * PostmanPaths.ParcelShard, target));
+        if (Paths.Res(PostmanPaths.Parcel) >= 1) StartCoroutine(PostStampShards(at, r, d * PostmanPaths.ParcelShard, target, relayed));
     }
 
-    IEnumerator PostStampShards(Vector3 at, float r, float dmg, GameObject skip)
+    //   skipBoss: 순회로 이어 간 소포의 조각 — 보스 · 중간 보스는 치지 않음
+    IEnumerator PostStampShards(Vector3 at, float r, float dmg, GameObject skip, bool skipBoss = false)
     {
         yield return new WaitForSeconds(0.2f);
         if (player == null || player.IsDying) yield break;
@@ -397,7 +402,7 @@ public partial class CharacterKit
             Vector3 p = at + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Mathf.Max(1.4f, r * 0.85f);
             Paths.Circle(p, 1.1f, 0f, 0f, null, c =>
             {
-                if (c.gameObject != skip) Paths.Deal(c.gameObject, dmg, (c.transform.position - p).normalized, 0.8f, PostmanPaths.ShardSource);
+                if (c.gameObject != skip && !(skipBoss && Paths.IsBoss(c.gameObject))) Paths.Deal(c.gameObject, dmg, (c.transform.position - p).normalized, 0.8f, PostmanPaths.ShardSource);
             });
             Fx.Spawn("fx_explosion", p, 2.2f, new Color(1f, 0.6f, 0.5f), 22f);
         }

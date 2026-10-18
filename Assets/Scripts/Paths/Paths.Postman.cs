@@ -30,6 +30,10 @@ public sealed class PostmanPaths : HeroPaths
     public const float ParcelShard = 0.3f;                           // 공명 I 우표 조각 (소포 피해의 30%)
     public const float ParcelBigDamage = 1.25f, ParcelBigRadius = 1.4f;  // 공명 II 대형 소포
     public const float ParcelMasteryRadius = 1.5f, ParcelRadiusCap = 6f;
+    // 순회 배달 + 무거운 소포 (교차 표에 없는 조합 · 2026-10-19 검토): 이어 간 소포(hop>0)의 폭발 · 우표 조각은 이어 갈수록 절반 (×0.5^hop)
+    //   그리고 둘레 폭발 · 우표 조각이 보스 · 중간 보스를 치지 않음 (받는 이가 보스면 그 한 대는 그대로)
+    //   → 예전 단일 소포의 약 3.2배(극의 4.5배) → 약 1.7배 · 보스 화력은 단일 소포와 같음 (±8% 원칙)
+    public const float ParcelRouteFalloff = 0.5f;
     // 속달
     public const float ExpressCharge = 2f, ExpressRefund = 0.25f, ExpressLetterCost = 0.75f;
     public const float ExpressMarkMul = 1.15f, ExpressBlastGauge = 0.1f, ExpressEcho = 0.6f, ExpressEchoDelay = 0.5f;
