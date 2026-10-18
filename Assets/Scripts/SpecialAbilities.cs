@@ -419,6 +419,35 @@ public partial class SpecialAbilities : MonoBehaviour
         _ => Loc.T("일제 사격"),
     };
 
+    // 1.3.3~ 뇌운 (사슬 번개 필살기): 일제 사격과 따로 도는 번개 폭풍 — 플레이어는 그동안 평타를 쏠 수 있음
+    //   이 컴포넌트의 코루틴이라 플레이어 · 씬이 사라지면 같이 멈춤 · 끝이 정해진 반복 (storm 초)
+    IEnumerator ThunderCloud(List<EnermyController> alive, float dmg, Color c, float storm)
+    {
+        FxAnim cloud = Fx.Play("fx_cloud", player.transform.position + Vector3.up * 6f, 12f, new Color(0.35f, 0.4f, 0.55f, 0.8f), 3f, 0f, 25, true, storm + 0.1f);
+        if (cloud != null) cloud.follow = player.transform;
+        for (float t = 0f; t < storm; t += 0.15f)
+        {
+            if (player == null) yield break;
+            alive.RemoveAll(e => !Alive(e));
+            Transform target = alive.Count > 0 ? alive[Random.Range(0, alive.Count)].transform
+                                               : Specials.NearestEnemy(player.transform.position + (Vector3)(Random.insideUnitCircle * 6f), 14f);
+            if (target != null)
+            {
+                Vector3 at = target.position;
+                Fx.Bolt(at + new Vector3(Random.Range(-2f, 2f), 14f), at, 1.4f, c, 0.2f);
+                Fx.Spawn("fx_shock", at, 3f, c, 24f);
+                Specials.Damage(target.gameObject, dmg * 0.5f, Vector3.zero, 0f);
+                Collider2D col = target.GetComponent<Collider2D>();
+                if (col != null) ChainLightning(at, col, dmg * 0.25f, 1);
+                fx.Play("thunder", 0.7f, Random.Range(0.9f, 1.2f));
+                fx.Play("zap", 0.5f, Random.Range(0.8f, 1.1f));
+                Fx.Spawn("fx_explosion", at, 2.5f, new Color(0.7f, 0.9f, 1f), 22f);
+                fx.Shake(0.25f, 0.08f);
+            }
+            yield return new WaitForSeconds(0.15f);
+        }
+    }
+
     public IEnumerator WeaponVolley(List<EnermyController> targets, float baseDamage, float blood, int ultId = -99)
     {
         int id = ultId != -99 ? ultId : UltId;            // 진화한 무기의 필살기 (권총을 들고 있어도) · 거너 1차 · 2차를 따로 부를 때는 ultId
@@ -579,33 +608,10 @@ public partial class SpecialAbilities : MonoBehaviour
                 break;
 
             case ChainId:
-                PlayerMotion.Of(player).Cast(2.5f);
                 // 뇌운: 2.5초 동안 하늘에서 번개가 조준한 적들에게 연달아 떨어짐
-                {
-                    float storm = 2.5f + 0.8f * UltTrait(id);
-                    FxAnim cloud = Fx.Play("fx_cloud", player.transform.position + Vector3.up * 6f, 12f, new Color(0.35f, 0.4f, 0.55f, 0.8f), 3f, 0f, 25, true, storm + 0.1f);
-                    if (cloud != null) cloud.follow = player.transform;
-                    for (float t = 0f; t < storm; t += 0.15f)
-                    {
-                        alive.RemoveAll(e => !Alive(e));
-                        Transform target = alive.Count > 0 ? alive[Random.Range(0, alive.Count)].transform
-                                                           : Specials.NearestEnemy(player.transform.position + (Vector3)(Random.insideUnitCircle * 6f), 14f);
-                        if (target != null)
-                        {
-                            Vector3 at = target.position;
-                            Fx.Bolt(at + new Vector3(Random.Range(-2f, 2f), 14f), at, 1.4f, c, 0.2f);
-                            Fx.Spawn("fx_shock", at, 3f, c, 24f);
-                            Specials.Damage(target.gameObject, dmg * 0.5f, Vector3.zero, 0f);
-                            Collider2D col = target.GetComponent<Collider2D>();
-                            if (col != null) ChainLightning(at, col, dmg * 0.25f, 1);
-                            fx.Play("thunder", 0.7f, Random.Range(0.9f, 1.2f));
-                            fx.Play("zap", 0.5f, Random.Range(0.8f, 1.1f));
-                            Fx.Spawn("fx_explosion", at, 2.5f, new Color(0.7f, 0.9f, 1f), 22f);
-                            fx.Shake(0.25f, 0.08f);
-                        }
-                        yield return new WaitForSeconds(0.15f);
-                    }
-                }
+                // 1.3.3~ 번개는 하늘에서 저절로 떨어지므로 따로 돌리고 일제 사격은 바로 끝냄 → 뇌운 동안에도 총을 쏠 수 있음 (예전엔 2.5초 넘게 평타가 막혔음)
+                PlayerMotion.Of(player).Cast(0.35f);
+                StartCoroutine(ThunderCloud(alive, dmg, c, 2.5f + 0.8f * UltTrait(id)));
                 break;
 
             case ScytheId:
