@@ -484,12 +484,11 @@ public static class MenuExtras
         }
         float rowY = Top - Step * column.Count;
         float w = lr.sizeDelta.x, half = (w - 16f) * 0.5f;
+        // 1.3.3~ 「게임 종료」 버튼을 없앰 (사용자 지시) — 「다시 시작」이 맨 아래 줄을 다 씀 (창을 닫아 끄면 무한 모드는 EndlessQuit 이 순위표에 올림)
         GameObject restart = UIKit.CloneButton(lowest.gameObject, "RestartButton", "다시 시작", esc.onPressRestart);
-        GameObject quit = UIKit.CloneButton(lowest.gameObject, "QuitButton", "게임 종료", esc.onPressQuit);
-        RectTransform rr = (RectTransform)restart.transform, qr = (RectTransform)quit.transform;
-        rr.sizeDelta = qr.sizeDelta = new Vector2(half, H);
-        rr.anchoredPosition = new Vector2(-(half + 16f) * 0.5f, rowY);
-        qr.anchoredPosition = new Vector2((half + 16f) * 0.5f, rowY);
+        RectTransform rr = (RectTransform)restart.transform;
+        rr.sizeDelta = new Vector2(w, H);
+        rr.anchoredPosition = new Vector2(0f, rowY);
         Transform hint = esc.escMenu.transform.Find("ResumeHint");
         if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, rowY - H * 0.5f - 34f);
 
