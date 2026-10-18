@@ -369,6 +369,7 @@ public partial class CharacterKit : MonoBehaviour
 
         Vector3 origin = transform.position;
         float sig = SignatureSkills.BeforeSwing(origin, dir);      // 영혼 흡수 · 반격 검기
+        SwordPathPre(dir, ref reach, ref half, ref sig);           // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman)
         int hits = 0;
         using (var ovl = PhysHits.Circle(origin, reach)) foreach (Collider2D c in ovl)
         {
@@ -386,6 +387,7 @@ public partial class CharacterKit : MonoBehaviour
         SwingCards(origin, dir, reach, half, hits);
         SwingFormAfter(origin, reach);
         SignatureSkills.AfterSwing(origin, dir, reach, hits);
+        SwordPathPost(origin, dir, reach, hits);                   // 2026-10-19~ 검사 갈래 (CharacterKit.Swordsman)
 
         float rot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         // 1.1.2: 굵은 칼날 그림(흰 날 · 하늘색 테 · 어두운 외곽선, make_attacks.py) — 바깥 크기 = 판정 반지름 그대로
@@ -1093,7 +1095,7 @@ public partial class CharacterKit : MonoBehaviour
         {
             if (Id != CharacterId.Swordsman) return 1f;
             float mul = 1f;
-            if (Time.time < swingGuardUntil) mul *= 0.5f;
+            if (Time.time < swingGuardUntil && !SwordPathNoGuard) mul *= 0.5f;     // 검기 갈래는 근접 특성이 없음
             if (Charging && card[5] > 0) mul *= 1f - (0.15f + 0.15f * card[5]);
             return mul;
         }
@@ -1152,7 +1154,7 @@ public partial class CharacterKit : MonoBehaviour
     // 검사: 검기 · 흡혈 베기 · 쳐내기 (평타를 휘두를 때마다)
     void SwingCards(Vector3 origin, Vector2 dir, float reach, float half, int hits)
     {
-        if (card[0] > 0)
+        if (card[0] > 0 && !SwordPathWave)         // 검기 갈래: 갈래 검기가 대신 날아감 (CharacterKit.Swordsman)
         {
             // 검기: 휘두른 방향으로 적을 꿰뚫는 칼바람이 날아감 (1.1.2~ 판정 세로 1.7 → 3.4~4.4 로 커져 피해 40 · 60 · 80% → 30 · 45 · 60%)
             Projectile(origin + (Vector3)(dir * 1f), dir, Damage * (0.15f + 0.15f * card[0]), 9999, 22f, 14f, "fx_swordwave", 3.4f, new Color(0.7f, 0.9f, 1f, 0.9f), false);

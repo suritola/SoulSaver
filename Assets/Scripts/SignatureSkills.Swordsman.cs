@@ -30,6 +30,38 @@ public partial class SignatureSkills
     // 광검무: 검무가 최대일 때 모든 베기가 강한 일격
     public static bool ForceCombo => Instance != null && Instance.E("se.dance") && Instance.danceStacks >= 5 && Time.time < Instance.danceUntil;
 
+    // ---------------- 2026-10-19~ 검사 갈래 (Paths/Paths.Swordsman.cs) 가 묻고 부르는 것
+    // 검무 최대 중첩 (검무 공명 II)
+    public static bool DanceFull => Instance != null && Instance.who == CharacterId.Swordsman && Instance.L("s.dance") > 0 && Instance.danceStacks >= 5 && Time.time < Instance.danceUntil;
+    // 혈갑 보호막이 가득 (피의 맹세 공명 II · 보호막 카드가 없으면 늘 false)
+    public static bool BloodShieldFull => Instance != null && Instance.who == CharacterId.Swordsman && Instance.L("s.bloodguard") > 0 && Instance.player != null && Instance.shield >= Instance.ShieldCap * 0.98f;
+    // 받아치기 막기 성공: 역습(맞은 뒤 1.5초 피해 증가)을 켜고, 완벽한 반격 진화면 반격 검기도 (맞은 것처럼 · 피해는 없음)
+    public static void PathParried()
+    {
+        if (Instance == null || Instance.who != CharacterId.Swordsman) return;
+        Instance.lastHurt = Time.time;
+        if (Instance.E("se.counter")) Instance.counterReady = true;
+    }
+    // 검기 공명 I: 검기로 같은 적을 세 번 맞히면 균열이 바로 터짐 (균열 카드가 없으면 1단계 세기) · power = 갈래 효과 배율
+    public static void CrackNow(GameObject g, float power)
+    {
+        if (Instance == null || Instance.who != CharacterId.Swordsman || g == null || !Instance.Alive) return;
+        Instance.CrackBurst(g, Mathf.Max(1, Instance.L("s.crack")), power);
+    }
+
+    void CrackBurst(GameObject g, int cr, float power)
+    {
+        float dmg = Atk * V(cr, 0.8f, 0.4f) * P("s.crack") * power;
+        Vector3 p = g.transform.position;
+        using var tier = EvoFx("s.crack");
+        Deal(g, dmg, Vector3.zero, 0f);
+        if (E("se.giant")) Circle(p, 2.6f, dmg * 0.6f, 0.5f);
+        Fx.Spawn("fx_fissure", p, 2.4f * Fs("s.crack"), Color.white, 14f, Random.Range(0f, 360f), 14);
+        Fx.Spawn("fx_shock", p, 3f * Fs("s.crack"), new Color(0.7f, 0.85f, 1f, 0.9f), 24f);
+        Flair("s.crack", p, 2.6f, new Color(0.7f, 0.85f, 1f));
+        Hostile.Play("crack", 0.45f, 1.3f);
+    }
+
     float SwordBefore(Vector3 origin, Vector2 dir)
     {
         float mul = 1f;
