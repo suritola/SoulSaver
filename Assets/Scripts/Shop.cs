@@ -93,16 +93,36 @@ public partial class Shop : MonoBehaviour
     void OnEnable() => EnermyController.Killed += OnEnemyKilled;
     void OnDisable() => EnermyController.Killed -= OnEnemyKilled;
 
+    // 1.3.3~ 무한 모드에서 개발자가 나온 뒤(잡몹이 나오지 않음)에도 떠돌이 상점이 계속 나옴 — 처치 수 대신 DevStallEvery 초마다 (평소보다 늦게)
+    //   결계 · 공간 침식 · 연출 · 창이 떠 있는 동안은 시계를 멈추고 기다림 (그 상태들은 모두 끝이 있음)
+    const float DevStallEvery = 60f;
+    float devStallTimer;
+
+    void TickDevStall()
+    {
+        if (!GameMode.IsEndless || EndlessMode.Instance == null || !EndlessMode.Instance.NoMobs) { devStallTimer = 0f; return; }
+        if (Time.timeScale == 0f || isShopOpen || isPause || playerControllerd == null) return;
+        if (BossUltimate.Active || BossUltimate.ErosionPending || StoryDirector.Playing || PlayerController.Cinematic) return;
+        devStallTimer += Time.deltaTime;
+        if (devStallTimer < DevStallEvery) return;
+        devStallTimer = 0f;
+        SpawnStall();
+    }
+
     void OnEnemyKilled(Vector3 pos)
     {
-        // 1.1.2~ 무한 모드에서 개발자가 나온 뒤로는 떠돌이 상점이 나오지 않음
+        // 개발자가 나온 뒤로는 위 Update 가 시간으로 (예전 1.1.2~ 에는 아예 나오지 않았음)
         if (GameMode.IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.NoMobs) return;
         // 보스 전에는 처치 수가 늘어난 만큼 천천히 셈 (한 판에 나오는 상점 수 · 코인과 맞춤)
         EnemySpawner sp = Cache<EnemySpawner>.Get;
         killsForStall += sp != null && !sp.bossSpawned && !sp.bossCleared ? 1f / GameMode.KillStretch : 1f;
         if (killsForStall < killsPerStall || playerControllerd == null) return;
         killsForStall = 0;
+        SpawnStall();
+    }
 
+    void SpawnStall()
+    {
         // 플레이어 근처, 벽이 아닌 곳
         Vector3 at = playerControllerd.transform.position;
         for (int i = 0; i < 12; i++)
@@ -140,6 +160,7 @@ public partial class Shop : MonoBehaviour
         // 상점은 떠돌이 제단으로만 열림 (P는 닫기만)
         if (Input.GetKeyDown(KeyCode.P) && isShopOpen && !specialOpen) ToggleShop();
         if (brokeLabel != null && brokeLabel.gameObject.activeSelf && Time.unscaledTime > brokeUntil) brokeLabel.gameObject.SetActive(false);
+        TickDevStall();         // 1.3.3~ 개발자가 나온 뒤에도 60초마다 떠돌이 상점
     }
 
 
