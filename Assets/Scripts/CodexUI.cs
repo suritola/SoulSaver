@@ -526,7 +526,7 @@ public static class CodexUI
              Loc.T("보스를 때릴 때마다 보스 체력바 아래 보라색 게이지가 찹니다. 약한 공격 여러 번보다 센 한 방이 훨씬 많이 채우고, 한동안 때리지 않으면 아주 서서히 줄어듭니다. 가득 차면 맵 전체가 어두워지며 보스 둘레에 거대한 결계가 펼쳐지고, 15초 동안 보스마다 다른 공격이 쏟아집니다. 공격 자리마다 느낌표가 먼저 뜹니다.")
              + " " + Loc.T("보스전마다 적어도 한 번: 결계를 펼치기 전에 보스 체력이 40% 아래로 내려가면 게이지가 곧바로 가득 찹니다."));     // 1.0.4~: 40% 규칙도 적음
         // 빈틈 (WeakSpot): 규칙 · 중간 보스
-        Card(FxIcon("fx_target_rune"), new Color(0.45f, 1f, 0.95f), Loc.T("weak.name"), Loc.T("weak.codex.tag"),
+        Card(FxIcon("fx_target_rune"), new Color(1f, 0.78f, 0.35f), Loc.T("weak.name"), Loc.T("weak.codex.tag"),
              Loc.T("weak.rule") + " " + Loc.T("weak.midboss"));
         // 1.2.5~ 보스가 둘 이상일 때의 통합 게이지 · 공간 침식 (무한 모드에서만 겹쳐 나와서 체험판에는 없음)
         if (!Demo.On)

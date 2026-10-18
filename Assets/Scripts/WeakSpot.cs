@@ -54,7 +54,7 @@ public class WeakSpot : MonoBehaviour
     class Mark
     {
         public Transform root;
-        public SpriteRenderer ring, outline, core;
+        public SpriteRenderer ring, outline, core, halo, brackets;
     }
 
     // 붙이기 (이미 있으면 그대로)
@@ -125,11 +125,88 @@ public class WeakSpot : MonoBehaviour
         int layer = SortingLayer.NameToID("Effect");
         Sprite[] rune = Fx.Frames("fx_target_rune");
         Sprite ringSprite = rune != null && rune.Length > 0 ? rune[0] : SpecialAbilities.GlowSprite;
+        m.halo = Part(m.root, "Halo", SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : WhiteSprite, layer, 36);
         m.outline = Part(m.root, "Outline", ringSprite, layer, 37);
         m.ring = Part(m.root, "Ring", ringSprite, layer, 38);
-        m.core = Part(m.root, "Core", SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : WhiteSprite, layer, 39);
+        m.core = Part(m.root, "Core", CoreSprite, layer, 39);
+        m.brackets = Part(m.root, "Brackets", BracketSprite, layer, 40);
         m.root.gameObject.SetActive(false);
         return m;
+    }
+
+    // 1.2.7~ 「약점」처럼 보이게: 금이 간 심장 결정(붉은 껍질 · 빛나는 금 · 하얗게 달아오른 가운데) + 네 귀퉁이 조준 꺾쇠 (도트, 한 번만 만듦)
+    static Sprite coreSprite, bracketSprite;
+    static Sprite CoreSprite => coreSprite != null ? coreSprite : coreSprite = MakeCore();
+    static Sprite BracketSprite => bracketSprite != null ? bracketSprite : bracketSprite = MakeBrackets();
+
+    static Sprite PixelSprite(int n, Color32[] px)
+    {
+        Texture2D tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+        tex.SetPixels32(px);
+        tex.Apply(false, true);
+        return Sprite.Create(tex, new Rect(0f, 0f, n, n), Vector2.one * 0.5f, n);
+    }
+
+    static Sprite MakeCore()
+    {
+        const int N = 15;
+        Color32[] px = new Color32[N * N];
+        for (int y = 0; y < N; y++)
+            for (int x = 0; x < N; x++)
+            {
+                float dx = x - 7f, dy = y - 7f;
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                Color32 c;
+                if (r < 1.3f) c = new Color32(255, 255, 240, 255);           // 하얗게 달아오른 가운데
+                else if (r < 2.4f) c = new Color32(255, 222, 110, 255);
+                else if (r < 3.8f) c = new Color32(240, 110, 40, 255);
+                else if (r < 5.2f) c = new Color32(196, 46, 34, 255);
+                else if (r < 6.3f) c = new Color32(128, 20, 26, 255);         // 어두운 껍질 가장자리
+                else if (r < 7.2f) c = new Color32(42, 6, 12, 255);           // 테두리 (밝은 배경에서도 보이게)
+                else c = new Color32(0, 0, 0, 0);
+                if (r >= 4.6f && r < 6.3f && (x + y) % 5 == 0) c = new Color32(232, 72, 44, 255);    // 껍질 결 (윗빛 점)
+                px[y * N + x] = c;
+            }
+        // 가운데서 뻗는 빛나는 금 (세 갈래)
+        int[] crack =
+        {
+            8,8, 8,9, 9,10, 9,11, 10,12,
+            6,7, 5,7, 4,6, 3,6, 2,5,
+            8,6, 9,5, 10,5, 11,4, 12,3,
+            6,9, 5,10, 5,11,
+        };
+        for (int i = 0; i < crack.Length; i += 2)
+        {
+            int x = crack[i], y = crack[i + 1];
+            if (px[y * N + x].a > 0) px[y * N + x] = new Color32(255, 236, 150, 255);
+        }
+        return PixelSprite(N, px);
+    }
+
+    static Sprite MakeBrackets()
+    {
+        const int N = 20, L = 6;
+        Color32[] px = new Color32[N * N];
+        Color32 ink = new Color32(30, 8, 8, 230), lit = new Color32(255, 255, 255, 255);
+        // 귀퉁이 「ㄱ」 넷: 두께 2 · 길이 L (가장자리에서 1칸 안쪽), 어두운 테두리를 먼저 사방 1칸 넓게
+        for (int pass = 0; pass < 2; pass++)
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    int cx = (x < N / 2 ? x : N - 1 - x) - 1, cy = (y < N / 2 ? y : N - 1 - y) - 1;      // 가장 가까운 귀퉁이 기준
+                    int g = pass == 0 ? 1 : 0;
+                    bool arm = (cy >= -g && cy <= 1 + g && cx >= -g && cx <= L - 1 + g) || (cx >= -g && cx <= 1 + g && cy >= -g && cy <= L - 1 + g);
+                    if (arm) px[y * N + x] = pass == 0 ? ink : lit;
+                }
+        return PixelSprite(N, px);
+    }
+
+    // 두 번 뛰는 심장 박동 (0 ~ 1): 「두-근」 · 0.85초마다
+    static float Heartbeat(float t)
+    {
+        float u = (t / 0.85f) % 1f;
+        float a = (u - 0.1f) / 0.07f, b = (u - 0.3f) / 0.08f;
+        return Mathf.Exp(-a * a) + 0.65f * Mathf.Exp(-b * b);
     }
 
     static SpriteRenderer Part(Transform parent, string name, Sprite sprite, int layer, int order)
@@ -261,20 +338,31 @@ public class WeakSpot : MonoBehaviour
         bool cb = GameSettings.ColorBlind;
         float ps = Mathf.Max(0.0001f, Mathf.Abs(transform.lossyScale.x));
         float pop = now - openedAt < 0.2f ? 1f + 0.35f * (1f - (now - openedAt) / 0.2f) : 1f;
-        float breathe = 1f + 0.08f * Mathf.Sin(now * 5f) * motion;
+        float beat = Heartbeat(now - bornAt) * motion;                  // 1.2.7~ 숨쉬기(사인) 대신 「두-근」
         bool flash = now < flashUntil;
-        float d = Radius * 2f * pop * breathe;
+        float d = Radius * 2f * pop * (1f + 0.06f * beat);
+        // 열릴 때 꺾쇠가 바깥(1.9배)에서 0.25초에 조여 들어와 「잠금」 (움직임 줄이기면 바로 제자리)
+        float lockT = Mathf.Clamp01((now - openedAt) / 0.25f);
+        float lockIn = motion <= 0f ? 1f : Mathf.Lerp(1.9f, 1f, 1f - (1f - lockT) * (1f - lockT));
+        float spin = (now - bornAt) * 40f * motion;
         for (int i = 0; i < Count; i++)
         {
             Mark m = marks[i];
             if (m == null) continue;
             if (!m.root.gameObject.activeSelf) m.root.gameObject.SetActive(true);
             m.root.position = new Vector3(centers[i].x, centers[i].y, 0f);
-            m.root.rotation = Quaternion.Euler(0f, 0f, (now - bornAt) * 40f * motion);
+            m.root.rotation = Quaternion.identity;
+            // 고리만 천천히 돎 · 꺾쇠 · 결정은 똑바로
+            m.ring.transform.localRotation = Quaternion.Euler(0f, 0f, spin);
+            m.outline.transform.localRotation = m.ring.transform.localRotation;
             Fit(m.ring, d, ps);
-            m.ring.color = flash ? Color.white : cb ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.35f, 1f, 0.95f, 0.95f);
-            // 색각 이상 모드: 흰 고리 + 검은 테두리 + 가운데 마름모 (색이 아닌 모양으로)
+            m.ring.color = flash ? Color.white : cb ? new Color(1f, 1f, 1f, 0.95f) : new Color(1f, 0.82f, 0.32f, 0.95f);
+            // 조준 꺾쇠: 고리보다 조금 바깥 · 박동에 맞춰 살짝 조였다 풀림
+            Fit(m.brackets, d * 1.3f * lockIn * (1f - 0.05f * beat), ps);
+            m.brackets.color = flash ? Color.white : cb ? Color.white : new Color(1f, 0.93f, 0.62f, 1f);
+            // 색각 이상 모드: 흰 고리 + 검은 테두리 + 가운데 마름모 (색이 아닌 모양으로) · 꺾쇠는 그대로
             m.outline.enabled = cb;
+            m.halo.enabled = !cb;
             if (cb) { Fit(m.outline, d * 1.14f, ps); m.outline.color = new Color(0f, 0f, 0f, 0.9f); }
             if (cb)
             {
@@ -285,11 +373,13 @@ public class WeakSpot : MonoBehaviour
             }
             else
             {
-                Sprite glow = SpecialAbilities.GlowSprite != null ? SpecialAbilities.GlowSprite : WhiteSprite;
-                if (m.core.sprite != glow) m.core.sprite = glow;
-                Fit(m.core, Radius * 0.9f, ps);
+                // 금이 간 심장 결정: 박동마다 부풀고, 주변 주황 빛이 함께 번짐
+                if (m.core.sprite != CoreSprite) m.core.sprite = CoreSprite;
+                Fit(m.core, Radius * (0.95f + 0.22f * beat) * (flash ? 1.15f : 1f), ps);
                 m.core.transform.localRotation = Quaternion.identity;
-                m.core.color = new Color(1f, 1f, 1f, flash ? 1f : 0.85f);
+                m.core.color = Color.white;              // 결정은 제 색 그대로 (맞을 때는 커지고 주변 빛이 하얗게)
+                Fit(m.halo, d * (1.15f + 0.2f * beat), ps);
+                m.halo.color = flash ? new Color(1f, 1f, 0.9f, 0.8f) : new Color(1f, 0.5f, 0.12f, 0.22f + 0.25f * beat);
             }
         }
     }
@@ -314,7 +404,7 @@ public class WeakSpot : MonoBehaviour
         flashUntil = now + 0.12f;
         if (now < sparkleAt) return;
         sparkleAt = now + 0.08f;
-        Fx.Spawn("fx_sparkle", at, 1.3f, new Color(0.45f, 1f, 0.95f), 24f);
+        Fx.Spawn("fx_sparkle", at, 1.3f, new Color(1f, 0.78f, 0.35f), 24f);      // 1.2.7~ 금빛 (빈틈 색)
     }
 
     // ================================================================= 판정
