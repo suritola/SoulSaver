@@ -81,6 +81,7 @@ public sealed partial class GunnerPaths : HeroPaths
     // ================================================================= 수치 (기획서 3-1 · 4장 — 갈래 효과 피해는 모두 Paths.Power(갈래)를 곱함)
     // 관통 저격
     const float AimTime = 0.6f;                 // 멈춰 있으면 이 시간마다 조준이 모임
+    const int BaseMag = 8;                      // 거너 기본 탄창 (GameScene 의 PlayerController.MaxBullet)
     const float SnipeMul = 2.2f, SnipeSpeed = 1.6f, MovingMul = 0.75f, SnipeMag = 0.75f;      // 탄창 8 → 6
     const float WeakMul = 1.5f, WeakBoom = 0.6f;                 // 공명 I: 약점 ×1.5 · 작은 폭발 (공격력 60%)
     const float PierceAim = 0.2f;                                // 공명 II: 꿰뚫은 적 하나마다 조준 20% (5마리면 즉시)
@@ -119,13 +120,17 @@ public sealed partial class GunnerPaths : HeroPaths
     // ================================================================= 판 흐름 훅
     public override void OnSeed(int path, bool replay)
     {
-        // 탄창 크기 (판마다 새 플레이어 · 이어하기도 같은 순서로 다시 적용되므로 한 번만 곱함)
+        // 탄창 크기: 기본 탄창(8발)만 바꾸고 그 차이를 더함 (저격 8 → 6 · 난사 8 → 14 · 산탄 8 → 4)
+        //   산 탄창 · 진화로 늘어난 탄창은 그대로 더해지므로 고르는 순서와 결과가 같음
+        //   판마다 새 플레이어 · 이어하기도 입문을 한 번만 다시 적용하므로 두 번 더해지지 않음
         float m = path == Snipe ? SnipeMag : path == Ricochet ? RicochetMag : path == Shotgun ? ShotgunMag : 1f;
         PlayerController p = Hostile.Player;
         if (p == null || m == 1f) return;
-        p.MaxBullet = Mathf.Max(2, Mathf.RoundToInt(p.MaxBullet * m));
-        if (!p.IsReloading) p.NowBullet = p.MaxBullet;
-        else p.NowBullet = Mathf.Min(p.NowBullet, p.MaxBullet);
+        int delta = Mathf.RoundToInt(BaseMag * m) - BaseMag;
+        p.MaxBullet = Mathf.Max(2, p.MaxBullet + delta);
+        // 입문 순간 공짜로 가득 채우지 않음 (이어하기 재적용은 판 시작이라 가득)
+        if (replay && !p.IsReloading) p.NowBullet = p.MaxBullet;
+        else p.NowBullet = Mathf.Clamp(p.NowBullet, 0, p.MaxBullet);
         // 상점이 들고 있는 탄창 값도 맞춤 (이어하기는 상점 창을 열지 않고 구매를 다시 적용해 옛 값 + 1 로 덮어쓰던 것)
         Shop coinShop = Object.FindFirstObjectByType<Shop>();
         if (coinShop != null) coinShop.MaxBullet = p.MaxBullet;
@@ -167,7 +172,11 @@ public sealed partial class GunnerPaths : HeroPaths
     public override void Tick()
     {
         PlayerController p = Hostile.Player;
-        if (p == null || p.IsDying) return;
+        if (p == null || p.IsDying)
+        {
+            if (dashing) CancelDash();      // 돌진 중 쓰러짐: 부활 뒤 옛 목표로 순간이동 · 끝 효과가 뒤늦게 터지지 않게
+            return;
+        }
         float now = Time.time;
         if (Paths.Has(Snipe)) SnipeTick(p);
         if (Paths.Has(Overheat)) HeatTick(p, now);
@@ -229,11 +238,12 @@ public sealed partial class GunnerPaths : HeroPaths
         return 0;
     }
 
-    // 탄에 맞힘 알림을 붙임 (저격탄 · 화상탄만 — 같은 적은 한 번만 맞힘)
+    // 탄에 맞힘 알림을 붙임 (저격탄 · 화상탄만)
+    //   원래 hitOnce 가 있던 탄: 같은 적은 한 번만 (원래대로) · 원래 null 이던 탄: 알림만 하고 같은 적 재명중도 원래대로 허용 (passThrough)
     void Tap(Bullet b, bool snipe, bool burn)
     {
         if (b == null) return;
-        GunHitTap tap = new GunHitTap(this, snipe, burn);
+        GunHitTap tap = new GunHitTap(this, snipe, burn, b.hitOnce == null);
         HashSet<int> set = new HashSet<int>(tap);
         if (b.hitOnce != null) foreach (int id in b.hitOnce) set.Add(id);      // 이미 넣어 둔 것은 그대로 (넣는 동안은 알림 안 함 · tap.set 이 아직 없음)
         tap.set = set;

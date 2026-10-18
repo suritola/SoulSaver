@@ -294,6 +294,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         GuardScreenTint();
+        ReloadWatchdog();       // 장전 코루틴이 끊겨 장전 상태만 남으면 풂 (재장전 부분)
         DamageSource.Current = DamageSource.Basic;      // 재장전 · 평타 (아래 우클릭 부분은 필살기)
         try { UpdateInput(); }
         finally { DamageSource.Current = null; }
@@ -541,34 +542,94 @@ public class PlayerController : MonoBehaviour
         if (!isReloading && !IsDying && isActiveAndEnabled) StartCoroutine(Reload());
     }
 
+    // 2026-10-19~ 장전 안전망 (1.2.7 「끊긴 코루틴이 상태를 남김」 사고와 같은 모양 막기)
+    //   reloadGen: 장전마다 번호 · 안전망이 강제로 풀면 번호가 바뀌어 옛 코루틴은 아무것도 건드리지 않고 끝남
+    //   reloadBeat: 장전 코루틴이 마지막으로 돈 시각 (멈춤 메뉴에서도 돎) — 3초 넘게 안 돌면 코루틴이 죽은 것으로 보고 풂
+    int reloadGen;
+    float reloadBeat;
+    const float ReloadGrace = 3f;
+
+    // 장전 중인데 코루틴이 죽었으면 (예외 · 비활성화로 끊김) 장전 상태를 풂 — Update 가 매 프레임 부름
+    void ReloadWatchdog()
+    {
+        if (!isReloading || Time.unscaledTime - reloadBeat <= ReloadGrace) return;
+        reloadGen++;
+        isReloading = false;
+        reload = 0f;
+        NowBullet = MaxBullet;
+    }
+
+    // 갈래 코드가 예외를 내도 장전이 막히지 않게 (예외는 기록만 하고 기본값)
+    static float SafeReloadTime(GunnerPaths gp, float normal)
+    {
+        if (gp == null) return normal;
+        try { return Mathf.Max(0.05f, gp.ReloadTime(normal)); }
+        catch (System.Exception e) { Debug.LogException(e); return normal; }
+    }
+
+    static float SafeReloadRate(GunnerPaths gp)
+    {
+        if (gp == null) return 1f;
+        try { float r = gp.ReloadRate; return float.IsNaN(r) || r < 1f ? 1f : r; }
+        catch (System.Exception e) { Debug.LogException(e); return 1f; }
+    }
+
+    static void SafeHook(System.Action a)
+    {
+        try { a(); }
+        catch (System.Exception e) { Debug.LogException(e); }
+    }
+
     IEnumerator Reload()
     {
         if (isReloading) yield break;
 
         isReloading = true;
         reload = 0f;
-        special?.ReloadShockwave(transform.position);
-        SignatureSkills.ReloadStart();          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발
-
-        if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
-        else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
-
-        // 2026-10-19~ 빌드 갈래 (거너): 과열 시간 · 산탄 장전 40% 빠름 · 포탑 곁 2배 — 진행 값(reload)은 그대로 0 → reloadTime (장전 표시가 맞게)
-        GunnerPaths gp = GunnerPaths.Live;
-        float need = gp != null ? Mathf.Max(0.05f, gp.ReloadTime(reloadTime)) : reloadTime;
-        while (reload < reloadTime)
+        int gen = ++reloadGen;
+        reloadBeat = Time.unscaledTime;
+        bool done = false;
+        try
         {
-            // 필살기 조준의 느린 시간에도 제 속도로, 메뉴로 멈춘 동안에는 멈춤
-            if (!IsPaused) reload += Time.unscaledDeltaTime * (gp != null ? reloadTime / need * gp.ReloadRate : 1f);
-            yield return null;
+            SafeHook(() => special?.ReloadShockwave(transform.position));
+            SafeHook(SignatureSkills.ReloadStart);          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발
+
+            if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
+            else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
+
+            // 2026-10-19~ 빌드 갈래 (거너): 과열 시간 · 산탄 장전 40% 빠름 · 포탑 곁 2배 — 진행 값(reload)은 그대로 0 → reloadTime (장전 표시가 맞게)
+            GunnerPaths gp = GunnerPaths.Live;
+            float need = SafeReloadTime(gp, reloadTime);
+            float spent = 0f;           // 멈추지 않은 동안 실제로 흐른 시간 (대기 상한: 정해진 장전 시간 + 3초)
+            while (reload < reloadTime)
+            {
+                if (gen != reloadGen) yield break;          // 안전망이 이미 풂
+                reloadBeat = Time.unscaledTime;
+                // 필살기 조준의 느린 시간에도 제 속도로, 메뉴로 멈춘 동안에는 멈춤
+                if (!IsPaused)
+                {
+                    reload += Time.unscaledDeltaTime * (gp != null ? reloadTime / need * SafeReloadRate(gp) : 1f);
+                    spent += Time.unscaledDeltaTime;
+                    if (spent > (gp != null ? need : reloadTime) + ReloadGrace) break;
+                }
+                yield return null;
+            }
+            if (gen != reloadGen) yield break;
+
+            NowBullet = MaxBullet;
+            done = true;
+        }
+        finally
+        {
+            // 예외로 코루틴이 죽어도 장전 상태가 남지 않게 (안전망이 이미 풀었으면 건드리지 않음)
+            if (gen == reloadGen)
+            {
+                reload = 0f;
+                isReloading = false;
+            }
         }
 
-        NowBullet = MaxBullet;
-
-        reload = 0f;
-
-        isReloading = false;
-        SignatureSkills.ReloadEnd();            // 섬광 장전 · 속사 장전
+        if (done) SafeHook(SignatureSkills.ReloadEnd);            // 섬광 장전 · 속사 장전
     }
 
     public bool IsReloading => isReloading;
@@ -589,9 +650,12 @@ void Shoot()
 
         nextShootTime = Time.time + ShootSpeed / fireRateMultiplier * (gp != null ? gp.IntervalMul : 1f);
         // 탄창 저주: 마지막 한 발 강화
-        bool cursed = special != null && special.IsLastBulletCursed(NowBullet);
-        bool lastShell = NowBullet == 1;
-        if (gp != null && gp.NoAmmo) NowBullet = MaxBullet;       // 과열 사격: 탄 대신 열 게이지
+        // 과열 사격은 탄이 줄지 않으므로 「과열까지 남은 발 수」를 탄 수 대신 씀 (마지막 발 = 이 발로 과열) — 갈래 없으면 NowBullet 그대로
+        bool noAmmo = gp != null && gp.NoAmmo;
+        int shellsLeft = noAmmo ? gp.HeatShotsLeft : NowBullet;
+        bool cursed = special != null && special.IsLastBulletCursed(shellsLeft);
+        bool lastShell = shellsLeft == 1;
+        if (noAmmo) NowBullet = MaxBullet;       // 과열 사격: 탄 대신 열 게이지
         else NowBullet--;
 
         // 서서 쏠 때는 쏠 때마다 사격 자세를 처음부터
@@ -616,6 +680,7 @@ void Shoot()
 
         float bulletDamage = damage * damageMultiplier * MultiShotDamageRate(multiShot) * (cursed ? 3f : 1f);
         SignatureSkills.Attacked(startPosition, direction);
+        float extraDamage = bulletDamage;           // 진화 덤 사격(쌍발 · 산탄 · 화염 총구)은 갈래 배율(저격 · 열 · 돌진 · 난사) 이전 값
         if (gp != null) bulletDamage *= gp.BeginShot(move.sqrMagnitude > 0.01f, lastShell);     // 대가 · 저격탄 · 아슬아슬한 열
 
         float shotRate = MultiShotDamageRate(multiShot);
@@ -646,7 +711,8 @@ void Shoot()
                 gp?.Dress(b);
             }
         }
-        special?.EvoExtraShots(startPosition, direction, bulletDamage / Mathf.Max(0.01f, cursed ? 3f : 1f));      // 쌍발 총구 · 산탄 총구
+        if (gp != null) extraDamage *= gp.ExtraShotMul;      // 산탄 갈래: 덤도 펠릿 비율 (덤이 본체보다 세지 않게)
+        special?.EvoExtraShots(startPosition, direction, extraDamage / Mathf.Max(0.01f, cursed ? 3f : 1f));      // 쌍발 총구 · 산탄 총구
         gp?.EndShot(this);          // 과열 사격: 열 (가득 차면 과열)
     }
 

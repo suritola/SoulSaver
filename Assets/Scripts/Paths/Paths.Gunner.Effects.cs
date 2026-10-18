@@ -26,12 +26,20 @@ public sealed partial class GunnerPaths
 
     // 이번 한 발 (BeginShot 이 정하고 FireOverride · Dress · EndShot 이 씀)
     bool curSnipe, curBurn, curSlug;
+    float curExtraMul = 1f;
+
+    // 진화 덤 사격(쌍발 · 산탄 · 화염 총구) 피해 배율 — 산탄 갈래 펠릿을 쏜 발이면 펠릿 비율 (덤이 본체보다 세던 것)
+    public float ExtraShotMul => curExtraMul;
+
+    // 과열 사격: 과열까지 남은 발 수 (이 발 포함 · 1 이면 이 발로 과열) — 탄창 저주 · 슬러그가 「마지막 발」로 봄
+    public int HeatShotsLeft => Mathf.Max(1, Mathf.CeilToInt((1f - heat) / HeatPerShot - 0.001f));
 
     // 이번 한 발의 피해 배율 (대가 · 저격탄 · 아슬아슬한 열) · 저격탄 · 화상 · 슬러그 판정
     public float BeginShot(bool moving, bool lastShell)
     {
         float mul = 1f;
         curSnipe = curBurn = curSlug = false;
+        curExtraMul = 1f;
         if (Paths.Has(Snipe))
         {
             if (moving) mul *= MovingMul;
@@ -83,6 +91,7 @@ public sealed partial class GunnerPaths
             if (curBurn) Tap(s, false, true);
             return true;
         }
+        curExtraMul = PelletRate;
         int n = Pellets + Mathf.Max(0, pc.multiShot - 1) * 2;
         float each = dmg * PelletRate * Paths.Power(Shotgun);
         for (int i = 0; i < n; i++)
@@ -142,13 +151,16 @@ public sealed partial class GunnerPaths
     }
 
     // ================================================================= 장전 (PlayerController.Reload)
-    public float ReloadTime(float normal) => Paths.Has(Overheat) ? (Paths.Mastered(Overheat) ? OverheatTimeMastery : OverheatTime) : normal;
+    //   과열 사격(NoAmmo)이면 장전 = 과열 → 카드 문구대로 2초 · 0.8초 (산탄 장전 · 포탑 곁 배율을 받지 않음)
+    //   튜토리얼 판(NoAmmo 아님)은 보통 장전 그대로
+    public float ReloadTime(float normal) => NoAmmo ? (Paths.Mastered(Overheat) ? OverheatTimeMastery : OverheatTime) : normal;
 
     public float ReloadRate
     {
         get
         {
             float r = 1f;
+            if (NoAmmo) return r;
             if (Paths.Has(Shotgun)) r *= ShotgunReload;
             if (Paths.Has(Turret) && Paths.Res(Turret) >= 1 && NearTurret(4f)) r *= 2f;       // 공명 I: 포탑 곁에서 장전 2배
             return r;
@@ -329,6 +341,7 @@ public sealed partial class GunnerPaths
         dashDir = d;
         dashT0 = Time.time;
         dashT1 = Time.time + DashTime * (len / DashDist);
+        dashLastPos = from;
         dashing = true;
         dashChain = chain;
         if (chain == 0) { dashRammed = false; dashHit.Clear(); }
@@ -339,11 +352,30 @@ public sealed partial class GunnerPaths
         return true;
     }
 
+    // 돌진을 조용히 끝냄 (위치를 옮기지 않고 끝 효과도 없음): 쓰러짐 · 너무 늦음 · 다른 것이 위치를 옮김 (결계 가두기 · 연출)
+    void CancelDash()
+    {
+        dashing = false;
+        boomAtDashEnd = false;
+    }
+
+    Vector3 dashLastPos;
+
     void DashTick(PlayerController p, float now)
     {
+        if (p.IsDying || now > dashT1 + 0.2f) { CancelDash(); return; }
+        // 지난 프레임에 놓은 자리에서 크게 벗어남 = 결계 가두기 · 연출 등이 옮김 → 그 자리에서 돌진만 끝 (끝 효과는 그 자리에서)
+        if (now > dashT0 && ((Vector2)(p.transform.position - dashLastPos)).sqrMagnitude > 0.5f * 0.5f)
+        {
+            dashing = false;
+            dashTo = p.transform.position;
+            DashEnded(p);
+            return;
+        }
         float t = dashT1 > dashT0 ? Mathf.Clamp01((now - dashT0) / (dashT1 - dashT0)) : 1f;
         Vector3 pos = Vector3.Lerp(dashFrom, dashTo, t);
         p.transform.position = pos;
+        dashLastPos = pos;
         Fx.Spawn("fx_spark", pos - (Vector3)(dashDir * 0.5f), 0.9f, new Color(1f, 0.75f, 0.5f, 0.8f), 30f);
         if (Paths.Res(Shotgun) >= 1)
         {
