@@ -1,70 +1,50 @@
-# 1.2.6 업데이트 — 버그 수정 · 다듬기
+# 1.2.7 업데이트 — 긴급 버그 수정
 
-- **왕들의 영토 수정**: 무한 모드에서 보스를 쓰러뜨려도 땅이 바뀌지 않던 문제를 고쳤습니다. 이제 영토가 번지고 용암 · 늪이 생깁니다.
-- 15분 「최후의 시간」이 결계 · 공간 침식 도중에 시작되던 문제를 고쳤습니다. 「고요의 눈」이 웅덩이 위에 생기지 않습니다.
-- 보스가 여럿일 때 체력바와 「기억」 글자가 겹치던 문제, 보스 넷의 체력바가 화면을 너무 가리던 문제를 고쳤습니다.
-- 엄마의 잔소리 글자가 체력바와 일시정지 화면을 가리던 문제를 고쳤습니다.
-- 메인 메뉴 · 결과 화면에서 일부 효과음이 나지 않던 문제와, 일시정지 메뉴에서 적 설명이 버튼을 가리던 문제를 고쳤습니다.
-- 이어하기 때 보스 위치가 어긋나거나 「풍화」 알림이 다시 뜨던 문제, 보스 등장 연출이 선택 창 위에 겹치던 문제, 드물게 적이 비정상적으로 커지던 문제를 고쳤습니다.
+- **보스 무적 버그 수정**: 무한 모드에서 보스가 가끔 영원히 공격을 받지 않던 문제를 고쳤습니다.
+- **공간 침식 수정**: 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
+- 무한 모드 · 일일 도전 중에 게임을 끄면 지금까지의 기록이 순위표에 올라갑니다.
+- 빈틈이 더 눈에 띄는 모습으로 바뀌었습니다.
 
 ## 밸런스 조정
 
-- **보스 보상 가운데 칸**: 「생명」 · 「회복」이 나옴 → **나오지 않음**
-- **보스 보상 가운데 칸 (이어하기)**: 이어할 때마다 새로 뽑음 → **처음 뽑은 칸 그대로**
-- **공간 침식 중 결계 공격이 아닌 피해의 한 대 상한**: 최대 체력 40% → **25%**
-- **결계 · 공간 침식 중 용암 웅덩이**: 0.6초마다 6 피해 → **피해 없음** (늪의 느려짐도 없음)
-- **시전 중인 보스의 결계**: 시전이 끝날 때까지 기다림 → **게이지가 찬 뒤 최대 3초 뒤 시전을 끊고 펼침**
+- **개발자 결계 게이지 차는 속도**: ×1 → **×2.5**
+- **개발자 엄마 결계 게이지 차는 속도**: ×1 → **×4**
 
 === en
-# 1.2.6 Update — Bug Fixes & Polish
+# 1.2.7 Update — Hotfix
 
-- **Realm of the Kings fixed**: The ground in Endless Mode now changes when you defeat a boss. Realms spread and lava pools and slime bogs appear as intended.
-- The 15-minute "Final Hour" no longer starts in the middle of a barrier or Spatial Erosion. The "Eye of Calm" no longer appears on top of pools.
-- Fixed health bars overlapping the "Memory" text when several bosses appear, and four boss health bars covering too much of the screen.
-- Fixed Mom's nagging text covering the health bar and the pause screen.
-- Fixed some sound effects not playing in the main menu and results screen, and enemy tooltips covering buttons in the pause menu.
-- Fixed bosses appearing in the wrong place or the "weathered" notice repeating after Continue, boss intros overlapping choice windows, and enemies rarely growing abnormally large.
+- **Invincible boss fixed**: Fixed bosses in Endless Mode sometimes becoming permanently immune to damage.
+- **Spatial Erosion fixed**: Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
+- Quitting the game during Endless Mode or the Daily Challenge now submits your run so far to the leaderboard.
+- Weak points now have a more noticeable look.
 
 ## Balance Changes
 
-- **Middle boss reward**: could offer "Life" and "Heal" → **no longer offered**
-- **Middle boss reward (Continue)**: rerolled every time you continued → **keeps the first roll**
-- **Max damage per hit from non-barrier attacks during Spatial Erosion**: 40% of max HP → **25%**
-- **Lava pools during barriers and Spatial Erosion**: 6 damage every 0.6s → **no damage** (bogs no longer slow you either)
-- **Barrier of a boss that is casting**: waited until the cast ended → **interrupts the cast up to 3s after the gauge fills**
+- **Developer barrier gauge fill speed**: ×1 → **×2.5**
+- **Developer's Mom barrier gauge fill speed**: ×1 → **×4**
 
 === ja
-# 1.2.6 アップデート — 不具合修正・調整
+# 1.2.7 アップデート — 緊急不具合修正
 
-- **王たちの領土を修正**: エンドレスでボスを倒しても地形が変わらなかった問題を修正しました。領土が広がり、溶岩・沼が現れるようになりました。
-- 15分の「最後の時間」が結界・空間侵食の途中で始まる問題を修正しました。「静寂の目」が溜まりの上に現れなくなりました。
-- ボスが複数いるとき体力バーと「記憶」の文字が重なる問題、ボス4体の体力バーが画面を覆いすぎる問題を修正しました。
-- ママの小言の文字が体力バーと一時停止画面を隠す問題を修正しました。
-- メインメニュー・結果画面で一部の効果音が鳴らない問題と、一時停止メニューで敵の説明がボタンを隠す問題を修正しました。
-- 続きから再開したときボスの位置がずれる・「風化」の通知が再び出る問題、ボス登場演出が選択ウィンドウに重なる問題、まれに敵が異常に大きくなる問題を修正しました。
+- **ボスの無敵バグを修正**: エンドレスでボスがまれにずっとダメージを受けなくなる問題を修正しました。
+- **空間侵食を修正**: ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
+- エンドレス・デイリーチャレンジ中にゲームを終了すると、ここまでの記録がランキングに登録されるようになりました。
+- 隙がより目立つ見た目になりました。
 
 ## バランス調整
 
-- **ボス報酬の中央の枠**: 「生命」・「回復」が出る → **出ない**
-- **ボス報酬の中央の枠（続きから）**: 再開するたびに引き直し → **最初に引いた枠のまま**
-- **空間侵食中、結界攻撃以外の被ダメージ1回の上限**: 最大体力の40% → **25%**
-- **結界・空間侵食中の溶岩の溜まり**: 0.6秒ごとに6ダメージ → **ダメージなし**（沼の減速もなし）
-- **詠唱中のボスの結界**: 詠唱が終わるまで待つ → **ゲージが満タンになってから最大3秒で詠唱を中断して展開**
+- **開発者の結界ゲージがたまる速さ**: ×1 → **×2.5**
+- **開発者のママの結界ゲージがたまる速さ**: ×1 → **×4**
 
 === zh
-# 1.2.6 更新 — 问题修复与打磨
+# 1.2.7 更新 — 紧急问题修复
 
-- **修复王之领地**：修复了在无尽模式中击败首领后地形不变的问题。现在领地会扩散，并出现熔岩与沼泽。
-- 修复了15分钟「最后时刻」在结界 · 空间侵蚀途中开始的问题。「寂静之眼」不再出现在池子上。
-- 修复了多个首领同时出现时生命条与「记忆」文字重叠的问题，以及四个首领的生命条遮挡画面过多的问题。
-- 修复了妈妈的唠叨文字遮挡生命条与暂停画面的问题。
-- 修复了主菜单 · 结算画面部分音效不播放的问题，以及暂停菜单中敌人说明遮挡按钮的问题。
-- 修复了继续游戏后首领位置错乱或「风化」提示再次出现、首领登场演出与选择窗口重叠、敌人偶尔异常变大的问题。
+- **修复首领无敌问题**：修复了无尽模式中首领偶尔永远不受伤害的问题。
+- **修复空间侵蚀**：修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
+- 在无尽模式 · 每日挑战中关闭游戏时，至今的记录会上传排行榜。
+- 破绽的外观变得更加醒目。
 
 ## 平衡调整
 
-- **首领奖励中间格**：会出现「生命」 · 「回复」 → **不再出现**
-- **首领奖励中间格（继续游戏）**：每次继续都重新抽取 → **保持第一次抽到的格子**
-- **空间侵蚀中非结界攻击的单次伤害上限**：最大生命的40% → **25%**
-- **结界 · 空间侵蚀中的熔岩池**：每0.6秒6点伤害 → **无伤害**（沼泽也不再减速）
-- **正在施法的首领的结界**：等待施法结束 → **槽充满后最多3秒内打断施法并展开**
+- **开发者结界槽充能速度**：×1 → **×2.5**
+- **开发者的妈妈结界槽充能速度**：×1 → **×4**
