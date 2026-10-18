@@ -36,6 +36,17 @@ public partial class SignatureSkills
     public static void ChainPopped(Vector3 p, float hit) { if (Instance != null && Instance.who == CharacterId.Alchemist) Instance.OnChainPop(p, hit, 0); }
     public static float HomunculusMul => Instance != null && Instance.L("l.tinker") > 0 ? 1f + V(Instance.L("l.tinker"), 0.3f, 0.2f) : 1f;
     public static void HomunculusLand(Vector3 q, float dmg) { if (Instance != null && Instance.L("l.tinker") > 0) Instance.TinkerLand(q, dmg); }
+    // 2026-10-19~ 갈래 (Paths/Paths.Alchemist.cs · CharacterKit.Alchemist.cs 가 씀)
+    public static GameObject AlchTwin => Instance != null && Instance.who == CharacterId.Alchemist ? Instance.twin : null;       // 쌍둥이 조수 (조수 수 세기)
+    public static bool AlchTinker => Instance != null && Instance.L("l.tinker") > 0;                                               // 조수 개조를 배웠나 (시약 따라 던지기를 한 곳에서만)
+    // 늪 웅덩이도 산성 웅덩이로 셈 (응급 연고 · 인화성 기체)
+    public static void AddAcid(Vector3 p, float r, float until)
+    {
+        if (Instance == null || Instance.who != CharacterId.Alchemist) return;
+        if (Instance.acids.Count >= 60) Instance.acids.RemoveAll(a => a.until < Time.time);
+        if (Instance.acids.Count >= 60) Instance.acids.RemoveAt(0);
+        Instance.acids.Add((p, r, until));
+    }
 
     float OnFlaskThrow()
     {
@@ -64,7 +75,7 @@ public partial class SignatureSkills
                 chilled[g] = Time.time + 3f;
                 if (E("le.frost")) Mark(g, 3f, 1.3f);
             }
-            if (!unstable && L("l.catalyst") > 0) AddElement(g, 1 << kind);
+            if (!unstable && (L("l.catalyst") > 0 || Paths.Has(AlchemistPaths.Catalyst))) AddElement(g, 1 << kind);     // 원소 촉매 입문: 촉매 반응 없이도 붕괴
         }
         // 불꽃 행진: 농축 플라스크가 터진 자리에 불길 고리
         if (concentrated && E("le.march"))
@@ -84,11 +95,14 @@ public partial class SignatureSkills
     void Ignite(Vector3 p, float r)
     {
         acids.RemoveAll(a => a.until < Time.time);
-        for (int i = acids.Count - 1; i >= 0; i--)
+        // 늪 갈래는 웅덩이가 많아 한 번에 여러 개가 같이 터지지 않게 두 개까지
+        int cap = Paths.Has(AlchemistPaths.Swamp) ? 2 : int.MaxValue, lit = 0;
+        for (int i = acids.Count - 1; i >= 0 && lit < cap; i--)
         {
             var a = acids[i];
             if ((a.p - p).sqrMagnitude > (a.r + r) * (a.r + r)) continue;
             acids.RemoveAt(i);
+            lit++;
             using var tier = EvoFx("l.ignite");
             Circle(a.p, a.r * 1.3f, Atk * V(L("l.ignite"), 1.2f, 0.5f) * P("l.ignite"), 1.5f, c => Burn.Apply(c.gameObject, Atk * 0.3f, 2f));      // 1.1.2~ 타오르는 늪: ×1.6
             Fx.Spawn("fx_firepillar", a.p + Vector3.up * 1.2f, a.r * 2.4f * Fs("l.ignite"), Color.white, 18f);
@@ -107,14 +121,45 @@ public partial class SignatureSkills
     }
 
     // 촉매 반응: 화염 · 빙결 · 산성이 모두 묻으면 원소 붕괴
+    //   2026-10-19~ 원소 촉매 갈래 (Paths/Paths.Alchemist.cs): 촉매 반응을 배우기 전에도 입문만으로 붕괴 — 대신 화염 → 빙결 → 산성 순서대로만 쌓임
+    //     (촉매 반응을 배우면 원래처럼 순서 없이 · 그 스킬 피해로) · 공명 I 붕괴한 적 받는 피해 +15% · 공명 II 가까운 적 둘에게 원소 · 극의 원소 둘이면 붕괴
     void AddElement(GameObject g, int bit)
     {
+        bool skill = L("l.catalyst") > 0;
+        bool seed = Paths.Has(AlchemistPaths.Catalyst);
         int mask = elements.TryGetValue(g, out var e) && e.until > Time.time ? e.mask : 0;
-        mask |= bit;
-        if (mask != 7) { elements[g] = (mask, Time.time + 6f); return; }
+        if (!skill && seed)
+        {
+            if (bit == 1) mask = 1;                                     // 화염이면 처음부터
+            else if (bit == 2 && (mask & 1) != 0) mask |= 2;            // 화염 뒤의 빙결만
+            else if (bit == 4 && (mask & 3) == 3) mask |= 4;            // 화염 · 빙결 뒤의 산성만
+        }
+        else mask |= bit;
+        int count = (mask & 1) + ((mask >> 1) & 1) + ((mask >> 2) & 1);
+        bool ready = mask == 7 || (Paths.Mastered(AlchemistPaths.Catalyst) && count >= 2);
+        if (!ready) { elements[g] = (mask, Time.time + 6f); return; }
         elements.Remove(g);
         Vector3 p = g.transform.position;
-        float dmg = Atk * V(L("l.catalyst"), 2.5f, 1f) * P("l.catalyst");        // 1.1.2~ 삼원소 붕괴: ×1.5
+        float dmg = skill ? Atk * V(L("l.catalyst"), 2.5f, 1f) * P("l.catalyst")        // 1.1.2~ 삼원소 붕괴: ×1.5
+                          : Atk * AlchemistPaths.CatalystSeedMul;
+        if (seed)
+        {
+            dmg *= Paths.Power(AlchemistPaths.Catalyst);
+            if (Paths.Res(AlchemistPaths.Catalyst) >= 1) Mark(g, AlchemistPaths.CatalystRes1Time, AlchemistPaths.CatalystRes1);
+            if (Paths.Res(AlchemistPaths.Catalyst) >= 2)
+            {
+                // 가까운 적 둘에게 원소 하나씩 (순서 규칙이면 첫 원소인 화염 · 아니면 아무 원소) — 붕괴는 그 적이 다음에 맞을 때
+                foreach (Transform t in Nearest(p, 5f, 2, g))
+                {
+                    if (t == null) continue;
+                    GameObject o = t.gameObject;
+                    int had = elements.TryGetValue(o, out var oe) && oe.until > Time.time ? oe.mask : 0;
+                    int add = !skill ? 1 : 1 << Random.Range(0, 3);
+                    elements[o] = (!skill ? Mathf.Max(had, 1) : had | add, Time.time + 6f);
+                    Fx.Spawn("fx_sparkle", t.position, 1.2f, new Color(1f, 0.85f, 0.45f), 24f);
+                }
+            }
+        }
         bool big = E("le.collapse");
         using var tier = EvoFx("l.catalyst");
         Deal(g, dmg, Vector3.zero, 0f);
@@ -192,6 +237,8 @@ public partial class SignatureSkills
     {
         int k = tinkerKind;
         tinkerKind = (tinkerKind + 1) % 3;
+        // 2026-10-19~ 조수 공방(갈래): 조수가 내가 마지막에 던진 시약을 따라 던짐
+        if (Paths.Has(AlchemistPaths.Twins) && Kit != null && Kit.AlchLastKind >= 0) k = Kit.AlchLastKind;
         foreach (Collider2D c in new List<Collider2D>(Specials.Overlap(q, 1.6f, hits)))
         {
             if (c == null || !IsFoe(c)) continue;
@@ -220,6 +267,7 @@ public partial class SignatureSkills
             {
                 Vector2 d = Quaternion.Euler(0f, 0f, i * 360f / n + Random.Range(-10f, 10f)) * Vector2.right;
                 Bullet b = Shot(p, d, Atk * 0.5f * P("l.frost"), 2, 22f, 7f, "fx_spark", 0.7f * Fs("l.frost"), Tint("l.frost", Ice));       // 1.1.2~ 영구 동토: ×1.6
+                if (b != null && Paths.Res(AlchemistPaths.Frost) >= 2) b.onHitEnemy += (bullet, col) => AlchemistPaths.ShardHit(col);     // 빙결 공명 II: 10% 로 다시 얼림
                 if (b != null && E("le.frost"))
                     b.onHitEnemy += (bullet, col) =>
                     {
