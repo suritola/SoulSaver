@@ -102,6 +102,7 @@ public static class AutoplayRunner
         MaxMinutes = EnvF("AP_MAXMIN", 45f);
         BeyondSeconds = EnvF("AP_BEYOND", 0f);
         NoDeath = Env("AP_NODEATH", "0") == "1";
+        NoRender = Env("AP_RENDER", "0") != "1";
         Directory.CreateDirectory(Out);
         progress = new StreamWriter(Path.Combine(Out, "progress.log"), true, new UTF8Encoding(false));
         errLog = new StreamWriter(Path.Combine(Out, "errors.txt"), true, new UTF8Encoding(false));
@@ -174,6 +175,14 @@ public static class AutoplayRunner
         yield return null;
     }
 
+    // 화면 그리기 끄기 (AP_RENDER=1 이면 그대로): 카메라가 아무 층도 그리지 않게 — Camera.main · 좌표 변환은 그대로라 조준 · 판정은 같음
+    //   게임 코드의 isVisible 은 모두 겉모습(꼬리 · 핏방울 · 체력바 애니메이션 · 화로 흔들림)만 건너뜀 → 피해 · 진행에는 영향 없음
+    public static bool NoRender = true;
+    static void MuteCameras()
+    {
+        foreach (Camera c in Camera.allCameras) if (c.cullingMask != 0) c.cullingMask = 0;
+    }
+
     static string Clock(float s) => s < 0f ? "-" : EndlessMode.Clock(s);
 
     // ================================================================= 판 하나
@@ -202,6 +211,7 @@ public static class AutoplayRunner
         while (true)
         {
             yield return null;
+            if (NoRender && Time.frameCount % 30 == 0) MuteCameras();
             string scene = SceneManager.GetActiveScene().name;
             EndlessMode em = EndlessMode.Instance;
             float s = GameMode.EndlessSeconds;

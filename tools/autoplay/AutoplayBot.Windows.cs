@@ -248,10 +248,12 @@ public partial class AutoplayBot
 
     // ================================================================= 떠돌이 상점: 제단에 다가가 열고 공격력 위주로 삼
     ShopStall stall;
+    float nextStallFind;
     Vector2 StallGoal(Vector2 me)
     {
-        if (stall == null)
+        if (stall == null && Time.time >= nextStallFind)
         {
+            nextStallFind = Time.time + 0.5f;
             ShopStall[] all = FindObjectsByType<ShopStall>(FindObjectsSortMode.None);
             float bd = 30f;
             foreach (ShopStall s in all) { float d = ((Vector2)s.transform.position - me).magnitude; if (d < bd) { bd = d; stall = s; } }

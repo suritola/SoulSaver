@@ -154,6 +154,21 @@ public partial class AutoplayBot : MonoBehaviour
         Fire(p, me);
         Ult(p, me);
         NoteHp(p);
+        Trace(p, me);
+    }
+
+    // AP_TRACE=1: 1초(게임)마다 봇 상태 한 줄 (조정용)
+    static readonly bool TraceOn = System.Environment.GetEnvironmentVariable("AP_TRACE") == "1";
+    float nextTrace;
+    Vector3 traceFrom;
+    void Trace(PlayerController p, Vector3 me)
+    {
+        if (!TraceOn || Time.time < nextTrace) return;
+        float moved = ((Vector2)(me - traceFrom)).magnitude / Mathf.Max(0.01f, Time.time - (nextTrace - 1f));
+        traceFrom = me; nextTrace = Time.time + 1f;
+        AutoplayRunner.Log("T " + EndlessMode.Clock(GameMode.EndlessSeconds) + " 자리 " + ((Vector2)me).ToString("0.0") + " 이동입력 " + GameInput.AutoMove.ToString("0.00") + " 실제속도 " + moved.ToString("0.0") + " 추정 " + speedEst.ToString("0.0")
+            + " · 가까운적 " + nearestMob.ToString("0.0") + " 8칸안 " + nearCount + " · 위험 " + lastDanger.ToString("0.0") + " · 표적 " + (hasTarget ? (targetBoss ? "보스 " : "몹 ") + ((Vector2)(targetPos - me)).magnitude.ToString("0.0") : "-")
+            + " · 쏨 " + firing + " · 체력 " + Mathf.RoundToInt(p.PlayerHealth) + " · dt " + Time.deltaTime.ToString("0.000") + " uDt " + Time.unscaledDeltaTime.ToString("0.000") + " · 탄 " + projs.Count + " 예고 " + warns.Count + " 장판 " + zones.Count);
     }
 
     void ReleaseAll()
@@ -190,6 +205,10 @@ public partial class AutoplayBot : MonoBehaviour
     readonly List<Warn> warns = new List<Warn>(32);
     readonly List<Zone> zones = new List<Zone>(32);
     readonly List<Vector3> mobs = new List<Vector3>(256);
+    struct MobInfo { public Vector2 p, v; public float r; }
+    readonly List<MobInfo> mobInfo = new List<MobInfo>(256);
+    readonly Dictionary<int, (Vector2 p, float t, Vector2 v, float r)> mobTrack = new Dictionary<int, (Vector2, float, Vector2, float)>(512);
+    float playerR = 0.5f;
     readonly List<(Vector3 c, float r)> bossBodies = new List<(Vector3, float)>(8);
     float nextSlowScan;
     Telegraph[] telegraphs = new Telegraph[0];
@@ -206,13 +225,34 @@ public partial class AutoplayBot : MonoBehaviour
             nextSeenClean = Time.time + 5f;
             if (seenAt.Count > 4000) { seenAt.Clear(); blind.Clear(); }
         }
-        mobs.Clear();
+        mobs.Clear(); mobInfo.Clear();
+        Collider2D pc = p.GetComponent<Collider2D>();
+        if (pc != null) playerR = Mathf.Clamp(Mathf.Min(pc.bounds.extents.x, pc.bounds.extents.y), 0.2f, 1.2f);
+        float now = Time.time;
         foreach (EnermyController e in EnermyController.Live)
         {
             if (e == null || e.IsDead) continue;
             Vector3 q = e.transform.position;
-            if (((Vector2)(q - me)).sqrMagnitude < 30f * 30f) mobs.Add(q);
+            if (((Vector2)(q - me)).sqrMagnitude > 30f * 30f) continue;
+            mobs.Add(q);
+            int id = e.GetInstanceID();
+            Vector2 v = Vector2.zero; float r;
+            if (mobTrack.TryGetValue(id, out var tr))
+            {
+                float dt = now - tr.t;
+                v = dt > 0.0001f ? Vector2.Lerp(tr.v, ((Vector2)q - tr.p) / dt, 0.5f) : tr.v;
+                if (v.sqrMagnitude > 40f * 40f) v = Vector2.zero;     // 순간이동 · 밀려남
+                r = tr.r;
+            }
+            else
+            {
+                Collider2D c = e.GetComponent<Collider2D>();
+                r = c != null ? Mathf.Clamp(Mathf.Max(c.bounds.extents.x, c.bounds.extents.y), 0.25f, 3f) : 0.5f;
+            }
+            mobTrack[id] = (q, now, v, r);
+            mobInfo.Add(new MobInfo { p = q, v = v, r = r });
         }
+        if (mobTrack.Count > 2000) mobTrack.Clear();
         bossBodies.Clear();
         foreach (bosss b in bosss.Live)
         {
@@ -235,7 +275,7 @@ public partial class AutoplayBot : MonoBehaviour
         // 예고 · 바닥 위험 · 결계는 0.1초마다 찾음 (FindObjectsByType 이 비쌈)
         if (Time.time >= nextSlowScan)
         {
-            nextSlowScan = Time.time + 0.1f;
+            nextSlowScan = Time.time + Mathf.Max(0.1f, Time.deltaTime * 3.5f);
             telegraphs = FindObjectsByType<Telegraph>(FindObjectsSortMode.None);
             hazards = FindObjectsByType<HazardZone>(FindObjectsSortMode.None);
             domainOn = false;
@@ -245,6 +285,7 @@ public partial class AutoplayBot : MonoBehaviour
                 if (bu != null) { domainOn = true; domainC = Get(bu, "center", Vector3.zero); domainR = Get(bu, "radiusNow", 0f); if (domainR <= 0.1f) domainOn = false; }
             }
             ScanTerrain(me);
+            ScanSpecial(me);
         }
         warns.Clear();
         foreach (Telegraph t in telegraphs)
@@ -264,6 +305,28 @@ public partial class AutoplayBot : MonoBehaviour
             zones.Add(new Zone { c = z.transform.position, r = z.radius, w = 10f });
         }
         AddTerrainZones();
+        foreach (var b in beams) warns.Add(new Warn { circle = false, a = b.a, b = b.b, r = 1.3f, fill = 1f });
+    }
+
+    // ================================================================= Telegraph 로 안 잡히는 패턴
+    // 리치 왕 결계 회전 광선 (LineRenderer "LichBeamWarn" · 선분 0.85 안이면 맞음) → 위험 직선
+    // 엄마 「불 끄고 자!」 확인 단계 (플레이어 머리 위 「…」 · 띠 4.5 안에서 움직이면 맞음) → 멈춰 섬
+    readonly List<(Vector2 a, Vector2 b)> beams = new List<(Vector2, Vector2)>();
+    bool lightsOut;
+    void ScanSpecial(Vector3 me)
+    {
+        beams.Clear();
+        if (BossUltimate.Active)
+            foreach (LineRenderer lr in FindObjectsByType<LineRenderer>(FindObjectsSortMode.None))
+                if (lr.name == "LichBeamWarn" && lr.enabled && lr.gameObject.activeInHierarchy && lr.positionCount >= 2)
+                    beams.Add((lr.GetPosition(0), lr.GetPosition(1)));
+        lightsOut = false;
+        bool mom = false;
+        foreach (bosss b in bosss.Live) if (b != null && !b.IsDead && b.developerMom) mom = true;
+        if (mom)
+            foreach (TMPro.TextMeshPro t in FindObjectsByType<TMPro.TextMeshPro>(FindObjectsSortMode.None))
+                if (t.isActiveAndEnabled && t.text == "…" && ((Vector2)(t.transform.position - me)).magnitude < 6f && Noticed(((long)t.GetInstanceID() << 20) | 3))
+                { lightsOut = true; break; }
     }
 
     // ================================================================= 속도 재기 (게임이 입력을 정규화하고 속도는 영웅 · 카드마다 다름)
@@ -365,6 +428,7 @@ public partial class AutoplayBot : MonoBehaviour
 
     void Move(PlayerController p, Vector3 me)
     {
+        if (lightsOut) { chosen = Vector2.zero; GameInput.AutoMove = Vector2.zero; return; }
         if (Time.time < nextDecide) { GameInput.AutoMove = chosen; return; }
         nextDecide = Time.time + decideEvery * Mathf.Clamp(1f + Gauss() * 0.2f, 0.6f, 1.5f);
         if (Time.time >= nextFlip) { nextFlip = Time.time + 4f + R01() * 5f; if (R01() < 0.5f) orbitDir = -orbitDir; }
@@ -397,8 +461,16 @@ public partial class AutoplayBot : MonoBehaviour
                 score -= dq < near ? (near - dq) * 0.5f : dq > far ? (dq - far) * 0.35f : 0f;
                 score += Vector2.Dot(d, side) * 0.45f;
             }
+            if (!Melee && mobInfo.Count > 0)
+            {
+                // 원거리: 가장 가까운 적과 near 이상 떨어지기 (지금 속도로 다가오는 것 포함)
+                Vector2 q = m2 + d * speedEst * 0.35f;
+                float minD = 99f;
+                foreach (MobInfo m in mobInfo) { float dd = (q - (m.p + m.v * 0.35f)).magnitude - m.r; if (dd < minD) minD = dd; }
+                if (minD < near) score -= (near - minD) * 0.6f;
+            }
             if (pick != Vector2.zero) score += Vector2.Dot(d, pick) * pickWeight;
-            if (i == 16) score += MustKeepMoving ? -1.5f : LikesStanding && lastDanger < 0.3f ? 0.8f : -0.25f;
+            if (i == 16) score += MustKeepMoving ? -1.5f : LikesStanding && lastDanger < 0.3f && nearestMob > 6f ? 0.8f : -0.25f;
             score += Gauss() * scoreNoise * 0.3f;
             if (score > best) { best = score; bi = i; bestDanger = danger; }
         }
@@ -412,11 +484,18 @@ public partial class AutoplayBot : MonoBehaviour
     {
         float s = 0f;
         // 잡몹 몸 (닿으면 피해) — 근접 영웅은 덜 꺼림
-        float body = Melee ? 1.05f : 1.6f;
-        foreach (Vector3 m in mobs)
+        // 몸이 닿는 거리 = 적 반지름 + 내 반지름, 그 바깥 여유(근접은 작게) 안이면 점점 위험 · 적은 지금 속도로 t 초 움직인 자리
+        float margin = Melee ? 0.9f : 2.2f;
+        foreach (MobInfo m in mobInfo)
         {
-            float d = (q - (Vector2)m).sqrMagnitude;
-            if (d < body * body * 4f) { float dd = Mathf.Sqrt(d); if (dd < body * 2f) s += (1f - dd / (body * 2f)) * (dd < body ? 3f : 1f); }
+            Vector2 mp = m.p + m.v * Mathf.Min(t, 0.45f);
+            float touch = m.r + playerR;
+            float dd = (q - mp).magnitude;
+            if (dd < touch + margin)
+            {
+                float k = 1f - Mathf.Max(0f, dd - touch) / margin;
+                s += dd < touch ? 6f : k * k * 2.5f;
+            }
         }
         foreach (var b in bossBodies)
         {

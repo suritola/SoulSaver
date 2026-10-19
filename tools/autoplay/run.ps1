@@ -1,4 +1,4 @@
-# 자동 플레이 봇으로 무한 모드를 배치 모드에서 끝까지 돌려 영웅 · 갈래별 클리어 시간을 잼 (tools/autoplay)
+﻿# 자동 플레이 봇으로 무한 모드를 배치 모드에서 끝까지 돌려 영웅 · 갈래별 클리어 시간을 잼 (tools/autoplay)
 # 프로젝트를 %LOCALAPPDATA%\SoulSaverBuild\Autoplay 로 복사하고 (빌드 · QA 복사본과 따로), 봇 코드는 그 복사본에만 넣음
 #   복사본에서만 고치는 줄: 초월 카드 · 궁수 숨 고르기의 Auto 생략을 되살림 · 쓰러질 때 AutoplayHooks 를 부름 (원본 Assets 는 그대로)
 #
@@ -13,12 +13,13 @@
 #   -Path2     두 번째 갈래: 0~4 · 키 · 이름 · single(외길) · random · all(첫 갈래와 다른 넷 + 외길)  /  -Single 은 -Path2 single 과 같음
 #   -Runs      조합마다 판 수 · -Seed 첫 시드 (판마다 +1)
 #   -Skill     봇 실력 0~1 (기본 0.5 = 보통 실력 플레이어: 반응 약 0.28초 · 새 위협 15% 못 봄 · 조준 흔들림 약 9°)
-#   -TimeScale 게임 한 프레임 길이 배수 (1 = 1/60초 · 기본 2 = 1/30초). Time.captureDeltaTime 으로 고정 → 실제 속도는 기계가 낼 수 있는 최대 (판정 · 물리는 매 프레임 같은 간격)
+#   -TimeScale 게임 한 프레임 길이 배수 (1 = 1/60초 · 기본 3 = 1/20초). Time.captureDeltaTime 으로 고정 → 실제 속도는 기계가 낼 수 있는 최대 (판정 · 물리는 매 프레임 같은 간격)
 #   -MaxMinutes 판 상한 (게임 분, 기본 45) · -Beyond 엄마 처치 뒤 한계 돌파에서 더 버틸 게임 초 (기본 0 = 바로 끝)
 #   -NoDeath   쓰러져도 체력을 채우고 계속 (클리어 시간 · 사망 횟수를 함께 잼)
 #   -OutName   회차 이름 (결과 폴더 · docs/balance/runs/<이름>/ 에 복사, 기본 날짜시각)
 #   -Commit    (선택) 그 git 커밋의 Assets · Packages · ProjectSettings 로 복사본을 만듦 (기본: 지금 작업 폴더)
-#   -NoCopyToDocs  docs/balance/runs 로 복사하지 않음
+#   -NoCopyToDocs  docs/balance/runs 로 복사하지 않음 · -Trace 1초마다 봇 상태 줄 (progress.log, 조정용)
+#   -Render    화면을 그림 (기본은 카메라가 아무것도 그리지 않게 해 빠르게 · 판정 · 조준에는 영향 없음)
 # 결과: %LOCALAPPDATA%\SoulSaverBuild\AutoplayOut\<OutName>\ results.csv · errors.txt(예외 · 오류 전체) · progress.log · unity_errors.txt · unity.log
 param(
     [string[]]$Hero = @("Gunner"),
@@ -28,13 +29,15 @@ param(
     [int]$Runs = 1,
     [int]$Seed = 1000,
     [double]$Skill = 0.5,
-    [double]$TimeScale = 2,
+    [double]$TimeScale = 3,
     [double]$MaxMinutes = 45,
     [double]$Beyond = 0,
     [switch]$NoDeath,
     [string]$OutName = "",
     [string]$Commit = "",
     [switch]$NoCopyToDocs,
+    [switch]$Trace,
+    [switch]$Render,
     [int]$HangSeconds = 150,
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
@@ -122,6 +125,8 @@ $env:AP_STEP = ($TimeScale / 60.0).ToString($inv)
 $env:AP_MAXMIN = $MaxMinutes.ToString($inv)
 $env:AP_BEYOND = $Beyond.ToString($inv)
 $env:AP_NODEATH = $(if ($NoDeath) { "1" } else { "0" })
+$env:AP_TRACE = $(if ($Trace) { "1" } else { "0" })
+$env:AP_RENDER = $(if ($Render) { "1" } else { "0" })
 $csv = Join-Path $Out "results.csv"
 $startRows = if (Test-Path $csv) { (Get-Content $csv | Measure-Object -Line).Lines - 1 } else { 0 }
 if ($startRows -lt 0) { $startRows = 0 }
