@@ -603,7 +603,7 @@ public class EnermyController : MonoBehaviour
             
 
             if (!skipKillCount) enemySpawner.killedEnemy++;       // 1.2~ 정화로 쓰러진 적 절반은 보스까지 처치 수에 넣지 않음
-            if (Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
+            if (HPpack.Live.Count < HPpack.Cap && Random.value * 100f < (hpChance >= 0f ? hpChance : chanceofHP)) Instantiate(hp, Hostile.ClampArena(transform.position), Quaternion.identity);     // 코인 · 회복약은 맵 안에만 (2.2.0)
             // 1.0.4~: 많이 떨어뜨리면(엘리트 등) 값이 큰 코인 몇 개로 나눔 · 풀에서 꺼내 씀 (줍는 양은 그대로)
             CoinTag.Drop(coin, transform.position, coinDrop, new Vector2(1.5f, 1.5f), true, CoinTag.EnemyPieces);
         }

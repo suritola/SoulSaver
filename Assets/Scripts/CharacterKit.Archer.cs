@@ -64,7 +64,7 @@ public partial class CharacterKit
             bool main = shotIndex++ == mid;     // 가운데 화살 — 덤 화살(멀티 샷 양옆)은 고유 스킬 명중 효과를 「가득 당긴 화살」(다섯 발마다)에만 (검토 2026-10-19)
             Bullet b = Projectile(start, d, dmg, 1, 70f, 0f, "fx_arrow", full ? 0.5f : 0.38f, full ? new Color(1f, 0.9f, 0.5f) : new Color(1f, 0.97f, 0.8f), false);
             if (b == null) continue;
-            ArrowForm(b, k, start);
+            ArrowForm(b, Mathf.Max(k, 0.5f), start);     // 1.4.1~ 속사 화살은 형태 판정에서 「반 이상 당긴 화살」로 (속사 활 관통 +1 · 그물 화살이 다섯 발 중 네 발에 빠졌음)
             if (full)
             {
                 if (card[0] > 0) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);

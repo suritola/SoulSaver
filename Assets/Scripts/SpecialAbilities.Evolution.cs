@@ -62,13 +62,23 @@ public partial class SpecialAbilities
         if (!Gunner)
         {
             // 1차: 캐릭터 전용 무기 셋의 모양으로 평타가 바뀜 · 2차: 형태 위에 덧붙는 강화
-            if (EvolutionTier == 0) return KitFormOptions();
-            if (EvolutionTier == 1) return CharacterKit.AugmentsFor(CharacterData.Selected);
+            if (EvolutionTier == 0) return DropDeadEvolutions(KitFormOptions());
+            if (EvolutionTier == 1) return DropDeadEvolutions(CharacterKit.AugmentsFor(CharacterData.Selected));
             return null;
         }
         if (EvolutionTier == 0) return Tier1Options;
         if (EvolutionTier == 1 && gunEvo1 >= 0) return Tier2Options(gunEvo1);
         return null;
+    }
+
+    // 1.4.1~ 지금 판에서 효과가 하나도 없는 진화는 빼고 보여 줌 (다 빠지면 원래대로)
+    //   지도 제작자: 도형이 닫히지 않는 판(일필 · 대형 도면 · 행군 없음)이면 지구본(도형 1.5배 · 끌어모음 · +30%) · 판화(도형을 닫으면 잉크 폭발)는 효과 0
+    static int[] DropDeadEvolutions(int[] options)
+    {
+        if (options == null || CharacterData.Selected != CharacterId.Cartographer || !Paths.Safe(() => CharacterKit.MapNoClosures, false)) return options;
+        List<int> keep = new List<int>();
+        foreach (int id in options) if (id != KitGlobe && id != CharacterKit.AugEngrave) keep.Add(id);
+        return keep.Count > 0 ? keep.ToArray() : options;
     }
 
     // 진화 단계에 맞는 무기 이름 (2차에서 같은 무기를 고르면 새 이름)
@@ -158,9 +168,8 @@ public partial class SpecialAbilities
         EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionName(id, EvolutionTier + 1), RunStats.Seconds));
         if (IsAwaken(id)) { ApplyAwaken(id); EvolutionTier = 3; return; }
         int tier = EvolutionTier + 1;
-        // 필살기 강화(영혼 트리)는 새 필살기로 이어받음
-        int ultFrom = UltActive ? UltId : PistolUlt;
-        if (ultFrom != id && ultLevels.TryGetValue(ultFrom, out int[] ul)) ultLevels[id] = (int[])ul.Clone();
+        // 1.4.1~ 필살기 특성 단계를 새 무기로 복사하지 않음 (예전엔 이전 무기 단계가 새 무기에 공짜로 붙고 이전 무기 단계도 그대로 남았음)
+        //   원래 우클릭 · 이전 궁극기는 진화 뒤에도 나가므로 각자의 특성 줄(u.t<무기>.N)에 그대로 남음 — 옮길 것도 사라질 것도 없음
         if (!Gunner) { KitEvolve(id); return; }
         // 무기는 권총 그대로, 능력만 덧붙음 (SpecialAbilities.EvoAugments)
         if (tier == 1) gunEvo1 = id; else gunEvo2 = id;
@@ -299,18 +308,19 @@ public partial class SpecialAbilities
         Chain(t, "u.power", 2, 4, "u.power1", 1, "필살 위력", "필살기 피해 +20%", new[] { 20, 36, 56 }, ult, () => TreeUltPower += 0.2f);
         t.Add(Node("u.gauge1", "u.power1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", 12, LvIcon(2), () => TreeGaugeMul += 0.12f));
         Chain(t, "u.gauge", 2, 3, "u.gauge1", 1, "빠른 충전", "필살기 게이지 차는 속도 +12%", new[] { 26, 44 }, LvIcon(2), () => TreeGaugeMul += 0.12f);
-        // 필살기 특성: 무기마다 다름 (권총 타겟 수 · 화염 회오리 지속 · 레일건 굵기 …), 진화해도 이어짐
-        int uw = UltActive ? UltId : PistolUlt;
-        string ut = UltTraitName(uw), ud = Loc.T("필살기") + " " + ut + " " + UltTraitStep(uw);
-        t.Add(RawNode("u.trait1", "u.power1", 1, ut, ud, 16, ult, () => UpgradeUlt(uw, UltTraitStat)));
-        t.Add(RawNode("u.trait2", "u.trait1", 1, ut + " II", ud, 32, ult, () => UpgradeUlt(uw, UltTraitStat)));
-        t.Add(RawNode("u.trait3", "u.trait2", 1, ut + " III", ud, 52, ult, () => UpgradeUlt(uw, UltTraitStat)));
+        // 필살기 특성: 무기마다 다름 (권총 타겟 수 · 화염 회오리 지속 · 레일건 굵기 …)
+        // 1.4.1~ 무기마다 따로 된 줄 (u.t<무기>.1~3, 권총 · 원래 우클릭 = u.t-1.1~3). 예전엔 칸 하나(u.trait1~3)가 지금 무기를 따라 바뀌어,
+        //   진화 전에 산 「타겟 수」가 진화 뒤 새 무기 특성으로 「배움」 처리되고(새 무기 특성은 공짜 · 다시 살 수 없음) 권총 쪽 값도 그대로 남았음
+        //   원래 우클릭(일제 사격 · 캐릭터 필살기)은 진화 뒤에도 늘 나가므로 권총 줄은 늘 두고, 덧붙는 궁극기마다 줄을 하나씩
+        AddUltTraitLine(t, PistolUlt, ult);
+        foreach (int aw in AddedUltIds()) AddUltTraitLine(t, aw, ult);
         if (Gunner)
         {
             // 1.0.1: 쌍권총도 일제 사격으로 조준하므로 「노려보는 눈빛」은 늘, 덧붙는 총알 폭풍이 있으면 사거리 칸도
             if (UltActive && HasAug(DualId))     // 1.0.2: 2차를 다른 무기로 해도 총알 폭풍이 남으므로
             {
-                t.Add(Node("u.storm1", "u.trait1", 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
+                // 1.4.1~ 쌍권총 특성 줄 첫 칸에서 (예전엔 u.trait1 이라 권총 시절에 산 「타겟 수」만으로 바로 열렸음)
+                t.Add(Node("u.storm1", UltTraitKey(DualId, 1), 1, "폭풍 사거리", "총알 폭풍 사거리 +3칸", 18, ult, () => TreeStormRange += 3f));
                 t.Add(Node("u.storm2", "u.storm1", 1, "폭풍 사거리 II", "총알 폭풍 사거리 +3칸", 34, ult, () => TreeStormRange += 3f));
             }
             t.Add(Node("u.slow1", "u.gauge1", 1, "노려보는 눈빛", "필살기를 조준하는 동안 적이 20% 더 느려집니다", 18, LvIcon(3), () => p.Skill_setTime *= 0.8f));
@@ -419,6 +429,8 @@ public partial class SpecialAbilities
     string TreeMarkName(string key)
     {
         if (key.StartsWith("o.") && key.EndsWith("+")) return "mark.evolve";
+        // 1.4.1~ 진화 무기 필살기 특성 줄: 무기 그림 + 단계 표식 (권총 줄은 전용 그림 tree_u_trait1~3)
+        if (ParseUltTraitKey(key, out int uw, out int us)) return uw >= 0 && us >= 1 && us <= 3 ? "mark." + us : null;
         if (!key.StartsWith("m")) return null;
         int dot = key.IndexOf('.');
         if (dot < 0) return null;                       // 숙련 첫 칸은 무기 그림 그대로
@@ -575,6 +587,37 @@ public partial class SpecialAbilities
                              apply = () => Equip(new[] { id }) });
         t.Add(new SoulNode { key = "o." + id + "+", parent = "o." + id, branch = 4, name = Loc.T(d.name) + Loc.T(" 진화"), desc = EvolveText(id), cost = evoCost, icon = d.icon,
                              apply = () => Evolve(id) });
+    }
+
+    // 1.4.1~ 필살기 특성 줄 (무기마다 따로): u.t<무기>.<단계> — 권총 · 캐릭터 원래 우클릭은 u.t-1.N
+    public static string UltTraitKey(int weapon, int step) => "u.t" + weapon + "." + step;
+
+    void AddUltTraitLine(List<SoulNode> t, int w, Sprite ult)
+    {
+        string ut = UltTraitName(w);
+        bool pistol = w == PistolUlt;
+        // 진화 전에는 예전 글 그대로 (「필살기 타겟 수 +2마리」), 진화 뒤에는 어느 필살기 특성인지 이름을 붙임
+        string head = pistol ? (UltActive ? UltName(PistolUlt) : Loc.T("필살기")) : UltName(w);
+        string name = pistol ? ut : UltName(w) + " " + ut;
+        string desc = head + " " + ut + " " + UltTraitStep(w);
+        int[] costs = { 16, 32, 52 };
+        string[] roman = { "", " II", " III" };
+        for (int i = 1; i <= 3; i++)
+        {
+            Sprite own = pistol ? TreeIcon("u.trait" + i) : null;
+            Sprite icon = pistol ? (own != null ? own : ult) : EvolutionIcon(w);
+            t.Add(RawNode(UltTraitKey(w, i), i == 1 ? "u.power1" : UltTraitKey(w, i - 1), 1, name + roman[i - 1], desc, costs[i - 1], icon,
+                          () => UpgradeUlt(w, UltTraitStat)));
+        }
+    }
+
+    // 줄 키에서 무기 · 단계 (u.t<무기>.<단계>가 아니면 false)
+    static bool ParseUltTraitKey(string key, out int weapon, out int step)
+    {
+        weapon = 0; step = 0;
+        if (key == null || !key.StartsWith("u.t") || key.StartsWith("u.trait")) return false;
+        int dot = key.LastIndexOf('.');
+        return dot > 3 && int.TryParse(key.Substring(3, dot - 3), out weapon) && int.TryParse(key.Substring(dot + 1), out step);
     }
 
     // 같은 칸을 여러 단계로 (예: w.dmg2 ~ w.dmg5): 앞 단계에서 이어짐
@@ -736,6 +779,9 @@ public partial class SpecialAbilities
     // 판 중간 저장 (RunSave): 기록한 칸을 조각 없이 다시 배움 (배운 순서대로 부르므로 그때와 같은 트리)
     public void ReplayNode(string key)
     {
+        // 1.4.1~ 옛 저장의 필살기 특성 칸(u.trait1~3)은 그때 무기의 줄로 (기록은 배운 순서대로 다시 적용하므로 지금 무기 = 그때 무기)
+        if (key != null && key.StartsWith("u.trait") && int.TryParse(key.Substring(7), out int oldStep))
+            key = UltTraitKey(UltActive ? UltId : PistolUlt, oldStep);
         if (string.IsNullOrEmpty(key) || ownedNodes.Contains(key)) return;
         foreach (SoulNode n in BuildSoulTree())
         {

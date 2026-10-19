@@ -800,7 +800,10 @@ public partial class SpecialAbilities : MonoBehaviour
     public int MaxTargets(int baseCount)
     {
         int w = UltReplaced ? UltId : PistolUlt;
-        return w == PistolUlt || w == ScytheId ? baseCount + 2 * UltTrait(w) : baseCount;
+        int n = w == PistolUlt || w == ScytheId ? baseCount + 2 * UltTrait(w) : baseCount;
+        // 1.4.1~ 덧붙는 죽음의 춤은 조준한 적들을 벰 → 낫 특성 줄 「타겟 수」도 조준 수에 (예전엔 늘 권총 값만 봐서 낫 칸은 효과 0)
+        if (w != ScytheId && Gunner && UltActive && HasAug(ScytheId)) n += 2 * UltTrait(ScytheId);
+        return n;
     }
 
     public int GrenadeRows => 6 + 2 * UltTrait(GrenadeId);

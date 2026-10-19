@@ -204,8 +204,11 @@ public partial class CharacterKit
         // 소포 (카드) · 소포 상자 (형태): 맞은 자리에서 터짐 (무거운 소포는 이미 크게 터지므로 대신 소포를 키움 · ParcelBlast)
         if (!heavy && (card[1] > 0 || form == SpecialAbilities.KitParcel))
         {
-            float r = (card[1] > 0 ? 0.8f + 0.4f * card[1] : 1.2f) * SignatureSkills.ParcelMul();
-            DamageCircle(at, r, dmg * (card[1] > 0 ? 0.5f : 0.6f), 1f);
+            // 1.4.1~ 카드와 형태가 겹치면 더함 (예전엔 카드를 배우는 순간 형태 폭발 60% 가 카드 폭발 50% 로 바뀌어 오히려 약해졌음)
+            //   반경 = 카드 반경(없으면 1.2칸) × 소포 상자 1.15 (무거운 소포 PostParcelRadius 와 같은 배율) · 피해 = 60%(상자) / 50%(카드) + 상자일 때 카드 단계마다 +10%
+            bool box = form == SpecialAbilities.KitParcel;
+            float r = (card[1] > 0 ? 0.8f + 0.4f * card[1] : 1.2f) * (box && card[1] > 0 ? 1.15f : 1f) * SignatureSkills.ParcelMul();
+            DamageCircle(at, r, dmg * (box ? 0.6f + 0.1f * card[1] : 0.5f), 1f);
             Fx.Spawn("fx_explosion", at, r * 2f, new Color(0.9f, 0.7f, 0.45f), 20f);
         }
         bool killed = wasAlive && g != null && g.TryGetComponent(out EnermyController e2) && e2.IsDead;

@@ -17,7 +17,9 @@ public partial class CharacterKit
     // 냉기: 적마다 쌓인 수 · 얼어붙은 때까지
     readonly Dictionary<GameObject, int> chill = new Dictionary<GameObject, int>();
     readonly Dictionary<GameObject, float> frozenUntil = new Dictionary<GameObject, float>();
-    public int FreezeNeed => Mathf.Max(2, 5 - card[1]);
+    // 1.4.1~ 하한을 상수로 (외길이 「얼어붙는 손길」을 하한 너머로 늘리지 않게 LevelShop.CapOf 가 봄)
+    public const int FreezeFloor = 2;
+    public int FreezeNeed => Mathf.Max(FreezeFloor, 5 - card[1]);
     // 갈래 산산조각(대가): 얼어붙는 시간 절반
     float FreezeTime => (augment == AugDeepChill ? 1.5f : 1f) * (Paths.Has(GhostPaths.Shatter) ? GhostPaths.ShatterFreezeMul : 1f);
     // 갈래 혹한: 손길 +1칸

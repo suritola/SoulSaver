@@ -504,6 +504,14 @@ public sealed class CartographerPaths : HeroPaths
         Vector3 center = Vector3.zero;
         foreach (Vector3 p in poly) center += p;
         center /= poly.Count;
+        // 1.4.1~ 도형처럼: 끊기지 않는 선이면 고리가 넓어지고, 지구본 끌어모음 · +30% · 측량 표식 · 판화 · 게이지도 붙음 (CharacterKit.MapLoop*)
+        CharacterKit kit = CharacterKit.Instance;
+        float grow = kit != null ? kit.MapLoopScale : 1f;
+        if (grow > 1f)
+        {
+            poly = new List<Vector3>(poly);
+            for (int i = 0; i < poly.Count; i++) poly[i] = center + (poly[i] - center) * grow;
+        }
         float reach = 0f;
         foreach (Vector3 p in poly) reach = Mathf.Max(reach, (p - center).magnitude);
 
@@ -512,8 +520,10 @@ public sealed class CartographerPaths : HeroPaths
             foreach (Collider2D c in hits)
                 if (c != null && Paths.IsFoe(c) && CharacterKit.MapInShape(c, poly)) inside.Add(c);
         float dmg = Paths.Atk * LoopRatio * Paths.Power(March) * (Paths.Mastered(March) ? 2f : 1f);
+        if (kit != null) kit.MapLoopPull(center, inside);
         foreach (Collider2D c in inside)
-            if (c != null) Paths.Deal(c.gameObject, dmg, (c.transform.position - center).normalized, 1.2f, "행군 고리");
+            if (c != null) Paths.Deal(c.gameObject, dmg * (kit != null ? kit.MapLoopMul(c.gameObject) : 1f), (c.transform.position - center).normalized, 1.2f, "행군 고리");
+        if (kit != null) kit.MapLoopClosed(center, reach, inside);
 
         // 공명 I: 고리 안의 적 투사체를 지움
         if (Paths.Res(March) >= 1)

@@ -364,7 +364,7 @@ public class EnemySpawner : MonoBehaviour
         foreach (Transform c in new System.Collections.Generic.List<Transform>(CoinTag.All)) Add(c, null, true);
         // 회복약은 체력이 가득 차 있으면 끌어오지 않음 (닿으면 저절로 먹혀 낭비됨) · 몇 개 안 되므로 그대로 닿아서 먹힘
         if (playerC.PlayerHealth < playerC.PlayerMaxHealth)
-            foreach (HPpack hp in FindObjectsByType<HPpack>(FindObjectsSortMode.None)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null, false);
+            foreach (HPpack hp in new System.Collections.Generic.List<HPpack>(HPpack.Live)) Add(hp.pack != null ? hp.pack.transform : hp.transform, null, false);
 
         // 연출 동안은 조작하지 않고 감상만 (이동 · 공격 · 스킬 · 영혼 트리 입력을 막음)
         PlayerController.Cinematic = true;

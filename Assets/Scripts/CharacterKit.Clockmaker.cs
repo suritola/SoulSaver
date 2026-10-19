@@ -21,7 +21,8 @@ public partial class CharacterKit
     bool clockDialDrawn;
     float clockRingK = -1f;
     // 2026-10-19~ 갈래 톱니 떼 대가: +4 (ClockmakerPaths.ExtraNeed)
-    public int ClockNeed => Mathf.Max(4, 12 - 2 * card[1] - (augment == AugPrecise ? 2 : 0)) + ClockmakerPaths.ExtraNeed;
+    // 1.4.1~ 정밀 톱니(-2)는 카드 하한(4)을 적용한 뒤에 뺌 — 예전엔 같은 하한에 막혀 외길 「빠른 태엽」 4단계와 정밀 톱니 중 하나가 효과 0 (최소 2)
+    public int ClockNeed => Mathf.Max(2, Mathf.Max(4, 12 - 2 * card[1]) - (augment == AugPrecise ? 2 : 0)) + ClockmakerPaths.ExtraNeed;
     public bool ClockReady => clockTicks >= ClockNeed;
     public void AddClockTicks(float n) { clockTickFrac += n; while (clockTickFrac >= 1f) { clockTickFrac -= 1f; if (clockTicks < ClockNeed) clockTicks++; } }
     float clockTickFrac;

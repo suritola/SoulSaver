@@ -426,7 +426,9 @@ public partial class CharacterKit : MonoBehaviour
     public void UpdateBow(bool canDraw, float fullTime)
     {
         BowFired = false;
-        if (Paths.Safe(() => BowPathRapid(canDraw, fullTime), false)) return;          // 2026-10-19~ 갈래 속사: 당기지 않고 연사 (CharacterKit.Archer · 예외면 평소 활)
+        // 1.4.1~ 정조준은 속사 간격(가득 당기는 시간 기준)에도 — 예전엔 아래 계산보다 먼저 속사로 빠져 정조준 카드가 효과 0
+        float rapidFull = card[5] > 0 ? fullTime / (1f + 0.25f * card[5]) : fullTime;
+        if (Paths.Safe(() => BowPathRapid(canDraw, rapidFull), false)) return;          // 2026-10-19~ 갈래 속사: 당기지 않고 연사 (CharacterKit.Archer · 예외면 평소 활)
         if (!drawing)
         {
             if (canDraw && GameInput.FireHeld)

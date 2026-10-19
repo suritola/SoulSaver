@@ -719,7 +719,7 @@ public class EndlessTerrain : MonoBehaviour
     Vector3[] PickSpots(System.Random rng, int realm)
     {
         PlayerController player = Hostile.Player;
-        HPpack[] packs = FindObjectsByType<HPpack>(FindObjectsSortMode.None);
+        HPpack[] packs = HPpack.Live.ToArray();      // 1.4.1~ 씬 전체 검색 대신 목록
         ShopStall[] stalls = FindObjectsByType<ShopStall>(FindObjectsSortMode.None);
         List<Vector3> found = new List<Vector3>(PiecesPerRealm);
         for (int j = 0; j < PiecesPerRealm; j++)

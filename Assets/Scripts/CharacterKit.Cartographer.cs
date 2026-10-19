@@ -122,6 +122,7 @@ public partial class CharacterKit
             Fx.Spawn("fx_spark", c.transform.position, 0.8f, Ink, 26f);
             n++;
         }
+        PruneSurveyMarks();             // 1.4.1~ 도형이 안 닫히는 판(일필)에서도 획 표식이 쌓이지 않게 (예전엔 도형을 닫을 때만 지웠음)
         // 1.1.2: 획을 한눈에 — 판정 폭(반폭 width = 폭 2 × width + 적 몸)까지 굵게 (예전 1.2 × width), 밝은 잉크 테 + 흰 심 줄
         //   짙은 남색 잉크는 어두운 묘역 · 심연 바닥에 묻혀서 테두리 색을 밝게, 적 · 맵 물체 위 순서
         Fx.Beam(a, b, width * 2f * band, SkinFx.Tint(new Color(0.35f, 0.55f, 1f, 0.95f)), 0.45f, AttackLook.AreaOrder - 1);
@@ -212,13 +213,7 @@ public partial class CharacterKit
             DamageCircle(center, Mathf.Max(1.5f, reach * 0.8f), Damage * 1.5f * formPower, 2f);
             Fx.Spawn("fx_explosion", center, Mathf.Max(3f, reach * 1.8f), new Color(0.3f, 0.4f, 1f), 18f);
         }
-        // 측량 표식: 쓰러진 적 · 지난 표식은 지움 (계속 쌓이지 않게)
-        if (surveyMarks.Count > 64)
-        {
-            List<GameObject> old = new List<GameObject>();
-            foreach (var kv in surveyMarks) if (kv.Key == null || kv.Value < Time.time) old.Add(kv.Key);
-            foreach (GameObject g in old) surveyMarks.Remove(g);
-        }
+        PruneSurveyMarks();
         if (card[6] > 0 && player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * (0.01f + 0.03f * card[6]));
         Play("chime", 0.6f, 1.25f);
         Play("paperfold", 0.6f, 1.2f);
@@ -228,6 +223,57 @@ public partial class CharacterKit
         SignatureSkills.Closed(poly, center, reach, inside);
         CartographerPaths.ShapeClosed();        // 접지술: 도형마다 게이지
     }
+
+    // ---------------- 1.4.1~ 행군 고리 (갈래 행군 측량 · Paths.Cartographer.CloseLoop)도 「도형이 닫힘」처럼
+    //   예전엔 끊기지 않는 선(card[6]) · 측량 표식(card[5]) · 지구본 · 판화가 CloseShape 안에만 있어, 일필(도형 없음) + 행군 판에서 효과 0
+    // 고리 넓이 배율 (끊기지 않는 선 단계마다 +15%, 도형 반지름과 같게)
+    public float MapLoopScale => IsCartographer ? 1f + 0.15f * card[6] : 1f;
+
+    // 고리 피해 전: 지구본이면 안쪽 적이 가운데로 모임 (보스 제외)
+    public void MapLoopPull(Vector3 center, List<Collider2D> inside)
+    {
+        if (!IsCartographer || form != SpecialAbilities.KitGlobe) return;
+        foreach (Collider2D c in inside)
+            if (c != null && c.CompareTag("enermy")) c.transform.position = Vector3.Lerp(c.transform.position, center, 0.6f);
+    }
+
+    // 고리 피해 배율: 지구본 +30% · 측량 표식 (정밀 측량 공명 I 이면 1단계처럼)
+    public float MapLoopMul(GameObject g)
+    {
+        if (!IsCartographer || g == null) return 1f;
+        float m = form == SpecialAbilities.KitGlobe ? 1.3f : 1f;
+        int markLv = Mathf.Max(card[5], CartographerPaths.AutoMark ? 1 : 0);
+        if (markLv > 0 && surveyMarks.TryGetValue(g, out float until) && until > Time.time) m *= 1f + 0.3f * markLv;
+        return m;
+    }
+
+    // 고리 피해 뒤: 정밀 측량 공명 I 표식 · 판화 잉크 폭발 · 끊기지 않는 선 게이지
+    public void MapLoopClosed(Vector3 center, float reach, List<Collider2D> inside)
+    {
+        if (!IsCartographer) return;
+        if (CartographerPaths.AutoMark)
+            foreach (Collider2D c in inside)
+                if (c != null) surveyMarks[c.gameObject] = Time.time + 5f;
+        PruneSurveyMarks();             // 도형이 안 닫히는 판(일필 + 행군)에서도 표식이 쌓이지 않게
+        if (augment == AugEngrave)
+        {
+            DamageCircle(center, Mathf.Max(1.5f, reach * 0.8f), Damage * 1.5f * formPower, 2f);
+            Fx.Spawn("fx_explosion", center, Mathf.Max(3f, reach * 1.8f), new Color(0.3f, 0.4f, 1f), 18f);
+        }
+        if (card[6] > 0 && player != null && player.skillGauge != null) player.skillGauge.AddSkillPoint(player.skillGauge.MaxSkillPoint * (0.01f + 0.03f * card[6]));
+    }
+
+    // 측량 표식: 쓰러진 적 · 지난 표식은 지움 (계속 쌓이지 않게)
+    void PruneSurveyMarks()
+    {
+        if (surveyMarks.Count <= 64) return;
+        List<GameObject> old = new List<GameObject>();
+        foreach (var kv in surveyMarks) if (kv.Key == null || kv.Value < Time.time) old.Add(kv.Key);
+        foreach (GameObject g in old) surveyMarks.Remove(g);
+    }
+
+    // 도형이 하나도 닫히지 않는 판인지 (일필 · 대형 도면 교차 없음 · 행군 고리 없음) — 지구본 · 판화 진화를 고를 수 없게 (SpecialAbilities.NextEvolutionOptions)
+    public static bool MapNoClosures => CartographerPaths.NoShapes && !CartographerPaths.BlueprintOn && !Paths.Has(CartographerPaths.March);
 
     // 정다각형 (기본 삼각형 · 정밀 측량 사각형 · 극의 오각형)
     static List<Vector3> MapPolygon(Vector3 c, float r, float a0, int sides)
