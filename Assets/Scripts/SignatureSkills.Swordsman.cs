@@ -234,6 +234,8 @@ public partial class SignatureSkills
 
     float SwordTaken(float dmg)
     {
+        // 1.4.1~ 갈래 받아치기 막기를 혈갑 보호막보다 먼저 (보호막이 피해를 먹어 막기 · 보상이 빠지거나 보호막을 헛되이 쓰던 것)
+        if (dmg > 0f && SwordsmanPaths.ParryFirst(dmg)) return 0f;
         if (shield <= 0f || dmg <= 0f) return dmg;
         float absorbed = Mathf.Min(shield, dmg);
         shield -= absorbed;
