@@ -110,10 +110,10 @@ public static partial class LocTable
         PA("포탑 설치", "Turret Deploy", "砲台設置", "架设炮塔");
         PA("장전할 때 포탑 · 진지 방어", "Turrets on reload · Hold the line", "装填で砲台・陣地防衛", "装填时架炮塔・阵地防守");
         PA("거치 포탑", "Mounted Turret", "据え置き砲台", "固定炮塔");
-        PA("장전을 마칠 때마다 발밑에 포탑이 서서 0.4초마다 가까운 적을 쏩니다. (공격력 20% · 최대 2개 · 12초)",
-           "Each time you finish reloading, a turret deploys at your feet and shoots a nearby enemy every 0.4s. (20% of Attack · up to 2 · 12s)",
-           "装填を終えるたびに足元に砲台が立ち、0.4秒ごとに近くの敵を撃ちます。(攻撃力20%・最大2基・12秒)",
-           "每次装填完毕，脚下会架起一座炮塔，每0.4秒射击附近的敌人。(攻击力20%・最多2座・12秒)");
+        PA("장전을 마칠 때마다 발밑에 포탑이 서서 0.4초마다 가까운 적을 쏩니다. 사거리 안에 보스가 있으면 보스를 먼저 쏩니다. (공격력 20% · 최대 2개 · 12초)",     // 1.4.2~ 보스 우선
+           "Each time you finish reloading, a turret deploys at your feet and shoots a nearby enemy every 0.4s, targeting a boss first if one is in range. (20% of Attack · up to 2 · 12s)",
+           "装填を終えるたびに足元に砲台が立ち、0.4秒ごとに近くの敵を撃ちます。射程内にボスがいればボスを優先して撃ちます。(攻撃力20%・最大2基・12秒)",
+           "每次装填完毕，脚下会架起一座炮塔，每0.4秒射击附近的敌人，射程内有首领时优先射击首领。(攻击力20%・最多2座・12秒)");
         PA("내 공격 속도가 20% 느려집니다.", "Your attack speed is 20% slower.", "自分の攻撃速度が20%遅くなります。", "自身攻击速度降低20%。");
         PA("진지 방어 · 서 있는 보스", "Holding ground · Stationary bosses", "陣地防衛・動かないボス", "阵地防守・不移动的首领");
         PA("이동 강제 (침식 · 결계)", "Forced movement (Erosion · Barriers)", "移動の強制 (侵食・結界)", "被迫移动 (侵蚀・结界)");

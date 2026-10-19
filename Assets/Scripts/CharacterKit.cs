@@ -498,7 +498,7 @@ public partial class CharacterKit : MonoBehaviour
         SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        // 1.4.1~ 바람 공명 I 「바람길 위에서는 언제 놓아도 완벽」: 폭풍의 길(ae.storm) 순간 당김이 autoRelease 를 켜도 완벽 (예전: 진화하면 바람길 위 완벽이 사라짐)
+        // 1.4.2~ 바람 공명 I: 평타는 바람길 위 「완벽!」 판정 폭 2배 · 폭풍의 길 순간 당김만 완벽 고정 (1.4.1~ 폭풍의 길(ae.storm) 순간 당김이 autoRelease 를 켜도 완벽 (예전: 진화하면 바람길 위 완벽이 사라짐))
         bool windPerfect = stormDraw && !lockRelease && !((GameInput.Auto || GameInput.TrailerRunning) && !ManualBowInAuto) && Paths.Safe(() => BowPathWindPerfect, false);
         bool perfect = (!autoRelease || windPerfect) && draw >= 1f && heldFull <= PerfectWindow && !Breathless;
         float power = 0.3f + DrawPower * draw;                                  // 가득 당김 220%

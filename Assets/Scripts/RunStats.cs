@@ -579,7 +579,8 @@ public static class Hints
                                              "terrain", "endless.bossqueue",     // 1.2.3~ 무한 지형 변화 · 보스는 기다리지 않는다
                                              "bossult.shared",                   // 1.2.5~ 통합 결계 게이지 · 공간 침식
                                              "dev.code", "dev.popup", "mom.medal", "mom.lights",     // 개발자 · 엄마 고유 기본 공격
-                                             "paths.seed", "paths.crossroads" };                 // 2026-10-19~ 빌드 갈래 입문 · 갈림길
+                                             "paths.seed", "paths.crossroads",                 // 2026-10-19~ 빌드 갈래 입문 · 갈림길
+                                             "endless.slowlevel", "endless.phaseshard" };      // 1.4.2~ 무한 후반 레벨 곡선 · 단계 보상 조각 (도움말 다시 보기에 걸리게)
 
     public static void ResetAll()
     {

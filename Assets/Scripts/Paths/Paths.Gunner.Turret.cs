@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 거너 「포탑 설치」 갈래의 포탑 (GunnerPaths.SpawnTurret 이 new GameObject + 이 컴포넌트로 만듦 · 자기 복제 없음 · 최대 4)
-//   0.4초마다 가까운 적에게 한 발 (공격력 20%) · 12초 뒤 사라짐 (극의: 사라지지 않음)
+//   0.4초마다 가까운 적에게 한 발 (공격력 20% · 1.4.2~ 사거리 안 보스 먼저) · 12초 뒤 사라짐 (극의: 사라지지 않음)
 //   공명 II: 0.8초마다 적 투사체 하나를 쏴서 지움 · 사라질 때 폭발 / 극의: 5초마다 탄피 지뢰
 //   쓰러진 뒤에는 아무것도 하지 않음 · 다른 판이 시작되면(효과 인스턴스가 바뀌면) 스스로 사라짐
 //   그림: Resources/Icons/Paths/gunner_turret · gunner_turret_fire (tools/pixelart/make_paths_gunner.py) — 없으면 둥근 빛으로
@@ -55,7 +55,9 @@ public class GunTurret : MonoBehaviour
         if (now >= nextShot)
         {
             nextShot = now + GunnerPaths.TurretEvery;
-            Transform t = Specials.NearestEnemy(transform.position, GunnerPaths.TurretRange);
+            // 1.4.2~ 사거리 안에 살아 있는 보스가 있으면 보스부터 (갈래 강점 「서 있는 보스」대로 — 가까운 적만 쏘면 폭증 잡몹에 화력이 흩어져 포탑 갈래가 보스전에서 가장 느렸음)
+            Transform t = NearestBoss(transform.position, GunnerPaths.TurretRange);
+            if (t == null) t = Specials.NearestEnemy(transform.position, GunnerPaths.TurretRange);
             if (t != null) ShootAt(t.position, Paths.Atk * GunnerPaths.TurretRate);
         }
         if (Paths.Res(GunnerPaths.Turret) >= 2 && now >= nextZap)
@@ -73,6 +75,20 @@ public class GunTurret : MonoBehaviour
                 if (!Hostile.IsWall(at)) ss.PathMine(at);
             }
         }
+    }
+
+    // 1.4.2~ 사거리 안 가장 가까운 살아 있는 보스 (없으면 null · 할당 없음)
+    static Transform NearestBoss(Vector3 from, float range)
+    {
+        Transform best = null;
+        float bestSq = range * range;
+        foreach (bosss b in bosss.Live)
+        {
+            if (b == null || b.IsDead || !b.isActiveAndEnabled) continue;
+            float d = ((Vector2)(b.transform.position - from)).sqrMagnitude;
+            if (d < bestSq) { bestSq = d; best = b.transform; }
+        }
+        return best;
     }
 
     void ShootAt(Vector3 target, float dmg)

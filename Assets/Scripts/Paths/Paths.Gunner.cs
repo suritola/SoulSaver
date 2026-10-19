@@ -61,7 +61,7 @@ public sealed partial class GunnerPaths : HeroPaths
             color = new Color(1f, 0.4f, 0.35f), form = "산탄총" },
         new PathDef {
             key = "g.turret", name = "포탑 설치", tagline = "장전할 때 포탑 · 진지 방어",
-            seed = "거치 포탑", seedDesc = "장전을 마칠 때마다 발밑에 포탑이 서서 0.4초마다 가까운 적을 쏩니다. (공격력 20% · 최대 2개 · 12초)",
+            seed = "거치 포탑", seedDesc = "장전을 마칠 때마다 발밑에 포탑이 서서 0.4초마다 가까운 적을 쏩니다. 사거리 안에 보스가 있으면 보스를 먼저 쏩니다. (공격력 20% · 최대 2개 · 12초)",     // 1.4.2~ 보스 우선 (갈래 강점 「서 있는 보스」대로)
             cost = "내 공격 속도가 20% 느려집니다.", strong = "진지 방어 · 서 있는 보스", weak = "이동 강제 (침식 · 결계)",
             cards = new[] { S(0), S(5), S(6) }, evo = "ge.dance",
             res1 = "포탑이 3개까지 서고, 포탑 4칸 안에 서 있으면 장전이 2배 빨라집니다.",

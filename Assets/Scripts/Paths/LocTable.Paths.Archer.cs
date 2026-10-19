@@ -83,10 +83,10 @@ public static partial class LocTable
         PA("숨이 2배 빨리 닳습니다.", "Breath drains twice as fast.", "息が2倍速く減ります。", "气息消耗速度变为2倍。");
         PA("기동 · 생존", "Mobility · Survival", "機動 · 生存", "机动 · 生存");
         PA("화력 중간", "Moderate damage", "火力は中程度", "火力中等");
-        PA("바람길 위에서는 가득 당긴 화살을 언제 놓아도 「완벽!」이 됩니다.",
-           "On a wind lane, a fully drawn arrow is always Perfect, whenever you release it.",
-           "風の道の上では、引き絞った矢をいつ放っても「パーフェクト！」になります。",
-           "在风道上，拉满的箭无论何时放出都是「完美！」。");
+        PA("바람길 위에서는 「완벽!」 판정 폭이 2배가 됩니다.",     // 1.4.2~
+           "On a wind lane, the Perfect timing window is doubled.",
+           "風の道の上では、「パーフェクト！」の判定幅が2倍になります。",
+           "在风道上，「完美！」的判定窗口变为2倍。");
         PA("후퇴 사격으로 물러난 뒤 0.8초 동안 공격이 몸을 통과합니다. (2.5초에 한 번)",
            "After a Backstep Shot, attacks pass through you for 0.8s. (Once every 2.5s)",
            "後退射撃で下がった後、0.8秒間攻撃が体をすり抜けます。（2.5秒に1回）",

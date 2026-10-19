@@ -100,15 +100,15 @@ public partial class CharacterKit
         if (Paths.Has(ArcherPaths.Wind) && !GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();
         if (fullPlayed && draw >= 1f)
         {
-            // 바람 공명 I: 바람길 위에서는 가득 찬 뒤 언제 놓아도 완벽 (떨리지도 않음)
-            if (Paths.Res(ArcherPaths.Wind) >= 1 && SignatureSkills.OnWind) fullAt = Time.time;
+            // 1.4.2~ 바람 공명 I: 바람길 위에서는 완벽 판정 폭 2배 (장궁 극의와 같은 방식 · 떨림도 그만큼 늦게 — 「언제 놓아도 완벽」이 손 기술 확인을 통째로 없애 궁수가 가장 빨랐음 · 장궁 극의와 겹치지 않음)
+            if (Paths.Res(ArcherPaths.Wind) >= 1 && SignatureSkills.OnWind) fullAt += Time.deltaTime * 0.5f;
             // 장궁 극의: 완벽 판정 폭 2배 (가득 찬 뒤 흐르는 시간을 절반으로 셈 · 떨림도 그만큼 늦게)
             else if (Paths.Mastered(ArcherPaths.Long)) fullAt += Time.deltaTime * 0.5f;
         }
         return fullTime;
     }
 
-    // 1.4.1~ 바람 공명 I: 지금 바람길 위라 언제 놓아도 완벽 (UpdateBow 가 폭풍의 길 순간 당김에 씀)
+    // 1.4.1~ 바람 공명 I: 지금 바람길 위 (UpdateBow 가 폭풍의 길 순간 당김에 씀) · 1.4.2~ 평타는 판정 폭 2배로 바뀌어 폭풍의 길 순간 당김만 완벽 (갈래 완성 보상)
     bool BowPathWindPerfect => Paths.Active && Paths.Res(ArcherPaths.Wind) >= 1 && SignatureSkills.OnWind;
 
     // ================================================================= 화살 피해 배율 (입문 · 대가)

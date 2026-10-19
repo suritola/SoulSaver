@@ -46,11 +46,23 @@ public class EndlessMode : MonoBehaviour
     // → 1.0.4~ 30분이 되면 「개발자 엄마」(개발자의 모든 능력치 2배: 체력 60만 · 공격 주기 ÷20 · 피해 · 이동 속도 2배)
     //   개발자를 30분 전에 못 잡았으면 둘이 함께 → 개발자와 엄마를 모두 쓰러뜨리면 무한 모드 클리어
     public const float FinalAt = 900f;
-    // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 n마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/1000」)
+    // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 n마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/500」 · 1.4.1~ 500)
     //   1.2.5~ 3000 → 1000 (3000마리를 모으는 동안 잡몹이 너무 많아 렉) — 3000 기준 저장은 이미 잡은 수를 그대로 빼서 남은 수가 0 ~ 1000 (다 찼으면 이어하자마자 강림)
     public const int MomSouls = 500;     // 1.4.1~ 사용자 「개발자 엄마까지 남은 수를 500 줄여」 (1000 → 500) · 저장된 남은 수는 0 ~ 500 으로 잘림 (MomSoulsLeft)
     public const int DeveloperHp = 100000;      // 1.2.5~ 20만 → 10만 (1.1.2~ 10만 → 20만 · 1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
     public const int MomHp = 200000;            // 1.2.5~ 40만 → 20만 (1.1.2~ 30만 → 40만)
+    // 1.4.2~ 최종 보스 단계 보상 (BossSkills.UpdateOwnPhase): 개발자 66 · 33%, 엄마 75 · 50 · 25% 를 처음 넘을 때 영혼 조각 (트리 배율을 받음 · 판마다 한 번)
+    //   긴 최종 보스전 안에 「강해지는 순간」을 두려고 (무한 30분 기획 A3) — 이어하면 체력 가득으로 다시 나오므로 받은 단계를 비트로 저장 (RunSave.endlessPhaseRewards)
+    public const int DevPhaseShards = 30, MomPhaseShards = 40;
+    int phaseRewards;
+    // k = 새로 들어선 구간 (개발자 1 · 2 → 비트 0 · 1, 엄마 1 · 2 · 3 → 비트 2 · 3 · 4) · 처음이면 true
+    public bool ClaimPhaseReward(bool mom, int k)
+    {
+        int bit = mom ? k + 1 : k - 1;
+        if (bit < 0 || bit > 4 || (phaseRewards & (1 << bit)) != 0) return false;
+        phaseRewards |= 1 << bit;
+        return true;
+    }
     const string ClearKey = "endless.cleared";
     public static bool EverCleared => Prefs.GetInt(ClearKey, 0) == 1;
     int finalStage;         // 0 평소 · 1 모든 보스 · 2 개발자 (· 엄마) · 3 클리어 · 4 클리어 뒤 한계 돌파 (1.1.4~ 엔딩 없이 죽을 때까지)
@@ -96,9 +108,11 @@ public class EndlessMode : MonoBehaviour
     //   1.2.5~ 3배 → 1배 (Surge ×16 · 한 화면 +90 에 3배까지 겹쳐 120마리 넘게 떠 렉) — 이 국면은 아래 고정 간격 · 상한으로
     public const float AfterDevSpawnMul = 1f;
     // 1.2.5~ 영혼을 모으는 국면 (개발자 처치 뒤 ~ 엄마 강림 전): 한 화면 최대 AfterDevMaxAlive · 생성은 Surge · 강도와 상관없이 AfterDevSpawnEvery 초마다 한 마리
-    //   최대 초당 약 6.7마리 → 1000마리를 쉬지 않고 잡으면 약 2분 30초 (실제로는 2분 30초 ~ 3분)
+    //   최대 초당 약 6.7마리 → 1.4.1~ 500마리를 쉬지 않고 잡으면 약 1분 15초 (실제로는 약 1분 25초 ~ 2분 · 1차 측정 84~111초)
     public const int AfterDevMaxAlive = 55;
     public const float AfterDevSpawnEvery = 0.15f;
+    // 1.4.2~ 영혼 구간은 약한 적 5종 (EnemySpawner.SpawnEnemy) — 기본 경험치 평균 33 이라 ×2.5 로 이 구간 경험치(약 5.4만)를 예전 강한 적과 비슷하게 (무한 30분 기획 B3)
+    public const float SoulsExpMul = 2.5f;
     public static bool GatheringSouls => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3;
     public static float MobSpawnBoost => GatheringSouls ? AfterDevSpawnMul : 1f;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
@@ -159,7 +173,7 @@ public class EndlessMode : MonoBehaviour
             shownSouls = souls;
             float best = daily ? DailyChallenge.RunBest : BestSeconds;
             // 1.1.2~ 개발자를 쓰러뜨렸으면 엄마가 강림하기까지 남은 영혼(잡몹 처치) 수
-            string final = finalStage == 4 ? Loc.T("클리어 뒤 · 한계 돌파") : devDown && !momSummoned ? Loc.T("그녀의 강림까지 남은 영혼 수") + " " + MomSoulsLeft + "/" + MomSouls : Loc.T(finalStage >= 2 ? "최종 보스" : "최후의 시간");
+            string final = finalStage == 4 ? Loc.T("클리어 뒤 · 한계 돌파") : devDown && !momSummoned ? Loc.T("그녀의 강림까지 남은 영혼 수") + " " + MomSoulsLeft + "/" + MomSouls : FinalProgress();     // 1.4.2~ 진행 표시
             hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
                      + (finalStage > 0 ? "   <color=#FF5A4A>" + final + "</color>"
                         : storm ? "   <color=#FF5A4A>" + Loc.T("모래 폭풍") + "</color>"         // 1.2.3~ 15:00 을 보스 처치 0 으로 넘긴 판
@@ -176,6 +190,13 @@ public class EndlessMode : MonoBehaviour
             if (BossesDefeated >= FinalMinBosses) StartFinal();
             else StartStorm();
             return;
+        }
+        // 1.4.2~ 왕 두 무리: 앞 무리가 다 쓰러졌거나(wave2Due) 60초가 지나면 뒤 무리 — 결계 · 공간 침식 중이면 끝난 프레임에 (보스가 결계 안에 생기지 않게)
+        //   정상 결계는 15초에 끝나므로 처음 미룬 때부터 Wave2Safety 초가 지나면 무조건 (결계가 끝나지 않는 고장에서 영원히 멈추지 않게 · 1.2.7 교훈)
+        if (finalStage == 1 && finalWave == 1 && free && (wave2Due || Time.time >= wave2At))
+        {
+            if (wave2DueAt < 0f) wave2DueAt = Time.time;
+            if (!(BossUltimate.Active || BossUltimate.ErosionPending) || Time.time - wave2DueAt >= Wave2Safety) { SpawnWave2(!wave2Due); return; }
         }
         // 1.1.2~ 개발자를 쓰러뜨린 뒤 잡몹 MomSouls 마리: 개발자 엄마
         if (devDown && !momSummoned && momKillBase < 0 && finalStage < 3) momKillBase = RunStats.Kills;      // 1.2.5~ 처치 기준이 빠진 저장 · 이어하기에서도 엄마가 끝내 안 오지 않게 지금부터 셈
@@ -253,27 +274,97 @@ public class EndlessMode : MonoBehaviour
     const float FinalGap = 7f;            // 1.2.6~ 4.5 → 7 (보스 넷이 뭉쳐 보였음)
     static readonly Vector3[] FinalSpread = { Vector3.zero, Vector3.right, Vector3.left, Vector3.down, new Vector3(0.7f, -0.7f, 0f) };
 
-    // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 모두 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
+    // 1.4.2~ 최후의 시간 왕 두 무리 (무한 30분 기획 B1): 15:00 에 리치 왕 · 지옥의 군주(종류 0 · 1 — 장 번호가 아니라 종류 번호) 먼저,
+    //   그 둘을 쓰러뜨리거나 Wave2After 초가 지나면 킹 슬라임 · 거울의 군주 (15:00 체력) — 15:00 화력으로 넷 + 폭증을 한꺼번에 버티기 어려워서 · 패턴을 읽을 틈
+    const float Wave2After = 60f, Wave2Safety = 30f;
+    static bool InWave1(int kind) => kind == 0 || kind == 1;
+    int finalWave;                  // finalStage 1: 1 앞 무리 중 · 2 뒤 무리까지 나옴
+    float wave2At = -1f, wave2DueAt = -1f;      // 뒤 무리가 기다리지 않고 깨어나는 시각 · 처음 미룬 시각 (결계 안전 상한)
+    bool wave2Due;                  // 앞 무리가 다 쓰러짐 → 다음 자유 프레임에 뒤 무리
+
+    // 15분 (1.0.4~ 30분 → 15분): 살아 있지 않은 종류의 보스를 한꺼번에 (같은 종류는 하나만 · 결계 · 체력바 · 킹 슬라임 목록이 종류마다 하나라서)
+    //   1.4.2~ 앞 무리만 (뒤 무리는 SpawnWave2) · 15:00 에 이미 살아 있던 왕은 그대로 싸움에 들어감
     void StartFinal()
     {
         finalStage = 1;
         if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.OnFinalBegin();      // 1.2.3~ 지형 조각이 모두 꺼짐 (시각이 아니라 최종 국면 시작에 묶음)
         nextBoss = float.MaxValue;
-        int made = 0;
-        if (bossPrefabs != null)
-            foreach (GameObject prefab in bossPrefabs)
-            {
-                if (prefab == null || (prefab.TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind))) continue;
-                Vector3 at = (Vector3)spawner.bossSpawnPoint + FinalSpread[Mathf.Min(made, FinalSpread.Length - 1)] * FinalGap;      // 큰 몸들이 한 자리에 겹치지 않게 (성문 위쪽은 아레나 밖이라 오른쪽 · 왼쪽 · 아래)
-                Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
-                made++;
-            }
+        finalWave = 1;
+        wave2At = Time.time + Wave2After;
+        wave2Due = false;
+        wave2DueAt = -1f;
+        int made = SpawnKings(true, 0);
         spawner.bossSpawned = true;
         spawner.bossCleared = false;
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         Hostile.Play("roar", 1f, 0.6f);
         Hostile.Shake(0.4f);
-        Notice.Big(Loc.T("15분을 버텼다… 모든 보스가 깨어났다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
+        Notice.Big(Loc.T("15분을 버텼다… 왕들이 깨어난다!") + "\n" + Loc.T("적이 끝없이 몰려온다!"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
+        if (made == 0 && bosss.LiveCount == 0) SpawnWave2(false);       // 앞 무리 견본이 없고 살아 있는 왕도 없음 → 바로 뒤 무리 (멈추지 않게)
+    }
+
+    // 1.4.2~ 한 무리의 살아 있지 않은 종류를 FinalSpread 자리에 (first: 앞 무리 · 아니면 뒤 무리) — 만든 수
+    //   뒤 무리는 나오는 시각의 강도가 붙지 않게 Start 전에 15:00 체력으로 맞춤 (늦게 나와 체력이 더 붙지 않게 · 검토 4번)
+    int SpawnKings(bool first, int slot)
+    {
+        if (bossPrefabs == null) return 0;
+        int made = 0;
+        float hpFix = first ? 1f : GameMode.EndlessRampAt(FinalAt) / Mathf.Max(0.01f, GameMode.EndlessRampAt(GameMode.EndlessSeconds));
+        foreach (GameObject prefab in bossPrefabs)
+        {
+            if (prefab == null || !prefab.TryGetComponent(out bosss pb) || InWave1(pb.bossKind) != first || bosss.KindAlive(pb.bossKind)) continue;
+            Vector3 at = (Vector3)spawner.bossSpawnPoint + FinalSpread[Mathf.Min(slot + made, FinalSpread.Length - 1)] * FinalGap;      // 큰 몸들이 한 자리에 겹치지 않게 (성문 위쪽은 아레나 밖이라 오른쪽 · 왼쪽 · 아래)
+            GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
+            if (!first && go.TryGetComponent(out bosss b)) b.setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(b.setEnemyHP * hpFix));      // Start 가 BossHpMul 을 곱하기 전
+            made++;
+        }
+        return made;
+    }
+
+    // 1.4.2~ 뒤 무리 (킹 슬라임 · 거울의 군주): timer = 앞 무리가 남은 채 60초가 지남
+    void SpawnWave2(bool timer)
+    {
+        finalWave = 2;
+        wave2Due = false;
+        wave2DueAt = -1f;
+        int made = SpawnKings(false, 2);
+        if (made == 0)
+        {
+            if (bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());      // 뒤 무리를 못 만들었고 남은 왕도 없음 → 바로 개발자 (멈추지 않게)
+            return;
+        }
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+        Hostile.Play("roar", 1f, 0.6f);
+        Hostile.Shake(0.3f);
+        Notice.Big(Loc.T(timer ? "남은 왕들이 기다리지 않고 깨어났다!" : "앞선 왕들이 쓰러졌다… 남은 왕들이 깨어났다!"), NoticeIcon.Boss, 3.5f, NoticeLevel.Urgent);
+    }
+
+    // 1.4.2~ HUD 최종 국면 진행 (무한 30분 기획 B2): 「최후의 시간 · 왕 2/4」 · 「최종 보스 · 개발자 2/3」 · 「최종 보스 · 개발자 엄마 3/4」 (1초마다 다시 씀)
+    BossSkills devSkills, momSkills;
+    string FinalProgress()
+    {
+        if (finalStage >= 2)
+        {
+            string head = Loc.T("최종 보스");
+            if (mom != null && !mom.IsDead && momSkills != null)
+                return head + " · " + bossbar.BossName(bossbar.DeveloperMomKind) + " " + (momSkills.OwnPhase + 1) + "/4";
+            if (developer != null && !developer.IsDead && devSkills != null)
+                return head + " · " + bossbar.BossName(bossbar.DeveloperKind) + " " + (devSkills.OwnPhase + 1) + "/3";
+            return head;
+        }
+        int total = 0, down = 0;
+        if (bossPrefabs != null)
+            foreach (GameObject g in bossPrefabs)
+            {
+                if (g == null || !g.TryGetComponent(out bosss pb)) continue;
+                total++;
+                if (bosss.KindAlive(pb.bossKind) || (finalWave == 1 && !InWave1(pb.bossKind))) continue;      // 살아 있음 · 아직 안 나온 뒤 무리
+                down++;
+            }
+        string kings = total > 0 ? " · " + Loc.T("왕 {0}/{1}").Replace("{0}", down.ToString()).Replace("{1}", total.ToString()) : "";
+        return Loc.T("최후의 시간") + kings;
     }
 
     // 모든 보스를 쓰러뜨리면 최종 보스 「개발자」 (거울의 군주 몸을 빌려 모든 캐릭터의 최종 진화 필살기를 돌려 씀 · BossSkills.Developer)
@@ -360,6 +451,7 @@ public class EndlessMode : MonoBehaviour
             body.fps = isMom ? 8f : 6f;
         }
         if (isMom && go.TryGetComponent(out SpriteRenderer tint)) tint.color = MomTint;
+        if (isMom) momSkills = go.GetComponent<BossSkills>(); else devSkills = go.GetComponent<BossSkills>();      // 1.4.2~ HUD 단계 표시 (FinalProgress)
         go.transform.localScale *= isMom ? 1.75f : 1.35f;
         Fx.Spawn("fx_soulburst", go.transform.position, isMom ? 18f : 14f, isMom ? MomTint : new Color(1f, 0.85f, 0.35f), 16f);
         spawner.bossSpawned = true;
@@ -429,7 +521,8 @@ public class EndlessMode : MonoBehaviour
         if (mom != null && mom.IsDead) momDown = true;
         if (!daily && devDown && !devWas && developer != null) EndlessMilestones.Reach(EndlessMilestones.Developer);     // 1.2~ 이정표: 개발자 처치 (엄마와 함께 쓰러져 바로 클리어로 가도)
         if (finalStage != 4 && devSummoned && momSummoned && devDown && momDown) { StartCoroutine(ClearEndless(momDown && !momWas)); return; }
-        if (finalStage == 1 && bosss.LiveCount == 0) StartCoroutine(SummonDeveloper());
+        // 1.4.2~ 앞 무리가 다 쓰러지면 뒤 무리 (Update 가 자유 프레임에 · 진화 창 뒤), 뒤 무리까지 다 쓰러지면 개발자
+        if (finalStage == 1 && bosss.LiveCount == 0) { if (finalWave == 1) wave2Due = true; else StartCoroutine(SummonDeveloper()); }
         if (devDown && !devWas && !momSummoned) { momKillBase = RunStats.Kills; StartCoroutine(ForeshadowMom()); }
         spawner.bossCleared = false;            // 다음 보스를 다시 부를 수 있게
         nextBoss = Time.time + Mathf.Max(BossEveryMin, BossEvery - 15f * BossesDefeated);
@@ -485,6 +578,9 @@ public class EndlessMode : MonoBehaviour
             for (int i = 0; i < bossPrefabs.Length && i < 31; i++)
                 if (bossPrefabs[i] != null && bossPrefabs[i].TryGetComponent(out bosss b) && bosss.KindAlive(b.bossKind)) mask |= 1 << i;
         d.endlessFinalAlive = mask;
+        d.endlessFinalWave = finalStage == 1 ? finalWave : 0;          // 1.4.2~ 왕 두 무리
+        d.endlessWave2In = finalStage == 1 && finalWave == 1 ? Mathf.Max(0f, wave2At - Time.time) : -1f;
+        d.endlessPhaseRewards = phaseRewards;                          // 1.4.2~ 받은 단계 보상
         if (EndlessTerrain.Instance != null) EndlessTerrain.Instance.Save(out d.terrainSeed, out d.terrain);     // 1.2.3~ 지형 변화
     }
 
@@ -557,8 +653,14 @@ public class EndlessMode : MonoBehaviour
         startGiven = d.endlessStartGiven;
         storm = d.endlessStorm;
         if (!startGiven) StartCoroutine(StartAtLevel(10));     // 시작 보너스를 받기 전에 저장한 판 (p.level 은 Restore 가 이미 되살림 → 모자란 만큼만)
+        phaseRewards = d.endlessPhaseRewards;                  // 1.4.2~ 이어해도 단계 보상은 판마다 한 번
         if (finalStage == 1)
         {
+            // 1.4.2~ 왕 두 무리 — 옛 저장(0)은 넷이 다 나온 것으로 (뒤 무리를 다시 부르지 않음)
+            finalWave = d.endlessFinalWave == 1 ? 1 : 2;
+            wave2At = Time.time + Mathf.Max(0f, d.endlessWave2In);
+            wave2Due = false;
+            wave2DueAt = -1f;
             if (RestoreLive(d.endlessLiveBosses)) nextBoss = float.MaxValue;     // 1.2.3~ 체력 · 살아 있은 시간 그대로
             else RestoreFinal(d.endlessFinalAlive);
         }
@@ -584,7 +686,12 @@ public class EndlessMode : MonoBehaviour
     // 15분 최종 국면에서 살아 있던 종류만 다시 (StartFinal 과 같은 자리 · 같은 깃발 · 비트가 비어 있으면 모두)
     void RestoreFinal(int aliveMask)
     {
-        if (aliveMask == 0 || bossPrefabs == null) { finalStage = 0; StartFinal(); return; }
+        if (aliveMask == 0 || bossPrefabs == null)
+        {
+            // 1.4.2~ 앞 무리 중에 저장했는데 살린 왕이 없음 → 앞 무리를 다시 부르지 않고 뒤 무리로 (다시 부르면 처치 · 진화가 겹침)
+            if (finalWave == 1) { finalStage = 1; nextBoss = float.MaxValue; wave2Due = true; return; }
+            finalStage = 0; StartFinal(); return;
+        }
         finalStage = 1;
         nextBoss = float.MaxValue;
         int made = 0;

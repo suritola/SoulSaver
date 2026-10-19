@@ -170,7 +170,14 @@ public class EnemySpawner : MonoBehaviour
 
         spawnedEnemys++;
         Vector3 randomPosition = GetSpawnPosition(playerC.transform.position);
-        GameObject spawned = Instantiate(Pick(Phase.weights), randomPosition, Quaternion.identity);
+        // 1.4.2~ 무한 모드 영혼 500 구간(개발자 처치 ~ 엄마 강림)은 규칙 E 와 같은 약한 적 5종 · 경험치 ×2.5 (조각도 경험치 기준이라 함께)
+        //   그 시각의 강한 적이라 느린 영웅은 이 구간이 4~10분 걸렸음 → 생성 상한에 묶인 약 1분 30초로 · 경험치 총량은 지금과 비슷 (무한 30분 기획 B3)
+        //   약한 적 목록이 없거나 비면 원래 목록 (영혼이 안 모여 엄마가 영영 안 오는 길이 없게)
+        bool souls = GameMode.IsEndless && EndlessMode.GatheringSouls && AnyWeight(Stage.finalWeights);
+        GameObject prefab = souls ? Pick(Stage.finalWeights) : null;
+        if (prefab == null) { souls = false; prefab = Pick(Phase.weights); }
+        GameObject spawned = Instantiate(prefab, randomPosition, Quaternion.identity);
+        if (souls && spawned.TryGetComponent(out EnermyController se)) se.expReward = Mathf.Max(1, Mathf.RoundToInt(se.expReward * EndlessMode.SoulsExpMul));     // Start 가 보상 배율을 곱하기 전
         // 보스 전에 나온 적은 처치 수로 보스를 부르므로, 늘어난 처치 수만큼 보상을 나눠 받음 (Start 전에 정함)
         if (!bossSpawned && !bossCleared && spawned.TryGetComponent(out EnermyController ec)) ec.countsTowardBoss = true;
 
@@ -290,6 +297,14 @@ public class EnemySpawner : MonoBehaviour
     }
 
     static float Weight(float[] weights, int i) => weights != null && i < weights.Length ? weights[i] : 0f;
+
+    // 1.4.2~ 비율이 하나라도 있는 목록인지 (영혼 구간 약한 적 · 없으면 원래 목록으로)
+    static bool AnyWeight(float[] weights)
+    {
+        if (weights == null) return false;
+        foreach (float w in weights) if (w > 0f) return true;
+        return false;
+    }
 
     // 장 중반 「습격」 (ChapterEvents, 1.0.1): 둘레에 지금 페이즈의 적을 한꺼번에 (최대 수와 상관없이)
     public System.Collections.Generic.List<GameObject> SpawnAmbush(Vector3 center, int count, float radius)

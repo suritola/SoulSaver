@@ -983,8 +983,8 @@ public static class SoulShards
     public static int ForEnemy(EnermyController e)
     {
         int before = Mathf.Max(1, Mathf.RoundToInt(e.expReward * (e.countsTowardBoss ? GameMode.KillStretch : 1f) / 30f));
-        // 중간 보스: 경험치 기준 그대로
-        if (e.IsMidBoss) return before;
+        // 중간 보스: 경험치 기준 그대로 (1.4.2~ 무한 모드는 ×0.5 · GameMode.EndlessMidBossShardMul)
+        if (e.IsMidBoss) return GameMode.IsEndless ? Mathf.Max(1, GameMode.RoundRandom(before * GameMode.EndlessMidBossShardMul)) : before;
         // 일반 적 (1.8.9~): 판이 길어져도 클리어 전에 영혼 트리가 다 차지 않게 줄이고,
         // 보스까지 세는 적은 늘어난 처치 수만큼 더 나눔. 소수는 확률로 (여러 마리 모으면 평균이 맞음)
         return GameMode.RoundRandom(before * GameMode.KillShardMul(e.countsTowardBoss));

@@ -880,7 +880,7 @@ public static class CodexUI
 
     static void LevelUpCards(CodexData data)
     {
-        // 1.1~ 종 수는 실제 진화 정의에서 셈 (예전 「37」 고정은 캐릭터 5명 시절 숫자) · 최대 레벨은 LevelShop.LevelCap 과 같은 80
+        // 1.1~ 종 수는 실제 진화 정의에서 셈 (예전 「37」 고정은 캐릭터 5명 시절 숫자) · 최대 레벨은 LevelShop.LevelCap 과 같은 50 (1.4.2~ 주석 바로잡음: 무한 모드도 50)
         Card(Resources.Load<Sprite>("Icons/ability_205"), Color.white, Loc.T("스킬 진화"), Loc.T("모든 캐릭터") + " · " + SkillEvoCount() + Loc.T("종"),
              Loc.T("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다."));
         // 끝없는 성장 (1.0.4~, LevelShop.Growth)

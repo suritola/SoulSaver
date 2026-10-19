@@ -81,6 +81,10 @@ public static class RunSave
         // 1.2.3~ 보스 타이밍 「보스는 기다리지 않는다」 (EndlessMode.SaveRun · RestoreRun)
         public bool endlessStorm;                       // 15:00 을 보스 처치 0 으로 넘김 (모래 폭풍 국면 · 이 판에선 최후의 시간이 열리지 않음)
         public string endlessLiveBosses = "";           // 살아 있던 보스 (개발자 · 엄마 제외 · 최대 4): "종류,최대 체력,체력,살아 있은 초;…" — 비어 있으면 endlessBossAlive 로 예전처럼 (체력 가득)
+        // 1.4.2~ 최후의 시간 왕 두 무리 · 최종 보스 단계 보상 (EndlessMode.SaveRun · RestoreRun · 옛 저장은 기본값 = 넷이 다 나온 것으로 · 받은 보상 없음)
+        public int endlessFinalWave;                    // finalStage 1: 1 앞 무리(리치 왕 · 지옥의 군주) 중 · 2 뒤 무리까지 나옴 · 0 옛 저장 · 그 밖의 국면
+        public float endlessWave2In = -1f;              // 앞 무리 중: 뒤 무리가 기다리지 않고 깨어나기까지 남은 초 (-1 = 해당 없음)
+        public int endlessPhaseRewards;                 // 받은 단계 보상 비트 (개발자 66 · 33% → 0 · 1, 엄마 75 · 50 · 25% → 2 · 3 · 4)
         // 1.2.5~ 이번 판 포인트 (결과 화면 「획득 포인트」 · 「클리어 보너스」 · balance_log points_run 이 이어한 판에서도 판 전체로)
         //   보유 포인트는 그때그때 저장되므로 여기 값은 표시 · 기록용으로만 되살림 (옛 저장은 0 → 예전처럼 이어한 뒤 몫만)
         public int runPoints, runBonus, contractPoints, contractsDone, pointsShown;

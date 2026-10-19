@@ -518,11 +518,11 @@ public partial class LevelShop : MonoBehaviour
     public void GainExp(PlayerController p, float amount)
     {
         if (p == null) return;
-        // 최대 레벨 50 (무한 모드 100): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
+        // 최대 레벨 50 (무한 모드도 50): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
         p.nowEXP += amount;
-        // 1.0.6~: 최대 레벨(50 · 무한 모드 80)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
+        // 1.0.6~: 최대 레벨(50 · 무한 모드도 50)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
         int room = LevelCap - (p.level + PendingLevels);
         if (room <= 0)
         {
@@ -536,6 +536,9 @@ public partial class LevelShop : MonoBehaviour
             earned++;
             p.needEXP = PlayerController.NeedExp(1 + earned);
             gained++;
+            // 1.4.2~ 무한 모드 레벨 곡선이 바뀌는 순간 처음 한 번 알림 (PlayerController.NeedExp)
+            if (1 + earned == 26 && GameMode.IsEndless && EndlessMode.Instance != null)
+                Hints.Show("endless.slowlevel", "무한 모드는 레벨 25부터 레벨업에 드는 경험치가 점점 늘어, 레벨 35부터는 4.5배가 됩니다. 최후의 시간 동안에도 계속 자랍니다.");
         }
         if (gained >= room) p.nowEXP = Mathf.Min(p.nowEXP, p.needEXP);
         if (gained == 0) return;
@@ -547,6 +550,8 @@ public partial class LevelShop : MonoBehaviour
     bool freePick;
     // 경험치로 얻은 레벨업 횟수 (경험치 요구량은 이 횟수로 오름 · 레벨 자체는 카드를 고를 때 오름)
     int earned;
+    // 1.4.2~ 경험치 요구량의 기준 레벨 = 지금 레벨 + 쌓인 레벨업 + 연출 중인 레벨업 (무한 모드 PlayerController.ExpLevel 이 매 프레임 씀)
+    public int ExpLevel => 1 + earned;
 
     // 한꺼번에 레벨업 포인트를 줌 (무한 모드는 레벨 10 만큼 미리)
     public void GrantLevels(PlayerController p, int n)

@@ -107,6 +107,51 @@ public partial class AutoplayBot : MonoBehaviour
         if (devDown && rec.devKillSec < 0f) rec.devKillSec = s;
         if (momDown && rec.momKillSec < 0f) rec.momKillSec = s;
         rec.bosses = em.BossesDefeated;
+        TrackGrowth(em, s, stage);
+    }
+
+    // 1.4.2~ 무한 30분 성장 속도 측정 (기획 2026-10-19 10-1) — 게임 필드가 없거나 이름이 바뀌면 반사 기본값이라 그 열만 빈칸 · 0
+    bool lastBarrier, lastWave2Due;
+    void TrackGrowth(EndlessMode em, float s, int stage)
+    {
+        PlayerController p = Hostile.Player;
+        if (shop == null) shop = FindFirstObjectByType<LevelShop>();
+        if (p != null && shop != null)
+        {
+            // 기준 레벨 = earned + 1 (요구량 기준 · 쌓아 둔 레벨업 포함) — 게임 쪽 ExpLevel 이 있으면 그것도, 없으면 지금 레벨 + 쌓인 수로 받침
+            int lv = Mathf.Max(Get(shop, "earned", 0) + 1, Mathf.Max(Get(shop, "ExpLevel", 0), p.level + shop.PendingLevels));
+            if (lv >= 30 && rec.lv30Sec < 0f) rec.lv30Sec = s;
+            if (lv >= 40 && rec.lv40Sec < 0f) rec.lv40Sec = s;
+            if (lv >= 45 && rec.lv45Sec < 0f) rec.lv45Sec = s;
+            if (lv >= 50 && rec.lv50Sec < 0f) rec.lv50Sec = s;
+            int tr = 0;
+            for (int k = 0; k < LevelShop.TranscendCount; k++) tr += shop.TranscendLevel(k);
+            rec.transcends = Mathf.Max(rec.transcends, tr);
+        }
+        SpecialAbilities sp = SpecialAbilities.SharedInstance;
+        if (sp != null)
+        {
+            rec.refines = Mathf.Max(rec.refines, sp.Refines);
+            if (sp.Refines > 0 && rec.treeDoneSec < 0f) rec.treeDoneSec = s;
+        }
+        if (s >= 900f && rec.bossesAt15 < 0) { rec.bossesAt15 = em.BossesDefeated; rec.deathsPre15 = rec.deaths; }
+        // 뒤 무리 (B1): finalWave 1 → 2 가 된 시각 · 앞 무리를 다 잡아서(wave2Due)가 아니라 60초 타이머로 나왔으면 1
+        //   같은 프레임에 앞 무리 마지막 왕이 쓰러지고 바로 나온 경우는 wave2Due 를 못 봐서, 앞 무리 시작 59초 전이면 처치로 봄
+        int wave = Get(em, "finalWave", 0);
+        if (stage == 1 && wave == 1) lastWave2Due = Get(em, "wave2Due", false);
+        if (wave >= 2 && rec.wave2Sec < 0f && rec.finalStartSec >= 0f)
+        {
+            rec.wave2Sec = s;
+            rec.wave2Timer = !lastWave2Due && s - rec.finalStartSec >= 59f ? 1 : 0;
+        }
+        // 단계 보상 (A3): phaseRewards 비트 수 = 받은 단계 보상 수
+        int bits = Get(em, "phaseRewards", 0), n = 0;
+        for (; bits != 0; bits &= bits - 1) n++;
+        rec.phaseShards = Mathf.Max(rec.phaseShards, n);
+        // 결계 · 침식이 켜진 횟수 (꺼짐 → 켜짐)
+        bool barrier = BossUltimate.Active;
+        if (barrier && !lastBarrier) rec.barriers++;
+        lastBarrier = barrier;
     }
 
     public static void FillPaths(AutoplayRunner.RunRecord r)

@@ -280,7 +280,30 @@ public class PlayerController : MonoBehaviour
 
     // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
     // 1.0.1: 최고점은 그대로 두고 성장 속도만 늦춤 — 레벨마다 +50 → +65 (초반 +15%, 레벨 20쯤 +30%)
-    public static float NeedExp(int level) => 50 + level * 65;
+    // 1.4.2~ 무한 모드(일일 도전 포함)만 레벨 25 다음부터 요구량이 점점 늘어 35~49 는 ×4.5 (레벨 50 초월 막대 3,300 은 그대로)
+    //   10분에 레벨 50 · 15분에 트리 완성이라 최후의 시간이 「다 큰 채 같은 보스를 오래」가 되던 것을 → 성장의 끝을 판 끝 쪽(약 23분)으로 옮김
+    //   (docs/review/2026-10-19-무한-30분-성장속도-기획.md A1 · 이야기 모드 · 메뉴는 그대로)
+    const int EndlessExpFrom = 25;
+    const float EndlessExpMax = 4.5f, EndlessExpRamp = 10f;
+    public static float NeedExp(int level) => (50 + level * 65) * EndlessExpMul(level);
+    static float EndlessExpMul(int level) => GameMode.IsEndless && EndlessMode.Instance != null && level > EndlessExpFrom && level < LevelShop.LevelCap
+        ? 1f + (EndlessExpMax - 1f) * Mathf.Clamp01((level - EndlessExpFrom) / EndlessExpRamp) : 1f;
+
+    // 1.4.2~ 요구량의 기준 레벨: 무한 모드는 지금 레벨 + 쌓아 둔 레벨업 (LevelShop.ExpLevel) — 카드를 미뤄 두면 싼 요구량으로 계속 모이던 길을 막음
+    //   이야기 모드는 예전처럼 고른 레벨 (숙련도 무료 카드로 레벨이 경험치보다 앞설 수 있어서)
+    LevelShop expShop;
+    int ExpLevel
+    {
+        get
+        {
+            if (GameMode.IsEndless && EndlessMode.Instance != null)
+            {
+                if (expShop == null) expShop = FindFirstObjectByType<LevelShop>(FindObjectsInactive.Include);      // 창이 꺼져 있어도 찾음
+                if (expShop != null) return expShop.ExpLevel;
+            }
+            return level;
+        }
+    }
 
     public void addDamage(int a)
     {
@@ -306,7 +329,7 @@ public class PlayerController : MonoBehaviour
     void UpdateInput()
     {
 
-        needEXP = NeedExp(level);
+        needEXP = NeedExp(ExpLevel);        // 1.4.2~ 무한 모드는 쌓아 둔 레벨업까지 센 레벨 (위 ExpLevel)
 
         // 생명의 샘: 초당 체력 회복
         if (regenPerSecond > 0f && PlayerHealth > 0f && PlayerHealth < PlayerMaxHealth)

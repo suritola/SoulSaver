@@ -119,6 +119,26 @@ public static class AutoplayHooks
         p.GrantInvincibility(2f);
         return true;
     }
+
+    // 1.4.2~ LevelShop.GainExp: 얻은 경험치 (상한에 막혀 버려지는 몫도 수입으로 셈) — 15:00~17:00 · 15분 뒤 수입 (기획 10-1 exp_15_17 · 검토 3번)
+    public static void Exp(float amount)
+    {
+        if (rec == null || amount <= 0f) return;
+        float s = GameMode.EndlessSeconds;
+        if (s < 900f) return;
+        rec.expPost15 += amount;
+        if (s < 1020f) rec.exp1517 += amount;
+    }
+
+    // 1.4.2~ boss.TakeDamage: 보스에게 준 피해 (RunStats.Dealt 와 같은 값 · 넘친 피해 빼고) — 출처별로 모아 영웅이 느린 원인을 봄 (기획 7-3)
+    public static void BossDealt(float amount)
+    {
+        if (rec == null || amount <= 0f) return;
+        rec.bossDealt += amount;
+        string key = DamageSource.Current ?? DamageSource.Other;
+        rec.bossDealtBy.TryGetValue(key, out float v);
+        rec.bossDealtBy[key] = v + amount;
+    }
 }
 
 // 복사본에서 Auto 로 꺼지던 실제 플레이 규칙(초월 카드 · 궁수 숨 고르기)을 되살리는 스위치

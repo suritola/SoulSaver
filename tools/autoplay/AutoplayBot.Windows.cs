@@ -179,11 +179,34 @@ public partial class AutoplayBot
     // 쌓인 레벨업: 시간이 흐르는 화면에서 바로 열어 고름 (사람은 위험할 때 잠깐 미룸)
     void OpenPendingLevels()
     {
+        if (shop != null && shop.PendingLevels <= 0 && !shop.IsOpen) { hoardDraining = false; hoardSince = -1f; }
         if (shop == null || shop.PendingLevels <= 0 || shop.IsOpen || Time.timeScale != 1f) return;
         if (stallShop != null && stallShop.isShopOpen) return;
+        if (HoldLevels()) return;
         if (Time.time < nextPendingOpen) return;
         nextPendingOpen = Time.time + Mathf.Lerp(1.2f, 0.3f, skill) * (lastDanger > 5f ? 2f : 1f);
         Call(shop, "TryOpenPending");
+    }
+
+    // 1.4.2~ -HoardLevels n (AP_HOARD): 쌓인 레벨업이 n 개가 되고 보스가 없을 때까지 안 열고, 열기 시작하면 0 이 될 때까지 몰아 고름
+    //   (기획 2026-10-19 검토 1번 — 카드를 미뤄도 레벨 곡선이 우회되지 않는지 확인 · 도적 판 18:08 → 18:44 몰아 고르기 흉내)
+    //   대기 상한: 처음 쌓인 뒤 게임 90초 · 최대 레벨까지 쌓여 경험치가 막히면 바로 (최후의 시간처럼 보스가 늘 있어도 끝없이 미루지 않게)
+    const float HoardMaxWait = 90f;
+    bool hoardDraining;
+    float hoardSince = -1f;
+    bool HoldLevels()
+    {
+        int n = AutoplayRunner.HoardLevels;
+        if (n <= 0 || hoardDraining) return false;
+        if (hoardSince < 0f) hoardSince = Time.time;
+        PlayerController p = Hostile.Player;
+        bool full = shop.PendingLevels >= n && bosss.LiveCount == 0;
+        bool capped = p != null && p.level + shop.PendingLevels >= LevelShop.LevelCap;
+        bool waitedTooLong = Time.time - hoardSince >= HoardMaxWait;
+        if (!full && !capped && !waitedTooLong) return true;
+        hoardDraining = true;
+        AutoplayRunner.Log("쌓아 둔 레벨업 " + shop.PendingLevels + "개 몰아 고름 · " + EndlessMode.Clock(GameMode.EndlessSeconds) + (full ? "" : capped ? " (최대 레벨)" : " (대기 상한)"));
+        return false;
     }
 
     // ================================================================= 무기 진화 (보스마다) · 스킬 진화 알림

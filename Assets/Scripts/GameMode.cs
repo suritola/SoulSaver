@@ -138,15 +138,14 @@ public static class GameMode
     }
     // 무한 모드 판이 진행 중일 때만 (메뉴에서는 0)
     public static float EndlessSeconds => IsEndless && endlessClockOn && EndlessMode.Instance != null ? Mathf.Max(0f, Time.time - endlessStart) : 0f;
-    static float Ramp
+    static float Ramp => EndlessRampAt(EndlessSeconds);
+    // 1.4.2~ 그 시각의 보스 강도 (Ramp 와 같은 식) — 최후의 시간 뒤 무리를 15:00 체력으로 맞출 때 씀 (EndlessMode.SpawnWave2)
+    public static float EndlessRampAt(float s)
     {
-        get
-        {
-            if (!IsEndless) return 1f;
-            float s = EndlessSeconds, m = s / 60f;
-            float warm = Mathf.Lerp(EndlessStartMul, 1f, Mathf.SmoothStep(0f, 1f, s / EndlessWarmup));
-            return Mathf.Min(EndlessRampMax, warm * (1f + EndlessLinear * m + EndlessQuad * m * m));
-        }
+        if (!IsEndless) return 1f;
+        float m = s / 60f;
+        float warm = Mathf.Lerp(EndlessStartMul, 1f, Mathf.SmoothStep(0f, 1f, s / EndlessWarmup));
+        return Mathf.Min(EndlessRampMax, warm * (1f + EndlessLinear * m + EndlessQuad * m * m));
     }
     // 잡몹용 강도 (1.0.2): 예전 곡선은 처음 3분 동안 0.7 → 1 로 확 오른 뒤 직선 + 제곱이라 「극초반 쉬움 → 초반 너무 어려움 → 갑자기 확 강해짐」
     // → 꺾이는 데 없는 지수 곡선 하나: 처음엔 쉽고, 1분마다 약 11%씩 곱으로 불어나 갈수록 걷잡을 수 없이 어려워짐
@@ -157,8 +156,11 @@ public static class GameMode
 
     // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분, EndlessMode.FinalAt): 그때부터 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
     //   1.0.4~ 개발자가 나온 뒤로는 잡몹 자체가 나오지 않음 (EnemySpawner.NoMobs)
-    const float SurgeGrowth = 0.693f, SurgeMax = 16f;
-    static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt ? Mathf.Min(SurgeMax, Mathf.Exp(SurgeGrowth * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
+    // 1.4.2~ 최후의 시간(EndlessMode.FinalPhase)은 2분마다 2배 (왕 국면이 길어져도 폭증이 지금 왕 국면 수준 · 최대 16배 그대로)
+    //   15:00 을 보스 처치 0 으로 넘긴 모래 폭풍 판은 1분마다 2배 그대로 (벌칙을 약하게 하지 않음 · 무한 30분 기획 B4)
+    const float SurgeGrowth = 0.693f, SurgeGrowthFinal = 0.347f, SurgeMax = 16f;
+    static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt
+        ? Mathf.Min(SurgeMax, Mathf.Exp((EndlessMode.Instance != null && EndlessMode.Instance.FinalPhase ? SurgeGrowthFinal : SurgeGrowth) * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
 
     // 1.1.7~ 무한 모드 초반 완화: 처음 5분은 잡몹 체력 ×0.5 · 받는 피해 ×0.6 · 보스 체력 ×0.5 · 적 스킬 간격 ×1.5 로 시작하고
     //   5분 → 9분 사이에 SmoothStep 으로 1 에 합류 (9분 뒤 · 최종 국면 · 개발자 · 엄마 · 한계 돌파는 그대로)
@@ -190,7 +192,11 @@ public static class GameMode
     const float CurveLow = 0.85f, CurveHigh = 1.15f, CurveEndlessSpan = 1800f, CurveStorySpan = 840f;
     static float CurveT => IsEndless ? (endlessClockOn ? Mathf.Clamp01(EndlessSeconds / CurveEndlessSpan) : 0.5f)
         : RunClock.Running ? Mathf.Clamp01(RunClock.Elapsed / CurveStorySpan) : 0.5f;      // 시계가 없는 판(튜토리얼 · 특수 판 등)은 가운데 = ×1.0
-    public static float PlayerDamageMul => 0.96f * Mathf.Lerp(CurveLow, CurveHigh, CurveT);     // 0.96 = 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
+    // 1.4.2~ 무한 모드(일일 도전 포함) 판 안에서는 시간 배율 대신 0분 값 0.816 고정 — 판이 길어질수록 보스전이 저절로 빨라져 성장 곡선(A1 · A2)을 깎던 몫을 뺌
+    //   숨은 체력 상향과 같은 체감이 되지 않게 0분 값까지만 (초반은 그대로 · 후반 화력은 레벨 · 트리 · 초월 · 정련으로만 · 무한 30분 기획 C)
+    const float EndlessDamageFlat = 0.96f * CurveLow;
+    public static float PlayerDamageMul => IsEndless && endlessClockOn && EndlessMode.Instance != null ? EndlessDamageFlat
+        : 0.96f * Mathf.Lerp(CurveLow, CurveHigh, CurveT);     // 0.96 = 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt) * BeyondDamageMul;
     // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
     //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)
@@ -220,7 +226,10 @@ public static class GameMode
     public static float KillStretch => Kills[I] / RewardBasis[I];
     // 일반 적 영혼 조각 배율 (예전 한 마리 몫 기준, 무한 모드는 그대로)
     public static float KillShardMul(bool countsTowardBoss) => IsEndless ? EndlessKillShardMul : KillShardRate / (countsTowardBoss ? KillStretch : 1f);
-    const float EndlessKillShardMul = 0.36f;    // 1.4.1~ 사용자 「무한 모드에서 적이 주는 영혼 조각을 40% 감소」 → 「지금 상태에서 40% 더」 (×1 → ×0.6 → ×0.36)
+    // 1.4.1~ 사용자 「무한 모드에서 적이 주는 영혼 조각을 40% 감소」 → 「지금 상태에서 40% 더」 (×1 → ×0.6 → ×0.36)
+    // 1.4.2~ ×0.36 → ×0.15 (트리 완성을 약 16분 → 약 26~28분으로 · 최후의 시간 동안 트리가 차며 강해지게 · 무한 30분 기획 A2)
+    const float EndlessKillShardMul = 0.15f;
+    public const float EndlessMidBossShardMul = 0.5f;     // 1.4.2~ 무한 모드 중간 보스 조각 ×1 → ×0.5 (왕 국면에도 계속 나와 트리를 빨리 채웠음 · SoulShards.ForEnemy)
 
     // 소수 보상을 확률로 반올림 (2.4 → 40% 확률로 3, 아니면 2): 여러 번 모으면 평균이 맞음
     public static int RoundRandom(float v)

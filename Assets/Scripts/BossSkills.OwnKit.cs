@@ -173,6 +173,8 @@ public partial class BossSkills
     int MaxHitsOf(OwnAtk a) => a == OwnAtk.Scratcher || a == OwnAtk.LightsOut || a == OwnAtk.TimeSale ? 1 : 2;
 
     // 구간: 개발자 66 · 33% (3구간) · 엄마 75 · 50 · 25% (4구간) — 내려가지 않음
+    // 1.4.2~ 지금 구간 (0부터 · 등장 전 0) — 무한 모드 HUD 「최종 보스 · 개발자 2/3」 (EndlessMode)
+    public int OwnPhase => Mathf.Max(0, ownPhase);
     int PhaseNow()
     {
         float f = HpFrac;
@@ -187,6 +189,12 @@ public partial class BossSkills
         if (ph <= ownPhase) return;
         for (int k = ownPhase + 1; k <= ph; k++)
         {
+            // 1.4.2~ 무한 모드 단계 보상: 체력 구간을 처음 넘을 때 영혼 조각 (개발자 +30 · 엄마 +40 · 판마다 한 번 · 상태는 바꾸지 않음 · 무한 30분 기획 A3)
+            if (EndlessMode.Instance != null && EndlessMode.Instance.ClaimPhaseReward(Mom, k))
+            {
+                SoulShards.Add(Mom ? EndlessMode.MomPhaseShards : EndlessMode.DevPhaseShards, transform.position, true);
+                Hints.Show("endless.phaseshard", "최종 보스의 체력 구간을 넘길 때마다 영혼 조각을 얻습니다.");
+            }
             if (Mom)
             {
                 if (k == 1) ownIntro.Add(OwnAtk.Broom);

@@ -7,6 +7,7 @@
 #   pwsh tools/autoplay/run.ps1 -Hero Ghost -Path1 Frost -Path2 Phase -Skill 0.5
 #   pwsh tools/autoplay/run.ps1 -Hero all -Path1 all -Path2 random -Runs 1 -OutName 2026-10-19-1차    (9명 × 갈래 5 = 45판)
 #   pwsh tools/autoplay/run.ps1 -Hero Archer,Rogue -Path1 2 -NoDeath                                   (쓰러져도 계속 · 사망 횟수만 셈)
+#   pwsh tools/autoplay/run.ps1 -Hero Clockmaker,Swordsman -NoDeath -HoardLevels 5 -OutName 2026-10-2x-2차-쌓기   (레벨업 쌓아 두기 · 1.4.2~)
 # 인자:
 #   -Hero      영웅 이름 (Gunner Swordsman Rogue Archer Alchemist Cartographer Clockmaker Postman Ghost · 쉼표 · all)
 #   -Path1     첫 갈래: 0~4 · 갈래 키(g.snipe) · 상수 이름(Snipe) · random · all(0~4 모두)
@@ -16,10 +17,13 @@
 #   -TimeScale 게임 한 프레임 길이 배수 (1 = 1/60초 · 기본 3 = 1/20초). Time.captureDeltaTime 으로 고정 → 실제 속도는 기계가 낼 수 있는 최대 (판정 · 물리는 매 프레임 같은 간격)
 #   -MaxMinutes 판 상한 (게임 분, 기본 45) · -Beyond 엄마 처치 뒤 한계 돌파에서 더 버틸 게임 초 (기본 0 = 바로 끝)
 #   -NoDeath   쓰러져도 체력을 채우고 계속 (클리어 시간 · 사망 횟수를 함께 잼)
+#   -HoardLevels n  레벨업을 n 개 쌓일 때까지(보스가 살아 있는 동안도) 안 고르고 몰아 고름 · 0 = 끔 (1.4.2~ 무한 레벨 곡선이 미루기로 우회되지 않는지 확인 · 대기 상한 게임 90초)
 #   -OutName   회차 이름 (결과 폴더 · docs/balance/runs/<이름>/ 에 복사, 기본 날짜시각)
 #   -Commit    (선택) 그 git 커밋의 Assets · Packages · ProjectSettings 로 복사본을 만듦 (기본: 지금 작업 폴더)
 #   -NoCopyToDocs  docs/balance/runs 로 복사하지 않음 · -Trace 1초마다 봇 상태 줄 (progress.log, 조정용)
 #   -Render    화면을 그림 (기본은 카메라가 아무것도 그리지 않게 해 빠르게 · 판정 · 조준에는 영향 없음)
+#   1.4.2~ results.csv 끝 열: lv30_at · lv40_at · lv45_at · lv50_at (기준 레벨 도달 게임 초) · exp_15_17 · exp_post15 (초당 경험치) · tree_done_at · bosses_at15 · deaths_pre15
+#          · wave2_at · wave2_timer · transcends · refines · phase_shards · barriers · boss_dealt · boss_top_dealt (보스에게 준 피해 출처 상위 4) · hoard_levels
 # 결과: %LOCALAPPDATA%\SoulSaverBuild\AutoplayOut\<OutName>\ results.csv · errors.txt(예외 · 오류 전체) · progress.log · unity_errors.txt · unity.log
 param(
     [string[]]$Hero = @("Gunner"),
@@ -33,6 +37,7 @@ param(
     [double]$MaxMinutes = 45,
     [double]$Beyond = 0,
     [switch]$NoDeath,
+    [int]$HoardLevels = 0,
     [string]$OutName = "",
     [string]$Commit = "",
     [switch]$NoCopyToDocs,
@@ -71,7 +76,7 @@ foreach ($h in $heroes) {
         }
     }
 }
-Write-Host ("계획 {0}판 · 실력 {1} · 프레임 {2}/60초 · 상한 {3}분 · 결과 {4}" -f $plan.Count, $Skill, $TimeScale, $MaxMinutes, $Out)
+Write-Host ("계획 {0}판 · 실력 {1} · 프레임 {2}/60초 · 상한 {3}분 · 레벨업 쌓아 두기 {4} · 결과 {5}" -f $plan.Count, $Skill, $TimeScale, $MaxMinutes, $HoardLevels, $Out)
 
 # ---------------------------------------------------------------- 복사본 만들기
 $Src = $Project
@@ -113,6 +118,9 @@ Patch "CharacterKit.cs" "if (!GameInput.Auto && !GameInput.TrailerRunning) Consu
 Patch "CharacterKit.Archer.cs" "if (Paths.Has(ArcherPaths.Wind) && !GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();" "if (Paths.Has(ArcherPaths.Wind) && (AutoplayFlags.Real || (!GameInput.Auto && !GameInput.TrailerRunning))) ConsumeBreath();"
 # 쓰러짐: 사망 횟수를 세고, -NoDeath 면 체력을 채우고 계속
 Patch "PlayerController.cs" "if (PlayerHealth <= 0) StartCoroutine(DeathSequence());" "if (PlayerHealth <= 0 && !AutoplayHooks.KeepAlive(this)) StartCoroutine(DeathSequence());"
+# 1.4.2~ 경험치 수입 (15:00~17:00 · 15분 뒤) · 보스에게 준 피해 출처 (무한 30분 기획 10-1 · 복사본에만)
+Patch "LevelShop.cs" "p.nowEXP += amount;" "AutoplayHooks.Exp(amount); p.nowEXP += amount;"
+Patch "boss.cs" "RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));" "AutoplayHooks.BossDealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth))); RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));"
 # 저장 파일 분리 (복사본 제품 이름 → %LOCALAPPDATA%\Soul Saver Autoplay_Editor\save.json)
 $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 (Get-Content $settings -Raw) -replace "(?m)^  productName: .*$", "  productName: Soul Saver Autoplay" | Set-Content $settings -NoNewline
@@ -125,6 +133,7 @@ $env:AP_STEP = ($TimeScale / 60.0).ToString($inv)
 $env:AP_MAXMIN = $MaxMinutes.ToString($inv)
 $env:AP_BEYOND = $Beyond.ToString($inv)
 $env:AP_NODEATH = $(if ($NoDeath) { "1" } else { "0" })
+$env:AP_HOARD = "$([Math]::Max(0, $HoardLevels))"
 $env:AP_TRACE = $(if ($Trace) { "1" } else { "0" })
 $env:AP_RENDER = $(if ($Render) { "1" } else { "0" })
 $env:AP_DOCS = $(if ($NoCopyToDocs) { "" } else { Join-Path $Project ("docs/balance/runs/" + $OutName) })
@@ -186,7 +195,7 @@ Get-ChildItem $Out -Filter "unity_*.log" | ForEach-Object {
     Select-String -Path $_.FullName -Pattern "Exception|^.*Error.*:|error CS" -Context 0, 4 | ForEach-Object { $_.Line; $_.Context.PostContext }
 } | Set-Content (Join-Path $Out "unity_errors.txt") -Encoding utf8
 Write-Host "결과:"
-if (Test-Path $csv) { Import-Csv $csv | Select-Object -Last $plan.Count | Format-Table hero, path1, path2, result, end_time, four_bosses, dev_kill, mom_kill, level, deaths, exceptions -AutoSize | Out-String | Write-Host }
+if (Test-Path $csv) { Import-Csv $csv | Select-Object -Last $plan.Count | Format-Table hero, path1, path2, result, end_time, four_bosses, dev_kill, mom_kill, level, deaths, lv45_at, lv50_at, tree_done_at, exp_15_17, boss_dealt, exceptions -AutoSize | Out-String | Write-Host }
 if (-not $NoCopyToDocs) {
     $docs = Join-Path $Project "docs\balance\runs\$OutName"
     New-Item -ItemType Directory -Force $docs | Out-Null
@@ -196,7 +205,7 @@ if (-not $NoCopyToDocs) {
     }
     @("# 자동 플레이 회차 $OutName", "", "- 시각: $(Get-Date -Format 'yyyy-MM-dd HH:mm')", "- 게임 커밋: $(if ($Commit) { $Commit } else { (git -C $Project rev-parse --short HEAD) + ' (+ 작업 폴더 변경)' })",
       "- 영웅: $($heroes -join ', ') · 갈래1: $($p1s -join ', ') · 갈래2: $($p2In -join ', ') · 판: $Runs · 시드 $Seed~",
-      "- 실력 $Skill · 프레임 $TimeScale/60초 · 상한 $MaxMinutes 분 · 불사 $([bool]$NoDeath) · 한계 돌파 $Beyond 초",
+      "- 실력 $Skill · 프레임 $TimeScale/60초 · 상한 $MaxMinutes 분 · 불사 $([bool]$NoDeath) · 한계 돌파 $Beyond 초 · 레벨업 쌓아 두기 $HoardLevels",
       "- 명령: pwsh tools/autoplay/run.ps1 $($MyInvocation.Line -replace '^.*?run\.ps1\s*', '')") | Set-Content (Join-Path $docs "README.md") -Encoding utf8
     Write-Host "기록 복사: $docs"
 }

@@ -14,6 +14,7 @@ using UnityEngine.SceneManagement;
 //   AP_OUT 결과 폴더 · AP_HERO 영웅 · AP_PATH1 · AP_PATH2 (0~4 · 갈래 키 · random · single) · AP_RUNS · AP_SKILL (0~1)
 //   AP_STEP 게임 한 프레임 길이(초, captureDeltaTime) · AP_MAXMIN 판 상한(게임 분) · AP_SEED 첫 시드 · AP_NODEATH 1 이면 쓰러져도 체력을 채우고 계속 (사망 횟수만 셈)
 //   AP_BEYOND 한계 돌파 뒤 더 버틸 게임 초 (0 = 엄마 처치 즉시 끝)
+//   AP_HOARD 레벨업을 n 개 쌓일 때까지(보스가 살아 있는 동안도) 안 고름 · 0 = 끔 (1.4.2~ · 대기 상한 있음 · AutoplayBot.Windows.cs)
 // 결과: AP_OUT/results.csv (판마다 한 줄, 이어 붙임) · AP_OUT/errors_<hero>.txt (예외 · 오류 전체) · AP_OUT/progress.log
 public static class AutoplayRunner
 {
@@ -23,6 +24,7 @@ public static class AutoplayRunner
     public static int Runs = 1, Seed = 1000;
     public static float Skill = 0.5f, Step = 1f / 30f, MaxMinutes = 45f, BeyondSeconds = 0f;
     public static bool NoDeath;
+    public static int HoardLevels;      // 1.4.2~ AP_HOARD: 레벨업을 n 개 쌓일 때까지 안 고름 (0 = 끔 · 기획 검토 1번 「쌓아 두기」 확인)
 
     // 판 하나의 기록
     public class RunRecord
@@ -40,6 +42,13 @@ public static class AutoplayRunner
         public float realSec;
         public string stuck = "";
         public int unknownWindows;
+        // 1.4.2~ 무한 30분 성장 속도 측정 (기획 docs/review/2026-10-19-무한-30분-성장속도-기획.md 10-1 · 시각은 게임 초, -1 = 못 닿음)
+        //   레벨은 기준 레벨(earned + 1 = 지금 레벨 + 쌓인 레벨업) 도달 시각 (카드를 미뤄도 같은 값 · 검토 1번)
+        public float lv30Sec = -1f, lv40Sec = -1f, lv45Sec = -1f, lv50Sec = -1f, treeDoneSec = -1f, wave2Sec = -1f;
+        public int bossesAt15 = -1, deathsPre15 = -1, wave2Timer = -1, transcends, refines, phaseShards, barriers;
+        public float exp1517, expPost15, bossDealt;                  // 경험치 합 (15:00~17:00 · 15분 뒤) · 보스에게 준 피해 합 (넘친 피해 빼고)
+        public readonly Dictionary<string, float> bossDealtBy = new Dictionary<string, float>();
+        public string topBossDealt = "";
     }
 
     static RunRecord cur;
@@ -102,12 +111,13 @@ public static class AutoplayRunner
         MaxMinutes = EnvF("AP_MAXMIN", 45f);
         BeyondSeconds = EnvF("AP_BEYOND", 0f);
         NoDeath = Env("AP_NODEATH", "0") == "1";
+        HoardLevels = Mathf.Max(0, EnvI("AP_HOARD", 0));
         NoRender = Env("AP_RENDER", "0") != "1";
         Directory.CreateDirectory(Out);
         progress = new StreamWriter(Path.Combine(Out, "progress.log"), true, new UTF8Encoding(false));
         errLog = new StreamWriter(Path.Combine(Out, "errors.txt"), true, new UTF8Encoding(false));
         Application.logMessageReceived += OnLog;
-        Log("시작 " + Hero + " 갈래 " + Path1 + "/" + Path2 + " · " + Runs + "판 · 실력 " + Inv(Skill, "0.00") + " · 한 프레임 " + Inv(Step, "0.000") + "초 · 상한 " + MaxMinutes + "분" + (NoDeath ? " · 불사(사망 횟수만 셈)" : "") + " · 게임 " + Application.version);
+        Log("시작 " + Hero + " 갈래 " + Path1 + "/" + Path2 + " · " + Runs + "판 · 실력 " + Inv(Skill, "0.00") + " · 한 프레임 " + Inv(Step, "0.000") + "초 · 상한 " + MaxMinutes + "분" + (NoDeath ? " · 불사(사망 횟수만 셈)" : "") + (HoardLevels > 0 ? " · 레벨업 " + HoardLevels + "개 쌓아 두기" : "") + " · 게임 " + Application.version);
 
         GameInput.Auto = true;
         AudioListener.volume = 0f;
@@ -151,7 +161,7 @@ public static class AutoplayRunner
             cur.realSec = Time.realtimeSinceStartup - realStart;
             WriteRow(cur);
             CopyToDocs();
-            Log("판 끝 " + (run + 1) + "/" + plan.Count + " · " + cur.result + " · " + EndlessMode.Clock(cur.endSec) + " · 개발자 " + Clock(cur.devKillSec) + " · 엄마 " + Clock(cur.momKillSec) + " · 사망 " + cur.deaths + " · 예외 " + cur.exceptions + " · 실제 " + Inv(cur.realSec / 60f, "0.0") + "분");
+            Log("판 끝 " + (run + 1) + "/" + plan.Count + " · " + cur.result + " · " + EndlessMode.Clock(cur.endSec) + " · 개발자 " + Clock(cur.devKillSec) + " · 엄마 " + Clock(cur.momKillSec) + " · 사망 " + cur.deaths + " · Lv 50 " + Clock(cur.lv50Sec) + " · 첫 정련 " + Clock(cur.treeDoneSec) + " · 예외 " + cur.exceptions + " · 실제 " + Inv(cur.realSec / 60f, "0.0") + "분");
             cur = null;
             // 다음 판 전에 정리
             Time.captureDeltaTime = 0f;
@@ -292,6 +302,8 @@ public static class AutoplayRunner
             r.topDealt = Top(RunStats.DamageDealt, 4);
             if (EndlessMode.Instance != null) r.bosses = EndlessMode.Instance.BossesDefeated;
             r.lastStandUsed = LastStand.Used;
+            if (r.deathsPre15 < 0) r.deathsPre15 = r.deaths;          // 1.4.2~ 15:00 전에 끝난 판은 사망 전부가 15분 전
+            r.topBossDealt = Top(r.bossDealtBy, 4);
             AutoplayBot.FillPaths(r);
         }
         catch (Exception e) { Log("기록 정리 실패 " + e.Message); }
@@ -304,7 +316,9 @@ public static class AutoplayRunner
     }
 
     // ================================================================= CSV
-    const string Header = "time,hero,path1,path2,skill,seed,result,end_time,four_bosses,dev_summon,dev_kill,mom_summon,mom_kill,bosses,level,kills,deaths,laststand,taken,dealt,top_taken,top_dealt,path_tiers,cross,exceptions,errors,first_errors,stuck,unknown_windows,real_minutes,step,version";
+    // 1.4.2~ 무한 30분 측정 열은 끝에 붙임 (옛 CSV 와 앞 열 순서 그대로)
+    const string Header = "time,hero,path1,path2,skill,seed,result,end_time,four_bosses,dev_summon,dev_kill,mom_summon,mom_kill,bosses,level,kills,deaths,laststand,taken,dealt,top_taken,top_dealt,path_tiers,cross,exceptions,errors,first_errors,stuck,unknown_windows,real_minutes,step,version"
+        + ",lv30_at,lv40_at,lv45_at,lv50_at,exp_15_17,exp_post15,tree_done_at,bosses_at15,deaths_pre15,wave2_at,wave2_timer,transcends,refines,phase_shards,barriers,boss_dealt,boss_top_dealt,hoard_levels";
 
     static void WriteRow(RunRecord r)
     {
@@ -320,8 +334,20 @@ public static class AutoplayRunner
             r.bosses.ToString(), r.level.ToString(), r.kills.ToString(), r.deaths.ToString(), r.lastStandUsed.ToString(), Inv(r.taken, "0"), Inv(r.dealt, "0"),
             Q(r.topTaken), Q(r.topDealt), Q(r.pathTiers), Q(r.cross), r.exceptions.ToString(), r.errors.ToString(), Q(string.Join(" || ", r.firstErrors)),
             Q(r.stuck), r.unknownWindows.ToString(), Inv(r.realSec / 60f, "0.0"), Inv(Step, "0.000"), Application.version,
+            T(r.lv30Sec), T(r.lv40Sec), T(r.lv45Sec), T(r.lv50Sec), ExpRate(r.exp1517, r.endSec, 900f, 1020f), ExpRate(r.expPost15, r.endSec, 900f, float.MaxValue),
+            T(r.treeDoneSec), N(r.bossesAt15), N(r.deathsPre15), T(r.wave2Sec), N(r.wave2Timer), r.transcends.ToString(), r.refines.ToString(), r.phaseShards.ToString(), r.barriers.ToString(),
+            Inv(r.bossDealt, "0"), Q(r.topBossDealt), HoardLevels.ToString(),
         });
         try { File.AppendAllText(path, (fresh ? Header + "\n" : "") + line + "\n", new UTF8Encoding(fresh)); }
         catch (Exception e) { Log("CSV 쓰기 실패 " + e.Message); }
+    }
+
+    static string N(int v) => v < 0 ? "" : v.ToString();
+
+    // 1.4.2~ 구간 경험치 수입(초당): from~to 구간 중 판이 지난 만큼으로 나눔 · 구간에 못 닿은 판은 빈칸
+    static string ExpRate(float exp, float endSec, float from, float to)
+    {
+        float span = Mathf.Min(endSec, to) - from;
+        return span < 1f ? "" : Inv(exp / span, "0");
     }
 }
