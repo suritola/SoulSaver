@@ -59,7 +59,7 @@
 
 === en
 # V1.2 Major Update — Build Paths
-Every hero now has 5 build paths that fight in completely different ways. Even the same hero plays differently every run.
+Every hero now has 5 build paths that fight in completely different ways, so every run plays differently.
 
 The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
 

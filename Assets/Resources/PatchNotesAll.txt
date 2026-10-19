@@ -60,7 +60,7 @@
 
 === en
 # V1.2 Major Update — Build Paths
-Every hero now has 5 build paths that fight in completely different ways. Even the same hero plays differently every run.
+Every hero now has 5 build paths that fight in completely different ways, so every run plays differently.
 
 The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
 
@@ -239,9 +239,9 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 感谢每一位游玩的玩家。如果有喜欢的流派组合，或觉得太强、太弱的流派，欢迎在社区讨论区告诉我们！
 @@@ v1.1.1
 # V1.1.1 업데이트 — 왕들의 영토 · 한 판 더 · 개발자와 엄마의 새 공격
-그동안의 업데이트를 하나로 모았습니다: 새 보스와 영토, 한 판 더 즐길 거리, 편의성 개선, 개발자와 엄마의 새 공격, 많은 버그 수정.
+왕들의 영토, 영혼 계약, 개발자와 엄마의 새 공격, 편의성 개선과 많은 버그 수정을 담았습니다.
 
-그동안 나누어 올렸던 업데이트 소식을 하나로 정리했습니다. 아래는 각 업데이트에서 바뀐 내용입니다.
+무한 모드를 뒤덮는 왕들의 영토부터 판마다 새로운 목표, 개발자와 엄마의 새 공격까지 — 이번 업데이트에서 바뀐 내용을 소개합니다.
 
 ## 왕들의 영토
 
@@ -441,10 +441,10 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.1.1 Update — Realm of the Kings · One More Run · New Attacks for the Developer and Mom
-All recent updates gathered in one place: new bosses and realms, more reasons for one more run, quality-of-life improvements, new attacks for the Developer and Mom, and many bug fixes.
+# V1.1.1 Update — Realm of the Kings, One More Run & More
+Realm of the Kings, Soul Contracts, new Developer & Mom attacks, QoL and many bug fixes.
 
-We've gathered the update notes we posted separately into a single post. Below is everything that changed in each update.
+From the Realm of the Kings spreading across Endless Mode to new goals every run and new attacks for the Developer and Mom — here is everything in this update.
 
 ## Realm of the Kings
 
@@ -645,9 +645,9 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 
 === ja
 # V1.1.1 アップデート — 王たちの領土・もう一回・開発者とママの新しい攻撃
-これまでのアップデートをひとつにまとめました：新しいボスと領土、もう一回遊びたくなる要素、快適性の改善、開発者とママの新しい攻撃、多くの不具合修正。
+王たちの領土、魂の契約、開発者とママの新しい攻撃、快適性の改善と多くの不具合修正を収録しました。
 
-これまで分けて投稿していたアップデート情報をひとつにまとめました。以下は各アップデートで変わった内容です。
+エンドレスを覆う王たちの領土から、毎回の新しい目標、開発者とママの新しい攻撃まで — 今回のアップデート内容をご紹介します。
 
 ## 王たちの領土
 
@@ -848,9 +848,9 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 === zh
 # V1.1.1 更新 — 王之领地 · 再来一局 · 开发者与妈妈的新攻击
-将近期的更新整合为一篇：新的首领与领地、让人想再来一局的内容、便利性改进、开发者与妈妈的新攻击，以及大量问题修复。
+王之领地、灵魂契约、开发者与妈妈的新攻击、便利性改进与大量问题修复。
 
-我们把之前分开发布的更新公告整合成了一篇。以下是每次更新中的变化。
+从覆盖无尽模式的王之领地，到每局的新目标，再到开发者与妈妈的新攻击 — 以下是本次更新的内容。
 
 ## 王之领地
 
