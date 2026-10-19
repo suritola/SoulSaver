@@ -15,7 +15,7 @@ public static partial class LocTable
         PA("무리 제어", "Crowd control", "群れの制御", "控制敌群");
         PA("보스 (얼지 않음)", "Bosses (won't stay frozen)", "ボス（凍りにくい）", "首领（难以冻结）");
         PA("얼어붙은 적 둘레 2칸에 냉기 오라가 생겨 0.6초마다 냉기 1을 쌓습니다.", "Frozen enemies give off a chill aura that adds 1 chill every 0.6 seconds within 2 tiles.", "凍った敵の周り2マスに冷気のオーラが生まれ、0.6秒ごとに冷気を1ためます。", "被冻结的敌人周围2格出现寒气光环，每0.6秒叠加1层寒气。");
-        PA("얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 30%)와 냉기 2를 줍니다.", "When the ice thaws, a cold wave deals damage (30% Attack) and 2 chill to enemies within 3 tiles.", "氷が解けるとき冷気の波が広がり、周り3マスの敵にダメージ（攻撃力30%）と冷気2を与えます。", "冰冻解除时扩散寒气波，对周围3格的敌人造成伤害（攻击力30%）并叠加2层寒气。");     // 1.4.2~ 40% → 30%
+        PA("얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 40%)와 냉기 2를 줍니다.", "When the ice thaws, a cold wave deals damage (40% Attack) and 2 chill to enemies within 3 tiles.", "氷が解けるとき冷気の波が広がり、周り3マスの敵にダメージ（攻撃力40%）と冷気2を与えます。", "冰冻解除时扩散寒气波，对周围3格的敌人造成伤害（攻击力40%）并叠加2层寒气。");
         PA("눈보라의 냉기 안개가 2배 오래 남습니다.", "Blizzard's frost mist lasts twice as long.", "吹雪の冷気の霧が2倍長く残ります。", "暴风雪的寒雾持续时间翻倍。");
         PA("산산조각", "Shatter", "粉砕", "粉碎");
         PA("얼린 적 부수기 · 보스 균열", "Shatter the frozen · Crack bosses", "凍った敵を砕く · ボスに亀裂", "粉碎冻结之敌 · 首领裂痕");

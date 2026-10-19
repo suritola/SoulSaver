@@ -73,7 +73,7 @@ public static class CharacterData
             description = "깃펜으로 세상을 그리는 측량사. 그은 선으로 적을 베고, 세 획마다 저절로 그려지는 도형으로 안쪽을 통째로 짓이깁니다.",
             weapon = "깃펜", attack = "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
             skill = "지도 접기", skillDesc = "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
-            hp = 0.95f, damage = 1.6f, attackSpeed = 0.85f, gauge = 1.1f, sig = 1.6f, special = 1.6f, range = 9f, price = 5000, condition = CharUnlock.Endless10,     // 1.4.2~ ×1.6: 공격력 1.0 → 1.6 · 고유 · 특수 (1) → 1.6 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 1.0 → 1.15 (유령에 맞춰 버프 · 원래 강해서 조금만) · 1.3.3: 1.1 → 1.0
+            hp = 0.95f, damage = 1.0f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,     // 1.3.6: 1.0 → 1.15 (유령에 맞춰 버프 · 원래 강해서 조금만) · 1.3.3: 1.1 → 1.0
             pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f) },
         new CharacterDef {
             name = "시계공", title = "멈춘 시간의 장인", body = "clockmaker", held = "gear",
@@ -94,7 +94,7 @@ public static class CharacterData
             description = "세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
             weapon = "차가운 손길", attack = "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
             skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",     // 1.0.4~: 1초 → 3초 · 조종
-            hp = 0.9f, damage = 1.45f, attackSpeed = 1.05f, gauge = 1.05f, sig = 1.6f, special = 1.6f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,     // 1.4.2~ ×1.6: 공격력 0.9 → 1.45 · 고유 · 특수 (1) → 1.6 (혹한 냉기 파동 40% → 30% 와 함께) (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.1.3: 체력 0.8 → 0.9 (사거리 4.5 근접인데 화력은 중앙값 · 받는 피해의 70~77% 가 접촉 · 사망률 가장 높음)
+            hp = 0.9f, damage = 0.9f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,     // 1.1.3: 체력 0.8 → 0.9 (사거리 4.5 근접인데 화력은 중앙값 · 받는 피해의 70~77% 가 접촉 · 사망률 가장 높음)
             pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f) },
         Coming(),
     };

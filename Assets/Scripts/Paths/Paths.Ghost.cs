@@ -23,7 +23,7 @@ public sealed class GhostPaths : HeroPaths
             cost = "차가운 손길 피해가 25% 줄어듭니다.", strong = "무리 제어", weak = "보스 (얼지 않음)",
             cards = new[] { P, S(2), S(0) }, evo = "he.blizzard",
             res1 = "얼어붙은 적 둘레 2칸에 냉기 오라가 생겨 0.6초마다 냉기 1을 쌓습니다.",
-            res2 = "얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 30%)와 냉기 2를 줍니다.",
+            res2 = "얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 40%)와 냉기 2를 줍니다.",
             mastery = "눈보라의 냉기 안개가 2배 오래 남습니다.",
             color = new Color(0.6f, 0.9f, 1f) },
         new PathDef {
@@ -77,7 +77,7 @@ public sealed class GhostPaths : HeroPaths
     public const float FrostReach = 1f;              // 혹한: 손길 +1칸
     const float FrostHandMul = 0.75f;                // 혹한 대가: 손길 피해 −25%
     const float FrostAuraR = 2f, FrostAuraEvery = 0.6f;     // 혹한 공명 I: 얼어붙은 적 둘레 2칸 · 0.6초마다 냉기 1
-    const float FrostWaveR = 3f, FrostWaveAtk = 0.3f;       // 혹한 공명 II: 풀릴 때 둘레 3칸 · 공격력 30% · 냉기 2     // 1.4.2~ 0.4 → 0.3 (유령 고유 스킬 1 → 1.6 상향을 받아 파동은 +20% 에 그치게 — 봇 판에서 화력의 49% 가 파동에 몰려 혹한 갈래만 튀지 않게)
+    const float FrostWaveR = 3f, FrostWaveAtk = 0.4f;       // 혹한 공명 II: 풀릴 때 둘레 3칸 · 공격력 40% · 냉기 2
     public const float ShatterFreezeMul = 0.5f;      // 산산조각 대가: 얼어붙는 시간 −50%
     const float ShatterBigShare = 0.06f;             // 산산조각: 큰 적은 최대 체력 6%
     const float CrackAtk = 0.8f, BigCrackAtk = 2f, BigCrackR = 3f, CrackGap = 2f;     // 보스 균열 공격력 80% · 큰 균열 200% (둘레 3칸) · 같은 보스에 2초에 한 번
