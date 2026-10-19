@@ -22,8 +22,9 @@ public partial class LevelShop
             },
             CharacterId.Clockmaker => id switch
             {
-                PierceId => Card("튕기는 톱니", "톱니가 적을 맞힌 뒤 가까운 다른 적에게 튕깁니다.", 0, "튕기는 횟수", "|1|회", "|2|회", "|3|회"),
-                MultiId => Zero("|12|", Card("빠른 태엽", "정각까지 필요한 눈금이 줄어듭니다.", 0, "필요한 눈금", "|10|", "|8|", "|6|")),       // 1.0.4~ 기본 12 (CharacterKit.ClockNeed)
+                // 1.4.1~ 갈래 톱니 떼: 덧붙는 튕김(ClockmakerPaths.ExtraBounce) · 대가 눈금 +4(ExtraNeed)를 카드 숫자에도 (머리 위 눈금 막대와 같게)
+                PierceId => Zero(ClockmakerPaths.ExtraBounce > 0 ? "|" + ClockmakerPaths.ExtraBounce + "|회" : null, Card("튕기는 톱니", "톱니가 적을 맞힌 뒤 가까운 다른 적에게 튕깁니다.", 0, "튕기는 횟수", "|" + (1 + ClockmakerPaths.ExtraBounce) + "|회", "|" + (2 + ClockmakerPaths.ExtraBounce) + "|회", "|" + (3 + ClockmakerPaths.ExtraBounce) + "|회")),
+                MultiId => Zero("|" + (12 + ClockmakerPaths.ExtraNeed) + "|", Card("빠른 태엽", "정각까지 필요한 눈금이 줄어듭니다.", 0, "필요한 눈금", "|" + (10 + ClockmakerPaths.ExtraNeed) + "|", "|" + (8 + ClockmakerPaths.ExtraNeed) + "|", "|" + (6 + ClockmakerPaths.ExtraNeed) + "|")),       // 1.0.4~ 기본 12 (CharacterKit.ClockNeed)
                 KnockId => Card("시계추", "톱니를 다섯 번 던질 때마다 시계추가 앞쪽을 크게 휩씁니다. (공격력 150%)", 0, "휩쓰는 범위", "|6|칸", "|7|칸", "|8|칸"),
                 GlareId => Card("남은 시각", "되감기로 떠난 자리에 시계가 남아 0.5초마다 둘레를 벱니다. (공격력 60%)", 0, "시계 지속", "|2|초", "|3|초", "|4|초"),
                 ExtraAId => Card("정각의 종", "정각 톱니가 터지면 종소리가 퍼져 주변 적을 잠깐 멈춥니다.", 0, "멈추는 시간", "|0.5|초", "|0.8|초", "|1.1|초"),

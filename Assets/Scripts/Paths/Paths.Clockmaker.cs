@@ -183,6 +183,26 @@ public sealed class ClockmakerPaths : HeroPaths
     float invulnReadyAt;
     float lastSp = -1f;
     float bank;                     // 시간 여행 극의: 두 번째 되감기 충전 (0 ~ 1)
+    // 1.4.1~ 이어하기에도 남게: 대정각 주기 · 모아 둔 되감기(10분의 1 단위)를 판 안 수(RunCounters → RunSave.counters)에 같이 적어 둠
+    //   공용 저장(RunSave)은 고치지 않음 · 판 안 수는 이어하기 복원(Contracts.RestoreRun)에서 돌아옴 → 읽을 때 큰 쪽을 씀
+    //   (판 안 수를 세지 않는 판(자동 · 튜토리얼)은 필드만 · 이어하기 직후엔 필드가 0 이라 저장된 값을 따름)
+    const string NoonKey = "paths.t.noon", BankKey = "paths.t.bank";
+    int NoonCount => Mathf.Max(noonCount, RunCounters.Get(NoonKey));
+    int bankSeen;                   // 마지막으로 본 판 안 수 (이것과 다르면 이어하기 복원이 바꾼 것 → 따름)
+    void SyncBank()
+    {
+        int saved = RunCounters.Get(BankKey);
+        if (saved == bankSeen) return;          // 판 안 수를 못 쓰는 판에서 쓴 한 번이 다시 채워지지 않게 (같으면 내 값 그대로)
+        bankSeen = saved;
+        bank = Mathf.Clamp01(saved / 10f);
+    }
+    void SaveBank()
+    {
+        int q = Mathf.FloorToInt(bank * 10f + 0.0001f);
+        int saved = RunCounters.Get(BankKey);
+        if (q != saved) RunCounters.Add(BankKey, q - saved);         // 10분의 1 단위로만 (매 프레임 계약 확인이 돌지 않게)
+        bankSeen = RunCounters.Get(BankKey);
+    }
 
     // ================================================================= 대시계
     // 극의: 세 번째 톱니마다 정각 (throwIndex = 이번이 몇 번째 던지기인지, 1부터)
@@ -192,7 +212,8 @@ public sealed class ClockmakerPaths : HeroPaths
     public bool NextNoonIsGrand()
     {
         if (!On(Grand) || Paths.Res(Grand) < 2) return false;
-        noonCount++;
+        noonCount = NoonCount + 1;                  // 1.4.1~ 이어하기 뒤엔 저장된 주기부터
+        RunCounters.Add(NoonKey, noonCount - RunCounters.Get(NoonKey));
         return noonCount % 3 == 0;
     }
 
@@ -337,7 +358,8 @@ public sealed class ClockmakerPaths : HeroPaths
     }
 
     // 공명 II: 세 번 이상 튕긴 톱니가 맞히면 작은 톱니 둘 (보스 쪽으로도 감)
-    public void Split(Vector3 at, Vector2 dir, float dmg, GameObject except)
+    // 1.4.1~ twin: 덧붙은 톱니에서 갈라진 것 → 갈라진 톱니 · 그 잔상도 덧붙은 톱니 (보스 −55% 대가가 갈라짐으로 빠지지 않게)
+    public void Split(Vector3 at, Vector2 dir, float dmg, GameObject except, bool twin = false)
     {
         if (!SplitOn || dmg <= 0f) return;
         if (Time.time >= splitWindow) { splitWindow = Time.time + 1f; splitCount = 0; }
@@ -356,9 +378,9 @@ public sealed class ClockmakerPaths : HeroPaths
             float sd = dmg * SplitMul;
             Bullet b = ss.Shot(at, d, sd, 1, 32f, 9f, "fx_shuriken", 0.7f, brass, true);
             if (b == null) continue;
-            b.SetSource(SplitSrc);
+            if (twin) MarkTwin(b); else b.SetSource(SplitSrc);
             if (except != null && except.TryGetComponent(out EnermyController e)) b.hitOnce = new HashSet<int> { e.GetInstanceID() };
-            if (GearEchoOn) QueueEcho(at, d, sd, false, false, 1);       // 교차 톱니 메아리
+            if (GearEchoOn) QueueEcho(at, d, sd, false, twin, 1);        // 교차 톱니 메아리
         }
     }
 
@@ -435,11 +457,13 @@ public sealed class ClockmakerPaths : HeroPaths
             if (gain <= lump) g.AddSkillPoint(gain * (mul - 1f));
         }
         // 시간 여행 극의: 가득 찬 뒤에도 같은 빠르기로 한 번 더 모음
+        if (On(Travel) && Paths.Mastered(Travel)) SyncBank();             // 1.4.1~ 이어하기 뒤 모아 둔 되감기
         if (On(Travel) && Paths.Mastered(Travel) && g.IsFull() && bank < 1f && !p.IsSkillUsing)
         {
             float tree = SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.TreeGaugeMul : 1f;
             float rate = g.pointsPerSecond * GameMode.GaugeMul / Mathf.Max(0.1f, CharacterData.Current.gauge) * (g.Boosted ? g.killBoost : 1f) * tree * mul;
             bank = Mathf.Min(1f, bank + rate * Time.deltaTime / Mathf.Max(1, g.MaxSkillPoint));
+            SaveBank();
         }
         lastSp = g.SkillPoint;
     }
@@ -447,10 +471,13 @@ public sealed class ClockmakerPaths : HeroPaths
     // 필살기(되감기)를 쓴 직후 (게이지는 이미 비움): 극의로 모아 둔 한 번을 채움
     public override void Ult()
     {
-        if (!On(Travel) || !Paths.Mastered(Travel) || bank < 1f) return;
+        if (!On(Travel) || !Paths.Mastered(Travel)) return;
+        SyncBank();                                 // 1.4.1~ 이어하기 직후 GaugeTick 보다 먼저 불려도
+        if (bank < 1f) return;
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying || p.skillGauge == null) return;
         bank = 0f;
+        SaveBank();
         p.skillGauge.AddSkillPoint(p.skillGauge.MaxSkillPoint);
         lastSp = p.skillGauge.SkillPoint;
     }
@@ -521,7 +548,7 @@ public sealed class ClockmakerPaths : HeroPaths
     // HUD 입문 칸 오른쪽 위: 대시계 공명 II = 대정각까지 · 시간 여행 극의 = 모아 둔 되감기 (문자열은 상수라 새로 만들지 않음)
     public override string Badge(int path)
     {
-        if (path == Grand && On(Grand) && Paths.Res(Grand) >= 2) return (noonCount % 3) switch { 1 => "1/3", 2 => "2/3", _ => "0/3" };
+        if (path == Grand && On(Grand) && Paths.Res(Grand) >= 2) return (NoonCount % 3) switch { 1 => "1/3", 2 => "2/3", _ => "0/3" };
         if (path == Travel && On(Travel) && Paths.Mastered(Travel) && bank >= 1f) return "x2";
         return null;
     }
