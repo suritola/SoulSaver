@@ -636,18 +636,17 @@ public sealed class SwordsmanPaths : HeroPaths
         PlayerController p = Player;
         if (!Alive(p)) return dmg;
         // 받아치기: 막기 판정 중이면 피해 0 · 보상(0.6초 무적 등)은 ParrySuccess 가 가려 줌 (무적은 Paths.Invuln 으로만, 시간이 지나면 저절로 풀림)
-        if (Paths.Has(Parry) && Time.time < parryUntil)
-        {
-            ParrySuccess(p);
-            return 0f;
-        }
+        //   1.4.1~ 보통은 SignatureSkills.SwordTaken 이 혈갑 보호막보다 먼저 ParryFirst 로 막음 — 여기는 그 앞을 거치지 않은 피해의 예비
+        if (TryParry(dmg)) return 0f;
         // 피의 맹세 극의: 장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고 3초 흡혈 3배
         //   죽는지는 PlayerController.TryHit 이 이 뒤에 거는 보스전 한 방 상한을 미리 적용한 값으로 판정 (실제로 안 죽을 피해에 쓰지 않게)
         //   최후의 보루(LastStand)가 남아 있으면 그쪽이 체력 1로 버티므로 극의는 아껴 둠
+        //   1.4.1~ 쓴 충전 번호는 RunCounters 「본 것」에도 남김 (이어하기 저장 · 복원 — 같은 장에서 저장 후 이어하면 다시 쓰던 것)
         int rageKey = RageKey();
-        if (Paths.Mastered(Blood) && CappedHit(p, dmg) >= p.PlayerHealth && p.PlayerHealth > 1f && rageStage != rageKey && !LastStand.Ready)
+        if (Paths.Mastered(Blood) && CappedHit(p, dmg) >= p.PlayerHealth && p.PlayerHealth > 1f && rageStage != rageKey && !LastStand.Ready && !RunCounters.Seen(RageSeenKey(rageKey)))
         {
             rageStage = rageKey;
+            RunCounters.Saw(RageSeenKey(rageKey));
             rageUntil = Time.time + RageTime;
             Vector3 at = p.transform.position;
             Fx.Spawn("fx_bleed", at, 5f, Color.white, 16f);
@@ -659,12 +658,34 @@ public sealed class SwordsmanPaths : HeroPaths
         return dmg;
     }
 
+    // 1.4.1~ 받아치기 막기 판정 — 혈갑 보호막(SignatureSkills.SwordTaken)이 피해를 흡수하기 전에 먼저 부름
+    //   (보호막이 피해를 다 먹으면 0 이 넘어와 Taken 의 막기 판정까지 가지 못해 보상 · 역습 자세 · 되돌리기 · 극의 게이지가 모두 빠지던 것)
+    public static bool ParryFirst(float dmg)
+    {
+        SwordsmanPaths cur = Cur;
+        if (cur == null) return false;
+        try { return cur.TryParry(dmg); }
+        catch (System.Exception e) { Debug.LogException(e); return false; }
+    }
+
+    bool TryParry(float dmg)
+    {
+        if (dmg <= 0f || !Paths.Has(Parry) || Time.time >= parryUntil) return false;
+        PlayerController p = Player;
+        if (!Alive(p)) return false;
+        ParrySuccess(p);
+        return true;
+    }
+
     // 피의 맹세 극의 충전 번호: 이야기 판은 장 번호 · 무한 모드(장이 바뀌지 않음)는 쓰러뜨린 보스 수 (음수 쪽 · 장 번호와 겹치지 않게)
     static int RageKey()
     {
         if (GameMode.IsEndless && EndlessMode.Instance != null) return -1000 - EndlessMode.Instance.BossesDefeated;
         return Chapters.CurrentStage;
     }
+
+    // 1.4.1~ RunCounters 「본 것」 열쇠 (열쇠는 영문 · 숫자 · . 뿐 — 무한 모드의 음수 번호는 e + 보스 수)
+    static string RageSeenKey(int key) => key < 0 ? "s.blood.rage.e" + (-1000 - key) : "s.blood.rage." + key;
 
     // PlayerController.TryHit 의 보스전 한 방 상한 (보스가 살아 있으면 최대 체력 40% · 공간 침식 중엔 25%) — 같은 식을 공용 파일을 고치지 않고 미리 계산
     static float CappedHit(PlayerController p, float dmg)
