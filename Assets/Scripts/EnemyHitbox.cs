@@ -86,6 +86,15 @@ public class EnemyHitbox : MonoBehaviour
         return ((Vector2)other.ClosestPoint(c) - c).sqrMagnitude <= r * r;
     }
 
+    // 1.4.4~ 원(플레이어 몸통 접촉 원 PlayerController.ContactCenter · ContactRadius)과 몸 안쪽 원이 겹치는지
+    public bool Touching(Vector2 center, float radius)
+    {
+        if (col == null || contactLocal <= 0f) return true;
+        Vector2 c = col.bounds.center;
+        float r = contactLocal * Scale + radius;
+        return (center - c).sqrMagnitude <= r * r;
+    }
+
     // 좌우로 뒤집으면 (flipX 는 피벗 기준) 가운데도 따라 뒤집음
     void LateUpdate()
     {

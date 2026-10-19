@@ -24,10 +24,7 @@ public static partial class LocTable
         PA("빙결", "Frost", "氷結", "冰结");
         PA("얼리고 산산조각 · 제어", "Freeze and shatter · Control", "凍らせて粉砕・制御", "冰冻并粉碎 · 控制");
         PA("빙결 전문", "Frost Specialist", "氷結の専門家", "冰结专家");
-        PA("빙결 시약이 두 번에 한 번 나와 적을 얼리고, 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)",
-           "Every other reagent is Frost, and it freezes enemies. Hitting a frozen enemy with a flask shatters it. (8% of max HP · up to 2% for bosses)",
-           "2回に1回は氷結の試薬になって敵を凍らせ、凍った敵をフラスコで当てると粉砕します。（体力の8%・ボスは体力の2%まで）",
-           "每两次就有一次是冰冻试剂并冻结敌人，用烧瓶击中被冻结的敌人会将其粉碎。（生命值8% · 首领最多生命值2%）");
+        PK("빙결 시약이 두 번에 한 번 나와 적을 얼리고, 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)", "빙결 시약이 두 번에 한 번 나옵니다. 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)", "Every other reagent is Frost. Hitting a frozen enemy with a flask shatters it. (8% of max HP · up to 2% for bosses)", "2回に1回は氷結の試薬になります。凍った敵にフラスコを当てると粉砕します。（体力の8%・ボスは体力の2%まで）", "每两次就有一次是冰冻试剂。用烧瓶击中被冻结的敌人会将其粉碎。（生命值8% · 首领最多生命值2%）");
         PA("화염 피해가 40% 줄어듭니다.", "Fire damage is reduced by 40%.", "火炎ダメージが40%減ります。", "火焰伤害降低40%。");
         PA("제어 · 생존 · 보스 약화", "Control · Survival · Weakening bosses", "制御・生存・ボス弱体化", "控制 · 生存 · 削弱首领");
         PA("직접 화력", "Raw damage", "直接火力", "直接火力");

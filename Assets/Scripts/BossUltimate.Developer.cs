@@ -269,7 +269,7 @@ public partial class BossUltimate
         Fx.Spawn("fx_explosion", at, r * 1.8f, color, 20f);
         if (fx == "fx_slash") { Fx.Spawn("fx_shock", at, r * 2.4f, color, 18f); Hostile.Play("boom", 0.7f, 1.4f); }     // 등짝 스매싱 「짝!」
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(at, p.transform.position) <= r + 0.4f) DevHit(d, dmg);
+        if (p != null && Vector2.Distance(at, p.HurtCenter) <= r + PlayerController.HurtRadius) DevHit(d, dmg);      // 1.4.4~ 몸 아래쪽 판정
     }
 
     // 띠 타격 (한 줄씩 실행 · 빨래 · 강제 종료): 예고 선 → 빔 + 선분 거리 판정
@@ -279,7 +279,7 @@ public partial class BossUltimate
     {
         Fx.Beam(a, b, width, color, 0.28f);
         PlayerController p = Hostile.Player;
-        if (p != null && Hostile.DistanceToSegment(p.transform.position, a, b) < hitHalf) DevHit(d, DevDamage(d, raw));
+        if (p != null && Hostile.HurtToSegment(p, a, b) < hitHalf) DevHit(d, DevDamage(d, raw));
     }
 
     // 보스 몸이 깜빡이며 기를 모음 (BossSkills.Windup 과 같은 모양)
@@ -565,8 +565,7 @@ public partial class BossUltimate
         PlayerController pl = Hostile.Player;
         if (pl != null)
         {
-            Vector3 me = pl.transform.position;
-            if (Hostile.DistanceToSegment(me, o - u * half, o + u * half) < width * 0.5f || Hostile.DistanceToSegment(me, o - v * half, o + v * half) < width * 0.5f)
+            if (Hostile.HurtToSegment(pl, o - u * half, o + u * half) < width * 0.5f || Hostile.HurtToSegment(pl, o - v * half, o + v * half) < width * 0.5f)     // 1.4.4~ 몸 아래쪽 판정
                 DevHit(d, DevDamage(d, 24f));
         }
         Hostile.Play("crack", 0.8f, 0.7f);
@@ -703,7 +702,7 @@ public partial class BossUltimate
             if (Time.time >= nextBite)
             {
                 nextBite = Time.time + 0.8f;
-                if (Vector2.Distance(pl.transform.position, mouth) < mouthR + 0.2f) DevHit(d, DevDamage(d, 20f));
+                if (Hostile.HurtDistance(pl, mouth) < mouthR + 0.2f) DevHit(d, DevDamage(d, 20f));
             }
             yield return null;
         }
@@ -751,7 +750,7 @@ public partial class BossUltimate
             Vector3 c = o + side * ((i - 1.5f) * gap + shift);
             Vector3 a = c - along * half, b = c + along * half;
             Fx.Beam(a, b, width, color, 0.3f);
-            if (!hit && p != null && Hostile.DistanceToSegment(p.transform.position, a, b) < width * 0.5f + 0.2f) hit = true;
+            if (!hit && p != null && Hostile.HurtToSegment(p, a, b) < width * 0.5f + 0.2f) hit = true;
         }
         if (hit) DevHit(d, DevDamage(d, 18f));
     }
@@ -858,7 +857,7 @@ public class DevBug : MonoBehaviour
         trail += Time.deltaTime;
         if (trail > 0.12f) { trail = 0f; Fx.Spawn("fx_spark", transform.position, 1.1f, new Color(0.2f, 1f, 0.45f, 0.7f), 16f); }
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(p.transform.position, transform.position) < 1f)
+        if (p != null && Hostile.HurtDistance(p, transform.position) < 1f)      // 1.4.4~ 몸 아래쪽 판정
         {
             AttackLabel.Pending = ctx.label;
             p.TryHit(damage);

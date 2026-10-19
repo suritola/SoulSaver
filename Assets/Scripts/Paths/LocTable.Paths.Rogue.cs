@@ -87,10 +87,7 @@ public static partial class LocTable
         PA("평타 공격 속도가 20% 느려집니다.", "Basic attack speed is 20% slower.", "通常攻撃の攻撃速度が20%遅くなります。", "普通攻击速度降低20%。");
         PA("기동 · 관통 · 보스 순간 화력", "Mobility · Piercing · Burst on bosses", "機動・貫通・ボスへの瞬間火力", "机动 · 贯穿 · 对首领瞬间爆发");
         PA("게이지 의존", "Gauge-dependent", "ゲージ頼み", "依赖能量槽");
-        PA("돌진으로 처치하면 게이지 25%를 돌려받습니다. (한 번의 돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)",      // 1.4.2~ 반환 상한
-           "Killing with a Dash refunds 25% of the gauge. (Gauge refunded from one Dash is capped at 40% in total)",
-           "ダッシュで倒すとゲージを25%取り戻します。(1回のダッシュで戻るゲージは合計40%まで)",
-           "冲刺击杀敌人时返还25%能量槽。（单次冲刺返还的能量槽合计最多40%）");
+        PK("돌진으로 처치하면 게이지 25%를 돌려받습니다. (한 번의 돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)", "돌진으로 처치하면 게이지 25%를 돌려받습니다. (돌진 한 번에 최대 40%)", "Dash kills refund 25% of the gauge. (Up to 40% per Dash)", "ダッシュで倒すとゲージを25%取り戻します。(1回のダッシュで最大40%)", "冲刺击杀返还25%能量槽。（每次冲刺最多40%）");      // 1.4.2~ 반환 상한
         PA("돌진한 길이 X자로 엇갈리면 교차점이 터집니다. (공격력 300%)",
            "When Dash paths cross in an X, the crossing point explodes. (300% Attack)",
            "ダッシュした道がX字に交わると、交点が爆発します。(攻撃力300%)",

@@ -38,10 +38,7 @@ public static partial class LocTable
         // ================================================================= 받아치기
         PA("받아치기", "Parry", "受け返し", "招架反击");
         PA("막기 0.25초 · 반격", "0.25s block · Counter", "0.25秒の受け · 反撃", "0.25秒格挡 · 反击");
-        PA("우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
-           "The first 0.25s after pressing right-click is a block. If you're hit during it, you take 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility · next slash ×3. (Once per 3s · enemy body contact is only blocked) Missing costs nothing, but you can block once per 1.2s (once per 2s after a success).",
-           "右クリックを押した最初の0.25秒が受けになります。その間に攻撃を受けるとダメージ0。弾やボスの攻撃を受けると、0.6秒無敵 · 次の斬撃×3も得ます。（3秒に1回 · 雑魚の体当たりはダメージを防ぐだけ）失敗しても損はありませんが、受けは1.2秒に1回（成功すると2秒に1回）です。",
-           "按下右键后的前0.25秒为格挡。期间受到攻击时伤害为0。格挡弹幕或首领攻击时，还会获得无敌0.6秒 · 下一次斩击×3。（每3秒一次 · 小怪的身体碰撞只挡伤害）失败也没有损失，但格挡每1.2秒只能一次（成功后每2秒一次）。");
+        PK("우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "우클릭 뒤 0.25초 동안 막기가 되어 그사이 받는 피해가 0입니다. 투사체 · 보스 공격을 막으면 0.6초 무적과 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "For 0.25s after right-click you block, taking 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility and a ×3 next slash. (Once per 3s · enemy body contact is only blocked) You can block once per 1.2s (once per 2s after a success).", "右クリック後の0.25秒間が受けになり、その間のダメージは0です。弾やボスの攻撃を受けると0.6秒無敵と次の斬撃×3も得ます。（3秒に1回・雑魚の体当たりはダメージを防ぐだけ）受けは1.2秒に1回（成功すると2秒に1回）です。", "按下右键后0.25秒内为格挡，期间受到的伤害为0。格挡弹幕或首领攻击时还获得0.6秒无敌和下一次斩击×3。（每3秒一次 · 小怪身体碰撞只挡伤害）格挡每1.2秒一次（成功后每2秒一次）。");
         PA("회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.",
            "Charging Spin Slash to full takes 30% longer.",
            "回転斬りを最大までためる時間が30%長くなります。",

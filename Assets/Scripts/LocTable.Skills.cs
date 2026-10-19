@@ -22,8 +22,7 @@ public static partial class LocTable
         // ---------------- 카드 설명 고침 (2.0.7~): 검사 밸런스 · 숫자 보강 · 진화 무기 필살기에도 적용
         A("적에게 맞은 뒤 1.5초 동안 주는 모든 피해가 늘어납니다.", "For 1.5s after being hit, all damage you deal is increased.", "敵に被弾してから1.5秒間、与えるすべてのダメージが増えます。", "受到敌人攻击后1.5秒内，造成的所有伤害提升。");
         A("휘두른 자리에 1초 동안 칼날 잔상이 남아 닿는 적을 0.25초마다 벱니다.", "Swings leave a blade afterimage for 1s that cuts enemies inside every 0.25s.", "振った場所に1秒間刃の残像が残り、触れた敵を0.25秒ごとに斬ります。", "挥砍处留下1秒的刀刃残影，每0.25秒斩击其中的敌人。");
-        K("벤 적 하나당 최대 체력의 0.6 ~ 1.5%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음 · 몸이 붉게 빛남)",
-          "벤 적 하나당 최대 체력의 0.6~1.5%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음 · 몸이 붉게 빛남)", "Each enemy you cut builds a shield worth 0.6–1.5% of max health that absorbs damage first. (Up to 3 enemies per swing; stops building for 1.5s after the shield is hit; your body glows red)", "斬った敵1体ごとに最大体力の0.6〜1.5%のシールドがたまり、受けるダメージを先に防ぎます。（1回の振りで最大3体、シールドが攻撃を受けた後1.5秒はたまらない・体が赤く光る）", "每斩中一名敌人，积累相当于最大生命0.6~1.5%的护盾，优先吸收伤害。（每次挥砍最多3名，护盾受击后1.5秒内不再积累 · 身体发出红光）");
+        K("벤 적 하나당 최대 체력의 0.6 ~ 1.5%만큼 보호막이 쌓여 받는 피해를 먼저 막습니다. (한 번 휘두를 때 최대 3마리, 보호막이 맞은 뒤 1.5초는 쌓이지 않음 · 몸이 붉게 빛남)", "벤 적 하나당 최대 체력의 0.6~1.5% 보호막이 쌓여 피해를 먼저 막습니다. (휘두를 때마다 최대 3마리 · 보호막이 맞으면 1.5초 동안 쌓이지 않음)", "Each enemy you cut adds a shield worth 0.6–1.5% of max health that absorbs damage first. (Up to 3 per swing · stops building for 1.5s after the shield is hit)", "斬った敵1体ごとに最大体力の0.6〜1.5%のシールドがたまり、ダメージを先に防ぎます。（1回の振りで最大3体・シールドが攻撃を受けると1.5秒たまらない）", "每斩中一名敌人，积累最大生命0.6~1.5%的护盾，优先吸收伤害。（每次挥砍最多3名 · 护盾受击后1.5秒内不积累）");
         K("필살기를 쓴 뒤 1.5 ~ 4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.", "필살기를 쓴 뒤 1.5~4초 동안 휘두르기가 빨라집니다. 오래 모았을수록 더 오래 이어집니다.",
           "After your Ultimate, you swing faster for 1.5–4s. The longer you charged, the longer it lasts.", "必殺技の後1.5〜4秒間、振りが速くなります。長くためるほど長く続きます。", "必杀技后1.5~4秒内挥砍加快。蓄力越久，持续越长。");
         A("필살기를 모으는 동안 범위 안의 적을 초당 2.5칸씩 끌어당깁니다. (보스 제외)", "While charging your Ultimate, pull enemies in range toward you at 2.5 tiles/s. (Excludes bosses)", "必殺技をためている間、範囲内の敵を毎秒2.5マス引き寄せます。（ボス除く）", "蓄力必杀技时，以每秒2.5格的速度拉近范围内的敌人。（首领除外）");
@@ -36,7 +35,7 @@ public static partial class LocTable
         A("필살기를 모으는 동안 주변 적에게 작은 플라스크가 떨어져 터집니다. (공격력 50%)", "While charging the Great Blast Flask, small flasks rain on nearby enemies. (50% attack)", "必殺技をためている間、周りの敵に小さなフラスコが落ちて爆発します。（攻撃力50%）", "蓄力必杀技时，小烧瓶落向周围敌人并爆炸。（攻击力50%）");
         A("평타로 벤 적 하나당 체력을 회복합니다. (한 번 휘두를 때 최대 3마리까지)", "Heal for each enemy your basic attack cuts. (Up to 3 per swing)", "通常攻撃で斬った敵1体ごとに体力を回復します。（1回の振りで最大3体まで）", "普通攻击每斩中一名敌人恢复生命。（每次挥砍最多3名）");
         A("평타를 휘두르면 베기 범위 안으로 날아오는 적 투사체를 모두 베어 없앱니다.", "Your basic swing cuts down every enemy projectile within its arc.", "通常攻撃を振ると、斬撃範囲に飛んでくる敵の投射物をすべて斬り消します。", "普通攻击挥砍时，斩灭挥砍范围内飞来的所有敌方投射物。");
-        A("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 1.6배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "Every few swings, one becomes a heavy strike with 1.4× reach and 1.6× damage. (Rank 3: the heavy strike also sends out a shockwave)", "何回か振るごとに1回は射程1.4倍・ダメージ1.6倍の強打になります。（3段階：強打に周囲の衝撃波）", "每挥砍几次，就有一次变为射程1.4倍、伤害1.6倍的强力一击。（3级：强力一击附带周围冲击波）");
+        K("몇 번 휘두를 때마다 한 번은 사거리 1.4배 · 피해 1.6배의 강한 일격이 됩니다. (3단계: 강한 일격에 주변 충격파)", "몇 번 휘두를 때마다 한 번 강한 일격이 나갑니다. (사거리 1.4배 · 피해 1.6배 · 3단계: 주변 충격파)", "Every few swings, one is a heavy strike. (1.4× reach · 1.6× damage · Rank 3: shockwave)", "何回か振るごとに1回強打になります。（射程1.4倍・ダメージ1.6倍・3段階：周囲に衝撃波）", "每挥砍几次就有一次强力一击。（射程1.4倍 · 伤害1.6倍 · 3级：周围冲击波）");
         A("필살기 뒤 칼바람이 몸을 감싸고 돌며 주변을 벱니다. (0.3초마다 공격력 35%)", "After your Ultimate, a storm of blades circles you, cutting nearby foes. (35% attack every 0.3s)", "必殺技の後、刃の風が体を包んで回り周りを斬ります。（0.3秒ごとに攻撃力35%）", "必杀技后，刀风环绕身体旋转斩击周围。（每0.3秒攻击力35%）");
 
         // ---------------- 플레이 튜토리얼 (2.1.9~, TutorialRun · 이미 있는 키는 그대로)
@@ -138,7 +137,7 @@ public static partial class LocTable
         K("쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 증가합니다. 1.5초 쉬면 식습니다.", "쉬지 않고 쏠수록 총열이 달아올라 총알의 피해가 늘어납니다. 1.5초 쉬면 식습니다.","The longer you keep firing, the hotter the barrel and the harder your bullets hit. It cools after 1.5s of rest.", "撃ち続けるほど銃身が熱くなり、弾のダメージが増えます。1.5秒休むと冷めます。", "持续射击会让枪管升温，子弹伤害提升。停火1.5秒后冷却。");
         A("최대 피해", "Max damage", "最大ダメージ", "最大伤害");
         A("영혼 탄환", "Soul Rounds", "魂の弾丸", "灵魂弹");
-        A("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "While your Ultimate gauge is full, and for shots fired by your Ultimate, bullets become soul rounds that hit harder and pierce one more enemy. (Non-bullet Ultimates just deal more damage)", "必殺技ゲージが満タンの間と必殺技で撃った弾が魂弾になり、ダメージが上がって敵をもう1体貫きます。（弾でない必殺技はダメージのみ増加）", "必杀技槽满时以及必杀技射出的子弹会变为灵魂弹，伤害更高并多穿透一名敌人。（非子弹类必杀技仅提升伤害）");
+        K("필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알이 영혼탄이 되어 더 아프고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만 증가)", "필살기 게이지가 가득 찬 동안과 필살기로 쏜 총알은 영혼탄이 되어 피해가 늘고 적을 하나 더 꿰뚫습니다. (총알이 아닌 필살기는 피해만)", "While your Ultimate gauge is full, and for Ultimate shots, bullets become soul rounds: more damage and +1 pierce. (Non-bullet Ultimates: damage only)", "必殺技ゲージが満タンの間と必殺技の弾は魂弾になり、ダメージが上がって敵を1体多く貫きます。（弾でない必殺技はダメージのみ）", "必杀技槽满时及必杀技射出的子弹变为灵魂弹：伤害提高，多穿透1名敌人。（非子弹类必杀技仅提高伤害）");
         A("영혼탄 피해", "Soul round damage", "魂弾ダメージ", "灵魂弹伤害");
         A("섬광 장전", "Flash Reload", "閃光リロード", "闪光装填");
         A("장전을 마치는 순간 섬광이 터져 주변 적을 기절시킵니다.", "Finishing a reload sets off a flash that stuns nearby enemies.", "リロードを終えた瞬間に閃光が走り、周りの敵を気絶させます。", "装填完成的瞬间爆出闪光，击晕周围敌人。");
@@ -187,7 +186,7 @@ public static partial class LocTable
         A("필살기가 끝나고 잠시 뒤 더 작은 회전 베기가 한 번 더 일어납니다.", "A moment after your Ultimate ends, a smaller echo spin follows.", "必殺技が終わった少し後、もう一度小さな回転斬りが起こります。", "必杀技结束片刻后，再发动一次较小的回旋斩。");
         A("잔향 피해", "Echo damage", "残響ダメージ", "余响伤害");
         A("영혼 흡수", "Soul Drinker", "魂吸収", "灵魂吸收");
-        K("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기의 피해가 증가합니다. (최대 8, 벨 때 모두 씀)", "적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기의 피해가 늘어납니다. (최대 8, 벨 때 모두 씀)","Each kill stores a soul in your blade, empowering your next swing. (Up to 8, all spent on the swing)", "敵を倒すたびに剣に魂が宿り、次の斬撃が強くなります。（最大8、斬ると全て使う）", "每击杀一名敌人，剑中就寄宿一个灵魂，强化下一次挥砍。（最多8个，挥砍时全部消耗）");
+        K("적을 쓰러뜨릴 때마다 검에 영혼이 깃들어 다음 베기의 피해가 증가합니다. (최대 8, 벨 때 모두 씀)", "적을 쓰러뜨릴 때마다 영혼이 하나 쌓여 다음 베기의 피해가 늘어납니다. (최대 8 · 벨 때 모두 씀)", "Each kill stores a soul that empowers your next swing. (Up to 8 · all spent on the swing)", "敵を倒すたびに魂が1つたまり、次の斬撃が強くなります。（最大8・斬ると全て使う）", "每次击杀积累一个灵魂，强化下一次挥砍。（最多8个 · 挥砍时全部消耗）");
         A("영혼 하나당 피해", "Damage per soul", "魂1つあたりのダメージ", "每个灵魂伤害");
 
         // ================================================================= 도적
@@ -214,13 +213,13 @@ public static partial class LocTable
         A("같은 적을 연달아 맞힐수록 피해가 오릅니다. (최대 5중첩)", "Hitting the same enemy in a row deals more and more damage. (Up to 5 stacks)", "同じ敵に続けて当てるほどダメージが上がります。（最大5重）", "连续命中同一敌人时伤害递增。（最多5层）");
         A("중첩당 피해", "Damage per stack", "1重ごとのダメージ", "每层伤害");
         A("넘치는 기세", "Overflowing Momentum", "あふれる勢い", "满溢气势");
-        K("필살기 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "필살기 게이지가 가득 차는 순간 몸 주변으로 표창이 사방에 퍼집니다. (공격력 100%씩)", "The moment your Ultimate gauge fills, throwing stars burst out in every direction. (100% attack each)", "必殺技ゲージが満タンになった瞬間、体の周りに手裏剣が四方へ広がります。（攻撃力100%ずつ）", "必杀技槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
+        K("필살기 게이지가 가득 차는 순간 몸 주위로 표창이 사방에 퍼집니다. (공격력 100%씩)", "필살기 게이지가 가득 차는 순간 표창이 사방으로 퍼집니다. (공격력 100%씩)", "When your Ultimate gauge fills, throwing stars burst out in all directions. (100% attack each)", "必殺技ゲージが満タンになった瞬間、手裏剣が四方へ飛び散ります。（攻撃力100%ずつ）", "必杀技槽充满的瞬间，飞镖向四周散射。（每枚攻击力100%）");
         A("표창 수", "Stars", "手裏剣の数", "飞镖数量");
         A("그림자 매듭", "Shadow Knot", "影の結び目", "暗影之结");
         A("필살기로 벤 적들이 4초 동안 그림자 줄로 묶여, 하나가 받은 피해의 일부를 나머지도 받습니다.", "Enemies cut by your Ultimate are tied by shadow for 4s; damage to one is partly shared by the rest.", "必殺技で斬った敵が4秒間影の糸で結ばれ、1体が受けたダメージの一部を他も受けます。", "被流血突进斩中的敌人被暗影之线绑定4秒，其中一个受到的伤害会部分传给其余敌人。");
         A("나눠 받는 피해", "Shared damage", "分け合うダメージ", "分摊伤害");
         A("빈 주머니의 비", "Empty-Pouch Rain", "空の袋の雨", "空囊之雨");
-        A("표창을 다 던져 주머니가 비는 순간, 하늘에서 표창이 주변 적들에게 쏟아집니다. (공격력 100%씩)", "When your pouch runs empty, throwing stars rain down on nearby enemies. (100% attack each)", "手裏剣を投げ切って袋が空になった瞬間、空から手裏剣が周りの敵に降り注ぎます。（攻撃力100%ずつ）", "飞镖投尽、囊中空空的瞬间，飞镖从天而降砸向周围敌人。（每枚攻击力100%）");
+        K("표창을 다 던져 주머니가 비는 순간, 하늘에서 표창이 주변 적들에게 쏟아집니다. (공격력 100%씩)", "표창 주머니가 비면 주변 적들에게 표창이 쏟아집니다. (공격력 100%씩)", "When your pouch runs empty, throwing stars rain on nearby enemies. (100% attack each)", "手裏剣の袋が空になると、周りの敵に手裏剣が降り注ぎます。（攻撃力100%ずつ）", "飞镖囊空时，飞镖落向周围敌人。（每枚攻击力100%）");
         A("떨어지는 표창", "Falling stars", "降る手裏剣", "落下飞镖");
 
         // ================================================================= 궁수
@@ -245,7 +244,7 @@ public static partial class LocTable
         A("가득 당긴 화살을 쏘면 반대쪽으로 짧게 뛰어 물러납니다.", "Firing a full-draw arrow hops you back a short distance.", "引き絞った矢を撃つと反対側へ短く飛び退きます。", "射出满弓之箭时向反方向短距跃退。");
         A("물러나는 거리", "Hop distance", "下がる距離", "后撤距离");
         A("매복", "Ambush Trap", "待ち伏せ", "埋伏");
-        A("가득 당겨 쏘면 발밑에 덫이 깔려(2초에 한 번), 들어온 적을 묶고 공격력 80% 피해를 줍니다. 묶인 적은 받는 피해가 30% 늘어납니다.", "Fully drawn shots lay a snare at your feet (once per 2s) that roots enemies and deals 80% attack damage. Rooted enemies take 30% more damage.", "引き絞って撃つと足元に罠が敷かれ（2秒に1回）、入った敵を縛って攻撃力80%のダメージを与えます。縛られた敵は受けるダメージが30%増えます。", "满弓射击时在脚下布下陷阱（每2秒一次），定住进入的敌人并造成80%攻击力伤害。被定住的敌人受到的伤害增加30%。");
+        K("가득 당겨 쏘면 발밑에 덫이 깔려(2초에 한 번), 들어온 적을 묶고 공격력 80% 피해를 줍니다. 묶인 적은 받는 피해가 30% 늘어납니다.", "가득 당겨 쏘면 발밑에 덫을 깝니다. (2초에 한 번) 덫은 적을 묶고 공격력 80% 피해를 주며, 묶인 적은 받는 피해가 30% 늘어납니다.", "Full-draw shots lay a snare at your feet (once per 2s). It roots enemies for 80% attack damage; rooted enemies take 30% more damage.", "引き絞って撃つと足元に罠を敷きます（2秒に1回）。罠は敵を縛って攻撃力80%のダメージを与え、縛られた敵は受けるダメージが30%増えます。", "满弓射击时在脚下布下陷阱（每2秒一次）。陷阱定住敌人并造成80%攻击力伤害，被定住的敌人受到的伤害+30%。");
         A("묶는 시간", "Root time", "縛る時間", "定身时间");
         A("높은 자리", "High Ground", "高所", "居高临下");
         A("유성 화살", "Meteor Arrow", "流星の矢", "流星箭");
@@ -263,7 +262,7 @@ public static partial class LocTable
         A("증폭 용액", "Amplifying Solution", "増幅溶液", "增幅溶液");
         A("적 하나당", "Per enemy", "敵1体ごと", "每名敌人");
         A("조수 개조", "Assistant Upgrade", "助手改造", "助手改造");
-        A("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "Your Homunculus loads fire, frost, and acid in turn and its flasks hit harder. (Requires Homunculus)", "ホムンクルスが投げるフラスコに火炎・氷結・酸の試薬を交互に詰め、より強く爆発させます。（ホムンクルスが必要）", "侏儒助手投掷的烧瓶轮流装入火焰、冰冻、酸性试剂，爆炸更强。（需要侏儒助手）");
+        K("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "호문쿨루스의 플라스크에 화염 · 빙결 · 산성이 번갈아 담겨 더 세게 터집니다. (호문쿨루스 필요)", "Your Homunculus's flasks cycle fire, frost and acid and hit harder. (Requires Homunculus)", "ホムンクルスのフラスコに火炎・氷結・酸が交互に入り、より強く爆発します。（ホムンクルスが必要）", "侏儒助手的烧瓶轮流装入火焰、冰冻、酸性，爆炸更强。（需要侏儒助手）");
         A("조수 플라스크 피해", "Assistant flask damage", "助手フラスコのダメージ", "助手烧瓶伤害");
         A("유리 비", "Glass Rain", "ガラスの雨", "玻璃雨");
         A("떨어지는 간격", "Drop interval", "落ちる間隔", "落下间隔");
@@ -290,14 +289,14 @@ public static partial class LocTable
         A("영혼 추적자", "Soul Seeker", "魂の追跡者", "灵魂追猎者");
         A("영혼탄이 적을 쫓아가고, 맞힌 적에게서 영혼 구슬이 튀어나와 가까운 적을 덮칩니다.", "Soul rounds home in, and each hit releases a soul orb that hunts a nearby enemy.", "魂弾が敵を追いかけ、当たった敵から魂の玉が飛び出して近くの敵を襲います。", "灵魂弹会追踪敌人，命中时迸出灵魂珠扑向附近敌人。");
         A("뇌격 반격", "Thunder Counter", "雷撃反撃", "雷击反击");
-        K("맞으면 반격과 함께 몸 주위에 번개 폭풍이 터져 주변 적에게 큰 피해를 주고 기절시킵니다. (공격력 200%)", "맞으면 반격과 함께 몸 주변에 번개 폭풍이 터져 주변 적에게 큰 피해를 주고 기절시킵니다. (공격력 200%)","When hit, a lightning storm bursts around you along with your return fire, heavily damaging and stunning nearby enemies. (200% attack)", "被弾すると反撃と共に体の周りで雷の嵐が弾け、周りの敵に大ダメージを与えて気絶させます。（攻撃力200%）", "受击时在反击的同时于身边爆发雷暴，重创并击晕周围敌人。（攻击力200%）");
+        K("맞으면 반격과 함께 몸 주위에 번개 폭풍이 터져 주변 적에게 큰 피해를 주고 기절시킵니다. (공격력 200%)", "맞으면 반격과 함께 번개 폭풍이 터져 주변 적에게 피해를 주고 기절시킵니다. (공격력 200%)", "When hit, a lightning storm bursts with your return fire, damaging and stunning nearby enemies. (200% attack)", "被弾すると反撃と共に雷の嵐が弾け、周りの敵にダメージを与えて気絶させます。（攻撃力200%）", "受击时随反击一同爆发雷暴，伤害并击晕周围敌人。（攻击力200%）");
         A("총잡이의 춤", "Gunslinger's Dance", "ガンマンの舞", "枪手之舞");
         A("장전을 마치면 가까운 적 여섯에게 자동으로 총알을 한 발씩 쏩니다.", "Finishing a reload automatically fires a shot at each of six nearby enemies.", "リロードを終えると近くの敵6体に自動で1発ずつ撃ちます。", "装填完成后自动向附近六名敌人各开一枪。");
         A("장전을 마치면 가까운 적 여섯에게 자동으로 총알을 한 발씩 쏩니다. (포탑 설치 갈래: 포탑도 함께 쏩니다)", "Finishing a reload automatically fires a shot at each of six nearby enemies. (Turret Deploy path: turrets fire too)", "リロードを終えると近くの敵6体に自動で1発ずつ撃ちます。（砲台設置の流派：砲台も一緒に撃ちます）", "装填完成后自动向附近六名敌人各开一枪。（架设炮塔流派：炮塔也会一起开火）");
         A("무법자", "Outlaw", "無法者", "亡命之徒");
         A("겁에 질린 적을 쓰러뜨리면 탄창이 가득 차고, 겁이 가까운 적들에게 번집니다.", "Killing a terrified enemy fully reloads your magazine and spreads the terror to nearby foes.", "怯えた敵を倒すと弾倉が満タンになり、恐怖が近くの敵に広がります。", "击杀恐惧中的敌人会装满弹匣，并让恐惧蔓延到附近敌人。");
         A("완벽한 반격", "Perfect Counter", "完璧な反撃", "完美反击");
-        A("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 300%)", "Getting hit or parrying a projectile turns your next swing into a giant counter wave. (300% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ巨大な反撃の剣気になります。（攻撃力300%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的巨大反击剑气。（攻击力300%）");
+        K("맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 거대한 반격 검기가 됩니다. (공격력 300%)", "맞거나 투사체를 쳐내면 다음 베기가 앞으로 날아가는 반격 검기가 됩니다. (공격력 300%)", "Getting hit or parrying a projectile turns your next swing into a flying counter wave. (300% attack)", "被弾するか投射物を弾くと、次の斬撃が前へ飛ぶ反撃の剣気になります。（攻撃力300%）", "受击或弹开投射物后，下一次挥砍化为向前飞出的反击剑气。（攻击力300%）");
         A("천검 궤적", "Thousand-Blade Trail", "千剣の軌跡", "千剑轨迹");
         A("칼날 잔상이 사라질 때 그 자리에서 검기가 사방으로 날아갑니다.", "When a blade afterimage fades, sword waves fly out from it in all directions.", "刃の残像が消えるとき、その場から剣気が四方へ飛びます。", "刀刃残影消失时，剑气从原地向四方飞出。");
         A("피의 성채", "Blood Bastion", "血の城砦", "血之堡垒");
@@ -315,7 +314,7 @@ public static partial class LocTable
         A("피바다", "Sea of Blood", "血の海", "血海");
         A("출혈 폭발이 주변 적에게도 같은 피해를 주고, 터질 때마다 체력을 회복합니다.", "Hemorrhage also hits nearby enemies for the same damage, and heals you each time.", "出血爆発が周りの敵にも同じダメージを与え、弾けるたびに体力を回復します。", "出血爆发对周围敌人造成同等伤害，并在每次爆发时恢复生命。");
         A("처형자의 길", "Executioner's Path", "処刑人の道", "处刑者之路");
-        A("급습 시간 동안 표창을 던질 때마다 모든 적을 꿰뚫는 그림자 표창이 함께 날아가고, 묶인 적이 쓰러지면 급습 시간이 다시 채워집니다.", "During Ambush, each throw also launches a shadow star that pierces everything, and killing a knotted enemy refreshes Ambush.", "急襲中は手裏剣を投げるたびにすべての敵を貫く影の手裏剣も飛び、結ばれた敵が倒れると急襲時間が再び満ちます。", "突袭期间每次投掷都会附带一枚穿透所有敌人的暗影飞镖，被绑定的敌人倒下时突袭时间重置。");
+        K("급습 시간 동안 표창을 던질 때마다 모든 적을 꿰뚫는 그림자 표창이 함께 날아가고, 묶인 적이 쓰러지면 급습 시간이 다시 채워집니다.", "급습 동안 표창마다 모든 적을 꿰뚫는 그림자 표창이 함께 날아갑니다. 묶인 적이 쓰러지면 급습 시간이 다시 찹니다.", "During Ambush, each throw adds a shadow star that pierces everything. Killing a knotted enemy refreshes Ambush.", "急襲中は手裏剣ごとにすべての敵を貫く影の手裏剣も飛びます。結ばれた敵が倒れると急襲時間が戻ります。", "突袭期间每次投掷附带一枚穿透所有敌人的暗影飞镖。被绑定的敌人倒下时重置突袭时间。");
         A("귀환하는 칼날", "Returning Blades", "帰還する刃", "归还之刃");
         A("되돌아오는 표창이 두 개가 되고, 되돌아올 때마다 탄창에 한 발이 돌아옵니다.", "Two stars return instead of one, and each return refunds a star.", "戻る手裏剣が2つになり、戻るたびに弾倉に1発戻ります。", "折返飞镖变为两枚，每次折返时补回一枚飞镖。");
         A("칼날 폭풍길", "Bladestorm Road", "刃の嵐の道", "刃风之路");
@@ -354,9 +353,9 @@ public static partial class LocTable
         A("불꽃 행진", "Flame March", "炎の行進", "火焰行军");
         A("농축 플라스크가 터진 자리에 불길 고리가 퍼지고, 연소 흔적이 두 배로 커집니다.", "Concentrated flasks leave a ring of fire, and Burning Steps grow twice as large.", "濃縮フラスコが爆発した場所に炎の輪が広がり、燃焼の跡が2倍大きくなります。", "浓缩烧瓶爆炸处扩散火焰之环，燃烧足迹扩大一倍。");
         A("황금 시대", "Golden Age", "黄金時代", "黄金时代");
-        A("코인을 주울 때마다 경험치를 조금 얻고, 코인 40개를 모을 때마다 황금 파동이 터져 주변 적에게 피해를 줍니다. (공격력 300%)", "Picking up coins grants a little EXP, and every 40 coins releases a golden wave that damages nearby enemies. (300% attack)", "コインを拾うたびに経験値を少し得て、コイン40枚ごとに黄金の波動が弾けて周りの敵にダメージを与えます。（攻撃力300%）", "每拾取金币获得少量经验，每收集40枚金币爆发黄金波动伤害周围敌人。（攻击力300%）");
+        K("코인을 주울 때마다 경험치를 조금 얻고, 코인 40개를 모을 때마다 황금 파동이 터져 주변 적에게 피해를 줍니다. (공격력 300%)", "코인을 주울 때마다 경험치를 조금 얻고, 코인 40개마다 황금 파동이 주변 적에게 피해를 줍니다. (공격력 300%)", "Coins grant a little EXP, and every 40 coins releases a golden wave that damages nearby enemies. (300% attack)", "コインを拾うたびに経験値を少し得て、40枚ごとに黄金の波動が周りの敵にダメージを与えます。（攻撃力300%）", "拾取金币获得少量经验，每40枚金币释放黄金波动伤害周围敌人。（攻击力300%）");
         A("불멸의 육체", "Undying Flesh", "不滅の肉体", "不灭之躯");
-        A("체력이 가득 차 있으면 3초마다 심장 박동 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", "At full health, a heartbeat pulse spreads every 3s, knocking back nearby enemies and dealing damage based on max health.", "体力が満タンのとき、3秒ごとに鼓動の波動が広がり、周りの敵を押し返して最大体力に比例したダメージを与えます。", "生命全满时每3秒扩散心跳波动，击退周围敌人并造成与最大生命成比例的伤害。");
+        K("체력이 가득 차 있으면 3초마다 심장 박동 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", "체력이 가득 차 있으면 3초마다 파동이 퍼져 주변 적을 밀어내고 최대 체력에 비례한 피해를 줍니다.", "At full health, a pulse every 3s pushes back nearby enemies and deals damage based on max health.", "体力が満タンのとき、3秒ごとに波動が広がり、周りの敵を押し返して最大体力に比例したダメージを与えます。", "生命全满时每3秒扩散波动，击退周围敌人并造成与最大生命成比例的伤害。");
         // 1.0.4 요청 growth: 끝없는 성장 카드 (LevelShop.Growth) · 영혼 정련 (SoulTreeUI) — A() 는 이미 있는 키를 건너뛰어 다른 갈래와 겹쳐도 안전
         A("성장: 힘", "Growth: Might", "成長：力", "成长：力量");
         A("성장: 생명", "Growth: Vitality", "成長：生命", "成长：生命");
@@ -367,19 +366,13 @@ public static partial class LocTable
         A("공격 속도가 1% 빨라집니다.", "Attack speed increases by 1%.", "攻撃速度が1%速くなります。", "攻击速度提升1%。");
         A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed increases by 1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
         K("상한 없이 계속 쌓입니다", "상한 없이 계속 쌓입니다.", "Stacks without limit.", "上限なく積み重なります。", "可无限叠加。");
-        A("최대 레벨(50) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.",
-          "If you learn every level-up card before max level (50), each level-up lets you pick an endlessly stacking \"Growth\" card.",
-          "最大レベル（50）の前に覚えるレベルアップカードをすべて覚えると、レベルアップごとに無限に積み重なる「成長」カードを選びます。",
-          "在达到等级上限（50）前学会所有升级卡后，每次升级都可选择一张可无限叠加的「成长」卡。");
+        K("최대 레벨(50) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.", "최대 레벨(50) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 「성장」 카드를 고릅니다.", "Learn every level-up card before max level (50), and each later level-up offers a Growth card that stacks without limit.", "最大レベル（50）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる「成長」カードを選びます。", "在达到等级上限（50）前学会所有升级卡后，此后每次升级可选择无上限叠加的「成长」卡。");
         A("성장 카드", "Growth Cards", "成長カード", "成长卡");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 (그 뒤로는 레벨업 없음) · 재료를 모두 올리면 스킬 진화",
           "Pick one of three cards or skip on each level-up · Max level 50 (no level-ups after that) · Max all ingredients to evolve a skill",
           "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
           "每次升级从三张中选一张或跳过 · 等级上限50（之后不再升级）· 素材全部升满即可技能进化");
-        A("최대 레벨(50) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%",
-          "If you learn every level-up card before max level (50), each further level-up lets you pick one of the endlessly stacking Growth cards. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: attack speed +1% · Stride: move speed +1%",
-          "最大レベル（50）の前に選べるレベルアップカードをすべて覚えると、その後のレベルアップごとに上限なく積み重なる成長カードから1枚を選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%",
-          "在达到等级上限（50）前学会所有可选升级卡后，之后每次升级都可从可无限叠加的成长卡中选一张。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
+        K("최대 레벨(50) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "최대 레벨(50) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 성장 카드를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "Learn every level-up card before max level (50), and each later level-up offers a Growth card that stacks without limit. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: attack speed +1% · Stride: move speed +1%", "最大レベル（50）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる成長カードを選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%", "在达到等级上限（50）前学会所有升级卡后，此后每次升级可选择无上限叠加的成长卡。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
         A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         K("트리를 모두 배우면 열립니다", "트리를 모두 배우면 열립니다.", "Unlocks once the whole tree is learned.", "ツリーをすべて習得すると解放されます。", "学满整棵树后解锁。");

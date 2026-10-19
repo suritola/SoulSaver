@@ -339,6 +339,15 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    // 1.4.4~ 정해 둔 자리에 부하 하나 (킹 슬라임 뱉기 — 미리 그린 예고 원 자리에 그대로 떨어지게) · 세는 방식은 위와 같음
+    public bool SummonMinionAt(Vector3 at)
+    {
+        if (NoMobs || spawnedEnemys >= MaxAlive) return false;
+        spawnedEnemys++;
+        Instantiate(Pick(GameMode.IsEndless ? Phase.weights : Stage.minionWeights), at, Quaternion.identity);
+        return true;
+    }
+
     public void OnBossDefeated()
     {
         bossCleared = true;

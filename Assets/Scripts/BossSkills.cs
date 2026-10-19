@@ -247,7 +247,7 @@ public partial class BossSkills : MonoBehaviour
                         if (!Alive) yield break;
                         Fx.Beam(transform.position, end, 1.2f, new Color(0.7f, 0.95f, 1f, 0.8f), 0.2f);
                         PlayerController pp = Hostile.Player;
-                        if (pp != null && Hostile.DistanceToSegment(pp.transform.position, transform.position, end) < 0.9f) pp.TryHit(Capped(18f * Power));
+                        if (pp != null && Hostile.HurtToSegment(pp, transform.position, end) < 0.9f) pp.TryHit(Capped(18f * Power));
                         Hostile.Play("whoosh", 0.5f, 0.7f);
                         break;
                     }
@@ -367,7 +367,7 @@ public partial class BossSkills : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl != null)
                 for (int i = 0; i < 2; i++)
-                    if (Hostile.DistanceToSegment(pl.transform.position, ends[i * 2], ends[i * 2 + 1]) < 1f) { pl.TryHit(Capped(24f * Power)); break; }
+                    if (Hostile.HurtToSegment(pl, ends[i * 2], ends[i * 2 + 1]) < 1f) { pl.TryHit(Capped(24f * Power)); break; }
             Hostile.Play("zap", 0.7f, 0.8f);
             Hostile.Shake(0.15f);
         }
@@ -419,7 +419,7 @@ public partial class BossSkills : MonoBehaviour
     bool UltInCircle(Vector3 at, float radius)
     {
         PlayerController pl = Hostile.Player;
-        return pl != null && Vector2.Distance(at, pl.transform.position) < radius + 0.2f;
+        return pl != null && Hostile.HurtDistance(pl, at) < radius + 0.2f;      // 1.4.4~ 몸 아래쪽 판정
     }
 
     // strong: 체력 절반 아래 · 되비친 기억이면 한 번 더 · banner: 따로 알림을 띄우지 않았을 때만
@@ -496,7 +496,7 @@ public partial class BossSkills : MonoBehaviour
             transform.position = to;
             Fx.Spawn("fx_slash", to, 7f, new Color(0.85f, 0.95f, 1f), 30f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 14);
             pl = Hostile.Player;
-            UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, from, to) < 1.2f);
+            UltHit(pl != null && Hostile.HurtToSegment(pl, from, to) < 1.2f);
             Hostile.Play("whoosh", 0.7f, 1.2f);
             yield return new WaitForSeconds(0.3f);
         }
@@ -808,7 +808,7 @@ public partial class BossSkills : MonoBehaviour
             for (int i = 0; i < 3; i++)
             {
                 Fx.Beam(c, ends[i], 1.1f, new Color(0.85f, 0.95f, 1f), 0.25f);
-                if (pl != null && Hostile.DistanceToSegment(pl.transform.position, c, ends[i]) < 0.9f) inside = true;
+                if (pl != null && Hostile.HurtToSegment(pl, c, ends[i]) < 0.9f) inside = true;
             }
             UltHit(inside);
             Hostile.Play("zap", 0.6f, 1f);
@@ -964,7 +964,7 @@ public partial class BossSkills : MonoBehaviour
 
     // ================================================================= 킹 슬라임 (2.2.1~ 분열 대신 맞을수록 작고 빠름 · BossSkills.Reborn.cs)
     static readonly Color Acid = new Color(0.55f, 1f, 0.35f, 0.9f);
-    float SlimeSize => Mathf.Max(0.4f, transform.localScale.x / 27f);
+    float SlimeSize => Mathf.Max(0.4f, transform.localScale.x / Mathf.Max(1f, slimeSwell) / 27f);      // 1.4.4~ 뱉기 예고의 부풀기는 겉모습만
 
     // 대점프: 떨어질 곳에 그림자 원 → 높이 뛰어올라 내려찍고 산성 웅덩이
     IEnumerator SlimeLeap(PlayerController p, float warn)
@@ -1026,7 +1026,7 @@ public partial class BossSkills : MonoBehaviour
                 trail = 0f;
                 HazardZone.Spawn(transform.position, 1.4f, 2.5f, 8f, Acid, "fx_puddle", 0.8f);
             }
-            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f * Power);
+            if (!hit && Hostile.HurtDistance(p, transform.position) < 2.6f * SlimeSize + 0.6f) hit = p.TryHit(28f * Power);
             yield return null;
         }
         if (!hit && p != null && !p.IsDying) RunCounters.AddLife("roll.dodge");      // 1.2~ 보드 「굴러오는 길」
@@ -1053,7 +1053,7 @@ public partial class BossSkills : MonoBehaviour
             if (Hostile.Glow != null)
                 FlameParticle.Spawn(Hostile.Glow, transform.position + (Vector3)Random.insideUnitCircle, Random.insideUnitCircle * 2f, 0.5f, 0.08f, 0.35f, false);
             if (Random.value < 0.3f) Fx.Spawn("fx_explosion", transform.position + (Vector3)(Random.insideUnitCircle * 1.2f), 2.2f, Color.white, 20f);
-            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 2.4f) hit = p.TryHit(35f * Power);
+            if (!hit && Hostile.HurtDistance(p, transform.position) < 2.4f) hit = p.TryHit(35f * Power);
             yield return null;
         }
         Hostile.Burst(transform.position, 3f, Fire, true);
@@ -1126,8 +1126,8 @@ public partial class BossSkills : MonoBehaviour
             PlayerController p = Hostile.Player;
             if (!hit && p != null)
             {
-                Vector2 to = p.transform.position - center;
-                if (Mathf.Abs(to.magnitude - radius) < 0.9f && !InGap(Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg, gapAt, gapSize))
+                Vector2 to = p.HurtCenter - (Vector2)center;      // 1.4.4~ 몸 아래쪽 판정
+                if (Mathf.Abs(to.magnitude - radius) < 0.9f - PlayerController.HurtShrink && !InGap(Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg, gapAt, gapSize))
                     hit = p.TryHit(30f * Power);
             }
             yield return null;

@@ -185,7 +185,7 @@ public class EnemySkill : MonoBehaviour
     // 뼈 가시: 플레이어 발밑에서 뼈 가시가 솟음
     IEnumerator BoneSpike(PlayerController p)
     {
-        Vector3 at = p.transform.position;
+        Vector3 at = Hostile.SpreadAim(p.transform.position, 1.4f);       // 1.4.4~ 여러 적이 한 점에 겹치지 않게
         Hostile.Circle(at, 1.4f, Tw(0.8f), new Color(1f, 0.95f, 0.8f, 0.9f));
         yield return Windup(new Color(1f, 1f, 0.8f), 0.8f);
         if (!Alive) yield break;
@@ -197,9 +197,9 @@ public class EnemySkill : MonoBehaviour
     // 구울: 떨어질 곳에 원을 띄운 뒤 높이 뛰어 내려찍음
     IEnumerator Leap(PlayerController p)
     {
-        Vector3 target = Hostile.ClampArena(p.transform.position);
-        if (Hostile.IsWall(target)) yield break;
         float r = 1.9f * Size;
+        Vector3 target = Hostile.ClampArena(Hostile.SpreadAim(p.transform.position, r));     // 1.4.4~ 착지점 흩뿌림
+        if (Hostile.IsWall(target)) yield break;
         Hostile.Circle(target, r, Tw(0.7f) + 0.35f, Danger);   // 1.0.4~ 착지할 때까지 원을 남김
         yield return Windup(Danger, 0.7f);
         if (!Alive) yield break;
@@ -251,7 +251,8 @@ public class EnemySkill : MonoBehaviour
     // 임프: 플레이어 자리에 X자 레이저 (두 줄기가 엇갈림)
     IEnumerator XLaser(PlayerController p)
     {
-        Vector3 c = p.transform.position;
+        // 1.4.4~ 교차점 흩뿌림: 0.9 × 0.8 = 최대 0.72 칸 → 가만히 선 플레이어는 판정(0.8) 안 그대로
+        Vector3 c = Hostile.SpreadAim(p.transform.position, 0.9f);
         const float half = 7f;
         float tilt = Random.Range(0f, 90f);
         Vector3[] ends = new Vector3[4];
@@ -275,7 +276,7 @@ public class EnemySkill : MonoBehaviour
         PlayerController pl = Hostile.Player;
         if (pl != null)
             for (int i = 0; i < 2; i++)
-                if (Hostile.DistanceToSegment(pl.transform.position, ends[i * 2], ends[i * 2 + 1]) < 0.8f) { pl.TryHit(Dmg * 1.1f); break; }
+                if (Hostile.HurtToSegment(pl, ends[i * 2], ends[i * 2 + 1]) < 0.8f) { pl.TryHit(Dmg * 1.1f); break; }
         Hostile.Shake(0.12f);
     }
 
@@ -329,7 +330,7 @@ public class EnemySkill : MonoBehaviour
             transform.position = nextPos;
             dust += Time.deltaTime;
             if (dust > 0.04f) { dust = 0f; Fx.Spawn("fx_smoke", transform.position, 1.4f, new Color(0.7f, 0.5f, 0.45f), 16f); }
-            if (!hit && Vector2.Distance(transform.position, p.transform.position) < 1.3f * Size) hit = p.TryHit(Dmg);
+            if (!hit && Hostile.HurtDistance(p, transform.position) < 1.3f * Size) hit = p.TryHit(Dmg);
             yield return null;
         }
     }
@@ -350,8 +351,8 @@ public class EnemySkill : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl != null)
             {
-                float d = Vector2.Distance(pl.transform.position, c);
-                if (d <= r + 0.4f && d >= inner - 0.4f) pl.TryHit(Dmg);
+                float d = Vector2.Distance(pl.HurtCenter, c);     // 1.4.4~ 몸 아래쪽 판정
+                if (d <= r + PlayerController.HurtRadius && d >= inner - PlayerController.HurtRadius) pl.TryHit(Dmg);
             }
             int n = 6 + w * 4;
             for (int i = 0; i < n; i++)
@@ -390,7 +391,7 @@ public class EnemySkill : MonoBehaviour
                 Fx.Spawn("fx_slash", transform.position, r * 2.2f, new Color(1f, 0.55f, 0.55f), 30f, Random.Range(0f, 360f), 14);
                 Hostile.Play("whoosh", 0.2f, 1.4f);
             }
-            if (Time.time - lastHit > 0.45f && Vector2.Distance(pl.transform.position, transform.position) < r)
+            if (Time.time - lastHit > 0.45f && Hostile.HurtDistance(pl, transform.position) < r)
             {
                 lastHit = Time.time;
                 pl.TryHit(Dmg * 0.8f);
@@ -414,8 +415,8 @@ public class EnemySkill : MonoBehaviour
     // 꽃가루 구름: 플레이어 주변에 구름 → 안에 있으면 느려지고 조금씩 아픔
     IEnumerator PollenCloud(PlayerController p)
     {
-        Vector3 c = p.transform.position;
         float r = 3f * Size;
+        Vector3 c = Hostile.SpreadAim(p.transform.position, r);       // 1.4.4~ 여러 구름이 한 점에 겹치지 않게
         Hostile.Circle(c, r, Tw(0.9f), new Color(1f, 0.9f, 0.35f, 0.9f));
         yield return Windup(new Color(1f, 0.95f, 0.5f), 0.9f);
         if (!Alive) yield break;
@@ -510,7 +511,7 @@ public class EnemySkill : MonoBehaviour
             Vector3 tip = Vector3.Lerp(start, end, t / 0.22f);
             Fx.Beam(start, tip, 0.45f, new Color(0.8f, 0.82f, 0.95f), 0.05f);
             PlayerController pl = Hostile.Player;
-            if (pl != null && Hostile.DistanceToSegment(pl.transform.position, start, tip) < 0.75f) caught = pl.TryHit(Dmg * 0.7f);
+            if (pl != null && Hostile.HurtToSegment(pl, start, tip) < 0.75f) caught = pl.TryHit(Dmg * 0.7f);
             yield return null;
         }
         if (!caught || !Alive) yield break;
@@ -554,7 +555,7 @@ public class EnemySkill : MonoBehaviour
             Vector3 end = transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length;
             Fx.Beam(transform.position, end, 0.9f, new Color(0.8f, 0.45f, 1f), 0.05f);
             PlayerController pl = Hostile.Player;
-            if (!hit && pl != null && Hostile.DistanceToSegment(pl.transform.position, transform.position, end) < 0.7f) hit = pl.TryHit(Dmg);
+            if (!hit && pl != null && Hostile.HurtToSegment(pl, transform.position, end) < 0.7f) hit = pl.TryHit(Dmg);
             yield return null;
         }
     }
@@ -579,8 +580,8 @@ public class EnemySkill : MonoBehaviour
         PlayerController pl = Hostile.Player;
         if (pl != null)
         {
-            float d = Vector2.Distance(pl.transform.position, c);
-            if (d <= r2 + 0.4f && d >= r1 - 0.4f) pl.TryHit(Dmg);
+            float d = Vector2.Distance(pl.HurtCenter, c);     // 1.4.4~ 몸 아래쪽 판정
+            if (d <= r2 + PlayerController.HurtRadius && d >= r1 - PlayerController.HurtRadius) pl.TryHit(Dmg);
         }
         Hostile.Play("whoosh", 0.6f, 0.6f);
     }
@@ -660,7 +661,7 @@ public class HazardZone : MonoBehaviour
         age += Time.deltaTime;
         if (visual != null) visual.fps = fps;
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(p.transform.position, transform.position) < radius)
+        if (p != null && Vector2.Distance(p.HurtCenter, transform.position) < radius)      // 1.4.4~ 몸 아래쪽 판정
         {
             if (slow > 0f) p.Slow(slow, 0.2f);
             tick += Time.deltaTime;
@@ -798,9 +799,14 @@ public static class Hostile
     public static bool HitCircle(Vector3 pos, float radius, float damage)
     {
         PlayerController p = Player;
-        if (p == null || Vector2.Distance(pos, p.transform.position) > radius + 0.4f) return false;
+        if (p == null || Vector2.Distance(pos, p.HurtCenter) > radius + PlayerController.HurtRadius) return false;     // 1.4.4~ 몸 아래쪽 판정 (예전 transform 위치 + 0.4)
         return p.TryHit(damage);
     }
+
+    // 1.4.4~ 플레이어 피격 거리 (판정 중심 PlayerController.HurtCenter 에서 잼)
+    //   각 패턴의 너비 · 반지름 숫자는 예전 플레이어 반지름 0.4 를 품고 있으므로 HurtShrink 를 더해 판정만 같이 작아지게 (숫자는 그대로)
+    public static float HurtDistance(PlayerController p, Vector2 at) => Vector2.Distance(at, p.HurtCenter) + PlayerController.HurtShrink;
+    public static float HurtToSegment(PlayerController p, Vector2 a, Vector2 b) => DistanceToSegment(p.HurtCenter, a, b) + PlayerController.HurtShrink;
 
     public static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
     {
@@ -890,6 +896,17 @@ public static class Hostile
         for (int i = 0; i < n; i++)
             if (!wallBuf[i].isTrigger && wallBuf[i].CompareTag("Wall")) return true;
         return false;
+    }
+
+    // 1.4.4~ 플레이테스트 「여러 적이 한 캐릭터를 노리면 장판이 전부 한 점에 찍힘」 → 목표점을 플레이어 둘레에 흩뿌림
+    //   exactChance 만큼은 정확히, 나머지는 radius × 0.4~0.8 떨어진 곳 (판정 원 안에 서 있는 플레이어는 그대로 걸침 · 움직이면 여러 장판을 피한 느낌)
+    //   맵 밖 · 벽이면 원래 자리 그대로
+    public static Vector3 SpreadAim(Vector3 target, float radius, float exactChance = 0.25f)
+    {
+        if (radius <= 0f || Random.value < exactChance) return target;
+        Vector2 off = Random.insideUnitCircle.normalized * radius * Random.Range(0.4f, 0.8f);
+        Vector3 at = ClampArena(target + (Vector3)off);
+        return IsWall(at) ? target : at;
     }
 
     static EnemySpawner arenaSpawner;
@@ -1447,7 +1464,7 @@ public class HostileProjectile : MonoBehaviour
 
         PlayerController p = Hostile.Player;
         AttackLabel.Pending = label;
-        bool hitPlayer = p != null && Vector2.Distance(transform.position, p.transform.position) < radius + 0.4f && p.TryHit(damage);
+        bool hitPlayer = p != null && Vector2.Distance(transform.position, p.HurtCenter) < radius + PlayerController.HurtRadius && p.TryHit(damage);     // 1.4.4~ 몸 아래쪽 판정
         AttackLabel.Pending = null;
         if (hitPlayer)
         {

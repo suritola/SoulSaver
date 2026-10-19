@@ -162,7 +162,7 @@ public partial class BossSkills
         transform.position = to;
         using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         pl = Hostile.Player;
-        if (UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, from, to) < 1.2f)) Hostile.Shake(0.1f);
+        if (UltHit(pl != null && Hostile.HurtToSegment(pl, from, to) < 1.2f)) Hostile.Shake(0.1f);
         yield return new WaitForSeconds(0.3f);
     }
 
@@ -289,7 +289,7 @@ public partial class BossSkills
             yield return Windup(Dev, close);
             if (!Alive) yield break;
             pl = Hostile.Player;
-            UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, a, b) < half);
+            UltHit(pl != null && Hostile.HurtToSegment(pl, a, b) < half);
             float rot = Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg;
             using (DamageSource.As(DamageSource.Ult))
             {

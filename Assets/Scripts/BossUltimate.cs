@@ -776,7 +776,7 @@ public class DomainBall : MonoBehaviour
         trail += Time.deltaTime;
         if (trail > 0.12f) { trail = 0f; Fx.Spawn(trailFx, transform.position, 1.2f, trailColor, 14f); }
         PlayerController p = Hostile.Player;
-        if (p != null && Vector2.Distance(p.transform.position, transform.position) < hitRadius)
+        if (p != null && Hostile.HurtDistance(p, transform.position) < hitRadius)      // 1.4.4~ 몸 아래쪽 판정
         {
             AttackLabel.Pending = label;
             p.TryHit(damage);

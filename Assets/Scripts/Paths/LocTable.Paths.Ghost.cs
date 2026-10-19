@@ -38,7 +38,7 @@ public static partial class LocTable
         PA("영혼 상한이 10이 됩니다.", "Your soul limit becomes 10.", "魂の上限が10になります。", "灵魂上限变为10。");
         PA("사령술", "Necromancy", "死霊術", "死灵术");
         PA("긴 빙의 · 무적 근접 폭딜", "Long possession · Untouchable close-range burst", "長い憑依 · 無敵の接近爆発", "长时间附身 · 无敌近身爆发");
-        PA("빙의가 3초에서 4.5초로 늘고, 빙의한 몸이 부딪친 적에게 냉기와 피해(공격력 30%)를 주며, 빙의 게이지가 25% 덜 듭니다.", "Possession lasts 4.5 seconds instead of 3, the possessed body deals chill and damage (30% Attack) to enemies it bumps into, and Possession costs 25% less gauge.", "憑依が3秒から4.5秒に延び、憑依した体がぶつかった敵に冷気とダメージ（攻撃力30%）を与え、憑依のゲージが25%少なく済みます。", "附身从3秒延长至4.5秒，附身的身体会对撞到的敌人施加寒气并造成伤害（攻击力30%），附身消耗的能量减少25%。");
+        PK("빙의가 3초에서 4.5초로 늘고, 빙의한 몸이 부딪친 적에게 냉기와 피해(공격력 30%)를 주며, 빙의 게이지가 25% 덜 듭니다.", "빙의가 3초에서 4.5초로 늘고 게이지가 25% 덜 듭니다. 빙의한 몸에 부딪친 적은 냉기와 피해(공격력 30%)를 받습니다.", "Possession lasts 4.5s instead of 3s and costs 25% less gauge. Enemies the possessed body bumps take chill and damage (30% Attack).", "憑依が3秒から4.5秒に延び、ゲージが25%少なく済みます。憑依した体にぶつかった敵は冷気とダメージ（攻撃力30%）を受けます。", "附身从3秒延长至4.5秒，消耗能量减少25%。附身的身体撞到的敌人受到寒气与伤害（攻击力30%）。");
         PA("평타 피해가 20% 줄고, 빙의 중 무적은 처음 2초뿐입니다.", "Basic attacks deal 20% less damage, and you are only invincible for the first 2 seconds of Possession.", "通常攻撃のダメージが20%減り、憑依中の無敵は最初の2秒だけです。", "普通攻击伤害降低20%，附身期间仅前2秒无敌。");
         PA("무적 시간 · 보스 근접 폭딜", "Invincibility · Close-range burst on bosses", "無敵時間 · ボスへの接近爆発", "无敌时间 · 对首领近身爆发");
         PA("빙의 밖 화력", "Damage outside Possession", "憑依していない時の火力", "附身以外的火力");

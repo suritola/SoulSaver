@@ -1280,7 +1280,7 @@ public class TerrainZone : TerrainPiece
     {
         if (BossUltimate.Active) { tick = 0f; return; }      // 결계 · 침식 중에는 바닥 피해 · 느려짐 없음 (그림은 그대로)
         PlayerController p = Hostile.Player;
-        if (p != null && !p.IsDying && Vector2.Distance(p.transform.position, transform.position) < Radius)
+        if (p != null && !p.IsDying && Vector2.Distance(p.HurtCenter, transform.position) < Radius)      // 1.4.4~ 몸 아래쪽 판정
         {
             if (!lava) p.Slow(0.6f, 0.2f);
             else

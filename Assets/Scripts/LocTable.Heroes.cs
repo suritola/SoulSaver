@@ -17,11 +17,7 @@ public static partial class LocTable
           "羽ペンで世界を描く測量士。引いた線で敵を斬り、3本ごとに自動で描かれる図形で内側をまとめて押し潰します。",
           "用羽毛笔描绘世界的测量师。画出的线斩击敌人，每三笔自动画出的图形将内部一并碾碎。");
         A("깃펜", "Quill", "羽ペン", "羽毛笔");
-        K("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
-          "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다.",
-          "Draw an ink stroke toward the cursor, cutting enemies it touches. Every third stroke closes a triangle around its end, dealing heavy damage to enemies inside.",
-          "マウスの方へインクの線を引き、触れた敵を斬ります。3本目の線ごとに線の端を囲む三角形が自動で閉じ、内側の敵に大ダメージを与えます。",
-          "向鼠标方向画出墨线斩击触碰的敌人。每第三笔会自动在笔画末端闭合一个三角形，内部敌人受到重创。");
+        K("마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다", "마우스 쪽으로 잉크 획을 그어 적을 벱니다. 세 번째 획마다 삼각형이 닫혀 안쪽 적에게 큰 피해를 줍니다.", "Draw ink strokes toward the cursor to cut enemies. Every third stroke closes a triangle that deals heavy damage inside.", "マウスの方へインクの線を引いて敵を斬ります。3本目ごとに三角形が閉じ、内側の敵に大ダメージを与えます。", "向鼠标方向画墨线斩击敌人。每第三笔闭合一个三角形，对内部敌人造成重创。");
         A("지도 접기", "Fold the Map", "地図折り", "折叠地图");
         K("누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
           "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다.",
@@ -111,7 +107,7 @@ public static partial class LocTable
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
         A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");
         A("먹물 해일", "Ink Tide", "墨の津波", "墨潮");
-        A("마우스 쪽으로 거대한 먹물 파도를 일으켜 휩쓸린 적을 밀어내고 느리게 합니다. (공격력 300%)", "Raise a giant ink wave toward the cursor that pushes back and slows enemies it sweeps. (300% attack)", "マウスの方へ巨大な墨の波を起こし、巻き込んだ敵を押し出して遅くします。（攻撃力300%）", "向鼠标方向掀起巨大墨浪，击退并减速被卷入的敌人。（攻击力300%）");
+        K("마우스 쪽으로 거대한 먹물 파도를 일으켜 휩쓸린 적을 밀어내고 느리게 합니다. (공격력 300%)", "마우스 쪽으로 먹물 파도를 일으켜 적을 밀어내고 느리게 합니다. (공격력 300%)", "Send an ink wave toward the cursor that pushes back and slows enemies. (300% attack)", "マウスの方へ墨の波を起こし、敵を押し出して遅くします。（攻撃力300%）", "向鼠标方向掀起墨浪，击退并减速敌人。（攻击力300%）");
         A("자전", "Rotation", "自転", "自转");
         A("지구본 네 개가 3초 동안 내 둘레를 돌며 닿는 적을 벱니다. (0.25초마다 공격력 60%)", "Four globes orbit you for 3s, cutting enemies they touch. (60% attack every 0.25s)", "地球儀4つが3秒間自分の周りを回り、触れた敵を斬ります。（0.25秒ごとに攻撃力60%）", "四个地球仪在身边环绕3秒，斩击触碰的敌人。（每0.25秒攻击力60%）");
         A("정밀 측량", "Precise Survey", "精密測量", "精密测量");
@@ -150,17 +146,9 @@ public static partial class LocTable
           "歯車とゼンマイで時を操る職人。当てるほど時計の目盛りがたまり正時の大歯車を投げ、ピンチには3秒前へ巻き戻ります。",
           "以齿轮与发条操纵时间的工匠。命中越多钟表刻度越满，便会掷出整点大齿轮；危急时倒回3秒前。");
         A("톱니바퀴", "Gears", "歯車", "齿轮");
-        K("회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
-          "회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다.",
-          "Throw spinning gears. Each hit fills the clock ring at your feet; when full, your next gear becomes an O'Clock gear that pierces everything and explodes.",
-          "回転する歯車を投げます。当てるたびに足元の時計の目盛りがたまり、満タンになると次の歯車がすべての敵を貫いて爆発する「正時」の歯車になります。",
-          "掷出旋转齿轮。每次命中都会填满脚下的钟表刻度，填满后下一枚齿轮变为贯穿所有敌人并爆炸的「整点」齿轮。");
+        K("회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다", "톱니를 던집니다. 맞힐 때마다 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다.", "Throw gears. Hits fill the clock; when full, your next gear is an O'Clock gear that pierces everything and explodes.", "歯車を投げます。当てるたびに時計の目盛りがたまり、満タンで次の歯車がすべての敵を貫いて爆発する「正時」の歯車になります。", "掷出齿轮。命中会填充钟表刻度，填满后下一枚变为贯穿所有敌人并爆炸的「整点」齿轮。");
         A("되감기", "Rewind", "巻き戻し", "倒带");
-        K("누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
-          "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레의 적에게 되갚습니다.",
-          "Hold to see yourself from 3 seconds ago; release to return there. Cut enemies along the way, recover half the health lost, and repay three times that loss to nearby foes.",
-          "押している間は3秒前の自分が見え、離すとその場所へ戻ります。通った道の敵を斬り、その間に失った体力の半分を取り戻し、失った体力の3倍を周りの敵に返します。",
-          "按住可看到3秒前的自己，松开回到那里。斩击途经的敌人，夺回期间失去生命的一半，并将失去生命的三倍回敬给周围敌人。");
+        K("누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다", "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾고, 잃은 체력의 세 배를 둘레의 적에게 줍니다.", "Hold to see where you were 3s ago; release to return there. You cut enemies on the way, recover half the health lost, and deal three times the lost health to nearby enemies.", "押している間は3秒前の自分が見え、離すとそこへ戻ります。通った道の敵を斬り、その間に失った体力の半分を取り戻し、失った体力の3倍を周りの敵に与えます。", "按住显示3秒前的自己，松开回到那里。斩击途经敌人，恢复期间失去生命的一半，并对周围敌人造成失去生命三倍的伤害。");
         A("정각!", "O'Clock!", "正時！", "整点！");
         A("시간 정지!", "Time Stop!", "時間停止！", "时间停止！");
         A("톱니 공격력", "Gear Damage", "歯車攻撃力", "齿轮攻击力");
@@ -276,11 +264,7 @@ public static partial class LocTable
         A("저승 배달부", "Courier of the Dead", "冥府の配達人", "冥府信使");
         A("편지", "Letters", "手紙", "信件");
         A("속달", "Express Delivery", "速達", "特快专递");
-        K("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
-          "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고(오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다.",
-          "While held, letter marks attach to nearby enemies one by one (more the longer you hold); release and all marks burst together 1s later.",
-          "押している間、周りの敵に手紙の印が順に付き（長く押すほど多く）、離すと1秒後に印がすべて一斉に弾けます。",
-          "按住时依次在周围敌人身上贴上信件标记（按得越久越多），松开1秒后所有标记同时爆炸。");
+        K("누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다", "누르는 동안 둘레의 적에게 편지 표식이 붙고(오래 누를수록 많이), 떼면 1초 뒤 모두 터집니다.", "While held, letter marks attach to nearby enemies (more the longer you hold); release and they all burst 1s later.", "押している間、周りの敵に手紙の印が付き（長く押すほど多く）、離すと1秒後にすべて弾けます。", "按住时在周围敌人身上贴信件标记（按得越久越多），松开1秒后全部爆炸。");
         A("배달 완료!", "Delivered!", "配達完了！", "送达！");
         A("편지 공격력", "Letter Damage", "手紙攻撃力", "信件攻击力");
         A("편지 공격력 · 이동 속도", "Letter Damage · Move Speed", "手紙攻撃力・移動速度", "信件攻击力 · 移动速度");
@@ -376,11 +360,7 @@ public static partial class LocTable
           "A courier who delivers to the living and the dead alike. Letters seek out the farthest foe first, and one Express Delivery bursts letters on many nearby enemies at once.",
           "生者にも死者にも手紙を届ける配達人。手紙は最も遠い敵から探しに行き、速達ひとつで周りの多くの敵に手紙が一斉に弾けます。",
           "无论生者死者都会送达信件的邮差。信件先寻找最远的敌人，一次特快便能让周围众多敌人身上的信件同时爆开。");
-        K("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
-          "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다.",
-          "Address a letter to the farthest enemy toward the cursor. It slips past other foes to chase its addressee, and every 10 deliveries of your own letters earn coins and Ultimate gauge.",
-          "マウスの方で最も遠い敵を宛先にして手紙を飛ばします。手紙は他の敵をすり抜けて宛先を追い、自分で送った手紙を10回配達するたびにコインと必殺技ゲージがもらえます。",
-          "以鼠标方向最远的敌人为收件人掷出信件。信件越过其他敌人追踪收件人，亲手寄出的信件每送达10次获得金币与必杀技充能。");
+        K("마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다", "마우스 쪽에서 가장 먼 적에게 편지를 보냅니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아갑니다. 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다.", "Send a letter to the farthest enemy toward the cursor; it slips past others to reach them. Every 10 deliveries of your own letters grant coins and Ultimate gauge.", "マウスの方で最も遠い敵へ手紙を送ります。手紙は他の敵をすり抜けて宛先を追います。自分で送った手紙を10回配達するたびにコインと必殺技ゲージを得ます。", "向鼠标方向最远的敌人寄出信件，信件越过其他敌人追踪收件人。亲手寄出的信每送达10次，获得金币与必杀技充能。");
         A("편지가 받는 이에게 닿으면 가까운 다른 적에게 다시 배달됩니다. (피해 65%)", "After reaching its addressee, a letter is redelivered to another nearby enemy. (65% damage)", "手紙が宛先に届くと、近くの別の敵へもう一度配達されます。（ダメージ65%）", "信件送达收件人后，再投递给附近另一名敌人。（伤害65%）");
         A("배달할 때마다 다음 편지의 피해가 늘어납니다. (최대 10중첩 · 맞으면 절반이 떨어짐)", "Each delivery strengthens your next letters. (Up to 10 stacks · getting hit loses half)", "配達するたびに次の手紙のダメージが増えます。（最大10重・被弾すると半分なくなる）", "每次送达都会强化之后的信件。（最多10层 · 受击时失去一半）");
         A("속달 표식이 터진 자리에서 작은 편지가 가까운 적에게 날아갑니다. (공격력 60% · 속달 한 번에 최대 10통)", "Where Express marks burst, small letters fly to nearby enemies. (60% attack · up to 10 per Express Delivery)", "速達の印が弾けた場所から小さな手紙が近くの敵へ飛びます。（攻撃力60%・速達1回につき最大10通）", "特快标记爆炸处飞出小信件射向附近敌人。（攻击力60% · 每次特快最多10封）");
@@ -411,18 +391,10 @@ public static partial class LocTable
           "この世を去れない魂。冷たい手で敵を凍らせ、倒した敵の魂を周りにまとってダメージを肩代わりさせ、敵の体に憑依して内側から破裂させます。",
           "无法离开人世的灵魂。以冰冷之手冻结敌人，让被击败敌人的灵魂环绕身边代为承受伤害，并附身于敌人体内将其从内部引爆。");
         A("차가운 손길", "Cold Touch", "冷たい手", "冰冷之手");
-        K("앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
-          "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다. 냉기가 다섯 번 쌓이면 얼어붙습니다. 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다.",
-          "A hand lunges a short way forward, piercing a line of enemies and building chill. Five stacks freeze them. Kills may spawn souls that orbit you; when you're hit, a soul vanishes instead of your health.",
-          "前へ短く伸びる手が一列の敵をすべて貫き、冷気をためます。5回たまると凍結します。敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が消えてダメージを防ぎます。",
-          "向前短伸的手贯穿一整列敌人并累积寒气。叠满五层即会冻结。击败敌人时有几率生成环绕身边的灵魂，受击时由灵魂代替生命消散以抵挡伤害。");
+        K("앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다", "앞으로 뻗는 손이 한 줄의 적을 꿰뚫고 냉기를 쌓습니다. (다섯 번 쌓이면 얼어붙음) 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌고, 맞으면 체력 대신 영혼이 하나 사라집니다.", "Your hand lunges forward, piercing a line of enemies and adding chill. (Five stacks freeze) Kills may spawn souls that orbit you; when hit, you lose a soul instead of health.", "前へ伸びる手が一列の敵を貫き、冷気をためます。（5回で凍結）敵を倒すと確率で魂が生まれて周りを回り、被弾すると体力の代わりに魂が1つ消えます。", "向前伸出的手贯穿一列敌人并叠加寒气。（叠满五层冻结）击杀时有几率生成环绕身边的灵魂，受击时由一个灵魂代替生命消散。");
         A("빙의", "Possession", "憑依", "附身");
         // 1.0.4 요청 ghost (빙의 1초 → 3초 · 들어간 동안 그 적의 이동 속도로 조종)
-        K("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",
-          "누르고 있으면 마우스에 가까운 적에게 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레의 적에게도 피해와 냉기를 줍니다.",
-          "Hold to mark the enemy nearest the cursor; release to slip into its body, steer it around at its own move speed for 3s, then burst it from within. You're invulnerable inside, and nearby enemies take damage and chill too.",
-          "押している間はマウス近くの敵に印が付き、離すとその敵の体に入り、3秒間その敵の移動速度で体を操って動き回った後、内側から破裂させます。入っている間は無敵で、周りの敵にもダメージと冷気を与えます。",
-          "按住标记鼠标附近的敌人，松开后潜入其体内，以该敌人的移动速度操控其身体行动3秒，随后从内部引爆。潜入期间无敌，并对周围敌人造成伤害与寒气。");
+        K("누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다", "누르면 마우스에 가까운 적이 표시되고, 떼면 그 적에게 빙의합니다. 3초 동안 그 몸을 조종하다(그 적의 이동 속도) 안에서 터뜨립니다. 빙의 중에는 무적이고 둘레의 적에게 피해와 냉기를 줍니다.", "Hold to mark the enemy nearest the cursor; release to possess it. Steer its body for 3s (at its move speed), then burst it from within. You're invincible inside, and nearby enemies take damage and chill.", "押すとマウス近くの敵に印が付き、離すとその敵に憑依します。3秒間その体を操り（その敵の移動速度）、内側から破裂させます。憑依中は無敵で、周りの敵にダメージと冷気を与えます。", "按住标记鼠标附近的敌人，松开后附身。操控其身体3秒（按该敌人的移动速度），然后从内部引爆。附身期间无敌，并对周围敌人造成伤害与寒气。");
         A("명계의 문!", "Gate of the Dead!", "冥界の門！", "冥界之门！");
         A("손길 공격력", "Touch Damage", "手の攻撃力", "冰手攻击力");
         A("손길 공격력 · 이동 속도", "Touch Damage · Move Speed", "手の攻撃力・移動速度", "冰手攻击力 · 移动速度");
@@ -535,16 +507,8 @@ public static partial class LocTable
         K("하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다...", "하지만 마지막 빛이 사라지기 전, 붉은 사막 쪽에서 낯익은 냉기가 불어왔다…", "But before the last light faded, a familiar chill blew in from the red desert...", "しかし最後の光が消える前、赤い砂漠の方から見覚えのある冷気が吹いてきた……", "然而在最后的光芒消失之前，一股熟悉的寒气从红色沙漠吹来……");
 
         // ================================================================= 고유 규칙 (궁수 숨 고르기 · 연금술사 불안정도)
-        K("누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
-          "누르고 있으면 시위를 당기고, 떼면 쏩니다. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살이 나가고, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 위력이 절반이 됩니다. 「완벽!」은 숨을 되돌려 줍니다.",
-          "Hold to draw the bowstring, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. You move slower while drawing. Breath: drawing uses up breath; run out and your bow shakes, halving its power. Perfect shots restore breath.",
-          "押し続けて弦を引き、離すと発射します。満タンの瞬間（チン！）に離すと「パーフェクト！」の矢になり、握りすぎると弱まります。引いている間は遅くなります。息継ぎ：引いている間は息が減り、尽きると弓が震えて威力が半分になります。「パーフェクト！」で息が戻ります。",
-          "按住拉弓，松开发射。拉满的瞬间（叮！）松开即为「完美！」之箭，握太久会变弱。拉弓时移动变慢。调息：拉弓时消耗气息，耗尽后弓会颤抖，威力减半。「完美！」会恢复气息。");
-        K("화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
-          "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크를 던집니다. 가끔 불안정한 플라스크가 크게 폭발합니다. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다. (대폭발 플라스크는 불안정도를 모두 쏟아 냄)",
-          "Throw flasks filled with fire, frost and acid reagents in turn. Now and then an unstable flask explodes violently. Instability: each throw raises it and makes blasts bigger, but when it's full, the flask detonates at your feet. (The Great Blast Flask spends all your Instability)",
-          "火炎・氷結・酸の試薬を交互に詰めたフラスコを投げます。時々、不安定なフラスコが大爆発します。不安定度：投げるほど上がり爆発が大きくなりますが、満タンになると足元で自爆します。（大爆発フラスコは不安定度をすべて吐き出す）",
-          "掷出轮流装入火焰、冰冻、酸性试剂的烧瓶。偶尔会有不稳定的烧瓶大爆炸。不稳定度：投掷越多越高、爆炸越大，但满了会在脚下自爆。（大爆炸烧瓶会将不稳定度全部倾泻）");
+        K("누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다", "누르면 시위를 당기고 떼면 쏩니다. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살이 나가고, 너무 오래 쥐면 약해집니다. 당기는 동안 느려지고 숨이 닳으며, 숨이 바닥나면 위력이 절반이 됩니다. 「완벽!」은 숨을 되돌려 줍니다.", "Hold to draw, release to fire. Release right as it fills (ding!) for a Perfect arrow; hold too long and it weakens. Drawing slows you and drains Breath; with no Breath, power is halved. Perfect shots restore Breath.", "押すと弦を引き、離すと撃ちます。満タンの瞬間（チン！）に離すと「パーフェクト！」の矢になり、握りすぎると弱まります。引いている間は遅くなって息が減り、息が尽きると威力が半分になります。「パーフェクト！」で息が戻ります。", "按住拉弓，松开发射。拉满瞬间（叮！）松开射出「完美！」之箭，握太久会变弱。拉弓时减速并消耗气息，气息耗尽则威力减半。「完美！」会恢复气息。");
+        K("화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)", "화염 · 빙결 · 산성 플라스크를 번갈아 던지고, 가끔 불안정한 플라스크가 크게 터집니다. 불안정도: 던질수록 올라 폭발이 커지고, 가득 차면 발밑에서 자폭합니다. (대폭발 플라스크는 불안정도를 모두 씀)", "Throw fire, frost and acid flasks in turn; now and then an unstable flask blows up big. Instability: rises with each throw and enlarges blasts, but at full you self-destruct at your feet. (The Great Blast Flask spends all Instability)", "火炎・氷結・酸のフラスコを交互に投げ、時々不安定なフラスコが大きく爆発します。不安定度：投げるほど上がって爆発が大きくなり、満タンになると足元で自爆します。（大爆発フラスコは不安定度をすべて使う）", "轮流投掷火焰、冰冻、酸性烧瓶，偶尔不稳定烧瓶会大爆炸。不稳定度：投掷越多越高、爆炸越大，满了会在脚下自爆。（大爆炸烧瓶会耗尽全部不稳定度）");
         A("숨이 차다!", "Out of breath!", "息切れ！", "喘不过气！");
         A("폭주!", "Overload!", "暴走！", "失控！");
     }

@@ -228,7 +228,29 @@ public class EnermyController : MonoBehaviour
             }
 
             float currentSpeed = speed * GlobalSpeedMultiplier * (Time.time < enrageUntil ? enrageMul : 1f) * (Time.time < slowUntil ? slowMul : 1f);
-            if (dashInterval > 0f && Mathf.Repeat(moveTime, dashInterval) < dashDuration) currentSpeed *= dashSpeedMultiplier;
+            // 1.4.4~ 돌진 예고 (플레이테스트 「심연 물방울처럼 대시하는 적의 시전 동작이 안 보임」): 돌진 직전 DashWarn 초 동안
+            //   머리 위 「!」 + 돌진 방향 짧은 예고선 + 몸이 붉게 깜빡이며 뒤로 움츠렸다 떨림 → 주기(dashInterval) · 돌진 시간 · 배율은 그대로
+            //   주기를 DashWarn 만큼 밀어 첫 돌진에도 예고가 먼저 옴 (예전엔 나오자마자 돌진)
+            bool warnNow = false;
+            if (dashInterval > 0f)
+            {
+                float warn = DashWarn;
+                // 스폰 직후엔 돌진 직후 자리(+ 마리마다 다른 여유)에서 시작 — 나오자마자 「!」가 한꺼번에 뜨지 않게
+                if (dashLead < 0f) dashLead = dashDuration + Random.Range(0f, Mathf.Max(0f, dashInterval - warn - dashDuration) * 0.5f);
+                float phase = Mathf.Repeat(moveTime + dashLead, dashInterval);
+                if (phase < dashDuration) currentSpeed *= dashSpeedMultiplier;
+                else if (phase >= dashInterval - warn)
+                {
+                    warnNow = true;
+                    if (!dashWarning) BeginDashWarn(warn);
+                    // 뒤로 조금 물러나며 옆으로 떨림 (앞으로는 가지 않음)
+                    Vector3 side = new Vector3(-move.y, move.x, 0f);
+                    dir = (-move + side * Mathf.Sin(moveTime * 70f) * 0.8f).normalized;
+                    currentSpeed *= 0.2f;
+                    if (!hitFxRunning) spriteRenderer.color = Color.Lerp(baseColor, DashWarnTint, Mathf.PingPong(moveTime * 12f, 1f));
+                }
+            }
+            if (!warnNow && dashWarning) EndDashWarn();
 
             Vector3 step = (dir * currentSpeed + Separation() * separationSpeed) * Time.fixedDeltaTime;
 
@@ -244,6 +266,34 @@ public class EnermyController : MonoBehaviour
             }
             transform.Translate(step);
         }
+        else if (dashWarning) EndDashWarn();      // 시전 · 죽음으로 멈추면 예고를 거둠 (색 · 「!」가 남지 않게)
+    }
+
+    // 1.4.4~ 돌진 예고 (위 FixedUpdate) — 어려울수록 짧음 (스킬 예고와 같은 배율)
+    float DashWarn => 0.3f * GameMode.WindupMul;
+    static readonly Color DashWarnTint = new Color(1f, 0.35f, 0.3f);
+    bool dashWarning;
+    FxAnim dashMark;
+    float dashLead = -1f;       // 돌진 주기 시작 자리 (처음 한 번 정함)
+
+    void BeginDashWarn(float warn)
+    {
+        dashWarning = true;
+        float top = spriteRenderer != null ? spriteRenderer.bounds.max.y : transform.position.y + 1f;
+        dashMark = Fx.Play("fx_warn", new Vector3(transform.position.x, top + 0.6f, 0f), 1.1f, Color.white, 1f, 0f, 30, true, warn + 0.1f);
+        if (dashMark != null) dashMark.transform.SetParent(transform, true);
+        // 예고선: 지금 방향으로 돌진 거리만큼 (돌진 중에도 플레이어를 따라 꺾이므로 짧게 · 최대 5칸)
+        float len = Mathf.Clamp(speed * GlobalSpeedMultiplier * dashSpeedMultiplier * dashDuration, 2f, 5f);
+        Vector3 from = transform.position;
+        Hostile.Line(from, from + move * len, 0.5f, warn, new Color(1f, 0.3f, 0.25f, 0.75f));
+    }
+
+    void EndDashWarn()
+    {
+        dashWarning = false;
+        if (dashMark != null) Destroy(dashMark.gameObject);
+        dashMark = null;
+        if (!isDead && !hitFxRunning && spriteRenderer != null) spriteRenderer.color = baseColor;
     }
 
     static readonly Collider2D[] wallHits = new Collider2D[16];
@@ -640,9 +690,10 @@ public class EnermyController : MonoBehaviour
         if (swarm != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수)
         if (contactDamage <= 0f) return;    // 1.1.0 다시 올림: 황금 고블린(피해 0)에 닿으면 보호막이 사라지고 피격음 · 무적이 붙었음
         if (isDead || !collision.CompareTag("Player")) return;
-        if (hitbox != null && !hitbox.Touching(collision)) return;      // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음
-
         PlayerController target = collision.GetComponent<PlayerController>();
+        // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음 · 1.4.4~ 플레이어 쪽도 몸 콜라이더 대신 몸 아래쪽 접촉 원 (위쪽은 널널하게)
+        if (hitbox != null && !(target != null ? hitbox.Touching(target.ContactCenter, target.ContactR) : hitbox.Touching(collision))) return;
+
         if (target != null && target.TryHit(contactDamage * ContactScale))
         {
             Vector3 away = transform.position - target.transform.position;

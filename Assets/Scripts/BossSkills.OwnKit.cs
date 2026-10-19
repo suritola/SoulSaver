@@ -515,7 +515,7 @@ public partial class BossSkills
     bool PlayerIn(Vector3 at, float r)
     {
         PlayerController pl = Hostile.Player;
-        return pl != null && Vector2.Distance(at, pl.transform.position) < r + 0.2f;
+        return pl != null && Hostile.HurtDistance(pl, at) < r + 0.2f;      // 1.4.4~ 몸 아래쪽 판정
     }
 
     HostileProjectile OwnShot(Vector3 pos, Vector2 dir, float speed, float raw, float share, float radius, Color c, OwnAtk a, char glyph)

@@ -96,10 +96,7 @@ public static partial class LocTable
         // ================================================================= 4 행군 측량
         PA("행군 측량", "Marching Survey", "行軍測量", "行军测量");
         PA("걸어간 길이 선 · 기동 생존", "Your path becomes a line · Mobility and survival", "歩いた道が線に・機動と生存", "走过的路化作线 · 机动生存");
-        PA("걸어간 길이 잉크 선이 되어 닿는 적을 0.3초마다 벱니다. (공격력 25%) 지나온 길이 고리로 닫히면 안쪽을 도형처럼 짓이깁니다. (공격력 200% · 2초에 한 번)",
-           "The path you walk becomes an ink line that cuts enemies touching it every 0.3 seconds. (25% of Attack) When your path closes into a loop, everything inside is crushed like a shape. (200% of Attack · once every 2 seconds)",
-           "歩いた道がインクの線になり、触れた敵を0.3秒ごとに斬ります。(攻撃力25%) 通った道が輪になって閉じると、内側を図形のように押し潰します。(攻撃力200%・2秒に1回)",
-           "走过的路会化作墨线，每0.3秒斩击接触的敌人。(攻击力25%) 走过的路连成闭环时，会像图形一样碾压环内敌人。(攻击力200% · 每2秒一次)");
+        PK("걸어간 길이 잉크 선이 되어 닿는 적을 0.3초마다 벱니다. (공격력 25%) 지나온 길이 고리로 닫히면 안쪽을 도형처럼 짓이깁니다. (공격력 200% · 2초에 한 번)", "걸어간 길이 잉크 선이 되어 닿는 적을 0.3초마다 벱니다. (공격력 25%) 길이 고리로 닫히면 안쪽을 짓이깁니다. (공격력 200% · 2초에 한 번)", "Your path becomes an ink line that cuts enemies every 0.3s. (25% of Attack) Closing a loop crushes everything inside. (200% of Attack · once per 2s)", "歩いた道がインクの線になり、触れた敵を0.3秒ごとに斬ります。(攻撃力25%) 道が輪になって閉じると内側を押し潰します。(攻撃力200%・2秒に1回)", "走过的路化为墨线，每0.3秒斩击接触的敌人。(攻击力25%) 路径连成闭环时碾压环内敌人。(攻击力200% · 每2秒一次)");
         PA("평타 획 피해가 30% 줄어듭니다.", "Basic stroke damage is reduced by 30%.", "通常攻撃の画のダメージが30%減ります。", "普攻笔画伤害降低30%。");
         PA("기동 · 생존 · 무리", "Mobility · Survival · Crowds", "機動・生存・群れ", "机动 · 生存 · 成群敌人");
         PA("보스 (계속 걸어야 함)", "Bosses (you must keep walking)", "ボス (歩き続ける必要あり)", "首领 (必须一直走动)");

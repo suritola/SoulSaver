@@ -472,7 +472,7 @@ public partial class BossSkills
             if (k == 0) f0 = f; else f1 = f;
             for (int i = 0; i < 8; i++)
                 Fx.Spawn("fx_spark", r.c + new Vector3(Random.Range(-0.5f, 0.5f) * r.w, Random.Range(-0.5f, 0.5f) * r.h), 1.6f, Random.value < 0.5f ? Color.white : (Color)Terminal, 22f);
-            if (pl != null && InRect(pl.transform.position, r)) inside = true;
+            if (pl != null && InRect(pl.HurtCenter, r)) inside = true;      // 1.4.4~ 몸 아래쪽 판정
             HideObj(selLines[k * 4]); HideObj(selLines[k * 4 + 1]); HideObj(selLines[k * 4 + 2]); HideObj(selLines[k * 4 + 3]);
         }
         if (OwnHit(inside, 14f, 0.12f, OwnAtk.SelectDelete)) Hostile.Shake(0.12f);
@@ -785,7 +785,7 @@ public partial class BossSkills
                     oc.a = Mathf.Lerp(0.45f, 1f, ringSlot[i] / dots[r]);      // 스피너처럼 앞에서 뒤로 옅어짐
                     ringOrb[i].color = oc;
                 }
-                if (pl != null && now < until && Vector2.Distance(at, pl.transform.position) < 0.75f) touch = true;
+                if (pl != null && now < until && Hostile.HurtDistance(pl, at) < 0.75f) touch = true;
             }
             if (touch) OwnHit(true, 10f, 0.08f, OwnAtk.Loading);
             if (now >= nextTick && now < until) { nextTick = now + 0.25f; Hostile.Play("tick", 0.25f, 1.8f); }
@@ -888,7 +888,7 @@ public partial class BossSkills
                         Hostile.Play("thump", 0.8f, 1f);
                         Hostile.Shake(0.2f);
                         PlayerController pl = Hostile.Player;
-                        bool hit = pl != null && Hostile.DistanceToSegment(pl.transform.position, baseAt[k], end0) < 1.3f + 0.2f;
+                        bool hit = pl != null && Hostile.HurtToSegment(pl, baseAt[k], end0) < 1.3f + 0.2f;
                         OwnHit(hit, 16f, 0.16f, OwnAtk.StackOverflow);
                         // 부딪힌 블록마다 작은 탄이 띠 양옆으로 번갈아
                         Vector2 perp = new Vector2(-dir[k].y, dir[k].x);

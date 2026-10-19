@@ -100,10 +100,7 @@ public static partial class LocTable
         PA("천공", "Skyfall", "天空", "天穹");
         PA("화살비 중심 · 지역 섬멸", "Arrow Rain focus · Area wipe", "矢の雨中心 · 地域殲滅", "以箭雨为核心 · 区域歼灭");
         PA("하늘 사수", "Sky Archer", "天空の射手", "天穹射手");
-        PA("화살비 게이지가 25% 빨리 차고 범위가 1.4배가 되며, 평타가 맞힐 때마다 게이지가 조금 더 찹니다.",
-           "Arrow Rain's gauge fills 25% faster and its area becomes 1.4×, and each basic-attack hit fills the gauge a little more.",
-           "矢の雨のゲージが25%速くたまり、範囲が1.4倍になり、通常攻撃が当たるたびにゲージが少し多くたまります。",
-           "箭雨能量条充能加快25%，范围变为1.4倍，普通攻击每次命中还会额外充能少许。");
+        PK("화살비 게이지가 25% 빨리 차고 범위가 1.4배가 되며, 평타가 맞힐 때마다 게이지가 조금 더 찹니다.", "화살비 게이지가 25% 빨리 차고 범위가 1.4배가 됩니다. 평타가 맞힐 때도 게이지가 조금 더 찹니다.", "Arrow Rain's gauge fills 25% faster and its area is 1.4×. Basic-attack hits fill it a little more.", "矢の雨のゲージが25%速くたまり、範囲が1.4倍になります。通常攻撃が当たるとゲージが少し多くたまります。", "箭雨充能加快25%，范围变为1.4倍。普通攻击命中时额外充能少许。");
         PA("평타 피해가 25% 줄어듭니다.", "Basic attacks deal 25% less damage.", "通常攻撃のダメージが25%減ります。", "普通攻击伤害降低25%。");
         PA("지역 섬멸", "Area wipe", "地域殲滅", "区域歼灭");
         PA("게이지 공백", "Gaps between gauges", "ゲージの空白", "能量空窗");

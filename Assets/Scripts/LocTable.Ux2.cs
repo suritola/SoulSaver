@@ -133,6 +133,7 @@ public static partial class LocTable
 
         // ================================================================= 12. 보스전 정보
         S("분노!", "Enraged!", "激怒！", "狂暴！");
+        S("분열!", "Split!", "分裂！", "分裂！");     // 1.4.4~ 킹 슬라임 뱉기 예고 (머리 위)
         S("{0}의 체력이 절반 아래입니다. 이제 특수 스킬을 씁니다.", "{0} is below half HP. It now uses special skills.", "{0}の体力が半分以下になりました。これから特殊スキルを使います。", "{0}的生命值已低于一半。现在开始使用特殊技能。");
         S("체력이 절반 아래로 내려가면 특수 스킬을 쓰고, 결계 게이지가 차면 결계를 펼칩니다.", "Below half HP it uses special skills, and when the gauge fills it unleashes its Barrier.", "体力が半分以下になると特殊スキルを使い、ゲージが満ちると結界を展開します。", "生命低于一半时会使用特殊技能，结界能量满时会展开结界。");
         S("체력 66% · 33%에서 단계가 오르고, 결계 게이지가 차면 결계를 펼칩니다.", "It enters a new phase at 66% and 33% HP, and when the gauge fills it unleashes its Barrier.", "体力66%・33%で段階が上がり、ゲージが満ちると結界を展開します。", "生命值降至66%、33%时进入新阶段，结界能量满时会展开结界。");

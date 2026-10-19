@@ -10,7 +10,7 @@ using UnityEngine.UI;
 //   적 수십 마리 · 이펙트 · 평타 · 맵 물체 금빛 맥동 속에서 640×72 반투명 띠의 14~26pt 글자가 묻혔음 → 한 체계로
 //
 //   ① 큰 알림 Notice.Big   — 보스 · 이벤트 · 새 스킬/유물 · 각인 · 무게 · 클리어 · 해금처럼 꼭 봐야 하는 것
-//        화면 가운데 위(가운데에서 +170) 가로 전체 어두운 띠 + 위아래 강조색 줄 · 아이콘(또는 키캡) · 제목 56pt · 설명 30pt
+//        화면 위쪽 가운데(위에서 212 아래, 1.4.4~ 예전엔 가운데 +170 가로 전체) 반투명 띠 + 위아래 강조색 줄 · 아이콘(또는 키캡) · 제목 46pt · 설명 26pt
 //        튀어나오며 번쩍(「번쩍임 효과」를 끄면 번쩍 · 튐 없이 서서히) · 효과음 · 한 번에 하나, 나머지는 줄을 섬 (급한 것 먼저)
 //   ② 토스트 Notice.Toast  — 이정표 · 도감 · 줍기 결과 · 상자 · 영혼 트리 같은 보통 소식
 //        오른쪽 위(코인 · 키 안내 아래)에 아이콘 + 글 카드, 화면 밖 오른쪽에서 밀려 들어와 아래로 쌓임 · 최대 4개, 넘치면 오래된 것부터
@@ -34,7 +34,12 @@ public static class Notice
     public const float MinFont = 22f;          // 1080p 기준 화면에 보이는 가장 작은 글자 (크기 배율을 곱한 뒤)
     public static float Min(float baseMin) => Mathf.Max(baseMin, MinFont / Scale);
 
-    const float BigY = 170f;                   // 큰 알림 띠 가운데 (화면 가운데에서 위로) — 위쪽 시계 · 보스 체력바 · 플레이어 머리와 겹치지 않는 높이
+    // 1.4.4~ 큰 알림 띠를 화면 위쪽 가운데 배너로: 예전엔 화면 가운데 +170(가로 전체 · 진한 바탕 0.88 · 제목 56pt)이라 띠 아래끝이 플레이어 머리 바로 위에 닿아
+    //   떠돌이 상점 알림 · 보스 대사(거울의 군주 흉내 · 분노 · 결계 등)가 뜨는 동안 캐릭터 주변 탄막이 가려졌음 (플레이테스트 피드백)
+    //   → 위끝을 화면 위에서 BigTop(보스 이름 · 체력바 · 진행 줄 -200 아래)에 고정 · 폭은 글 길이만큼(양 끝은 투명하게 빠짐) · 바탕 반투명 · 글자 한 단계 작게
+    const float BigTop = -212f;
+    const float BigIcon = 88f;                 // 1.4.4~ 큰 알림 아이콘 (104 → 88)
+    const float BigBgA = 0.6f;                // 큰 알림 바탕 불투명도 (예전 0.88) — 띠 뒤의 탄 · 적이 비쳐 보이게, 글자는 외곽선 · 그림자로 읽힘
     const float ToastTop = -214f, ToastRight = -24f, ToastW = 470f, ToastGap = 8f;      // 오른쪽 위 코인(96) · 포인트 · 키 안내(-193까지) 아래
     const int MaxToasts = 4, MaxBigQueue = 6;
     const float ObjectiveY = -150f;
@@ -431,17 +436,15 @@ public static class Notice
         GameObject go = new GameObject("BigNotice", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
         v.band = (RectTransform)go.transform;
         v.band.SetParent(root, false);
-        v.band.anchorMin = new Vector2(0f, 0.5f);
-        v.band.anchorMax = new Vector2(1f, 0.5f);
-        v.band.pivot = new Vector2(0.5f, 0.5f);
-        v.band.anchoredPosition = new Vector2(0f, BigY);
-        v.band.sizeDelta = new Vector2(0f, 150f);
+        v.band.anchorMin = v.band.anchorMax = v.band.pivot = new Vector2(0.5f, 1f);     // 1.4.4~ 위 가운데 고정 (높이가 바뀌어도 위끝은 그대로 · 아래로 펼쳐짐)
+        v.band.anchoredPosition = new Vector2(0f, BigTop);
+        v.band.sizeDelta = new Vector2(1200f, 130f);
         v.cg = go.GetComponent<CanvasGroup>();
         v.cg.blocksRaycasts = false;
         v.cg.interactable = false;
         v.bg = go.GetComponent<Image>();
         v.bg.sprite = BandSprite;
-        v.bg.color = new Color(0.03f, 0.02f, 0.06f, 0.88f);
+        v.bg.color = new Color(0.03f, 0.02f, 0.06f, BigBgA);
         v.bg.raycastTarget = false;
 
         v.lineTop = NewImage(v.band, "LineTop", BandSprite, Gold);
@@ -461,7 +464,7 @@ public static class Notice
         v.content = UIKit.Rect("Content", v.band, Vector2.zero, new Vector2(1000f, 120f));
         // 아이콘 뒤 강조색 빛 (아이콘보다 먼저 그림)
         v.glow = NewImage(v.content, "Glow", SpecialAbilities.GlowSprite, new Color(1f, 1f, 1f, 0f));
-        v.glow.rectTransform.sizeDelta = new Vector2(190f, 190f);
+        v.glow.rectTransform.sizeDelta = new Vector2(160f, 160f);
         v.iconImg = NewImage(v.content, "Icon", null, Color.white);
         v.iconImg.preserveAspect = true;
         v.icon = v.iconImg.rectTransform;
@@ -476,11 +479,23 @@ public static class Notice
         v.capText.fontSizeMin = 18f;
         Stretch(v.capText.rectTransform, new Vector2(10f, 22f), new Vector2(-10f, -8f));
 
-        v.tag = NewText(v.content, "Tag", 26f, Gold, TextAlignmentOptions.Center);
-        v.title = NewText(v.content, "Title", 56f, new Color(1f, 0.97f, 0.9f), TextAlignmentOptions.Center);
-        v.sub = NewText(v.content, "Sub", 30f, Parch, TextAlignmentOptions.Center);
+        // 1.4.4~ 글자 한 단계 작게 (제목 56 → 46 · 설명 30 → 26 · 꼬리표 26 → 24): 위쪽 배너라 시선이 덜 가려지게, 최소 글자 크기는 그대로
+        v.tag = NewText(v.content, "Tag", 24f, Gold, TextAlignmentOptions.Center);
+        v.title = NewText(v.content, "Title", 46f, new Color(1f, 0.97f, 0.9f), TextAlignmentOptions.Center);
+        v.sub = NewText(v.content, "Sub", 26f, Parch, TextAlignmentOptions.Center);
         go.SetActive(false);
         return v;
+    }
+
+    // 1.4.4~ 띠 위끝: 보통은 BigTop · 다중 보스전에서 추가 체력바(+ 아래 게이지 · 기억 줄)가 더 내려와 있으면 그 아래로 (띠가 체력바를 덮지 않게)
+    static readonly Vector3[] barCorners = new Vector3[4];
+    static float BigTopNow()
+    {
+        RectTransform bar = bossbar.LowestShown;
+        if (bar == null || root == null) return BigTop;
+        bar.GetWorldCorners(barCorners);
+        float bottom = Mathf.Min(root.InverseTransformPoint(barCorners[0]).y, root.InverseTransformPoint(barCorners[3]).y);
+        return Mathf.Min(BigTop, bottom - 48f - root.rect.yMax);
     }
 
     static void ShowBig(BigItem it)
@@ -494,6 +509,7 @@ public static class Notice
         bool hasIcon = !hasCap && it.icon != null;
         bool hasTag = !string.IsNullOrEmpty(it.tag);
         bool hasSub = !string.IsNullOrEmpty(it.sub);
+        v.band.anchoredPosition = new Vector2(0f, BigTopNow());
 
         // 키캡 폭은 글자 길이에 맞춰 (한글 · 가나는 글자당 넓게)
         float capW = 0f;
@@ -503,7 +519,7 @@ public static class Notice
             foreach (char ch in it.key) est += ch >= 0x2E80 ? 46f : 30f;
             capW = Mathf.Clamp(44f + est, 104f, 240f);
         }
-        float iconW = hasCap ? capW : hasIcon ? 104f : 0f;
+        float iconW = hasCap ? capW : hasIcon ? BigIcon : 0f;
         float gap = iconW > 0f ? 30f : 0f;
         float screenW = root.rect.width > 10f ? root.rect.width : 1920f;
         float textMax = Mathf.Clamp((screenW - 160f) / S - iconW - gap, 360f, 1300f);
@@ -525,17 +541,18 @@ public static class Notice
         v.title.fontSizeMin = Min(38f);
         v.sub.fontSizeMin = Min(24f);
         v.tag.fontSizeMin = Min(22f);
+        // 1.4.4~ 높이 상한도 글자 크기만큼 줄임 (제목 150 → 124 · 설명 128 → 110)
         Vector2 tp = v.title.GetPreferredValues(v.title.text, textMax, 0f);
-        float titleW = Mathf.Min(textMax, tp.x), titleH = Mathf.Min(tp.y, 150f);
+        float titleW = Mathf.Min(textMax, tp.x), titleH = Mathf.Min(tp.y, 124f);
         float subW = 0f, subH = 0f;
         if (hasSub)
         {
             Vector2 sp = v.sub.GetPreferredValues(v.sub.text, textMax, 0f);
             subW = Mathf.Min(textMax, sp.x);
-            subH = Mathf.Min(sp.y, 128f);
-            if (sp.y > 128f) { v.sub.enableAutoSizing = true; subW = textMax; }
+            subH = Mathf.Min(sp.y, 110f);
+            if (sp.y > 110f) { v.sub.enableAutoSizing = true; subW = textMax; }
         }
-        if (tp.y > 150f) { v.title.enableAutoSizing = true; titleW = textMax; }
+        if (tp.y > 124f) { v.title.enableAutoSizing = true; titleW = textMax; }
         float tagW = 0f, tagH = 0f;
         if (hasTag)
         {
@@ -546,8 +563,10 @@ public static class Notice
         float blockW = Mathf.Max(titleW, Mathf.Max(subW, tagW)) + 8f;
         float blockH = tagH + titleH + (hasSub ? 6f + subH : 0f);
         float contentW = iconW + gap + blockW;
-        float contentH = Mathf.Max(blockH, iconW > 0f ? 108f : 0f);
-        v.band.sizeDelta = new Vector2(0f, (contentH + 44f) * S);
+        float contentH = Mathf.Max(blockH, hasCap ? 108f : hasIcon ? BigIcon + 4f : 0f);
+        // 1.4.4~ 띠 폭 = 글 폭 + 양 끝 투명하게 빠지는 몫 (화면 폭까지) · 위아래 여백 44 → 32
+        float bandW = Mathf.Min(screenW, contentW * S / 0.6f + 80f);
+        v.band.sizeDelta = new Vector2(bandW, (contentH + 32f) * S);
         v.content.sizeDelta = new Vector2(contentW, contentH);
         v.content.localScale = Vector3.one * S;
 
@@ -559,8 +578,8 @@ public static class Notice
         if (hasIcon)
         {
             v.iconImg.sprite = it.icon;
-            v.icon.sizeDelta = new Vector2(104f, 104f);
-            v.icon.anchoredPosition = new Vector2(left + 52f, 0f);
+            v.icon.sizeDelta = new Vector2(BigIcon, BigIcon);
+            v.icon.anchoredPosition = new Vector2(left + BigIcon * 0.5f, 0f);
             v.glow.rectTransform.anchoredPosition = v.icon.anchoredPosition;
             v.glow.color = new Color(it.accent.r, it.accent.g, it.accent.b, 0.5f);
         }
@@ -578,7 +597,7 @@ public static class Notice
         if (hasSub) Place(v.sub.rectTransform, bx, y - subH * 0.5f, blockW, subH);
 
         v.lineTop.color = v.lineBot.color = it.accent;
-        v.bg.color = Color.Lerp(new Color(0.03f, 0.02f, 0.06f, 0.88f), new Color(it.accent.r * 0.3f, it.accent.g * 0.3f, it.accent.b * 0.3f, 0.9f), 0.35f);
+        v.bg.color = Color.Lerp(new Color(0.03f, 0.02f, 0.06f, BigBgA), new Color(it.accent.r * 0.3f, it.accent.g * 0.3f, it.accent.b * 0.3f, BigBgA + 0.02f), 0.35f);
         v.cg.alpha = 0f;
         Sound(it.warn ? "warn" : "big");
     }

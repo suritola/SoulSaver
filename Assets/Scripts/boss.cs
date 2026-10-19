@@ -282,7 +282,16 @@ public class bosss : MonoBehaviour
         if (!enragedFired && Enraged && before > setEnemyHP * 0.5f && EnemyHealth > 0f && !developer && bossKind != 1)
         {
             enragedFired = true;
-            Notice.Big(Loc.T("분노!"), Loc.T("{0}의 체력이 절반 아래입니다. 이제 특수 스킬을 씁니다.").Replace("{0}", bossbar.BossName(bossKind)), NoticeIcon.Boss, 2.4f, NoticeLevel.Urgent);
+            // 1.4.4~ 설명 문장(「체력이 절반 아래입니다. 이제 특수 스킬을 씁니다.」)은 빼고 제목만 짧게 — 싸우는 중엔 못 읽음 (플레이테스트)
+            //   대신 보스 몸에서 붉은 충격파 + 머리 위 「분노!」로 그 자리에서 보이게 · 무엇을 하는지는 각 스킬의 예고(원 · 띠 · 색)가 보여 줌
+            Notice.Big(Loc.T("분노!"), NoticeIcon.Boss, 1.6f, NoticeLevel.Urgent);
+            Color rage = Hostile.Accessible(new Color(1f, 0.3f, 0.25f, 0.9f));
+            // 킹 슬라임은 같은 순간 자기 2페 연출(부풀기 · 머리 위 「분열!」 · 초록 충격파)이 있어 몸 위 「분노!」 · 붉은 충격파는 생략 (겹쳐서 안 읽힘)
+            if (!IsSlime)
+            {
+                Fx.Spawn("fx_shock", transform.position, 9f, rage, 18f);
+                SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 2.6f, Loc.T("분노!"), rage, 6.5f, 0f, 1.2f);
+            }
             Hostile.Play("roar", 0.6f, 1.2f);
             bossbar.FlashName();
         }

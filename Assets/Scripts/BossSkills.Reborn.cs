@@ -40,6 +40,8 @@ public partial class BossSkills
     // ================================================================= 1장 킹 슬라임
     Vector3 slimeBaseScale;
     float slimeBaseSpeed = -1f;
+    float slimeSwellUntil;      // 1.4.4~ 뱉기 예고로 몸이 부푸는 끝 시각
+    float slimeSwell = 1f;      // 1.4.4~ 지금 부푼 배율 (SlimeSize 에서 나눠 빼서 판정 크기는 그대로)
 
     // 맞을수록 작아지고 (65%까지) 빨라짐 (1.6배까지)
     void SlimeBody()
@@ -47,7 +49,10 @@ public partial class BossSkills
         if (boss == null) return;
         if (slimeBaseSpeed < 0f) { slimeBaseScale = transform.localScale; slimeBaseSpeed = boss.speed; }
         float f = HpFrac;
-        transform.localScale = slimeBaseScale * Mathf.Lerp(0.65f, 1f, f);
+        // 1.4.4~ 뱉기 예고 동안 몸이 부풀었다 줄었다 (시간 기준 · 끝나면 저절로 1배)
+        float swell = Time.time < slimeSwellUntil ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.time * 14f)) : 1f;
+        slimeSwell = swell;
+        transform.localScale = slimeBaseScale * Mathf.Lerp(0.65f, 1f, f) * swell;
         boss.speed = slimeBaseSpeed * Mathf.Lerp(1.6f, 1f, f);
     }
 
@@ -79,15 +84,52 @@ public partial class BossSkills
     }
 
     // 절반 아래 한 번: 작은 슬라임(일반 잡몹) 넷을 뱉음 (예전의 분열 대신)
+    // 1.4.4~ 글 배너(「킹 슬라임이 작은 슬라임을 뱉어 낸다!」) 대신 화면에서 바로 보이게 (플레이테스트: 2페에 글로 알려 주면 피하느라 못 읽음)
+    //   몸이 부풀며 깜빡임 + 머리 위 짧은 「분열!」 → 떨어질 네 자리에 초록 예고 원 → 원 자리로 점액 줄기가 뻗고 그 자리에 작은 슬라임
     IEnumerator SlimeSpit()
     {
-        Banner("킹 슬라임이 작은 슬라임을 뱉어 낸다!");
-        yield return Windup(Acid, 0.9f);
+        const int count = 4;
+        const float warn = 1.1f;
+        Vector3[] spots = new Vector3[count];
+        float off = Random.Range(0f, 360f);
+        for (int i = 0; i < count; i++)
+        {
+            float a = (off + i * 360f / count) * Mathf.Deg2Rad;
+            spots[i] = Hostile.ClampArena(transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * Random.Range(3.5f, 5f));
+            Hostile.Circle(spots[i], 1.1f, warn, Acid);
+        }
+        slimeSwellUntil = Time.time + warn;      // 시간으로만 (끊겨도 몸 크기가 남지 않음)
+        SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 2.4f * Mathf.Max(1f, SlimeSize), Loc.T("분열!"), Acid, 6f, 0f, warn);
+        Hostile.Play("hiss", 0.6f, 0.7f);
+        yield return Windup(Acid, warn);
         if (!Alive) yield break;
         EnemySpawner sp = FindFirstObjectByType<EnemySpawner>();
-        if (sp != null) sp.SummonMinions(transform.position, 4);
+        for (int i = 0; i < count; i++)
+        {
+            LineRenderer lr = Hostile.NewLine("SlimeSpitGoo", Acid, 0.35f);
+            lr.positionCount = 2;
+            lr.SetPosition(0, transform.position);
+            lr.SetPosition(1, transform.position);
+            StartCoroutine(GooReach(lr, transform.position, spots[i]));      // 1.4.4~ 보스에서 원 쪽으로 0.15초 동안 뻗음
+            Destroy(lr.gameObject, 0.3f);       // 코루틴이 끊겨도 줄은 사라짐
+            if (sp != null) sp.SummonMinionAt(spots[i]);
+            Fx.Spawn("fx_puddle", spots[i], 2.2f, Acid, 14f);
+        }
         Fx.Spawn("fx_shock", transform.position, 7f, Acid, 18f);
         Hostile.Play("thump", 0.8f, 0.9f);
+    }
+
+    // 점액 줄기 끝점을 from → to 로 0.15초 동안 늘림 (줄이 먼저 지워지면 그만)
+    IEnumerator GooReach(LineRenderer lr, Vector3 from, Vector3 to)
+    {
+        float t0 = Time.time;
+        while (lr != null)
+        {
+            float k = Mathf.Clamp01((Time.time - t0) / 0.15f);
+            lr.SetPosition(1, Vector3.Lerp(from, to, k));
+            if (k >= 1f) yield break;
+            yield return null;
+        }
     }
 
     // ================================================================= 2장 리치 왕
@@ -132,7 +174,7 @@ public partial class BossSkills
             Vector3 to = p.transform.position - orb.transform.position;
             to.z = 0f;
             orb.transform.position += to.normalized * 3.2f * Time.deltaTime;
-            if (to.magnitude < 0.9f)
+            if (Hostile.HurtDistance(p, orb.transform.position) < 0.9f)     // 1.4.4~ 몸 아래쪽 판정 (쫓는 곳은 그대로 transform 위치)
             {
                 p.TryHit(16f * Power);
                 Fx.Spawn("fx_soulburst", orb.transform.position, 3f, Soul, 18f);
@@ -181,8 +223,8 @@ public partial class BossSkills
             PlayerController pl = Hostile.Player;
             if (pl != null && hitCd <= 0f)
             {
-                Vector2 to = pl.transform.position - c;
-                if (Mathf.Abs(to.magnitude - r) < 0.7f && !InGap(Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg, gaps, gap) && pl.TryHit(14f * Power)) hitCd = 0.6f;
+                Vector2 to = pl.HurtCenter - (Vector2)c;      // 1.4.4~ 몸 아래쪽 판정
+                if (Mathf.Abs(to.magnitude - r) < 0.7f - PlayerController.HurtShrink && !InGap(Mathf.Atan2(to.y, to.x) * Mathf.Rad2Deg, gaps, gap) && pl.TryHit(14f * Power)) hitCd = 0.6f;
             }
             yield return null;
         }

@@ -327,7 +327,7 @@ public partial class BossUltimate
                 {
                     float a = (angle + i * step) * Mathf.Deg2Rad;
                     Vector3 end = c + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * len;
-                    if (Hostile.DistanceToSegment(p.transform.position, c, end) < 0.85f) { d.Hit(p, d.Dmg(16f)); beamHit = 0.4f; break; }
+                    if (Hostile.HurtToSegment(p, c, end) < 0.85f) { d.Hit(p, d.Dmg(16f)); beamHit = 0.4f; break; }
                 }
             if (Time.time >= nextRing)
             {
@@ -524,8 +524,8 @@ public partial class BossUltimate
         Fx.Beam(fromA, toA, 1.8f, beam, 0.35f);
         Fx.Beam(fromB, toB, 1.8f, beam, 0.35f);
         PlayerController p = Hostile.Player;
-        if (p != null && Hostile.DistanceToSegment(p.transform.position, fromA, toA) < 1.1f) d.Hit(p, d.Dmg(22f));
-        if (p != null && Hostile.DistanceToSegment(p.transform.position, fromB, toB) < 1.1f) d.Hit(p, d.Dmg(22f));
+        if (p != null && Hostile.HurtToSegment(p, fromA, toA) < 1.1f) d.Hit(p, d.Dmg(22f));
+        if (p != null && Hostile.HurtToSegment(p, fromB, toB) < 1.1f) d.Hit(p, d.Dmg(22f));
         Hostile.Play("zap", 0.6f, 0.9f);
         Hostile.Play("zap", 0.6f, 0.9f);
     }

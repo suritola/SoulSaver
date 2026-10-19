@@ -234,6 +234,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        baseScaleY = Mathf.Abs(transform.lossyScale.y);     // 1.4.4~ 판정 크기 배율 기준 (BodyScale)
         baseMoveSpeed = speed * CharacterData.Current.move;        // 영웅 기본 이동 배율까지 (CharacterKit 이 곱하는 값)
         EnermyController.Killed += HealOnKill;
         SpriteOutline.Player(gameObject);       // 1.8.7 밝은 윤곽선 (적 무리 속에서도 잘 보이게)
@@ -1383,7 +1384,7 @@ void Shoot()
         {
             if (collision.GetComponent<BossPart>() != null) return;     // 등불 · 묘비 · 영혼구는 닿아도 몸통 피해 없음 (영혼구는 스스로 터짐)
             // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음 (몸 안쪽에 닿아야)
-            if (collision.TryGetComponent(out EnemyHitbox hitbox) && !hitbox.Touching(Body)) return;
+            if (collision.TryGetComponent(out EnemyHitbox hitbox) && !hitbox.Touching(ContactCenter, ContactR)) return;     // 1.4.4~ 몸 콜라이더 → 몸 아래쪽 접촉 원
             bosss boss = collision.GetComponent<bosss>();
             if (boss != null && boss.IsDead) return;     // 1.0.4~ 쓰러져 사라지는 중인 보스 몸에 닿아도 피해 없음
             TryHit(boss != null ? boss.contactDamage : bossContactDamage);
@@ -1396,6 +1397,23 @@ void Shoot()
     public float hurtInvincibleTime = 0.6f;
     public const float MaxDef = 0.7f;
     public const float BossHitShare = 0.4f;     // 1.0.4~ 보스전 중 한 대 피해 상한 (최대 체력 비율)
+
+    // 1.4.4~ 피격 판정 한 곳 (플레이테스트: 「히트박스가 너무 엄격 · 탑다운이면 캐릭터 위쪽은 널널하게, 그림자를 판정으로」)
+    //   몸 그림은 transform 위치(목 높이, 머리끝 약 +0.6)에서 발끝 약 −2.4 까지 — 예전 적 탄 · 패턴 판정은 transform 위치 기준 반지름 0.4 라
+    //   머리 위로 스친 탄 · 머리 위쪽 장판도 맞았음 → 판정 중심을 아래(가슴 · 배)로 내리고 작게 (위쪽 가장자리 +0.4 → −0.12, 0.52 내려감)
+    //   적의 조준 · 장판 위치는 모두 transform 위치를 노리므로 발끝까지는 내리지 않음 (가만히 서 있으면 조준탄 · 장판은 그대로 맞음)
+    public const float HurtDropY = 0.42f;                   // 판정 중심: transform 위치에서 아래로 (월드, 예전 0)
+    public const float HurtRadius = 0.3f;                   // 판정 반지름 (월드, 예전 0.4)
+    public const float HurtShrink = 0.4f - HurtRadius;      // 너비 숫자에 예전 반지름 0.4 가 들어 있던 직선 · 원 판정은 거리에 이만큼 더해 같이 작아짐
+    // 거대화 · 축소 물약처럼 몸 크기가 바뀌면 판정 자리(· 접촉 원 크기)도 같이 (시작 크기 대비 배율 · 탄 판정 반지름은 그대로)
+    float baseScaleY;
+    public float BodyScale => baseScaleY > 0f ? Mathf.Abs(transform.lossyScale.y) / baseScaleY : 1f;
+    public Vector2 HurtCenter { get { Vector3 p = transform.position; return new Vector2(p.x, p.y - HurtDropY * BodyScale); } }
+    // 몸통 접촉(적 · 보스 몸에 닿기): 예전엔 몸 콜라이더(중심 −1.15 · 반지름 약 1.47, 그림보다 넓음) 그대로 → 중심은 같고 반지름 1.0 (위끝 +0.32 → −0.15 · 좌우 폭은 덜 줄임)
+    //   벽 · 이동 막힘 · 코인 줍기는 몸 콜라이더 그대로
+    public const float ContactDropY = 1.15f, ContactRadius = 1f;
+    public Vector2 ContactCenter { get { Vector3 p = transform.position; return new Vector2(p.x, p.y - ContactDropY * BodyScale); } }
+    public float ContactR => ContactRadius * BodyScale;
 
     private float invincibleUntil = 0f;
 
@@ -1534,6 +1552,12 @@ void Shoot()
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere( transform.position, targetRange );
+        // 1.4.4~ 피격 판정(빨강) · 몸통 접촉(주황) — 씬 뷰에서 플레이어를 고르면 보임
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(HurtCenter, HurtRadius);
+        Gizmos.color = new Color(1f, 0.6f, 0.1f);
+        Gizmos.DrawWireSphere(ContactCenter, ContactRadius);
+        Gizmos.color = Color.white;
     }
 }
 

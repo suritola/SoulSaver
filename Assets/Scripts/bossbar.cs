@@ -292,6 +292,17 @@ public class bossbar : MonoBehaviour
     Color nameBase;
     bool nameBaseSet;
     public static void FlashName() { if (instance != null) instance.nameFlashUntil = Time.unscaledTime + 0.4f; }
+    // 1.4.4~ 지금 보이는 가장 아래 보스 체력바 (없으면 null) — 큰 알림 띠를 다중 보스전 추가 체력바 아래로 내릴 때
+    public static RectTransform LowestShown
+    {
+        get
+        {
+            if (instance == null || !instance.isActiveAndEnabled) return null;
+            RectTransform r = instance.LowestBar;
+            // 주 체력바만 있으면 null (BigTop 이 이미 그 아래) — 추가 체력바가 있을 때만
+            return r != null && r.gameObject.activeInHierarchy && (instance.backBar == null || r.gameObject != instance.backBar) ? r : null;
+        }
+    }
 
     void FlashTick()
     {

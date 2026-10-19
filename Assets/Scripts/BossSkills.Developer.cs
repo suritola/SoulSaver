@@ -262,7 +262,7 @@ public partial class BossSkills
             if (!Alive) yield break;
             pl = Hostile.Player;
             Fx.Beam(a, b, 1.6f, new Color(0.75f, 0.85f, 1f, 0.95f), 0.35f, 18);
-            UltHit(pl != null && Hostile.DistanceToSegment(pl.transform.position, a, b) < 2.5f);
+            UltHit(pl != null && Hostile.HurtToSegment(pl, a, b) < 2.5f);
             Hostile.Play("crack", 0.7f, 0.8f);
             Hostile.Shake(0.15f);
             yield return new WaitForSeconds(0.35f);

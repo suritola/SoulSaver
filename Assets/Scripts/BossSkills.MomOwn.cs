@@ -90,7 +90,7 @@ public partial class BossSkills
                                 slSprite[i].transform.position = cur;
                                 slSprite[i].transform.Rotate(0f, 0f, 1080f * dt);
                             }
-                            if (!slHit[i] && pl != null && Hostile.DistanceToSegment(pl.transform.position, prev, cur) < 0.8f + 0.2f
+                            if (!slHit[i] && pl != null && Hostile.HurtToSegment(pl, prev, cur) < 0.8f + 0.2f
                                 && OwnHit(true, 14f, 0.12f, OwnAtk.Slipper))
                             {
                                 slHit[i] = true;
@@ -232,8 +232,8 @@ public partial class BossSkills
             bool inside = false;
             if (p != null)
             {
-                Vector2 to = p.transform.position - apex;
-                inside = to.magnitude < R + 0.3f && Vector2.Angle(d, to) <= ConeHalf + 6f;
+                Vector2 to = p.HurtCenter - (Vector2)apex;      // 1.4.4~ 몸 아래쪽 판정
+                inside = to.magnitude + PlayerController.HurtShrink < R + 0.3f && Vector2.Angle(d, to) <= ConeHalf + 6f;
             }
             float baseAng = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
             Fx.Spawn("fx_slash", apex + (Vector3)(d * R * 0.5f), R * 1.4f, pink, 26f, baseAng, 14);
@@ -356,7 +356,7 @@ public partial class BossSkills
                     transform.position = cur;
                     TickAura();
                     PlayerController p = Hostile.Player;
-                    if (p != null && Hostile.DistanceToSegment(p.transform.position, prev, cur) < 1.8f && OwnHit(true, 16f, 0.16f, OwnAtk.TimeSale))
+                    if (p != null && Hostile.HurtToSegment(p, prev, cur) < 1.8f && OwnHit(true, 16f, 0.16f, OwnAtk.TimeSale))
                     {
                         Hostile.Play("mom_slap", 0.9f, 0.8f);
                         Hostile.Shake(0.18f);
@@ -527,7 +527,7 @@ public partial class BossSkills
                     PlayerController p = Hostile.Player;
                     if (!w.hit && p != null)
                     {
-                        Vector2 rel = p.transform.position - w.o;
+                        Vector2 rel = p.HurtCenter - (Vector2)w.o;      // 1.4.4~ 몸 아래쪽 판정
                         float sp = Vector2.Dot(rel, w.d), lp = Vector2.Dot(rel, w.l);
                         float lo = Mathf.Min(prevS, w.s) - 1.4f, hi = Mathf.Max(prevS, w.s) + 1.4f;
                         if (sp >= lo && sp <= hi && Mathf.Abs(lp) <= BroomHalf && Mathf.Abs(lp - w.u) >= BroomGap

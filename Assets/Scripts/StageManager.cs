@@ -48,6 +48,7 @@ public class StageManager : MonoBehaviour
     public float portalPullTime = 8f;       // 마지막 이 시간 동안 문 쪽으로 점점 세게 끌려감
     TextMeshProUGUI countdownText;
     LineRenderer portalGuide;
+    LineRenderer portalGuideShade;      // 1.4.4~ 안내선 뒤 진한 그림자 (초원 · 묘역의 밝은 바닥에서도 보이게)
 
     [Header("특수 능력 포인트 (2장 중간 보스 보상)")]
     public int specialPoints = 0;
@@ -880,12 +881,19 @@ public class StageManager : MonoBehaviour
             countdownText.color = urgent ? Color.Lerp(new Color(1f, 0.35f, 0.3f), Color.white, Mathf.PingPong(Time.unscaledTime * 4f, 1f)) : Gold;
 
             // 플레이어 → 문 안내선
+            // 1.4.4~ 모든 장에서 보이게: 예전엔 알파 0.25 · 굵기 0.18 금빛 한 줄이라 어두운 지옥 바닥에서만 눈에 띄고
+            //   초원 · 묘역의 밝은 바닥에선 거의 안 보였음 (「지옥에서만 문 경로가 나온다」 제보) → 진하게 + 뒤에 어두운 그림자 줄
             portalGuide.enabled = true;
             portalGuide.SetPosition(0, player.position);
             portalGuide.SetPosition(1, target);
-            float a = urgent ? 0.5f + 0.3f * Mathf.Sin(Time.time * 10f) : 0.25f + 0.1f * Mathf.Sin(Time.time * 3f);
+            float a = urgent ? 0.75f + 0.25f * Mathf.Sin(Time.time * 10f) : 0.6f + 0.15f * Mathf.Sin(Time.time * 3f);
             portalGuide.startColor = new Color(1f, 0.8f, 0.4f, a);
-            portalGuide.endColor = new Color(1f, 0.55f, 0.2f, a * 0.3f);
+            portalGuide.endColor = new Color(1f, 0.55f, 0.2f, a * 0.45f);
+            portalGuideShade.enabled = true;
+            portalGuideShade.SetPosition(0, player.position);
+            portalGuideShade.SetPosition(1, target);
+            portalGuideShade.startColor = new Color(0.05f, 0.03f, 0.06f, 0.6f * a);
+            portalGuideShade.endColor = new Color(0.05f, 0.03f, 0.06f, 0.6f * a * 0.45f);
 
             if (urgent && Time.timeScale > 0f)
             {
@@ -906,6 +914,7 @@ public class StageManager : MonoBehaviour
 
         countdownText.gameObject.SetActive(false);
         portalGuide.enabled = false;
+        portalGuideShade.enabled = false;
         if (CurrentStage == fromStage && !transitioning) EnterPortal();
     }
 
@@ -937,10 +946,17 @@ public class StageManager : MonoBehaviour
         }
         if (portalGuide == null)
         {
-            portalGuide = Hostile.NewLine("PortalGuide", Gold, 0.18f, 3);
+            portalGuide = Hostile.NewLine("PortalGuide", Gold, 0.24f, 3);     // 1.4.4~ 0.18 → 0.24 (모든 장에서 보이게)
             portalGuide.positionCount = 2;
-            portalGuide.endWidth = 0.05f;
+            portalGuide.endWidth = 0.08f;
             portalGuide.enabled = false;
+        }
+        if (portalGuideShade == null)
+        {
+            portalGuideShade = Hostile.NewLine("PortalGuideShade", new Color(0.05f, 0.03f, 0.06f, 0.45f), 0.42f, 2);
+            portalGuideShade.positionCount = 2;
+            portalGuideShade.endWidth = 0.16f;
+            portalGuideShade.enabled = false;
         }
     }
 

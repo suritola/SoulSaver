@@ -82,7 +82,7 @@ public static partial class LocTable
         C("chest.level.name", "깨달음", "Insight", "悟り", "顿悟");
         C("chest.level.desc", "레벨업 카드를 한 번 더 고릅니다.", "Pick one more level-up card.", "レベルアップカードをもう1回選べます。", "再选择一次升级卡牌。");
         C("chest.might.name", "날 선 힘", "Honed Might", "研ぎ澄まされた力", "锋锐之力");
-        C("chest.might.desc", "공격력 +5% (기본 공격력 기준, 이번 판 끝까지)", "Attack +5% (of base attack, for the rest of the run)", "攻撃力 +5%（基本攻撃力基準、このランの間）", "攻击力 +5%（以基础攻击力计，本局内持续）");
+        C("chest.might.desc", "공격력 +5% (기본 공격력 기준, 쓰러지거나 클리어할 때까지 유지)", "Attack +5% (of base attack, lasts until you fall or clear the run)", "攻撃力 +5%（基本攻撃力基準、倒れるかクリアするまで持続）", "攻击力 +5%（以基础攻击力计，持续到倒下或通关）");
         // 희귀
         C("chest.card.name", "숙련", "Mastery", "熟練", "熟练");
         C("chest.card.desc", "{0} +1단계", "{0} +1 level", "{0} +1段階", "{0} +1级");
