@@ -89,6 +89,7 @@ public class PauseBuild : MonoBehaviour
         Group cards = new Group { key = "pausebuild.cards" };
         Group specials = new Group { key = "pausebuild.special" };
         Group relics = new Group { key = "pausebuild.relic" };
+        Group transcends = new Group { key = "pausebuild.transcend" };      // 1.4.1~ 초월을 레벨업 스킬과 따로 (섞여 있어 찾기 어려웠음)
         Group brands = new Group { key = "brand.title" };
         string evoMark = Loc.T("pausebuild.evolved");
 
@@ -140,7 +141,7 @@ public class PauseBuild : MonoBehaviour
                 int lv = shop.TranscendLevel(k);
                 if (lv <= 0) continue;
                 int max = LevelShop.TranscendMax[k];
-                cards.cells.Add(new Cell
+                transcends.cells.Add(new Cell
                 {
                     icon = Resources.Load<Sprite>("Icons/choice_" + LevelShop.TranscendIcon(k)),
                     title = LevelShop.TranscendName(k) + "  <size=80%>" + LevelLine(lv, max) + "</size>",
@@ -161,7 +162,7 @@ public class PauseBuild : MonoBehaviour
         foreach (SoulBrandDef b in SoulBrand.Run)
             brands.cells.Add(new Cell { icon = Resources.Load<Sprite>(ChoiceUI.IconPath(b.Icon)), title = b.Name, body = SoulBrand.CardTextOf(b) });
 
-        foreach (Group g in new[] { weapons, cards, specials, relics, brands })
+        foreach (Group g in new[] { weapons, cards, transcends, specials, relics, brands })
             if (g.cells.Count > 0) list.Add(g);
         return list;
     }
@@ -374,6 +375,7 @@ public static partial class LocTable
         C("pausebuild.cards", "레벨업 스킬", "Level-Up Skills", "レベルアップスキル", "升级技能");
         C("pausebuild.special", "특수 스킬", "Special Skills", "特殊スキル", "特殊技能");
         C("pausebuild.relic", "유물", "Relics", "遺物", "遗物");
+        C("pausebuild.transcend", "초월", "Transcendence", "超越", "超越");
         C("pausebuild.evolved", "진화", "EVO", "進化", "进化");
         C("pausebuild.empty", "아직 가진 스킬이 없습니다.", "You have no skills yet.", "まだスキルを持っていません。", "目前还没有技能。");
         C("pausebuild.hint.mouse", "아이콘에 마우스를 올리면 이름과 효과가 보입니다.", "Hover over an icon to see its name and effect.",

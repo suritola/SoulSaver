@@ -24,7 +24,7 @@ public partial class CharacterKit
     //   게이지가 가득 찬 동안에도 같은 빠르기로 「다음 돌진」을 하나 더 채워 모아 둠 (게이지는 가득 찬 그대로 — 넘치는 기세 · 사냥의 절정이 그대로 동작)
     //   빠르기 = 게이지가 차지 않았을 때 잰 초당 충전량 (처치 가속 · 영혼 트리 포함, 반환처럼 한꺼번에 늘어난 것은 뺌)
     //   쓸 때: 게이지가 가득이면 게이지부터, 아니면 모아 둔 돌진 (그림자 숙련 4단계의 「한 번 더 돌진」 창을 빌려 씀)
-    float rpBank, rpRate, rpLastPoint = -1f;
+    float rpBank, rpRate, rpLastPoint = -1f, rpAcc, rpAccT;
     void RpUlt(SkillGauge gauge)
     {
         rpArmed = false;
@@ -35,10 +35,19 @@ public partial class CharacterKit
         bool full = gauge.IsFull();
         if (!full)
         {
-            if (rpLastPoint >= 0f && pt > rpLastPoint && dt > 0f)
+            // 1.4.1~ 빠르기를 2초 동안 모인 양으로 잼 — 도적 게이지는 처치 · 명중으로 덩어리째 차서, 예전처럼 한 프레임으로 재면
+            //   값이 너무 커 늘 버려졌고(rpRate 0) 돌진이 영영 모이지 않았음. 반환처럼 한꺼번에 크게 는 것(최대치의 절반 넘게)만 뺌
+            if (rpLastPoint >= 0f && dt > 0f)
             {
-                float r = (pt - rpLastPoint) / dt;
-                if (r <= gauge.MaxSkillPoint) rpRate = rpRate <= 0f ? r : Mathf.Lerp(rpRate, r, 0.05f);
+                float g = pt - rpLastPoint;
+                if (g > 0f && g <= gauge.MaxSkillPoint * 0.5f) rpAcc += g;
+                rpAccT += dt;
+                if (rpAccT >= 2f)
+                {
+                    float r = rpAcc / rpAccT;
+                    rpRate = rpRate <= 0f ? r : Mathf.Lerp(rpRate, r, 0.5f);
+                    rpAcc = 0f; rpAccT = 0f;
+                }
             }
             rpBank = 0f;
         }

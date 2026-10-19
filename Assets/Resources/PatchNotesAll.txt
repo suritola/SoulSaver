@@ -1,3 +1,138 @@
+@@@ v1.2.1
+# V1.2.1 업데이트 — 갈래 개선 · 무한 모드 조정
+갈래를 골라도 모든 레벨업 스킬이 나오고, 무한 모드 진행과 도적 밸런스를 다듬었습니다.
+
+V1.2 빌드 갈래 업데이트에 보내 주신 의견을 바탕으로 갈래와 무한 모드를 다듬고, 많은 버그를 고쳤습니다.
+
+## 🌿 빌드 갈래 개선
+- 갈래를 골라도 레벨업에는 모든 스킬이 나옵니다. 고른 갈래에 맞춰 스킬을 골라도 되고, 다르게 골라도 됩니다.
+- 고른 갈래에 맞는 스킬을 모으면 그 갈래의 공명 · 극의가 열립니다. 갈래는 입문 능력과 대가를 줍니다.
+
+## ✨ 편의성 개선
+- 영혼 트리는 이제 칸을 한 번만 누르면 바로 배웁니다.
+- 일시정지(ESC)의 「지금 가진 스킬」에서 초월을 따로 묶어 보여 줍니다.
+- 연금술사의 불 장판(불타는 늪 · 불꽃 행진)이 그을린 땅 위에 불꽃이 넘실대는 모습으로 바뀌었습니다.
+
+## 🛠️ 버그 수정
+- 일시정지(ESC) 화면에서 「이번 판 각인」 창이 스킬 목록 위에 겹쳐 고정되어, 다른 스킬 설명을 볼 수 없던 문제를 고쳤습니다.
+- 도적 「그림자」 갈래에서 돌진을 하나 더 모아 두는 효과가 동작하지 않던 문제를 고쳤습니다.
+- 판 시작 입문 카드를 고르기 전에 나갔다 이어하면 입문 카드가 사라지던 문제를 고쳤습니다.
+- 도적 「질주 암살」 극의로 무적 돌진이 끝없이 이어지던 문제를 고쳤습니다.
+- 거너 「화염 과열」의 과열 폭발이 특수 총기 장전에도 터지던 문제, 「산탄 돌격」 산탄의 효과가 알마다 겹치던 문제를 고쳤습니다.
+- 검사 「받아치기」가 혈갑 보호막이 있으면 성공하지 않던 문제를 고쳤습니다.
+- 그 밖에 갈래 효과 · 이어하기 · 화면 표시에서 찾은 버그 20여 개를 고쳤습니다.
+
+## ⚖️ 밸런스 조정
+- 무한 모드 적이 주는 영혼 조각: ×1 → ×0.36 (64% 감소)
+- 개발자 엄마 강림에 필요한 영혼: 1,000 → 500
+- 도적 공격력: ×2.9 → ×2.0
+- 도적 공격 속도: ×1.5 → ×1.4
+- 도적 고유 스킬 위력: ×1.6 → ×1.1
+- 도적 특수 능력 위력: ×1.9 → ×1.4
+
+플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
+
+=== en
+# V1.2.1 Update — Path Improvements & Endless Tuning
+Every level-up skill now appears no matter your path, plus Endless Mode and Rogue balance tuning.
+
+Based on your feedback on the V1.2 Build Paths update, we've refined paths and Endless Mode and fixed many bugs.
+
+## 🌿 Build Path Improvements
+- Every skill now appears on level-up even after you choose a path. You can pick skills that fit your path, or go a different way.
+- Collecting skills that match your chosen path unlocks its Resonance and Mastery. A path gives you its Path Seed ability and cost.
+
+## ✨ Quality of Life
+- Soul Tree nodes are now learned with a single click.
+- The pause (ESC) 「Current Build」 panel now shows Transcendence in its own group.
+- The Alchemist's fire fields (Burning Swamp · Ember March) are redrawn as flames dancing over scorched ground.
+
+## 🛠️ Bug Fixes
+- Fixed the 「This Run's Brands」 panel sticking on top of the skill list on the pause (ESC) screen and blocking other skill descriptions.
+- Fixed the Rogue's Shadow path not storing an extra dash.
+- Fixed the Path Seed card disappearing if you quit before choosing it and then continued the run.
+- Fixed the Rogue's Dash Assassin Mastery chaining invincible dashes endlessly.
+- Fixed the Gunner's Overheat explosion also triggering on special weapon reloads, and Shotgun Rush pellets stacking their effects per pellet.
+- Fixed the Swordsman's Parry failing while a Blood Armor shield was active.
+- Fixed about 20 other bugs in path effects, continuing runs and screen displays.
+
+## ⚖️ Balance Changes
+- Soul Shards from enemies in Endless Mode: ×1 → ×0.36 (−64%)
+- Souls needed for the Developer's Mom to descend: 1,000 → 500
+- Rogue attack: ×2.9 → ×2.0
+- Rogue attack speed: ×1.5 → ×1.4
+- Rogue signature skill power: ×1.6 → ×1.1
+- Rogue special ability power: ×1.9 → ×1.4
+
+Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
+
+=== ja
+# V1.2.1 アップデート — 流派の改善・エンドレス調整
+流派を選んでもすべてのレベルアップスキルが出るようになり、エンドレスと盗賊のバランスを調整しました。
+
+V1.2 ビルド流派アップデートへのご意見をもとに、流派とエンドレスを見直し、多くの不具合を修正しました。
+
+## 🌿 ビルド流派の改善
+- 流派を選んでも、レベルアップにはすべてのスキルが出ます。流派に合わせて選んでも、別の道を選んでも構いません。
+- 選んだ流派に合うスキルを集めると、その流派の共鳴・極意が開きます。流派は入門能力と代償を与えます。
+
+## ✨ 快適性の改善
+- 魂のツリーのマスは1回押すだけで習得できるようになりました。
+- 一時停止（ESC）の「現在のスキル」で、超越をまとめて表示します。
+- 錬金術師の炎の床（燃える沼・火花の行進）が、焦げた地面の上で炎が揺らめく姿になりました。
+
+## 🛠️ 不具合の修正
+- 一時停止（ESC）画面で「今回の刻印」パネルがスキル一覧の上に重なって固定され、他のスキルの説明が見られなかった問題を修正しました。
+- 盗賊の「影」流派で、突進をもう1回ためておく効果が働かなかった問題を修正しました。
+- 開始時の入門カードを選ぶ前に終了して続きから再開すると、入門カードが消えていた問題を修正しました。
+- 盗賊の「疾走暗殺」の極意で、無敵の突進が際限なく続いていた問題を修正しました。
+- ガンナーの「火炎過熱」の過熱爆発が特殊銃のリロードでも起きていた問題、「散弾突撃」の散弾の効果が1粒ごとに重なっていた問題を修正しました。
+- 剣士の「受け流し」が血の鎧のシールドがあると成功しなかった問題を修正しました。
+- そのほか、流派の効果・続きからの再開・画面表示で見つかった不具合を約20件修正しました。
+
+## ⚖️ バランス調整
+- エンドレスで敵が落とす魂のかけら: ×1 → ×0.36（64%減少）
+- 開発者のママの降臨に必要な魂: 1,000 → 500
+- 盗賊の攻撃力: ×2.9 → ×2.0
+- 盗賊の攻撃速度: ×1.5 → ×1.4
+- 盗賊の固有スキルの威力: ×1.6 → ×1.1
+- 盗賊の特殊能力の威力: ×1.9 → ×1.4
+
+遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
+
+=== zh
+# V1.2.1 更新 — 流派改进 · 无尽模式调整
+选择流派后升级时仍会出现所有技能，并调整了无尽模式与盗贼的平衡。
+
+根据大家对V1.2构筑流派更新的反馈，我们改进了流派与无尽模式，并修复了大量问题。
+
+## 🌿 构筑流派改进
+- 即使选择了流派，升级时也会出现所有技能。可以按流派挑选技能，也可以另辟蹊径。
+- 收集与所选流派相符的技能即可开启该流派的共鸣与极意。流派会赋予入门能力与代价。
+
+## ✨ 便利性改进
+- 灵魂树节点现在单击即可学习。
+- 暂停（ESC）界面的「当前技能」中，超越会单独成组显示。
+- 炼金术士的火焰地带（燃烧沼泽 · 火花行进）改为焦土上摇曳的火焰。
+
+## 🛠️ 问题修复
+- 修复了暂停（ESC）界面中「本局刻印」面板固定叠在技能列表上，导致看不到其他技能说明的问题。
+- 修复了盗贼「暗影」流派中多储存一次突进的效果不生效的问题。
+- 修复了在选择开局入门卡之前退出并继续游戏后，入门卡消失的问题。
+- 修复了盗贼「疾走暗杀」极意让无敌突进无限持续的问题。
+- 修复了枪手「火焰过热」的过热爆炸在特殊枪械装填时也会触发、「霰弹突击」的霰弹效果逐颗叠加的问题。
+- 修复了剑士「格挡反击」在拥有血甲护盾时无法成功的问题。
+- 另外修复了流派效果、继续游戏和画面显示中的约20个问题。
+
+## ⚖️ 平衡调整
+- 无尽模式中敌人掉落的灵魂碎片：×1 → ×0.36（减少64%）
+- 开发者的妈妈降临所需的灵魂：1,000 → 500
+- 盗贼攻击力：×2.9 → ×2.0
+- 盗贼攻击速度：×1.5 → ×1.4
+- 盗贼固有技能威力：×1.6 → ×1.1
+- 盗贼特殊能力威力：×1.9 → ×1.4
+
+感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
 @@@ v1.2
 # V1.2 대규모 업데이트 — 빌드 갈래
 영웅마다 전혀 다르게 싸우는 빌드 갈래 5개가 생겼습니다. 같은 영웅도 이제 매판 다른 판이 됩니다.

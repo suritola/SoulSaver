@@ -90,7 +90,7 @@ public partial class LevelShop
     {
         CharacterId who = CharacterData.Selected;
         int max = MaxLevelOf(who, id);
-        if (max >= 2 && Paths.Active && Paths.Single && Paths.A >= 0 && Paths.PathOfCard(who, id) == Paths.A && !FlatTail(KitCardOf(who, id))) max += 1;
+        if (max >= 2 && Paths.Active && Paths.Single && Paths.A >= 0 && Paths.PathOfCard(who, id) == Paths.A && !FlatTail(KitCardOf(who, id)) && !PastFloor(who, id, KitCardOf(who, id))) max += 1;
         return max;
     }
 
@@ -104,6 +104,18 @@ public partial class LevelShop
         return ParseStep(pa[1], out float na, out _, out _, out _) && ParseStep(pb[1], out float nb, out _, out _, out _) && Mathf.Approximately(na, nb);
     }
 
+    // 1.4.1~ 실효 단계 검사: 늘어난 단계의 수치가 효과 쪽 하한을 넘어서면 실제로는 바뀌지 않음 → 늘리지 않음
+    //   유령 「얼어붙는 손길」 4 · 3 · 2 → 외길 1 이지만 필요한 냉기는 2에서 멈춤 (CharacterKit.FreezeFloor) — 카드 글만 1로 보이고 극의 조건에는 들어갔음
+    static bool PastFloor(CharacterId who, int id, KitCard c)
+    {
+        float floor;
+        if (who == CharacterId.Ghost && id == MultiId) floor = CharacterKit.FreezeFloor;
+        else return false;
+        if (c == null || c.max < 2) return false;
+        string[] p = NextStep(c.values[c.max - 2], c.values[c.max - 1]).Split('|');
+        return p.Length == 3 && ParseStep(p[1], out float n, out _, out _, out _) && n < floor - 0.001f;
+    }
+
     // 갈래 규칙에서 이 카드가 레벨업에 나올 수 있나 (구판 규칙: 25 ~ 31 만 막음)
     bool PathAllows(int id)
     {
@@ -111,7 +123,7 @@ public partial class LevelShop
         if (Paths.IsSeed(id) || id == Paths.SingleId) return false;        // 입문 · 외길은 입문 창 · 갈림길 창에서만
         int path = Paths.PathOfCard(CharacterData.Selected, id);
         if (path < 0) return id != Paths.ExtraId;                          // 공용 카드 (31번은 갈래에 들어 있을 때만)
-        return path == Paths.A || path == Paths.B;
+        return true;        // 1.4.1~ 사용자 「레벨업 스킬은 갈래와 상관없이 전부 나오고, 갈래는 컨셉에 맞는 능력과 대가만」 — 예전엔 고른 두 갈래(A · B) 카드만
     }
 
     // 지금 레벨업에서 고를 수 있는 카드
@@ -152,14 +164,14 @@ public partial class LevelShop
         {
             picks.AddRange(OfferSeeds(3, reroll ? shown : null));
             while (picks.Count < 3) picks.Add(DrawGrowth());
-            Hints.Show("paths.seed", "이번 판의 갈래를 고르세요. 입문 카드는 평타 · 움직임을 바꾸고 대가가 붙습니다. 레벨업에는 고른 갈래의 카드만 나옵니다.");
+            Hints.Show("paths.seed", "이번 판의 갈래를 고르세요. 입문 카드는 평타 · 움직임을 바꾸고 대가가 붙습니다. 레벨업에는 모든 카드가 나오고, 고른 갈래에 맞는 카드를 모으면 공명 · 극의가 열립니다.");
         }
         else if (pathWindow == PathWindow.Crossroads)
         {
             picks.AddRange(OfferSeeds(2, reroll ? shown : null));
             while (picks.Count < 2) picks.Add(DrawGrowth());
             picks.Add(Paths.SingleId);                      // 세 번째 칸은 늘 외길 (금빛)
-            Hints.Show("paths.crossroads", "갈림길: 두 번째 갈래를 고르거나 「외길」로 첫 갈래만 더 깊게 팝니다. 두 갈래가 정해지면 다른 갈래 카드는 나오지 않습니다.");
+            Hints.Show("paths.crossroads", "갈림길: 두 번째 갈래를 고르거나 「외길」로 첫 갈래만 더 깊게 팝니다.");
         }
         else DrawPathCards(picks, reroll ? shown : null);
         first = picks[0];
@@ -168,7 +180,7 @@ public partial class LevelShop
         ShowPathHeader();
     }
 
-    // 갈래 카드 최대 2장 + 공용 최소 1장 (공용이 없으면 갈래 카드로, 둘 다 없으면 성장 카드) · 자리는 섞음
+    // 모든 배울 수 있는 카드에서 세 장 (모자라면 성장 카드) · 고른 갈래의 문턱 가까운 카드만 조금 더 잘 나옴 (PathDrawWeight) · 자리는 섞음
     void DrawPathCards(List<int> picks, int[] shown)
     {
         List<int> hero = new List<int>(), heroSpare = new List<int>(), common = new List<int>(), commonSpare = new List<int>();
@@ -181,10 +193,9 @@ public partial class LevelShop
                 (isHero ? (seen ? heroSpare : hero) : (seen ? commonSpare : common)).Add(i);
             }
         if (hero.Count + heroSpare.Count + common.Count + commonSpare.Count < 3) GrowthHint();
-        for (int k = 0; k < 2 && hero.Count + heroSpare.Count > 0; k++) picks.Add(TakeWeighted(hero, heroSpare));
-        if (common.Count + commonSpare.Count > 0) picks.Add(TakeWeighted(common, commonSpare));
+        // 1.4.1~ 영웅 · 공용 카드를 한 바구니에서 세 장 (예전엔 갈래 카드 최대 2 + 공용 최소 1 로 나눴음 · 고르는 맛이 없었음)
+        hero.AddRange(common); heroSpare.AddRange(commonSpare);
         while (picks.Count < 3 && hero.Count + heroSpare.Count > 0) picks.Add(TakeWeighted(hero, heroSpare));
-        while (picks.Count < 3 && common.Count + commonSpare.Count > 0) picks.Add(TakeWeighted(common, commonSpare));
         while (picks.Count < 3) picks.Add(DrawGrowth());
         for (int i = picks.Count - 1; i > 0; i--)
         {

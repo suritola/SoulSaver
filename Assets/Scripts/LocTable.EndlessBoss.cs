@@ -39,10 +39,10 @@ public static partial class LocTable
 
         // ================================================================= 도감 「개발자 엄마」 설명 (완결 문장 · 규칙 E)
         C("개발자를 쓰러뜨린 뒤 영혼 1000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
-          "개발자를 쓰러뜨린 뒤 영혼 1,000개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
-          "Descends once you gather 1,000 souls after defeating the Developer. It has twice the Developer's health, and its damage and movement speed are doubled as well. It uses its ultimate once every 5 seconds at first and faster as its health drops, down to once every second. During the fight only weak enemies appear, 4 every second, up to 30 at a time. Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
-          "開発者を倒した後、魂を1,000個集めると降臨します。開発者の2倍の体力を持ち、ダメージと移動速度も2倍です。必殺技は最初は5秒に1回、体力が減るほど速くなり、最後は1秒に1回使います。戦っている間は弱い敵だけが1秒に4体ずつ、最大30体まで現れます。開発者とママを両方倒すと、エンドレスをクリアします。",
-          "击败开发者后收集1,000个灵魂即会降临。它的生命是开发者的2倍，伤害和移动速度也是2倍。必杀技起初每5秒一次，生命越低越快，最终每1秒一次。战斗期间只会出现弱小的敌人，每秒4名，最多同时30名。击败开发者和妈妈即可通关无尽模式。");
+          "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면 강림합니다. 개발자보다 체력이 2배이고, 피해와 이동 속도도 2배입니다. 필살기는 처음엔 5초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
+          "Descends once you gather 500 souls after defeating the Developer. It has twice the Developer's health, and its damage and movement speed are doubled as well. It uses its ultimate once every 5 seconds at first and faster as its health drops, down to once every second. During the fight only weak enemies appear, 4 every second, up to 30 at a time. Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
+          "開発者を倒した後、魂を500個集めると降臨します。開発者の2倍の体力を持ち、ダメージと移動速度も2倍です。必殺技は最初は5秒に1回、体力が減るほど速くなり、最後は1秒に1回使います。戦っている間は弱い敵だけが1秒に4体ずつ、最大30体まで現れます。開発者とママを両方倒すと、エンドレスをクリアします。",
+          "击败开发者后收集500个灵魂即会降临。它的生命是开发者的2倍，伤害和移动速度也是2倍。必杀技起初每5秒一次，生命越低越快，最终每1秒一次。战斗期间只会出现弱小的敌人，每秒4名，最多同时30名。击败开发者和妈妈即可通关无尽模式。");
 
         // ================================================================= 패치노트 (게임 안 공지 · 결과 화면 여유분)
         K("보스는 기다리지 않는다", "Bosses Do Not Wait", "ボスは待たない", "首领不会等待");

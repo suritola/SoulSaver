@@ -48,7 +48,7 @@ public class EndlessMode : MonoBehaviour
     public const float FinalAt = 900f;
     // 1.1.2~ 엄마는 30분이 아니라 「개발자를 쓰러뜨린 뒤 잡몹 n마리」를 잡으면 강림 (HUD 「그녀의 강림까지 남은 영혼 수 n/1000」)
     //   1.2.5~ 3000 → 1000 (3000마리를 모으는 동안 잡몹이 너무 많아 렉) — 3000 기준 저장은 이미 잡은 수를 그대로 빼서 남은 수가 0 ~ 1000 (다 찼으면 이어하자마자 강림)
-    public const int MomSouls = 1000;
+    public const int MomSouls = 500;     // 1.4.1~ 사용자 「개발자 엄마까지 남은 수를 500 줄여」 (1000 → 500) · 저장된 남은 수는 0 ~ 500 으로 잘림 (MomSoulsLeft)
     public const int DeveloperHp = 100000;      // 1.2.5~ 20만 → 10만 (1.1.2~ 10만 → 20만 · 1.0.7~ 30만 → 10만 · 엄마 60만 → 30만)
     public const int MomHp = 200000;            // 1.2.5~ 40만 → 20만 (1.1.2~ 30만 → 40만)
     const string ClearKey = "endless.cleared";

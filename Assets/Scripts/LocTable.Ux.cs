@@ -21,11 +21,11 @@ public static partial class LocTable
           "戦闘中にマウスがウィンドウの外へ出ないようにします。停止画面・メニュー・パッド使用中は解除されます。ウィンドウモードやモニター2台のときに便利です。",
           "战斗中防止鼠标移出窗口。暂停画面、菜单和使用手柄时会解除。窗口模式或双显示器时很有用。");
         C("카드 한 번 클릭으로 확정", "카드 한 번 클릭으로 확정", "One-Click Card Confirm", "カードをワンクリックで確定", "单击即确认卡牌");
-        C("켜면 레벨업 · 보물 상자 · 보스 보상 카드와 영혼 트리 칸을 한 번만 눌러도 바로 확정됩니다. 끄면 카드는 누른 뒤 [{INTERACT}] · 더블클릭으로, 영혼 트리 칸은 두 번 눌러 확정합니다. 무기 진화는 늘 두 번 확인합니다.",
-          "켜면 레벨업 · 보물 상자 · 보스 보상 카드와 영혼 트리 칸을 한 번만 눌러도 바로 확정됩니다. 끄면 카드는 누른 뒤 [{INTERACT}] · 더블클릭으로, 영혼 트리 칸은 두 번 눌러 확정합니다. 무기 진화는 늘 두 번 확인합니다.",
-          "On: level-up, chest and boss-reward cards and Soul Tree nodes are confirmed with a single click. Off: click a card, then confirm with [{INTERACT}] or a double-click, and click a Soul Tree node twice. Weapon evolution always asks twice.",
-          "オン：レベルアップ・宝箱・ボス報酬のカードと魂のツリーのマスを1回押すだけで確定します。オフ：カードは押してから [{INTERACT}]・ダブルクリックで、魂のツリーのマスは2回押して確定します。武器進化は常に2回確認します。",
-          "开启：升级、宝箱、首领奖励卡牌与灵魂树节点单击即确认。关闭：卡牌点击后用 [{INTERACT}] 或双击确认，灵魂树节点需点击两次确认。武器进化始终二次确认。");
+        C("켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 영혼 트리 칸은 늘 한 번에 배우고, 무기 진화는 늘 두 번 확인합니다.",
+          "켜면 레벨업 · 보물 상자 · 보스 보상 카드를 한 번만 눌러도 바로 확정됩니다. 끄면 누른 뒤 [{INTERACT}] · 더블클릭으로 확정합니다. 영혼 트리 칸은 늘 한 번에 배우고, 무기 진화는 늘 두 번 확인합니다.",
+          "On: level-up, chest and boss-reward cards are confirmed with a single click. Off: click a card, then confirm with [{INTERACT}] or a double-click. Soul Tree nodes are always learned with one click, and weapon evolution always asks twice.",
+          "オン：レベルアップ・宝箱・ボス報酬のカードを1回押すだけで確定します。オフ：押してから [{INTERACT}]・ダブルクリックで確定します。魂のツリーのマスは常に1回で習得し、武器進化は常に2回確認します。",
+          "开启：升级、宝箱、首领奖励卡牌单击即确认。关闭：点击后用 [{INTERACT}] 或双击确认。灵魂树节点始终单击即可学习，武器进化始终二次确认。");
         C("카드를 클릭하면 바로 확정됩니다", "카드를 클릭하면 바로 확정됩니다.", "Click a card to confirm it right away.", "カードをクリックするとすぐ確定します。", "点击卡牌即可立即确认。");
         C("카드를 누르면 바로 확정됩니다", "카드를 누르면 바로 확정됩니다.", "Click a card to confirm it right away.", "カードを押すとすぐ確定します。", "点击卡牌即可立即确认。");
 

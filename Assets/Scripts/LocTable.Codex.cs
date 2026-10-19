@@ -92,10 +92,10 @@ public static partial class LocTable
           "Survive 15 minutes in Endless with at least one boss defeated, and every boss awakens. Defeat them all, and someone descends.",
           "エンドレスでボスを1体でも倒したまま15分耐えると、すべてのボスが目覚めます。すべて倒すと、誰かが降りてきます。",
           "在无尽模式中至少击败一名首领并坚持到15分钟，所有首领都会苏醒。将其全部击败，就会有人降临。");
-        C("codex.hint.mom", "개발자를 쓰러뜨린 뒤 영혼 1,000개를 거두면, 개발자보다 더 무서운 누군가가 강림합니다.",
-          "Reap 1,000 souls after defeating the Developer, and someone scarier descends.",
-          "開発者を倒した後に魂を1,000個集めると、開発者よりも恐ろしい誰かが降臨します。",
-          "击败开发者后收割1,000个灵魂，比开发者更可怕的人便会降临。");
+        C("codex.hint.mom", "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면, 개발자보다 더 무서운 누군가가 강림합니다.",
+          "Reap 500 souls after defeating the Developer, and someone scarier descends.",
+          "開発者を倒した後に魂を500個集めると、開発者よりも恐ろしい誰かが降臨します。",
+          "击败开发者后收割500个灵魂，比开发者更可怕的人便会降临。");
         C("codex.hint.jackpot", "보물 상자를 열다 보면 아주 드물게 특별한 일이 일어납니다.",
           "Open enough treasure chests and, very rarely, something special happens.",
           "宝箱を開けていると、ごくまれに特別なことが起こります。",

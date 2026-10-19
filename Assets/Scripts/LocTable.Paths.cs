@@ -50,14 +50,14 @@ public static partial class LocTable
            "Path rank (1 for the Path Seed + your path cards' ranks) unlocks Resonance I at 4 and Resonance II at 8. When both paths reach Resonance I, their Crossover opens.",
            "流派段階（入門1＋流派カードの段階）が4で共鳴I、8で共鳴IIが開きます。二つの流派がどちらも共鳴Iに達すると交差が開きます。",
            "流派阶段（入门1＋流派卡等级）达到4时开启共鸣I，达到8时开启共鸣II。两个流派都达到共鸣I时开启交汇。");
-        PA("이번 판의 갈래를 고르세요. 입문 카드는 평타 · 움직임을 바꾸고 대가가 붙습니다. 레벨업에는 고른 갈래의 카드만 나옵니다.",
-           "Choose this run's path. A Path Seed changes your basic attack or movement, and comes with a cost. Level-ups only offer cards from the paths you chose.",
-           "このプレイの流派を選んでください。入門カードは通常攻撃や動きを変え、代償が付きます。レベルアップには選んだ流派のカードだけが出ます。",
-           "选择本局的流派。入门卡会改变普通攻击或移动方式，并附带代价。升级时只会出现所选流派的卡。");
-        PA("갈림길: 두 번째 갈래를 고르거나 「외길」로 첫 갈래만 더 깊게 팝니다. 두 갈래가 정해지면 다른 갈래 카드는 나오지 않습니다.",
-           "Crossroads: take a second path, or choose Single Path to go deeper into your first. Once two paths are set, cards from the other paths stop appearing.",
-           "分かれ道：二つ目の流派を選ぶか、「一筋」で最初の流派だけをさらに深く極めます。二つの流派が決まると、ほかの流派のカードは出なくなります。",
-           "岔路：选择第二个流派，或选「专精」只深入第一个流派。两个流派确定后，其他流派的卡将不再出现。");
+        PA("이번 판의 갈래를 고르세요. 입문 카드는 평타 · 움직임을 바꾸고 대가가 붙습니다. 레벨업에는 모든 카드가 나오고, 고른 갈래에 맞는 카드를 모으면 공명 · 극의가 열립니다.",
+           "Choose this run's path. A Path Seed changes your basic attack or movement, and comes with a cost. Level-ups offer every card, and collecting cards that match your path unlocks its Resonance and Mastery.",
+           "このプレイの流派を選んでください。入門カードは通常攻撃や動きを変え、代償が付きます。レベルアップにはすべてのカードが出て、選んだ流派に合うカードを集めると共鳴・極意が開きます。",
+           "选择本局的流派。入门卡会改变普通攻击或移动方式，并附带代价。升级时会出现所有卡，收集与所选流派相符的卡即可开启共鸣与极意。");
+        PA("갈림길: 두 번째 갈래를 고르거나 「외길」로 첫 갈래만 더 깊게 팝니다.",
+           "Crossroads: take a second path, or choose Single Path to go deeper into your first.",
+           "分かれ道：二つ目の流派を選ぶか、「一筋」で最初の流派だけをさらに深く極めます。",
+           "岔路：选择第二个流派，或选「专精」只深入第一个流派。");
 
         // ================================================================= 영웅 아홉 (Paths/LocTable.Paths.<영웅>.cs)
         AddPathsGunner();

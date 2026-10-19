@@ -219,7 +219,8 @@ public static class GameMode
     // 처치 수가 예전보다 몇 배인지 (떠돌이 상점 간격 등 처치 수로 세는 것을 맞출 때)
     public static float KillStretch => Kills[I] / RewardBasis[I];
     // 일반 적 영혼 조각 배율 (예전 한 마리 몫 기준, 무한 모드는 그대로)
-    public static float KillShardMul(bool countsTowardBoss) => IsEndless ? 1f : KillShardRate / (countsTowardBoss ? KillStretch : 1f);
+    public static float KillShardMul(bool countsTowardBoss) => IsEndless ? EndlessKillShardMul : KillShardRate / (countsTowardBoss ? KillStretch : 1f);
+    const float EndlessKillShardMul = 0.36f;    // 1.4.1~ 사용자 「무한 모드에서 적이 주는 영혼 조각을 40% 감소」 → 「지금 상태에서 40% 더」 (×1 → ×0.6 → ×0.36)
 
     // 소수 보상을 확률로 반올림 (2.4 → 40% 확률로 3, 아니면 2): 여러 번 모으면 평균이 맞음
     public static int RoundRandom(float v)

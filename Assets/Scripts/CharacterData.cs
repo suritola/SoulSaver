@@ -51,7 +51,7 @@ public static class CharacterData
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
-            hp = 0.85f, damage = 2.9f, attackSpeed = 1.5f, gauge = 1.2f, sig = 1.6f, special = 1.9f, range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),     // 1.3.6: 공격력 1.0 → 1.6/1.5 (유령에 맞춰 크게 버프 · 체력 · 생존은 그대로)
+            hp = 0.85f, damage = 2.0f, attackSpeed = 1.4f, gauge = 1.2f, sig = 1.1f, special = 1.4f,     /* 1.4.1~ 사용자 「도적 너무 세요」 · 「도적 개발자 엄마를 21분에 잡았다」(목표 30분): 공격력 2.9 → 2.0 · 공속 1.5 → 1.4 · 고유 스킬 1.6 → 1.1 · 특수 능력 1.9 → 1.4 (질주 암살 극의 무한 돌진 버그 수정과 함께) */ range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),     // 1.3.6: 공격력 1.0 → 1.6/1.5 (유령에 맞춰 크게 버프 · 체력 · 생존은 그대로)
             color = new Color(0.7f, 0.45f, 0.9f) },
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
