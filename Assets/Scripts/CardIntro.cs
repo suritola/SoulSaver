@@ -16,6 +16,7 @@ public sealed class CardIntro : MonoBehaviour
     CanvasGroup group;
     float baseAlpha;
     bool restored;
+    bool still;             // 1.4.1~ 설정 「움직임 줄이기」: 크기 · 기울기는 그대로, 투명도만 (다시 뽑기 연출 LevelShop.RerollFx 와 같음)
 
     // 카드들을 차례로 등장시키고, 마지막 카드가 다 나오는 시각(unscaledTime)을 돌려줌
     public static float Play(IList<Transform> cards, float stagger = Stagger, float firstDelay = 0.08f)
@@ -23,6 +24,7 @@ public sealed class CardIntro : MonoBehaviour
         float now = Time.unscaledTime;
         if (cards == null || cards.Count == 0) return now;
         int n = 0;
+        bool still = GameSettings.Motion <= 0f;
         for (int i = 0; i < cards.Count; i++)
         {
             Transform c = cards[i];
@@ -30,6 +32,7 @@ public sealed class CardIntro : MonoBehaviour
             CardIntro old = c.GetComponent<CardIntro>();
             if (old != null) { old.Restore(); Destroy(old); }
             CardIntro a = c.gameObject.AddComponent<CardIntro>();
+            a.still = still;
             a.Begin(now + firstDelay + n * stagger);
             n++;
         }
@@ -56,13 +59,14 @@ public sealed class CardIntro : MonoBehaviour
 
     void Apply(float t)
     {
+        if (group != null) group.alpha = baseAlpha * Mathf.Clamp01(t * 2.5f);
+        if (still) { transform.localScale = baseScale; transform.localRotation = baseRot; return; }
         // 살짝 넘쳤다가 제자리 (ease-out-back)
         const float c1 = 1.70158f, c3 = c1 + 1f;
         float u = t - 1f;
         float s = t <= 0f ? 0.001f : 1f + c3 * u * u * u + c1 * u * u;
         transform.localScale = baseScale * Mathf.Max(0.001f, s);
         transform.localRotation = baseRot * Quaternion.Euler(0f, 0f, (1f - t) * -9f);
-        if (group != null) group.alpha = baseAlpha * Mathf.Clamp01(t * 2.5f);
     }
 
     void Restore()
