@@ -47,13 +47,13 @@ public sealed class SwordsmanPaths : HeroPaths
             mastery = "검기가 끝에서 되돌아옵니다. (80% 세기)",
             color = new Color(0.6f, 0.8f, 1f), form = "채찍검" },
         new PathDef {
-            key = "s.parry", name = "받아치기", tagline = "막기 0.25초 · 반격",
-            seed = "받아치기", seedDesc = "우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
+            key = "s.parry", name = "받아치기", tagline = "막기 0.5초 · 반격",
+            seed = "받아치기", seedDesc = "우클릭을 누른 첫 0.5초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
             cost = "회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.", strong = "보스 탄막 · 생존", weak = "무리 · 손 기술",
             cards = new[] { K, S(0), A, S(7) }, evo = "se.counter",
             res1 = "투사체 · 보스 공격을 막으면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
             res2 = "3초 안에 두 번 막으면 4초 동안 역습 자세가 됩니다. (사거리 ×1.4 · 피해 ×1.5)",
-            mastery = "막기가 0.4초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
+            mastery = "막기가 0.8초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
             color = new Color(1f, 0.9f, 0.5f) },
         new PathDef {
             key = "s.blood", name = "피의 맹세", tagline = "체력을 바쳐 흡혈 · 근접 지속",
@@ -97,7 +97,7 @@ public sealed class SwordsmanPaths : HeroPaths
     const float WaveMul = 0.6f, WavePerCard = 0.05f, WaveRange = 9f, WaveSpeed = 22f, WaveReach = 0.8f;
     const float XWaveMul = 0.7f, XBurstMul = 0.3f, XBurstR = 2.4f, XOffset = 1.5f, XMeet = 4.5f, ReturnMul = 0.8f;
     // 받아치기
-    const float ParryWindow = 0.25f, ParryWindowM = 0.4f, ParryInvuln = 0.6f, ParryCounter = 3f, ParryCd = 1.2f, ParryCdHit = 2f, ParryChargeSlow = 1.3f, ParryRewardCd = 3f;
+    const float ParryWindow = 0.5f, ParryWindowM = 0.8f, ParryInvuln = 0.6f, ParryCounter = 3f, ParryCd = 1.2f, ParryCdHit = 2f, ParryChargeSlow = 1.3f, ParryRewardCd = 3f;      // 1.4.5~ 막기 0.25 → 0.5초 · 극의 0.4 → 0.8초 (사용자 「0.25초는 너무 짧아 화끈하게 0.5초」)
     const float StanceWithin = 3f, StanceTime = 4f, StanceReach = 1.4f, StanceDmg = 1.5f, ReflectR = 6f, ReflectMul = 0.6f, MasteryGauge = 0.2f;
     const int ReflectMax = 12;
     // 피의 맹세
@@ -584,8 +584,8 @@ public sealed class SwordsmanPaths : HeroPaths
             Paths.Invuln(ParryInvuln);
             counterSwing = true;
             SignatureSkills.PathParried();      // 역습 · 완벽한 반격
-            Juice.CounterFreeze();              // 1.4.3~ 화면 멈춤 + 서서히 줌
         }
+        Juice.CounterFreeze();                  // 1.4.3~ 화면 멈춤 + 서서히 줌 · 1.4.5~ 보상과 상관없이 막기에 성공할 때마다 (잡몹 몸통 막기도 · 사용자 「무조건 효과를 보여줘」)
         if (Paths.Res(Parry) >= 2 && Time.time - lastParryAt <= StanceWithin) stanceUntil = Time.time + StanceTime;
         lastParryAt = Time.time;
 

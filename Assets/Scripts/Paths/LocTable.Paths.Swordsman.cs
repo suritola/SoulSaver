@@ -37,8 +37,8 @@ public static partial class LocTable
 
         // ================================================================= 받아치기
         PA("받아치기", "Parry", "受け返し", "招架反击");
-        PA("막기 0.25초 · 반격", "0.25s block · Counter", "0.25秒の受け · 反撃", "0.25秒格挡 · 反击");
-        PK("우클릭을 누른 첫 0.25초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "우클릭 뒤 0.25초 동안 막기가 되어 그사이 받는 피해가 0입니다. 투사체 · 보스 공격을 막으면 0.6초 무적과 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "For 0.25s after right-click you block, taking 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility and a ×3 next slash. (Once per 3s · enemy body contact is only blocked) You can block once per 1.2s (once per 2s after a success).", "右クリック後の0.25秒間が受けになり、その間のダメージは0です。弾やボスの攻撃を受けると0.6秒無敵と次の斬撃×3も得ます。（3秒に1回・雑魚の体当たりはダメージを防ぐだけ）受けは1.2秒に1回（成功すると2秒に1回）です。", "按下右键后0.25秒内为格挡，期间受到的伤害为0。格挡弹幕或首领攻击时还获得0.6秒无敌和下一次斩击×3。（每3秒一次 · 小怪身体碰撞只挡伤害）格挡每1.2秒一次（成功后每2秒一次）。");
+        PA("막기 0.5초 · 반격", "0.5s block · Counter", "0.5秒の受け · 反撃", "0.5秒格挡 · 反击");
+        PK("우클릭을 누른 첫 0.5초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "우클릭 뒤 0.5초 동안 막기가 되어 그사이 받는 피해가 0입니다. 투사체 · 보스 공격을 막으면 0.6초 무적과 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "For 0.5s after right-click you block, taking 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility and a ×3 next slash. (Once per 3s · enemy body contact is only blocked) You can block once per 1.2s (once per 2s after a success).", "右クリック後の0.5秒間が受けになり、その間のダメージは0です。弾やボスの攻撃を受けると0.6秒無敵と次の斬撃×3も得ます。（3秒に1回・雑魚の体当たりはダメージを防ぐだけ）受けは1.2秒に1回（成功すると2秒に1回）です。", "按下右键后0.5秒内为格挡，期间受到的伤害为0。格挡弹幕或首领攻击时还获得0.6秒无敌和下一次斩击×3。（每3秒一次 · 小怪身体碰撞只挡伤害）格挡每1.2秒一次（成功后每2秒一次）。");
         PA("회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.",
            "Charging Spin Slash to full takes 30% longer.",
            "回転斬りを最大までためる時間が30%長くなります。",
@@ -53,10 +53,10 @@ public static partial class LocTable
            "Block twice within 3s to enter Counter Stance for 4s. (Range ×1.4 · Damage ×1.5)",
            "3秒以内に2回受けると、4秒間逆襲の構えになります。（射程×1.4 · ダメージ×1.5）",
            "3秒内格挡两次，进入4秒反击架势。（范围×1.4 · 伤害×1.5）");
-        PA("막기가 0.4초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
-           "The block lasts 0.4s, and each projectile or boss attack you block fills 20% of the Ultimate Gauge. (Once per 3s)",
-           "受けが0.4秒に伸び、弾やボスの攻撃を受けるたびに必殺技ゲージが20%たまります。（3秒に1回）",
-           "格挡延长至0.4秒，每次格挡弹幕或首领攻击时充能20%必杀技槽。（每3秒一次）");
+        PA("막기가 0.8초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
+           "The block lasts 0.8s, and each projectile or boss attack you block fills 20% of the Ultimate Gauge. (Once per 3s)",
+           "受けが0.8秒に伸び、弾やボスの攻撃を受けるたびに必殺技ゲージが20%たまります。（3秒に1回）",
+           "格挡延长至0.8秒，每次格挡弹幕或首领攻击时充能20%必杀技槽。（每3秒一次）");
         PA("막기!", "Parry!", "受け！", "招架！");
         PA("역습 자세!", "Counter Stance!", "逆襲の構え！", "反击架势！");
         PA("반격!", "Counter!", "反撃！", "反击！");
