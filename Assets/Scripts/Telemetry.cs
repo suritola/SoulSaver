@@ -14,9 +14,9 @@ using UnityEngine.UI;
 public static class Telemetry
 {
     // TODO: 서버(server/telemetry) 배포 후 Worker 주소 (예: https://soulsaver-telemetry.<계정>.workers.dev) — 비어 있으면 아무것도 안 보내고 동의창 · 설정 줄도 숨김
-    public const string Endpoint = "";
+    public const string Endpoint = "https://soulsaver-telemetry.soulsaver.workers.dev";
     // 공개 키 (Worker 의 INGEST_KEY 와 같게 · 비밀이 아님, 아무나 막 보내는 것만 줄임) — 비워 두면 헤더를 안 붙임
-    public const string IngestKey = "";
+    public const string IngestKey = "0b288103af20d0fc319533b112deddd0";
     // 동의문이 바뀌면 +1 → 저장된 동의가 이보다 낮으면 다시 물음
     public const int ConsentVersion = 1;
     // TODO: 문의 메일 (동의문 「연락처」에 들어감) — 비어 있으면 「스팀 상점 페이지의 개발자 문의」로 대체

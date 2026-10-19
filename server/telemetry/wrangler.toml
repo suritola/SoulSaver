@@ -11,7 +11,7 @@ enabled = false
 [[d1_databases]]
 binding = "DB"
 database_name = "soulsaver-telemetry"
-database_id = "여기에-wrangler-d1-create-가-알려준-database_id-붙여넣기"
+database_id = "2000c3bd-dbc8-4e2b-9220-5ab1e812f233"
 
 # 매일 1회 (UTC 03:17) — 2년 지난 기록 삭제
 [triggers]
@@ -19,5 +19,5 @@ crons = ["17 3 * * *"]
 
 [vars]
 # 게임의 Telemetry.IngestKey 와 같은 값 (공개 키 · 비워 두면 검사 안 함). 바꾸면 게임도 같이 바꿀 것
-INGEST_KEY = ""
+INGEST_KEY = "0b288103af20d0fc319533b112deddd0"
 # ADMIN_TOKEN 은 여기 적지 말고 `wrangler secret put ADMIN_TOKEN` 으로
