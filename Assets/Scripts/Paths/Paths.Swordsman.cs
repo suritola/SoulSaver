@@ -174,6 +174,7 @@ public sealed class SwordsmanPaths : HeroPaths
         waveHits.Clear();
         sliding = false;
         counterSwing = false;       // 1.4.3~ 반격 준비 불티가 다음 판까지 남지 않게
+        ParryAura.Hide(Player);
     }
 
     // ================================================================= 평타 앞 (CharacterKit.Swing → SwordPathPre)
@@ -555,6 +556,7 @@ public sealed class SwordsmanPaths : HeroPaths
             parryUntil = Time.time + window;
             parryReadyAt = Time.time + ParryCd;
             ShockRing.Spawn(p.transform.position, 2.4f, 1.2f, window, new Color(Gold.r, Gold.g, Gold.b, 0.85f), 0.18f);
+            ParryAura.Show(p, window);          // 1.4.5~ 막는 동안 캐릭터가 금빛으로
             Hostile.Play("whoosh", 0.35f, 1.8f);
         }
         // 1.4.3~ 반격 준비(다음 베기 ×3): 몸 둘레에 금빛 불티 · 0.36초마다 조여 드는 고리
@@ -575,6 +577,7 @@ public sealed class SwordsmanPaths : HeroPaths
     void ParrySuccess(PlayerController p)
     {
         parryUntil = 0f;
+        ParryAura.Hide(p);
         parryReadyAt = Time.time + ParryCdHit;
         bool body = MobTouching(p);
         bool reward = Time.time >= parryRewardAt && !body;
@@ -797,5 +800,95 @@ public sealed class SwordsmanPaths : HeroPaths
             return badge;
         }
         return counterSwing ? "x3" : null;
+    }
+}
+
+// 1.4.5~ 받아치기 막는 동안(0.5초 · 극의 0.8초) 캐릭터를 금빛으로 (사용자 「훨씬 더 눈에 잘 띄게 · 캐릭터 모습을 바꾼다던가」)
+//   캐릭터 그림을 그대로 베낀 겹그림 둘(뒤: 조금 크게 = 금빛 테두리 · 앞: 반투명 금빛 덧칠, 두근거림) + 몸을 감싸는 금빛 막(fx_orb)
+//   캐릭터 SpriteRenderer 의 색 · 재질은 건드리지 않음 (피격 깜빡임과 겹쳐 색이 남지 않게) · 끝나면 스스로 지움 · 실제 시간 2초 상한
+public class ParryAura : MonoBehaviour
+{
+    SpriteRenderer src, rim, coat;
+    FxAnim orb;
+    Transform orbAnchor;
+    float until, hardEnd, born;
+    static readonly Color Gold = new Color(1f, 0.85f, 0.35f);
+
+    public static void Show(PlayerController p, float seconds)
+    {
+        if (p == null) return;
+        Hide(p);
+        SpriteRenderer body = p.GetComponent<SpriteRenderer>();
+        if (body == null) return;
+        GameObject go = new GameObject("ParryAura");
+        go.transform.SetParent(p.transform, false);
+        ParryAura a = go.AddComponent<ParryAura>();
+        a.src = body;
+        a.rim = a.Copy("Rim", -1, 1.12f);
+        a.coat = a.Copy("Coat", 1, 1f);
+        a.until = Time.time + seconds;
+        a.hardEnd = Time.unscaledTime + 2f;
+        a.born = Time.time;
+        a.orbAnchor = new GameObject("ParryOrbAnchor").transform;
+        a.orbAnchor.SetParent(go.transform, false);
+        a.orbAnchor.position = body.bounds.center;
+        a.orb = Fx.Play("fx_orb", body.bounds.center, body.bounds.size.y * 1.15f, new Color(Gold.r, Gold.g, Gold.b, 0.4f), 16f, 0f, body.sortingOrder + 2, true, seconds);
+        if (a.orb != null) a.orb.follow = a.orbAnchor;
+        a.LateUpdate();
+    }
+
+    public static void Hide(PlayerController p)
+    {
+        if (p == null) return;
+        ParryAura a = p.GetComponentInChildren<ParryAura>();
+        if (a != null) a.End();
+    }
+
+    SpriteRenderer Copy(string name, int order, float scale)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(transform, false);
+        go.transform.localScale = Vector3.one * scale;
+        SpriteRenderer r = go.AddComponent<SpriteRenderer>();
+        r.sortingLayerID = src.sortingLayerID;
+        r.sortingOrder = src.sortingOrder + order;
+        return r;
+    }
+
+    void LateUpdate()
+    {
+        if (src == null || Time.time >= until || Time.unscaledTime >= hardEnd) { End(); return; }
+        float k = 0.5f + 0.5f * Mathf.Sin((Time.time - born) * 30f);       // 두근거림
+        foreach (SpriteRenderer r in new[] { rim, coat })
+        {
+            if (r == null) continue;
+            if (!ReferenceEquals(r.sprite, src.sprite)) r.sprite = src.sprite;
+            r.flipX = src.flipX;
+            r.flipY = src.flipY;
+        }
+        // 테두리: 조금 큰 그림이 몸 뒤로 진하게 · 덧칠: 몸 위로 반투명하게 깜빡임
+        if (rim != null)
+        {
+            rim.color = new Color(Gold.r, Gold.g, Gold.b, 0.75f + 0.25f * k);
+            rim.sortingOrder = src.sortingOrder - 1;
+            // 몸 중심을 기준으로 커지게: 기준점(목)에서 키우면 아래로 쏠리므로 (중심 − 기준점) × (1 − 배율) 만큼 옮김
+            Vector3 c = transform.InverseTransformPoint(src.bounds.center);
+            rim.transform.localPosition = c * (1f - rim.transform.localScale.x);
+        }
+        if (coat != null) { coat.color = new Color(1f, 0.95f, 0.7f, 0.35f + 0.3f * k); coat.sortingOrder = src.sortingOrder + 1; }
+        if (orbAnchor != null) orbAnchor.position = src.bounds.center;
+    }
+
+    void End()
+    {
+        if (orb != null) Destroy(orb.gameObject);
+        orb = null;
+        if (this != null && gameObject != null) Destroy(gameObject);
+    }
+
+    void OnDisable()
+    {
+        if (orb != null) Destroy(orb.gameObject);
+        orb = null;
     }
 }
