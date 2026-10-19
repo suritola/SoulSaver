@@ -127,6 +127,9 @@ $env:AP_BEYOND = $Beyond.ToString($inv)
 $env:AP_NODEATH = $(if ($NoDeath) { "1" } else { "0" })
 $env:AP_TRACE = $(if ($Trace) { "1" } else { "0" })
 $env:AP_RENDER = $(if ($Render) { "1" } else { "0" })
+$env:AP_DOCS = $(if ($NoCopyToDocs) { "" } else { Join-Path $Project ("docs/balance/runs/" + $OutName) })
+uns\" + $OutName) })
+uns\$OutName" })
 $csv = Join-Path $Out "results.csv"
 $startRows = if (Test-Path $csv) { (Get-Content $csv | Measure-Object -Line).Lines - 1 } else { 0 }
 if ($startRows -lt 0) { $startRows = 0 }

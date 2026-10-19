@@ -150,6 +150,7 @@ public static class AutoplayRunner
             }
             cur.realSec = Time.realtimeSinceStartup - realStart;
             WriteRow(cur);
+            CopyToDocs();
             Log("판 끝 " + (run + 1) + "/" + plan.Count + " · " + cur.result + " · " + EndlessMode.Clock(cur.endSec) + " · 개발자 " + Clock(cur.devKillSec) + " · 엄마 " + Clock(cur.momKillSec) + " · 사망 " + cur.deaths + " · 예외 " + cur.exceptions + " · 실제 " + Inv(cur.realSec / 60f, "0.0") + "분");
             cur = null;
             // 다음 판 전에 정리
@@ -181,6 +182,27 @@ public static class AutoplayRunner
     static void MuteCameras()
     {
         foreach (Camera c in Camera.allCameras) if (c.cullingMask != 0) c.cullingMask = 0;
+    }
+
+    // 판마다 결과를 docs/balance/runs/<회차>/ 에도 (AP_DOCS · run.ps1 이 채움)
+    static void CopyToDocs()
+    {
+        string docs = Env("AP_DOCS", "");
+        if (docs.Length == 0) return;
+        try
+        {
+            Directory.CreateDirectory(docs);
+            errLog?.Flush(); progress?.Flush();
+            foreach (string f in new[] { "results.csv", "errors.txt", "progress.log" })
+            {
+                string src = Path.Combine(Out, f);
+                if (!File.Exists(src)) continue;
+                using (var i = new FileStream(src, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var o = new FileStream(Path.Combine(docs, f), FileMode.Create, FileAccess.Write))
+                    i.CopyTo(o);
+            }
+        }
+        catch (Exception e) { Log("docs 복사 실패 " + e.Message); }
     }
 
     static string Clock(float s) => s < 0f ? "-" : EndlessMode.Clock(s);
