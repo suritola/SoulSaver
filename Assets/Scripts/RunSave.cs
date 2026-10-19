@@ -87,6 +87,7 @@ public static class RunSave
         // 2026-10-19~ 빌드 갈래 규칙 판 (1) · 옛 저장 · 구판 규칙 판 (0 → 이어해도 끝까지 예전 뽑기 · 진화 재료, LevelShop.SetPathRules)
         //   입문 · 외길 · 새 카드는 다른 카드처럼 c<25 ~ 31> · f<25 ~ 29> 기록으로 다시 적용 (Version 은 그대로 — 올리면 진행 중인 판이 모두 버려짐)
         public int paths;
+        public float pathsState;                        // 1.4.1~ 영웅 갈래가 남기는 값 하나 (HeroPaths.SaveState · 예 지도 제작자 접지술 극의의 두 번째 충전, 옛 저장은 0)
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -285,6 +286,7 @@ public static class RunSave
         Point pt = Cache<Point>.Get;
         d.pointsShown = pt != null ? pt.points : 0;
         d.paths = Paths.Active ? 1 : 0;                             // 2026-10-19~ 갈래 규칙 판인지
+        d.pathsState = Paths.Active && Paths.Hero != null ? Paths.Safe(() => Paths.Hero.SaveState(), 0f) : 0f;     // 1.4.1~
         shop.SaveLevels(out d.earned, out d.pending);
         Coin coin = Cache<Coin>.Get;
         d.coins = coin != null ? coin.coins : 0;
@@ -473,6 +475,7 @@ public static class RunSave
         SoulShards.Restore(d.shards, d.shardsTotal, d.shardsSpent);
         SkillGauge g = Object.FindFirstObjectByType<SkillGauge>();
         if (g != null) { g.SkillPoint = 0f; g.AddSkillPoint(d.gauge); }
+        if (Paths.Active && Paths.Hero != null) Paths.Safe(() => Paths.Hero.LoadState(d.pathsState));     // 1.4.1~ 기록을 다시 적용한 뒤 (극의 등이 켜진 다음)
         if (specials != null) specials.SetRerolls(d.rerolls);
         sm.specialPoints = d.specialPoints;
         RunStats.Seconds = d.seconds;
