@@ -132,6 +132,7 @@ public sealed class SwordsmanPaths : HeroPaths
     // 받아치기
     float parryUntil, parryReadyAt, lastParryAt = -99f, stanceUntil, parryRewardAt;
     bool counterSwing;
+    float counterFxAt;      // 1.4.3~ 반격 준비 중 몸 둘레 금빛 (0.12초마다)
     SkillGauge gauge;
     // 피의 맹세
     float bloodMul = 1f, rageUntil, lastHp = -1f, healWindowAt, healedInWindow;
@@ -172,6 +173,7 @@ public sealed class SwordsmanPaths : HeroPaths
         later.Clear();
         waveHits.Clear();
         sliding = false;
+        counterSwing = false;       // 1.4.3~ 반격 준비 불티가 다음 판까지 남지 않게
     }
 
     // ================================================================= 평타 앞 (CharacterKit.Swing → SwordPathPre)
@@ -201,10 +203,18 @@ public sealed class SwordsmanPaths : HeroPaths
             {
                 counterSwing = false;
                 sig *= 1f + (ParryCounter - 1f) * pw;
+                // 1.4.3~ 반격 베기를 눈에 띄게: 베는 방향으로 큰 금빛 참격 둘 · 퍼지는 고리 · 흔들림 · 「반격!」
                 Vector3 at = p.transform.position;
-                Fx.Spawn("fx_shock", at, 4f, new Color(Gold.r, Gold.g, Gold.b, 0.85f), 22f);
-                Fx.Spawn("fx_sparkle", at + (Vector3)(dir * 1.5f), 2f, Gold, 22f);
-                Hostile.Play("crack", 0.55f, 1.1f);
+                float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                Fx.Spawn("fx_slash", at + (Vector3)(dir * reach * 0.55f), reach * 1.9f, new Color(1f, 0.82f, 0.3f), 30f, ang, 14);
+                Fx.Spawn("fx_slash", at + (Vector3)(dir * reach * 0.45f), reach * 1.4f, new Color(1f, 0.97f, 0.85f), 30f, ang + 12f, 15);
+                Fx.Spawn("fx_shock", at, 6f, new Color(Gold.r, Gold.g, Gold.b, 0.9f), 22f);
+                Fx.Spawn("fx_sparkle", at + (Vector3)(dir * 1.5f), 2.6f, Gold, 22f);
+                ShockRing.Spawn(at, 0.5f, reach * 1.3f, 0.35f, new Color(1f, 0.85f, 0.35f, 0.95f), 0.3f);
+                Hostile.Play("crack", 0.8f, 1.1f);
+                Hostile.Play("clank", 0.5f, 0.8f);
+                Hostile.Shake(0.2f);
+                SpecialAbilities.SharedFx?.FloatText(at + Vector3.up * 2f, Loc.T("반격!"), new Color(1f, 0.85f, 0.3f), 6.5f, 0f);
             }
         }
         // 피의 맹세: 지금 체력 2% 를 바치고 베기 피해 +35% (공명 I: 체력 50% 아래 +25% · 25% 아래 +50%)
@@ -547,6 +557,14 @@ public sealed class SwordsmanPaths : HeroPaths
             ShockRing.Spawn(p.transform.position, 2.4f, 1.2f, window, new Color(Gold.r, Gold.g, Gold.b, 0.85f), 0.18f);
             Hostile.Play("whoosh", 0.35f, 1.8f);
         }
+        // 1.4.3~ 반격 준비(다음 베기 ×3): 몸 둘레에 금빛 불티 · 0.36초마다 조여 드는 고리
+        if (counterSwing && Time.time >= counterFxAt)
+        {
+            counterFxAt = Time.time + 0.12f;
+            Vector3 at = p.transform.position;
+            Fx.Spawn("fx_sparkle", at + (Vector3)(Random.insideUnitCircle * 0.9f), 1.1f, Gold, 22f);
+            if (Mathf.Repeat(Time.time, 0.36f) < 0.12f) ShockRing.Spawn(at, 1.9f, 0.9f, 0.25f, new Color(Gold.r, Gold.g, Gold.b, 0.7f), 0.14f);
+        }
         // 대가: 회전 베기를 끝까지 모으는 시간 +30% (CharacterKit.UpdateCharged 가 더한 만큼에서 덜어 냄 · 1.5초 → 1.95초)
         if (kit.Charging && kit.SwordCharge < 1f)
             kit.SwordCharge = kit.SwordCharge - Time.deltaTime / 1.5f * (1f - 1f / ParryChargeSlow);
@@ -566,6 +584,7 @@ public sealed class SwordsmanPaths : HeroPaths
             Paths.Invuln(ParryInvuln);
             counterSwing = true;
             SignatureSkills.PathParried();      // 역습 · 완벽한 반격
+            Juice.CounterFreeze();              // 1.4.3~ 화면 멈춤 + 서서히 줌
         }
         if (Paths.Res(Parry) >= 2 && Time.time - lastParryAt <= StanceWithin) stanceUntil = Time.time + StanceTime;
         lastParryAt = Time.time;

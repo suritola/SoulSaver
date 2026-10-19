@@ -75,6 +75,19 @@ public static class Juice
         Runner.Hold(StopScale, seconds);
     }
 
+    // 1.4.3~ 검사 받아치기 반격 성공: 0.45초 멈춤 + 그동안 화면이 서서히 18% 당겨졌다가 0.3초에 걸쳐 돌아옴
+    //   멈춤은 HitStop 과 같은 조건(자동 조작 · 이야기 · 죽는 중 제외) · 줌은 「화면 흔들림」을 끄면 하지 않음 · 카메라가 기본 크기일 때만 (필살기 줌 중이면 멈춤만)
+    const float CounterHold = 0.45f, CounterZoom = 0.82f, CounterZoomBack = 0.3f;
+    public static void CounterFreeze()
+    {
+        if (!CanStop()) return;
+        lastStopAt = Time.unscaledTime;
+        Runner.Hold(StopScale, CounterHold);
+        PlayerController p = Hostile.Player;
+        if (GameSettings.ScreenShake && p != null && p.MainCamera != null)
+            Runner.ZoomPunch(p.MainCamera, p.normalZoom, CounterZoom, CounterHold, CounterZoomBack);
+    }
+
     // 장 보스 처치: 0.35초 슬로모션(0.15배) + 화면 흰 번쩍임 (방금 멈춤이 있었어도 보스는 덮어씀 · 1초 제한도 보지 않음)
     // 번쩍임 효과를 끈 설정(광과민 접근성)이면 번쩍임 없이 슬로모션만
     public static void BossDown()
@@ -302,10 +315,52 @@ public class JuiceRunner : MonoBehaviour
         if (Time.unscaledTime >= until) { Time.timeScale = 1f; Release(); }
     }
 
-    // 씬이 바뀌어 사라질 때 우리 배율이 남아 있으면 되돌림 (물리 간격은 언제나 되돌림)
+    // 1.4.3~ 반격 줌 (Juice.CounterFreeze): 카메라가 기본 크기일 때만 시작 · 실제 시간으로 당겼다가 되돌림
+    //   다른 곳(필살기 줌)이 크기를 바꾸면 바로 손을 뗌 · 끝나거나 손을 뗄 때 기본보다 작게(당겨진 채) 남기지 않음
+    Camera zoomCam;
+    float zoomBase, zoomLast;
+    Coroutine zoomCo;
+
+    public void ZoomPunch(Camera cam, float normal, float mul, float inFor, float outFor)
+    {
+        if (cam == null || zoomCo != null || Mathf.Abs(cam.orthographicSize - normal) > 0.01f) return;
+        zoomCam = cam;
+        zoomBase = zoomLast = normal;
+        zoomCo = StartCoroutine(ZoomRun(mul, inFor, outFor));
+    }
+
+    System.Collections.IEnumerator ZoomRun(float mul, float inFor, float outFor)
+    {
+        float start = Time.unscaledTime;
+        while (zoomCam != null && Mathf.Abs(zoomCam.orthographicSize - zoomLast) < 0.001f)
+        {
+            float e = Time.unscaledTime - start;
+            if (e >= inFor + outFor) break;
+            float k = e < inFor ? 1f - (1f - e / inFor) * (1f - e / inFor) : 1f - Mathf.SmoothStep(0f, 1f, (e - inFor) / outFor);
+            zoomLast = zoomBase * Mathf.Lerp(1f, mul, k);
+            zoomCam.orthographicSize = zoomLast;
+            yield return null;
+        }
+        EndZoom();
+    }
+
+    void EndZoom()
+    {
+        // 우리가 당긴 만큼만 되돌림 (줌 중에 필살기 줌 아웃이 시작돼도 크기가 한 번에 튀지 않게) · 그래도 기본보다 작으면 기본으로
+        if (zoomCam != null)
+        {
+            zoomCam.orthographicSize += zoomBase - zoomLast;
+            if (zoomCam.orthographicSize < zoomBase) zoomCam.orthographicSize = zoomBase;
+        }
+        zoomCam = null;
+        zoomCo = null;
+    }
+
+    // 씬이 바뀌어 사라질 때 우리 배율이 남아 있으면 되돌림 (물리 간격은 언제나 되돌림 · 당겨 둔 카메라도)
     void OnDestroy()
     {
         if (Owns) Time.timeScale = 1f;
         Release();
+        EndZoom();
     }
 }
