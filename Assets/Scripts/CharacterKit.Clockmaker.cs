@@ -92,8 +92,8 @@ public partial class CharacterKit
             if (card[6] > 0 && c.TryGetComponent(out EnermyController e)) e.Slow(1f - (0.05f + 0.1f * card[6]), 2f);
             if (form == SpecialAbilities.KitHourglass && c.TryGetComponent(out EnermyController e2)) e2.Slow(0.5f, 1f);
             SignatureSkills.GearHit(c, s.damage, big);
-            // 갈래 톱니 떼 공명 II: 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라짐
-            if (!big && hop >= ClockmakerPaths.SplitHop && ClockmakerPaths.SplitOn) ClockmakerPaths.Live?.Split(c.transform.position, s.Direction, s.damage, c.gameObject);
+            // 갈래 톱니 떼 공명 II: 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라짐 (1.4.1~ 덧붙은 톱니면 갈라진 톱니도 덧붙은 톱니)
+            if (!big && hop >= ClockmakerPaths.SplitHop && ClockmakerPaths.SplitOn) ClockmakerPaths.Live?.Split(c.transform.position, s.Direction, s.damage, c.gameObject, DamageSource.Current == ClockmakerPaths.TwinSrc);
             if (big && !boom.exploded)
             {
                 boom.exploded = true;
