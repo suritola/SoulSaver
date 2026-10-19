@@ -1,306 +1,150 @@
-# V1.2 대규모 업데이트 — 빌드 갈래
-영웅마다 전혀 다르게 싸우는 빌드 갈래 5개가 생겼습니다. 같은 영웅도 이제 매판 다른 판이 됩니다.
+# V1.2.1 밸런스 패치 — 무한 모드 30분 · 영웅 밸런스
+무한 모드 성장 속도와 최후의 시간 흐름을 바꾸고, 영웅 화력을 맞췄습니다. 도적의 과한 화력도 바로잡았습니다.
 
-이번 업데이트의 중심은 「빌드 갈래」입니다. 지금까지는 한 판에 카드 대부분을 얻어 매판 비슷한 모습이 되었습니다. 이제 영웅마다 공격 방식 자체가 바뀌는 갈래 5개 가운데 한두 개만 골라 깊게 파게 됩니다.
+무한 모드는 숙련된 플레이어가 어떤 영웅 · 어떤 갈래로든 약 30분에 개발자 엄마를 쓰러뜨리도록 맞추고 있습니다. 지금은 10분이면 성장이 끝나 15분 뒤 보스들이 몇 초 만에 쓰러졌고, 영웅마다 클리어 시간이 크게 달랐습니다. 보스 체력을 늘리는 대신 성장 속도와 최후의 시간 흐름을 바꿨습니다.
 
-## 🌿 빌드 갈래는 이렇게 동작합니다
-- 판을 시작하면 입문 카드 3장 가운데 하나를 고릅니다. 입문 카드는 공격 방식을 바꾸고, 대가도 함께 붙습니다.
-- 갈래 카드를 모으면 공명 I · 공명 II 가 열리고, 효과가 질적으로 바뀝니다. 갈래 카드를 모두 채우면 완성(진화)이 열립니다.
-- 갈림길에서 두 번째 갈래를 고르거나, 한 갈래만 깊게 파는 「외길」을 고릅니다. 외길은 카드 단계가 하나 더 늘고 마지막 「극의」가 열립니다.
-- 두 갈래를 섞으면 생기는 교차 시너지가 영웅마다 있습니다.
-- 레벨업에는 갈래와 상관없이 모든 카드가 나옵니다. 고른 갈래에 맞는 카드를 모으면 공명 · 극의가 열리고, 다르게 골라도 됩니다. 최근에 고른 갈래는 판 시작 때 덜 나와 매판 다른 빌드를 만나게 됩니다.
+## 📈 무한 모드 성장 속도
+- Lv 26부터 레벨업에 필요한 경험치가 점점 늘어납니다. Lv 35~49는 4.5배입니다. 이제 Lv 50은 약 10분이 아니라 22~24분쯤 됩니다.
+- 레벨업을 쌓아 두었다가 나중에 골라도 필요한 경험치가 줄지 않습니다.
+- 시간에 따라 오르던 무한 모드 공격력 보정(×0.82 → ×1.10)이 ×0.82로 고정됩니다.
+- 적이 주는 영혼 조각: ×0.36 → ×0.15 · 중간 보스: ×1 → ×0.5. 대신 개발자의 체력 단계마다 영혼 조각 +30, 엄마의 체력 단계마다 +40을 얻습니다.
+- 이야기 모드는 바뀌지 않습니다.
 
-## ⚔️ 영웅별 갈래
-
-**거너**: 관통 저격 (멈춰서 모아 쏘는 관통 저격탄) · 도탄 난사 (큰 탄창 · 튕기는 난사) · 화염 과열 (장전 대신 열 게이지 · 과열 폭발) · 산탄 돌격 (탄창 4 산탄 · 장전 돌진) · 포탑 설치 (장전할 때 포탑 · 진지 방어)
-
-**검사**: 검기 (휘두를 때마다 검기 · 안전 거리) · 받아치기 (막기 0.25초 · 반격) · 피의 맹세 (체력을 바쳐 흡혈 · 근접 지속) · 검무 (미끄러지며 베기 · 기동) · 회오리 (원형 베기 · 모으며 베기)
-
-**도적**: 출혈 (5중첩 출혈 · 전염) · 그림자 (돌진 2회 · 미끼 분신) · 회귀 칼날 (되돌아오는 표창 · 탄 경제) · 질주 암살 (긴 돌진 직접 피해 · 순간 화력) · 광란 (처치마다 빨라짐 · 무리)
-
-**궁수**: 장궁 (길게 당긴 관통 화살) · 속사 (누르는 동안 연사 · 기동 무리) · 덫 (완벽 화살이 덫 · 지역 장악) · 바람 (당기며 달리기 · 생존) · 천공 (화살비 중심 · 지역 섬멸)
-
-**연금술사**: 늪 (모든 플라스크가 웅덩이 · 지역) · 빙결 (얼리고 산산조각 · 제어) · 연쇄 폭발 (자폭까지 무기로 · 무리) · 조수 (처음부터 호문쿨루스 · 자동 전투) · 원소 촉매 (순서 맞춰 붕괴 · 보스)
-
-**지도 제작자**: 정밀 측량 (네 획 사각형 · 무리 일괄) · 일필 (도형 대신 굵은 한 획) · 먹물 (획이 잉크 웅덩이 · 지역) · 접지술 (지도 접기 중심 · 필살기 폭딜) · 행군 측량 (걸어간 길이 선 · 기동 생존)
-
-**시계공**: 톱니 떼 (두 개씩 튕기기 · 무리) · 대시계 (거대 정각 톱니 · 보스 폭딜) · 시간 여행 (잦은 되감기 · 무적 · 생존) · 잔상 (모든 톱니가 두 번 · 균형) · 시간 빚 (필살기 두 배 · 맞으면 손해)
-
-**우체부**: 순회 배달 (편지가 네 명을 돎 · 무리) · 무거운 소포 (느린 폭발 소포 · 밀집 무리) · 속달 (표식 폭발 중심 · 무리 폭딜) · 자전거 배달 (달리면 편지가 저절로 · 기동) · 장거리 배송 (사거리 20 · 보스 · 원거리)
-
-**유령**: 혹한 (냉기 두 배 · 무리 제어) · 산산조각 (얼린 적 부수기 · 보스 균열) · 영혼 군단 (영혼이 돌진 공격 · 자동 화력) · 사령술 (긴 빙의 · 무적 근접 폭딜) · 유체 이탈 (움직이면 접촉 무시 · 기동 생존)
-
-## 📈 성장 곡선
-- 영웅이 주는 모든 피해가 판이 진행될수록 강해집니다: 시작 ×0.85 → 후반 ×1.15 (무한 모드 30분 · 이야기 모드 14분 기준, 한 판 평균은 그대로)
-- 초반은 조금 더 긴장감 있게, 후반은 성장한 만큼 더 강력하게 느껴집니다.
+## 👑 최후의 시간
+- 15:00에 왕 넷이 한꺼번에 깨어나지 않고, 둘씩 두 무리로 나옵니다. 앞 무리를 모두 쓰러뜨리거나 60초가 지나면 나머지 둘이 깨어납니다.
+- 화면 위에 진행이 보입니다: 「왕 n/4」 · 「개발자 k/3」 · 「엄마 k/4」.
+- 엄마 강림을 기다리는 영혼 구간에는 약한 적만 나오고, 경험치를 2.5배 줍니다.
+- 최후의 시간에 적이 늘어나는 속도: 1분마다 2배 → 2분마다 2배.
 
 ## 🦸 영웅 밸런스
+- 검사: 공격력 ×4.75 → ×3.3 · 고유 스킬 위력 ×1.85 → ×1.3 · 특수 능력 위력 ×1.9 → ×1.33
+- 궁수: 공격력 ×2.75 → ×2.0 · 고유 스킬 · 특수 능력 위력 ×1.8 → ×1.3 · 바람 공명 I: 바람길 위에서 언제 놓아도 완벽 → 완벽 판정 폭 2배
+- 우체부: 공격력 ×1.95 → ×1.8 · 고유 스킬 · 특수 능력 위력 ×2.0 → ×1.85
+- 연금술사: 공격력 · 고유 스킬 · 특수 능력 위력 ×1.9 → ×2.05
+- 거너: 공격력 ×2.7 → ×3.5 · 고유 스킬 · 특수 능력 위력 ×2.0 → ×2.6 · 포탑이 사거리 안의 보스를 먼저 쏩니다
+- 영웅 선택 화면의 공격력 막대는 이제 고정된 기준으로 표시됩니다.
 
-고유 스킬과 지옥의 문 특수 능력에도 이제 영웅마다 위력 배율이 붙습니다. 체력과 생존력은 그대로입니다.
-- 거너: 공격력 ×1.7 → ×2.7 · 공격 속도 ×1.0 → ×1.25 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×2.0
-- 검사: 공격력 ×2.8 → ×4.75 · 공격 속도 ×0.55 → ×0.62 · 필살기 충전 더 빠르게 · 고유 스킬 위력 ×0.98 → ×1.85 · 특수 능력 위력 ×1.9
-- 도적: 공격력 ×1.6 → ×2.0 · 고유 스킬 위력 ×0.85 → ×1.1 · 특수 능력 위력 ×1.4
-- 궁수: 공격력 ×1.8 → ×2.75 · 공격 속도 ×1.0 → ×1.18 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×1.8
-- 연금술사: 공격력 ×1.2 → ×1.9 · 공격 속도 ×0.8 → ×0.96 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×1.9
-- 시계공: 공격력 ×1.5 → ×2.65 · 공격 속도 ×0.85 → ×0.92 · 고유 스킬 · 특수 능력 위력 ×1.9
-- 우체부: 공격력 ×1.2 → ×1.95 · 공격 속도 ×1.0 → ×1.22 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×2.0
-- 유령: 공격력 ×1.0 → ×0.9 · 원한: 얼어붙은 적 5중첩 → 3중첩 · 동상 +15/22/29/36% → +10/15/20/25%
-- 지도 제작자: 공격력 ×1.15 → ×1.0 · 번지는 잉크 실제 피해를 설명대로 (초당 30/50/70% → 15/25/35%) · 닫힌 도형 피해 ×2.6 → ×2.2
+## 🗡️ 도적 바로잡기
+- 출혈 폭발: 「피바다」에서 터진 적이 폭발을 두 번 맞던 문제 수정 · 터진 뒤 출혈 중첩이 비워집니다 · 남은 출혈은 최대 1.5초치만 터집니다.
+- 출혈 갈래: 출혈 세기 = 직접 피해의 55% → 40% · 공명 I 「출혈 터짐」은 남은 출혈 최대 1.5초치 · 돌진 타격은 출혈 세기 계산에서 빠집니다 · 「질주 암살」 돌진에도 출혈 대가(직접 피해 −35%)가 붙습니다.
+- 약한 출혈이 걸려도 더 센 출혈의 시간이 늘어나지 않습니다.
+- 돌진: 한 번의 돌진 묶음에서 돌려받는 필살기 게이지는 합쳐서 40%까지 · 재돌진 · 연속 돌진은 새 묶음으로 세지 않습니다 · 게이지 없이 나가는 돌진은 보스에게 피해 60%.
+- 회귀 칼날 극의 「두 번 왕복」: 두 번째 왕복 피해 100% → 50% · 탄창 환급: 매번 → 두 번 던질 때마다 한 번.
+- 증강 「연발」은 표창 수에 맞춰 한 개의 피해가 줄어들 수 있습니다 (모든 영웅 공통).
+- 그림자 공명 II 연막 안 치명 ×2는 분신 연막에서만 켜집니다.
 
-## ✨ 개선
-- 초월 「영혼불 발자국」이 푸른 영혼불로 새로 그려졌습니다.
-- 영웅 선택 화면의 공격력 막대가 거너를 기준(100%)으로 표시되어 영웅끼리 비교하기 쉬워졌습니다.
-- 영혼 트리는 이제 칸을 한 번만 누르면 바로 배웁니다.
-- 일시정지(ESC)의 「지금 가진 스킬」에서 초월을 따로 묶어 보여 줍니다.
-- 연금술사의 불 장판(불타는 늪 · 불꽃 행진)이 그을린 땅 위에 불꽃이 넘실대는 모습으로 바뀌었습니다.
-
-## 🛠️ 버그 수정
-- 기술이 중간에 끊기면 상태가 남을 수 있던 곳들을 막았습니다. (유령 빙의 · 거너 일제 사격 · 궁수 물러서기 · 시계공 회복 · 검사 폭풍의 눈)
-- 거너 장전이 어떤 경우에도 막히지 않도록 안전장치를 더했습니다.
-- 일시정지(ESC) 화면에서 「이번 판 각인」 창이 스킬 목록 위에 겹쳐 고정되어, 다른 스킬 설명을 볼 수 없던 문제를 고쳤습니다.
-- 도적 「그림자」 갈래에서 돌진을 하나 더 모아 두는 효과가 동작하지 않던 문제를 고쳤습니다.
-- 판 시작 입문 카드를 고르기 전에 나갔다 이어하면 입문 카드가 사라지던 문제를 고쳤습니다.
-- 도적 「질주 암살」 극의로 무적 돌진이 끝없이 이어지던 문제를 고쳤습니다.
-- 거너 「화염 과열」의 과열 폭발이 특수 총기 장전에도 터지던 문제, 「산탄 돌격」 산탄의 효과가 알마다 겹치던 문제를 고쳤습니다.
-- 검사 「받아치기」가 혈갑 보호막이 있으면 성공하지 않던 문제를 고쳤습니다.
-- 무기 진화 뒤 영혼 트리의 필살기 특성 칸(거너 「타겟 수」 등)이 사라지고 진화 전 투자만 남던 문제를 고쳤습니다. 이제 무기마다 따로 올릴 수 있습니다.
-- 개발자 엄마를 쓰러뜨린 뒤 후반에 회복 아이템이 끝없이 쌓여 렉이 생기던 문제를 고쳤습니다. (바닥에 최대 24개 · 45초 뒤 사라짐)
-- 갈래 · 진화 · 형태가 겹칠 때 효과가 빠지거나 오히려 약해지던 카드 8곳을 고쳤습니다. (유령 · 시계공 · 지도 제작자 · 궁수 · 우체부)
-- 그 밖에 갈래 효과 · 이어하기 · 화면 표시에서 찾은 버그 20여 개를 고쳤습니다.
-
-## ⚖️ 무한 모드 조정
-- 무한 모드 적이 주는 영혼 조각: ×1 → ×0.36 (64% 감소)
-- 개발자 엄마 강림에 필요한 영혼: 1,000 → 500
-
-플레이해 주시는 모든 분께 감사드립니다. 마음에 드는 갈래 조합이나 너무 세거나 약한 갈래가 있다면 커뮤니티 토론 게시판에 남겨 주세요!
+다음 패치에서도 실제 플레이 기록을 보며 계속 다듬겠습니다. 너무 세거나 약한 영웅 · 갈래가 있다면 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.2 Major Update — Build Paths
-Every hero now has 5 build paths that fight in completely different ways, so every run plays differently.
+# V1.2.1 Balance Patch — 30-Minute Endless · Hero Balance
+New Endless growth pace and Final Hour flow, tuned hero damage, and a fix for the Rogue's excessive damage.
 
-The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
+We're tuning Endless Mode so a skilled player can defeat the Developer's Mom in about 30 minutes with any hero and any path. Until now growth finished by minute 10, bosses melted in seconds after minute 15, and clear times varied a lot between heroes. Instead of raising boss HP, we changed the growth pace and the Final Hour flow.
 
-## 🌿 How Build Paths Work
-- At the start of a run, pick one of 3 Path Seed cards. A Path Seed card changes how you attack, and comes with a cost.
-- Collecting path cards unlocks Resonance I and Resonance II, which change the effect itself. Filling every card of a path unlocks its Completion (evolution).
-- At the crossroads, choose a second path or the Single Path. The Single Path raises card levels by one more and unlocks the final Mastery.
-- Every hero has Crossover synergies that appear when two paths are combined.
-- Level-ups offer every card regardless of your path. Collecting cards that match your path unlocks its Resonance and Mastery, but you're free to pick differently. Recently chosen paths show up less often at the start, so you meet a different build every run.
+## 📈 Endless Growth Pace
+- From Lv 26, the EXP needed to level up gradually increases — ×4.5 at Lv 35–49. Lv 50 now arrives around minute 22–24 instead of minute 10.
+- Saving up level-ups and picking them later no longer lowers the EXP required.
+- The Endless damage modifier that grew over time (×0.82 → ×1.10) is now fixed at ×0.82.
+- Soul shards from enemies: ×0.36 → ×0.15 · mini-bosses: ×1 → ×0.5. In exchange, you gain +30 soul shards at each of the Developer's HP phases and +40 at each of Mom's.
+- Story Mode is unchanged.
 
-## ⚔️ Paths by Hero
-
-**Gunner**: Piercing Snipe (Stand still and charge piercing sniper rounds) · Ricochet Spray (Big magazine · Bouncing spray) · Flame Overheat (A heat gauge instead of reloading · Overheat blast) · Shotgun Rush (4-shell shotgun · Reload dash) · Turret Deploy (Turrets on reload · Hold the line)
-
-**Swordsman**: Sword Wave (A wave on every swing · Safe distance) · Parry (0.25s block · Counter) · Blood Oath (Pay health for lifesteal · Sustained melee) · Sword Dance (Gliding slashes · Mobility) · Whirlwind (Circular slashes · Slash while charging)
-
-**Rogue**: Bleed (5-stack bleed · Contagion) · Shadow (2 Dash charges · Decoy clone) · Returning Blade (Returning stars · Ammo economy) · Dash Assassin (Long Dash direct damage · Burst damage) · Frenzy (Faster with every kill · Crowds)
-
-**Archer**: Longbow (Long-drawn piercing arrows) · Rapid Fire (Hold to fire nonstop · Mobile crowd-clearing) · Traps (Perfect arrows set traps · Area control) · Wind (Run while drawing · Survival) · Skyfall (Arrow Rain focus · Area wipe)
-
-**Alchemist**: Swamp (Every flask leaves a puddle · Area) · Frost (Freeze and shatter · Control) · Chain Blast (Even self-detonation is a weapon · Crowds) · Assistants (Homunculus from the start · Auto combat) · Elemental Catalyst (Collapse in order · Bosses)
-
-**Cartographer**: Precise Survey (Four-stroke squares · Crowd sweeps) · Single Stroke (One bold stroke instead of shapes) · Ink Pools (Strokes leave ink pools · Area control) · Art of Folding (Built around Fold the Map · Ultimate burst) · Marching Survey (Your path becomes a line · Mobility and survival)
-
-**Clockmaker**: Gear Swarm (Gears in pairs, ricocheting · Crowds) · Grand Clock (Giant O'Clock gears · Boss burst) · Time Travel (Frequent Rewinds · Invincibility · Survival) · Afterimage (Every gear flies twice · Balanced) · Time Debt (Double Ultimate · Hits cost you)
-
-**Postman**: Delivery Round (Letters visit four foes · Crowds) · Heavy Parcel (Slow exploding parcels · Packed crowds) · Express Delivery (Mark bursts · Crowd burst damage) · Bike Courier (Letters fly as you ride · Mobility) · Long-Haul Delivery (Range 20 · Bosses · Long range)
-
-**Ghost**: Deep Frost (Double chill · Crowd control) · Shatter (Shatter the frozen · Crack bosses) · Soul Legion (Souls charge foes · Automatic damage) · Necromancy (Long possession · Untouchable close-range burst) · Astral Projection (Ignore contact while moving · Mobile survival)
-
-## 📈 Growth Curve
-- All damage dealt by heroes now grows as the run goes on: ×0.85 at the start → ×1.15 late (based on 30 minutes in Endless Mode and 14 minutes in Story Mode; the average over a run is unchanged)
-- The early game is a bit tenser, and the late game feels as powerful as you've grown.
+## 👑 The Final Hour
+- At 15:00 the four kings no longer wake all at once — they come in two groups of two. The second pair wakes when the first pair is defeated or after 60 seconds.
+- Progress is shown at the top of the screen: "King n/4" · "Developer k/3" · "Mom k/4".
+- While gathering souls for Mom's descent, only weak enemies appear and they give ×2.5 EXP.
+- Enemy growth during the Final Hour: doubles every minute → doubles every 2 minutes.
 
 ## 🦸 Hero Balance
+- Swordsman: attack ×4.75 → ×3.3 · signature skill power ×1.85 → ×1.3 · special ability power ×1.9 → ×1.33
+- Archer: attack ×2.75 → ×2.0 · signature skill & special ability power ×1.8 → ×1.3 · Wind Resonance I: always Perfect on the wind path → Perfect window ×2
+- Postman: attack ×1.95 → ×1.8 · signature skill & special ability power ×2.0 → ×1.85
+- Alchemist: attack, signature skill & special ability power ×1.9 → ×2.05
+- Gunner: attack ×2.7 → ×3.5 · signature skill & special ability power ×2.0 → ×2.6 · turrets now target bosses in range first
+- The attack bar on the hero select screen now uses a fixed baseline.
 
-Signature skills and Gate of Hell special abilities now also get a per-hero power multiplier. Health and survivability are unchanged.
-- Gunner: attack ×1.7 → ×2.7 · attack speed ×1.0 → ×1.25 · faster Ultimate charge · signature skill & special ability power ×2.0
-- Swordsman: attack ×2.8 → ×4.75 · attack speed ×0.55 → ×0.62 · faster Ultimate charge · signature skill power ×0.98 → ×1.85 · special ability power ×1.9
-- Rogue: attack ×1.6 → ×2.0 · signature skill power ×0.85 → ×1.1 · special ability power ×1.4
-- Archer: attack ×1.8 → ×2.75 · attack speed ×1.0 → ×1.18 · faster Ultimate charge · signature skill & special ability power ×1.8
-- Alchemist: attack ×1.2 → ×1.9 · attack speed ×0.8 → ×0.96 · faster Ultimate charge · signature skill & special ability power ×1.9
-- Clockmaker: attack ×1.5 → ×2.65 · attack speed ×0.85 → ×0.92 · signature skill & special ability power ×1.9
-- Postman: attack ×1.2 → ×1.95 · attack speed ×1.0 → ×1.22 · faster Ultimate charge · signature skill & special ability power ×2.0
-- Ghost: attack ×1.0 → ×0.9 · Grudge: frozen enemies count as 5 stacks → 3 · Frostbite +15/22/29/36% → +10/15/20/25%
-- Cartographer: attack ×1.15 → ×1.0 · Spreading Ink now deals the damage its description says (30/50/70% → 15/25/35% per second) · closed shape damage ×2.6 → ×2.2
+## 🗡️ Rogue Fixes
+- Bleed Burst: fixed the target being hit twice by "Sea of Blood" · bleed stacks are now cleared after a burst · only up to 1.5 seconds of remaining bleed bursts.
+- Bleed path: bleed strength = 55% → 40% of direct damage · Resonance I "Bleed Burst" uses up to 1.5 seconds of remaining bleed · dash hits no longer count toward bleed strength · the bleed cost (direct damage −35%) now also applies to the Dash Assassin dash.
+- A weaker bleed no longer extends the duration of a stronger bleed.
+- Dash: ultimate gauge refunded from one dash chain is capped at 40% total · re-dashes and chained dashes no longer start a new chain · dashes that cost no gauge deal 60% damage to bosses.
+- Returning Blade Mastery "Double Return": second return damage 100% → 50% · magazine refund: every throw → every second throw.
+- The "Extra Throw" augment may now reduce per-projectile damage based on projectile count (all heroes).
+- Shadow Resonance II's ×2 crit in smoke now only works in clone smoke.
 
-## ✨ Improvements
-- Transcend "Soulfire Steps" has been redrawn as blue soulfire.
-- The attack bar on the hero select screen now uses the Gunner as the baseline (100%), making heroes easier to compare.
-- Soul Tree nodes are now learned with a single click.
-- The pause (ESC) 「Current Build」 panel now shows Transcendence in its own group.
-- The Alchemist's fire fields (Burning Swamp · Ember March) are redrawn as flames dancing over scorched ground.
-
-## 🛠️ Bug Fixes
-- Fixed several places where an interrupted skill could leave a state behind. (Ghost Possession, Gunner volley, Archer retreat, Clockmaker healing, Swordsman Eye of the Storm)
-- Added safeguards so the Gunner's reload can never get stuck.
-- Fixed the 「This Run's Brands」 panel sticking on top of the skill list on the pause (ESC) screen and blocking other skill descriptions.
-- Fixed the Rogue's Shadow path not storing an extra dash.
-- Fixed the Path Seed card disappearing if you quit before choosing it and then continued the run.
-- Fixed the Rogue's Dash Assassin Mastery chaining invincible dashes endlessly.
-- Fixed the Gunner's Overheat explosion also triggering on special weapon reloads, and Shotgun Rush pellets stacking their effects per pellet.
-- Fixed the Swordsman's Parry failing while a Blood Armor shield was active.
-- Fixed the Soul Tree's Ultimate trait nodes (such as the Gunner's 「Targets」) disappearing after weapon evolution while only the pre-evolution investment remained. Each weapon can now be upgraded separately.
-- Fixed recovery items piling up endlessly after defeating the Developer's Mom, causing lag late in the run. (Up to 24 on the ground · they vanish after 45s)
-- Fixed 8 cards whose effects were lost or even weakened when paths, evolutions and forms overlapped. (Ghost · Clockmaker · Cartographer · Archer · Postman)
-- Fixed about 20 other bugs in path effects, continuing runs and screen displays.
-
-## ⚖️ Endless Mode Tuning
-- Soul Shards from enemies in Endless Mode: ×1 → ×0.36 (−64%)
-- Souls needed for the Developer's Mom to descend: 1,000 → 500
-
-Thank you to everyone who plays. If you find a path combo you love, or a path that feels too strong or too weak, let us know on the Community Discussions board!
+We'll keep tuning based on real play data in future patches. If a hero or path feels too strong or too weak, let us know on the Community Discussions board!
 
 === ja
-# V1.2 大型アップデート — ビルド流派
-英雄ごとに、まったく違う戦い方をする5つのビルド流派が登場しました。同じ英雄でも毎回違うプレイになります。
+# V1.2.1 バランスパッチ — エンドレス30分・英雄バランス
+エンドレスの成長速度と最後の時の流れを変え、英雄の火力を調整しました。盗賊の強すぎる火力も修正しました。
 
-今回のアップデートの中心は「ビルド流派」です。これまでは1プレイでカードの大半を手に入れ、毎回似た姿になっていました。これからは英雄ごとに攻撃方法そのものが変わる5つの流派から、1つか2つだけを選んで深く育てます。
+エンドレスは、熟練プレイヤーがどの英雄・どの流派でも約30分で開発者のママを倒せるよう調整しています。これまでは10分で成長が終わり、15分以降のボスが数秒で倒れ、英雄ごとのクリア時間も大きく違いました。ボスの体力を増やす代わりに、成長速度と最後の時の流れを変えました。
 
-## 🌿 ビルド流派の仕組み
-- プレイ開始時、入門カード3枚から1枚を選びます。入門カードは攻撃方法を変え、代償も付きます。
-- 流派のカードを集めると共鳴I・共鳴IIが開き、効果そのものが変わります。流派のカードをすべて満たすと完成（進化）が開きます。
-- 分かれ道で2つ目の流派を選ぶか、1つの流派だけを深く育てる「一筋」を選びます。一筋はカードの段階がさらに1つ増え、最後の「極意」が開きます。
-- 2つの流派を組み合わせると生まれる交差のシナジーが英雄ごとにあります。
-- レベルアップには流派に関係なくすべてのカードが出ます。選んだ流派に合うカードを集めると共鳴・極意が開き、別の選び方をしても構いません。最近選んだ流派は開始時に出にくくなり、毎回違うビルドに出会えます。
+## 📈 エンドレスの成長速度
+- Lv 26 からレベルアップに必要な経験値が少しずつ増えます。Lv 35~49 は 4.5 倍です。Lv 50 は約10分ではなく22~24分ごろになります。
+- レベルアップを溜めて後で選んでも、必要な経験値は減りません。
+- 時間とともに上がっていたエンドレスの攻撃力補正（×0.82 → ×1.10）が ×0.82 に固定されます。
+- 敵が落とす魂の欠片: ×0.36 → ×0.15・中ボス: ×1 → ×0.5。代わりに開発者の体力段階ごとに魂の欠片 +30、ママの体力段階ごとに +40 を得ます。
+- ストーリーモードは変わりません。
 
-## ⚔️ 英雄ごとの流派
+## 👑 最後の時
+- 15:00 に4人の王が一度に目覚めるのではなく、2人ずつ2組で現れます。前の組をすべて倒すか、60秒経つと残りの2人が目覚めます。
+- 画面上部に進行が表示されます：「王 n/4」・「開発者 k/3」・「ママ k/4」。
+- ママの降臨を待つ魂の区間では弱い敵だけが現れ、経験値が 2.5 倍になります。
+- 最後の時に敵が増える速度：1分ごとに2倍 → 2分ごとに2倍。
 
-**ガンナー**: 貫通狙撃 (足を止めて溜めて撃つ貫通狙撃弾)、跳弾乱射 (大きな弾倉・跳ねる乱射)、火炎過熱 (装填の代わりに熱ゲージ・過熱爆発)、散弾突撃 (4発の散弾・装填ダッシュ)、砲台設置 (装填で砲台・陣地防衛)
+## 🦸 英雄バランス
+- 剣士: 攻撃力 ×4.75 → ×3.3・固有スキルの威力 ×1.85 → ×1.3・特殊能力の威力 ×1.9 → ×1.33
+- 弓使い: 攻撃力 ×2.75 → ×2.0・固有スキル・特殊能力の威力 ×1.8 → ×1.3・風の共鳴I: 風の道ではいつ放ってもパーフェクト → パーフェクト判定の幅 2倍
+- 郵便配達人: 攻撃力 ×1.95 → ×1.8・固有スキル・特殊能力の威力 ×2.0 → ×1.85
+- 錬金術師: 攻撃力・固有スキル・特殊能力の威力 ×1.9 → ×2.05
+- ガンナー: 攻撃力 ×2.7 → ×3.5・固有スキル・特殊能力の威力 ×2.0 → ×2.6・タレットが射程内のボスを優先して撃ちます
+- 英雄選択画面の攻撃力バーは固定の基準で表示されるようになりました。
 
-**剣士**: 剣気 (振るたびに剣気 · 安全な間合い)、受け返し (0.25秒の受け · 反撃)、血の誓い (体力を捧げて吸血 · 近接で粘る)、剣舞 (滑りながら斬る · 機動)、旋風 (円形斬り · ためながら斬る)
+## 🗡️ 盗賊の修正
+- 出血爆発：「血の海」で爆発した敵が2回当たっていた問題を修正・爆発後に出血の重ねがリセットされます・残りの出血は最大1.5秒分だけ爆発します。
+- 出血の流派：出血の強さ＝直接ダメージの55% → 40%・共鳴I「出血の炸裂」は残りの出血最大1.5秒分・突進のヒットは出血の強さの計算に入りません・「疾走暗殺」の突進にも出血の代償（直接ダメージ −35%）が付きます。
+- 弱い出血がかかっても、より強い出血の時間は延びません。
+- 突進：1回の突進のまとまりで戻る必殺技ゲージは合計40%まで・再突進・連続突進は新しいまとまりとして数えません・ゲージを使わない突進はボスへのダメージ60%。
+- 回帰の刃の極意「二度の往復」：2回目の往復のダメージ 100% → 50%・弾倉の還元：毎回 → 2回投げるごとに1回。
+- 強化「連投」は手裏剣の数に応じて1本あたりのダメージが下がる場合があります（全英雄共通）。
+- 影の共鳴II の煙幕内クリティカル×2は分身の煙幕でのみ発動します。
 
-**盗賊**: 出血 (5重ね出血・感染)、影 (ダッシュ2回・おとり分身)、回帰の刃 (戻ってくる手裏剣・弾の節約)、疾走暗殺 (長いダッシュの直接ダメージ・瞬間火力)、狂乱 (倒すたび速くなる・群れ)
-
-**弓使い**: 長弓 (長く引き絞る貫通の矢)、速射 (押している間連射 · 機動して群れを掃討)、罠 (パーフェクトの矢で罠 · 地域制圧)、風 (引きながら走る · 生存)、天空 (矢の雨中心 · 地域殲滅)
-
-**錬金術師**: 沼 (すべてのフラスコが水たまりに・範囲)、氷結 (凍らせて粉砕・制御)、連鎖爆発 (自爆まで武器に・群れ)、助手 (最初からホムンクルス・自動戦闘)、元素触媒 (順番どおりに崩壊・ボス)
-
-**地図職人**: 精密測量 (四画の四角形・群れを一掃)、一筆 (図形の代わりに太い一画)、墨だまり (画がインクだまりに・範囲制圧)、折図術 (地図折りが主役・必殺技で大ダメージ)、行軍測量 (歩いた道が線に・機動と生存)
-
-**時計職人**: 歯車の群れ (2つずつ跳ねる · 群れ)、大時計 (巨大な正時の歯車 · ボス瞬間火力)、時間旅行 (頻繁な巻き戻し · 無敵 · 生存)、残像 (すべての歯車が2回 · バランス)、時の借り (必殺技2倍 · 被弾で損)
-
-**郵便配達人**: 巡回配達 (手紙が4体を巡る · 群れ)、重い小包 (遅い爆発小包 · 密集した群れ)、速達 (印の爆発が中心 · 群れへの瞬間火力)、自転車配達 (走れば手紙が勝手に · 機動)、長距離配送 (射程20 · ボス · 遠距離)
-
-**幽霊**: 酷寒 (冷気二倍 · 群れの制御)、粉砕 (凍った敵を砕く · ボスに亀裂)、魂の軍団 (魂が突進攻撃 · 自動火力)、死霊術 (長い憑依 · 無敵の接近爆発)、幽体離脱 (動けば接触無視 · 機動生存)
-
-## 📈 成長曲線
-- 英雄が与えるすべてのダメージが、プレイが進むほど強くなります: 開始時 ×0.85 → 後半 ×1.15（エンドレス30分・ストーリー14分基準、1プレイの平均はそのまま）
-- 序盤は少し緊張感が増し、後半は成長した分だけ強く感じられます。
-
-## 🦸 英雄のバランス
-
-固有スキルと地獄の門の特殊能力にも、英雄ごとの威力倍率がかかるようになりました。体力と生存力はそのままです。
-- ガンナー: 攻撃力 ×1.7 → ×2.7・攻撃速度 ×1.0 → ×1.25・必殺技チャージが速く・固有スキル・特殊能力の威力 ×2.0
-- 剣士: 攻撃力 ×2.8 → ×4.75・攻撃速度 ×0.55 → ×0.62・必殺技チャージが速く・固有スキルの威力 ×0.98 → ×1.85・特殊能力の威力 ×1.9
-- 盗賊: 攻撃力 ×1.6 → ×2.0・固有スキルの威力 ×0.85 → ×1.1・特殊能力の威力 ×1.4
-- 弓使い: 攻撃力 ×1.8 → ×2.75・攻撃速度 ×1.0 → ×1.18・必殺技チャージが速く・固有スキル・特殊能力の威力 ×1.8
-- 錬金術師: 攻撃力 ×1.2 → ×1.9・攻撃速度 ×0.8 → ×0.96・必殺技チャージが速く・固有スキル・特殊能力の威力 ×1.9
-- 時計職人: 攻撃力 ×1.5 → ×2.65・攻撃速度 ×0.85 → ×0.92・固有スキル・特殊能力の威力 ×1.9
-- 郵便配達人: 攻撃力 ×1.2 → ×1.95・攻撃速度 ×1.0 → ×1.22・必殺技チャージが速く・固有スキル・特殊能力の威力 ×2.0
-- 幽霊: 攻撃力 ×1.0 → ×0.9・怨み: 凍った敵 5重扱い → 3重・凍傷 +15/22/29/36% → +10/15/20/25%
-- 地図職人: 攻撃力 ×1.15 → ×1.0・にじむインクの実際のダメージを説明どおりに（毎秒30/50/70% → 15/25/35%）・閉じた図形のダメージ ×2.6 → ×2.2
-
-## ✨ 改善
-- 超越「魂火の足跡」が青い魂の炎で新しく描き直されました。
-- 英雄選択画面の攻撃力バーがガンナー基準（100%）で表示され、英雄同士を比べやすくなりました。
-- 魂のツリーのマスは1回押すだけで習得できるようになりました。
-- 一時停止（ESC）の「現在のスキル」で、超越をまとめて表示します。
-- 錬金術師の炎の床（燃える沼・火花の行進）が、焦げた地面の上で炎が揺らめく姿になりました。
-
-## 🛠️ 不具合の修正
-- 技が途中で中断されたときに状態が残ることがあった箇所を修正しました。（幽霊の憑依・ガンナーの一斉射撃・弓使いの後退・時計職人の回復・剣士の嵐の目）
-- ガンナーのリロードがどんな場合でも止まらないよう安全装置を追加しました。
-- 一時停止（ESC）画面で「今回の刻印」パネルがスキル一覧の上に重なって固定され、他のスキルの説明が見られなかった問題を修正しました。
-- 盗賊の「影」流派で、突進をもう1回ためておく効果が働かなかった問題を修正しました。
-- 開始時の入門カードを選ぶ前に終了して続きから再開すると、入門カードが消えていた問題を修正しました。
-- 盗賊の「疾走暗殺」の極意で、無敵の突進が際限なく続いていた問題を修正しました。
-- ガンナーの「火炎過熱」の過熱爆発が特殊銃のリロードでも起きていた問題、「散弾突撃」の散弾の効果が1粒ごとに重なっていた問題を修正しました。
-- 剣士の「受け流し」が血の鎧のシールドがあると成功しなかった問題を修正しました。
-- 武器進化の後、魂のツリーの必殺技特性マス（ガンナーの「ターゲット数」など）が消え、進化前の投資だけが残っていた問題を修正しました。武器ごとに個別に強化できるようになりました。
-- 開発者のママを倒した後の終盤、回復アイテムが際限なくたまってラグが起きていた問題を修正しました。（床に最大24個・45秒で消える）
-- 流派・進化・形態が重なると効果が抜けたり逆に弱くなったりしていたカード8か所を修正しました。（幽霊・時計職人・地図職人・弓使い・郵便配達人）
-- そのほか、流派の効果・続きからの再開・画面表示で見つかった不具合を約20件修正しました。
-
-## ⚖️ エンドレスの調整
-- エンドレスで敵が落とす魂のかけら: ×1 → ×0.36（64%減少）
-- 開発者のママの降臨に必要な魂: 1,000 → 500
-
-遊んでくださる皆さま、ありがとうございます。気に入った流派の組み合わせや、強すぎる・弱すぎる流派があれば、コミュニティのディスカッションにお寄せください！
+今後も実際のプレイ記録を見ながら調整を続けます。強すぎる・弱すぎる英雄や流派があれば、コミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.2 大型更新 — 构筑流派
-每位英雄都有了5个战斗方式截然不同的构筑流派。即使是同一位英雄，每局也会有不同的玩法。
+# V1.2.1 平衡补丁 — 无尽30分钟 · 英雄平衡
+调整了无尽模式的成长速度与最后时刻的流程，并重新平衡了英雄火力。盗贼过高的火力也已修正。
 
-本次更新的核心是「构筑流派」。以前一局就能拿到大部分卡牌，每局的样子都差不多。现在每位英雄都有5个改变攻击方式本身的流派，每局只选其中一两个深入培养。
+我们正在调整无尽模式，让熟练玩家无论使用哪位英雄、哪条流派，都能在约30分钟击败开发者的妈妈。此前成长在10分钟就已结束，15分钟后的首领几秒就倒下，各英雄的通关时间差距也很大。我们没有提高首领生命值，而是改变了成长速度与最后时刻的流程。
 
-## 🌿 构筑流派的规则
-- 开局时从3张入门卡中选择1张。入门卡会改变攻击方式，同时附带代价。
-- 收集流派卡牌会开启共鸣I与共鸣II，效果本身会发生变化。集满一个流派的所有卡牌即可开启完成（进化）。
-- 在岔路选择第二个流派，或选择只深入一个流派的「专精」。专精会让卡牌等级再多一级，并开启最终的「极意」。
-- 每位英雄都有组合两个流派时出现的交汇协同效果。
-- 无论流派如何，升级时都会出现所有卡牌。收集与所选流派相符的卡牌会开启共鸣与极意，也可以另辟蹊径。最近选过的流派在开局时出现得更少，每局都会遇到不同的构筑。
+## 📈 无尽模式成长速度
+- 从 Lv 26 起，升级所需经验逐渐增加，Lv 35~49 为 4.5 倍。Lv 50 现在约在第22~24分钟达到，而不是第10分钟。
+- 攒着升级稍后再选，所需经验也不会减少。
+- 随时间提升的无尽模式攻击修正（×0.82 → ×1.10）现固定为 ×0.82。
+- 敌人掉落的灵魂碎片：×0.36 → ×0.15 · 精英首领：×1 → ×0.5。作为补偿，开发者每个生命阶段获得灵魂碎片 +30，妈妈每个生命阶段 +40。
+- 故事模式不受影响。
 
-## ⚔️ 各英雄的流派
-
-**枪手**: 贯穿狙击 (站定蓄力，射出贯穿狙击弹)、跳弹扫射 (大弹匣・弹跳扫射)、烈焰过热 (以热量槽代替装填・过热爆炸)、霰弹突击 (4发霰弹・装填冲刺)、架设炮塔 (装填时架炮塔・阵地防守)
-
-**剑士**: 剑气 (每次挥砍放出剑气 · 安全距离)、招架反击 (0.25秒格挡 · 反击)、血之誓约 (献出生命换取吸血 · 近战持久)、剑舞 (滑行斩击 · 机动)、旋风 (环形斩击 · 蓄力时斩击)
-
-**盗贼**: 出血 (5层出血 · 传染)、暗影 (2次冲刺 · 诱饵分身)、回旋刃 (回旋飞镖 · 弹药经济)、疾走暗杀 (长距离冲刺直接伤害 · 瞬间爆发)、狂乱 (每次击杀都更快 · 敌群)
-
-**弓箭手**: 长弓 (长久拉满的穿透之箭)、速射 (按住连射 · 机动清群)、陷阱 (完美之箭布陷阱 · 区域控制)、风 (边拉弓边奔跑 · 生存)、天穹 (以箭雨为核心 · 区域歼灭)
-
-**炼金术士**: 沼泽 (每个烧瓶都留下水洼 · 区域)、冰结 (冰冻并粉碎 · 控制)、连锁爆炸 (连自爆都是武器 · 群敌)、助手 (开局就有人造小人 · 自动战斗)、元素催化 (按顺序崩坏 · 首领)
-
-**制图师**: 精密测量 (四笔方形 · 成群清扫)、一笔 (以粗重一笔代替图形)、墨池 (笔画化作墨池 · 区域控制)、折图术 (以折叠地图为核心 · 必杀技爆发)、行军测量 (走过的路化作线 · 机动生存)
-
-**钟表匠**: 齿轮群 (成双弹跳 · 群敌)、大钟表 (巨型整点齿轮 · 首领爆发)、时间旅行 (频繁倒带 · 无敌 · 生存)、残影 (每个齿轮飞两次 · 均衡)、时间之债 (必杀技双倍 · 受击吃亏)
-
-**邮差**: 巡回投递 (信件巡访四人 · 群敌)、沉重包裹 (缓慢爆炸包裹 · 密集群敌)、特快专递 (以标记爆炸为主 · 群体爆发)、自行车投递 (骑行时自动寄信 · 机动)、长途配送 (射程20 · 首领 · 远程)
-
-**幽灵**: 酷寒 (双倍寒气 · 控制敌群)、粉碎 (粉碎冻结之敌 · 首领裂痕)、灵魂军团 (灵魂冲锋攻击 · 自动火力)、死灵术 (长时间附身 · 无敌近身爆发)、灵魂出窍 (移动时无视接触 · 机动生存)
-
-## 📈 成长曲线
-- 英雄造成的所有伤害会随着游戏进行而增强：开局 ×0.85 → 后期 ×1.15（以无尽模式30分钟、故事模式14分钟为基准，一局的平均值不变）
-- 前期更有紧张感，后期则能感受到成长带来的强大。
+## 👑 最后时刻
+- 15:00 时四位王不再同时苏醒，而是分两组、每组两位出现。击败第一组或经过60秒后，剩下两位苏醒。
+- 屏幕上方会显示进度：「王 n/4」·「开发者 k/3」·「妈妈 k/4」。
+- 等待妈妈降临的灵魂阶段只会出现弱小的敌人，经验为 2.5 倍。
+- 最后时刻敌人增加的速度：每1分钟2倍 → 每2分钟2倍。
 
 ## 🦸 英雄平衡
+- 剑士：攻击力 ×4.75 → ×3.3 · 固有技能威力 ×1.85 → ×1.3 · 特殊能力威力 ×1.9 → ×1.33
+- 弓箭手：攻击力 ×2.75 → ×2.0 · 固有技能与特殊能力威力 ×1.8 → ×1.3 · 风之共鸣I：在风之路上随时松手都是完美 → 完美判定范围 2倍
+- 邮差：攻击力 ×1.95 → ×1.8 · 固有技能与特殊能力威力 ×2.0 → ×1.85
+- 炼金术士：攻击力、固有技能与特殊能力威力 ×1.9 → ×2.05
+- 枪手：攻击力 ×2.7 → ×3.5 · 固有技能与特殊能力威力 ×2.0 → ×2.6 · 炮塔会优先射击射程内的首领
+- 英雄选择界面的攻击力条现以固定基准显示。
 
-固有技能与地狱之门特殊能力现在也会套用各英雄的威力倍率。生命与生存能力保持不变。
-- 枪手：攻击力 ×1.7 → ×2.7 · 攻击速度 ×1.0 → ×1.25 · 必杀技充能更快 · 固有技能与特殊能力威力 ×2.0
-- 剑士：攻击力 ×2.8 → ×4.75 · 攻击速度 ×0.55 → ×0.62 · 必杀技充能更快 · 固有技能威力 ×0.98 → ×1.85 · 特殊能力威力 ×1.9
-- 盗贼：攻击力 ×1.6 → ×2.0 · 固有技能威力 ×0.85 → ×1.1 · 特殊能力威力 ×1.4
-- 弓箭手：攻击力 ×1.8 → ×2.75 · 攻击速度 ×1.0 → ×1.18 · 必杀技充能更快 · 固有技能与特殊能力威力 ×1.8
-- 炼金术士：攻击力 ×1.2 → ×1.9 · 攻击速度 ×0.8 → ×0.96 · 必杀技充能更快 · 固有技能与特殊能力威力 ×1.9
-- 钟表匠：攻击力 ×1.5 → ×2.65 · 攻击速度 ×0.85 → ×0.92 · 固有技能与特殊能力威力 ×1.9
-- 邮差：攻击力 ×1.2 → ×1.95 · 攻击速度 ×1.0 → ×1.22 · 必杀技充能更快 · 固有技能与特殊能力威力 ×2.0
-- 幽灵：攻击力 ×1.0 → ×0.9 · 怨恨：冻结视为5层 → 3层 · 冻伤 +15/22/29/36% → +10/15/20/25%
-- 制图师：攻击力 ×1.15 → ×1.0 · 晕染墨迹的实际伤害与说明一致（每秒30/50/70% → 15/25/35%）· 闭合图形伤害 ×2.6 → ×2.2
+## 🗡️ 盗贼修正
+- 流血爆发：修复「血海」中爆发的敌人会被命中两次的问题 · 爆发后流血层数清空 · 剩余流血最多只爆发1.5秒的量。
+- 流血流派：流血强度＝直接伤害的55% → 40% · 共鸣I「流血迸发」最多使用1.5秒的剩余流血 · 突进命中不再计入流血强度 · 「疾驰暗杀」的突进也会附带流血代价（直接伤害 −35%）。
+- 较弱的流血不会再延长较强流血的持续时间。
+- 突进：一次突进连段返还的必杀技量表合计最多40% · 再次突进与连续突进不再算作新的连段 · 不消耗量表的突进对首领造成60%伤害。
+- 回归之刃极意「两次往返」：第二次往返伤害 100% → 50% · 弹匣返还：每次 → 每投掷两次返还一次。
+- 强化「连投」会根据飞镖数量降低单发伤害（所有英雄通用）。
+- 暗影共鸣II 的烟幕内暴击×2 现在只在分身烟幕中生效。
 
-## ✨ 改进
-- 超越「魂火足迹」重新绘制为蓝色魂火。
-- 英雄选择画面的攻击力条改为以枪手为基准（100%）显示，更方便比较英雄。
-- 灵魂树节点现在单击即可学习。
-- 暂停（ESC）界面的「当前技能」中，超越会单独成组显示。
-- 炼金术士的火焰地带（燃烧沼泽 · 火花行进）改为焦土上摇曳的火焰。
-
-## 🛠️ 问题修复
-- 修复了技能中途被打断时可能残留状态的几处问题。（幽灵附身 · 枪手齐射 · 弓箭手后撤 · 钟表匠回复 · 剑士风暴之眼）
-- 为枪手的装填加入了安全机制，任何情况下都不会卡住。
-- 修复了暂停（ESC）界面中「本局刻印」面板固定叠在技能列表上，导致看不到其他技能说明的问题。
-- 修复了盗贼「暗影」流派中多储存一次突进的效果不生效的问题。
-- 修复了在选择开局入门卡之前退出并继续游戏后，入门卡消失的问题。
-- 修复了盗贼「疾走暗杀」极意让无敌突进无限持续的问题。
-- 修复了枪手「火焰过热」的过热爆炸在特殊枪械装填时也会触发、「霰弹突击」的霰弹效果逐颗叠加的问题。
-- 修复了剑士「格挡反击」在拥有血甲护盾时无法成功的问题。
-- 修复了武器进化后灵魂树的必杀技特性节点（如枪手的「目标数」）消失、只剩进化前投入的问题。现在每种武器都可以单独强化。
-- 修复了击败开发者的妈妈后，后期回复道具无限堆积导致卡顿的问题。（地面最多24个 · 45秒后消失）
-- 修复了流派、进化与形态叠加时效果丢失或反而变弱的8张卡。（幽灵 · 钟表匠 · 制图师 · 弓箭手 · 邮差）
-- 另外修复了流派效果、继续游戏和画面显示中的约20个问题。
-
-## ⚖️ 无尽模式调整
-- 无尽模式中敌人掉落的灵魂碎片：×1 → ×0.36（减少64%）
-- 开发者的妈妈降临所需的灵魂：1,000 → 500
-
-感谢每一位游玩的玩家。如果有喜欢的流派组合，或觉得太强、太弱的流派，欢迎在社区讨论区告诉我们！
+今后我们也会根据实际游玩记录继续调整。如果有过强或过弱的英雄、流派，欢迎在社区讨论区告诉我们！

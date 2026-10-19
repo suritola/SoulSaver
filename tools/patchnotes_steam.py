@@ -10,6 +10,7 @@ ANN = os.path.join(ROOT, "docs", "steam", "announcements")
 
 # 스팀 게시판에 올라간 공지 (최신이 위) — 게임 안 「패치노트」 목록의 왼쪽 표시 · 공지 파일
 POSTS = [
+    ("v1.2.1", "v1.2.1.md"),
     ("v1.2", "v1.2.md"),
     ("v1.1.1", "v1.1.1.md"),
     ("Hotfix", "hotfix-frame-drop.md"),
