@@ -1559,6 +1559,12 @@ public static class SettingsUI
         RectTransform root = UIKit.Rect("VolumeSlider", parent, pos, size);
         Slider s = root.gameObject.AddComponent<Slider>();
 
+        // 1.4.3~ 클릭 영역: 얇은 막대(높이 40%)만 눌리던 것을 줄 전체 + 위아래 · 양 끝 14px 까지 (게이지 아무 곳이나 누르면 그 위치로 바로 이동 · 끝 바깥은 0% · 100%)
+        RectTransform hit = UIKit.Rect("Hit Area", root, Vector2.zero, Vector2.zero);
+        hit.anchorMin = Vector2.zero; hit.anchorMax = Vector2.one;
+        hit.offsetMin = new Vector2(-14f, -14f); hit.offsetMax = new Vector2(14f, 14f);
+        hit.gameObject.AddComponent<Image>().color = Color.clear;
+
         RectTransform bg = UIKit.Rect("Background", root, Vector2.zero, Vector2.zero);
         bg.anchorMin = new Vector2(0f, 0.3f); bg.anchorMax = new Vector2(1f, 0.7f);
         bg.offsetMin = bg.offsetMax = Vector2.zero;
