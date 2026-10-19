@@ -53,20 +53,26 @@ public partial class CharacterKit
         return alchFrostAlt ? 2 : 0;
     }
 
-    void PathThrowReagent(Vector3 from, Vector3 land, float dmg, float weakMul)
+    //   1.4.1~ depth > 0: 수은 플라스크 형태로 튕긴 플라스크 — 시약 순서(reagent)는 넘기지 않고 본 플라스크의 시약(bounceKind)을 그대로,
+    //     불안정도 · 시약 농축 · 과부하는 세지 않음 (예전 ThrowReagent 로 던지면 순서가 깨지고 촉매 판에도 불안정이 나왔음)
+    void PathThrowReagent(Vector3 from, Vector3 land, float dmg, float weakMul, int depth = 0, int bounceKind = -1)
     {
-        int kind = reagent;
-        reagent = NextPathReagent(kind);
-        alchLastKind = kind;
+        bool bounce = depth > 0;
+        int kind = bounce ? Mathf.Clamp(bounceKind, 0, 2) : reagent;
+        if (!bounce)
+        {
+            reagent = NextPathReagent(kind);
+            alchLastKind = kind;
+        }
         bool swamp = Paths.Has(AlchemistPaths.Swamp), frost = Paths.Has(AlchemistPaths.Frost);
         bool chain = Paths.Has(AlchemistPaths.Chain), catalyst = Paths.Has(AlchemistPaths.Catalyst);
         bool unstable = Special != null ? (Special.KitStoneActive || Random.value < Special.KitUnstableChance) : Random.value < 0.15f;
-        if (!catalyst && ForceUnstable()) unstable = true;     // 촉매 판은 과부하 증강 횟수를 쓰지 않음 (어차피 아래에서 꺼짐)
+        if (!bounce && !catalyst && ForceUnstable()) unstable = true;     // 촉매 판은 과부하 증강 횟수를 쓰지 않음 (어차피 아래에서 꺼짐)
         if (catalyst) unstable = false;                 // 정밀 조제의 대가: 불안정 플라스크가 나오지 않음
         float instR = InstRadiusMul, instD = InstDamageMul;
-        AlchAddInstability(unstable ? 12f : 5f);
+        if (!bounce) AlchAddInstability(unstable ? 12f : 5f);
         Color tint = unstable ? AlchUnstableTint : ReagentColors[kind];
-        float conc = SignatureSkills.FlaskThrow();
+        float conc = bounce ? 1f : SignatureSkills.FlaskThrow();
         FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
         {
             if (this == null) return;                   // 판이 끝나 플레이어가 사라진 뒤 떨어진 플라스크
@@ -74,9 +80,17 @@ public partial class CharacterKit
             float r = 1.65f * blastMul * (unstable ? 1.6f : 1f) * FlaskRadiusMul * conc * instR;
             float hit = dmg * 1.2f * (unstable ? 1.6f : 1f) * FlaskDamageMul * conc * instD;
             if (unstable && chain) r *= AlchemistPaths.ChainBlastRadius;              // 불안정 연구: 불안정 폭발 1.5배 크게
-            if (swamp) hit *= 1f - AlchemistPaths.SwampBlastCut;                       // 늪지기의 대가: 폭발 피해 −30%
-            if (frost && kind == 0 && !unstable) hit *= 1f - AlchemistPaths.FrostFireCut;     // 빙결 전문의 대가: 화염 −40%
-            FlaskExtras(p, r, hit, 0);
+            // 1.4.1~ 튕긴 플라스크는 본 플라스크 피해(이미 대가가 깎인 값)를 이어받으므로 대가를 다시 깎지 않음
+            if (swamp && !bounce) hit *= 1f - AlchemistPaths.SwampBlastCut;                       // 늪지기의 대가: 폭발 피해 −30%
+            if (frost && kind == 0 && !unstable && !bounce) hit *= 1f - AlchemistPaths.FrostFireCut;     // 빙결 전문의 대가: 화염 −40%
+            // 1.4.1~ FlaskExtras 의 depth 는 수은 튕기기만 가름 — 갈래 판은 아래에서 갈래용으로 튕기므로 1 이상을 넘겨 예전 ThrowReagent 튕기기를 끔
+            FlaskExtras(p, r, hit, Mathf.Max(1, depth));
+            if (!bounce && form == SpecialAbilities.KitQuicksilver)
+            {
+                Transform next = NearestOther(p, 7f, null, Vector2.right, 360f);
+                Vector3 bounceLand = next != null ? next.position : p + (Vector3)(Random.insideUnitCircle.normalized * 3f);
+                PathThrowReagent(p, bounceLand, hit / 1.6f * 0.7f, 0f, depth + 1, kind);      // 예전 튕기기와 같은 피해 · 같은 시약 · 빙결 · 늪 · 산산조각 훅 그대로
+            }
             Play("shatter", 0.55f, Random.Range(0.9f, 1.2f));
             ap?.Shatter(p, r, hit);                     // 빙결: 이 플라스크가 얼리기 전에 얼어 있던 적만
             if (unstable)
