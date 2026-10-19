@@ -77,9 +77,23 @@ public partial class LevelShop : MonoBehaviour
     {
         freeWaiting = true;
         float until = Time.realtimeSinceStartup + 180f;
-        while (freeWaiting && StageManager.Instance != null && !StageManager.Instance.OpeningDone && Time.realtimeSinceStartup < until)
+        // 1.4.1~ 상한을 넘겨도 이야기 · 영웅 안내 · 고르기 창(각인 등)이 떠 있는 동안은 기다림 (자리를 비워 3분이 지나면 입문 창이 그 위에 겹쳐 열렸음)
+        //   상한은 시작 순서가 끝나지 않는 경우(트레일러 촬영 등)에만 창을 열려고 둔 것
+        while (freeWaiting && StageManager.Instance != null && !StageManager.Instance.OpeningDone
+               && (Time.realtimeSinceStartup < until || StoryDirector.Playing || ChoiceUI.Open || HeroGuide.IsOpen))
             yield return null;
         OpenFreeIfWaiting();
+    }
+
+    // 1.4.1~ 이어하기 (RunSave.Restore 끝): 판 시작 무료 카드(= 갈래 입문)를 고르기 전에 저장한 판이면 그 창을 다시 엶
+    //   예전엔 CancelOpening 이 끈 채로 남아 무료 입문이 사라지고, 첫 레벨업 창이 입문 창이 되어 카드 한 장을 잃었음
+    public bool FreePickDue => freePick;
+    public void ResumeFreePick()
+    {
+        freeWaiting = false;
+        if (IsOpen) return;
+        freePick = true;
+        openLevelShop();
     }
 
     // StageManager 가 시작 순서를 마친 그 프레임에 부름 — 바로 열어야 「카드 창을 닫은 뒤 장 제목」 순서가 지켜짐
