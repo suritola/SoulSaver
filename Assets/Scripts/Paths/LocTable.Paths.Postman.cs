@@ -92,7 +92,7 @@ public static partial class LocTable
         PA("근접 포위", "Being surrounded", "近接での包囲", "近身包围");
         PA("20칸 넘게 날아간 편지는 치명타가 됩니다. (피해 ×1.5)", "Letters that fly over 20 tiles become critical hits. (×1.5 damage)", "20マス以上飛んだ手紙は会心になります。（ダメージ×1.5）", "飞行超过20格的信件成为暴击。（伤害×1.5）");
         PA("보스에게 배달하면 우표가 2중첩 쌓입니다.", "Deliveries to bosses add 2 stamp stacks.", "ボスに配達すると切手が2枚たまります。", "向首领投递时累积2层邮票。");
-        PA("사거리가 무한이 됩니다.", "Range becomes unlimited.", "射程が無限になります。", "射程变为无限。");
+        PA("사거리가 40칸이 됩니다.", "Range becomes 40 tiles.", "射程が40マスになります。", "射程变为40格。");
 
         // ---------------- 새 교차
         PA("달리는 소포", "Rolling Parcel", "走る小包", "奔跑的包裹");
