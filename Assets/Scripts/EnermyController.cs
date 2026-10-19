@@ -61,6 +61,7 @@ public class EnermyController : MonoBehaviour
 
     // 잠깐 느려짐 (빙결 플라스크 · 연막탄 · 덫: 0 이면 묶임)
     float slowUntil, slowMul = 1f;
+    public float SlowUntil => slowUntil;       // 1.4.1~ 덫 묶임 면역 끝 계산 (ArcherPaths.MarkRooted)
     public void Slow(float mul, float seconds)
     {
         slowMul = Time.time < slowUntil ? Mathf.Min(slowMul, mul) : mul;

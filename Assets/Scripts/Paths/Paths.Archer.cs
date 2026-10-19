@@ -280,6 +280,9 @@ public sealed class ArcherPaths : HeroPaths
         };
     }
 
+    // 1.4.1~ 덫을 바로 놓음 (장궁 공명 II 관통 광선 · 하늘 화살처럼 화살을 거둘 때 — 맞힌 적 자리를 기다릴 화살이 없음)
+    public void TrapAt(Vector3 at) => PlaceTrap(at);
+
     // 천공 공명 II: 화살비 뒤 3초 동안 평타가 하늘로 → 화살비 자리의 적 셋에게 (그 화살 피해 그대로 · 보스 하나면 한 대)
     //   떨어뜨렸으면 true (화살은 거둠)
     public bool SkyDrop(Bullet b)
@@ -432,7 +435,7 @@ public sealed class ArcherPaths : HeroPaths
             GameObject g = c.gameObject;
             bool boss = Paths.IsBoss(g);
             EnermyController e = c.GetComponent<EnermyController>();
-            if (e != null && !e.IsDead && (!boss || master) && RootFree(g, boss ? TrapBossRoot : TrapRoot)) { e.Slow(0f, boss ? TrapBossRoot : TrapRoot); rooted++; }
+            if (e != null && !e.IsDead && (!boss || master) && RootFree(g)) { e.Slow(0f, boss ? TrapBossRoot : TrapRoot); MarkRooted(g, e.SlowUntil); rooted++; }
             else if (boss && master && e == null) snares[g] = Time.time + TrapSnareTime;     // 보스 (몸을 묶을 수 없음): 받는 피해 +
             Fx.Spawn("fx_net", c.transform.position, 2f, new Color(0.8f, 1f, 0.6f, 0.9f), 16f);
         });
@@ -462,7 +465,15 @@ public sealed class ArcherPaths : HeroPaths
     const float RootImmune = 2f;
     readonly Dictionary<GameObject, float> rootFreeAt = new Dictionary<GameObject, float>();
 
-    bool RootFree(GameObject g, float root)
+    // 1.4.1~ 덫에 묶여 있는 동안은 가시 덤불 · 가시줄 감속이 묶임(속도 0)을 이어 붙이지 않게 (EnermyController.Slow 가 더 느린 쪽 · 더 늦은 끝을 남김
+    //   → 묶인 적이 덤불 밖으로 못 나가 덤불이 사라질 때까지 묶이던 것) — 묶임 끝 = 면역 끝 − RootImmune
+    public static bool Rooted(GameObject g)
+    {
+        ArcherPaths me = Me;
+        return me != null && g != null && me.rootFreeAt.TryGetValue(g, out float t) && Time.time < t - RootImmune;
+    }
+
+    bool RootFree(GameObject g)
     {
         float now = Time.time;
         if (g == null || (rootFreeAt.TryGetValue(g, out float t) && now < t)) return false;
@@ -473,8 +484,14 @@ public sealed class ArcherPaths : HeroPaths
             foreach (GameObject k in scratch) rootFreeAt.Remove(k);
             scratch.Clear();
         }
-        rootFreeAt[g] = now + root + RootImmune;
         return true;
+    }
+
+    // 1.4.1~ 면역 끝은 실제 묶임 끝(EnermyController.SlowUntil) 기준 — 다른 감속으로 묶임이 길어져도 면역이 먼저 끝나 다음 덫이 바로 다시 묶지 않게
+    void MarkRooted(GameObject g, float rootUntil)
+    {
+        if (g == null) return;
+        rootFreeAt[g] = Mathf.Max(Time.time, rootUntil) + RootImmune;
     }
 
     void ThornLine(Vector3 a, Vector3 b)
@@ -502,7 +519,7 @@ public sealed class ArcherPaths : HeroPaths
             Paths.Deal(c.gameObject, dmg, Vector3.zero, 0f, "가시줄");
             if (c == null) continue;
             EnermyController e = c.GetComponent<EnermyController>();
-            if (e != null && !e.IsDead && !Paths.IsBoss(c.gameObject)) e.Slow(0.4f, 0.4f);
+            if (e != null && !e.IsDead && !Paths.IsBoss(c.gameObject) && !Rooted(e.gameObject)) e.Slow(0.4f, 0.4f);      // 1.4.1~ 덫에 묶인 적은 건너뜀
         }
     }
 }
