@@ -39,6 +39,12 @@ public partial class CharacterKit
         rapidNext = Time.time + Mathf.Max(RapidMinStep, fullTime * (master ? RapidMasterStep : RapidStep));
         rapidCount = (rapidCount + 1) % 60;
         bool full = rapidCount % ArcherPaths.RapidFullEvery == 0;                 // 「가득 당긴 화살」 효과는 다섯 발마다
+        // 1.4.1~ 사냥꾼의 집중(켜진 동안) · 사냥 본능(남은 발 수만큼)도 속사에서 듣게: 그 화살을 「가득 당긴 화살」로 (예전: UpdateBow 에 닿지 않아 효과 없음 · 본능 x3 이 안 줄었음)
+        if (Special != null && (Special.KitFocusActive || Special.KitFreeDraws > 0))
+        {
+            if (!Special.KitFocusActive) Special.KitFreeDraws--;
+            full = true;
+        }
         int echoEvery = Paths.Res(ArcherPaths.Rapid) >= 1 ? ArcherPaths.RapidEchoRes : ArcherPaths.RapidFullEvery;
         bool echo = card[1] > 0 && rapidCount % echoEvery == 0;
         float k = full ? 1f : 0.4f;     // 화살 효과에 넘기는 당김 정도
@@ -102,6 +108,9 @@ public partial class CharacterKit
         return fullTime;
     }
 
+    // 1.4.1~ 바람 공명 I: 지금 바람길 위라 언제 놓아도 완벽 (UpdateBow 가 폭풍의 길 순간 당김에 씀)
+    bool BowPathWindPerfect => Paths.Active && Paths.Res(ArcherPaths.Wind) >= 1 && SignatureSkills.OnWind;
+
     // ================================================================= 화살 피해 배율 (입문 · 대가)
     float BowPathPower(bool perfect) => BowPathPower(perfect, draw, false);
 
@@ -141,44 +150,67 @@ public partial class CharacterKit
             b.pene = 9999;
             b.hitOnce = new HashSet<int>();
             if (Paths.Res(ArcherPaths.Long) >= 1) b.onHitEnemy += (arrow, c) => me.LongPierced(c);
-            // 공명 II: 집중 호흡 5중첩이면 굵은 관통 광선 (그 화살의 피해 그대로)
-            if (Paths.Res(ArcherPaths.Long) >= 2 && SignatureSkills.FocusStacks >= 5)
-            {
-                BowPathBeam(b);
-                return;
-            }
         }
+        // 공명 II: 집중 호흡 5중첩이면 굵은 관통 광선 (그 화살의 피해 그대로)
+        //   1.4.1~ 일찍 return 하지 않음 — 덫 놓기 · 천공 하늘 화살이 광선 때문에 판 끝까지 꺼지던 것 (명중 효과는 BowPathBeam 이 직접)
+        bool beam = perfect && Paths.Has(ArcherPaths.Long) && Paths.Res(ArcherPaths.Long) >= 2 && SignatureSkills.FocusStacks >= 5;
 
         // 덫: 완벽 화살이 떨어진 자리에 (여러 발이어도 한 번 놓을 때 하나)
-        if (perfect && first && Paths.Has(ArcherPaths.Trap))
+        bool trap = perfect && first && Paths.Has(ArcherPaths.Trap);
+        Vector3 trapAt = Vector3.zero;
+        if (trap)
         {
             Vector3 from = b.transform.position;
             float reach = Mathf.Min(11f, Vector2.Distance(from, Mouse));
-            me.ArmTrap(b, from + (Vector3)(b.Direction * reach));
+            trapAt = from + (Vector3)(b.Direction * reach);
+            if (!beam) me.ArmTrap(b, trapAt);
         }
 
-        // 천공 공명 II: 화살비 뒤 3초 동안 평타가 하늘로 쏴져 화살비 자리의 적에게 떨어짐
-        me.SkyDrop(b);
+        // 천공 공명 II: 화살비 뒤 3초 동안 평타가 하늘로 쏴져 화살비 자리의 적에게 떨어짐 (화살을 거두므로 광선보다 먼저 · 광선은 다음 화살부터)
+        if (me.SkyDrop(b))
+        {
+            if (trap && beam) me.TrapAt(trapAt);
+            return;
+        }
+        if (beam) BowPathBeam(b, trap, trapAt);
     }
 
+    // 1.4.1~ 광선이 꿰뚫은 적 (장궁 공명 I 당김 가속 — BowPathRelease 의 Released 가 longBank 를 비운 뒤에 셈)
+    readonly List<Collider2D> beamPierced = new List<Collider2D>();
+
     // 장궁 공명 II: 굵은 관통 광선 (레일건처럼 · 화살은 거둠)
-    void BowPathBeam(Bullet b)
+    //   1.4.1~ 화살의 명중 효과가 사라지므로 천공 게이지 · 장궁 공명 I · 덫(첫 명중 자리, 없으면 겨눈 자리)을 여기서 직접
+    void BowPathBeam(Bullet b, bool trap, Vector3 trapAt)
     {
         Vector3 from = b.transform.position;
         Vector2 dir = b.Direction;
-        if (dir.sqrMagnitude < 0.01f) return;
+        if (dir.sqrMagnitude < 0.01f)
+        {
+            if (trap) ArcherPaths.Me?.TrapAt(trapAt);
+            return;
+        }
         Vector3 to = from + (Vector3)(dir * ArcherPaths.LongBeamLength);
         float dmg = b.damage;
         b.Release();
+        ArcherPaths me = ArcherPaths.Me;
+        bool sky = Paths.Has(ArcherPaths.Sky);
+        bool pierce = me != null && Paths.Res(ArcherPaths.Long) >= 1;
+        float atk = Mathf.Max(0.01f, Damage);
+        float nearest = float.MaxValue;
         using (var ovl = PhysHits.Circle((from + to) * 0.5f, ArcherPaths.LongBeamLength * 0.5f + ArcherPaths.LongBeamWidth, true))
             foreach (Collider2D c in ovl)
             {
                 if (c == null || !Paths.IsFoe(c)) continue;
                 if (Hostile.DistanceToSegment(c.transform.position, from, to) > ArcherPaths.LongBeamWidth) continue;
                 Vector3 at = c.transform.position;
+                float along = Vector2.Dot((Vector2)(at - from), dir);
+                if (along < nearest) { nearest = along; trapAt = at; }
+                if (pierce && beamPierced.Count < 32) beamPierced.Add(c);
                 Paths.Deal(c.gameObject, dmg, dir, 2f, "관통 광선");
+                if (sky) ArcherPaths.AddGauge(Mathf.Min(0.03f, dmg / atk * ArcherPaths.SkyHitGauge));
                 Fx.Spawn("fx_spark", at, 1.6f, new Color(1f, 0.9f, 0.5f), 22f);
             }
+        if (trap && me != null) me.TrapAt(trapAt);
         Fx.Beam(from, to, 1.6f, new Color(1f, 0.9f, 0.45f, 0.9f), 0.3f);
         Fx.Spawn("fx_shock", from, 3.2f, new Color(1f, 0.9f, 0.5f, 0.8f), 22f);
         SpecialAbilities.SharedFx?.Play("railgun", 0.45f, 1.4f);
@@ -191,6 +223,9 @@ public partial class CharacterKit
         if (!Paths.Active) return;
         ArcherPaths me = ArcherPaths.Me;
         if (me != null) me.Released(start, dir, perfect);
+        // 1.4.1~ 장궁 공명 I: 관통 광선이 꿰뚫은 적도 다음 당김을 빠르게 (Released 가 비운 뒤에 채움)
+        if (me != null) foreach (Collider2D c in beamPierced) me.LongPierced(c);
+        beamPierced.Clear();
     }
 
     // ================================================================= 화살비 (천공)

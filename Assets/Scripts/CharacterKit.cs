@@ -444,8 +444,9 @@ public partial class CharacterKit : MonoBehaviour
         }
 
         // 사냥꾼의 집중: 순식간에 가득 당김
+        bool stormDraw = false;         // 1.4.1~ 폭풍의 길로 순간 당김 (바람 공명 I 이면 완벽으로 셈)
         if (Special != null && (Special.KitFocusActive || Special.KitFreeDraws > 0)) fullTime = 0.05f;
-        else if (SignatureSkills.InstantDraw) fullTime = 0.05f;          // 폭풍의 길: 바람길 위
+        else if (SignatureSkills.InstantDraw) { fullTime = 0.05f; stormDraw = true; }          // 폭풍의 길: 바람길 위
         // 정조준: 늘 더 빨리 가득 당김 (예전 「가만히 서서」 조건은 없앰)
         else if (card[5] > 0) fullTime /= 1f + 0.25f * card[5];
         fullTime = Paths.Safe(() => BowPathFrame(fullTime), fullTime);       // 2026-10-19~ 갈래 장궁 · 바람 (CharacterKit.Archer)
@@ -495,7 +496,9 @@ public partial class CharacterKit : MonoBehaviour
         SpecialFeedback.Hide(bowLine);
         PlayerLook.Draw(0f);
         PlayerLook.Fired(-1);
-        bool perfect = !autoRelease && draw >= 1f && heldFull <= PerfectWindow && !Breathless;
+        // 1.4.1~ 바람 공명 I 「바람길 위에서는 언제 놓아도 완벽」: 폭풍의 길(ae.storm) 순간 당김이 autoRelease 를 켜도 완벽 (예전: 진화하면 바람길 위 완벽이 사라짐)
+        bool windPerfect = stormDraw && !lockRelease && !((GameInput.Auto || GameInput.TrailerRunning) && !ManualBowInAuto) && Paths.Safe(() => BowPathWindPerfect, false);
+        bool perfect = (!autoRelease || windPerfect) && draw >= 1f && heldFull <= PerfectWindow && !Breathless;
         float power = 0.3f + DrawPower * draw;                                  // 가득 당김 220%
         if (perfect) power = PerfectPower;
         else if (!autoRelease && draw >= 1f && heldFull > TrembleAfter)
@@ -1353,7 +1356,7 @@ public partial class CharacterKit : MonoBehaviour
             using (var ovl = PhysHits.Circle(center, radius)) foreach (Collider2D c in ovl)
             {
                 EnermyController e = c.GetComponent<EnermyController>();
-                if (e != null && !e.IsDead) e.Slow(0.45f, 0.4f);
+                if (e != null && !e.IsDead && !ArcherPaths.Rooted(e.gameObject)) e.Slow(0.45f, 0.4f);      // 1.4.1~ 덫에 묶인 적은 건너뜀 (묶임을 덤불 끝까지 잇던 것)
             }
             Fx.Spawn("fx_spike", center + (Vector3)(Random.insideUnitCircle * radius), 1.2f, new Color(0.6f, 0.9f, 0.4f), 18f);
             yield return new WaitForSeconds(0.25f);
