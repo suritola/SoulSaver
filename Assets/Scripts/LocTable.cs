@@ -853,8 +853,8 @@ public static partial class LocTable
         { "돌진 뒤 2초 동안 이동 속도 +35%", L("+35% move speed for 2s after dashing", "突進後2秒間 移動速度+35%", "突进后2秒内移动速度+35%") },
         { "돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 느리게", E("돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 둔화", "Enemies around the landing spot slowed by 60% for 1.5s", "突進の着地点周辺の敵を1.5秒間60%鈍化", "突进落点周围的敌人减速60%，持续1.5秒") },
         { "돌진 거리 +30% · 돌진 뒤 무적 시간 두 배", L("+30% dash distance · Double invincibility after dashing", "突進距離+30%・突進後の無敵時間2倍", "突进距离+30% · 突进后无敌时间翻倍") },
-        { "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이)", E("돌진 뒤 3초 안에 [{ULT}]로 한 번 더 돌진 (게이지 없이)", "Press [{ULT}] within 3s after a dash to dash again (no gauge cost)", "突進後3秒以内に[{ULT}]でもう一度突進（ゲージ不要）", "突进后3秒内按 [{ULT}] 可再突进一次（无需能量）") },
-        { "돌진으로 벤 적 하나당 필살기 게이지 4% 되돌려 받음 (최대 40%)", E("돌진으로 벤 적 하나당 필살기 게이지 4% 반환 (최대 40%)", "Refund 4% Ultimate gauge per enemy cut by the dash (max 40%)", "突進で斬った敵1体ごとに必殺技ゲージ4%回復（最大40%）", "突进每斩中一个敌人返还4%必杀技槽（最多40%）") },
+        { "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이 · 보스에게 베기 피해 60%)", E("돌진 뒤 3초 안에 [{ULT}]로 한 번 더 돌진 (게이지 없이 · 보스에게 베기 피해 60%)", "Press [{ULT}] within 3s after a dash to dash again (no gauge cost · 60% slash damage to bosses)", "突進後3秒以内に[{ULT}]でもう一度突進（ゲージ不要・ボスへの斬撃ダメージ60%）", "突进后3秒内按 [{ULT}] 可再突进一次（无需能量 · 对首领的斩击伤害为60%）") },     // 1.4.2~ 보스 베기 피해 60% (출혈은 그대로)
+        { "게이지를 쓴 돌진(모아 둔 돌진 포함)으로 벤 적 하나당 필살기 게이지 4% 되돌려 받음 (돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)", E("게이지를 쓴 돌진(모아 둔 돌진 포함)으로 벤 적 하나당 필살기 게이지 4% 반환 (돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)", "Refund 4% Ultimate gauge per enemy cut by a gauge-spending dash (stored dashes included · all dash refunds combined: max 40%)", "ゲージを使った突進（溜めた突進を含む）で斬った敵1体ごとに必殺技ゲージ4%回復（突進で戻るゲージは合計40%まで）", "消耗能量的突进（含储存的突进）每斩中一个敌人返还4%必杀技槽（突进返还的能量合计最多40%）") },     // 1.4.2~ 반환 상한 · 공짜 돌진 제외
         { "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.", E("약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자입니다.","A frail assassin who fights with a hail of fast throwing stars and shadow dashes.", "非力だが素早い手裏剣の雨と影の突進で戦う暗殺者です。", "虽然柔弱，却以飞快的飞镖和暗影突进作战的刺客。") },
         { "출혈 돌진", L("Bleeding Dash", "出血突進", "出血突进") },
         { "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (즉발). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다", L("Dash toward the mouse while invincible, making every enemy you pass bleed (instant). Learning Shadow Mastery in the Soul Tree adds speed, slows, chained dashes and more to the dash", "無敵状態でマウスの方向へ突進し、通り過ぎた敵に出血ダメージを与えます（即発動）。魂のツリーで影の熟練を覚えると突進に移動速度・鈍化・連続突進などが付きます", "在无敌状态下朝鼠标方向突进，使途经的敌人流血（瞬发）。在灵魂树学习暗影精通后，突进会附带移速 · 减速 · 连续突进等效果") },
@@ -1534,7 +1534,7 @@ public static partial class LocTable
         { "벨 때마다 처음 맞은 적에게서 번개가 적 셋에게 튑니다.", L("Each swing sends lightning from the first enemy hit to three more.", "斬るたびに最初に当たった敵から雷が3体に飛びます。", "每次挥砍，闪电会从第一个命中的敌人跳向另外三个敌人。") },
         { "던질 때마다 잠시 뒤 그림자가 같은 방향으로 한 번 더 던집니다. (피해 60%)", L("After each throw, a shadow throws again in the same direction. (60% damage)", "投げるたびに少し後で影が同じ方向にもう一度投げます。（ダメージ60%）", "每次投掷后，影子会朝同一方向再投一次。（伤害60%）") },
         { "모든 평타가 독을 쌓습니다. (최대 6중첩)", L("All basic attacks stack poison. (up to 6 stacks)", "全ての通常攻撃が毒を重ねます。（最大6重）", "所有普通攻击都会叠加毒。（最多6层）") },
-        { "한 번에 하나 더 던집니다.", L("Throw one more at a time.", "一度にもう1つ多く投げます。", "每次多投一个。") },
+        { "한 번에 하나 더 던집니다. (표창 수에 맞춰 한 개의 피해가 줄어들 수 있습니다)", L("Throw one more at a time. (Damage per star may be reduced to match the count)", "一度にもう1つ多く投げます。(数に合わせて1つあたりのダメージが下がる場合があります)", "每次多投一个。（单个飞镖伤害可能会按数量降低）") },     // 1.4.2~ 멀티샷 감쇠 반영
         { "화살이 맞은 자리에서 폭발합니다. (피해 60%)", L("Arrows explode where they hit. (60% damage)", "矢が命中した場所で爆発します。（ダメージ60%）", "箭矢在命中处爆炸。（伤害60%）") },
         { "화살이 가까운 적을 쫓아갑니다.", L("Arrows chase nearby enemies.", "矢が近くの敵を追いかけます。", "箭矢会追踪附近的敌人。") },
         { "화살이 적 셋을 더 꿰뚫고 30% 더 빠르게 날아갑니다.", L("Arrows pierce three more enemies and fly 30% faster.", "矢がさらに3体を貫き、30%速く飛びます。", "箭矢额外穿透三个敌人，飞行速度加快30%。") },

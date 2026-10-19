@@ -15,11 +15,13 @@ using UnityEngine;
 //              DashEnd(공명 I 게이지 25% · 공명 II 길이 엇갈린 자리 폭발 · 극의 연속 돌진)
 //   광란       Tick(탄창 +4) · RateMul · Killed(중첩) · Taken(대가) · Hurt(중첩 잃음) · CharacterKit.Rogue RpVolley(공명 I 두 개씩) · Killed(공명 II 표창 비)
 // 밸런스 (기획서 4-2 · 1.3.7 기준 보스 화력 ±8% 안을 목표로 한 계산 · 실측으로 맞출 것)
-//   출혈: 직접 −35% ↔ 5중첩 출혈 = 이 적이 받는 직접 피해 흐름의 55% (0.65 + 0.65 × 0.55 ≈ 1.0) — 공격 속도 · 멀티샷과 상관없이 늘 같은 비율
+//   출혈: 직접 −35% ↔ 5중첩 출혈 = 이 적이 받는 직접 피해 흐름의 40% (1.4.2~ 0.55 → 0.40: 흐름에 치명이 이미 들어 있어 0.65 + 0.65 × 0.40 × 치명 기대값 약 1.4 ≈ 1.0) — 공격 속도 · 멀티샷과 상관없이 늘 같은 비율
 //   광란: 공격 속도 +25% ↔ 표창 피해 −20% (보스 앞 1.0) · 탄창 10 이라 장전이 줄어 약 +6%. 처치 중첩(무리)이 강점
 //   질주 암살: 평타 −20% ↔ 돌진 1.43배 자주 · 돌진 한 번 220% + 500% (예전 220% + 출혈 600%) → 약 −5%
-//   회귀 칼날: 8칸 안 보스만 맞힘 ↔ 돌아오며 25% · 탄창이 거의 마르지 않음 → 약 +5% (거리를 지킬 때)
-//   그림자: 돌진 출혈 −30% (약 −5%) ↔ 공명 II 연막 안 치명 ×2 (연막 안에 서 있는 동안만) → 약 +5%
+//              1.4.2~ 도적 쪽 게이지 반환은 돌진 묶음마다 모두 합쳐 40% (CharacterKit.RogueGaugeBack) · 재돌진 · 연속 돌진은 보스 피해 60%
+//   회귀 칼날: 8칸 안 보스만 맞힘 ↔ 돌아오며 25% · 1.4.2~ 탄창 환급 두 묶음에 한 번(연사 약 ×1.2) · 극의 두 번째 왕복 50% → 약 +5% (거리를 지킬 때)
+//   그림자: 돌진 출혈 −30% (약 −5%) ↔ 공명 II 분신 연막 안 치명 ×2 (1.4.2~ 분신 연막만 · 가동률 약 25~35%) → 약 +5%
+//   출혈 세기는 1.4.2~ 0.40 (BleedShare 주석) · 1.4.2~ 약한 출혈은 센 출혈의 시간을 늘리지 않음 (Bleed.Apply)
 public sealed class RoguePaths : HeroPaths
 {
     public const int Bleed = 0, Shadow = 1, Boomerang = 2, Dash = 3, Frenzy = 4;
@@ -72,26 +74,26 @@ public sealed class RoguePaths : HeroPaths
             cost = "돌진 출혈이 30% 줄어듭니다.", strong = "생존 · 회피 · 보스 시선 돌리기", weak = "화력",
             cards = new[] { K, S(0), S(8) }, evo = "re.phantom",
             res1 = "분신이 사라질 때 연막이 퍼집니다.",
-            res2 = "연막 안에서 던진 표창은 치명타(×2)가 됩니다.",
+            res2 = "분신 연막 안에서 던진 표창은 치명타(×2)가 됩니다.",          // 1.4.2~ 분신 연막만 (SignatureSkills.RogueInSmoke)
             mastery = "돌진을 3번 모아 두고, 분신도 표창을 함께 던집니다.",
             color = new Color(0.55f, 0.4f, 0.85f), form = "살상 와이어" },
         new PathDef {
             key = "r.return", name = "회귀 칼날", tagline = "되돌아오는 표창 · 탄 경제",
-            seed = "곡선 투척", seedDesc = "표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (던질 때마다 한 번)",
+            seed = "곡선 투척", seedDesc = "표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (두 번 던질 때마다 한 번)",       // 1.4.2~ 두 묶음에 한 번 (CharacterKit.Rogue RpShot)
             cost = "사거리가 무한에서 8칸으로 줄어듭니다.", strong = "근중거리 무리 · 탄 경제", weak = "원거리",
             cards = new[] { B, S(4), S(6) }, evo = "re.return",
             res1 = "왕복으로 같은 적을 맞히면 던지기 연습이 2중첩 쌓입니다.",
             res2 = "돌아올 때 몸 둘레를 한 바퀴 돈 뒤 돌아옵니다.",
-            mastery = "표창이 두 번 왕복합니다.",
+            mastery = "표창이 한 번 더 왕복합니다. (두 번째 왕복은 피해 50%)",        // 1.4.2~ ReturningShuriken.Relaunch
             color = new Color(0.5f, 0.85f, 0.95f) },
         new PathDef {
             key = "r.dash", name = "질주 암살", tagline = "긴 돌진 직접 피해 · 순간 화력",
             seed = "질주 암살", seedDesc = "돌진 거리 ×1.5, 돌진 게이지 −30%, 돌진 경로가 출혈 대신 직접 피해를 줍니다. (공격력 500%)",
             cost = "평타 공격 속도가 20% 느려집니다.", strong = "기동 · 관통 · 보스 순간 화력", weak = "게이지 의존",
             cards = new[] { G, S(5), S(3) }, evo = "re.road",
-            res1 = "돌진으로 처치하면 게이지 25%를 돌려받습니다.",
+            res1 = "돌진으로 처치하면 게이지 25%를 돌려받습니다. (한 번의 돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)",      // 1.4.2~ RogueGaugeBack
             res2 = "돌진한 길이 X자로 엇갈리면 교차점이 터집니다. (공격력 300%)",
-            mastery = "돌진 중 처치하면 바로 다시 돌진합니다. (3연속)",
+            mastery = "돌진 중 처치하면 바로 다시 돌진합니다. (3연속 · 이어지는 돌진은 보스에게 피해 60%)",      // 1.4.2~ CharacterKit.FreeDashBossMul
             color = new Color(0.95f, 0.75f, 0.3f) },
         new PathDef {
             key = "r.frenzy", name = "광란", tagline = "처치마다 빨라짐 · 무리",
@@ -120,7 +122,8 @@ public sealed class RoguePaths : HeroPaths
     bool magAdded;              // 탄창 +4 를 넣었나 (End 에서 되돌림)
     // 질주 암살
     bool dashKilled;            // 이번 돌진 중 처치가 있었나
-    int chain;                  // 극의: 이어서 다시 돌진한 수
+    int chain;                  // 극의: 이어서 다시 돌진한 수 (1.4.2~ 게이지 돌진 묶음 하나에서 — 숙련 4단계 재돌진과 함께 셈)
+    bool killBackGiven;         // 1.4.2~ 공명 I 25% 를 이번 게이지 돌진 묶음에서 이미 주었나
     struct Trail { public Vector3 a, b; public float until; }
     readonly List<Trail> trails = new List<Trail>(8);
     // 그림자
@@ -151,6 +154,7 @@ public sealed class RoguePaths : HeroPaths
         if (magAdded && p != null) { p.MaxBullet = Mathf.Max(1, p.MaxBullet - FrenzyMagAdd); p.NowBullet = Mathf.Min(p.NowBullet, p.MaxBullet); }
         magAdded = false;
         frenzy = 0;
+        chain = 0; dashKilled = false; killBackGiven = false;       // 1.4.2~ 돌진 묶음 상태도 되돌림
     }
 
     // ================================================================= 전투 훅
@@ -205,8 +209,7 @@ public sealed class RoguePaths : HeroPaths
         if (!Paths.Has(Dash)) return;
         CharacterKit k = CharacterKit.Instance;
         if (k != null && k.RpStoredUlt) return;
-        SkillGauge g = Cache<SkillGauge>.Get;
-        if (g != null) g.AddSkillPoint(g.MaxSkillPoint * DashGaugeBack);
+        if (k != null) k.RogueGaugeBack(DashGaugeBack);         // 1.4.2~ 묶음 반환 상한 40% 안에서 (묶음의 처음이라 늘 30% 다 받음 — 카드 글 「게이지 −30%」 그대로)
     }
 
     public override float RateMul()
@@ -312,8 +315,9 @@ public sealed class RoguePaths : HeroPaths
         try
         {
             CharacterKit k = CharacterKit.Instance;
-            bool chained = k != null && k.RpChaining;
-            if (!chained) chain = 0;
+            // 1.4.2~ 게이지 돌진 묶음을 새로 열 때만 되돌림 (숙련 4단계 재돌진이 새 묶음이 되어 25% · 연속 돌진 3번을 또 받던 빈틈)
+            bool gaugeDash = k == null || (k.RpGaugeDash && !k.RpChaining);
+            if (gaugeDash) { chain = 0; killBackGiven = false; }
             dashKilled = false;
             if (k != null) k.RpDashBegan();                 // 그림자: 모아 둔 돌진을 썼으면 하나 줄임
             if (Paths.Has(Shadow)) SpawnDecoy(from);
@@ -336,10 +340,12 @@ public sealed class RoguePaths : HeroPaths
             if (cut != null && Paths.Has(Bleed) && Paths.Res(Bleed) >= 1) BurstCut(cut);
             if (!Paths.Has(Dash)) return;
             // 1.4.1~ 게이지 25% 는 돌진 묶음(극의 연속 돌진 포함)마다 한 번 — 연속 돌진마다 붙으면 게이지가 다시 가득 차 무적 돌진이 끝없이 이어짐
-            if (dashKilled && chain == 0 && Paths.Res(Dash) >= 1)
+            // 1.4.2~ 묶음 = 게이지 돌진 + 숙련 4단계 재돌진 + 연속 돌진 (killBackGiven) · 반환 상한 40% 안에서 (RogueGaugeBack)
+            if (dashKilled && !killBackGiven && Paths.Res(Dash) >= 1)
             {
-                SkillGauge g = Cache<SkillGauge>.Get;
-                if (g != null) g.AddSkillPoint(g.MaxSkillPoint * DashKillBack);
+                killBackGiven = true;
+                CharacterKit kb = CharacterKit.Instance;
+                if (kb != null) kb.RogueGaugeBack(DashKillBack);
                 Fx.Spawn("fx_sparkle", to, 1.8f, new Color(1f, 0.85f, 0.4f), 22f);
             }
             if (Paths.Res(Dash) >= 2) CrossTrails(from, to);
@@ -404,8 +410,8 @@ public sealed class RoguePaths : HeroPaths
 }
 
 // 출혈 갈래: 적 하나의 출혈 중첩 (실제 피해는 기존 Bleed 컴포넌트가 줌 — 여기선 중첩 수와 세기만 셈)
-//   세기 = 이 적이 받는 직접 피해 흐름(초당, 최근 평균) × 0.55 × 중첩/5 × 배율 → 공격 속도 · 멀티샷이 달라도 보스 앞 비율이 같음
-//   다른 출혈(돌진 · 갈고리 표창)이 더 세면 그쪽을 그대로 둠 (Bleed.Apply 는 센 쪽을 남김)
+//   세기 = 이 적이 받는 직접 피해 흐름(초당, 최근 평균) × BleedShare(1.4.2~ 0.40) × 중첩/5 × 배율 → 공격 속도 · 멀티샷이 달라도 보스 앞 비율이 같음
+//   다른 출혈(돌진 · 갈고리 표창)이 더 세면 그쪽을 그대로 둠 (Bleed.Apply 는 센 쪽을 남김 · 1.4.2~ 약한 쪽은 센 쪽의 시간도 늘리지 않음)
 //   상태는 until 하나 (3초 안에 다시 안 맞으면 중첩이 0) · Update 없음
 public class RogueBleed : MonoBehaviour
 {
@@ -470,7 +476,8 @@ public class RogueBleed : MonoBehaviour
         using (DamageSource.As("출혈 중첩")) Bleed.Apply(gameObject, dps, Life);
         if (b == null) b = GetComponent<Bleed>();
         if (b == null) return;
-        if (mine) b.dps = dps;
+        // 1.4.2~ 내 출혈은 세기가 낮아져도 시간을 이어 감 (Bleed.Apply 가 약한 출혈의 시간을 늘리지 않게 바뀌어서)
+        if (mine) { b.dps = dps; b.until = Mathf.Max(b.until, Time.time + Life); }
         lastSet = b.dps <= dps + 0.001f ? b.dps : -1f;       // 1.4.1~ 내가 정한 값일 때만 기억 (더 센 남의 출혈을 다음 명중에서 내 값으로 낮추지 않게)
     }
 }

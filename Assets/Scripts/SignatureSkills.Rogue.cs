@@ -10,6 +10,7 @@ public partial class SignatureSkills
     static readonly Color Shade = new Color(0.7f, 0.5f, 1f);
 
     readonly List<SigZone> smokes = new List<SigZone>();
+    readonly List<SigZone> pathSmokes = new List<SigZone>();       // 1.4.2~ 그림자 갈래 분신 연막만 (공명 II 치명 판정용 — 고유 스킬 연막 · 환영 연막까지 세던 문제)
     readonly Dictionary<GameObject, float> bleedSince = new Dictionary<GameObject, float>();
     readonly Dictionary<GameObject, float> knots = new Dictionary<GameObject, float>();
     float ambushUntil;
@@ -166,7 +167,8 @@ public partial class SignatureSkills
             else if (Time.time - since >= 3f)
             {
                 bleedSince.Remove(target);
-                float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 0.8f, 0.2f) * P("r.burst");     // 1.1.2~ 피바다: ×1.5
+                // 1.1.2~ 피바다: ×1.5 · 1.4.2~ 남은 출혈은 최대 1.5초치 (표창마다 출혈이 갱신돼 늘 3초치를 3초마다 터뜨렸음 · 갈래 공명 I BurstCut 과 같은 상한)
+                float burst = bleed.dps * Mathf.Clamp(bleed.until - Time.time, 0f, 1.5f) * V(bu, 0.8f, 0.2f) * P("r.burst");
                 Vector3 p = target.transform.position;
                 Destroy(bleed);
                 // 1.4.2~ 출혈 갈래 중첩도 비움 (남겨 두면 다음 표창 한 발에 출혈이 바로 원래 세기로 돌아와 3초마다 공짜로 다시 터짐)
@@ -261,10 +263,13 @@ public partial class SignatureSkills
 
     // ================================================================= 갈래 효과가 쓰는 도적 도우미 (2026-10-19 · Paths/Paths.Rogue.cs · CharacterKit.Rogue.cs)
     // 그림자 공명 I: 미끼 분신이 사라진 자리에 연막 (적 느리게 · 환영 연막 · 공명 II 치명 판정에 같이 셈)
+    //   1.4.2~ 공명 II 치명 판정은 이 분신 연막(pathSmokes)만 — 환영 연막(받는 피해 −90%)은 smokes 전체를 그대로 봄
     public void RoguePathSmoke(Vector3 at)
     {
         if (!Alive) return;
         smokes.RemoveAll(z => z == null);
+        pathSmokes.RemoveAll(z => z == null);
+        while (pathSmokes.Count >= 12) pathSmokes.RemoveAt(0);      // 지우는 것은 아래 smokes 상한이 함 (같은 연막)
         while (smokes.Count >= 12) { if (smokes[0] != null) Destroy(smokes[0].gameObject); smokes.RemoveAt(0); }     // 연막 상한
         SigZone z = Zone(at, 3f * Fs("r.smoke"), 2.5f, 0.2f, zone =>
         {
@@ -275,13 +280,14 @@ public partial class SignatureSkills
             }
         }, "fx_cloud", new Color(0.4f, 0.32f, 0.55f, 0.7f), 7.5f * Fs("r.smoke"));
         smokes.Add(z);
+        pathSmokes.Add(z);
         Fx.Spawn("fx_smoke", at, 4f, new Color(0.5f, 0.45f, 0.6f), 14f);
     }
 
-    // 이 자리가 연막 안인가 (그림자 공명 II)
+    // 이 자리가 분신 연막 안인가 (그림자 공명 II) — 1.4.2~ 고유 스킬 연막(r.smoke) · 환영 연막은 세지 않음
     public bool RogueInSmoke(Vector3 p)
     {
-        foreach (SigZone z in smokes)
+        foreach (SigZone z in pathSmokes)
             if (z != null && z.Contains(p)) return true;
         return false;
     }
@@ -311,8 +317,8 @@ public partial class SignatureSkills
 //            벽은 지나침, 매 프레임 주인 쪽으로 방향을 틂(트는 빠르기가 점점 빨라져 주인 둘레를 맴돌지 않음), 주인에게 닿으면 사라짐
 //   귀환하는 칼날(re.return): 꺾이는 순간 하나 더 갈라져 둘이 양쪽으로 휘어 돌아옴, 처음 표창이 끝나면 탄창에 한 발 (평타 한 번에 한 발 — 예전과 같음)
 //   안전: 돌아오는 길은 최대 3초 (그 뒤 사라짐) · 매 프레임 할당 없음 · 복제(Instantiate) 없음 (갈라지는 표창도 평타 표창처럼 새로 만듦)
-//   회귀 칼날 갈래(ThrowPath, 2026-10-19~): 모든 평타 표창이 8칸에서 꺾임 · 몸으로 받으면 탄창 한 발(던진 묶음마다 한 번)
-//            공명 I 가는 길에 벤 적을 오는 길에 또 베면 던지기 연습 +1 더 · 공명 II 받기 전에 몸 둘레를 한 바퀴 · 극의 받은 뒤 처음 방향으로 한 번 더 왕복
+//   회귀 칼날 갈래(ThrowPath, 2026-10-19~): 모든 평타 표창이 8칸에서 꺾임 · 몸으로 받으면 탄창 한 발(1.4.2~ 두 묶음에 한 번)
+//            공명 I 가는 길에 벤 적을 오는 길에 또 베면 던지기 연습 +1 더 · 공명 II 받기 전에 몸 둘레를 한 바퀴 · 극의 받은 뒤 처음 방향으로 한 번 더 왕복(1.4.2~ 피해 50%)
 public class ReturningShuriken : MonoBehaviour
 {
     const float BackSpeed = 26f, CatchDist = 1.2f, MaxBack = 3f, BaseTurn = 540f, TurnGrow = 1440f, Split = 40f, Curl = 20f;
@@ -335,6 +341,8 @@ public class ReturningShuriken : MonoBehaviour
     RogueVolley volley;
     int trips, outPene;
     float orbitT, orbitAng, outDmg, outSpeed;
+    bool outCrit, outCritRolled;            // 1.4.2~ 처음 던질 때의 치명 상태 (극의 두 번째 길이 그대로 이어 받음)
+    const float SecondTripMul = 0.5f;       // 1.4.2~ 극의 두 번째 왕복 피해 (가는 길 · 오는 길 모두 첫 왕복의 50%)
     Vector2 outDir0;
     System.Collections.Generic.HashSet<int> outHits;
 
@@ -364,6 +372,8 @@ public class ReturningShuriken : MonoBehaviour
         this.orbit = orbit;
         this.trips = Mathf.Clamp(trips, 1, 2);
         outDmg = b.damage;
+        outCrit = b.isCrit;
+        outCritRolled = b.critRolled;
         outSpeed = b.speed;
         outPene = Mathf.Max(1, b.pene);
         outDir0 = b.Direction;
@@ -497,18 +507,22 @@ public class ReturningShuriken : MonoBehaviour
         bullet.Steer(d);
     }
 
-    // 극의: 받은 자리에서 처음 던진 방향으로 한 번 더 (가는 길 피해 · 관통 그대로)
+    // 극의: 받은 자리에서 처음 던진 방향으로 한 번 더 (관통 그대로 · 1.4.2~ 가는 길 피해 50%)
     void Relaunch()
     {
         trips--;
         returning = orbiting = orbited = false;
         backAge = 0f;
         origin = transform.position;
-        bullet.damage = outDmg;
+        // 1.4.2~ 두 번째 길은 피해 50% (예전엔 첫 표창과 같은 피해라 극의 하나가 ×2~2.5) ·
+        //   치명 상태는 처음 던질 때 그대로 (outDmg 에 이미 든 연막 치명 ×2 위에 영혼 트리 치명을 또 굴리던 문제 — 오는 길이 지운 상태를 되돌림)
+        bullet.damage = outDmg * SecondTripMul;
+        backDmg *= SecondTripMul;           // 두 번째 왕복의 오는 길도 50% (한 개 = 1 + 0.25 + 0.5 + 0.125 = 1.875, 예전 2.5)
         bullet.speed = outSpeed;
         bullet.ResetPene(outPene);
         if (bullet.hitOnce != null) bullet.hitOnce.Clear();
-        bullet.isCrit = bullet.critRolled = false;
+        bullet.isCrit = outCrit;
+        bullet.critRolled = outCritRolled;
         bullet.onSpent = Spent;
         bullet.onHitWall = TurnBack;
         bullet.onHitEnemy = null;

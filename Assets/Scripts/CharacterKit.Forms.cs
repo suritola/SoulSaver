@@ -61,7 +61,7 @@ public partial class CharacterKit
         AugThunder => "벨 때마다 처음 맞은 적에게서 번개가 적 셋에게 튑니다.",
         AugEcho => "던질 때마다 잠시 뒤 그림자가 같은 방향으로 한 번 더 던집니다. (피해 60%)",
         AugVenom => "모든 평타가 독을 쌓습니다. (최대 6중첩)",
-        AugVolley => "한 번에 하나 더 던집니다.",
+        AugVolley => "한 번에 하나 더 던집니다. (표창 수에 맞춰 한 개의 피해가 줄어들 수 있습니다)",     // 1.4.2~ 멀티샷 감쇠 반영 (RogueThrow)
         AugBlast => "화살이 맞은 자리에서 폭발합니다. (피해 60%)",
         AugSeek => "화살이 가까운 적을 쫓아갑니다.",
         AugGale => "화살이 적 셋을 더 꿰뚫고 30% 더 빠르게 날아갑니다.",
@@ -227,7 +227,14 @@ public partial class CharacterKit
 
     void RogueThrow(Vector3 start, Vector2 dir, float dmg, int shots)
     {
-        if (augment == AugVolley) shots++;
+        if (augment == AugVolley)
+        {
+            // 1.4.2~ 「하나 더」도 멀티샷 감쇠 표를 따름 (dmg 에는 원래 발 수의 배율이 이미 들어 있음 → 한 발 늘어난 배율로 바꿔 끼움)
+            //   ×1.15 는 다른 증강(잔상 +60%)과 같은 급으로 맞춘 값 — 1발 → 2발이면 총피해 2.0 → 1.61. 도적 전용 증강이라 다른 영웅은 그대로
+            //   1.4.2~ 한 개 배율은 1 을 넘지 않음 (표 끝(5발 이상)은 감쇠가 0.4 로 멈춰 ×1.15 가 그대로 상향이 되던 문제 → 그 구간은 예전처럼 1.0)
+            dmg *= Mathf.Min(1f, player.MultiShotDamageRate(shots + 1) / Mathf.Max(0.01f, player.MultiShotDamageRate(shots)) * VolleyAugMul);
+            shots++;
+        }
         float step = form == SpecialAbilities.KitCards ? 9f : 8f;
         lastRogueThrow = null;
         int i = 0, mid = shots / 2;
@@ -239,10 +246,12 @@ public partial class CharacterKit
         }
         Paths.Safe(() => RpVolley(start, dir, dmg, shots, step));       // 갈래 광란 공명 I: 10중첩이면 두 개씩
         Play("whoosh", 0.35f, form == SpecialAbilities.KitBlowgun ? 2.3f : 1.8f);
-        if (augment == AugEcho) StartCoroutine(EchoThrow(dir, dmg, shots, step));
+        if (augment == AugEcho) StartCoroutine(EchoThrow(dir, dmg, shots, step, rpVolleyFrame == Time.frameCount ? rpVolley : null));     // 1.4.2~ 이번 묶음을 넘김 (회귀 칼날 환급을 같이 셈)
     }
 
-    IEnumerator EchoThrow(Vector2 dir, float dmg, int shots, float step)
+    const float VolleyAugMul = 1.15f;       // 1.4.2~ 연발 증강: 멀티샷 감쇠 뒤 한 개 피해 ×1.15
+
+    IEnumerator EchoThrow(Vector2 dir, float dmg, int shots, float step, RogueVolley volley)
     {
         yield return new WaitForSeconds(0.15f);
         Vector3 start = player.MuzzlePosition;
@@ -250,7 +259,7 @@ public partial class CharacterKit
         {
             Bullet b = ThrowOne(start, d, dmg * 0.6f, 0.6f);
             if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(0.55f, 0.4f, 0.8f, 0.8f);
-            Paths.Safe(() => RpShot(b, false));     // 1.4.1~ 메아리 표창에도 갈래 (회귀 칼날 8칸 · 광란 −20% · 그림자 연막 치명)
+            Paths.Safe(() => RpShot(b, false, true, volley));     // 1.4.1~ 메아리 표창에도 갈래 (회귀 칼날 8칸 · 광란 −20% · 그림자 연막 치명) · 1.4.2~ 원래 묶음 · 왕복 한 번
         }
     }
 

@@ -44,10 +44,10 @@ public static partial class LocTable
         PA("생존 · 회피 · 보스 시선 돌리기", "Survival · Evasion · Drawing the boss away", "生存・回避・ボスの目をそらす", "生存 · 闪避 · 引开首领");
         PA("화력", "Firepower", "火力", "火力");
         PA("분신이 사라질 때 연막이 퍼집니다.", "Clones release a Smoke Screen when they vanish.", "分身が消えるとき煙幕が広がります。", "分身消失时会散开烟幕。");
-        PA("연막 안에서 던진 표창은 치명타(×2)가 됩니다.",
-           "Throwing Stars thrown inside a Smoke Screen become critical hits (×2).",
-           "煙幕の中で投げた手裏剣は会心(×2)になります。",
-           "在烟幕中投出的飞镖必定暴击（×2）。");
+        PA("분신 연막 안에서 던진 표창은 치명타(×2)가 됩니다.",          // 1.4.2~ 분신 연막만
+           "Throwing Stars thrown inside a clone's Smoke Screen become critical hits (×2).",
+           "分身の煙幕の中で投げた手裏剣は会心(×2)になります。",
+           "在分身烟幕中投出的飞镖必定暴击（×2）。");
         PA("돌진을 3번 모아 두고, 분신도 표창을 함께 던집니다.",
            "Store up to 3 Dashes, and clones throw Throwing Stars with you.",
            "ダッシュを3回ためられ、分身も一緒に手裏剣を投げます。",
@@ -57,10 +57,10 @@ public static partial class LocTable
         PA("회귀 칼날", "Returning Blade", "回帰の刃", "回旋刃");
         PA("되돌아오는 표창 · 탄 경제", "Returning stars · Ammo economy", "戻ってくる手裏剣・弾の節約", "回旋飞镖 · 弹药经济");
         PA("곡선 투척", "Curved Throw", "曲線投げ", "弧线投掷");
-        PA("표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (던질 때마다 한 번)",
-           "Throwing Stars turn back after 8 tiles and cut again on the way. (25% damage) Catching a returning star with your body refills 1 shot. (Once per throw)",
-           "手裏剣が8マス先で戻ってきて、もう一度斬ります。(ダメージ25%) 戻った手裏剣を体で受けると弾倉が1発回復します。(投げるたびに1回)",
-           "飞镖飞出8格后折返，再次斩击。（伤害25%）用身体接住飞回的飞镖可补充1发。（每次投掷1次）");
+        PA("표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (두 번 던질 때마다 한 번)",      // 1.4.2~ 두 묶음에 한 번
+           "Throwing Stars turn back after 8 tiles and cut again on the way. (25% damage) Catching a returning star with your body refills 1 shot. (Once every two throws)",
+           "手裏剣が8マス先で戻ってきて、もう一度斬ります。(ダメージ25%) 戻った手裏剣を体で受けると弾倉が1発回復します。(2回投げるごとに1回)",
+           "飞镖飞出8格后折返，再次斩击。（伤害25%）用身体接住飞回的飞镖可补充1发。（每投掷两次1次）");
         PA("사거리가 무한에서 8칸으로 줄어듭니다.", "Range drops from unlimited to 8 tiles.", "射程が無限から8マスに縮みます。", "射程从无限缩短为8格。");
         PA("근중거리 무리 · 탄 경제", "Close-to-mid-range crowds · Ammo economy", "近〜中距離の群れ・弾の節約", "近中距离敌群 · 弹药经济");
         PA("원거리", "Long range", "遠距離", "远距离");
@@ -72,7 +72,10 @@ public static partial class LocTable
            "Returning stars circle around you once before coming back.",
            "戻るとき体の周りを1周してから戻ります。",
            "飞回时会绕身体转一圈再回来。");
-        PA("표창이 두 번 왕복합니다.", "Throwing Stars make the round trip twice.", "手裏剣が2回往復します。", "飞镖往返两次。");
+        PA("표창이 한 번 더 왕복합니다. (두 번째 왕복은 피해 50%)",      // 1.4.2~ 두 번째 왕복 50%
+           "Throwing Stars make one more round trip. (50% damage on the second trip)",
+           "手裏剣がもう1回往復します。(2回目の往復はダメージ50%)",
+           "飞镖再往返一次。（第二次往返伤害50%）");
 
         // ================================================================= 질주 암살
         PA("질주 암살", "Dash Assassin", "疾走暗殺", "疾走暗杀");
@@ -84,15 +87,18 @@ public static partial class LocTable
         PA("평타 공격 속도가 20% 느려집니다.", "Basic attack speed is 20% slower.", "通常攻撃の攻撃速度が20%遅くなります。", "普通攻击速度降低20%。");
         PA("기동 · 관통 · 보스 순간 화력", "Mobility · Piercing · Burst on bosses", "機動・貫通・ボスへの瞬間火力", "机动 · 贯穿 · 对首领瞬间爆发");
         PA("게이지 의존", "Gauge-dependent", "ゲージ頼み", "依赖能量槽");
-        PA("돌진으로 처치하면 게이지 25%를 돌려받습니다.", "Killing with a Dash refunds 25% of the gauge.", "ダッシュで倒すとゲージを25%取り戻します。", "冲刺击杀敌人时返还25%能量槽。");
+        PA("돌진으로 처치하면 게이지 25%를 돌려받습니다. (한 번의 돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)",      // 1.4.2~ 반환 상한
+           "Killing with a Dash refunds 25% of the gauge. (Gauge refunded from one Dash is capped at 40% in total)",
+           "ダッシュで倒すとゲージを25%取り戻します。(1回のダッシュで戻るゲージは合計40%まで)",
+           "冲刺击杀敌人时返还25%能量槽。（单次冲刺返还的能量槽合计最多40%）");
         PA("돌진한 길이 X자로 엇갈리면 교차점이 터집니다. (공격력 300%)",
            "When Dash paths cross in an X, the crossing point explodes. (300% Attack)",
            "ダッシュした道がX字に交わると、交点が爆発します。(攻撃力300%)",
            "冲刺路径呈X形交叉时，交叉点会爆炸。（攻击力300%）");
-        PA("돌진 중 처치하면 바로 다시 돌진합니다. (3연속)",
-           "Killing during a Dash lets you Dash again at once. (Up to 3 in a row)",
-           "ダッシュ中に倒すと、すぐにもう一度ダッシュします。(3連続)",
-           "冲刺中击杀敌人会立刻再次冲刺。（最多3连）");
+        PA("돌진 중 처치하면 바로 다시 돌진합니다. (3연속 · 이어지는 돌진은 보스에게 피해 60%)",      // 1.4.2~ 이어지는 돌진 보스 피해 60%
+           "Killing during a Dash lets you Dash again at once. (Up to 3 in a row · follow-up Dashes deal 60% damage to bosses)",
+           "ダッシュ中に倒すと、すぐにもう一度ダッシュします。(3連続・続くダッシュはボスへのダメージ60%)",
+           "冲刺中击杀敌人会立刻再次冲刺。（最多3连 · 后续冲刺对首领伤害为60%）");
 
         // ================================================================= 광란
         PA("광란", "Frenzy", "狂乱", "狂乱");

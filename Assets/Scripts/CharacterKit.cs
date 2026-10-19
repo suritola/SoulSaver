@@ -676,10 +676,13 @@ public partial class CharacterKit : MonoBehaviour
                 if (Dashing || !(full || Time.time < recastUntil)) break;
                 {
                     recast = Time.time < recastUntil;
+                    // 1.4.2~ 게이지 돌진 묶음의 시작인가: 게이지로 쓴 돌진 · 그림자 모아 둔 돌진(rpArmed)은 true, 숙련 4단계 공짜 재돌진은 false
+                    //   (재돌진이 새 묶음이 되어 반환 · 극의 연속 돌진을 또 받던 빈틈 — 게이지 한 칸에 돌진이 최대 6번 나갔음)
+                    bool gaugeDash = !recast || (rpArmed && rpStored > 0);
                     // 그림자 숙련 4단계: 게이지로 돌진한 뒤 잠깐은 한 번 더 공짜로 (게이지는 아껴 둠)
                     recastUntil = 0f;
                     Vector3 aimAt = Mouse;          // 조준 범위를 그린 자리 (돌진하면 카메라가 따라가 마우스의 월드 좌표가 바뀜)
-                    StartCoroutine(BleedDash(((Vector2)(aimAt - transform.position)).normalized));
+                    StartCoroutine(BleedDash(((Vector2)(aimAt - transform.position)).normalized, gaugeDash));
                     if (recast) break;
                     KitUltAdd(0.25f, aimAt);           // 게이지로 돌진할 때만 (공짜 연속 돌진에는 안 붙음) · 돌진 끝 무렵에 터지게
                     Spend(gauge);
@@ -910,16 +913,20 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 도적 출혈 돌진: 무적 상태로 마우스 쪽으로 빠르게 돌진, 지나간 적마다 한 번 베고 출혈
-    public IEnumerator BleedDash(Vector2 dir)
+    //   gaugeDash: 1.4.2~ 게이지 돌진 묶음을 새로 여는 돌진인가 (게이지 · 그림자 모아 둔 돌진 = true, 숙련 4단계 재돌진 · 질주 암살 극의 연속 돌진 = false)
+    public IEnumerator BleedDash(Vector2 dir, bool gaugeDash = true)
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
         int mastery = RogueMastery;
-        bool chained = rpChaining;      // 1.4.1~ 질주 암살 극의가 이어 붙인 돌진 (코루틴 첫 줄은 RpChainDash 안에서 바로 돎)
+        if (rpChaining) gaugeDash = false;      // 1.4.1~ 질주 암살 극의가 이어 붙인 돌진 (코루틴 첫 줄은 RpChainDash 안에서 바로 돎)
         const float time = 0.32f, width = 1.4f;
         Vector3 from = transform.position;
         Vector3 to = DashEnd(dir);
 
         dashUntil = Time.time + time;
+        // 1.4.2~ 게이지 돌진 묶음 시작: 도적 쪽 게이지 반환 상한을 되돌림 (재돌진 · 연속 돌진은 같은 묶음이라 나눠 씀) — 연막 · 갈래 DashStart 보다 먼저
+        rpGaugeDash = gaugeDash;
+        if (gaugeDash) rogueBackLeft = RogueBackCap;
         SignatureSkills.DashStart(from);                         // 연막
         // 돌진하는 동안 + 끝난 뒤 0.4초 무적
         player.GrantInvincibility(time + (mastery >= 3 ? 0.8f : 0.4f));
@@ -937,7 +944,7 @@ public partial class CharacterKit : MonoBehaviour
         {
             Vector3 p = Vector3.Lerp(from, to, t / time);
             transform.position = p;
-            Cut(prev, p, width, dir, hit);
+            Cut(prev, p, width, dir, hit, gaugeDash);
             prev = p;
             // 보라 잔상과 그림자 줄기
             if (t >= ghosts * 0.03f)
@@ -952,12 +959,12 @@ public partial class CharacterKit : MonoBehaviour
             yield return null;
         }
         transform.position = to;
-        Cut(prev, to, width, dir, hit);
+        Cut(prev, to, width, dir, hit, gaugeDash);
         Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
         RunCounters.Max("dash.hits", hit.Count);       // 1.2~ 영혼 계약 「한 번의 돌진, 여덟」
-        DashMastery(to, mastery, chained ? 0 : hit.Count);      // 1.4.1~ 연속 돌진은 숙련 5단계 게이지 반환 없음 (반환으로 게이지가 다시 차 끝없이 이어지지 않게)
+        DashMastery(to, mastery, gaugeDash ? hit.Count : 0);      // 1.4.1~ 연속 돌진은 숙련 5단계 게이지 반환 없음 · 1.4.2~ 숙련 4단계 재돌진도 (반환으로 게이지가 다시 차 끝없이 이어지지 않게)
         SignatureSkills.DashEnd(from, to, hit);                  // 급습 · 궤적 칼날 · 그림자 매듭
     }
 
@@ -969,9 +976,11 @@ public partial class CharacterKit : MonoBehaviour
         "돌진 뒤 2초 동안 이동 속도 +35%",
         "돌진이 끝난 자리 주변의 적을 1.5초 동안 60% 느리게",
         "돌진 거리 +30% · 돌진 뒤 무적 시간 두 배",
-        "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이)",
-        "돌진으로 벤 적 하나당 필살기 게이지 4% 되돌려 받음 (최대 40%)",
+        "돌진 뒤 3초 안에 우클릭으로 한 번 더 돌진 (게이지 없이 · 보스에게 베기 피해 60%)",           // 1.4.2~ 보스 베기 피해 60% (FreeDashBossMul · 출혈은 그대로)
+        "게이지를 쓴 돌진(모아 둔 돌진 포함)으로 벤 적 하나당 필살기 게이지 4% 되돌려 받음 (돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)",     // 1.4.2~ 재돌진 · 연속 돌진은 반환 없음 · 질주 암살 반환과 합쳐 40% (RogueGaugeBack)
     };
+    // 1.4.2~ 게이지를 쓰지 않은 돌진(숙련 4단계 재돌진 · 질주 암살 극의 연속 돌진)이 보스를 벨 때 피해 배율 (잡몹은 그대로 — 이동 유틸로 기획한 재돌진이 보스 화력을 두 배로 만들던 문제)
+    const float FreeDashBossMul = 0.6f;
     float recastUntil;
     [HideInInspector] public int shadowLevel;        // 배운 그림자 숙련 단계 (0 = 없음)
 
@@ -992,10 +1001,7 @@ public partial class CharacterKit : MonoBehaviour
         if (mastery >= 4 && recastUntil > Time.time)
             Fx.Spawn("fx_sparkle", at, 1.6f, new Color(0.8f, 0.6f, 1f), 20f);
         if (mastery >= 5 && hits > 0)
-        {
-            if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
-            if (gaugeRef != null) gaugeRef.AddSkillPoint(gaugeRef.MaxSkillPoint * Mathf.Min(0.4f, 0.04f * hits));
-        }
+            RogueGaugeBack(Mathf.Min(0.4f, 0.04f * hits));      // 1.4.2~ 질주 암살 반환과 합쳐 묶음마다 40% 상한 (CharacterKit.Rogue)
     }
 
     // 1.0.1: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
@@ -1013,15 +1019,17 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 이번 프레임에 지나간 구간 전체 (프레임이 길어도 건너뛰지 않게)
-    void Cut(Vector3 a, Vector3 b, float width, Vector2 dir, HashSet<Collider2D> hit)
+    //   gaugeDash = false(재돌진 · 연속 돌진)면 1.4.2~ 보스에게 베기 · 질주 암살 직접 피해 ×0.6 (FreeDashBossMul)
+    void Cut(Vector3 a, Vector3 b, float width, Vector2 dir, HashSet<Collider2D> hit, bool gaugeDash = true)
     {
         using (var ovl = PhysHits.Circle((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width)) foreach (Collider2D c in ovl)
         {
             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
             if (Hostile.DistanceToSegment(c.transform.position, a, b) > width) continue;
             if (!hit.Add(c)) continue;
-            Specials.Damage(c.gameObject, Damage * 2.2f * UltMul, dir, 1f);
-            Paths.Safe(() => RpCutBleed(c.gameObject, Damage * 1.5f * UltMul, dir));       // 출혈 (갈래: 질주 암살은 직접 피해 · 그림자는 −30%, CharacterKit.Rogue)
+            float bossMul = !gaugeDash && c.CompareTag("boss") ? FreeDashBossMul : 1f;
+            Specials.Damage(c.gameObject, Damage * 2.2f * UltMul * bossMul, dir, 1f);
+            Paths.Safe(() => RpCutBleed(c.gameObject, Damage * 1.5f * UltMul, dir, bossMul));       // 출혈 (갈래: 질주 암살은 직접 피해 · 그림자는 −30%, CharacterKit.Rogue)
             Fx.Spawn("fx_bleed", c.transform.position, 1.4f, Color.white, 16f);
             Play("crack", 0.35f, 1.4f);
         }
@@ -1463,7 +1471,7 @@ public class HuntMark : MonoBehaviour
     }
 }
 
-// 출혈: 몇 초 동안 0.25초마다 피해, 핏방울이 떨어짐 (다시 걸리면 시간 갱신)
+// 출혈: 몇 초 동안 0.25초마다 피해, 핏방울이 떨어짐 (같거나 센 출혈이 다시 걸리면 세기 · 시간 갱신)
 public class Bleed : MonoBehaviour
 {
     readonly string dmgSource = DamageSource.Current;     // 만들어질 때의 피해 출처 (RunStats)
@@ -1478,8 +1486,10 @@ public class Bleed : MonoBehaviour
         if (target == null) return;
         Bleed b = target.GetComponent<Bleed>();
         if (b == null) b = target.AddComponent<Bleed>();
-        b.dps = Mathf.Max(b.dps, dps);
-        b.until = Time.time + duration;
+        // 1.4.2~ 약한 출혈은 센 출혈의 시간을 늘리지 않음 (도적 돌진 출혈이 갈고리 표창 · 출혈 중첩 · 저주 전이가 걸릴 때마다 끝없이 이어지던 문제)
+        //   센 출혈이 끝나면 약한 출혈이 다음 명중에서 새로 걸림. 모든 영웅 공통 경로 — 다른 영웅은 약한 출혈이 센 출혈을 늘려 주던 몫만 사라짐
+        //   이미 끝났는데 아직 지워지지 않은 출혈(같은 프레임 · Update 전)은 약한 출혈로 새로 걸림 (약한 출혈이 시간을 조금씩 늘리면 잦은 명중에 다시 끝없이 이어져서 늘리지 않음)
+        if (dps >= b.dps || b.until <= Time.time) { b.dps = dps; b.until = Time.time + duration; }
     }
 
     void Update()

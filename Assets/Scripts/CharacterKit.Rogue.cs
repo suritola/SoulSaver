@@ -13,9 +13,30 @@ public partial class CharacterKit
     // 한 번에 던진 표창 묶음 (회귀 칼날: 받으면 탄창 한 발은 묶음마다 한 번)
     RogueVolley rpVolley;
     int rpVolleyFrame = -1;
+    int rpVolleyCount;          // 1.4.2~ 지금까지 만든 묶음 수 (회귀 칼날 탄창 환급은 두 묶음에 한 번 — 환급이 장전을 지워 연사가 ×1.3~1.75 되던 문제)
 
     public int RpStored => Paths.Has(RoguePaths.Shadow) ? rpStored : 0;
     public bool RpChaining => rpChaining;
+
+    // ---------------- 1.4.2~ 게이지 돌진 묶음 (게이지 · 모아 둔 돌진으로 시작 → 숙련 4단계 재돌진 · 질주 암살 극의 연속 돌진이 이어 씀)
+    //   도적 쪽 게이지 반환(질주 암살 30% · 공명 I 25% · 숙련 5단계 4%/명)은 묶음 하나에 모두 합쳐 40% 까지
+    //   (넷이 상한 없이 더해져 돌진 뒤 게이지가 60~125% 남아 무적 돌진이 입력 한계마다 나가던 문제) · 영혼 트리 잔불은 모든 영웅 공통이라 상한 밖
+    //   상태는 숫자 둘뿐 · 묶음을 새로 열 때(BleedDash) 늘 되돌림 → 끊겨도 남는 상태 없음
+    public const float RogueBackCap = 0.4f;
+    float rogueBackLeft = RogueBackCap;     // 이번 묶음에서 아직 돌려받을 수 있는 몫 (게이지 최대치 비율)
+    bool rpGaugeDash = true;                // 지금(또는 마지막) 돌진이 묶음을 새로 연 돌진인가 — RoguePaths.DashStart 가 물음
+    public bool RpGaugeDash => rpGaugeDash;
+
+    // 돌진 게이지 반환 (frac = 최대치 비율) — 이번 묶음의 남은 몫까지만
+    public void RogueGaugeBack(float frac)
+    {
+        if (frac <= 0f || rogueBackLeft <= 0f) return;
+        if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
+        if (gaugeRef == null) return;
+        float f = Mathf.Min(frac, rogueBackLeft);
+        rogueBackLeft -= f;
+        gaugeRef.AddSkillPoint(gaugeRef.MaxSkillPoint * f);
+    }
 
     // 질주 암살: 돌진 거리 ×1.5 (조준 미리보기 · 실제 돌진이 같은 값)
     float RogueDashDist => Paths.Has(RoguePaths.Dash) ? RoguePaths.DashDistMul : 1f;
@@ -94,17 +115,19 @@ public partial class CharacterKit
         if (player == null || player.IsDying || Time.timeScale == 0f) return;
         Vector2 d = ((Vector2)(Mouse - transform.position)).normalized;
         rpChaining = true;
-        try { StartCoroutine(BleedDash(d)); }
+        try { StartCoroutine(BleedDash(d, false)); }        // 1.4.2~ 같은 묶음 (반환 상한 · 연속 횟수를 이어 씀)
         finally { rpChaining = false; }
     }
 
     // 돌진이 벤 적의 출혈 (Cut): 질주 암살이면 출혈 대신 직접 피해, 그림자면 출혈 −30%
-    void RpCutBleed(GameObject g, float dps, Vector2 dir)
+    //   bossMul: 1.4.2~ 재돌진 · 연속 돌진이 보스를 벨 때 0.6 (Cut) — 질주 암살 직접 피해에만. 출혈은 그대로
+    //   (출혈은 센 쪽만 남아 게이지 돌진의 출혈을 이어 받을 뿐이고, 줄이면 약한 출혈이 되어 시간도 못 이어 이중으로 깎임)
+    void RpCutBleed(GameObject g, float dps, Vector2 dir, float bossMul = 1f)
     {
         if (g == null) return;
         if (Paths.Has(RoguePaths.Dash))
         {
-            Paths.Deal(g, Damage * RoguePaths.DashCutMul * UltMul * Paths.Power(RoguePaths.Dash)
+            Paths.Deal(g, Damage * RoguePaths.DashCutMul * UltMul * Paths.Power(RoguePaths.Dash) * bossMul
                 * (Paths.Has(RoguePaths.Bleed) ? RoguePaths.BleedDirectMul : 1f), dir, 0.5f, "질주 암살");     // 1.4.2~ 출혈 대가(직접 피해 −35%)가 이 돌진에도 (Paths.Deal 이라 빠져 있었음)
             return;
         }
@@ -136,7 +159,8 @@ public partial class CharacterKit
     }
 
     // RogueThrow: 던진 표창 하나마다 (center = 가운데 표창 · 회전 표창이 쓰는 그 표창)
-    void RpShot(Bullet b, bool center)
+    //   echo: 1.4.2~ 잔상 표창 (0.15초 뒤라 새 묶음이 생겨 환급이 두 번 되던 것 → 원래 묶음 echoVolley 를 같이 씀 · 회귀 극의 두 번 왕복도 받지 않고 한 번)
+    void RpShot(Bullet b, bool center, bool echo = false, RogueVolley echoVolley = null)
     {
         if (b == null || !Paths.Active || Paths.A < 0) return;
         // 광란 대가: 표창 피해 −20%
@@ -155,7 +179,19 @@ public partial class CharacterKit
         // 회귀 칼날: 8칸에서 꺾여 돌아옴
         if (Paths.Has(RoguePaths.Boomerang))
         {
-            if (rpVolleyFrame != Time.frameCount || rpVolley == null) { rpVolley = new RogueVolley(); rpVolleyFrame = Time.frameCount; }
+            RogueVolley vol;
+            if (echo) vol = echoVolley ?? new RogueVolley { refunded = true };      // 원래 묶음을 못 찾으면 환급 없음
+            else
+            {
+                if (rpVolleyFrame != Time.frameCount || rpVolley == null)
+                {
+                    // 1.4.2~ 탄창 환급은 두 묶음에 한 번: 홀수 번째 묶음은 처음부터 환급한 것으로
+                    rpVolleyCount++;
+                    rpVolley = new RogueVolley { refunded = (rpVolleyCount & 1) == 1 };
+                    rpVolleyFrame = Time.frameCount;
+                }
+                vol = rpVolley;
+            }
             SignatureSkills s = SignatureSkills.Instance;
             float back = b.damage * RoguePaths.ReturnDmgMul * Paths.Power(RoguePaths.Boomerang);
             bool twin = false;
@@ -164,8 +200,8 @@ public partial class CharacterKit
                 back += s.RogueSpinBack;            // 회전 표창 카드가 있으면 그 피해도 (가운데 표창 — 회전 표창은 따로 붙지 않음)
                 twin = s.RogueEvolved("re.return");
             }
-            b.gameObject.AddComponent<ReturningShuriken>().ThrowPath(b, transform, b.transform.position, RoguePaths.ReturnDist, back, twin, rpVolley,
-                Paths.Res(RoguePaths.Boomerang) >= 1, Paths.Res(RoguePaths.Boomerang) >= 2, Paths.Mastered(RoguePaths.Boomerang) ? 2 : 1);
+            b.gameObject.AddComponent<ReturningShuriken>().ThrowPath(b, transform, b.transform.position, RoguePaths.ReturnDist, back, twin, vol,
+                Paths.Res(RoguePaths.Boomerang) >= 1, Paths.Res(RoguePaths.Boomerang) >= 2, Paths.Mastered(RoguePaths.Boomerang) && !echo ? 2 : 1);
         }
     }
 
@@ -181,7 +217,7 @@ public partial class CharacterKit
     }
 }
 
-// 한 번에 던진 표창 묶음 (회귀 칼날: 돌아온 표창을 받으면 탄창 한 발은 묶음마다 한 번)
+// 한 번에 던진 표창 묶음 (회귀 칼날: 돌아온 표창을 받으면 탄창 한 발은 묶음마다 한 번 · 1.4.2~ 홀수 번째 묶음은 refunded = true 로 시작해 두 묶음에 한 번)
 public class RogueVolley
 {
     public bool refunded;
