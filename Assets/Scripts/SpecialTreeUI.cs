@@ -75,7 +75,11 @@ public class SpecialTreeUI : MonoBehaviour
         closeButton.SetActive(upgradeMode);
         View(-1, null);
         gameObject.SetActive(true);
+        introEnd = CardIntro.Play(introNodes, 0.045f);      // 1.4.1~ 노드 등장 애니메이션 — 다 나오기 전엔 고를 수 없음
     }
+
+    readonly List<Transform> introNodes = new List<Transform>();
+    float introEnd;
 
     bool CanConfirm => upgradeMode ? picked.Count > 0 : picked.Count >= pointsNow;
 
@@ -164,6 +168,7 @@ public class SpecialTreeUI : MonoBehaviour
     {
         GameObject go = new GameObject(id < 0 ? "Root" : "Node_" + id, typeof(RectTransform), typeof(Image));
         RectTransform r = go.GetComponent<RectTransform>();
+        introNodes.Add(r);              // 1.4.1~ 창이 열릴 때 등장 애니메이션
         r.SetParent(parent, false);
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
         r.sizeDelta = new Vector2(size, size);
@@ -353,6 +358,7 @@ public class SpecialTreeUI : MonoBehaviour
     // 노드를 누르면 선택/해제 (포인트 안에서)
     void Toggle(int id)
     {
+        if (Time.unscaledTime < introEnd) return;      // 1.4.1~ 등장 애니메이션 중엔 고르지 않음
         // 누른 노드에 포커스가 남으면 Space · Enter 로 다시 눌리므로 바로 풂
         if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
         string note = null;

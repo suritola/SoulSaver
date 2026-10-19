@@ -71,6 +71,7 @@ public class StageManager : MonoBehaviour
     bool evolving;
     public bool IsEvolving => evolving;
     bool started;                       // 인트로가 끝나 버튼을 보여도 되는지
+    public bool OpeningDone => started;     // 1.4.1~ 판 시작 순서(이야기 · 안내 · 각인 · 특수 능력)가 끝났는지 — 갈래 입문 창이 그 위에 겹쳐 보이지 않게 LevelShop 이 기다림
     // 이어하기 (RunSave.Restore 가 정함): 화면 위 시계를 이 시간부터
     [System.NonSerialized] public float RestoredClock;
     // 이어하기 배너에 덧붙일 말 (ResumeGate: 특수 능력 포인트 +2)
@@ -208,6 +209,7 @@ public class StageManager : MonoBehaviour
         if (!endless) yield return SoulBrand.RunStart();        // 1.2~ 영혼 각인 3택 1 (쉬움을 클리어한 이야기 판만)
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;
+        FindFirstObjectByType<LevelShop>()?.OpenFreeIfWaiting();      // 1.4.1~ 판 시작 입문 창은 시작 순서가 끝난 지금 (겹쳐 보이지 않게)
         string openBanner;
         float openTime;
         if (endless)

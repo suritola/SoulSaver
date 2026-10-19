@@ -67,8 +67,27 @@ public partial class LevelShop : MonoBehaviour
         SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
-        
+        StartCoroutine(OpenFreeWhenReady());
+    }
 
+    // 1.4.1~ 판 시작 무료 카드(= 갈래 입문) 창은 시작 순서(이야기 · 영웅 안내 · 영혼 각인 · 특수 능력)가 끝난 뒤에 엶
+    //   예전엔 Start 에서 바로 열려, 입문 창이 잠깐 보였다가 그 위로 각인 · 특수 능력 창이 덮였음 · 대기 상한 3분 (어떤 경우에도 창이 안 뜨는 일은 없게)
+    bool freeWaiting;
+    IEnumerator OpenFreeWhenReady()
+    {
+        freeWaiting = true;
+        float until = Time.realtimeSinceStartup + 180f;
+        while (freeWaiting && StageManager.Instance != null && !StageManager.Instance.OpeningDone && Time.realtimeSinceStartup < until)
+            yield return null;
+        OpenFreeIfWaiting();
+    }
+
+    // StageManager 가 시작 순서를 마친 그 프레임에 부름 — 바로 열어야 「카드 창을 닫은 뒤 장 제목」 순서가 지켜짐
+    public void OpenFreeIfWaiting()
+    {
+        if (!freeWaiting) return;
+        freeWaiting = false;
+        if (!freePick || (LvshopPanel != null && LvshopPanel.activeSelf)) return;      // 튜토리얼 · 이어하기는 CancelOpening 이 freePick 을 끔
         openLevelShop();
     }
 
@@ -400,6 +419,7 @@ public partial class LevelShop : MonoBehaviour
     // 창이 열리고 잠깐 지난 뒤 마우스 버튼을 한 번 떼야 고를 수 있음
     const float SelectDelay = 0.6f;
     float openedAt;
+    float introEnd;             // 1.4.1~ 카드 등장 애니메이션이 끝나는 시각 (unscaledTime)
     bool selectReady;
     CanvasGroup cardGroup;
 
@@ -427,7 +447,7 @@ public partial class LevelShop : MonoBehaviour
         if (cardGroup != null) cardGroup.alpha = Mathf.Lerp(0.6f, 1f, t);
 
         bool mouseHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1) || GameInput.FireHeld || GameInput.UltHeld;     // 1.0.4~ 공격 · 필살기를 다른 키로 바꿨어도
-        if (t >= 1f && !mouseHeld)
+        if (t >= 1f && Time.unscaledTime >= introEnd && !mouseHeld)
         {
             selectReady = true;
             if (cardGroup != null)
@@ -572,6 +592,8 @@ public partial class LevelShop : MonoBehaviour
         UpdateLvShopContent();
         pendingSlot = -1;
         RefreshCards();
+        // 1.4.1~ 판 시작 입문 · 갈림길 창은 카드 등장 애니메이션 — 다 나오기 전엔 고를 수 없음 (계약 · 각인 창 바로 뒤라 잘못 누르던 문제)
+        introEnd = PathWindowShown ? CardIntro.Play(new[] { CardOf(0), CardOf(1), CardOf(2) }) : 0f;
         
 
     }

@@ -188,6 +188,7 @@ public class ChoiceUI : MonoBehaviour
         group.interactable = false;
         group.alpha = 0.6f;
         float openedAt = Time.unscaledTime;
+        float introEnd = CardIntro.Play(ui.cards);        // 1.4.1~ 카드 등장 애니메이션 — 다 나오기 전엔 고를 수 없음 (연달아 뜨는 창에서 잘못 누르기 방지)
 
         while (ui.confirmed < 0)
         {
@@ -195,7 +196,7 @@ public class ChoiceUI : MonoBehaviour
             {
                 float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
                 group.alpha = Mathf.Lerp(0.6f, 1f, t);
-                if (t >= 1f && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+                if (t >= 1f && Time.unscaledTime >= introEnd && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
                 {
                     ui.ready = true;
                     group.interactable = true;
