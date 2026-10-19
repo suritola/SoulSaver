@@ -95,6 +95,9 @@ public abstract class HeroPaths
     public virtual bool KitAttack(CharacterKit kit, Vector3 start, Vector2 dir, float dmg, int shots) => false;
     // HUD 입문 칸 오른쪽 위 숫자 (열 게이지 · 중첩 등, 없으면 null)
     public virtual string Badge(int path) => null;
+    // 1.4.1~ 이어하기에 남길 값 하나 (RunSave.Data.pathsState · 기록을 다시 적용한 뒤 LoadState) — 카드 기록으로 되살아나지 않는 모아 둔 상태만
+    public virtual float SaveState() => 0f;
+    public virtual void LoadState(float v) { }
 }
 
 // ================================================================= 판 상태 · 묻기 · 도우미

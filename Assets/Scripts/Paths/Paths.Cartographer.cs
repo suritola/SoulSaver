@@ -203,6 +203,10 @@ public sealed class CartographerPaths : HeroPaths
     // HUD 입문 칸: 접지술 극의의 두 번째 충전이 차 있으면 「x2」 (문자열 상수라 매 프레임 새로 만들지 않음)
     public override string Badge(int path) => path == Fold && Paths.Mastered(Fold) && foldBank >= 1f ? "x2" : null;
 
+    // 1.4.1~ 이어하기: 접지술 극의의 두 번째 충전(foldBank)은 카드 기록으로 되살아나지 않아 판 저장에 따로 남김 (「x2」가 사라지고 필살기 뒤 게이지가 다시 안 차던 것)
+    public override float SaveState() => Paths.Mastered(Fold) ? foldBank : 0f;
+    public override void LoadState(float v) => foldBank = Paths.Mastered(Fold) && !float.IsNaN(v) ? Mathf.Clamp01(v) : 0f;
+
     // ================================================================= 획을 그은 뒤 (CharacterKit.MapAttack)
     public static void Stroked(CharacterKit kit, Vector3 from, Vector3 to, float width, float dmg) => Me?.OnStroke(kit, from, to, width, dmg);
 
