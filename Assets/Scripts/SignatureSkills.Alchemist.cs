@@ -112,10 +112,11 @@ public partial class SignatureSkills
             if (E("le.swamp"))
             {
                 float rr = a.r;
-                Zone(a.p, rr, 4f, 0.4f, zone =>
+                SigZone swamp = Zone(a.p, rr, 4f, 0.4f, zone =>
                 {
                     foreach (Collider2D c in Inside(zone)) { Burn.Apply(c.gameObject, Atk * 0.35f, 1.5f); Deal(c.gameObject, Atk * 0.15f, Vector3.zero, 0f); }
-                }, "fx_puddle", new Color(1f, 0.5f, 0.2f, 0.75f), rr * 2.2f);
+                });
+                FireGround.Attach(swamp.gameObject, rr, 4f);        // 1.4.1~ 주황 웅덩이 그림 → 불 바닥 연출 (그을린 땅 · 빛나는 금 · 불꽃 혀) · 판정 그대로
             }
         }
     }
@@ -288,10 +289,12 @@ public partial class SignatureSkills
         embers.RemoveAll(z => z == null);
         if (embers.Count >= 10) { if (embers[0] != null) Destroy(embers[0].gameObject); embers.RemoveAt(0); }
         float dmg = Atk * V(Mathf.Max(1, L("l.embers")), 0.15f, 0.07f) * 0.5f * P("l.embers");       // 1.1.2~ 불꽃 행진: ×1.6
-        embers.Add(Zone(at, r, 2f, 0.5f, zone =>
+        SigZone ember = Zone(at, r, 2f, 0.5f, zone =>
         {
             foreach (Collider2D c in Inside(zone)) Deal(c.gameObject, dmg, Vector3.zero, 0f);
-        }, "fx_puddle", Big("l.embers") ? new Color(1f, 0.6f, 0.2f, 0.55f) : new Color(1f, 0.5f, 0.15f, 0.4f), r * 1.8f, true));        // 바닥에 옅게 (시야를 가리지 않게) · 진화하면 조금 더 밝게
+        });
+        FireGround.Attach(ember.gameObject, r, 2f);         // 1.4.1~ 주황 웅덩이 그림 → 불 바닥 연출 · 판정 그대로
+        embers.Add(ember);        // 바닥에 옅게 (시야를 가리지 않게) · 진화하면 조금 더 밝게
     }
 
     void AlchemistTick()
