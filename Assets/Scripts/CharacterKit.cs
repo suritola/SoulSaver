@@ -909,6 +909,7 @@ public partial class CharacterKit : MonoBehaviour
     {
         if (dir.sqrMagnitude < 0.01f) dir = body.flipX ? Vector2.left : Vector2.right;
         int mastery = RogueMastery;
+        bool chained = rpChaining;      // 1.4.1~ 질주 암살 극의가 이어 붙인 돌진 (코루틴 첫 줄은 RpChainDash 안에서 바로 돎)
         const float time = 0.32f, width = 1.4f;
         Vector3 from = transform.position;
         Vector3 to = DashEnd(dir);
@@ -951,7 +952,7 @@ public partial class CharacterKit : MonoBehaviour
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
         RunCounters.Max("dash.hits", hit.Count);       // 1.2~ 영혼 계약 「한 번의 돌진, 여덟」
-        DashMastery(to, mastery, hit.Count);
+        DashMastery(to, mastery, chained ? 0 : hit.Count);      // 1.4.1~ 연속 돌진은 숙련 5단계 게이지 반환 없음 (반환으로 게이지가 다시 차 끝없이 이어지지 않게)
         SignatureSkills.DashEnd(from, to, hit);                  // 급습 · 궤적 칼날 · 그림자 매듭
     }
 

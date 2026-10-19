@@ -250,6 +250,7 @@ public partial class CharacterKit
         {
             Bullet b = ThrowOne(start, d, dmg * 0.6f, 0.6f);
             if (b != null && b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(0.55f, 0.4f, 0.8f, 0.8f);
+            Paths.Safe(() => RpShot(b, false));     // 1.4.1~ 메아리 표창에도 갈래 (회귀 칼날 8칸 · 광란 −20% · 그림자 연막 치명)
         }
     }
 
