@@ -75,9 +75,9 @@ public static class Juice
         Runner.Hold(StopScale, seconds);
     }
 
-    // 1.4.3~ 검사 받아치기 반격 성공: 0.45초 멈춤 + 그동안 화면이 서서히 18% 당겨졌다가 0.3초에 걸쳐 돌아옴
+    // 1.4.3~ 검사 받아치기 반격 성공: 0.6초 멈춤 (사용자 「조금 더 늘리자」 0.45 → 0.6) + 그동안 화면이 서서히 18% 당겨졌다가 0.3초에 걸쳐 돌아옴
     //   멈춤은 HitStop 과 같은 조건(자동 조작 · 이야기 · 죽는 중 제외) · 줌은 「화면 흔들림」을 끄면 하지 않음 · 카메라가 기본 크기일 때만 (필살기 줌 중이면 멈춤만)
-    const float CounterHold = 0.45f, CounterZoom = 0.82f, CounterZoomBack = 0.3f;
+    const float CounterHold = 0.6f, CounterZoom = 0.82f, CounterZoomBack = 0.3f;
     public static void CounterFreeze()
     {
         if (!CanStop()) return;
