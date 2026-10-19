@@ -589,6 +589,13 @@ public sealed class GhostPaths : HeroPaths
         ghosted.RemoveAt(0);
     }
 
+    // 1.4.1~ 유체 이탈이 지금 내 몸과의 충돌을 꺼 둔 적 몸인지 (빙의 RestoreHostBody 가 이 쌍은 되살리지 않게 — 되돌리기는 유체 이탈 쪽 Restore 가 맡음)
+    public static bool IsGhosted(Collider2D c)
+    {
+        GhostPaths me = Me;
+        return me != null && c != null && me.ghostedSet.Contains(c);
+    }
+
     void Unghost()
     {
         for (int i = 0; i < ghosted.Count; i++) Restore(ghosted[i]);

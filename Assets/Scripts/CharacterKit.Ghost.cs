@@ -652,6 +652,9 @@ public partial class CharacterKit
         {
             (Collider2D m, Collider2D c) = possessIgnored[i];
             if (m == null || c == null) continue;
+            // 1.4.1~ 빙의 중 유체 이탈이 같은 쌍을 넘겨받았으면(멈춤 → 되살림 → 내가 다시 끔 → 다시 움직여 ghostedSet 에 들어감) 되살리지 않음
+            //   — 유체 이탈은 이미 꺼져 있다고 믿고 다시 끄지 않으므로, 여기서 켜면 움직이는 동안에도 보스 몸 접촉 피해가 들어왔음 (멈추거나 멀어지면 유체 이탈 Restore 가 되돌림)
+            if (GhostPaths.IsGhosted(c)) continue;
             try { Physics2D.IgnoreCollision(m, c, false); }
             catch (System.Exception e) { Debug.LogException(e); }
         }
