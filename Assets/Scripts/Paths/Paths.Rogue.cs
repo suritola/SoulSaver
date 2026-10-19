@@ -333,7 +333,8 @@ public sealed class RoguePaths : HeroPaths
             if (p == null || p.IsDying) return;            // 쓰러진 뒤에는 아무것도 하지 않음
             if (cut != null && Paths.Has(Bleed) && Paths.Res(Bleed) >= 1) BurstCut(cut);
             if (!Paths.Has(Dash)) return;
-            if (dashKilled && Paths.Res(Dash) >= 1)
+            // 1.4.1~ 게이지 25% 는 돌진 묶음(극의 연속 돌진 포함)마다 한 번 — 연속 돌진마다 붙으면 게이지가 다시 가득 차 무적 돌진이 끝없이 이어짐
+            if (dashKilled && chain == 0 && Paths.Res(Dash) >= 1)
             {
                 SkillGauge g = Cache<SkillGauge>.Get;
                 if (g != null) g.AddSkillPoint(g.MaxSkillPoint * DashKillBack);
@@ -468,7 +469,7 @@ public class RogueBleed : MonoBehaviour
         if (b == null) b = GetComponent<Bleed>();
         if (b == null) return;
         if (mine) b.dps = dps;
-        lastSet = b.dps;
+        lastSet = b.dps <= dps + 0.001f ? b.dps : -1f;       // 1.4.1~ 내가 정한 값일 때만 기억 (더 센 남의 출혈을 다음 명중에서 내 값으로 낮추지 않게)
     }
 }
 
