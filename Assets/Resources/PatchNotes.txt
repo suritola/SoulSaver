@@ -1,4 +1,4 @@
-# V1.4 대규모 업데이트 — 빌드 갈래
+# V1.2 대규모 업데이트 — 빌드 갈래
 영웅마다 전혀 다르게 싸우는 빌드 갈래 5개가 생겼습니다. 같은 영웅도 이제 매판 다른 판이 됩니다.
 
 이번 업데이트의 중심은 「빌드 갈래」입니다. 지금까지는 한 판에 카드 대부분을 얻어 매판 비슷한 모습이 되었습니다. 이제 영웅마다 공격 방식 자체가 바뀌는 갈래 5개 가운데 한두 개만 골라 깊게 파게 됩니다.
@@ -58,7 +58,7 @@
 플레이해 주시는 모든 분께 감사드립니다. 마음에 드는 갈래 조합이나 너무 세거나 약한 갈래가 있다면 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.4 Major Update — Build Paths
+# V1.2 Major Update — Build Paths
 Every hero now has 5 build paths that fight in completely different ways. Even the same hero plays differently every run.
 
 The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
@@ -118,7 +118,7 @@ Signature skills and Gate of Hell special abilities now also get a per-hero powe
 Thank you to everyone who plays. If you find a path combo you love, or a path that feels too strong or too weak, let us know on the Community Discussions board!
 
 === ja
-# V1.4 大型アップデート — ビルド流派
+# V1.2 大型アップデート — ビルド流派
 英雄ごとに、まったく違う戦い方をする5つのビルド流派が登場しました。同じ英雄でも毎回違うプレイになります。
 
 今回のアップデートの中心は「ビルド流派」です。これまでは1プレイでカードの大半を手に入れ、毎回似た姿になっていました。これからは英雄ごとに攻撃方法そのものが変わる5つの流派から、1つか2つだけを選んで深く育てます。
@@ -178,7 +178,7 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 遊んでくださる皆さま、ありがとうございます。気に入った流派の組み合わせや、強すぎる・弱すぎる流派があれば、コミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.4 大型更新 — 构筑流派
+# V1.2 大型更新 — 构筑流派
 每位英雄都有了5个战斗方式截然不同的构筑流派。即使是同一位英雄，每局也会有不同的玩法。
 
 本次更新的核心是「构筑流派」。以前一局就能拿到大部分卡牌，每局的样子都差不多。现在每位英雄都有5个改变攻击方式本身的流派，每局只选其中一两个深入培养。

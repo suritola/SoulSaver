@@ -1,5 +1,5 @@
-@@@ v1.4
-# V1.4 대규모 업데이트 — 빌드 갈래
+@@@ v1.2
+# V1.2 대규모 업데이트 — 빌드 갈래
 영웅마다 전혀 다르게 싸우는 빌드 갈래 5개가 생겼습니다. 같은 영웅도 이제 매판 다른 판이 됩니다.
 
 이번 업데이트의 중심은 「빌드 갈래」입니다. 지금까지는 한 판에 카드 대부분을 얻어 매판 비슷한 모습이 되었습니다. 이제 영웅마다 공격 방식 자체가 바뀌는 갈래 5개 가운데 한두 개만 골라 깊게 파게 됩니다.
@@ -59,7 +59,7 @@
 플레이해 주시는 모든 분께 감사드립니다. 마음에 드는 갈래 조합이나 너무 세거나 약한 갈래가 있다면 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.4 Major Update — Build Paths
+# V1.2 Major Update — Build Paths
 Every hero now has 5 build paths that fight in completely different ways. Even the same hero plays differently every run.
 
 The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
@@ -119,7 +119,7 @@ Signature skills and Gate of Hell special abilities now also get a per-hero powe
 Thank you to everyone who plays. If you find a path combo you love, or a path that feels too strong or too weak, let us know on the Community Discussions board!
 
 === ja
-# V1.4 大型アップデート — ビルド流派
+# V1.2 大型アップデート — ビルド流派
 英雄ごとに、まったく違う戦い方をする5つのビルド流派が登場しました。同じ英雄でも毎回違うプレイになります。
 
 今回のアップデートの中心は「ビルド流派」です。これまでは1プレイでカードの大半を手に入れ、毎回似た姿になっていました。これからは英雄ごとに攻撃方法そのものが変わる5つの流派から、1つか2つだけを選んで深く育てます。
@@ -179,7 +179,7 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 遊んでくださる皆さま、ありがとうございます。気に入った流派の組み合わせや、強すぎる・弱すぎる流派があれば、コミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.4 大型更新 — 构筑流派
+# V1.2 大型更新 — 构筑流派
 每位英雄都有了5个战斗方式截然不同的构筑流派。即使是同一位英雄，每局也会有不同的玩法。
 
 本次更新的核心是「构筑流派」。以前一局就能拿到大部分卡牌，每局的样子都差不多。现在每位英雄都有5个改变攻击方式本身的流派，每局只选其中一两个深入培养。
@@ -237,375 +237,47 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 - 为枪手的装填加入了安全机制，任何情况下都不会卡住。
 
 感谢每一位游玩的玩家。如果有喜欢的流派组合，或觉得太强、太弱的流派，欢迎在社区讨论区告诉我们！
-@@@ v1.3.6
-# V1.3.6 업데이트 — 개발자와 엄마의 새 공격
-개발자와 엄마가 자기만의 공격을 쓰기 시작합니다. 새 로딩 화면과 여러 버그 수정도 함께 담았습니다.
+@@@ v1.1.1
+# V1.1.1 업데이트 — 왕들의 영토 · 한 판 더 · 개발자와 엄마의 새 공격
+그동안의 업데이트를 하나로 모았습니다: 새 보스와 영토, 한 판 더 즐길 거리, 편의성 개선, 개발자와 엄마의 새 공격, 많은 버그 수정.
 
-무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
+그동안 나누어 올렸던 업데이트 소식을 하나로 정리했습니다. 아래는 각 업데이트에서 바뀐 내용입니다.
 
-## 💻 개발자의 새 공격
-- 라이브 코딩: 코드 한 줄이 탄이 되어 날아옵니다. 띄어쓰기 자리가 빈틈입니다.
-- 범위 선택: 사각형으로 드래그한 뒤 Del 키로 지웁니다. 체력이 줄면 Ctrl+V 로 한 번 더 붙여 넣습니다.
-- 빌드 실패: 빌드가 다 차면 실패하며 터집니다.
-- 오류 창: 경고 창이 뜨고, 「확인」 자리로 가야 안전합니다.
-- 로딩 중…: 빙글 도는 고리가 조여 듭니다.
-- 스택 오버플로: 블록 탑이 쌓였다가 무너집니다.
+## 왕들의 영토
 
-## 🧹 엄마의 새 공격
-- 슬리퍼 투척: 슬리퍼가 날아와 벽에 튕깁니다.
-- 효자손: 효자손을 크게 휘두릅니다.
-- 타임 세일!: 할인 쿠폰을 따라 매장을 휘젓고 다닙니다.
-- 빗자루질: 화면을 가로질러 쓸어 버립니다. 빗자루 사이 빈틈으로 피하세요.
-- 엄친아: 엄친아 메달이 쫓아옵니다.
-- 불 끄고 자!: 불빛이 지나갈 때 움직이면 들킵니다. 자는 척하세요!
+영혼을 구하는 여정에 큰 업데이트가 찾아왔습니다! 무한 모드가 훨씬 깊어지고, 더 편하게 즐길 수 있게 되었습니다.
 
-모든 공격은 먼저 경고가 보이고, 결계 · 공간 침식이 시작되면 바로 멈춥니다.
+## 👑 왕들의 영토
 
-## ✨ 편의성 개선
-- 새 로딩 화면: 검은 화면 대신 로딩바와 함께 지금 영웅이 달립니다.
-- 불 장판을 그을린 땅 위에 불꽃이 넘실대는 모습으로 새로 그렸습니다. (영웅의 불 공격 · 지옥의 군주의 불 웅덩이)
-- 이펙트 스킨 · 전설 스킨의 연출이 훨씬 크고 잘 보입니다.
-- 쉬움을 클리어하면 보통 · 어려움과 함께 무한 모드까지 열립니다. 이미 쉬움을 클리어했다면 바로 열립니다.
-- 무한 모드에서 개발자가 나타난 뒤에도 떠돌이 상점이 1분마다 찾아옵니다.
-- 게임 안 패치노트를 스팀 공지와 똑같이 맞췄습니다.
-- 거너가 뇌운(사슬 번개 필살기)을 쓰는 동안에도 총을 쏠 수 있습니다.
-- 무한 모드 · 일일 도전 중에 게임을 끄면 지금까지의 기록이 순위표에 올라갑니다.
-- 빈틈이 금이 간 심장처럼 두근거리고 조준 표시가 조여 들어, 더 약점처럼 보입니다.
+무한 모드에서 보스를 쓰러뜨리면, 그 왕의 영토가 쓰러진 자리부터 파동처럼 사막을 덮습니다.
+- 묘비와 영혼 수정이 솟아 길과 탄을 막습니다. 어디서 쏘느냐가 중요해집니다.
+- 용암 웅덩이는 밟으면 피해를 입고, 점액 늪은 모두를 느리게 합니다.
+- 15분 「최후의 시간」이 시작되면 모래 폭풍이 지형을 집어삼킵니다.
 
-## 🛠️ 버그 수정
-- 결과 화면이 메인 메뉴와 다음 판까지 화면에 남아 겹쳐 보이던 문제를 고쳤습니다.
-- 무한 모드 이어하기에서 시간이 00:00에서 멈추던 문제를 고쳤습니다. 15분 「최후의 시간」과 적 증가도 제대로 진행됩니다.
-- 보스가 영원히 공격을 받지 않던 문제를 고쳤습니다.
-- 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
-- 보스가 기술 도중 끊겨 공중에 떠 있던 문제 등 보스전이 멈출 수 있던 문제를 더 막았습니다.
+## 💾 무한 모드 저장 · 이어하기
+- 무한 모드도 메인 메뉴로 나가거나 게임을 끄면 저장되고, 「이어하기」로 같은 지점부터 다시 할 수 있습니다.
+- 일일 도전은 공정한 순위를 위해 저장되지 않습니다.
 
-## 🦸 영웅 밸런스
+## ⚔️ 보스는 기다리지 않습니다
+- 보스를 3분 넘게 못 쓰러뜨리면 다음 보스가 함께 나옵니다(동시에 최대 2마리).
+- 오래 버틴 보스는 모래 폭풍에 풍화되어 받는 피해가 점점 늘어납니다.
+- 15분 「최후의 시간」은 보스를 하나 이상 쓰러뜨린 판에만 열립니다.
+- 개발자 · 개발자 엄마와 싸우는 동안 약한 적들이 몰려옵니다.
 
-유령에 비해 약하던 영웅들의 화력을 크게 올렸습니다.
-- 거너: 공격력 ×1.15 → ×1.7
-- 검사: 공격력 ×1.75 → ×2.8
-- 도적: 공격력 ×1.0 → ×1.6
-- 궁수: 공격력 ×1.25 → ×1.8
-- 연금술사: 공격력 ×0.8 → ×1.2 · 필살기 충전 ×1.2 → ×1.1 (더 빨리 참)
-- 지도 제작자: 공격력 ×1.0 → ×1.15
-- 시계공: 공격력 ×1.0 → ×1.5 · 계약 「팔백 개의 톱니」 → 「육백 개의 톱니」 (톱니 800개 → 600개)
-- 우체부: 공격력 ×0.8 → ×1.2
-- 유령: 처치할 때 영혼이 생길 확률 20% → 10% · 최대 영혼 4 → 3 (영혼 수호 5 · 6 · 7 → 4 · 5 · 6) · 빙의가 끝난 뒤 무적 0.65초 → 0.3초
+## ✨ 손맛과 편의
+- 피격 시 체력바에 효과가 추가됩니다!
+- 탄이 더 잘 보입니다. 내 탄과 적 탄에 어두운 테두리를 더하고 그림을 조금 키웠습니다(맞는 판정은 그대로입니다).
+- 도적의 회전 표창은 던진 표창이 그대로 꺾여 돌아옵니다.
+- 맵의 통이 부서진 뒤 40초마다 하나씩 다시 생깁니다.
+- 무한 모드 초반이 더 쉬워지고, 첫 보스가 더 늦게 나옵니다.
 
 ## ⚖️ 밸런스 조정
-- 모든 적의 체력: 40% 감소 (잡몹 · 엘리트 · 중간 보스 · 보스 모두)
-- 개발자 체력: 100,000 → 60,000
-- 개발자 엄마 체력: 200,000 → 120,000
-- 모든 영웅의 모든 피해: 20% 증가
-- 지도 제작자 피해: 약 9% 감소 (공격력 배율 ×1.1 → ×1.0)
-- 한계 돌파(개발자 엄마까지 처치한 뒤) 적의 공격력: 그대로 → 1분마다 ×1.12씩 끝없이 강해짐
-- 무한 모드 최대 레벨: 80 → 50 (이야기 모드와 같음 · 이제 무한 모드에서도 모든 스킬을 진화할 수는 없습니다)
-- 개발자 결계 게이지 차는 속도: ×1 → ×2.5
-- 개발자 엄마 결계 게이지 차는 속도: ×1 → ×4
+- 무한 모드 처음 5분: 잡몹 · 보스 체력 ×0.5, 받는 피해 ×0.6 (5~9분에 서서히 원래대로)
+- 무한 모드 첫 보스 등장: 1분 30초 → 4분
+- 개발자 · 개발자 엄마 필살기 예고 시간: 개발자 ×0.6, 엄마 ×0.5
+- 도적 진화 「환영 연막」: 연막 안 적 공격이 모두 빗나감 → 40% 확률로 빗나감
 
-플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
-
-=== en
-# V1.3.6 Update — New Attacks for the Developer and Mom
-The Developer and Mom now have attacks all their own, plus a new loading screen and many bug fixes.
-
-The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
-
-## 💻 The Developer's New Attacks
-- Live Coding: a line of code flies at you as projectiles. The spaces are your gaps.
-- Select & Delete: a box is dragged out, then erased with the Del key. At lower health, Ctrl+V pastes it once more.
-- Build Failed: when the build bar fills, it fails and explodes.
-- Error Popup: an error window appears, and the "OK" spot is the safe place.
-- Loading…: a spinning ring closes in.
-- Stack Overflow: a tower of blocks stacks up, then collapses.
-
-## 🧹 Mom's New Attacks
-- Slipper Toss: slippers fly at you and bounce off walls.
-- Back Scratcher: a big sweeping swing.
-- Time Sale!: she storms through the store following the coupons.
-- Broom Sweep: a sweep across the screen. Dodge through the gaps between the bristles.
-- Mom's Friend's Son: his medals chase you.
-- Lights Out!: move while the light passes and you're caught. Pretend to sleep!
-
-Every attack shows a warning first and stops the moment a barrier or Spatial Erosion begins.
-
-## ✨ Quality of Life
-- New loading screen: instead of a black screen, your hero runs along a loading bar.
-- Fire fields have been redrawn as flames dancing over scorched ground. (Hero fire attacks and the Demon Lord's fire pools)
-- Effect skins and Legendary skins now have much bigger, clearer effects.
-- Clearing Easy now unlocks Endless Mode along with Normal and Hard. If you've already cleared Easy, it unlocks right away.
-- In Endless Mode, the Wandering Shop keeps appearing every minute even after the Developer shows up.
-- In-game patch notes now match the Steam announcements exactly.
-- The Gunner can keep shooting while Thunderstorm (the Chain Lightning ultimate) is active.
-- Quitting the game during Endless Mode or the Daily Challenge now submits your run so far to the leaderboard.
-- Weak points now pulse like a cracked heart with a tightening target mark, so they look more like weak points.
-
-## 🛠️ Bug Fixes
-- Fixed the results screen staying on top of the main menu and the next run.
-- Fixed the timer stopping at 00:00 after continuing an Endless run. The 15-minute "Final Hour" and enemy scaling now progress correctly.
-- Fixed bosses becoming permanently immune to damage.
-- Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
-- Fixed more cases that could stall boss fights, such as bosses staying in the air after an interrupted attack.
-
-## 🦸 Hero Balance
-
-Heroes that fell behind the Ghost now hit much harder.
-- Gunner: attack ×1.15 → ×1.7
-- Swordsman: attack ×1.75 → ×2.8
-- Rogue: attack ×1.0 → ×1.6
-- Archer: attack ×1.25 → ×1.8
-- Alchemist: attack ×0.8 → ×1.2 · Ultimate charge ×1.2 → ×1.1 (fills faster)
-- Cartographer: attack ×1.0 → ×1.15
-- Clockmaker: attack ×1.0 → ×1.5 · contract "Eight Hundred Gears" → "Six Hundred Gears" (800 → 600 gears)
-- Postman: attack ×0.8 → ×1.2
-- Ghost: soul chance on kill 20% → 10% · max souls 4 → 3 (Soul Guard 5 · 6 · 7 → 4 · 5 · 6) · invincibility after Possession 0.65s → 0.3s
-
-## ⚖️ Balance Changes
-- All enemy health: −40% (mobs, elites, mid-bosses and bosses)
-- Developer health: 100,000 → 60,000
-- Developer's Mom health: 200,000 → 120,000
-- All damage from every hero: +20%
-- Cartographer damage: about −9% (attack multiplier ×1.1 → ×1.0)
-- Enemy attack after Beyond the Limit (after defeating the Developer's Mom): unchanged → grows ×1.12 every minute, without limit
-- Endless Mode max level: 80 → 50 (same as Story Mode, so you can no longer evolve every skill in Endless)
-- Developer barrier gauge fill speed: ×1 → ×2.5
-- Developer's Mom barrier gauge fill speed: ×1 → ×4
-
-Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
-
-=== ja
-# V1.3.6 アップデート — 開発者とママの新しい攻撃
-開発者とママが自分だけの攻撃を使い始めます。新しいロード画面と多くの不具合修正も含まれています。
-
-エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
-
-## 💻 開発者の新しい攻撃
-- ライブコーディング: コード1行が弾になって飛んできます。スペースの部分が隙間です。
-- 範囲選択: 四角形をドラッグしてDelキーで消します。体力が減るとCtrl+Vでもう一度貼り付けます。
-- ビルド失敗: ビルドが満タンになると失敗して爆発します。
-- エラーダイアログ: 警告ウィンドウが出て、「OK」の場所が安全です。
-- 読み込み中…: 回るリングが迫ってきます。
-- スタックオーバーフロー: ブロックの塔が積み上がって崩れます。
-
-## 🧹 ママの新しい攻撃
-- スリッパ投げ: スリッパが飛んできて壁で跳ね返ります。
-- 孫の手: 孫の手を大きく振り回します。
-- タイムセール！: クーポンを追って売り場を駆け回ります。
-- ほうき掃き: 画面を横切って掃いていきます。ほうきの隙間をくぐってよけましょう。
-- ママ友の息子: メダルが追いかけてきます。
-- 電気消して寝なさい！: 光が通るときに動くと見つかります。寝たふりをしましょう！
-
-すべての攻撃は先に警告が表示され、結界・空間侵食が始まるとすぐに止まります。
-
-## ✨ 快適性の改善
-- 新しいロード画面: 黒い画面の代わりに、ロードバーと一緒に今の英雄が走ります。
-- 炎の床を、焦げた地面の上で炎が揺らめく姿に描き直しました。（英雄の炎の攻撃・地獄の君主の炎の溜まり）
-- エフェクトスキン・伝説スキンの演出がずっと大きく見やすくなりました。
-- イージーをクリアすると、ノーマル・ハードと一緒にエンドレスモードまで解放されます。すでにイージーをクリアしていればすぐに解放されます。
-- エンドレスで開発者が現れた後も、さすらいのショップが1分ごとにやって来ます。
-- ゲーム内のパッチノートをSteamのお知らせと同じ内容にそろえました。
-- ガンナーが雷雲（連鎖雷撃の必殺技）を使っている間も銃を撃てるようになりました。
-- エンドレス・デイリーチャレンジ中にゲームを終了すると、ここまでの記録がランキングに登録されるようになりました。
-- 隙がひびの入った心臓のように脈打ち、狙いの印が締まっていくので、より弱点らしく見えます。
-
-## 🛠️ 不具合の修正
-- 結果画面がメインメニューや次のプレイまで画面に残って重なる問題を修正しました。
-- エンドレスの続きから再開すると時間が00:00で止まる問題を修正しました。15分の「最後の時間」と敵の増加も正しく進みます。
-- ボスがずっとダメージを受けなくなる問題を修正しました。
-- ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
-- 技の途中で中断されたボスが空中に浮いたままになるなど、ボス戦が止まりうる問題をさらに防ぎました。
-
-## 🦸 英雄のバランス
-
-幽霊に比べて弱かった英雄たちの火力を大きく上げました。
-- ガンナー: 攻撃力 ×1.15 → ×1.7
-- 剣士: 攻撃力 ×1.75 → ×2.8
-- 盗賊: 攻撃力 ×1.0 → ×1.6
-- 弓使い: 攻撃力 ×1.25 → ×1.8
-- 錬金術師: 攻撃力 ×0.8 → ×1.2・必殺技チャージ ×1.2 → ×1.1（早くたまる）
-- 地図職人: 攻撃力 ×1.0 → ×1.15
-- 時計職人: 攻撃力 ×1.0 → ×1.5・契約「八百の歯車」→「六百の歯車」（歯車800個 → 600個）
-- 郵便配達人: 攻撃力 ×0.8 → ×1.2
-- 幽霊: 撃破時に魂が生まれる確率 20% → 10%・最大の魂 4 → 3（魂の守り 5・6・7 → 4・5・6）・憑依が終わった後の無敵 0.65秒 → 0.3秒
-
-## ⚖️ バランス調整
-- すべての敵の体力: 40%減少（雑魚・エリート・中ボス・ボスすべて）
-- 開発者の体力: 100,000 → 60,000
-- 開発者のママの体力: 200,000 → 120,000
-- すべての英雄のすべてのダメージ: 20%増加
-- 地図職人のダメージ: 約9%減少（攻撃力倍率 ×1.1 → ×1.0）
-- 限界突破（開発者のママまで倒した後）の敵の攻撃力: そのまま → 1分ごとに×1.12ずつ際限なく強くなる
-- エンドレスの最大レベル: 80 → 50（ストーリーモードと同じ・エンドレスでもすべてのスキルは進化できなくなりました）
-- 開発者の結界ゲージがたまる速さ: ×1 → ×2.5
-- 開発者のママの結界ゲージがたまる速さ: ×1 → ×4
-
-遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
-
-=== zh
-# V1.3.6 更新 — 开发者与妈妈的新攻击
-开发者与妈妈开始使用属于自己的攻击，同时带来新的加载画面与多项问题修复。
-
-无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
-
-## 💻 开发者的新攻击
-- 现场编程：一行代码化作弹幕飞来，空格处就是空隙。
-- 框选删除：拖出方框后按 Del 键删除。生命降低后还会用 Ctrl+V 再粘贴一次。
-- 构建失败：构建进度条充满后失败并爆炸。
-- 错误弹窗：弹出警告窗口，「确定」的位置才安全。
-- 加载中…：旋转的圆环向内收紧。
-- 栈溢出：方块塔堆起后崩塌。
-
-## 🧹 妈妈的新攻击
-- 拖鞋飞袭：拖鞋飞来并在墙上反弹。
-- 痒痒挠：大幅挥舞痒痒挠。
-- 限时抢购！：追着优惠券在卖场里横冲直撞。
-- 扫帚横扫：横扫整个画面，从扫帚之间的空隙躲开。
-- 别人家的孩子：奖牌会追着你跑。
-- 关灯睡觉！：灯光扫过时一动就会被发现，快装睡！
-
-所有攻击都会先显示警告，结界 · 空间侵蚀开始时会立即停止。
-
-## ✨ 便利性改进
-- 新的加载画面：不再是黑屏，当前英雄会沿着加载条奔跑。
-- 重新绘制了火焰地带，现在是焦土上摇曳的火焰。（英雄的火焰攻击 · 地狱领主的火焰池）
-- 特效皮肤 · 传说皮肤的演出变得更大、更醒目。
-- 通关简单难度后，普通 · 困难与无尽模式会一并解锁。如果已经通关简单难度，会立即解锁。
-- 在无尽模式中，开发者出现后流浪商店仍会每分钟到来。
-- 游戏内的更新日志已与 Steam 公告内容完全一致。
-- 枪手在使用雷云（连锁闪电必杀技）期间也能继续射击。
-- 在无尽模式 · 每日挑战中关闭游戏时，至今的记录会上传排行榜。
-- 破绽会像裂开的心脏一样跳动，瞄准标记也会收紧，看起来更像弱点。
-
-## 🛠️ 问题修复
-- 修复了结算画面一直留在主菜单和下一局画面上重叠显示的问题。
-- 修复了无尽模式继续游戏后时间停在00:00的问题。15分钟「最后时刻」与敌人增长也会正常推进。
-- 修复了首领永远不受伤害的问题。
-- 修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
-- 进一步防止了首领招式被打断后停在空中等可能导致首领战停滞的问题。
-
-## 🦸 英雄平衡
-
-大幅提升了相比幽灵偏弱的英雄们的火力。
-- 枪手：攻击力 ×1.15 → ×1.7
-- 剑士：攻击力 ×1.75 → ×2.8
-- 盗贼：攻击力 ×1.0 → ×1.6
-- 弓箭手：攻击力 ×1.25 → ×1.8
-- 炼金术士：攻击力 ×0.8 → ×1.2 · 必杀技充能 ×1.2 → ×1.1（充得更快）
-- 制图师：攻击力 ×1.0 → ×1.15
-- 钟表匠：攻击力 ×1.0 → ×1.5 · 契约「八百齿轮」→「六百齿轮」（齿轮800枚 → 600枚）
-- 邮差：攻击力 ×0.8 → ×1.2
-- 幽灵：击败敌人时生成灵魂的几率 20% → 10% · 灵魂上限 4 → 3（灵魂守护 5 · 6 · 7 → 4 · 5 · 6）· 附身结束后的无敌 0.65秒 → 0.3秒
-
-## ⚖️ 平衡调整
-- 所有敌人的生命：降低40%（小怪 · 精英 · 中头目 · 首领全部）
-- 开发者生命：100,000 → 60,000
-- 开发者的妈妈生命：200,000 → 120,000
-- 所有英雄的所有伤害：提高20%
-- 制图师伤害：降低约9%（攻击力倍率 ×1.1 → ×1.0）
-- 突破极限（击败开发者的妈妈之后）敌人攻击力：不变 → 每分钟×1.12，无限增强
-- 无尽模式等级上限：80 → 50（与故事模式相同 · 无尽模式中也无法让所有技能进化）
-- 开发者结界槽充能速度：×1 → ×2.5
-- 开发者的妈妈结界槽充能速度：×1 → ×4
-
-感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
-@@@ v1.3.1
-# V1.3.1 업데이트 — 편의성 개선 · 버그 수정
-결계와 공간 침식 속 전투를 더 편하게 다듬고, 왕들의 영토 · 보스 체력바 등 여러 문제를 고쳤습니다.
-
-V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 편하게 다듬었습니다.
-
-## ✨ 편의성 개선
-- 결계 · 공간 침식 중에는 용암 웅덩이가 피해를 주지 않고, 늪도 느려지게 하지 않습니다. (0.6초마다 6 피해 → 피해 없음)
-- 공간 침식 중 결계 공격이 아닌 피해는 한 대에 최대 체력의 25%까지만 받습니다. (40% → 25%)
-- 시전 중인 보스도 필살기 게이지가 찬 뒤 최대 3초 안에 시전을 끊고 결계를 펼칩니다. 결계가 언제 올지 알기 쉬워졌습니다.
-- 보스 보상 가운데 칸에 「생명」 · 「회복」이 더는 나오지 않습니다.
-- 「고요의 눈」이 웅덩이 위에 생기지 않습니다.
-
-## 🛠️ 버그 수정
-- 무한 모드에서 보스를 쓰러뜨려도 「왕들의 영토」 땅이 바뀌지 않던 문제를 고쳤습니다. 이제 영토가 번지고 용암 · 늪이 생깁니다.
-- 15분 「최후의 시간」이 결계 · 공간 침식 도중에 시작되던 문제를 고쳤습니다.
-- 보스가 여럿일 때 체력바와 「기억」 글자가 겹치던 문제, 보스 넷의 체력바가 화면을 너무 가리던 문제를 고쳤습니다.
-- 엄마의 잔소리 글자가 체력바와 일시정지 화면을 가리던 문제를 고쳤습니다.
-- 메인 메뉴 · 결과 화면에서 일부 효과음이 나지 않던 문제와, 일시정지 메뉴에서 적 설명이 버튼을 가리던 문제를 고쳤습니다.
-- 이어하기 때 보스 위치가 어긋나거나 「풍화」 알림이 다시 뜨던 문제를 고쳤습니다. 보스 보상 가운데 칸도 이어할 때마다 다시 뽑히지 않고 처음 뽑은 칸 그대로 남습니다.
-- 보스 등장 연출이 선택 창 위에 겹치던 문제와, 드물게 적이 비정상적으로 커지던 문제를 고쳤습니다.
-
-플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
-
-=== en
-# V1.3.1 Update — Quality of Life & Bug Fixes
-Smoother fights inside barriers and Spatial Erosion, plus fixes for Realm of the Kings, boss health bars, and more.
-
-This update fixes issues found after the V1.3 update and makes fighting inside barriers more comfortable.
-
-## ✨ Quality of Life
-- During barriers and Spatial Erosion, lava pools no longer deal damage and bogs no longer slow you. (6 damage every 0.6s → no damage)
-- During Spatial Erosion, damage from non-barrier attacks is capped at 25% of your max HP per hit. (40% → 25%)
-- A boss that is casting now interrupts its cast and opens its barrier within 3 seconds after its ultimate gauge fills. It is easier to tell when a barrier is coming.
-- The middle boss reward no longer offers "Life" or "Heal."
-- The "Eye of Calm" no longer appears on top of pools.
-
-## 🛠️ Bug Fixes
-- Fixed the ground of "Realm of the Kings" not changing when you defeat a boss in Endless Mode. Realms now spread and lava pools and bogs appear.
-- Fixed the 15-minute "Final Hour" starting in the middle of a barrier or Spatial Erosion.
-- Fixed health bars overlapping the "Memory" text when several bosses appear, and four boss health bars covering too much of the screen.
-- Fixed Mom's nagging text covering the health bar and the pause screen.
-- Fixed some sound effects not playing in the main menu and results screen, and enemy tooltips covering buttons in the pause menu.
-- Fixed bosses appearing in the wrong place and the "weathered" notice showing again after Continue. The middle boss reward now keeps its first roll instead of rerolling every time you continue.
-- Fixed boss intros overlapping choice windows, and enemies rarely growing abnormally large.
-
-Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
-
-=== ja
-# V1.3.1 アップデート — 快適性の改善・不具合の修正
-結界と空間侵食の中の戦闘をより快適にし、王たちの領土やボスの体力バーなど多くの問題を修正しました。
-
-V1.3 アップデート後に見つかった問題を修正し、結界の中の戦闘をより快適に調整しました。
-
-## ✨ 快適性の改善
-- 結界・空間侵食中は溶岩の溜まりがダメージを与えず、沼でも遅くなりません。（0.6秒ごとに6ダメージ → ダメージなし）
-- 空間侵食中、結界攻撃以外から受けるダメージは1回につき最大体力の25%までになりました。（40% → 25%）
-- 詠唱中のボスも、必殺技ゲージが満タンになってから最大3秒で詠唱を中断して結界を展開します。結界が来るタイミングが分かりやすくなりました。
-- ボス報酬の中央の枠に「生命」・「回復」が出なくなりました。
-- 「静寂の目」が溜まりの上に現れなくなりました。
-
-## 🛠️ 不具合の修正
-- エンドレスでボスを倒しても「王たちの領土」の地形が変わらなかった問題を修正しました。領土が広がり、溶岩・沼が現れるようになりました。
-- 15分の「最後の時間」が結界・空間侵食の途中で始まる問題を修正しました。
-- ボスが複数いるとき体力バーと「記憶」の文字が重なる問題、ボス4体の体力バーが画面を覆いすぎる問題を修正しました。
-- ママの小言の文字が体力バーと一時停止画面を隠す問題を修正しました。
-- メインメニュー・結果画面で一部の効果音が鳴らない問題と、一時停止メニューで敵の説明がボタンを隠す問題を修正しました。
-- 続きから再開したときボスの位置がずれる問題、「風化」の通知が再び出る問題を修正しました。ボス報酬の中央の枠も、再開するたびに引き直さず最初に引いた枠のまま残ります。
-- ボス登場演出が選択ウィンドウに重なる問題と、まれに敵が異常に大きくなる問題を修正しました。
-
-遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
-
-=== zh
-# V1.3.1 更新 — 便利性改进 · 问题修复
-让结界与空间侵蚀中的战斗更顺手，并修复了王之领地、首领生命条等多个问题。
-
-本次更新修复了 V1.3 更新后发现的问题，并让结界中的战斗更加顺手。
-
-## ✨ 便利性改进
-- 结界 · 空间侵蚀期间，熔岩池不再造成伤害，沼泽也不再减速。（每0.6秒6点伤害 → 无伤害）
-- 空间侵蚀期间，非结界攻击造成的单次伤害最多为最大生命的25%。（40% → 25%）
-- 正在施法的首领在必杀技槽充满后，最多3秒内也会打断施法并展开结界。更容易判断结界何时到来。
-- 首领奖励中间格不再出现「生命」 · 「回复」。
-- 「寂静之眼」不再出现在池子上。
-
-## 🛠️ 问题修复
-- 修复了在无尽模式中击败首领后「王之领地」地形不变的问题。现在领地会扩散，并出现熔岩与沼泽。
-- 修复了15分钟「最后时刻」在结界 · 空间侵蚀途中开始的问题。
-- 修复了多个首领同时出现时生命条与「记忆」文字重叠的问题，以及四个首领的生命条遮挡画面过多的问题。
-- 修复了妈妈的唠叨文字遮挡生命条与暂停画面的问题。
-- 修复了主菜单 · 结算画面部分音效不播放的问题，以及暂停菜单中敌人说明遮挡按钮的问题。
-- 修复了继续游戏后首领位置错乱、「风化」提示再次出现的问题。首领奖励中间格也不会在每次继续时重新抽取，而是保持第一次抽到的格子。
-- 修复了首领登场演出与选择窗口重叠的问题，以及敌人偶尔异常变大的问题。
-
-感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
-@@@ v1.3
-# V1.3 업데이트 — 한 판 더
-영혼 계약, 보스가 겹치면 펼쳐지는 「공간 침식」, 보스의 빈틈과 기억까지. 한 판 더 하고 싶어지는 큰 업데이트입니다.
+## 한 판 더
 
 영혼을 구하는 여정에 큰 업데이트가 찾아왔습니다! 판마다 새 목표가 생기고, 보스는 더 영리해졌으며, 더 부드럽고 편하게 즐길 수 있게 되었습니다.
 
@@ -682,11 +354,133 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 영혼 정련 비용 (이야기 모드): 40 · 200 · 1,000 · 5,000 → 60 · 180 · 540 · 1,620 · 4,860
 - 도적 진화 「환영 연막」: 연막 안에서 적의 공격이 40% 확률로 빗나감 → 연막 안에서 받는 피해 90% 감소
 
+## 편의성 개선 · 버그 수정
+
+V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 편하게 다듬었습니다.
+
+## ✨ 편의성 개선
+- 결계 · 공간 침식 중에는 용암 웅덩이가 피해를 주지 않고, 늪도 느려지게 하지 않습니다. (0.6초마다 6 피해 → 피해 없음)
+- 공간 침식 중 결계 공격이 아닌 피해는 한 대에 최대 체력의 25%까지만 받습니다. (40% → 25%)
+- 시전 중인 보스도 필살기 게이지가 찬 뒤 최대 3초 안에 시전을 끊고 결계를 펼칩니다. 결계가 언제 올지 알기 쉬워졌습니다.
+- 보스 보상 가운데 칸에 「생명」 · 「회복」이 더는 나오지 않습니다.
+- 「고요의 눈」이 웅덩이 위에 생기지 않습니다.
+
+## 🛠️ 버그 수정
+- 무한 모드에서 보스를 쓰러뜨려도 「왕들의 영토」 땅이 바뀌지 않던 문제를 고쳤습니다. 이제 영토가 번지고 용암 · 늪이 생깁니다.
+- 15분 「최후의 시간」이 결계 · 공간 침식 도중에 시작되던 문제를 고쳤습니다.
+- 보스가 여럿일 때 체력바와 「기억」 글자가 겹치던 문제, 보스 넷의 체력바가 화면을 너무 가리던 문제를 고쳤습니다.
+- 엄마의 잔소리 글자가 체력바와 일시정지 화면을 가리던 문제를 고쳤습니다.
+- 메인 메뉴 · 결과 화면에서 일부 효과음이 나지 않던 문제와, 일시정지 메뉴에서 적 설명이 버튼을 가리던 문제를 고쳤습니다.
+- 이어하기 때 보스 위치가 어긋나거나 「풍화」 알림이 다시 뜨던 문제를 고쳤습니다. 보스 보상 가운데 칸도 이어할 때마다 다시 뽑히지 않고 처음 뽑은 칸 그대로 남습니다.
+- 보스 등장 연출이 선택 창 위에 겹치던 문제와, 드물게 적이 비정상적으로 커지던 문제를 고쳤습니다.
+
+## 개발자와 엄마의 새 공격
+
+무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
+
+## 💻 개발자의 새 공격
+- 라이브 코딩: 코드 한 줄이 탄이 되어 날아옵니다. 띄어쓰기 자리가 빈틈입니다.
+- 범위 선택: 사각형으로 드래그한 뒤 Del 키로 지웁니다. 체력이 줄면 Ctrl+V 로 한 번 더 붙여 넣습니다.
+- 빌드 실패: 빌드가 다 차면 실패하며 터집니다.
+- 오류 창: 경고 창이 뜨고, 「확인」 자리로 가야 안전합니다.
+- 로딩 중…: 빙글 도는 고리가 조여 듭니다.
+- 스택 오버플로: 블록 탑이 쌓였다가 무너집니다.
+
+## 🧹 엄마의 새 공격
+- 슬리퍼 투척: 슬리퍼가 날아와 벽에 튕깁니다.
+- 효자손: 효자손을 크게 휘두릅니다.
+- 타임 세일!: 할인 쿠폰을 따라 매장을 휘젓고 다닙니다.
+- 빗자루질: 화면을 가로질러 쓸어 버립니다. 빗자루 사이 빈틈으로 피하세요.
+- 엄친아: 엄친아 메달이 쫓아옵니다.
+- 불 끄고 자!: 불빛이 지나갈 때 움직이면 들킵니다. 자는 척하세요!
+
+모든 공격은 먼저 경고가 보이고, 결계 · 공간 침식이 시작되면 바로 멈춥니다.
+
+## ✨ 편의성 개선
+- 새 로딩 화면: 검은 화면 대신 로딩바와 함께 지금 영웅이 달립니다.
+- 불 장판을 그을린 땅 위에 불꽃이 넘실대는 모습으로 새로 그렸습니다. (영웅의 불 공격 · 지옥의 군주의 불 웅덩이)
+- 이펙트 스킨 · 전설 스킨의 연출이 훨씬 크고 잘 보입니다.
+- 쉬움을 클리어하면 보통 · 어려움과 함께 무한 모드까지 열립니다. 이미 쉬움을 클리어했다면 바로 열립니다.
+- 무한 모드에서 개발자가 나타난 뒤에도 떠돌이 상점이 1분마다 찾아옵니다.
+- 게임 안 패치노트를 스팀 공지와 똑같이 맞췄습니다.
+- 거너가 뇌운(사슬 번개 필살기)을 쓰는 동안에도 총을 쏠 수 있습니다.
+- 무한 모드 · 일일 도전 중에 게임을 끄면 지금까지의 기록이 순위표에 올라갑니다.
+- 빈틈이 금이 간 심장처럼 두근거리고 조준 표시가 조여 들어, 더 약점처럼 보입니다.
+
+## 🛠️ 버그 수정
+- 결과 화면이 메인 메뉴와 다음 판까지 화면에 남아 겹쳐 보이던 문제를 고쳤습니다.
+- 무한 모드 이어하기에서 시간이 00:00에서 멈추던 문제를 고쳤습니다. 15분 「최후의 시간」과 적 증가도 제대로 진행됩니다.
+- 보스가 영원히 공격을 받지 않던 문제를 고쳤습니다.
+- 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
+- 보스가 기술 도중 끊겨 공중에 떠 있던 문제 등 보스전이 멈출 수 있던 문제를 더 막았습니다.
+
+## 🦸 영웅 밸런스
+
+유령에 비해 약하던 영웅들의 화력을 크게 올렸습니다.
+- 거너: 공격력 ×1.15 → ×1.7
+- 검사: 공격력 ×1.75 → ×2.8
+- 도적: 공격력 ×1.0 → ×1.6
+- 궁수: 공격력 ×1.25 → ×1.8
+- 연금술사: 공격력 ×0.8 → ×1.2 · 필살기 충전 ×1.2 → ×1.1 (더 빨리 참)
+- 지도 제작자: 공격력 ×1.0 → ×1.15
+- 시계공: 공격력 ×1.0 → ×1.5 · 계약 「팔백 개의 톱니」 → 「육백 개의 톱니」 (톱니 800개 → 600개)
+- 우체부: 공격력 ×0.8 → ×1.2
+- 유령: 처치할 때 영혼이 생길 확률 20% → 10% · 최대 영혼 4 → 3 (영혼 수호 5 · 6 · 7 → 4 · 5 · 6) · 빙의가 끝난 뒤 무적 0.65초 → 0.3초
+
+## ⚖️ 밸런스 조정
+- 모든 적의 체력: 40% 감소 (잡몹 · 엘리트 · 중간 보스 · 보스 모두)
+- 개발자 체력: 100,000 → 60,000
+- 개발자 엄마 체력: 200,000 → 120,000
+- 모든 영웅의 모든 피해: 20% 증가
+- 지도 제작자 피해: 약 9% 감소 (공격력 배율 ×1.1 → ×1.0)
+- 한계 돌파(개발자 엄마까지 처치한 뒤) 적의 공격력: 그대로 → 1분마다 ×1.12씩 끝없이 강해짐
+- 무한 모드 최대 레벨: 80 → 50 (이야기 모드와 같음 · 이제 무한 모드에서도 모든 스킬을 진화할 수는 없습니다)
+- 개발자 결계 게이지 차는 속도: ×1 → ×2.5
+- 개발자 엄마 결계 게이지 차는 속도: ×1 → ×4
+
 플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
 
 === en
-# V1.3 Update — One More Run
-Soul Contracts, "Spatial Erosion" when bosses team up, and bosses with weak points and memories. One more run awaits.
+# V1.1.1 Update — Realm of the Kings · One More Run · New Attacks for the Developer and Mom
+All recent updates gathered in one place: new bosses and realms, more reasons for one more run, quality-of-life improvements, new attacks for the Developer and Mom, and many bug fixes.
+
+We've gathered the update notes we posted separately into a single post. Below is everything that changed in each update.
+
+## Realm of the Kings
+
+A big update has arrived on your journey to save souls! Endless Mode is now much deeper, and more comfortable to play.
+
+## 👑 Realm of the Kings
+
+In Endless Mode, each defeated boss spreads its realm across the desert in a wave from where it fell.
+- Tombstones and soul crystals rise to block movement and shots. Where you shoot from now matters.
+- Lava pools burn you, and slime bogs slow everyone down.
+- When the 15-minute "Final Hour" begins, a sandstorm swallows the terrain.
+
+## 💾 Endless Save & Continue
+- Endless runs are saved when you return to the main menu or quit, and you can pick them up again with "Continue."
+- Daily Challenge is not saved, to keep the leaderboard fair.
+
+## ⚔️ Bosses Don't Wait
+- If a boss survives more than 3 minutes, the next boss joins in (up to 2 at once).
+- A boss that lingers is weathered by the sandstorm and takes more and more damage.
+- The 15-minute "Final Hour" only opens if you have defeated at least one boss.
+- Weak enemies swarm in while you fight the Developer and the Developer's Mom.
+
+## ✨ Feel & Quality of Life
+- Health bars now react when you take a hit!
+- Projectiles are easier to see: your shots and enemy shots have a dark outline and are drawn slightly larger (hitboxes are unchanged).
+- The Rogue's Spinning Stars now curve back to you themselves.
+- Barrels on the map reappear one at a time every 40 seconds after being broken.
+- The early game of Endless Mode is easier, and the first boss appears later.
+
+## ⚖️ Balance Changes
+- First 5 minutes of Endless: mob and boss HP ×0.5, damage taken ×0.6 (gradually back to normal from 5 to 9 minutes)
+- First Endless boss: 1:30 → 4:00
+- Developer / Developer's Mom ultimate warning time: Developer ×0.6, Mom ×0.5
+- Rogue evolution "Phantom Smoke": all enemy attacks miss in the smoke → 40% chance to miss
+
+## One More Run
 
 A big update has arrived on your journey to save souls! Every run now brings new goals, bosses have grown smarter, and the game is smoother and more comfortable to play.
 
@@ -763,11 +557,133 @@ In Endless Mode, when two or more bosses are on the field together, their ultima
 - Soul Refining cost (Story Mode): 40 · 200 · 1,000 · 5,000 → 60 · 180 · 540 · 1,620 · 4,860
 - Rogue evolution "Phantom Smoke": 40% chance for enemy attacks to miss inside the smoke → damage taken inside the smoke reduced by 90%
 
+## Quality of Life & Bug Fixes
+
+This update fixes issues found after the V1.3 update and makes fighting inside barriers more comfortable.
+
+## ✨ Quality of Life
+- During barriers and Spatial Erosion, lava pools no longer deal damage and bogs no longer slow you. (6 damage every 0.6s → no damage)
+- During Spatial Erosion, damage from non-barrier attacks is capped at 25% of your max HP per hit. (40% → 25%)
+- A boss that is casting now interrupts its cast and opens its barrier within 3 seconds after its ultimate gauge fills. It is easier to tell when a barrier is coming.
+- The middle boss reward no longer offers "Life" or "Heal."
+- The "Eye of Calm" no longer appears on top of pools.
+
+## 🛠️ Bug Fixes
+- Fixed the ground of "Realm of the Kings" not changing when you defeat a boss in Endless Mode. Realms now spread and lava pools and bogs appear.
+- Fixed the 15-minute "Final Hour" starting in the middle of a barrier or Spatial Erosion.
+- Fixed health bars overlapping the "Memory" text when several bosses appear, and four boss health bars covering too much of the screen.
+- Fixed Mom's nagging text covering the health bar and the pause screen.
+- Fixed some sound effects not playing in the main menu and results screen, and enemy tooltips covering buttons in the pause menu.
+- Fixed bosses appearing in the wrong place and the "weathered" notice showing again after Continue. The middle boss reward now keeps its first roll instead of rerolling every time you continue.
+- Fixed boss intros overlapping choice windows, and enemies rarely growing abnormally large.
+
+## New Attacks for the Developer and Mom
+
+The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
+
+## 💻 The Developer's New Attacks
+- Live Coding: a line of code flies at you as projectiles. The spaces are your gaps.
+- Select & Delete: a box is dragged out, then erased with the Del key. At lower health, Ctrl+V pastes it once more.
+- Build Failed: when the build bar fills, it fails and explodes.
+- Error Popup: an error window appears, and the "OK" spot is the safe place.
+- Loading…: a spinning ring closes in.
+- Stack Overflow: a tower of blocks stacks up, then collapses.
+
+## 🧹 Mom's New Attacks
+- Slipper Toss: slippers fly at you and bounce off walls.
+- Back Scratcher: a big sweeping swing.
+- Time Sale!: she storms through the store following the coupons.
+- Broom Sweep: a sweep across the screen. Dodge through the gaps between the bristles.
+- Mom's Friend's Son: his medals chase you.
+- Lights Out!: move while the light passes and you're caught. Pretend to sleep!
+
+Every attack shows a warning first and stops the moment a barrier or Spatial Erosion begins.
+
+## ✨ Quality of Life
+- New loading screen: instead of a black screen, your hero runs along a loading bar.
+- Fire fields have been redrawn as flames dancing over scorched ground. (Hero fire attacks and the Demon Lord's fire pools)
+- Effect skins and Legendary skins now have much bigger, clearer effects.
+- Clearing Easy now unlocks Endless Mode along with Normal and Hard. If you've already cleared Easy, it unlocks right away.
+- In Endless Mode, the Wandering Shop keeps appearing every minute even after the Developer shows up.
+- In-game patch notes now match the Steam announcements exactly.
+- The Gunner can keep shooting while Thunderstorm (the Chain Lightning ultimate) is active.
+- Quitting the game during Endless Mode or the Daily Challenge now submits your run so far to the leaderboard.
+- Weak points now pulse like a cracked heart with a tightening target mark, so they look more like weak points.
+
+## 🛠️ Bug Fixes
+- Fixed the results screen staying on top of the main menu and the next run.
+- Fixed the timer stopping at 00:00 after continuing an Endless run. The 15-minute "Final Hour" and enemy scaling now progress correctly.
+- Fixed bosses becoming permanently immune to damage.
+- Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
+- Fixed more cases that could stall boss fights, such as bosses staying in the air after an interrupted attack.
+
+## 🦸 Hero Balance
+
+Heroes that fell behind the Ghost now hit much harder.
+- Gunner: attack ×1.15 → ×1.7
+- Swordsman: attack ×1.75 → ×2.8
+- Rogue: attack ×1.0 → ×1.6
+- Archer: attack ×1.25 → ×1.8
+- Alchemist: attack ×0.8 → ×1.2 · Ultimate charge ×1.2 → ×1.1 (fills faster)
+- Cartographer: attack ×1.0 → ×1.15
+- Clockmaker: attack ×1.0 → ×1.5 · contract "Eight Hundred Gears" → "Six Hundred Gears" (800 → 600 gears)
+- Postman: attack ×0.8 → ×1.2
+- Ghost: soul chance on kill 20% → 10% · max souls 4 → 3 (Soul Guard 5 · 6 · 7 → 4 · 5 · 6) · invincibility after Possession 0.65s → 0.3s
+
+## ⚖️ Balance Changes
+- All enemy health: −40% (mobs, elites, mid-bosses and bosses)
+- Developer health: 100,000 → 60,000
+- Developer's Mom health: 200,000 → 120,000
+- All damage from every hero: +20%
+- Cartographer damage: about −9% (attack multiplier ×1.1 → ×1.0)
+- Enemy attack after Beyond the Limit (after defeating the Developer's Mom): unchanged → grows ×1.12 every minute, without limit
+- Endless Mode max level: 80 → 50 (same as Story Mode, so you can no longer evolve every skill in Endless)
+- Developer barrier gauge fill speed: ×1 → ×2.5
+- Developer's Mom barrier gauge fill speed: ×1 → ×4
+
 Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
 
 === ja
-# V1.3 アップデート — もう一回
-魂の契約、ボスが重なると展開される「空間侵食」、ボスの隙と記憶まで。もう一回遊びたくなる大型アップデートです。
+# V1.1.1 アップデート — 王たちの領土・もう一回・開発者とママの新しい攻撃
+これまでのアップデートをひとつにまとめました：新しいボスと領土、もう一回遊びたくなる要素、快適性の改善、開発者とママの新しい攻撃、多くの不具合修正。
+
+これまで分けて投稿していたアップデート情報をひとつにまとめました。以下は各アップデートで変わった内容です。
+
+## 王たちの領土
+
+魂を救う旅に大型アップデートが届きました！エンドレスがより奥深く、より遊びやすくなりました。
+
+## 👑 王たちの領土
+
+エンドレスでボスを倒すと、その王の領土が倒れた場所から波のように砂漠を覆います。
+- 墓石と魂の水晶が現れ、移動と弾を遮ります。どこから撃つかが重要になります。
+- 溶岩だまりは踏むとダメージを受け、粘液の沼はすべてを遅くします。
+- 15分の「最後の時間」が始まると、砂嵐が地形を飲み込みます。
+
+## 💾 エンドレスのセーブ・続きから
+- エンドレスもメインメニューに戻るかゲームを終了するとセーブされ、「続きから」で同じところから再開できます。
+- デイリーチャレンジは公平なランキングのためセーブされません。
+
+## ⚔️ ボスは待ってくれません
+- ボスを3分以上倒せないと、次のボスが一緒に現れます（同時に最大2体）。
+- 長く生き残ったボスは砂嵐に風化し、受けるダメージがだんだん増えます。
+- 15分の「最後の時間」は、ボスを1体以上倒したときだけ開きます。
+- 開発者・開発者の母と戦っている間は、弱い敵が押し寄せてきます。
+
+## ✨ 手触りと便利機能
+- 被弾時に体力バーへ演出が追加されます！
+- 弾が見やすくなりました。自分の弾と敵の弾に暗い縁取りを加え、少し大きく描くようにしました（当たり判定は変わりません）。
+- 盗賊の回転手裏剣は、投げた手裏剣がそのまま曲がって戻ってきます。
+- マップの樽が、壊れたあと40秒ごとにひとつずつ再び現れます。
+- エンドレスの序盤がやさしくなり、最初のボスの登場が遅くなりました。
+
+## ⚖️ バランス調整
+- エンドレス最初の5分：雑魚・ボスの体力 ×0.5、被ダメージ ×0.6（5〜9分にかけて徐々に元どおり）
+- エンドレス最初のボスの登場：1分30秒 → 4分
+- 開発者・開発者の母の必殺技の予告時間：開発者 ×0.6、母 ×0.5
+- 盗賊の進化「幻影の煙幕」：煙幕の中では敵の攻撃がすべて外れる → 40%の確率で外れる
+
+## もう一回
 
 魂を救う旅に大型アップデートが届きました！毎回のプレイに新しい目標が生まれ、ボスはより賢くなり、より滑らかで快適に遊べるようになりました。
 
@@ -844,11 +760,133 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - 魂の精錬の費用（ストーリーモード）：40・200・1,000・5,000 → 60・180・540・1,620・4,860
 - 盗賊の進化「幻影の煙幕」：煙幕の中で敵の攻撃が40%の確率で外れる → 煙幕の中で受けるダメージ90%減少
 
+## 快適性の改善・不具合の修正
+
+V1.3 アップデート後に見つかった問題を修正し、結界の中の戦闘をより快適に調整しました。
+
+## ✨ 快適性の改善
+- 結界・空間侵食中は溶岩の溜まりがダメージを与えず、沼でも遅くなりません。（0.6秒ごとに6ダメージ → ダメージなし）
+- 空間侵食中、結界攻撃以外から受けるダメージは1回につき最大体力の25%までになりました。（40% → 25%）
+- 詠唱中のボスも、必殺技ゲージが満タンになってから最大3秒で詠唱を中断して結界を展開します。結界が来るタイミングが分かりやすくなりました。
+- ボス報酬の中央の枠に「生命」・「回復」が出なくなりました。
+- 「静寂の目」が溜まりの上に現れなくなりました。
+
+## 🛠️ 不具合の修正
+- エンドレスでボスを倒しても「王たちの領土」の地形が変わらなかった問題を修正しました。領土が広がり、溶岩・沼が現れるようになりました。
+- 15分の「最後の時間」が結界・空間侵食の途中で始まる問題を修正しました。
+- ボスが複数いるとき体力バーと「記憶」の文字が重なる問題、ボス4体の体力バーが画面を覆いすぎる問題を修正しました。
+- ママの小言の文字が体力バーと一時停止画面を隠す問題を修正しました。
+- メインメニュー・結果画面で一部の効果音が鳴らない問題と、一時停止メニューで敵の説明がボタンを隠す問題を修正しました。
+- 続きから再開したときボスの位置がずれる問題、「風化」の通知が再び出る問題を修正しました。ボス報酬の中央の枠も、再開するたびに引き直さず最初に引いた枠のまま残ります。
+- ボス登場演出が選択ウィンドウに重なる問題と、まれに敵が異常に大きくなる問題を修正しました。
+
+## 開発者とママの新しい攻撃
+
+エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
+
+## 💻 開発者の新しい攻撃
+- ライブコーディング: コード1行が弾になって飛んできます。スペースの部分が隙間です。
+- 範囲選択: 四角形をドラッグしてDelキーで消します。体力が減るとCtrl+Vでもう一度貼り付けます。
+- ビルド失敗: ビルドが満タンになると失敗して爆発します。
+- エラーダイアログ: 警告ウィンドウが出て、「OK」の場所が安全です。
+- 読み込み中…: 回るリングが迫ってきます。
+- スタックオーバーフロー: ブロックの塔が積み上がって崩れます。
+
+## 🧹 ママの新しい攻撃
+- スリッパ投げ: スリッパが飛んできて壁で跳ね返ります。
+- 孫の手: 孫の手を大きく振り回します。
+- タイムセール！: クーポンを追って売り場を駆け回ります。
+- ほうき掃き: 画面を横切って掃いていきます。ほうきの隙間をくぐってよけましょう。
+- ママ友の息子: メダルが追いかけてきます。
+- 電気消して寝なさい！: 光が通るときに動くと見つかります。寝たふりをしましょう！
+
+すべての攻撃は先に警告が表示され、結界・空間侵食が始まるとすぐに止まります。
+
+## ✨ 快適性の改善
+- 新しいロード画面: 黒い画面の代わりに、ロードバーと一緒に今の英雄が走ります。
+- 炎の床を、焦げた地面の上で炎が揺らめく姿に描き直しました。（英雄の炎の攻撃・地獄の君主の炎の溜まり）
+- エフェクトスキン・伝説スキンの演出がずっと大きく見やすくなりました。
+- イージーをクリアすると、ノーマル・ハードと一緒にエンドレスモードまで解放されます。すでにイージーをクリアしていればすぐに解放されます。
+- エンドレスで開発者が現れた後も、さすらいのショップが1分ごとにやって来ます。
+- ゲーム内のパッチノートをSteamのお知らせと同じ内容にそろえました。
+- ガンナーが雷雲（連鎖雷撃の必殺技）を使っている間も銃を撃てるようになりました。
+- エンドレス・デイリーチャレンジ中にゲームを終了すると、ここまでの記録がランキングに登録されるようになりました。
+- 隙がひびの入った心臓のように脈打ち、狙いの印が締まっていくので、より弱点らしく見えます。
+
+## 🛠️ 不具合の修正
+- 結果画面がメインメニューや次のプレイまで画面に残って重なる問題を修正しました。
+- エンドレスの続きから再開すると時間が00:00で止まる問題を修正しました。15分の「最後の時間」と敵の増加も正しく進みます。
+- ボスがずっとダメージを受けなくなる問題を修正しました。
+- ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
+- 技の途中で中断されたボスが空中に浮いたままになるなど、ボス戦が止まりうる問題をさらに防ぎました。
+
+## 🦸 英雄のバランス
+
+幽霊に比べて弱かった英雄たちの火力を大きく上げました。
+- ガンナー: 攻撃力 ×1.15 → ×1.7
+- 剣士: 攻撃力 ×1.75 → ×2.8
+- 盗賊: 攻撃力 ×1.0 → ×1.6
+- 弓使い: 攻撃力 ×1.25 → ×1.8
+- 錬金術師: 攻撃力 ×0.8 → ×1.2・必殺技チャージ ×1.2 → ×1.1（早くたまる）
+- 地図職人: 攻撃力 ×1.0 → ×1.15
+- 時計職人: 攻撃力 ×1.0 → ×1.5・契約「八百の歯車」→「六百の歯車」（歯車800個 → 600個）
+- 郵便配達人: 攻撃力 ×0.8 → ×1.2
+- 幽霊: 撃破時に魂が生まれる確率 20% → 10%・最大の魂 4 → 3（魂の守り 5・6・7 → 4・5・6）・憑依が終わった後の無敵 0.65秒 → 0.3秒
+
+## ⚖️ バランス調整
+- すべての敵の体力: 40%減少（雑魚・エリート・中ボス・ボスすべて）
+- 開発者の体力: 100,000 → 60,000
+- 開発者のママの体力: 200,000 → 120,000
+- すべての英雄のすべてのダメージ: 20%増加
+- 地図職人のダメージ: 約9%減少（攻撃力倍率 ×1.1 → ×1.0）
+- 限界突破（開発者のママまで倒した後）の敵の攻撃力: そのまま → 1分ごとに×1.12ずつ際限なく強くなる
+- エンドレスの最大レベル: 80 → 50（ストーリーモードと同じ・エンドレスでもすべてのスキルは進化できなくなりました）
+- 開発者の結界ゲージがたまる速さ: ×1 → ×2.5
+- 開発者のママの結界ゲージがたまる速さ: ×1 → ×4
+
 遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
 
 === zh
-# V1.3 更新 — 再来一局
-灵魂契约、首领聚集时展开的「空间侵蚀」，以及首领的破绽与记忆。一次让你忍不住再来一局的大型更新。
+# V1.1.1 更新 — 王之领地 · 再来一局 · 开发者与妈妈的新攻击
+将近期的更新整合为一篇：新的首领与领地、让人想再来一局的内容、便利性改进、开发者与妈妈的新攻击，以及大量问题修复。
+
+我们把之前分开发布的更新公告整合成了一篇。以下是每次更新中的变化。
+
+## 王之领地
+
+拯救灵魂的旅程迎来了大型更新！无尽模式变得更有深度，也更容易畅玩。
+
+## 👑 王之领地
+
+在无尽模式中击败首领后，该王的领地会从它倒下的地方如波浪般覆盖沙漠。
+- 墓碑和灵魂水晶会升起，阻挡移动和子弹。从哪里射击变得更加重要。
+- 熔岩池踩上去会受伤，黏液沼泽会让所有人减速。
+- 15分钟「最后时刻」开始时，沙暴会吞没地形。
+
+## 💾 无尽模式保存与继续
+- 无尽模式在返回主菜单或退出游戏时会保存，可通过「继续游戏」从同一位置重新开始。
+- 为了排行榜的公平，每日挑战不会保存。
+
+## ⚔️ 首领不会等待
+- 如果超过3分钟仍未击败首领，下一个首领会一同出现（同时最多2个）。
+- 存活过久的首领会被沙暴风化，受到的伤害逐渐增加。
+- 15分钟「最后时刻」只有在击败至少1个首领时才会开启。
+- 与开发者 · 开发者妈妈战斗时，会有弱小的敌人蜂拥而来。
+
+## ✨ 手感与便利
+- 受击时生命条会出现特效！
+- 子弹更容易看清了：为自己和敌人的子弹加上深色描边，并稍微放大了显示（命中判定不变）。
+- 盗贼的旋转飞镖现在会让掷出的飞镖直接折返回来。
+- 地图上的木桶被打破后，每40秒会重新出现一个。
+- 无尽模式前期变得更简单，第一个首领登场更晚。
+
+## ⚖️ 平衡调整
+- 无尽模式前5分钟：小怪 · 首领生命 ×0.5，受到伤害 ×0.6（5~9分钟逐渐恢复）
+- 无尽模式第一个首领登场：1分30秒 → 4分钟
+- 开发者 · 开发者妈妈必杀技预警时间：开发者 ×0.6，妈妈 ×0.5
+- 盗贼进化「幻影烟幕」：烟幕中敌人攻击全部落空 → 40%几率落空
+
+## 再来一局
 
 拯救灵魂的旅程迎来了大型更新！每局都会出现新的目标，首领变得更聪明，游戏也更流畅、更容易畅玩。
 
@@ -925,156 +963,89 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 - 灵魂精炼费用（故事模式）：40 · 200 · 1,000 · 5,000 → 60 · 180 · 540 · 1,620 · 4,860
 - 盗贼进化「幻影烟幕」：烟幕中敌人的攻击有40%概率落空 → 烟幕中受到的伤害降低90%
 
-感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
-@@@ v1.2
-# V1.2 업데이트 — 왕들의 영토
-무한 모드 저장 · 이어하기, 보스를 쓰러뜨릴 때마다 바뀌는 지형, 새 보스 흐름을 만나 보세요.
+## 便利性改进 · 问题修复
 
-영혼을 구하는 여정에 큰 업데이트가 찾아왔습니다! 무한 모드가 훨씬 깊어지고, 더 편하게 즐길 수 있게 되었습니다.
+本次更新修复了 V1.3 更新后发现的问题，并让结界中的战斗更加顺手。
 
-## 👑 왕들의 영토
+## ✨ 便利性改进
+- 结界 · 空间侵蚀期间，熔岩池不再造成伤害，沼泽也不再减速。（每0.6秒6点伤害 → 无伤害）
+- 空间侵蚀期间，非结界攻击造成的单次伤害最多为最大生命的25%。（40% → 25%）
+- 正在施法的首领在必杀技槽充满后，最多3秒内也会打断施法并展开结界。更容易判断结界何时到来。
+- 首领奖励中间格不再出现「生命」 · 「回复」。
+- 「寂静之眼」不再出现在池子上。
 
-무한 모드에서 보스를 쓰러뜨리면, 그 왕의 영토가 쓰러진 자리부터 파동처럼 사막을 덮습니다.
-- 묘비와 영혼 수정이 솟아 길과 탄을 막습니다. 어디서 쏘느냐가 중요해집니다.
-- 용암 웅덩이는 밟으면 피해를 입고, 점액 늪은 모두를 느리게 합니다.
-- 15분 「최후의 시간」이 시작되면 모래 폭풍이 지형을 집어삼킵니다.
+## 🛠️ 问题修复
+- 修复了在无尽模式中击败首领后「王之领地」地形不变的问题。现在领地会扩散，并出现熔岩与沼泽。
+- 修复了15分钟「最后时刻」在结界 · 空间侵蚀途中开始的问题。
+- 修复了多个首领同时出现时生命条与「记忆」文字重叠的问题，以及四个首领的生命条遮挡画面过多的问题。
+- 修复了妈妈的唠叨文字遮挡生命条与暂停画面的问题。
+- 修复了主菜单 · 结算画面部分音效不播放的问题，以及暂停菜单中敌人说明遮挡按钮的问题。
+- 修复了继续游戏后首领位置错乱、「风化」提示再次出现的问题。首领奖励中间格也不会在每次继续时重新抽取，而是保持第一次抽到的格子。
+- 修复了首领登场演出与选择窗口重叠的问题，以及敌人偶尔异常变大的问题。
 
-## 💾 무한 모드 저장 · 이어하기
-- 무한 모드도 메인 메뉴로 나가거나 게임을 끄면 저장되고, 「이어하기」로 같은 지점부터 다시 할 수 있습니다.
-- 일일 도전은 공정한 순위를 위해 저장되지 않습니다.
+## 开发者与妈妈的新攻击
 
-## ⚔️ 보스는 기다리지 않습니다
-- 보스를 3분 넘게 못 쓰러뜨리면 다음 보스가 함께 나옵니다(동시에 최대 2마리).
-- 오래 버틴 보스는 모래 폭풍에 풍화되어 받는 피해가 점점 늘어납니다.
-- 15분 「최후의 시간」은 보스를 하나 이상 쓰러뜨린 판에만 열립니다.
-- 개발자 · 개발자 엄마와 싸우는 동안 약한 적들이 몰려옵니다.
+无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
 
-## ✨ 손맛과 편의
-- 피격 시 체력바에 효과가 추가됩니다!
-- 탄이 더 잘 보입니다. 내 탄과 적 탄에 어두운 테두리를 더하고 그림을 조금 키웠습니다(맞는 판정은 그대로입니다).
-- 도적의 회전 표창은 던진 표창이 그대로 꺾여 돌아옵니다.
-- 맵의 통이 부서진 뒤 40초마다 하나씩 다시 생깁니다.
-- 무한 모드 초반이 더 쉬워지고, 첫 보스가 더 늦게 나옵니다.
+## 💻 开发者的新攻击
+- 现场编程：一行代码化作弹幕飞来，空格处就是空隙。
+- 框选删除：拖出方框后按 Del 键删除。生命降低后还会用 Ctrl+V 再粘贴一次。
+- 构建失败：构建进度条充满后失败并爆炸。
+- 错误弹窗：弹出警告窗口，「确定」的位置才安全。
+- 加载中…：旋转的圆环向内收紧。
+- 栈溢出：方块塔堆起后崩塌。
 
-## ⚖️ 밸런스 조정
-- 무한 모드 처음 5분: 잡몹 · 보스 체력 ×0.5, 받는 피해 ×0.6 (5~9분에 서서히 원래대로)
-- 무한 모드 첫 보스 등장: 1분 30초 → 4분
-- 개발자 · 개발자 엄마 필살기 예고 시간: 개발자 ×0.6, 엄마 ×0.5
-- 도적 진화 「환영 연막」: 연막 안 적 공격이 모두 빗나감 → 40% 확률로 빗나감
+## 🧹 妈妈的新攻击
+- 拖鞋飞袭：拖鞋飞来并在墙上反弹。
+- 痒痒挠：大幅挥舞痒痒挠。
+- 限时抢购！：追着优惠券在卖场里横冲直撞。
+- 扫帚横扫：横扫整个画面，从扫帚之间的空隙躲开。
+- 别人家的孩子：奖牌会追着你跑。
+- 关灯睡觉！：灯光扫过时一动就会被发现，快装睡！
 
-플레이해 주시는 모든 분께 감사드립니다. 의견은 언제든 커뮤니티 토론 게시판에 남겨 주세요!
+所有攻击都会先显示警告，结界 · 空间侵蚀开始时会立即停止。
 
-=== en
-# V1.2 Update — Realm of the Kings
-Save and continue Endless runs, terrain that changes with every boss you defeat, and a new boss rhythm.
+## ✨ 便利性改进
+- 新的加载画面：不再是黑屏，当前英雄会沿着加载条奔跑。
+- 重新绘制了火焰地带，现在是焦土上摇曳的火焰。（英雄的火焰攻击 · 地狱领主的火焰池）
+- 特效皮肤 · 传说皮肤的演出变得更大、更醒目。
+- 通关简单难度后，普通 · 困难与无尽模式会一并解锁。如果已经通关简单难度，会立即解锁。
+- 在无尽模式中，开发者出现后流浪商店仍会每分钟到来。
+- 游戏内的更新日志已与 Steam 公告内容完全一致。
+- 枪手在使用雷云（连锁闪电必杀技）期间也能继续射击。
+- 在无尽模式 · 每日挑战中关闭游戏时，至今的记录会上传排行榜。
+- 破绽会像裂开的心脏一样跳动，瞄准标记也会收紧，看起来更像弱点。
 
-A big update has arrived on your journey to save souls! Endless Mode is now much deeper, and more comfortable to play.
+## 🛠️ 问题修复
+- 修复了结算画面一直留在主菜单和下一局画面上重叠显示的问题。
+- 修复了无尽模式继续游戏后时间停在00:00的问题。15分钟「最后时刻」与敌人增长也会正常推进。
+- 修复了首领永远不受伤害的问题。
+- 修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
+- 进一步防止了首领招式被打断后停在空中等可能导致首领战停滞的问题。
 
-## 👑 Realm of the Kings
+## 🦸 英雄平衡
 
-In Endless Mode, each defeated boss spreads its realm across the desert in a wave from where it fell.
-- Tombstones and soul crystals rise to block movement and shots. Where you shoot from now matters.
-- Lava pools burn you, and slime bogs slow everyone down.
-- When the 15-minute "Final Hour" begins, a sandstorm swallows the terrain.
-
-## 💾 Endless Save & Continue
-- Endless runs are saved when you return to the main menu or quit, and you can pick them up again with "Continue."
-- Daily Challenge is not saved, to keep the leaderboard fair.
-
-## ⚔️ Bosses Don't Wait
-- If a boss survives more than 3 minutes, the next boss joins in (up to 2 at once).
-- A boss that lingers is weathered by the sandstorm and takes more and more damage.
-- The 15-minute "Final Hour" only opens if you have defeated at least one boss.
-- Weak enemies swarm in while you fight the Developer and the Developer's Mom.
-
-## ✨ Feel & Quality of Life
-- Health bars now react when you take a hit!
-- Projectiles are easier to see: your shots and enemy shots have a dark outline and are drawn slightly larger (hitboxes are unchanged).
-- The Rogue's Spinning Stars now curve back to you themselves.
-- Barrels on the map reappear one at a time every 40 seconds after being broken.
-- The early game of Endless Mode is easier, and the first boss appears later.
-
-## ⚖️ Balance Changes
-- First 5 minutes of Endless: mob and boss HP ×0.5, damage taken ×0.6 (gradually back to normal from 5 to 9 minutes)
-- First Endless boss: 1:30 → 4:00
-- Developer / Developer's Mom ultimate warning time: Developer ×0.6, Mom ×0.5
-- Rogue evolution "Phantom Smoke": all enemy attacks miss in the smoke → 40% chance to miss
-
-Thank you to everyone who plays. Feel free to share your feedback on the Community Discussions board anytime!
-
-=== ja
-# V1.2 アップデート — 王たちの領土
-エンドレスのセーブ・続きから、ボスを倒すたびに変わる地形、新しいボスの流れをお楽しみください。
-
-魂を救う旅に大型アップデートが届きました！エンドレスがより奥深く、より遊びやすくなりました。
-
-## 👑 王たちの領土
-
-エンドレスでボスを倒すと、その王の領土が倒れた場所から波のように砂漠を覆います。
-- 墓石と魂の水晶が現れ、移動と弾を遮ります。どこから撃つかが重要になります。
-- 溶岩だまりは踏むとダメージを受け、粘液の沼はすべてを遅くします。
-- 15分の「最後の時間」が始まると、砂嵐が地形を飲み込みます。
-
-## 💾 エンドレスのセーブ・続きから
-- エンドレスもメインメニューに戻るかゲームを終了するとセーブされ、「続きから」で同じところから再開できます。
-- デイリーチャレンジは公平なランキングのためセーブされません。
-
-## ⚔️ ボスは待ってくれません
-- ボスを3分以上倒せないと、次のボスが一緒に現れます（同時に最大2体）。
-- 長く生き残ったボスは砂嵐に風化し、受けるダメージがだんだん増えます。
-- 15分の「最後の時間」は、ボスを1体以上倒したときだけ開きます。
-- 開発者・開発者の母と戦っている間は、弱い敵が押し寄せてきます。
-
-## ✨ 手触りと便利機能
-- 被弾時に体力バーへ演出が追加されます！
-- 弾が見やすくなりました。自分の弾と敵の弾に暗い縁取りを加え、少し大きく描くようにしました（当たり判定は変わりません）。
-- 盗賊の回転手裏剣は、投げた手裏剣がそのまま曲がって戻ってきます。
-- マップの樽が、壊れたあと40秒ごとにひとつずつ再び現れます。
-- エンドレスの序盤がやさしくなり、最初のボスの登場が遅くなりました。
-
-## ⚖️ バランス調整
-- エンドレス最初の5分：雑魚・ボスの体力 ×0.5、被ダメージ ×0.6（5〜9分にかけて徐々に元どおり）
-- エンドレス最初のボスの登場：1分30秒 → 4分
-- 開発者・開発者の母の必殺技の予告時間：開発者 ×0.6、母 ×0.5
-- 盗賊の進化「幻影の煙幕」：煙幕の中では敵の攻撃がすべて外れる → 40%の確率で外れる
-
-遊んでくださる皆さま、ありがとうございます。ご意見はいつでもコミュニティのディスカッションにお寄せください！
-
-=== zh
-# V1.2 更新 — 王之领地
-无尽模式保存与继续、每次击败首领都会改变的地形，以及全新的首领节奏。
-
-拯救灵魂的旅程迎来了大型更新！无尽模式变得更有深度，也更容易畅玩。
-
-## 👑 王之领地
-
-在无尽模式中击败首领后，该王的领地会从它倒下的地方如波浪般覆盖沙漠。
-- 墓碑和灵魂水晶会升起，阻挡移动和子弹。从哪里射击变得更加重要。
-- 熔岩池踩上去会受伤，黏液沼泽会让所有人减速。
-- 15分钟「最后时刻」开始时，沙暴会吞没地形。
-
-## 💾 无尽模式保存与继续
-- 无尽模式在返回主菜单或退出游戏时会保存，可通过「继续游戏」从同一位置重新开始。
-- 为了排行榜的公平，每日挑战不会保存。
-
-## ⚔️ 首领不会等待
-- 如果超过3分钟仍未击败首领，下一个首领会一同出现（同时最多2个）。
-- 存活过久的首领会被沙暴风化，受到的伤害逐渐增加。
-- 15分钟「最后时刻」只有在击败至少1个首领时才会开启。
-- 与开发者 · 开发者妈妈战斗时，会有弱小的敌人蜂拥而来。
-
-## ✨ 手感与便利
-- 受击时生命条会出现特效！
-- 子弹更容易看清了：为自己和敌人的子弹加上深色描边，并稍微放大了显示（命中判定不变）。
-- 盗贼的旋转飞镖现在会让掷出的飞镖直接折返回来。
-- 地图上的木桶被打破后，每40秒会重新出现一个。
-- 无尽模式前期变得更简单，第一个首领登场更晚。
+大幅提升了相比幽灵偏弱的英雄们的火力。
+- 枪手：攻击力 ×1.15 → ×1.7
+- 剑士：攻击力 ×1.75 → ×2.8
+- 盗贼：攻击力 ×1.0 → ×1.6
+- 弓箭手：攻击力 ×1.25 → ×1.8
+- 炼金术士：攻击力 ×0.8 → ×1.2 · 必杀技充能 ×1.2 → ×1.1（充得更快）
+- 制图师：攻击力 ×1.0 → ×1.15
+- 钟表匠：攻击力 ×1.0 → ×1.5 · 契约「八百齿轮」→「六百齿轮」（齿轮800枚 → 600枚）
+- 邮差：攻击力 ×0.8 → ×1.2
+- 幽灵：击败敌人时生成灵魂的几率 20% → 10% · 灵魂上限 4 → 3（灵魂守护 5 · 6 · 7 → 4 · 5 · 6）· 附身结束后的无敌 0.65秒 → 0.3秒
 
 ## ⚖️ 平衡调整
-- 无尽模式前5分钟：小怪 · 首领生命 ×0.5，受到伤害 ×0.6（5~9分钟逐渐恢复）
-- 无尽模式第一个首领登场：1分30秒 → 4分钟
-- 开发者 · 开发者妈妈必杀技预警时间：开发者 ×0.6，妈妈 ×0.5
-- 盗贼进化「幻影烟幕」：烟幕中敌人攻击全部落空 → 40%几率落空
+- 所有敌人的生命：降低40%（小怪 · 精英 · 中头目 · 首领全部）
+- 开发者生命：100,000 → 60,000
+- 开发者的妈妈生命：200,000 → 120,000
+- 所有英雄的所有伤害：提高20%
+- 制图师伤害：降低约9%（攻击力倍率 ×1.1 → ×1.0）
+- 突破极限（击败开发者的妈妈之后）敌人攻击力：不变 → 每分钟×1.12，无限增强
+- 无尽模式等级上限：80 → 50（与故事模式相同 · 无尽模式中也无法让所有技能进化）
+- 开发者结界槽充能速度：×1 → ×2.5
+- 开发者的妈妈结界槽充能速度：×1 → ×4
 
 感谢每一位游玩的玩家。欢迎随时在社区讨论区留下您的意见！
 @@@ Hotfix
