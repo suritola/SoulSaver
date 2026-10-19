@@ -65,3 +65,4 @@ __pycache__/
 # 플레이 데이터 (텔레메트리) 로컬 사본 · 관리자 토큰
 /docs/balance/telemetry/
 /tools/telemetry/.token
+/server/telemetry/.wrangler/
