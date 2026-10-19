@@ -224,6 +224,7 @@ public static class MenuExtras
         }
         SaveNotice(root, () => LanguagePicker.Open(root, () => PatchNotesUI.OpenOnLaunch(root)));
         ClaimRewards.InstallMenu(root);         // 1.2~ 소급 해금 알림 · 이미 이룬 기록의 보상 「받기」 (위 창들이 닫힌 뒤)
+        TelemetryConsentUI.InstallMenu(root);   // 1.4.4~ 플레이 데이터 보내기 동의 (미정일 때만 · 위 창들이 다 닫힌 뒤)
         // 1.0.4~: 튜토리얼 완료 화면 「바로 첫 판 시작」 → 게임 시작 버튼을 대신 누름 (저장된 판이 있으면 원래처럼 한 번 물음)
         if (TutorialRun.ConsumeQuickStart())
         {
@@ -1033,14 +1034,21 @@ public static class SettingsUI
         UIKit.Text(page, ko, 30f, Parch, new Vector2(-400f, y), new Vector2(280f, 50f), TextAlignmentOptions.Left);
 
     // ================================================================= 일반
+    // 1.4.4~ 플레이 데이터 보내기 두 줄을 더하면 8줄: 65 간격 · 높이 56 (서버 주소가 없으면 예전 6줄 그대로)
+    static readonly float[] GeneralY6 = { 200f, 110f, 20f, -70f, -160f, -250f };
+    static readonly float[] GeneralY8 = { 215f, 150f, 85f, 20f, -45f, -110f, -175f, -240f };
+
     static void BuildGeneral()
     {
-        RowLabel("언어", 200f);
+        bool tel = Telemetry.Configured;
+        float[] ys = tel ? GeneralY8 : GeneralY6;
+        if (tel) rowH = 56f;
+        RowLabel("언어", ys[0]);
         List<Button> langButtons = new List<Button>();
         for (int i = 0; i < 4; i++)
         {
             int lang = i;
-            Button b = UIKit.MakeButton(page, "", new Vector2(-140f + 185f * i, 200f), new Vector2(170f, 64f), () =>
+            Button b = UIKit.MakeButton(page, "", new Vector2(-140f + 185f * i, ys[0]), new Vector2(170f, rowH), () =>
             {
                 GameSettings.Language = (Loc.Lang)lang;
                 HighlightLang(langButtons);
@@ -1054,11 +1062,96 @@ public static class SettingsUI
         HighlightLang(langButtons);
 
         // 2.1.9: 「창이 비활성일 때 소리 끄기」 한 줄을 더 넣으려고 줄 간격 90
-        SliderRow("전체 볼륨", 110f, GameSettings.Volume, v => GameSettings.Volume = v);
-        SliderRow("음악", 20f, GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
-        SliderRow("효과음", -70f, GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, true);
-        SensitivityRow(-160f);
-        ToggleRow("창이 비활성일 때 소리 끄기", -250f, () => GameSettings.MuteUnfocused, v => GameSettings.MuteUnfocused = v);
+        SliderRow("전체 볼륨", ys[1], GameSettings.Volume, v => GameSettings.Volume = v);
+        SliderRow("음악", ys[2], GameSettings.MusicVolume, v => GameSettings.MusicVolume = v);
+        SliderRow("효과음", ys[3], GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, true);
+        SensitivityRow(ys[4]);
+        ToggleRow("창이 비활성일 때 소리 끄기", ys[5], () => GameSettings.MuteUnfocused, v => GameSettings.MuteUnfocused = v);
+        if (tel) TelemetryRows(ys[6], ys[7]);
+    }
+
+    // 1.4.4~ 플레이 데이터 보내기: 켜기 = 동의 · 끄기 = 거부 · 「전문 보기」(동의창을 읽기 전용으로)
+    //   아랫줄: 익명 ID 앞 8자 · 「내 데이터 삭제 요청」(두 번 눌러 확인 · 3초 안에 다시 안 누르면 풀림)
+    static Button deleteButton;
+    static TMP_Text telemetryIdLabel;
+    static float deleteArmedAt = -99f, deleteDoneAt = -99f;
+    static bool deleteSending;
+
+    static void TelemetryRows(float y1, float y2)
+    {
+        ToggleRow("telemetry.setting", y1, () => Telemetry.Consent == 1, v => Telemetry.SetConsent(v), "telemetry.setting.tip");
+        Transform root = open != null ? open.transform.parent : null;
+        Button view = UIKit.MakeButton(page, "telemetry.view", new Vector2(355f, y1), new Vector2(230f, rowH), () =>
+        {
+            Deselect();
+            if (root != null) TelemetryConsentUI.Open(root, true);
+        }, 24f);
+        TMP_Text vl = view.GetComponentInChildren<TMP_Text>();
+        if (vl != null) { vl.fontSizeMin = 14f; vl.fontSizeMax = 24f; }
+
+        telemetryIdLabel = RowLabel("", y2);
+        telemetryIdLabel.rectTransform.sizeDelta = new Vector2(420f, 50f);
+        telemetryIdLabel.rectTransform.anchoredPosition = new Vector2(-330f, y2);
+        telemetryIdLabel.fontSizeMax = 26f;
+        RefreshTelemetryId();
+        telemetryIdLabel.gameObject.AddComponent<LocRefresh>().refresh = RefreshTelemetryId;
+
+        deleteArmedAt = deleteDoneAt = -99f;
+        deleteSending = false;
+        deleteButton = UIKit.MakeButton(page, "telemetry.delete", new Vector2(220f, y2), new Vector2(500f, rowH), DeleteClicked, 24f);
+        TMP_Text dl = deleteButton.GetComponentInChildren<TMP_Text>();
+        if (dl != null) { dl.fontSizeMin = 14f; dl.fontSizeMax = 24f; }
+        SetDeleteLabel("telemetry.delete", new Color(0.96f, 0.9f, 0.8f));
+    }
+
+    static void RefreshTelemetryId()
+    {
+        if (telemetryIdLabel == null) return;
+        telemetryIdLabel.text = Loc.T("telemetry.id") + "  " + Telemetry.ShortId;
+    }
+
+    static void SetDeleteLabel(string ko, Color color)
+    {
+        TMP_Text t = deleteButton != null ? deleteButton.GetComponentInChildren<TMP_Text>() : null;
+        if (t == null) return;
+        t.text = Loc.T(ko);
+        t.color = color;
+        UIKit.Remember(t, ko);
+    }
+
+    static void DeleteClicked()
+    {
+        Deselect();
+        if (deleteSending) return;
+        if (deleteArmedAt <= -99f || Time.unscaledTime - deleteArmedAt >= 3f)
+        {
+            deleteArmedAt = Time.unscaledTime;
+            deleteDoneAt = -99f;
+            SetDeleteLabel("telemetry.delete.confirm", new Color(1f, 0.55f, 0.45f));
+            return;
+        }
+        deleteArmedAt = -99f;
+        deleteSending = true;
+        SetDeleteLabel("telemetry.delete.sending", new Color(0.96f, 0.9f, 0.8f));
+        Telemetry.RequestDelete(ok =>
+        {
+            deleteSending = false;
+            if (deleteButton == null) return;          // 그사이 설정 창 · 탭이 닫힘
+            SetDeleteLabel(ok ? "telemetry.delete.done" : "telemetry.delete.failed", ok ? new Color(0.6f, 0.95f, 0.6f) : new Color(1f, 0.55f, 0.45f));
+            deleteDoneAt = Time.unscaledTime;
+            RefreshTelemetryId();
+        });
+    }
+
+    // 무장 3초 · 결과 글자 3초 뒤 원래 글자로 (Tick)
+    static void TickDelete()
+    {
+        if (deleteButton == null || deleteSending) return;
+        if ((deleteArmedAt > -99f && Time.unscaledTime - deleteArmedAt >= 3f) || (deleteDoneAt > -99f && Time.unscaledTime - deleteDoneAt >= 3f))
+        {
+            deleteArmedAt = deleteDoneAt = -99f;
+            SetDeleteLabel("telemetry.delete", new Color(0.96f, 0.9f, 0.8f));
+        }
     }
 
     // 마우스 감도 25% ~ 300% (5% 단위, 기본 100%) · 전투 중 조준에만 적용
@@ -1508,10 +1601,12 @@ public static class SettingsUI
     internal static void Tick()
     {
         if ((ResetArmed && Time.unscaledTime - resetArmedAt >= 2f) || (resetDoneAt > -99f && Time.unscaledTime - resetDoneAt >= 1.5f)) DisarmReset();
-        if (GameInput.EscDown)
+        TickDelete();
+        if (TelemetryConsentUI.IsOpen) return;          // 1.4.4~ 「전문 보기」 창이 위에 떠 있으면 ESC · 키 입력은 그 창이 받음
+        if (GameInput.EscDown && EscHandledFrame != Time.frameCount)     // 같은 프레임에 「전문 보기」 창이 ESC 로 닫혔으면 설정은 그대로
         {
             EscHandledFrame = Time.frameCount;
-            if (DropdownAssist.HideOpen()) return;          // 1.2.4~ 펼친 드롭다운 목록만 닫음 (설정 창은 그대로)
+            if (DropdownAssist.HideOpen()) return;         // 1.2.4~ 펼친 드롭다운 목록만 닫음 (설정 창은 그대로)
             if (capturing >= 0) { capturing = -1; RefreshKeys(); }
             else Close();
             return;
@@ -1602,6 +1697,10 @@ public static class SettingsUI
         capturing = -1;
         resetArmedAt = resetDoneAt = -99f;
         resetButton = null;
+        deleteButton = null;
+        telemetryIdLabel = null;
+        deleteArmedAt = deleteDoneAt = -99f;
+        TelemetryConsentUI.Close();             // 1.4.4~ 「전문 보기」 창이 남지 않게
         GameSettings.Save();
         if (open != null) Object.Destroy(open);
         open = null;

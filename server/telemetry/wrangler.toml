@@ -1,0 +1,23 @@
+# Soul Saver 플레이 데이터 수집 Worker (Cloudflare Workers + D1)
+# 배포 방법은 README.md
+name = "soulsaver-telemetry"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# 요청 로그(IP · User-Agent 가 들어감)를 Cloudflare 에 남기지 않음
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "soulsaver-telemetry"
+database_id = "여기에-wrangler-d1-create-가-알려준-database_id-붙여넣기"
+
+# 매일 1회 (UTC 03:17) — 2년 지난 기록 삭제
+[triggers]
+crons = ["17 3 * * *"]
+
+[vars]
+# 게임의 Telemetry.IngestKey 와 같은 값 (공개 키 · 비워 두면 검사 안 함). 바꾸면 게임도 같이 바꿀 것
+INGEST_KEY = ""
+# ADMIN_TOKEN 은 여기 적지 말고 `wrangler secret put ADMIN_TOKEN` 으로

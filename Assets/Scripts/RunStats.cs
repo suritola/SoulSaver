@@ -461,6 +461,7 @@ public class RunStats : MonoBehaviour
             bool fresh = !System.IO.File.Exists(path);
             System.Text.StringBuilder b = new System.Text.StringBuilder();
             if (fresh) b.AppendLine(Header);
+            int rowStart = b.Length;                         // 1.4.4~ 플레이 데이터 보내기 (Telemetry) 에 이번 판 줄만 넘김
             string E(int i, bool time) => i < Evolutions.Count ? (time ? Evolutions[i].Value.ToString("0") : Evolutions[i].Key.Replace(",", " ")) : "";
             b.Append(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")).Append(',')
              .Append(Application.version).Append(',')
@@ -492,6 +493,7 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics)     // 1.2~ 무게 · 각인 · 유물
              .Append(',').Append(LogSkillEvos)        // 1.1.2~ 스킬 진화 "키@초|…"
              .Append(',').Append(RunLog.Row()).AppendLine();       // 1.2~ 판 사이 기록 (retry_kind … points_run)
+            Telemetry.RecordRun(Header, b.ToString(rowStart, b.Length - rowStart).TrimEnd('\r', '\n'));     // 1.4.4~ 동의한 이용자만 (안에서 확인)
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
             RunLog.OnRunLogged(result, Seconds);      // 1.2~ 세션 기록(sessions.csv)의 판 수
         }
