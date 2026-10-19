@@ -180,7 +180,7 @@ public partial class CharacterKit
         if (augment == AugThickEnvelope) m *= 1.25f;
         m *= PostPathMul(dist, traveled, route, out bool crit);
         bool wasAlive = !(g.TryGetComponent(out EnermyController e) && e.IsDead);
-        if (heavy) PostParcelBlast(g, at, v, dmg * m, route.big, weak, route.hop);       // 무거운 소포: 받는 이 + 둘레 폭발 (순회로 이어 간 소포는 감쇠)
+        if (heavy) PostParcelBlast(g, at, v, dmg * m, route.big, weak, route.hop, crit);       // 무거운 소포: 받는 이 + 둘레 폭발 (순회로 이어 간 소포는 감쇠 · 1.4.1~ 먼 소포는 치명 표시)
         else
         {
             if (crit) DamagePopup.NextCrit = true;      // 장거리 배송 공명 I: 먼 편지 치명타 (금색 숫자)
@@ -197,7 +197,9 @@ public partial class CharacterKit
             if (Deliveries % 10 == 0) { PostBonus(at); RunCounters.Add("post.bonus"); }
         }
         // 장거리 배송 공명 II: 보스에게 배달하면 우표 2중첩
-        if (card[2] > 0) stampStacks = Mathf.Min(StampMax, stampStacks + (Paths.Res(PostmanPaths.LongHaul) >= 2 && Paths.IsBoss(g) ? 2 : 1));
+        //   1.4.1~ 우표 수집(card[2]) 없이 공명 II 에 닿아도 보스 배달이면 쌓임 (전엔 card[2]==0 이면 0 그대로)
+        int stampGain = Paths.Res(PostmanPaths.LongHaul) >= 2 && Paths.IsBoss(g) ? 2 : (card[2] > 0 ? 1 : 0);
+        if (stampGain > 0) stampStacks = Mathf.Min(StampMax, stampStacks + stampGain);
         Fx.Spawn("fx_sparkle", at, 1f, Letter, 24f);
         // 소포 (카드) · 소포 상자 (형태): 맞은 자리에서 터짐 (무거운 소포는 이미 크게 터지므로 대신 소포를 키움 · ParcelBlast)
         if (!heavy && (card[1] > 0 || form == SpecialAbilities.KitParcel))
@@ -318,7 +320,8 @@ public partial class CharacterKit
         : (def.range > 0f ? def.range : 12f);
 
     // 우표 한 장의 값 (우표 수집 단계 · 자전거 공명 I 이면 우표 수집이 없어도 1단계 값)
-    int PostStampLevel => Mathf.Max(card[2], Paths.Res(PostmanPaths.Bike) >= 1 ? 1 : 0);
+    //   1.4.1~ 장거리 배송 공명 II 도 우표 수집 없이 1단계 값 (보스 배달로 쌓인 우표가 +0% 이던 것)
+    int PostStampLevel => Mathf.Max(card[2], Paths.Res(PostmanPaths.Bike) >= 1 || Paths.Res(PostmanPaths.LongHaul) >= 2 ? 1 : 0);
 
     float PostPathSpeed(bool heavy) => (Paths.Has(PostmanPaths.Round) ? PostmanPaths.RoundSpeed : 1f) * (heavy ? PostmanPaths.ParcelSpeed : 1f);
 
@@ -364,7 +367,8 @@ public partial class CharacterKit
 
     // 무거운 소포가 받는 이에게 닿음: 받는 이(빈틈 지정이면 빈틈 배율) + 둘레 적 모두 같은 피해 (평타 피해라 명중 효과가 그대로 붙음)
     //   hop: 순회 배달로 몇 번째 이어 간 소포인지 (0 = 처음) — 이어 간 소포는 폭발 · 우표 조각이 ×0.5^hop 이고 둘레 폭발 · 조각이 보스를 치지 않음
-    void PostParcelBlast(GameObject target, Vector3 at, Vector2 v, float dmg, bool big, bool weak, int hop = 0)
+    //   crit: 1.4.1~ 장거리 배송 공명 I 먼 소포 — 피해는 이미 ×1.5 (PostPathMul), 받는 이 · 둘레 숫자를 금색 치명으로
+    void PostParcelBlast(GameObject target, Vector3 at, Vector2 v, float dmg, bool big, bool weak, int hop = 0, bool crit = false)
     {
         float r = PostParcelRadius(big);
         float d = dmg * PostmanPaths.ParcelDamage * (1f + PostmanPaths.ParcelCardDamage * card[1]) * Paths.Power(PostmanPaths.Parcel) * (big ? PostmanPaths.ParcelBigDamage : 1f);
@@ -373,6 +377,7 @@ public partial class CharacterKit
         float knock = big ? 2.5f : 1.5f;
         if (target != null)
         {
+            if (crit) DamagePopup.NextCrit = true;
             if (weak) WeakHit.Hit(target, WeakShape.Marked(1.75f), d, v, knock);
             else Specials.Damage(target, d, v, knock);
         }
@@ -381,6 +386,7 @@ public partial class CharacterKit
             {
                 if (c == null || c.gameObject == target || (!c.CompareTag("enermy") && !c.CompareTag("boss"))) continue;
                 if (relayed && Paths.IsBoss(c.gameObject)) continue;       // 이어 간 소포의 둘레 폭발은 보스 · 중간 보스 제외
+                if (crit) DamagePopup.NextCrit = true;
                 Specials.Damage(c.gameObject, d, (c.transform.position - at).normalized, knock);
             }
         Fx.Spawn("fx_explosion", at, r * 2f, ParcelTint, 20f);
@@ -593,6 +599,10 @@ public partial class CharacterKit
         }
         for (int i = 0; i < expressIcons.Count && i < expressMarks.Count; i++)
             if (expressIcons[i] != null) PlaceExpressIcon(expressIcons[i], expressMarks[i], expressCharge, IconScale(expressIcons[i]));
+        // 1.4.1~ 공명 I: 누르고 있는 동안 표식 대상의 받는 피해 +15% 를 계속 이어 감 (처음 건 6초가 누르는 중에 끝나던 것 · Max 로 합침)
+        if (Paths.Res(PostmanPaths.Express) >= 1)
+            foreach (Transform t in expressMarks)
+                if (t != null) PostmanPaths.MarkExpress(t.gameObject, 1f);
         if (AddedUltShown) DrawUltAim(false, true);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;

@@ -100,7 +100,7 @@ public sealed class PostmanPaths : HeroPaths
             cards = new[] { S(8), S(6), K }, evo = "pe.collector",
             res1 = "20칸 넘게 날아간 편지는 치명타가 됩니다. (피해 ×1.5)",
             res2 = "보스에게 배달하면 우표가 2중첩 쌓입니다.",
-            mastery = "사거리가 무한이 됩니다.",
+            mastery = "사거리가 40칸이 됩니다.",       // 1.4.1~ 문구 「무한」 → 실제 값(LongMasteryRange 40칸)에 맞춤
             power = 0.9f,           // 보스 화력 ±8% (공격 속도 0.75 × 피해 1.5 = 1.13 → 1.01 · 먼 편지 치명타 몫을 남김)
             color = new Color(0.55f, 0.75f, 1f) },
     };
