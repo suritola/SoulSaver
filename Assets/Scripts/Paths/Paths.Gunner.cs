@@ -116,6 +116,8 @@ public sealed partial class GunnerPaths : HeroPaths
     public static GunnerPaths Live => Paths.Active ? Paths.Hero as GunnerPaths : null;
     // 도탄 난사가 「도탄 사격」 카드의 튕김을 맡음 (SpecialAbilities.GunCards 가 카드 튕김을 건너뜀)
     public static bool OwnsRicochet => Live != null && Paths.Has(Ricochet);
+    // 1.4.1~ 이 탄에 갈래 튕김(AttachRicochet)이 붙었나 — 붙은 탄만 카드 튕김을 건너뜀 (탄은 풀에서 다시 쓰므로 generation 까지 비교)
+    public static bool OwnsRicochetOf(Bullet b) => OwnsRicochet && b != null && b.TryGetComponent(out GunPathBounce m) && m.gen == b.generation;
 
     // ================================================================= 판 흐름 훅
     public override void OnSeed(int path, bool replay)

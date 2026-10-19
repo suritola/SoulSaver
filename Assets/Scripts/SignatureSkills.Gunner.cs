@@ -25,9 +25,10 @@ public partial class SignatureSkills
     readonly List<SigZone> mines = new List<SigZone>();
 
     // ---------------- 게임 코드가 부르는 거너 훅
-    public static void ReloadStart() { if (Instance != null) Instance.OnReloadStart(); }
-    public static void ReloadEnd() { if (Instance != null) Instance.OnReloadEnd(); }
-    public static void GunBullet(Bullet b) { if (Instance != null && b != null && Instance.who == CharacterId.Gunner) Instance.OnGunBullet(b); }
+    // 1.4.1~ pistol = 권총 장전 코루틴이 부름 (특수 총기 장전은 false — 화염 과열은 권총 장전 때만)
+    public static void ReloadStart(bool pistol = false) { if (Instance != null) Instance.OnReloadStart(pistol); }
+    public static void ReloadEnd(bool pistol = false) { if (Instance != null) Instance.OnReloadEnd(pistol); }
+    public static void GunBullet(Bullet b, bool pellet = false) { if (Instance != null && b != null && Instance.who == CharacterId.Gunner) Instance.OnGunBullet(b, pellet); }
 
     // 2026-10-19~ 빌드 갈래 코드가 예외를 내도 장전 훅의 나머지(탄피 지뢰 · 섬광 장전 …)는 그대로 돌게 (기록만)
     static void PathSafe(System.Action a)
@@ -36,11 +37,11 @@ public partial class SignatureSkills
         catch (System.Exception e) { Debug.LogException(e); }
     }
 
-    void OnReloadStart()
+    void OnReloadStart(bool pistol)
     {
         if (who == CharacterId.Rogue) { RogueEmpty(); return; }
         if (who != CharacterId.Gunner) return;
-        PathSafe(() => GunnerPaths.Live?.ReloadStarted());      // 2026-10-19~ 빌드 갈래: 산탄 돌격 돌진 · 화염 과열 폭발 (Paths/Paths.Gunner.Effects.cs)
+        PathSafe(() => GunnerPaths.Live?.ReloadStarted(pistol));      // 2026-10-19~ 빌드 갈래: 산탄 돌격 돌진 · 화염 과열 폭발 (Paths/Paths.Gunner.Effects.cs)
         int m = L("g.mine");
         if (m <= 0) return;
         int n = m + 1;
@@ -79,11 +80,11 @@ public partial class SignatureSkills
         mines.Add(z);
     }
 
-    void OnReloadEnd()
+    void OnReloadEnd(bool pistol)
     {
         using var source = DamageSource.As(DamageSource.Signature);
         if (who != CharacterId.Gunner) return;
-        PathSafe(() => GunnerPaths.Live?.ReloadEnded());        // 2026-10-19~ 빌드 갈래: 포탑 설치 · 과열이 풀림
+        PathSafe(() => GunnerPaths.Live?.ReloadEnded(pistol));        // 2026-10-19~ 빌드 갈래: 포탑 설치 · 과열이 풀림
         Vector3 p = transform.position;
         int f = L("g.flash");
         if (f > 0)
@@ -123,7 +124,8 @@ public partial class SignatureSkills
         }
     }
 
-    void OnGunBullet(Bullet b)
+    // 1.4.1~ pellet = 산탄 갈래의 둘째 펠릿부터: 피해 배율(총열 과열 · 영혼 탄환)은 그대로, 공격력 기준 명중 효과(용광로 폭발 · 추적 구슬)는 첫 펠릿만
+    void OnGunBullet(Bullet b, bool pellet)
     {
         // 총열 과열: 쉬지 않고 쏠수록 (마지막 발사에서 1.5초 지나면 식음)
         int h = L("g.heat");
@@ -132,7 +134,7 @@ public partial class SignatureSkills
             b.damage *= 1f + V(h, 0.2f, 0.1f) * heat / (float)HeatMax;
             if (heat >= HeatMax && b.TryGetComponent(out SpriteRenderer hs)) hs.color = Color.Lerp(hs.color, new Color(1f, 0.45f, 0.2f), 0.6f);
         }
-        if (E("ge.furnace") && heat >= HeatMax)
+        if (E("ge.furnace") && heat >= HeatMax && !pellet)
         {
             b.onHitEnemy += (bullet, col) =>
             {
@@ -151,7 +153,7 @@ public partial class SignatureSkills
             b.damage *= 1f + V(s, 0.25f, 0.15f);
             b.pene += 1;
             if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = SoulBlue;
-            if (E("ge.seeker"))
+            if (E("ge.seeker") && !pellet)
             {
                 if (b.GetComponent<Homing>() == null) b.gameObject.AddComponent<Homing>().turnSpeed = 540f;
                 b.onHitEnemy += (bullet, col) =>

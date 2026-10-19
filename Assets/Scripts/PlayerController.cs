@@ -592,7 +592,7 @@ public class PlayerController : MonoBehaviour
         try
         {
             SafeHook(() => special?.ReloadShockwave(transform.position));
-            SafeHook(SignatureSkills.ReloadStart);          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발
+            SafeHook(() => SignatureSkills.ReloadStart(true));          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발 (1.4.1~ 권총 장전 표시)
 
             if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
             else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
@@ -629,7 +629,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (done) SafeHook(SignatureSkills.ReloadEnd);            // 섬광 장전 · 속사 장전
+        if (done) SafeHook(() => SignatureSkills.ReloadEnd(true));            // 섬광 장전 · 속사 장전 (1.4.1~ 권총 장전 표시)
     }
 
     public bool IsReloading => isReloading;

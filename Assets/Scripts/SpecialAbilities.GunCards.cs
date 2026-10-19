@@ -11,10 +11,11 @@ public partial class SpecialAbilities
     readonly List<Collider2D> gunHits = new List<Collider2D>();
 
     // 새 총알에 카드 효과를 붙임. light = 화염 방사기처럼 아주 촘촘히 나가는 판정탄 (무거운 효과는 뺌)
-    public void ApplyGunCards(Bullet b, bool light, bool countShot = true)
+    // 1.4.1~ pellet = 산탄 갈래의 둘째 펠릿부터 (공격력 기준 명중 효과 — 전기탄 확률 · 용광로 탄두 · 영혼 추적자 구슬 — 를 펠릿 수만큼 곱하지 않게)
+    public void ApplyGunCards(Bullet b, bool light, bool countShot = true, bool pellet = false)
     {
         if (b == null || !CharacterData.IsGunner) return;
-        SignatureSkills.GunBullet(b);               // 고유 스킬: 총열 과열 · 영혼 탄환
+        SignatureSkills.GunBullet(b, pellet);       // 고유 스킬: 총열 과열 · 영혼 탄환
         b.critRolled = true;                        // 치명타는 여기서 한 번만 (피해 훅에서 또 굴리지 않게)
         // 영혼 트리: 치명타 (피해 2배, 금색) · 탄속
         if (TreeCrit > 0f && Random.value < TreeCrit) MakeCrit(b);
@@ -36,9 +37,10 @@ public partial class SpecialAbilities
         bool firstHit = true;
         b.onHitEnemy += (bullet, col) =>
         {
-            GunCardHit(col, bullet.damage, bullet.Direction, light, firstHit && boom);
+            GunCardHit(col, bullet.damage, bullet.Direction, light || pellet, firstHit && boom);     // 1.4.1~ 둘째 펠릿부터 전기탄 확률은 촘촘한 탄처럼 (15%)
             // 2026-10-19~ 도탄 난사 갈래면 튕김은 갈래가 맡음 (카드 단계 = 튕김 횟수 · 피해, Paths/Paths.Gunner.Effects.cs)
-            if (firstHit && !light && gunCard[GunRicochet] > 0 && !GunnerPaths.OwnsRicochet) Ricochet(bullet, col);
+            //   1.4.1~ 갈래 튕김이 붙은 탄만 건너뜀 (특수 총기 · 진화 덤 탄은 갈래 튕김이 없어 카드를 찍어도 안 튕기던 것)
+            if (firstHit && !light && gunCard[GunRicochet] > 0 && !GunnerPaths.OwnsRicochetOf(bullet)) Ricochet(bullet, col);
             firstHit = false;
         };
     }
