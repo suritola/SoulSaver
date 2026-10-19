@@ -169,11 +169,13 @@ public partial class SignatureSkills
                 float burst = bleed.dps * Mathf.Max(0f, bleed.until - Time.time) * V(bu, 0.8f, 0.2f) * P("r.burst");     // 1.1.2~ 피바다: ×1.5
                 Vector3 p = target.transform.position;
                 Destroy(bleed);
+                // 1.4.2~ 출혈 갈래 중첩도 비움 (남겨 두면 다음 표창 한 발에 출혈이 바로 원래 세기로 돌아와 3초마다 공짜로 다시 터짐)
+                if (target.TryGetComponent(out RogueBleed rb)) rb.Clear();
                 if (burst > 0f)
                 {
                     using var tier = EvoFx("r.burst");
                     Deal(target, burst, Vector3.zero, 0f);
-                    if (E("re.sea")) { Circle(p, 3f, burst, 0.5f); Heal(3f); }
+                    if (E("re.sea")) { Circle(p, 3f, 0f, 0.5f, c => { if (c.gameObject != target) Deal(c.gameObject, burst, Vector3.zero, 0.5f); }); Heal(3f); }   // 1.4.2~ 피바다: 터진 적 자신은 빼고 둘레만 (보스가 두 번 맞던 문제)
                     Fx.Spawn("fx_bleed", p, 3.4f * Fs("r.burst"), Color.white, 16f);
                     Fx.Spawn("fx_shock", p, 4f * Fs("r.burst"), Blood, 22f);
                     Flair("r.burst", p, 3f, Blood);

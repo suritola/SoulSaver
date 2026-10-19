@@ -28,7 +28,7 @@ public sealed class RoguePaths : HeroPaths
 
     // ---------------- 수치 (카드 글 · LocTable.Paths.Rogue 와 같게)
     public const float BleedDirectMul = 0.65f;      // 출혈 대가: 직접 피해 −35%
-    public const float BleedShare = 0.55f;          // 5중첩 출혈의 초당 피해 = 이 적이 받는 직접 피해 흐름 × 0.55
+    public const float BleedShare = 0.40f;          // 5중첩 출혈의 초당 피해 = 이 적이 받는 직접 피해 흐름 × 0.40 (1.4.2~ 0.55 → 0.40: 직접 피해에 이미 붙은 치명 · 성장 배율을 출혈 틱이 또 받고, 멀티샷 동시 명중을 빠른 흐름으로 재던 몫)
     public const int BleedCap = 5, BleedBossCap = 10;   // 극의: 보스는 10중첩 (6중첩부터는 하나에 +6%)
     public const float BleedMasteryMul = 1.3f;      // 극의: 출혈 피해 ×1.3
     public const float ShadowDashBleedMul = 0.7f;   // 그림자 대가: 돌진 출혈 −30%
@@ -166,7 +166,8 @@ public sealed class RoguePaths : HeroPaths
         if (target == null) return;
         if (Paths.Has(Bleed))
         {
-            if (proc && !killed && dmg > 0f) BleedOn(target, dmg, 1);
+            // 1.4.2~ 돌진 중 타격(220% · 무기 궁극기 덧붙임)은 출혈 세기 계산에서 뺌 — 치솟은 세기로 공명 I · 출혈 폭발이 터지던 문제
+            if (proc && !killed && dmg > 0f && !(CharacterKit.Instance != null && CharacterKit.Instance.Dashing)) BleedOn(target, dmg, 1);
             // 공명 II: 출혈로 쓰러진 적이 둘레 둘에게 2중첩
             if (killed && SignatureSkills.DotTick && Paths.Res(Bleed) >= 2) Spread(target);
         }
@@ -290,7 +291,8 @@ public sealed class RoguePaths : HeroPaths
             float burst = 0f;
             if (g.TryGetComponent(out global::Bleed b))
             {
-                burst = b.dps * Mathf.Max(0f, b.until - Time.time);       // 남은 출혈 그대로 (세기에 이미 갈래 배율이 들어 있음)
+                burst = b.dps * Mathf.Clamp(b.until - Time.time, 0f, 1.5f);       // 남은 출혈 (세기에 이미 갈래 배율이 들어 있음) · 1.4.2~ 최대 1.5초치 (표창마다 갱신돼 늘 3초치였음)
+                b.dps = 0f; b.until = 0f;                                          // Destroy 는 프레임 끝이라, 같은 프레임에 출혈 폭발이 같은 출혈을 다시 읽지 않게
                 Object.Destroy(b);
             }
             rb.Clear();

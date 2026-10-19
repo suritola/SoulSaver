@@ -104,7 +104,8 @@ public partial class CharacterKit
         if (g == null) return;
         if (Paths.Has(RoguePaths.Dash))
         {
-            Paths.Deal(g, Damage * RoguePaths.DashCutMul * UltMul * Paths.Power(RoguePaths.Dash), dir, 0.5f, "질주 암살");
+            Paths.Deal(g, Damage * RoguePaths.DashCutMul * UltMul * Paths.Power(RoguePaths.Dash)
+                * (Paths.Has(RoguePaths.Bleed) ? RoguePaths.BleedDirectMul : 1f), dir, 0.5f, "질주 암살");     // 1.4.2~ 출혈 대가(직접 피해 −35%)가 이 돌진에도 (Paths.Deal 이라 빠져 있었음)
             return;
         }
         if (Paths.Has(RoguePaths.Shadow)) dps *= RoguePaths.ShadowDashBleedMul;
