@@ -90,8 +90,18 @@ public partial class LevelShop
     {
         CharacterId who = CharacterData.Selected;
         int max = MaxLevelOf(who, id);
-        if (max >= 2 && Paths.Active && Paths.Single && Paths.A >= 0 && Paths.PathOfCard(who, id) == Paths.A) max += 1;
+        if (max >= 2 && Paths.Active && Paths.Single && Paths.A >= 0 && Paths.PathOfCard(who, id) == Paths.A && !FlatTail(KitCardOf(who, id))) max += 1;
         return max;
+    }
+
+    // 1.4.1~ 마지막 두 단계 수치가 같은 카드 (검사 「연속 베기」 |3| · |3| + 충격파 · 우체부 「행운의 편지」 |3| · |3|): 외길로 늘려도 효과가 없음
+    //   예전엔 늘어난 단계가 극의 조건에 들어가, 아무 효과 없는 카드를 꼭 골라야 했음 → 이런 카드는 늘리지 않음 (극의 조건에서도 원래 최대까지)
+    static bool FlatTail(KitCard c)
+    {
+        if (c == null || c.max < 2) return false;
+        string[] pa = c.values[c.max - 2].Split('|'), pb = c.values[c.max - 1].Split('|');
+        if (pa.Length != 3 || pb.Length != 3) return false;
+        return ParseStep(pa[1], out float na, out _, out _, out _) && ParseStep(pb[1], out float nb, out _, out _, out _) && Mathf.Approximately(na, nb);
     }
 
     // 갈래 규칙에서 이 카드가 레벨업에 나올 수 있나 (구판 규칙: 25 ~ 31 만 막음)

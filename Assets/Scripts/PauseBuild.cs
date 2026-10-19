@@ -114,7 +114,7 @@ public class PauseBuild : MonoBehaviour
             {
                 int lv = shop.ability_level[i];
                 if (lv <= 0 || string.IsNullOrEmpty(shop.ability_name[i])) continue;
-                int max = LevelShop.MaxLevelOf(who, i);
+                int max = shop.CapOf(i);           // 1.4.1~ 외길이면 갈래 A 카드 +1 (HUD 칸과 같게 · 예전엔 원래 최대라 「Lv 4 / 3」)
                 cards.cells.Add(new Cell
                 {
                     icon = LevelShop.CardIcon(who, i),

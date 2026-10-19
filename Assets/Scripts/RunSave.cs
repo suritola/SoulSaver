@@ -88,6 +88,7 @@ public static class RunSave
         //   입문 · 외길 · 새 카드는 다른 카드처럼 c<25 ~ 31> · f<25 ~ 29> 기록으로 다시 적용 (Version 은 그대로 — 올리면 진행 중인 판이 모두 버려짐)
         public int paths;
         public float pathsState;                        // 1.4.1~ 영웅 갈래가 남기는 값 하나 (HeroPaths.SaveState · 예 지도 제작자 접지술 극의의 두 번째 충전, 옛 저장은 0)
+        public bool freeDue;                            // 1.4.1~ 판 시작 무료 카드(= 갈래 입문)를 아직 고르지 않음 → 이어할 때 그 창을 다시 엶
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -288,6 +289,7 @@ public static class RunSave
         d.paths = Paths.Active ? 1 : 0;                             // 2026-10-19~ 갈래 규칙 판인지
         d.pathsState = Paths.Active && Paths.Hero != null ? Paths.Safe(() => Paths.Hero.SaveState(), 0f) : 0f;     // 1.4.1~
         shop.SaveLevels(out d.earned, out d.pending);
+        d.freeDue = shop.FreePickDue;                               // 1.4.1~ 무료 입문 창이 떠 있거나 ESC 로 숨긴 채 저장 (pending 에는 들어가지 않음)
         Coin coin = Cache<Coin>.Get;
         d.coins = coin != null ? coin.coins : 0;
         SkillGauge g = Cache<SkillGauge>.Get;
@@ -509,6 +511,7 @@ public static class RunSave
         // 문에 들어가기 전에 나갔으면 문에 들어갈 때 받는 것을 지금 (첫 문 특수 능력 · 포인트 +2 · 저주 제단)
         if (d.gatePending) yield return sm.ResumeGate(d.stage);
         else if (d.altarPending) sm.StartCoroutine(Curse.Altar(d.stage));
+        if (d.freeDue) shop.ResumeFreePick();                      // 1.4.1~ 무료 입문을 고르기 전에 나간 판: 그 창을 다시 (CancelOpening 이 끈 것을 되돌림)
     }
 
     static int[] ParseIds(string s)

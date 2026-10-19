@@ -98,6 +98,17 @@ public partial class LevelShop : MonoBehaviour
     static bool OpeningWindowUp => StoryDirector.Playing || HeroGuide.IsOpen || ChoiceUI.Open
                                    || (StageManager.Instance != null && StageManager.Instance.IsMenuOpen);
 
+    // 1.4.1~ 이어하기 (RunSave.Restore 끝): 판 시작 무료 카드(= 갈래 입문)를 고르기 전에 저장한 판이면 그 창을 다시 엶
+    //   예전엔 CancelOpening 이 끈 채로 남아 무료 입문이 사라지고, 첫 레벨업 창이 입문 창이 되어 카드 한 장을 잃었음
+    public bool FreePickDue => freePick;
+    public void ResumeFreePick()
+    {
+        freeWaiting = false;
+        if (IsOpen) return;
+        freePick = true;
+        openLevelShop();
+    }
+
     // StageManager 가 시작 순서를 마친 그 프레임에 부름 — 바로 열어야 「카드 창을 닫은 뒤 장 제목」 순서가 지켜짐
     public void OpenFreeIfWaiting()
     {
