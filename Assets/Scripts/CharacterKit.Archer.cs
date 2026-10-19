@@ -10,9 +10,9 @@ using UnityEngine;
 public partial class CharacterKit
 {
     // ---------------- 속사: 한 발 간격 = 가득 당기는 시간 × 이 값 (기본 공격 속도에서 초당 약 4발 · 극의 6발), 한 발 피해 = 공격력 × 이 값
-    //   평타 화력: 4발 × 35% ≈ 완벽 화살을 계속 쏘는 궁수의 95~100% (관통 없음 · 보스는 조금 약하게)
+    //   평타 화력: 4발 × 32% ≈ 완벽 화살을 계속 쏘는 궁수의 95~100% (관통 없음 · 보스는 조금 약하게)
     const float RapidStep = 0.185f, RapidMasterStep = 0.123f;
-    const float RapidPower = 0.35f, RapidMasterPower = 0.25f;
+    const float RapidPower = 0.32f, RapidMasterPower = 0.23f;       // 1.4.3~ 0.35 · 0.25 → 0.32 · 0.23 (완벽 화살 3.0 → 2.7 에 맞춰 −10%)
     // 한 발 간격 하한 (초당 최대 10번 놓음) — 공격 속도를 쌓아도 멀티 샷과 곱해져 초당 수십 발 · 명중 효과 폭주가 되지 않게 (예전 0.06초)
     const float RapidMinStep = 0.1f;
     float rapidNext;                    // 다음 화살을 쏠 수 있는 시각

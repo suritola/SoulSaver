@@ -48,10 +48,10 @@ public partial class CharacterKit : MonoBehaviour
     float draw;
     LineRenderer bowLine;
     bool fullPlayed;
-    // 1.0.1 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
+    // 1.0.1 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 270%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
     float fullAt;
     const float PerfectWindow = 0.5f, TrembleAfter = 0.9f;      // 1.0.1: 0.2초는 너무 빡빡했음
-    const float DrawPower = 1.9f, PerfectPower = 3f, MinHeldPower = 1.6f;
+    const float DrawPower = 1.9f, PerfectPower = 2.7f, MinHeldPower = 1.6f;       // 1.4.3~ 완벽 3.0 → 2.7 (사용자 「공격력 2인데 7이 뜸 · 조금만 낮추자」 · 속사도 같이 −10%)
     const float PierceFalloff = 0.85f;       // 꿰뚫을 때마다 피해 -15% (일렬 쓸어 버리기가 너무 셌음)
 
     // 캐릭터 전용 레벨업 카드 4장의 레벨 (LevelShop.Kits, 0 = 아직 없음). 기본 스펙이 아닌 특수 능력
