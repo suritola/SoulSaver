@@ -17,7 +17,7 @@ public sealed class ArcherPaths : HeroPaths
     public const float LongDrawMul = 1.4f, LongPerfectMul = 1.35f, LongWeakMul = 0.6f;
     public const float LongHaste = 0.08f;             // 공명 I: 꿰뚫은 적(보스 제외) 하나마다 다음 당김 8% 빠르게 (최대 5)
     public const int LongHasteMax = 5;
-    public const float LongBeamWidth = 1.1f, LongBeamLength = 30f;      // 공명 II: 관통 광선 (피해는 그 화살 그대로 · 보스 화력 그대로)
+    public const float LongBeamWidth = 0.8f, LongBeamLength = 30f;      // 공명 II: 관통 광선 (피해는 그 화살 그대로 · 보스 화력 그대로) · 1.4.3~ 폭 = 보이는 광선 반폭 (그림 두께 1.6 = 폭 × 2 · 판정은 여기에 적 몸 크기를 더함) — 예전엔 발밑 기준점에서 1.1 이라 몸이 걸려도 안 맞거나 밖인데 맞았음
     // 속사 — 무리형: 당기지 않고 연사 (CharacterKit.Archer 의 RapidStep · RapidPower), 다섯 발마다 「가득 당긴 화살」
     public const int RapidFullEvery = 5, RapidEchoRes = 3, RapidRingHits = 10;
     public const float RapidRingMul = 2f;

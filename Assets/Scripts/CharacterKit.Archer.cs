@@ -177,6 +177,7 @@ public partial class CharacterKit
 
     // 1.4.1~ 광선이 꿰뚫은 적 (장궁 공명 I 당김 가속 — BowPathRelease 의 Released 가 longBank 를 비운 뒤에 셈)
     readonly List<Collider2D> beamPierced = new List<Collider2D>();
+    readonly HashSet<GameObject> beamOnce = new HashSet<GameObject>();
 
     // 장궁 공명 II: 굵은 관통 광선 (레일건처럼 · 화살은 거둠)
     //   1.4.1~ 화살의 명중 효과가 사라지므로 천공 게이지 · 장궁 공명 I · 덫(첫 명중 자리, 없으면 겨눈 자리)을 여기서 직접
@@ -197,11 +198,15 @@ public partial class CharacterKit
         bool pierce = me != null && Paths.Res(ArcherPaths.Long) >= 1;
         float atk = Mathf.Max(0.01f, Damage);
         float nearest = float.MaxValue;
-        using (var ovl = PhysHits.Circle((from + to) * 0.5f, ArcherPaths.LongBeamLength * 0.5f + ArcherPaths.LongBeamWidth, true))
+        beamOnce.Clear();
+        // 1.4.3~ 판정 = 보이는 광선 반폭 + 적 몸 (몸 중심 기준 · 지도 제작자 획과 같은 방식) — 예전엔 발밑 기준점만 봐서 보이는 광선이 몸을 지나도 안 맞았음
+        //   콜라이더가 여럿인 적은 한 번만 · 검색 반지름도 큰 몸(보스)이 걸리게 넉넉히
+        using (var ovl = PhysHits.Circle((from + to) * 0.5f, ArcherPaths.LongBeamLength * 0.5f + ArcherPaths.LongBeamWidth + 3f, true))
             foreach (Collider2D c in ovl)
             {
                 if (c == null || !Paths.IsFoe(c)) continue;
-                if (Hostile.DistanceToSegment(c.transform.position, from, to) > ArcherPaths.LongBeamWidth) continue;
+                if (Hostile.DistanceToSegment(c.bounds.center, from, to) > ArcherPaths.LongBeamWidth + MapBody(c)) continue;
+                if (!beamOnce.Add(c.gameObject)) continue;
                 Vector3 at = c.transform.position;
                 float along = Vector2.Dot((Vector2)(at - from), dir);
                 if (along < nearest) { nearest = along; trapAt = at; }
@@ -211,7 +216,7 @@ public partial class CharacterKit
                 Fx.Spawn("fx_spark", at, 1.6f, new Color(1f, 0.9f, 0.5f), 22f);
             }
         if (trap && me != null) me.TrapAt(trapAt);
-        Fx.Beam(from, to, 1.6f, new Color(1f, 0.9f, 0.45f, 0.9f), 0.3f);
+        Fx.Beam(from, to, ArcherPaths.LongBeamWidth * 2f, new Color(1f, 0.9f, 0.45f, 0.9f), 0.3f);
         Fx.Spawn("fx_shock", from, 3.2f, new Color(1f, 0.9f, 0.5f, 0.8f), 22f);
         SpecialAbilities.SharedFx?.Play("railgun", 0.45f, 1.4f);
         Hostile.Shake(0.12f);
