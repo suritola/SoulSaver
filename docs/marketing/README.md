@@ -5,6 +5,8 @@
 | [store-copy.md](store-copy.md) | 상점 짧은 설명 · 첫 문단 · 태그 개편안 (4개 언어) |
 | [press-kit.md](press-kit.md) | 프레스 키트 (영어 · 한국어 요약) |
 | [streamer-email.md](streamer-email.md) | 스트리머 · 유튜버 키 메일 (한 · 영), 출시일 안내, 키 배포 기록표 |
+| [community-posts.md](community-posts.md) | 2026-10-20 출시 뒤 커뮤니티 글: 레딧 · 국내 커뮤니티 · X(4개 언어), 훅 고르기, 올리는 순서 · 기록표 |
+| [creator-followup.md](creator-followup.md) | 2026-10-20 크리에이터 2차: 1차 23곳 후속(키 넣기 · 5개 언어), 남은 채널 목록, 키 플랫폼 등록, 일정 |
 | [reports/노출 · 위시리스트 · 구매 늘리기.md](reports/노출%20·%20위시리스트%20·%20구매%20늘리기.md) | 2026-10-15 다음 단계: 컨트롤러 표기 정정 · 출시일 판단 새 기준 · 체험판 퍼널 · 리뷰 요청 · 타임라인 · 스크린샷 · 트레일러 · 캡슐 사양 · 마감 일정 |
 
 ## 체험판
