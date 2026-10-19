@@ -173,3 +173,10 @@ sealed class GunHitTap : IEqualityComparer<int>
         return v;
     }
 }
+
+// 1.4.1~ 도탄 난사: 갈래 튕김(GunnerPaths.AttachRicochet)이 붙은 탄 표시 — 이 탄만 「도탄 사격」 카드 튕김을 건너뜀
+//   탄이 풀로 돌아가면 Bullet.Release 가 지우고, 같은 프레임에 다시 쓰여도 gen(Bullet.generation)이 달라 옛 표시로 보지 않음
+public sealed class GunPathBounce : MonoBehaviour
+{
+    public int gen;
+}

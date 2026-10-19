@@ -157,7 +157,10 @@ public partial class SpecialAbilities
     void UpdateCurseNotice()
     {
         if (!Has(CurseId)) return;
-        int now = WeaponActive && UsesAmmo(CurrentWeapon) ? Ammo(CurrentWeapon).ammo : player.NowBullet;
+        // 1.4.1~ 과열 사격(갈래)은 탄이 줄지 않으므로 Shoot 처럼 「과열까지 남은 발 수」로 봄 (과열 중에는 저주탄 없음 → 0)
+        GunnerPaths gpCurse = GunnerPaths.Live;
+        int now = WeaponActive && UsesAmmo(CurrentWeapon) ? Ammo(CurrentWeapon).ammo
+            : gpCurse != null && gpCurse.NoAmmo ? (player.IsReloading ? 0 : gpCurse.HeatShotsLeft) : player.NowBullet;
         if (IsLastBulletCursed(now) && !IsLastBulletCursed(lastBullets))
         {
             fx.Play("pulse", 0.6f, 1.6f);

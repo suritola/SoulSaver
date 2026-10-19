@@ -100,8 +100,11 @@ public sealed partial class GunnerPaths
             Vector2 d = Quaternion.Euler(0f, 0f, a) * dir;
             Bullet b = pc.CreateBullet(start, d, each, pc.pene, 0f, false, 1f / n + 0.1f);
             if (b == null) continue;
-            sp?.CurseBullet(b, cursed);
-            sp?.ApplyGunCards(b, false, i == 0);
+            // 1.4.1~ 저주 폭발 · 공격력 기준 명중 효과(전기탄 · 용광로 · 추적 구슬)는 첫 펠릿만 (펠릿마다 붙어 공격력 150% 폭발이 6번 터지던 것)
+            //   나머지 펠릿은 저주탄 색만 (피해 ×3 은 each 에 이미 들어 있음)
+            if (i == 0) sp?.CurseBullet(b, cursed);
+            else if (cursed && b.TryGetComponent(out SpriteRenderer csr)) csr.color = new Color(1f, 0.3f, 0.3f);
+            sp?.ApplyGunCards(b, false, i == 0, i > 0);
             b.speed *= Random.Range(1.05f, 1.2f);
             b.lifetime = PelletRange / Mathf.Max(1f, b.speed);       // 사거리 6칸 (가까울수록 많이 맞음)
             b.transform.localScale *= 0.8f;
@@ -171,13 +174,15 @@ public sealed partial class GunnerPaths
     bool boomAtDashEnd;
 
     // 장전 시작 (SignatureSkills.OnReloadStart · 과열이면 과열 시작)
-    public void ReloadStarted()
+    // 1.4.1~ pistol = 권총 장전 코루틴(PlayerController.Reload)에서 부름 — 과열(열 100% · 폭발)은 권총 장전 때만
+    //   (특수 총기 장전도 같은 훅을 불러, 대가 없이 과열 폭발이 터지던 것)
+    public void ReloadStarted(bool pistol)
     {
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying) return;
         bool dashed = false;
         if (Paths.Has(Shotgun)) dashed = StartDash(p, 0);
-        if (Paths.Has(Overheat))
+        if (Paths.Has(Overheat) && pistol)
         {
             heat = 1f;
             extraDashes = 0;
@@ -189,11 +194,12 @@ public sealed partial class GunnerPaths
     }
 
     // 장전 끝 (SignatureSkills.OnReloadEnd · 과열이면 과열이 풀림)
-    public void ReloadEnded()
+    // 1.4.1~ pistol = 권총 장전이 끝남 — 열은 권총 장전(과열)이 끝날 때만 0 (특수 총기 장전이 권총 열을 지우지 않게)
+    public void ReloadEnded(bool pistol)
     {
         PlayerController p = Hostile.Player;
         if (p == null || p.IsDying) return;
-        if (Paths.Has(Overheat)) { heat = 0f; lastShotAt = Time.time; }
+        if (Paths.Has(Overheat) && pistol) { heat = 0f; lastShotAt = Time.time; }
         if (Paths.Has(Turret)) SpawnTurret(p.transform.position);
     }
 
@@ -431,6 +437,9 @@ public sealed partial class GunnerPaths
     // gen: 이 탄이 몇 번째로 튕긴 탄인가 (원래 탄 0)
     void AttachRicochet(Bullet b, int gen)
     {
+        // 1.4.1~ 이 탄의 튕김은 갈래가 맡음 표시 (카드 튕김은 이 탄만 건너뜀 — 특수 총기 · 진화 덤 탄은 「도탄 사격」 카드 튕김 그대로)
+        if (!b.TryGetComponent(out GunPathBounce mark)) mark = b.gameObject.AddComponent<GunPathBounce>();
+        mark.gen = b.generation;
         bool bounced = false;
         b.onHitEnemy += (bullet, col) =>
         {

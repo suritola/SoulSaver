@@ -293,7 +293,7 @@ public static partial class LocTable
         K("맞으면 반격과 함께 몸 주위에 번개 폭풍이 터져 주변 적에게 큰 피해를 주고 기절시킵니다. (공격력 200%)", "맞으면 반격과 함께 몸 주변에 번개 폭풍이 터져 주변 적에게 큰 피해를 주고 기절시킵니다. (공격력 200%)","When hit, a lightning storm bursts around you along with your return fire, heavily damaging and stunning nearby enemies. (200% attack)", "被弾すると反撃と共に体の周りで雷の嵐が弾け、周りの敵に大ダメージを与えて気絶させます。（攻撃力200%）", "受击时在反击的同时于身边爆发雷暴，重创并击晕周围敌人。（攻击力200%）");
         A("총잡이의 춤", "Gunslinger's Dance", "ガンマンの舞", "枪手之舞");
         A("장전을 마치면 가까운 적 여섯에게 자동으로 총알을 한 발씩 쏩니다.", "Finishing a reload automatically fires a shot at each of six nearby enemies.", "リロードを終えると近くの敵6体に自動で1発ずつ撃ちます。", "装填完成后自动向附近六名敌人各开一枪。");
-        A("장전을 마치면 가까운 적 여섯에게 자동으로 총알을 한 발씩 쏩니다. (포탑 설치 극의: 포탑도 함께 쏩니다)", "Finishing a reload automatically fires a shot at each of six nearby enemies. (Turret Deploy Mastery: turrets fire too)", "リロードを終えると近くの敵6体に自動で1発ずつ撃ちます。（砲台設置の極意：砲台も一緒に撃ちます）", "装填完成后自动向附近六名敌人各开一枪。（架设炮塔极意：炮塔也会一起开火）");
+        A("장전을 마치면 가까운 적 여섯에게 자동으로 총알을 한 발씩 쏩니다. (포탑 설치 갈래: 포탑도 함께 쏩니다)", "Finishing a reload automatically fires a shot at each of six nearby enemies. (Turret Deploy path: turrets fire too)", "リロードを終えると近くの敵6体に自動で1発ずつ撃ちます。（砲台設置の流派：砲台も一緒に撃ちます）", "装填完成后自动向附近六名敌人各开一枪。（架设炮塔流派：炮塔也会一起开火）");
         A("무법자", "Outlaw", "無法者", "亡命之徒");
         A("겁에 질린 적을 쓰러뜨리면 탄창이 가득 차고, 겁이 가까운 적들에게 번집니다.", "Killing a terrified enemy fully reloads your magazine and spreads the terror to nearby foes.", "怯えた敵を倒すと弾倉が満タンになり、恐怖が近くの敵に広がります。", "击杀恐惧中的敌人会装满弹匣，并让恐惧蔓延到附近敌人。");
         A("완벽한 반격", "Perfect Counter", "完璧な反撃", "完美反击");
