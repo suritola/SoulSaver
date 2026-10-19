@@ -34,10 +34,10 @@ public static partial class LocTable
         PA("속사", "Rapid Fire", "速射", "速射");
         PA("누르는 동안 연사 · 기동 무리", "Hold to fire nonstop · Mobile crowd-clearing", "押している間連射 · 機動して群れを掃討", "按住连射 · 机动清群");
         PA("단궁 속사", "Shortbow Volley", "短弓速射", "短弓速射");
-        PA("당기지 않고 누르는 동안 초당 4발을 쏩니다. (한 발 피해 32%) 당길 때 느려지지 않고 숨도 닳지 않습니다.",
-           "Fires 4 arrows per second while held, with no drawing. (32% damage per arrow) You don't slow down and Breath doesn't drain.",
-           "引き絞らずに、押している間毎秒4発撃ちます。（1発のダメージ32%）引いても遅くならず、息も減りません。",
-           "无需拉弓，按住时每秒射出4箭。（每箭伤害32%）射击时不减速，气息也不消耗。");
+        PA("당기지 않고 누르는 동안 초당 4발을 쏩니다. (한 발 피해 28%) 당길 때 느려지지 않고 숨도 닳지 않습니다.",
+           "Fires 4 arrows per second while held, with no drawing. (28% damage per arrow) You don't slow down and Breath doesn't drain.",
+           "引き絞らずに、押している間毎秒4発撃ちます。（1発のダメージ28%）引いても遅くならず、息も減りません。",
+           "无需拉弓，按住时每秒射出4箭。（每箭伤害28%）射击时不减速，气息也不消耗。");
         PA("관통이 없어지고, 가득 당긴 화살의 효과와 메아리 화살은 다섯 발마다 한 번 나갑니다.",
            "Arrows no longer pierce, and fully-drawn arrow effects and Echo Arrow trigger only once every 5 shots.",
            "貫通がなくなり、引き絞った矢の効果とこだまの矢は5発ごとに1回だけ出ます。",
@@ -49,7 +49,7 @@ public static partial class LocTable
            "After 10 hits on the same enemy, Resonant Tip's radius doubles on it.",
            "同じ敵に10発当てると、共鳴の矢じりの範囲が2倍になります。",
            "对同一敌人命中10箭后，共鸣箭头的范围变为2倍。");
-        PA("초당 6발을 쏩니다. (한 발 피해 23%)", "Fires 6 arrows per second. (23% damage per arrow)", "毎秒6発撃ちます。（1発のダメージ23%）", "每秒射出6箭。（每箭伤害23%）");
+        PA("초당 6발을 쏩니다. (한 발 피해 20%)", "Fires 6 arrows per second. (20% damage per arrow)", "毎秒6発撃ちます。（1発のダメージ20%）", "每秒射出6箭。（每箭伤害20%）");
 
         // ================================================================= 덫
         PA("덫", "Traps", "罠", "陷阱");

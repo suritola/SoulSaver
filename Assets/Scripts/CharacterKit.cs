@@ -48,10 +48,12 @@ public partial class CharacterKit : MonoBehaviour
     float draw;
     LineRenderer bowLine;
     bool fullPlayed;
-    // 1.0.1 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 270%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
+    // 1.0.1 완벽한 타이밍: 가득 찬 뒤 PerfectWindow 안에 놓으면 「완벽!」 300%, 너무 오래 쥐면 활이 떨리며 약해짐 (최저 160%)
     float fullAt;
     const float PerfectWindow = 0.5f, TrembleAfter = 0.9f;      // 1.0.1: 0.2초는 너무 빡빡했음
-    const float DrawPower = 1.9f, PerfectPower = 2.7f, MinHeldPower = 1.6f;       // 1.4.3~ 완벽 3.0 → 2.7 (사용자 「공격력 2인데 7이 뜸 · 조금만 낮추자」 · 속사도 같이 −10%)
+    const float DrawPower = 1.9f, PerfectPower = 3f, MinHeldPower = 1.6f;
+    // 1.4.3~ 궁수 평타 화살 피해 전체 ×0.8 (덜 당김 · 가득 · 완벽 · 속사 · 관통 광선 — 사용자 「공격력 2인데 7이 뜸 · 평타 −20%」)
+    public const float BowBasicMul = 0.8f;
     const float PierceFalloff = 0.85f;       // 꿰뚫을 때마다 피해 -15% (일렬 쓸어 버리기가 너무 셌음)
 
     // 캐릭터 전용 레벨업 카드 4장의 레벨 (LevelShop.Kits, 0 = 아직 없음). 기본 스펙이 아닌 특수 능력
@@ -519,7 +521,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         float speed = 35f + 60f * draw;
         int shots = Mathf.Max(1, player.multiShot);
-        float dmg = Damage * player.MultiShotDamageRate(shots) * power;
+        float dmg = Damage * player.MultiShotDamageRate(shots) * power * BowBasicMul;
         using (WeakHit.AimScope(1.75f))         // 빈틈: 시위를 놓는 순간 커서 쪽 화살 (완벽! 은 ×2.1)
         foreach (Vector2 d in Spread(dir, shots, 6f))
         {
