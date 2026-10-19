@@ -77,10 +77,26 @@ public partial class LevelShop : MonoBehaviour
     {
         freeWaiting = true;
         float until = Time.realtimeSinceStartup + 180f;
-        while (freeWaiting && StageManager.Instance != null && !StageManager.Instance.OpeningDone && Time.realtimeSinceStartup < until)
+        float clearSince = -1f;
+        while (freeWaiting && StageManager.Instance != null && !StageManager.Instance.OpeningDone)
+        {
+            // 1.4.1~ 상한이 지나도 시작 창(이야기 · 영웅 안내 · 각인 · 특수 능력)이 떠 있으면 계속 기다림
+            //   예전엔 자리를 비우면 3분 뒤 그 창들과 겹쳐 열렸고, 각인 · 안내를 닫을 때 시간이 1 로 돌아가 카드 창이 떠 있는데 적이 나왔음
+            //   상한은 시작 순서가 끊긴 경우만 위한 것 — 시작 창이 1초 넘게 하나도 없을 때만 엶 (창 사이 한 프레임 틈에 열리지 않게)
+            if (Time.realtimeSinceStartup >= until)
+            {
+                if (OpeningWindowUp) clearSince = -1f;
+                else if (clearSince < 0f) clearSince = Time.realtimeSinceStartup;
+                else if (Time.realtimeSinceStartup - clearSince >= 1f) break;
+            }
             yield return null;
+        }
         OpenFreeIfWaiting();
     }
+
+    // 1.4.1~ 판 시작 순서의 창이 떠 있는지 (StageManager.IsMenuOpen 은 무한 모드 특수 능력 창)
+    static bool OpeningWindowUp => StoryDirector.Playing || HeroGuide.IsOpen || ChoiceUI.Open
+                                   || (StageManager.Instance != null && StageManager.Instance.IsMenuOpen);
 
     // StageManager 가 시작 순서를 마친 그 프레임에 부름 — 바로 열어야 「카드 창을 닫은 뒤 장 제목」 순서가 지켜짐
     public void OpenFreeIfWaiting()
