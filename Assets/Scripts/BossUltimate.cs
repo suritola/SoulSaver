@@ -179,7 +179,7 @@ public partial class BossUltimate : MonoBehaviour
         center = Hostile.ClampArena(boss.transform.position);
         // 멈췄던 화면이 풀리는 순간 옆의 잡몹 · 날아오던 탄 · 보스 몸통에 한꺼번에 맞지 않게 (결계가 다 펼쳐지고 1.2초까지 무적)
         if (player != null) player.GrantInvincibility(2f);
-        HideWalls(true);
+        HideWalls(this, true);
         yield return Expand(info.color);
         float until = Time.time + (kind == 2 ? SlimeDuration : kind == DevSlot ? DevDuration : kind == MomSlot ? MomDuration : Duration);
         SetActiveWindow(Time.time, until);      // 1.2.5~ 보스바가 결계 중 남은 시간을 그림 (BossUltimate.Erosion.cs)
@@ -225,7 +225,7 @@ public partial class BossUltimate : MonoBehaviour
         FadeLichBeams();
         soloCtx.running = false;        // 남은 불씨 운석 등 같이 멈춤 (이미 예고된 땅 타격은 끝까지 떨어짐)
         DevDomainStop();
-        HideWalls(false);
+        HideWalls(this, false);
         restUntil = Time.time + 15f;
         if (domainRoot != null) Destroy(domainRoot);
         if (aura != null) Destroy(aura);
@@ -510,13 +510,20 @@ public partial class BossUltimate : MonoBehaviour
 
     // 1.0.1: 결계 안은 다른 공간 — 맵 테두리 · 구조물(벽)을 끄고 감춤 (구석에서 펼치면 벽 때문에 피할 자리가 없었음)
     // 끝나면 되살리고, 맵 밖이나 벽 속에 있으면 가장 가까운 맵 안 빈자리로 옮김
+    // 1.4.6~ 벽을 숨긴 쪽(개별 결계 · 침식)을 모두 기억해, 마지막 하나가 끝날 때만 되살림 · 되돌리기는 늘 (먼저 끝난 결계가 벽을 되살려
+    //   나중 결계의 원이 플레이어를 벽 밖에 둔 채 끝나면 「이미 되살림」으로 건너뛰어 맵 밖에 갇혔음)
     static readonly List<Collider2D> hiddenWalls = new List<Collider2D>();
     static readonly List<Renderer> hiddenWallArt = new List<Renderer>();
+    static readonly List<Object> wallHiders = new List<Object>();
+    public static bool WallsHidden => hiddenWalls.Count > 0 && hiddenWalls[0] != null;     // 장면이 바뀌어 지워진 벽만 남았으면 숨김 아님
 
-    static void HideWalls(bool hide)
+    static void HideWalls(Object owner, bool hide)
     {
+        wallHiders.RemoveAll(o => o == null);       // 끝내지 못하고 사라진 쪽은 빼고 셈
         if (hide)
         {
+            if (!wallHiders.Contains(owner)) wallHiders.Add(owner);
+            hiddenWalls.RemoveAll(c => c == null);  // 지난 장면에서 되살리지 못한 벽은 버림
             if (hiddenWalls.Count > 0) return;
             foreach (Collider2D c in FindObjectsOfType<Collider2D>())
             {
@@ -528,7 +535,8 @@ public partial class BossUltimate : MonoBehaviour
             }
             return;
         }
-        if (hiddenWalls.Count == 0) return;
+        wallHiders.Remove(owner);
+        if (wallHiders.Count > 0) return;           // 다른 결계 · 침식이 아직 펼쳐져 있음
         foreach (Collider2D c in hiddenWalls) if (c != null) c.enabled = true;
         foreach (Renderer r in hiddenWallArt) if (r != null) r.enabled = true;
         hiddenWalls.Clear();
@@ -537,17 +545,38 @@ public partial class BossUltimate : MonoBehaviour
         if (p != null && p.isActiveAndEnabled) p.StartCoroutine(ReturnInside(p));
     }
 
+    // 벽을 되살린 뒤 몇 물리 단계 동안 확인 (되살린 벽에 밀려 바깥쪽으로 튕겨도 다시 안으로)
     static IEnumerator ReturnInside(PlayerController p)
     {
-        yield return new WaitForFixedUpdate();          // 되살린 벽이 물리에 들어간 뒤 검사
-        if (p == null) yield break;
+        for (int i = 0; i < 6; i++)
+        {
+            yield return new WaitForFixedUpdate();          // 되살린 벽이 물리에 들어간 뒤 검사
+            if (p == null || WallsHidden) yield break;
+            Vector3 pos = p.transform.position;
+            if (Hostile.InArena(pos) && !Hostile.IsWall(pos)) continue;
+            MoveInside(p);
+        }
+    }
+
+    static void MoveInside(PlayerController p)
+    {
         Vector3 pos = p.transform.position;
-        if (Hostile.InArena(pos) && !Hostile.IsWall(pos)) yield break;
         Vector3 to = FreeSpot(Hostile.ClampArena(pos));
         Fx.Spawn("fx_soulburst", pos, 3f, Color.white, 16f);
         p.transform.position = new Vector3(to.x, to.y, pos.z);
         Fx.Spawn("fx_soulburst", to, 3f, Color.white, 16f);
         p.GrantInvincibility(1f);
+    }
+
+    // 1.4.6~ 안전장치: 결계 · 침식이 없는데 맵 테두리 벽 너머(맵 안 범위 + 3 밖)에 있으면 안으로 (PlayerController.FixedUpdate 가 0.5초마다)
+    //   맵 안 범위(스포너 영역)와 테두리 벽 안쪽 사이는 2칸 안팎이라 +3 은 늘 벽 속이거나 벽 너머
+    public static void KeepInside(PlayerController p)
+    {
+        if (p == null || WallsHidden || p.IsDying || PlayerController.Cinematic || StoryDirector.Playing) return;
+        Vector3 pos = p.transform.position;
+        Vector3 c = Hostile.ClampArena(pos);
+        if (Mathf.Abs(c.x - pos.x) <= 3f && Mathf.Abs(c.y - pos.y) <= 3f) return;
+        MoveInside(p);
     }
 
     // 맵 안이면서 벽이 아닌 가장 가까운 자리 (가까운 고리부터 돌아가며 찾음)

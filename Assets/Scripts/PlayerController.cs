@@ -287,7 +287,7 @@ public class PlayerController : MonoBehaviour
     const int EndlessExpFrom = 25;
     const float EndlessExpMax = 4.5f, EndlessExpRamp = 10f;
     public static float NeedExp(int level) => (50 + level * 65) * EndlessExpMul(level);
-    static float EndlessExpMul(int level) => GameMode.IsEndless && EndlessMode.Instance != null && level > EndlessExpFrom && level < LevelShop.LevelCap
+    static float EndlessExpMul(int level) => GameMode.IsEndless && EndlessMode.Instance != null && level > EndlessExpFrom && level < LevelShop.BaseLevelCap
         ? 1f + (EndlessExpMax - 1f) * Mathf.Clamp01((level - EndlessExpFrom) / EndlessExpRamp) : 1f;
 
     // 1.4.2~ 요구량의 기준 레벨: 무한 모드는 지금 레벨 + 쌓아 둔 레벨업 (LevelShop.ExpLevel) — 카드를 미뤄 두면 싼 요구량으로 계속 모이던 길을 막음
@@ -551,7 +551,11 @@ public class PlayerController : MonoBehaviour
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
         float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
         if (!isSkillUsing) transform.Translate(move * CappedSpeed(speed * kitMul * SignatureSkills.MoveMul) * slowMul * Time.fixedDeltaTime);
+
+        // 1.4.6~ 결계 뒤 맵 테두리 벽 너머에 갇히지 않게 (0.5초마다 · BossUltimate.KeepInside)
+        if (Time.time >= nextInsideCheck) { nextInsideCheck = Time.time + 0.5f; BossUltimate.KeepInside(this); }
     }
+    float nextInsideCheck;
 
     // =====================================
     // 재장전

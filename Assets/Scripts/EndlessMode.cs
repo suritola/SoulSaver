@@ -97,6 +97,11 @@ public class EndlessMode : MonoBehaviour
     public bool NoMobs => devSummoned && finalStage != 4;
     // 1.1.4~ 클리어 뒤 「한계 돌파」: 잡몹 · 습격 · 중간 보스 · 보스가 다시 나오고 시간이 갈수록 계속 강해짐 (기록은 죽을 때까지 늘어남)
     public bool Beyond => finalStage == 4;
+    // 1.4.6~ 한계 돌파: 최대 레벨 100 (LevelShop.LevelCap) · 받는 경험치 ×0.2 (LevelShop.GainExp)
+    //   이어하기는 카드 기록을 다시 고를 때(RunSave.Restore) 아직 EndlessMode 가 없어서(Restore 뒤에 만들고 RestoreRun), 50 을 넘긴 레벨 · 대기 레벨업이 잘리지 않게 미리 static 으로 표시 (Init 에서 지움)
+    public const float BeyondExpMul = 0.2f;
+    public static bool ResumeBeyond;
+    public static bool LevelBeyond => ResumeBeyond || (Instance != null && Instance.finalStage == 4);
     // 1.3.4~ 한계 돌파가 시작된 뒤 흐른 분 (이어하기로 되살린 판은 이어한 때부터 다시 셈 · 저장 형식은 그대로)
     float beyondAt;
     public float BeyondMinutes => Beyond ? Mathf.Max(0f, Time.time - beyondAt) / 60f : 0f;
@@ -132,6 +137,7 @@ public class EndlessMode : MonoBehaviour
     public void Init(StageManager sm, GameObject[] bosses, bool resumed = false)
     {
         Instance = this;
+        ResumeBeyond = false;       // 1.4.6~ 이어하기 표시는 여기까지 (곧 RestoreRun 이 finalStage 를 되살림 · 같은 프레임)
         daily = DailyChallenge.Active;
         stages = sm;
         spawner = sm.spawner;
@@ -497,6 +503,7 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + 20f;
         nextMidBoss = Time.time + 30f;
         Notice.Big(Loc.T("한계 돌파!") + "\n" + Loc.T("이제 쓰러질 때까지 버텨라 — 적은 끝없이 강해진다"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
+        Notice.Big(Loc.T("한계 돌파 — 최대 레벨 100!") + "\n" + Loc.T("이제 레벨 100까지 오를 수 있다 (얻는 경험치는 크게 줄어든다)"), NoticeIcon.Up, 5f, NoticeLevel.Important);     // 1.4.6~
     }
 
     // 함께 나온 보스 중 마지막이 아닌 보스를 쓰러뜨렸을 때: 처치 연출만 빼고 보상(진화 · 전리품 · 포인트)은 똑같이

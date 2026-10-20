@@ -175,7 +175,7 @@ public partial class BossUltimate
     internal static bool ErosionSkip() => SkipPressed();
     internal static void ErosionSfx(string name, float vol) => PlaySfx(name, vol);
     internal static float Ease(float k) => EaseOut(k);
-    internal static void ErosionWalls(bool hide) => HideWalls(hide);
+    internal static void ErosionWalls(Object owner, bool hide) => HideWalls(owner, hide);
 
     // 어둠 메시 (개별 결계와 같은 메시 · 머티리얼 하나를 같이 씀 · 크기만 localScale 로)
     internal static MeshRenderer ErosionDark(Transform parent, float radius)

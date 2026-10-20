@@ -13,7 +13,9 @@ public partial class LevelShop
     // 최대 레벨: 다 올리지 못하게 (무한 모드는 더 길게)
     // 1.3.3~ 무한 모드도 50 (사용자 「무한 모드에서 모든 스킬을 진화하지 못하도록 만렙을 50」 · 예전 80, 1.0.6~ 100 → 80)
     //   상한에 닿으면 레벨업 카드(성장 카드 포함)를 더 고를 수 없음 · 그 뒤 경험치 막대는 초월 카드 (무한 모드 세 번마다 그대로)
-    public static int LevelCap => 50;
+    // 1.4.6~ 무한 모드 「한계 돌파」(개발자 엄마 처치 뒤)는 100 까지 (경험치는 EndlessMode.BeyondExpMul 로 크게 줄여 받음 · 100 에 닿으면 다시 초월 카드)
+    public const int BaseLevelCap = 50, BeyondLevelCap = 100;
+    public static int LevelCap => GameMode.IsEndless && EndlessMode.LevelBeyond ? BeyondLevelCap : BaseLevelCap;
 
     // 새 스킬 효과 키 (SignatureSkills 가 이 키로 단계를 읽음)
     public static readonly string[][] SigKeys =

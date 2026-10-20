@@ -127,7 +127,7 @@ public class SpaceErosion : MonoBehaviour
         center = Hostile.ClampArena(Vector3.Lerp(me, mid, 0.35f));
         center.z = 0f;
         if (player != null) player.GrantInvincibility(2.4f);          // 펼침 1.2 + 여유 1.2
-        BossUltimate.ErosionWalls(true);
+        BossUltimate.ErosionWalls(this, true);
         yield return Expand();
 
         float until = Time.time + Duration;
@@ -236,7 +236,7 @@ public class SpaceErosion : MonoBehaviour
     {
         for (int i = 0; i < MaxMembers; i++) { ctxs[i].StopAttack(); ctxs[i].FadeBeams(); ctxs[i].running = false; }
         DomainStrikes.EyeOn = false;
-        BossUltimate.ErosionWalls(false);
+        BossUltimate.ErosionWalls(this, false);
         if (root != null) Destroy(root);
         root = null;
         for (int i = 0; i < MaxMembers; i++) { auras[i] = null; bossRings[i] = null; }

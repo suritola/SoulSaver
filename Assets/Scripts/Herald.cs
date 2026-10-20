@@ -82,7 +82,7 @@ public static partial class Herald
         if (shop != null && shop.PendingBadge != null && shop.PendingBadge.activeInHierarchy) f.extra.Add("levelup");
         PlayerController p = Hostile.Player;
         if (p != null && p.skillGauge != null && p.skillGauge.IsFull()) f.extra.Add("ultfull");
-        if (RunStats.Level >= LevelShop.LevelCap) f.extra.Add("lv50");
+        if (RunStats.Level >= LevelShop.BaseLevelCap) f.extra.Add("lv50");
         if (SoulShards.Amount >= 40) f.extra.Add("shards unspent");
         foreach (SoulBrandDef b in SoulBrand.Current) f.extra.Add("brand:" + b.id);
         if (endless)

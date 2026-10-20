@@ -409,6 +409,7 @@ public static class RunSave
         // 재생 중 처음 GrowAttack 에서 정하면 앞서 재생한 상점 공격력(b1) 만큼 부푼 값이 기준이 되어 ap · 트리 · 성장이 더 크게 들어갔음
         if (specials != null) specials.RestoreBase(d.baseAttack, d.baseMag);
 
+        EndlessMode.ResumeBeyond = GameMode.IsEndless && d.endlessFinal >= 3;      // 1.4.6~ 한계 돌파 판은 레벨 100 까지 다시 쌓이게 (카드 재생 전에)
         Replaying = true;
         try
         {
