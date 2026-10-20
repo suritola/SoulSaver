@@ -74,6 +74,11 @@ def fetch_page(base, token, since):
 
 
 def main():
+    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
     ap = argparse.ArgumentParser(description="Soul Saver 플레이 데이터 내려받기")
     ap.add_argument("--url", default=os.environ.get("SOULSAVER_TELEMETRY_URL", ""), help="Worker 주소")
     ap.add_argument("--db", default=DEFAULT_DB, help="로컬 SQLite 경로")
