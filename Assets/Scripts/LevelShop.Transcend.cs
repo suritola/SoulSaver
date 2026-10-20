@@ -113,6 +113,7 @@ public partial class LevelShop
     {
         if (transcending) return;
         if (bul == null) bul = FindFirstObjectByType<PlayerController>();
+        if ((LevelCap > BaseLevelCap && !AtLevelCap) || transcendBars >= BarsNeeded) { UpdateBeyondTranscend(); return; }      // 1.4.6~ 한계 돌파 50~100 · 100 에 닿을 때 남은 칸
         if (bul == null || bul.PlayerHealth <= 0f || bul.needEXP <= 0f || bul.nowEXP < bul.needEXP || !AtLevelCap) { transcendReadyAt = -1f; return; }
         if (!TranscendLeft || TutorialRun.Active || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return;
         if (IsOpen || PendingLevels > 0 || Time.timeScale != 1f || ChoiceUI.Open || ShopOpen || ESCmenu.IsOpen) return;
@@ -125,6 +126,31 @@ public partial class LevelShop
         if (Time.unscaledTime < transcendReadyAt) return;
         if (transcendBars < BarsNeeded - 1) { ChargeTranscend(); return; }
         StartCoroutine(TranscendPick());
+    }
+
+    // 1.4.6~ 한계 돌파(최대 레벨 100) 50~100 동안: 레벨업 카드와 초월 카드를 둘 다 — 경험치로 레벨업할 때마다 초월 칸 하나 (막대를 비우지 않음)
+    //   칸이 다 차면 쌓인 레벨업 카드를 모두 고른 뒤 초월 카드 창 · 기록은 막대와 같은 tr9 (이어하기 그대로) · 100 에 닿으면 예전처럼 막대로
+    void BeyondChargeTranscend()
+    {
+        if (!TranscendLeft || TutorialRun.Active || GameInput.Auto) return;
+        transcendBars++;
+        RunSave.Record("tr" + TranscendBarCode);
+        if (transcendBars >= BarsNeeded) return;            // 다 찼으면 창이 알림을 대신함
+        string pips = "<color=#FFD75A>" + new string('◆', transcendBars) + "</color><color=#5E5272>" + new string('◆', Mathf.Max(0, BarsNeeded - transcendBars)) + "</color>";
+        Notice.Toast(NoticeIcon.Up, Loc.T("새 규칙까지") + "  " + pips, 3f);
+    }
+
+    void UpdateBeyondTranscend()
+    {
+        if (transcendBars < BarsNeeded || bul == null || bul.PlayerHealth <= 0f) { transcendReadyAt = -1f; return; }
+        if (!TranscendLeft || TutorialRun.Active || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode) return;
+        if (IsOpen || PendingLevels > 0 || levelUpQueued > 0 || Time.timeScale != 1f || ChoiceUI.Open || ShopOpen || ESCmenu.IsOpen) return;
+        StageManager sm = StageManager.Instance;
+        if (sm != null && (sm.IsMenuOpen || !sm.Started)) return;
+        if (StoryDirector.EndingPlaying) { transcendReadyAt = -1f; return; }
+        if (transcendReadyAt < 0f) { transcendReadyAt = Time.unscaledTime + 0.6f; return; }
+        if (Time.unscaledTime < transcendReadyAt) return;
+        StartCoroutine(TranscendPick(false));
     }
 
     // 셋째가 아닌 막대: 비우고 충전 단계만 알림
@@ -141,7 +167,8 @@ public partial class LevelShop
         if (sm != null) Notice.Toast(NoticeIcon.Up, Loc.T("새 규칙까지") + "  " + pips, 3f);
     }
 
-    IEnumerator TranscendPick()
+    // drainBar: 상한에서 막대를 채워 연 창이면 막대를 비움 (한계 돌파 50~100 의 칸으로 연 창은 막대를 건드리지 않고 칸만 뺌)
+    IEnumerator TranscendPick(bool drainBar = true)
     {
         transcending = true;
         // 아직 최대 단계가 아닌 카드 가운데 겹치지 않게 최대 세 장
@@ -167,11 +194,11 @@ public partial class LevelShop
         int chosen = ids.Count > 0 ? ids[Mathf.Clamp(pick, 0, ids.Count - 1)] : -1;
         if (chosen >= 0)
         {
-            if (bul != null) bul.nowEXP = Mathf.Max(0f, bul.nowEXP - bul.needEXP);
+            if (drainBar && bul != null) bul.nowEXP = Mathf.Max(0f, bul.nowEXP - bul.needEXP);
             int before = transcendLevel[chosen];
             ApplyTranscend(chosen, false);
             RunSave.Record("tr" + (TranscendCodeBase + chosen));        // 판 중간 저장 (이어할 때 같은 초월 카드를 다시 적용)
-            transcendBars = 0;
+            transcendBars = Mathf.Max(0, transcendBars - BarsNeeded);       // 1.4.6~ 한계 돌파에서 더 찬 칸은 다음 카드로 (상한 막대는 늘 0)
             if (bul != null) Juice.LevelUp(bul.transform.position);
             StageManager sm = StageManager.Instance;
             if (sm != null) Notice.Toast(NoticeIcon.Up, TranscendName(chosen) + "  <color=#FFD75A>" + TranscendStageText(chosen, before) + "</color>", 3.5f);
@@ -187,7 +214,7 @@ public partial class LevelShop
         if (code == TranscendBarCode) { transcendBars++; return; }
         int k = code >= TranscendCodeBase ? code - TranscendCodeBase : code >= 0 && code < OldTranscendMap.Length ? OldTranscendMap[code] : -1;
         if (k >= 0 && k < TranscendCount) ApplyTranscend(k, true);
-        transcendBars = 0;
+        transcendBars = Mathf.Max(0, transcendBars - BarsNeeded);       // 상한 막대 기록은 BarsNeeded − 1 개라 늘 0 · 한계 돌파 칸은 남은 만큼
     }
 
     // 단계만 올리고, 규칙은 TranscendRules 가 단계를 보고 바꿈 (기본 능력치는 건드리지 않음)

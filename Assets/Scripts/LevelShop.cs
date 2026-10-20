@@ -531,12 +531,14 @@ public partial class LevelShop : MonoBehaviour
             return;
         }
         int gained = 0;
+        int startLv = p.level + PendingLevels;
         while (p.nowEXP >= p.needEXP && p.needEXP > 0f && gained < room)
         {
             p.nowEXP -= p.needEXP;
             earned++;
             p.needEXP = PlayerController.NeedExp(1 + earned);
             gained++;
+            if (startLv + gained > BaseLevelCap && LevelCap > BaseLevelCap) BeyondChargeTranscend();      // 1.4.6~ 한계 돌파: 레벨업마다 초월 칸도 하나 (LevelShop.Transcend)
             // 1.4.2~ 무한 모드 레벨 곡선이 바뀌는 순간 처음 한 번 알림 (PlayerController.NeedExp)
             if (1 + earned == 26 && GameMode.IsEndless && EndlessMode.Instance != null)
                 Hints.Show("endless.slowlevel", "무한 모드는 레벨 25부터 레벨업에 드는 경험치가 점점 늘어, 레벨 35부터는 4.5배가 됩니다. 최후의 시간 동안에도 계속 자랍니다.");

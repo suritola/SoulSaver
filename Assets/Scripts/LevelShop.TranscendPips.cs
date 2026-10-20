@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public partial class LevelShop
 {
     // TranscendBarsFilled · TranscendBarsNeeded 는 LevelShop.Transcend (이야기 모드 2 막대 · 첫 카드 1 막대)
-    public bool TranscendCharging => AtLevelCap && TranscendLeft && !TutorialRun.Active && !GameInput.Auto;
+    public bool TranscendCharging => (AtLevelCap || LevelCap > BaseLevelCap) && TranscendLeft && !TutorialRun.Active && !GameInput.Auto;     // 1.4.6~ 한계 돌파 50~100 도 (레벨업마다 칸)
 }
 
 public class TranscendPips : MonoBehaviour

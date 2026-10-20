@@ -503,7 +503,7 @@ public class EndlessMode : MonoBehaviour
         nextBoss = Time.time + 20f;
         nextMidBoss = Time.time + 30f;
         Notice.Big(Loc.T("한계 돌파!") + "\n" + Loc.T("이제 쓰러질 때까지 버텨라 — 적은 끝없이 강해진다"), NoticeIcon.Boss, 4f, NoticeLevel.Urgent);
-        Notice.Big(Loc.T("한계 돌파 — 최대 레벨 100!") + "\n" + Loc.T("이제 레벨 100까지 오를 수 있다 (얻는 경험치는 크게 줄어든다)"), NoticeIcon.Up, 5f, NoticeLevel.Important);     // 1.4.6~
+        Notice.Big(Loc.T("한계 돌파 — 최대 레벨 100!") + "\n" + Loc.T("이제 레벨 100까지 오르고, 레벨업 3번마다 초월 카드도 고른다 (얻는 경험치는 크게 줄어든다)"), NoticeIcon.Up, 5f, NoticeLevel.Important);     // 1.4.6~
     }
 
     // 함께 나온 보스 중 마지막이 아닌 보스를 쓰러뜨렸을 때: 처치 연출만 빼고 보상(진화 · 전리품 · 포인트)은 똑같이
