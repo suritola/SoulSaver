@@ -55,6 +55,8 @@ def load(db_path, version, build, since):
             continue
         if since and s(d.get("date")) < since:
             continue
+        if s(d.get("retry_kind")) == "tutorial":      # 튜토리얼 판은 밸런싱에서 뺌 (1.4.7~ 게임도 보내지 않음)
+            continue
         d["version"], d["build"] = ver, bld
         rows.append(d)
     return rows

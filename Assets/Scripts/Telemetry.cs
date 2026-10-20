@@ -88,6 +88,7 @@ public static class Telemetry
     public static void RecordRun(string header, string row)
     {
         if (!Configured || Blocked || Consent != 1) return;
+        if (TutorialRun.Active || RunLog.TutorialStarted) return;      // 1.4.7~ 튜토리얼 판은 보내지 않음 (밸런싱 데이터를 흐림)
         try
         {
             if (AnonId.Length == 0) { NewAnonId(); Prefs.Save(); }

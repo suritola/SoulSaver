@@ -26,6 +26,7 @@ public static class RunLog
     public static string NextKind;
 
     static string retryKind = "", menuGap = "";
+    public static bool TutorialStarted => retryKind == "tutorial";      // 1.4.7~ 이번 판이 튜토리얼로 시작됨 (Telemetry 가 보내지 않음 · 끝날 땐 TutorialRun.Active 가 이미 꺼졌을 수 있음)
     static int points;
     static float lastRunEnd = -1f;
     static string prevScene;
