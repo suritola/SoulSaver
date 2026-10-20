@@ -521,7 +521,6 @@ public partial class LevelShop : MonoBehaviour
         // 최대 레벨 50 (무한 모드도 50): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
-        if (LevelCap > BaseLevelCap && p.level + PendingLevels < LevelCap) amount *= EndlessMode.BeyondExpMul;        // 1.4.6~ 한계 돌파 50~100 동안만 경험치를 크게 줄여 받음 (100 뒤 초월 막대는 예전 속도)
         p.nowEXP += amount;
         // 1.0.6~: 최대 레벨(50 · 무한 모드도 50)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
         int room = LevelCap - (p.level + PendingLevels);
