@@ -83,10 +83,10 @@ public static partial class LocTable
         A("꾹 눌러 조준", "Hold to Aim", "長押しで狙う", "长按瞄准");
         A("종", "", "種", "种");
         K("정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
-          "정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
-          "Max out two or three specific level-up cards and they fuse into one with a new power. Levels cap at 50 (80 in Endless), so pick which evolutions to chase. You can skip unwanted cards, and you only level up when you take a card. See every recipe under Skill Evolution on the main menu.",
-          "決まった2〜3枚のレベルアップカードをすべて最大段階にすると一つに合わさり、新しい能力が生まれます。最大レベルは50なので全部は上げられません。狙う進化を選びましょう。不要なカードはスキップでき、レベルはカードを選んだときだけ上がります。組み合わせはメインメニューの「スキル進化」で見られます。",
-          "将指定的两到三张升级卡全部升到满级后会合而为一，获得新能力。等级上限为50，无法全部升满，请选择要追求的进化。不想要的卡牌可以跳过，只有选择卡牌时才会升级。组合可在主菜单的「技能进化」中查看。");
+          "정해진 두세 장의 레벨업 카드를 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 최대 레벨은 50(무한 모드 한계 돌파에서는 100)이라 모두 올릴 수 없으니 노릴 진화를 고르세요. 원하지 않는 카드는 건너뛸 수 있고, 레벨은 카드를 골라야 오릅니다. 조합은 메인 메뉴의 「스킬 진화」에서 볼 수 있습니다.",
+          "Max out two or three specific level-up cards and they fuse into one with a new power. Levels cap at 50 (100 in Endless once you go Beyond the Limit), so pick which evolutions to chase. You can skip unwanted cards, and you only level up when you take a card. See every recipe under Skill Evolution on the main menu.",
+          "決まった2〜3枚のレベルアップカードをすべて最大段階にすると一つに合わさり、新しい能力が生まれます。最大レベルは50（エンドレスの限界突破では100）なので全部は上げられません。狙う進化を選びましょう。不要なカードはスキップでき、レベルはカードを選んだときだけ上がります。組み合わせはメインメニューの「スキル進化」で見られます。",
+          "将指定的两到三张升级卡全部升到满级后会合而为一，获得新能力。等级上限为50（无尽模式突破极限后为100），无法全部升满，请选择要追求的进化。不想要的卡牌可以跳过，只有选择卡牌时才会升级。组合可在主菜单的「技能进化」中查看。");
         K("무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
           "무적 상태로 마우스 쪽으로 돌진해 지나간 적에게 출혈 피해를 입힙니다. 누르고 있으면 경로가 보이고, 떼면 돌진합니다. 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다.",
           "Dash toward the cursor while invincible, making every enemy you pass bleed. Hold to see the path, release to dash. Learning Shadow Mastery in the Soul Tree adds speed, slows, chained dashes and more to the dash.",
@@ -118,10 +118,10 @@ public static partial class LocTable
         A("필요", "Requires", "必要", "需要");
         A("진화 조합", "Evolution recipes", "進化の組み合わせ", "进化组合");
         K("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지라 모두 올릴 수는 없습니다.",
-          "레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지라 모두 올릴 수는 없습니다.",
-          "Max out two or three level-up cards and they merge into one, gaining a new power. Levels cap at 50 (80 in Endless), so you can't max everything.",
-          "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力が生まれます。レベルは50までなので全部は上げられません。",
-          "将两到三张升级卡全部升到最高级后会合而为一，获得新能力。等级上限为50，无法全部升满。");
+          "레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지(무한 모드 한계 돌파에서는 100)라 모두 올릴 수는 없습니다.",
+          "Max out two or three level-up cards and they merge into one, gaining a new power. Levels cap at 50 (100 in Endless once you go Beyond the Limit), so you can't max everything.",
+          "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力が生まれます。レベルは50まで（エンドレスの限界突破では100）なので全部は上げられません。",
+          "将两到三张升级卡全部升到最高级后会合而为一，获得新能力。等级上限为50（无尽模式突破极限后为100），无法全部升满。");
         K("모든 캐릭터", "모든 영웅", "All Heroes", "すべての英雄", "所有英雄");
         A("잠긴 캐릭터", "Locked hero", "ロック中のキャラクター", "未解锁角色");
         K("포인트로 잠금을 풀면 이 캐릭터의 진화 조합을 볼 수 있습니다.", "포인트로 잠금을 풀면 이 영웅의 진화 조합을 볼 수 있습니다.", "Unlock this hero with points to see their evolution recipes.", "ポイントでロックを解除すると、この英雄の進化の組み合わせが見られます。", "用点数解锁该英雄后即可查看其进化组合。");
@@ -366,13 +366,13 @@ public static partial class LocTable
         A("공격 속도가 1% 빨라집니다.", "Attack speed increases by 1%.", "攻撃速度が1%速くなります。", "攻击速度提升1%。");
         A("이동 속도가 1% 빨라집니다. (이동 속도 상한은 그대로)", "Move speed increases by 1%. (The move speed cap still applies)", "移動速度が1%速くなります。（移動速度の上限はそのまま）", "移动速度提升1%。（移动速度上限不变）");
         K("상한 없이 계속 쌓입니다", "상한 없이 계속 쌓입니다.", "Stacks without limit.", "上限なく積み重なります。", "可无限叠加。");
-        K("최대 레벨(50) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.", "최대 레벨(50) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 「성장」 카드를 고릅니다.", "Learn every level-up card before max level (50), and each later level-up offers a Growth card that stacks without limit.", "最大レベル（50）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる「成長」カードを選びます。", "在达到等级上限（50）前学会所有升级卡后，此后每次升级可选择无上限叠加的「成长」卡。");
+        K("최대 레벨(50) 전에 배울 레벨업 카드를 모두 배우면, 레벨업마다 끝없이 쌓이는 「성장」 카드를 고릅니다.", "최대 레벨(50 · 무한 모드 한계 돌파에서는 100) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 「성장」 카드를 고릅니다.", "Learn every level-up card before max level (50, or 100 in Endless Beyond the Limit), and each later level-up offers a Growth card that stacks without limit.", "最大レベル（50・エンドレスの限界突破では100）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる「成長」カードを選びます。", "在达到等级上限（50 · 无尽模式突破极限后为100）前学会所有升级卡后，此后每次升级可选择无上限叠加的「成长」卡。");
         A("성장 카드", "Growth Cards", "成長カード", "成长卡");
         A("레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 (그 뒤로는 레벨업 없음) · 재료를 모두 올리면 스킬 진화",
           "Pick one of three cards or skip on each level-up · Max level 50 (no level-ups after that) · Max all ingredients to evolve a skill",
           "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50（その後はレベルアップなし）・素材をすべて上げるとスキル進化",
           "每次升级从三张中选一张或跳过 · 等级上限50（之后不再升级）· 素材全部升满即可技能进化");
-        K("최대 레벨(50) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "최대 레벨(50) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 성장 카드를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "Learn every level-up card before max level (50), and each later level-up offers a Growth card that stacks without limit. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: attack speed +1% · Stride: move speed +1%", "最大レベル（50）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる成長カードを選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%", "在达到等级上限（50）前学会所有升级卡后，此后每次升级可选择无上限叠加的成长卡。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
+        K("최대 레벨(50) 전에 고를 레벨업 카드를 모두 배우면, 그 뒤 레벨업마다 상한 없이 쌓이는 성장 카드 중 하나를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "최대 레벨(50 · 무한 모드 한계 돌파에서는 100) 전에 레벨업 카드를 모두 배우면, 이후 레벨업마다 상한 없이 쌓이는 성장 카드를 고릅니다. 힘: 모든 무기 피해 +2% · 생명: 최대 체력 +5 · 손놀림: 공격 속도 +1% · 발걸음: 이동 속도 +1%", "Learn every level-up card before max level (50, or 100 in Endless Beyond the Limit), and each later level-up offers a Growth card that stacks without limit. Might: all weapon damage +2% · Vitality: max health +5 · Dexterity: attack speed +1% · Stride: move speed +1%", "最大レベル（50・エンドレスの限界突破では100）の前にレベルアップカードをすべて覚えると、以後のレベルアップごとに上限なく重なる成長カードを選びます。力：すべての武器ダメージ +2%・生命：最大体力 +5・手さばき：攻撃速度 +1%・足取り：移動速度 +1%", "在达到等级上限（50 · 无尽模式突破极限后为100）前学会所有升级卡后，此后每次升级可选择无上限叠加的成长卡。力量：所有武器伤害 +2% · 生命：最大生命 +5 · 手速：攻击速度 +1% · 步伐：移动速度 +1%");
         A("영혼 정련", "Soul Refining", "魂の精錬", "灵魂精炼");
         A("모든 무기 피해 +2% · 최대 체력 +4", "All weapon damage +2% · Max health +4", "すべての武器ダメージ +2%・最大体力 +4", "所有武器伤害 +2% · 最大生命 +4");
         K("트리를 모두 배우면 열립니다", "트리를 모두 배우면 열립니다.", "Unlocks once the whole tree is learned.", "ツリーをすべて習得すると解放されます。", "学满整棵树后解锁。");
