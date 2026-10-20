@@ -200,10 +200,15 @@ public static class GameMode
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt) * BeyondDamageMul;
     // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
     //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)
-    public const float BeyondDamageGrowthPerMin = 1.12f;
+    // 1.4.7~ 사용자 「개발자 엄마 처치 이후 몹들의 이동속도, 공격력을 훨씬 더 빠르게」(한계 돌파에서 1시간 가까이 버틴 판): 1분마다 ×1.12 → ×1.25 (약 3분마다 2배 · 10분 ×9.3 · 20분 ×87)
+    public const float BeyondDamageGrowthPerMin = 1.25f;
     static float BeyondDamageMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
         ? Mathf.Pow(BeyondDamageGrowthPerMin, Mathf.Min(600f, EndlessMode.Instance.BeyondMinutes)) : 1f;
-    public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed);
+    public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed) * BeyondSpeedMul;
+    // 1.4.7~ 한계 돌파 뒤 몹 이동 속도: 1분마다 +5% · 16분에 ×1.8 에서 멈춤 (새로 나오는 몹부터 · 보스는 그대로)
+    public const float BeyondSpeedPerMin = 0.05f, BeyondSpeedMax = 1.8f;
+    static float BeyondSpeedMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
+        ? Mathf.Min(BeyondSpeedMax, 1f + BeyondSpeedPerMin * EndlessMode.Instance.BeyondMinutes) : 1f;
     public static float WindupMul => Windup[I];
     public static float ProjectileSpeedMul => ProjectileSpeed[I];
     public static float SkillCooldownMul => SkillCooldown[I] / Mathf.Lerp(1f, MobRamp, 0.3f) * D(DailyStat.EnemySkill) * Early(EarlySkill);
