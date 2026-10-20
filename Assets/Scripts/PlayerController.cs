@@ -287,8 +287,11 @@ public class PlayerController : MonoBehaviour
     const int EndlessExpFrom = 25;
     const float EndlessExpMax = 4.5f, EndlessExpRamp = 10f;
     public static float NeedExp(int level) => (50 + level * 65) * EndlessExpMul(level);
-    static float EndlessExpMul(int level) => GameMode.IsEndless && EndlessMode.Instance != null && level > EndlessExpFrom && level < LevelShop.BaseLevelCap
-        ? 1f + (EndlessExpMax - 1f) * Mathf.Clamp01((level - EndlessExpFrom) / EndlessExpRamp) : 1f;
+    // 1.4.7~ 한계 돌파 레벨 50~99 는 ×6 (49 의 ×4.5 보다 늘 느리게 · 51 약 20,200 → 99 약 38,900 · 사용자 「49레벨때보단 더 느려지게」)
+    const float BeyondExpNeedMul = 6f;
+    static float EndlessExpMul(int level) => !GameMode.IsEndless || EndlessMode.Instance == null || level <= EndlessExpFrom ? 1f
+        : level >= LevelShop.BaseLevelCap ? (EndlessMode.LevelBeyond && level < LevelShop.BeyondLevelCap ? BeyondExpNeedMul : 1f)     // 한계 돌파 전 50 · 100 의 초월 막대는 예전 그대로
+        : 1f + (EndlessExpMax - 1f) * Mathf.Clamp01((level - EndlessExpFrom) / EndlessExpRamp);
 
     // 1.4.2~ 요구량의 기준 레벨: 무한 모드는 지금 레벨 + 쌓아 둔 레벨업 (LevelShop.ExpLevel) — 카드를 미뤄 두면 싼 요구량으로 계속 모이던 길을 막음
     //   이야기 모드는 예전처럼 고른 레벨 (숙련도 무료 카드로 레벨이 경험치보다 앞설 수 있어서)
