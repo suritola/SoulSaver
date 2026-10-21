@@ -257,7 +257,7 @@ public class SoulTreeUI : MonoBehaviour
         top.rectTransform.anchoredPosition = Vector2.zero;
         Image bottom = Img("BottomBar", root, Vector2.zero, Vector2.zero, null, new Color(0.05f, 0.03f, 0.08f, 0.92f));
         bottom.rectTransform.anchorMin = Vector2.zero; bottom.rectTransform.anchorMax = new Vector2(1f, 0f);
-        bottom.rectTransform.pivot = new Vector2(0.5f, 0f); bottom.rectTransform.sizeDelta = new Vector2(0f, 64f);
+        bottom.rectTransform.pivot = new Vector2(0.5f, 0f); bottom.rectTransform.sizeDelta = new Vector2(0f, 76f);      // 1.4.8~ 안내 두 줄 (64 → 76)
         bottom.rectTransform.anchoredPosition = Vector2.zero;
 
         TMP_Text title = UIKit.Text(root, "영혼 트리", 54f, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
@@ -278,14 +278,14 @@ public class SoulTreeUI : MonoBehaviour
         shardText.fontStyle = FontStyles.Bold;
         affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
         UIKit.Pin(affordText.rectTransform, new Vector2(0f, 1f), new Vector2(225f, -140f));
-        refineBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(400f, 64f), RefineClick, 22f);
+        refineBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(400f, 72f), RefineClick, 22f);      // 1.4.8~ 64 → 72 (아래 줄 글자 20 이상)
         refineBtn.name = "RefineButton";
-        UIKit.Pin((RectTransform)refineBtn.transform, new Vector2(0f, 1f), new Vector2(225f, -196f));
+        UIKit.Pin((RectTransform)refineBtn.transform, new Vector2(0f, 1f), new Vector2(225f, -200f));
         refineText = refineBtn.GetComponentInChildren<TMP_Text>();
         refineText.enableWordWrapping = true;
         refineText.enableAutoSizing = true;
-        refineText.fontSizeMin = 12f;
-        refineText.fontSizeMax = 22f;
+        refineText.fontSizeMin = 20f;           // 1.4.8~ 12 → 20 (윗줄 24 · 아랫줄은 20 고정 — 예전 72% 는 약 16)
+        refineText.fontSizeMax = 24f;
         TooltipTrigger refineTip = refineBtn.gameObject.AddComponent<TooltipTrigger>();
         refineTip.titleProvider = () => Loc.T("영혼 정련");
         refineTip.bodyProvider = RefineTip;
@@ -298,13 +298,14 @@ public class SoulTreeUI : MonoBehaviour
         UIKit.Pin((RectTransform)fitBtn.transform, Vector2.one, new Vector2(-405f, -60f));
         // 1.1~ 아래 띠(64) 가운데: 예전엔 1800 고정 폭이라 UI 크기 110% 이상(캔버스 폭 1600~1745)에서 양 끝이 잘림
         //   → 화면 폭을 따라 좌우 40 여백, 두 줄까지 · 글자색도 Dim(대비 약 3.9:1) → 밝게(약 8:1)
-        footText = UIKit.Text(root, "", 22f, new Color(0.72f, 0.68f, 0.78f), Vector2.zero, new Vector2(0f, 56f));
+        footText = UIKit.Text(root, "", 22f, new Color(0.72f, 0.68f, 0.78f), Vector2.zero, new Vector2(0f, 64f));
         footText.enableWordWrapping = true;
-        footText.fontSizeMin = 14f;
+        footText.fontSizeMin = 20f;             // 1.4.8~ 최소 글자 20 (예전 14) · 두 줄로 나눠 줄일 일이 거의 없음
+        footText.lineSpacing = -8f;             // 두 줄이 띠(76) 안에 들어가게 조금 붙임
         RectTransform fr = footText.rectTransform;
         fr.anchorMin = new Vector2(0f, 0f); fr.anchorMax = new Vector2(1f, 0f);
-        fr.sizeDelta = new Vector2(-80f, 56f);
-        fr.anchoredPosition = new Vector2(0f, 32f);
+        fr.sizeDelta = new Vector2(-80f, 68f);
+        fr.anchoredPosition = new Vector2(0f, 38f);
         // 가지 색 범례 (트리 위에 이름을 띄우면 칸과 겹쳐서, 위 띠에 한 줄로)
         string legend = "";
         for (int b = 0; b < SpecialAbilities.BranchCount; b++)
@@ -352,10 +353,11 @@ public class SoulTreeUI : MonoBehaviour
             v.line = lines[n.key];
             views.Add(v);
         }
-        footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount
-                      + "  ·  " + Loc.T(GamePad.Active ? "오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기"      // 1.0.5~ 패드 안내
-                                                       : "끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기")
-                      + (GamePad.Active ? "" : "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기"));      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름 · 1.1~ 패드엔 없는 조합(「[Shift]+[View]」)이라 패드일 땐 뺌
+        // 1.4.8~ 한 줄에 다 넣어 너무 길었음 → 두 줄 · 핵심만 (UI 정리 기획 2026-10-21)
+        //   첫 줄: 배우는 법 · 숨은 칸 / 둘째 줄: 움직이는 법 · 빠르게 배우기 — [F] 전체 보기는 위 버튼에 있고 [C] 가운데로는 뺌 (키는 그대로 동작)
+        footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount + "\n"
+                      + (GamePad.Active ? Loc.T("오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기")      // 1.0.5~ 패드 안내
+                                        : Loc.T("끌기 · {MOVE} 이동 · 휠 확대") + "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기"));      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름 · 1.1~ 패드엔 없는 조합(「[Shift]+[View]」)이라 패드일 땐 뺌
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
         bounds = new Rect(-120f, -120f, 240f, 240f);
         foreach (NodeView v in views)
@@ -479,7 +481,7 @@ public class SoulTreeUI : MonoBehaviour
         if (refineBtn == null) return;
         int cost = sp.RefineCost;
         refineReady = complete && SoulShards.Amount >= cost;
-        refineText.text = "<b>" + Loc.T("영혼 정련") + (complete ? "  " + cost : "") + (sp.Refines > 0 ? "  <color=#C9A0FF>x" + sp.Refines + "</color>" : "") + "</b>\n<size=72%>"
+        refineText.text = "<b>" + Loc.T("영혼 정련") + (complete ? "  " + cost : "") + (sp.Refines > 0 ? "  <color=#C9A0FF>x" + sp.Refines + "</color>" : "") + "</b>\n<size=20>"
                         + (complete ? Loc.T("모든 무기 피해 +2% · 최대 체력 +4") : Loc.T("트리를 모두 배우면 열립니다")) + "</size>";
         refineText.color = refineReady ? Color.white : complete ? new Color(1f, 0.6f, 0.55f) : new Color(0.6f, 0.56f, 0.62f);
         Image bg = refineBtn.GetComponent<Image>();

@@ -150,6 +150,9 @@ public static class Notice
     // 큰 알림이 떠 있거나 기다리는 중 (재촉 알림처럼 급하지 않은 것은 이때 미룸)
     public static bool Busy => bigNow != null || bigQueue.Count > 0;
 
+    // 1.4.8~ 큰 알림 띠가 지금 화면 위 가운데에 떠 있음 (레벨업 리본이 그동안 비킴 — 위 가운데는 한 번에 하나)
+    public static bool BigShowing => bigNow != null && bigView != null && bigView.band != null && bigView.band.gameObject.activeInHierarchy;
+
     // 옛 알림판 (StageManager.ShowBanner) — 짧은 한 줄은 토스트, 나머지는 큰 알림
     public static void Legacy(string text, float seconds, bool keep)
     {

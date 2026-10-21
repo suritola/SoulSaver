@@ -477,7 +477,7 @@ public static class Contracts
             s.group.interactable = false;
 
             // 각인 고르기 창의 카드(아래끝 -270) · 안내 줄(-330) 아래: 화면 아래 띠에 한 줄로
-            const float W = 420f, H = 104f, Gap = 18f;
+            const float W = 440f, H = 104f, Gap = 18f;      // 1.4.8~ 꼬리표 · 조건 글자 16 · 17 → 20 (UI 정리 기획 최소 글자) · 폭 420 → 440
             float x0 = -(list.Count - 1) * (W + Gap) * 0.5f;
             TMP_Text head = UIKit.Text(go.transform, "contract.run.title", 24f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -398f), new Vector2(800f, 32f));
             head.raycastTarget = false;
@@ -490,11 +490,11 @@ public static class Contracts
                 bg.type = Image.Type.Sliced;
                 bg.color = new Color(0.1f, 0.08f, 0.14f, 0.94f);
                 bg.raycastTarget = false;
-                TMP_Text tag = UIKit.Text(card, "", 16f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 32f), new Vector2(W - 24f, 24f), TextAlignmentOptions.Left);
+                TMP_Text tag = UIKit.Text(card, "", 20f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 32f), new Vector2(W - 24f, 24f), TextAlignmentOptions.Left);
                 tag.text = KindTag(a.def) + (a.carried ? "  ·  <color=#C9A2FF>" + Loc.T("contract.carried.tag") + "</color>" : "");
                 TMP_Text name = UIKit.Text(card, "", 22f, new Color(0.95f, 0.92f, 0.86f), new Vector2(0f, 4f), new Vector2(W - 24f, 30f), TextAlignmentOptions.Left);
                 name.text = a.def.Name;
-                TMP_Text cond = UIKit.Text(card, "", 17f, new Color(0.72f, 0.68f, 0.62f), new Vector2(0f, -30f), new Vector2(W - 24f, 30f), TextAlignmentOptions.Left);
+                TMP_Text cond = UIKit.Text(card, "", 20f, new Color(0.72f, 0.68f, 0.62f), new Vector2(0f, -30f), new Vector2(W - 24f, 30f), TextAlignmentOptions.Left);
                 cond.text = a.def.Cond;
                 foreach (TMP_Text t in new[] { tag, name, cond }) { t.enableWordWrapping = false; t.raycastTarget = false; UIKit.Forget(t); }
             }

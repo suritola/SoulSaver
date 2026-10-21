@@ -276,6 +276,9 @@ public partial class LevelShop : MonoBehaviour
     void UpdatePendingBadge()
     {
         bool show = PendingLevels > 0 && !IsOpen && !ESCmenu.IsOpen && !StoryDirector.Playing;     // 1.1~ 보스 등장 연출 중엔 숨김 (대사 뒤에서 번쩍였음)
+        // 1.4.8~ 영혼 트리 · 특수 트리 · 무기 진화 · 상점 창이 열린 동안도 숨김 — 막 뒤로 띠가 비쳤음 (그 창에선 카드를 열 수 없고, 닫으면 바로 다시 보임)
+        StageManager smNow = StageManager.Instance;
+        show &= !SoulTreeUI.IsOpen && !(smNow != null && smNow.IsMenuOpen) && !ShopOpen;
         if (!show)
         {
             if (pendingBadge != null && pendingBadge.activeSelf) pendingBadge.SetActive(false);
@@ -315,7 +318,7 @@ public partial class LevelShop : MonoBehaviour
             if (UIKit.Font != null) pendingText.font = UIKit.Font;
             if (UIKit.FontMaterial != null) pendingText.fontSharedMaterial = UIKit.FontMaterial;
             pendingText.enableAutoSizing = true;
-            pendingText.fontSizeMin = 14f;
+            pendingText.fontSizeMin = 20f;          // 1.4.8~ 최소 글자 20 (UI 정리 기획 · 예전 14)
             pendingText.fontSizeMax = 30f;
             pendingText.alignment = TextAlignmentOptions.Center;
             pendingText.raycastTarget = false;
@@ -484,7 +487,7 @@ public partial class LevelShop : MonoBehaviour
             }
         }
     }
-    private bool showLv;
+    private bool showLv = false;            // 1.4.8~ 게임 코드는 ribbonUntil 로만 띄움 · 화면 확인 도구(tools/uicheck)가 억지로 켤 때 씀
     public GameObject LvUpPanel;
     // 「레벨업!」 표시를 작게 줄여 알림판 아래에 (시야를 가리지 않게)
     void CompactLevelUp()
@@ -509,8 +512,12 @@ public partial class LevelShop : MonoBehaviour
         r.anchoredPosition = new Vector2(0f, 380f);
     }
 
-    // 「레벨업!」 표시를 띄우고 있는 연출 수 (겹쳐도 마지막 연출이 끝날 때 꺼짐)
-    int levelUpShowing;
+    // 1.4.8~ 「레벨업!」 리본은 레벨이 오른 순간 1.2초 한 번만 (UI 정리 기획 2026-10-21)
+    //   예전: 레벨업마다 1초씩 · 한꺼번에 여러 레벨이 오르면 0.35초 간격으로 이어져 길게 떠 있었고, 머리 위 글 · 아래 띠와 같은 안내가 겹쳤음
+    //   → 연달아 오른 레벨업(앞 레벨업과 1.5초 안)은 리본을 다시 띄우지 않음 · 쌓인 수는 아래 띠(배지)가 늘 보여 줌
+    //   시각으로만 정해 코루틴이 끊겨도 리본이 남지 않음 · 실제 시간이라 카드 · 일시정지 창이 열려도 그 뒤에 멈춰 남지 않음
+    const float RibbonTime = 1.2f, RibbonBurst = 1.5f;
+    float ribbonUntil = -1f, lastLevelUpAt = -9f;
     // 아직 연출하지 않은 레벨업 (한 번에 여러 레벨이 오르면 차례로)
     int levelUpQueued;
 
@@ -568,12 +575,11 @@ public partial class LevelShop : MonoBehaviour
     {
         if (delay > 0f) yield return new WaitForSeconds(delay);
         if (p != null) Juice.LevelUp(p.transform.position);
-        levelUpShowing++;
-        showLv = true;
+        float now = Time.unscaledTime;
+        if (now - lastLevelUpAt > RibbonBurst) ribbonUntil = now + RibbonTime;
+        lastLevelUpAt = now;
         yield return new WaitForSeconds(1f);
-        levelUpShowing--;
         levelUpQueued = Mathf.Max(0, levelUpQueued - 1);
-        showLv = levelUpShowing > 0;
         AddPending();                       // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
@@ -588,9 +594,12 @@ public partial class LevelShop : MonoBehaviour
     }
 
     // 상점이 열려 있는 동안은 레벨업 표시가 화면을 가리지 않게
+    // 1.4.8~ 위 가운데는 한 번에 하나: 큰 알림(Notice.Big) 띠가 떠 있으면 리본은 띄우지 않음 (리본이 띠 글자를 가려 양옆만 잘려 보였음)
+    //   창(카드 · 트리 · 일시정지)이 열린 동안도 숨김 · showLv 는 화면 확인 도구(tools/uicheck)가 억지로 켤 때만
     void LateUpdate()
     {
-        if (LvUpPanel != null && LvUpPanel.activeSelf != (showLv && !ShopOpen)) LvUpPanel.SetActive(showLv && !ShopOpen);
+        bool on = (showLv || Time.unscaledTime < ribbonUntil) && !ShopOpen && !Notice.BigShowing && !Notice.Held;
+        if (LvUpPanel != null && LvUpPanel.activeSelf != on) LvUpPanel.SetActive(on);
     }
     public bool IsOpen => LvshopPanel != null && LvshopPanel.activeSelf;
 
