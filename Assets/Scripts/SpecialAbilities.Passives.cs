@@ -164,7 +164,12 @@ public partial class SpecialAbilities
 
     public DamageZone SpawnZone(Vector3 pos, float radius, float duration, float tickDamage, Color color)
     {
-        GameObject z = MakeSprite("DamageZone", glowSprite, pos, radius * 2f / 8f, color, "Background", 7);
+        // 1.5.1~ 흐린 빛(가장자리가 번져 판정 원이 안 보이던 것) → 도트 바닥 원판 (체크 디더 + 테두리, 가장자리 = 판정 원 · 지름 그대로)
+        //   원판이 빛보다 고르게 진해 알파를 조금 낮춤. 그림이 없으면 예전 빛 그대로
+        Sprite floor = PixelLine.Floor;
+        GameObject z = floor != null
+            ? MakeSprite("DamageZone", floor, pos, PixelLine.DiscScale(floor, radius * 2f), new Color(color.r, color.g, color.b, color.a * 0.8f), "Background", 7)
+            : MakeSprite("DamageZone", glowSprite, pos, radius * 2f / 8f, color, "Background", 7);
         DamageZone dz = z.AddComponent<DamageZone>();
         dz.radius = radius;
         dz.duration = duration;
@@ -219,7 +224,7 @@ public partial class SpecialAbilities
     {
         GameObject go = new GameObject("Line");
         LineRenderer lr = go.AddComponent<LineRenderer>();
-        lr.material = lineMaterial;
+        PixelLine.Apply(lr);        // 1.5.1~ 도트 획 (색 부분 두께는 그대로)
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = 0.25f;
         lr.positionCount = 2;

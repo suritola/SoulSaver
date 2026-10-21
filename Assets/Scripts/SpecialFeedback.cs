@@ -12,11 +12,9 @@ public class SpecialFeedback : MonoBehaviour
     readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
     AudioSource oneShot;
     AudioSource loop;
-    // 1.2.4: 실선 재질 · 점선 텍스처 · 점선 틀은 판마다 새로 만들던 것 → 한 번만 만들어 같이 씀 (장면이 바뀌어 지워졌으면 다시 만듦)
-    static Material lineMaterial;
-    static Material dashMaterialTemplate;
-    static Texture2D dashTexture;
-    readonly List<Material> dashMaterials = new List<Material>();       // 점선 선마다 하나 (선마다 반복 배율이 달라서) · 이 장면이 끝나면 지움
+    // 1.5.1~ 실선 · 점선 재질은 PixelLine 의 도트 획 · 도트 점선 획을 모든 선이 같이 씀
+    //   (예전 점선은 선마다 재질을 복사해 반복 배율을 바꿨지만 Sprites/Default 가 배율을 무시해 고리 · 부채꼴이 앞 5/8 만 그려졌음
+    //    → 선 마디마다 점선 한 칸(RepeatPerSegment)이라 복사 없이 한 재질)
     TMP_FontAsset font;
     Material fontMaterial;
     Coroutine shake;
@@ -33,24 +31,6 @@ public class SpecialFeedback : MonoBehaviour
         loop = gameObject.AddComponent<AudioSource>();
         loop.playOnAwake = false;
         loop.loop = true;
-
-        // 장면 전환의 사용 안 하는 에셋 정리(UnloadUnusedAssets)가 정적 캐시를 지우지 않게 (이 Awake 뒤에 지워지면 선이 분홍색이 됨)
-        if (lineMaterial == null) lineMaterial = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontUnloadUnusedAsset };
-
-        // 점선: 절반은 채우고 절반은 비운 텍스처를 선 길이만큼 반복
-        if (dashTexture == null)
-        {
-            Texture2D dash = new Texture2D(8, 1, TextureFormat.RGBA32, false);
-            for (int x = 0; x < 8; x++) dash.SetPixel(x, 0, x < 5 ? Color.white : Color.clear);
-            dash.wrapMode = TextureWrapMode.Repeat;
-            dash.filterMode = FilterMode.Point;
-            dash.Apply();
-            dash.hideFlags = HideFlags.DontUnloadUnusedAsset;
-            dashTexture = dash;
-            if (dashMaterialTemplate != null) Destroy(dashMaterialTemplate);
-            dashMaterialTemplate = null;
-        }
-        if (dashMaterialTemplate == null) dashMaterialTemplate = new Material(lineMaterial) { mainTexture = dashTexture, hideFlags = HideFlags.DontUnloadUnusedAsset };
 
         BuildClips();
     }
@@ -538,14 +518,7 @@ public class SpecialFeedback : MonoBehaviour
     {
         GameObject go = new GameObject(name);
         LineRenderer lr = go.AddComponent<LineRenderer>();
-        Material m = lineMaterial;
-        if (dashed)
-        {
-            m = new Material(dashMaterialTemplate);
-            dashMaterials.Add(m);
-        }
-        lr.sharedMaterial = m;
-        lr.textureMode = LineTextureMode.Stretch;
+        PixelLine.Apply(lr, dashed);        // 1.5.1~ 도트 획 (점선은 도트 점선 획) · 색 부분 두께는 그대로
         lr.sortingLayerName = "Effect";
         lr.sortingOrder = order;
         lr.positionCount = 2;
@@ -554,22 +527,15 @@ public class SpecialFeedback : MonoBehaviour
         return lr;
     }
 
-    // 점선 한 칸의 길이 (월드 단위)
-    const float DashLength = 0.9f;
+    // 점선 한 칸(획 + 빈칸)의 길이 (월드 단위) · 1.5.1~ 선 마디 하나 = 한 칸이라 마디를 이 길이쯤으로 나눔
+    const float DashLength = 0.6f;
 
-    void SetDashScale(LineRenderer lr, float length)
-    {
-        // 1.2.4: lr.material 게터는 공유 재질을 넣은 선(실선 · 활 조준선)도 처음 부를 때 재질을 복제했음 → sharedMaterial
-        //   (점선 선은 NewLine 이 이미 선마다 따로 만든 재질이라 sharedMaterial 도 그 재질)
-        Material m = lr.sharedMaterial;
-        if (m != null && m.mainTexture != null) m.mainTextureScale = new Vector2(Mathf.Max(1f, length / DashLength), 1f);
-    }
+    static bool Dashed(LineRenderer lr) => lr.sharedMaterial == PixelLine.Dash;
 
     public void SetLine(LineRenderer lr, Vector3 a, Vector3 b, Color color, float width)
     {
         // 점선용 선은 도트 화살촉으로 그림 (Sprites/Default 셰이더가 텍스처 반복을 무시해 실선으로 보였음)
-        Material shared = lr.sharedMaterial;
-        if (shared != null && shared.mainTexture != null)
+        if (Dashed(lr))
         {
             lr.enabled = false;
             SetDots(lr, a, b, color, width);
@@ -582,12 +548,12 @@ public class SpecialFeedback : MonoBehaviour
         lr.SetPosition(1, b);
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
-        SetDashScale(lr, Vector3.Distance(a, b));
     }
 
     public void SetRing(LineRenderer lr, Vector3 center, float radius, Color color, float width)
     {
-        const int seg = 48;
+        // 실선은 예전처럼 48 마디, 점선은 둘레를 점선 한 칸 길이로 나눈 마디 (같은 원 · 마디 수만 다름)
+        int seg = Dashed(lr) ? Mathf.Clamp(Mathf.RoundToInt(2f * Mathf.PI * radius / DashLength), 12, 120) : 48;
         lr.enabled = true;
         if (lr.positionCount != seg + 1) lr.positionCount = seg + 1;
         Vector3[] buf = Hostile.PointBuffer(seg + 1);       // 1.2.4: 점마다 SetPosition → 한 번에 (같은 좌표)
@@ -599,26 +565,31 @@ public class SpecialFeedback : MonoBehaviour
         lr.SetPositions(buf);
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
-        SetDashScale(lr, 2f * Mathf.PI * radius);
     }
 
     public void SetCone(LineRenderer lr, Vector3 origin, Vector2 dir, float halfAngle, float range, Color color, float width)
     {
-        const int seg = 16;
+        // 실선: 예전처럼 중심 → 호 16 마디 → 중심. 점선: 양 옆 변 · 호를 점선 한 칸 길이로 나눔 (같은 부채꼴 · 마디 수만 다름)
+        bool dashed = Dashed(lr);
+        int side = dashed ? Mathf.Clamp(Mathf.CeilToInt(range / DashLength), 1, 40) : 1;
+        int seg = dashed ? Mathf.Clamp(Mathf.CeilToInt(range * halfAngle * 2f * Mathf.Deg2Rad / DashLength), 4, 80) : 16;
+        int n = side + seg + side + 1;
         lr.enabled = true;
-        if (lr.positionCount != seg + 3) lr.positionCount = seg + 3;
-        Vector3[] buf = Hostile.PointBuffer(seg + 3);       // 1.2.4: 점마다 SetPosition → 한 번에 (같은 좌표)
-        buf[0] = origin;
+        if (lr.positionCount != n) lr.positionCount = n;
+        Vector3[] buf = Hostile.PointBuffer(n);       // 1.2.4: 점마다 SetPosition → 한 번에 (같은 좌표)
+        Vector3 from = origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, -halfAngle) * dir) * range);
+        Vector3 to = origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, halfAngle) * dir) * range);
+        int p = 0;
+        for (int i = 0; i < side; i++) buf[p++] = Vector3.Lerp(origin, from, i / (float)side);
         for (int i = 0; i <= seg; i++)
         {
             float a = Mathf.Lerp(-halfAngle, halfAngle, i / (float)seg);
-            buf[i + 1] = origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, a) * dir) * range);
+            buf[p++] = origin + (Vector3)((Vector2)(Quaternion.Euler(0, 0, a) * dir) * range);
         }
-        buf[seg + 2] = origin;
+        for (int i = 1; i <= side; i++) buf[p++] = Vector3.Lerp(to, origin, i / (float)side);
         lr.SetPositions(buf);
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
-        SetDashScale(lr, range * 2f + range * halfAngle * Mathf.Deg2Rad * 2f);
     }
 
     public static void Hide(LineRenderer lr)
@@ -685,13 +656,6 @@ public class SpecialFeedback : MonoBehaviour
             // 끝으로 갈수록 살짝 옅게
             sr.color = new Color(color.r, color.g, color.b, color.a * Mathf.Lerp(1f, 0.55f, k));
         }
-    }
-
-    // 1.2.4: 이 장면에서 만든 점선 재질은 장면과 함께 지움 (Unity 는 재질을 자동으로 지우지 않음)
-    void OnDestroy()
-    {
-        foreach (Material m in dashMaterials) if (m != null) Destroy(m);
-        dashMaterials.Clear();
     }
 
     // ================================================================= floating text

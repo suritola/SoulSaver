@@ -878,18 +878,22 @@ public partial class BossSkills
             const int seg = 16;
             Vector3[] v = new Vector3[seg + 2];
             Color[] col = new Color[seg + 2];
+            Vector2[] uv = new Vector2[seg + 2];        // 1.5.1~ 가로 = 중심(0) → 끝(1) 반지름 방향 (fx_ind_cone 동심 띠 · 끝 테두리)
             int[] tri = new int[seg * 3];
             v[0] = Vector3.zero;
+            uv[0] = new Vector2(0f, 0.5f);
             for (int i = 0; i <= seg; i++)
             {
                 float a = Mathf.Lerp(-ConeHalf, ConeHalf, i / (float)seg) * Mathf.Deg2Rad;
                 v[i + 1] = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                uv[i + 1] = new Vector2(1f, i / (float)seg);
             }
             for (int i = 0; i < v.Length; i++) col[i] = Color.white;
             for (int i = 0; i < seg; i++) { tri[i * 3] = 0; tri[i * 3 + 1] = i + 2; tri[i * 3 + 2] = i + 1; }
             coneMesh = new Mesh { name = "OwnCone", hideFlags = HideFlags.DontUnloadUnusedAsset };
             coneMesh.vertices = v;
             coneMesh.colors = col;
+            coneMesh.uv = uv;
             coneMesh.triangles = tri;
             coneMesh.RecalculateBounds();
             return coneMesh;
@@ -901,7 +905,8 @@ public partial class BossSkills
     {
         get
         {
-            if (coneMat == null) coneMat = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontUnloadUnusedAsset };
+            // 1.5.1~ 단색 → 도트 부채꼴 (반지름 방향 동심 띠 + 끝 테두리 · 모양 · 크기는 같은 메시 그대로)
+            if (coneMat == null) coneMat = PixelLine.Cone;
             return coneMat;
         }
     }
