@@ -171,6 +171,7 @@ public static class SkillEvoCodexUI
         TMP_Text body = UIKit.Text(inner, "", 22f, Parch, new Vector2(0f, -58f), new Vector2(700f, 118f), TextAlignmentOptions.TopLeft);
         string pow = known ? LevelShop.EvoPowerLine(e, who) : "";       // 1.1.2~ 진화 강화 한 줄
         body.text = known ? Loc.T(e.desc) + (pow.Length > 0 ? "  <color=#FFD966>▲ " + pow + "</color>" : "") : "<color=#A89C86>" + Loc.T("아직 발견하지 못한 진화입니다. 위의 재료 카드를 한 판에서 모두 최대 단계로 올리면 무엇이 되는지 알 수 있습니다.") + "</color>";
+        TermLinks.Apply(body);              // 1.4.8~ 용어에 마우스 → 정의
         body.enableWordWrapping = true;
         body.enableAutoSizing = true;
         body.fontSizeMin = 14f;

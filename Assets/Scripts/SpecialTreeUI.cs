@@ -303,6 +303,7 @@ public class SpecialTreeUI : MonoBehaviour
         detailName = Text(r, "", 34f, Gold, new Vector2(-470f, 20f), new Vector2(300f, 44f), TextAlignmentOptions.Left);
         detailKind = Text(r, "", 22f, new Color(1f, 0.72f, 0.55f), new Vector2(-470f, -24f), new Vector2(300f, 30f), TextAlignmentOptions.Left);
         detailText = Text(r, "", 24f, Parch, new Vector2(20f, 0f), new Vector2(660f, 100f), TextAlignmentOptions.Left);
+        TermLinks.Apply(detailText);        // 1.4.8~ 용어에 마우스 → 정의 (글이 바뀔 때마다 다시 감쌈)
 
         GameObject btn = new GameObject("Confirm", typeof(RectTransform), typeof(Image), typeof(Button));
         RectTransform brt = btn.GetComponent<RectTransform>();

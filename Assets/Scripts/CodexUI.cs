@@ -1025,6 +1025,7 @@ public static class CodexUI
         b.fontSizeMin = 14f;
         b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표 (기본 높이 카드 · 검색 결과도)
         b.text = body;
+        TermLinks.Apply(b);                 // 1.4.8~ 용어에 마우스 → 정의
         if (fresh) Badge(card, new Vector2(-40f, -18f));        // 1.2~ 새로 얻었거나 이번 업데이트 항목
     }
 

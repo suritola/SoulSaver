@@ -97,16 +97,35 @@ public class TooltipUI : MonoBehaviour
     public static void Show(string title, string body)
     {
         // 씬에 적힌 툴팁 문장도 현재 언어로
-        if (Instance != null) Instance.ShowInternal(Loc.T(title), Loc.T(body));
+        // 1.4.8~ 본문에 나온 용어(Glossary)는 아래에 작게 「· 용어: 정의」 (이 창은 커서를 따라다녀 링크에 다시 올릴 수 없음)
+        if (Instance == null) return;
+        string t = Loc.T(title);
+        Instance.ShowInternal(t, Glossary.WithNotes(t, Loc.T(body)));
     }
+
+    // 1.4.8~ 번역 · 용어 덧붙임 없이 그대로 (TermLinks 의 용어 정의)
+    public static void ShowRaw(string title, string body)
+    {
+        if (Instance != null) Instance.ShowInternal(title, body);
+    }
+
+    // 1.4.8~ 띄울 때마다 +1 — 내가 띄운 툴팁만 닫을 때 (HideIf)
+    public static int Version { get; private set; }
 
     public static void Hide()
     {
         if (Instance != null && Instance.panel != null) Instance.panel.gameObject.SetActive(false);
     }
 
+    // 그 뒤로 다른 코드가 새 툴팁을 띄우지 않았을 때만 닫음
+    public static void HideIf(int version)
+    {
+        if (version == Version) Hide();
+    }
+
     void ShowInternal(string title, string body)
     {
+        Version++;
         // 1.1.2~ 진화 스킬처럼 긴 설명: 화면 높이의 70%를 넘으면 폭을 넓히고 (최대 1.7배 · 화면 폭 45%), 그래도 넘치면 통째로 줄임 (Follow 가 화면 안에 둠)
         float w = width;
         float limitH = canvasRect.rect.height * 0.7f;
