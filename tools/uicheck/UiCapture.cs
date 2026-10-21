@@ -152,6 +152,26 @@ public class UiCapture
 
     static IEnumerator CaptureFx()
     {
+        if (Environment.GetEnvironmentVariable("CAPTURE_GUNNER") == "1")
+        {
+            // 거너 일제 사격 튕김 재현: 게이지 채우고 우클릭 누름 → 0.5초 · 2초 유지 → 뗌
+            yield return Load("Gunner", 0);
+            yield return CloseCards(90);
+            Time.timeScale = 1f;
+            Time.captureFramerate = 60;
+            object g = Find("SkillGauge");
+            if (g != null) Call(g, "AddSkillPoint", 100000f);
+            Debug.Log("[UICAP-G] 누름");
+            In("AutoUlt", true);
+            In("UltDownFrame", Time.frameCount + 1);
+            for (int i = 0; i < 120; i++) { yield return null; if (i % 20 == 0) Debug.Log("[UICAP-G] 누르는 중 " + i); }
+            yield return Shot("30_gunner_volley");
+            In("AutoUlt", false);
+            In("UltUpFrame", Time.frameCount + 1);
+            for (int i = 0; i < 120; i++) { yield return null; if (i % 20 == 0) Debug.Log("[UICAP-G] 뗀 뒤 " + i); }
+            Time.captureFramerate = 0;
+            yield break;
+        }
         yield return Load("Swordsman", 0);
         yield return CloseCards(90);
         Time.timeScale = 1f;
