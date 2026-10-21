@@ -158,11 +158,16 @@ public class ChoiceUI : MonoBehaviour
                 ii.preserveAspect = true;
                 ii.raycastTarget = false;
             }
-            UIKit.Text(face, o.name, 38f, o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
+            // 1.4.8~ 이름은 한 줄 (길면 두 줄로 꺾여 그림을 덮지 않고 줄어듦) · 설명 글씨 26 → 하한 20 (예전 UIKit.Text 하한 12) · 줄마다 문단 간격 (레벨업 카드 TidyCards 와 같은 규칙)
+            TMP_Text nameText = UIKit.Text(face, o.name, 38f, o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
+            nameText.enableWordWrapping = false;
+            nameText.fontSizeMin = 24f;
             // 1.1.2~ 단계 칸이 있으면 이름 바로 아래에 두고 설명을 그만큼 내림 (설명은 UIKit.Text 의 자동 크기라 칸 안에서 줄어듦)
             bool pips = o.pipMax > 0;
             if (pips) LevelPips.Create(face, new Vector2(0f, -32f), new Vector2(w - 120f, 16f)).Set(o.pipLevel, o.pipMax, o.pipAdd);
-            UIKit.Text(face, o.desc, 26f, Parch, new Vector2(0f, pips ? -118f : -105f), new Vector2(w - 50f, pips ? 134f : 160f));
+            TMP_Text descText = UIKit.Text(face, o.desc, LevelShop.CardBodyMax, Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
+            descText.fontSizeMin = LevelShop.CardBodyMin;
+            descText.paragraphSpacing = 10f;
             TMP_Text key = UIKit.Text(face, "", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
             key.text = "[" + (i + 1) + "]";
         }
@@ -186,7 +191,7 @@ public class ChoiceUI : MonoBehaviour
         CanvasGroup group = go.GetComponent<CanvasGroup>();
         if (group == null) group = go.AddComponent<CanvasGroup>();
         group.interactable = false;
-        group.alpha = 0.6f;
+        group.alpha = LevelShop.LockAlpha;     // 1.4.8~ 0.6 → 0.85 (뒤 화면이 카드 글 위로 비치지 않게)
         float openedAt = Time.unscaledTime;
         float introEnd = CardIntro.Play(ui.cards);        // 1.4.1~ 카드 등장 애니메이션 — 다 나오기 전엔 고를 수 없음 (연달아 뜨는 창에서 잘못 누르기 방지)
 
@@ -195,7 +200,7 @@ public class ChoiceUI : MonoBehaviour
             if (!ui.ready)
             {
                 float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
-                group.alpha = Mathf.Lerp(0.6f, 1f, t);
+                group.alpha = Mathf.Lerp(LevelShop.LockAlpha, 1f, t);
                 if (t >= 1f && Time.unscaledTime >= introEnd && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
                 {
                     ui.ready = true;

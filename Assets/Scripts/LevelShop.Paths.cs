@@ -384,16 +384,18 @@ public partial class LevelShop
 
     static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 
-    // 입문 카드: 갈래 이름 · 무엇이 바뀌나 · 대가 · 강점 / 약점 (status: HUD 칸 설명이면 지금 갈래 진행까지)
+    // 입문 카드: 갈래 라벨 한 줄 / 무엇이 바뀌나 / 대가 한 줄 / 강점 · 약점 한 줄 (status: HUD 칸 설명이면 성격 한 줄 · 지금 갈래 진행까지)
+    // 1.4.8~ 칸마다 줄을 나눔 (카드 본문 TMP 의 문단 간격 · TidyCards) — 예전엔 성격 한 줄이 라벨 옆에 붙어 두 줄로 꺾이고, 글자를 85 ~ 90%로 줄여 20 아래로 작아졌음
+    //   성격 한 줄(tagline)은 카드에선 빼고 HUD 칸 설명에만 (강점과 같은 말이 많았음)
     string SeedText(CharacterId who, int path, bool status)
     {
         PathDef d = Paths.DefOf(who, path);
         if (d == null) return "";
         string s = "<color=" + Hex(d.color) + ">" + Loc.T("갈래") + " · " + Loc.T(d.name) + "</color>"
-                 + (string.IsNullOrEmpty(d.tagline) ? "" : "  <size=85%><color=#A89C86>" + Loc.T(d.tagline) + "</color></size>")
+                 + (status && !string.IsNullOrEmpty(d.tagline) ? "  <color=#A89C86>" + Loc.T(d.tagline) + "</color>" : "")
                  + "\n" + Loc.T(d.seedDesc)
                  + "\n<color=#FF9C86>" + Loc.T("대가") + "</color>  " + Loc.T(d.cost)
-                 + "\n<size=90%><color=#9FE89F>" + Loc.T("강점") + "</color> " + Loc.T(d.strong) + "   <color=#FF9F9F>" + Loc.T("약점") + "</color> " + Loc.T(d.weak) + "</size>";
+                 + "\n<color=#9FE89F>" + Loc.T("강점") + "</color> " + Loc.T(d.strong) + "   <color=#FF9F9F>" + Loc.T("약점") + "</color> " + Loc.T(d.weak);
         if (status && Paths.Has(path)) s += "\n" + PathStatus(path);
         else if (!status && Paths.A >= 0) s += CrossLine(path);
         return s;
@@ -408,7 +410,7 @@ public partial class LevelShop
         foreach (CrossDef x in h.Crosses)
             if ((x.a == Paths.A && x.b == path) || (x.b == Paths.A && x.a == path))
                 names.Add(x.evo != null ? EvoNameOf(x.evo) : Loc.T(x.name));
-        return names.Count > 0 ? "\n<size=90%><color=#C9A0FF>" + Loc.T("교차") + "</color> " + string.Join(" · ", names) + "</size>" : "";
+        return names.Count > 0 ? "\n<color=#C9A0FF>" + Loc.T("교차") + "</color> " + string.Join(" · ", names) : "";      // 1.4.8~ 90% 크기를 뺌 (카드 글 하한 20)
     }
 
     // 진화 키 → 이름 (카드 글은 창이 열린 동안 매 프레임 만들므로 목록을 새로 만들지 않고 표에서 바로)
@@ -547,43 +549,29 @@ public partial class LevelShop
     static string StripTags(string s) => System.Text.RegularExpressions.Regex.Replace(s, "<[^>]+>", "").Trim();
 
     // ================================================================= 창 머리말 (입문 · 갈림길) · 외길 카드 금빛
-    TextMeshProUGUI pathHeader;
-    bool PathHeaderShown => pathHeader != null && pathHeader.gameObject.activeSelf;
+    // 1.4.8~ 예전엔 리본(「능력을 하나 선택하세요」) 위에 머리말 줄을 따로 띄워 같은 안내가 두 줄이었음 → 리본 글 한 줄로 바꿔 씀
+    //   갈림길의 「지금 갈래 ○○」는 외길 카드 글(「○○」 하나만 더 깊게)에 이미 있어 뺌
+    TMP_Text ribbonText;
 
     void ShowPathHeader()
     {
-        bool show = pathWindow != PathWindow.None;
-        if (pathHeader == null)
+        if (ribbonText == null)
         {
-            if (!show || LvshopPanel == null) return;
-            UIKit.EnsureStyle();
-            // 진화 첫 안내 줄(448)과 같은 자리 — 입문 · 갈림길 창에는 진화 띠가 없어 안내가 뜨지 않음 · 이어 고르기 줄은 위로 비킴 (LevelShop.Chain)
-            pathHeader = Label((RectTransform)LvshopPanel.transform, new Vector2(0f, 448f), new Vector2(1500f, 48f), 32f);
-            pathHeader.name = "PathHeader";
-            pathHeader.enableAutoSizing = true;
-            pathHeader.fontSizeMin = 18f;
-            pathHeader.fontSizeMax = 32f;
-            pathHeader.fontStyle = FontStyles.Bold;
+            Transform t = LvshopPanel != null ? LvshopPanel.transform.Find("Title/Title") : null;
+            if (t == null) return;
+            ribbonText = t.GetComponent<TMP_Text>();
+            if (ribbonText == null) return;
+            ribbonText.enableWordWrapping = false;      // 번역이 길어도 한 줄 (자동 크기로 줄어듦)
         }
-        pathHeader.gameObject.SetActive(show);
-        if (!show) return;
-        if (pathWindow == PathWindow.Seed)
-        {
-            pathHeader.color = new Color(1f, 0.86f, 0.4f);
-            pathHeader.text = Loc.T("입문") + "  <size=80%><color=#E6DCC4>" + Loc.T("이번 판의 갈래를 고르세요") + "</color></size>";
-        }
-        else
-        {
-            PathDef a = Paths.Def(Paths.A);
-            pathHeader.color = new Color(0.79f, 0.63f, 1f);
-            pathHeader.text = Loc.T("갈림길") + "  <size=80%><color=#E6DCC4>" + Loc.T("두 번째 갈래 또는 외길") + (a != null ? "  ·  " + Loc.T("지금 갈래") + " " + Loc.T(a.name) : "") + "</color></size>";
-        }
+        ribbonText.text = pathWindow == PathWindow.Seed ? "<color=#FFF1C2>" + Loc.T("입문") + "</color>  ·  " + Loc.T("이번 판의 갈래를 고르세요")
+                        : pathWindow == PathWindow.Crossroads ? "<color=#FFF1C2>" + Loc.T("갈림길") + "</color>  ·  " + Loc.T("두 번째 갈래 또는 외길")
+                        : Loc.T("능력을 하나 선택하세요");
     }
 
     void HidePathWindow()
     {
         pathWindow = PathWindow.None;
-        if (pathHeader != null) pathHeader.gameObject.SetActive(false);
+        ShowPathHeader();           // 리본 글을 원래 「능력을 하나 선택하세요」로
     }
 
     // 외길 카드 자리 (갈림길 창의 세 번째 칸 · 고르지 않아도 옅은 금빛)
