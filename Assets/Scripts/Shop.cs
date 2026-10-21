@@ -341,7 +341,7 @@ public partial class Shop : MonoBehaviour
 
             if (coind != null) coins = coind.coins;
 
-            if (shopPanel != null) shopPanel.SetActive(true);
+            if (shopPanel != null) { shopPanel.SetActive(true); shopPanel.transform.SetAsLastSibling(); }      // 1.4.8~ 오른쪽 위 포인트 · [ESC] 안내 줄이 창 위로 겹쳐 그려지지 않게 맨 위로
 
             UpdateShopText();
             RefreshCloseLabel();

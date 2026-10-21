@@ -2461,14 +2461,17 @@ public class EscBackdrop : MonoBehaviour
         StartCoroutine(Grab());
     }
 
+    float hiddenUntil = -1f;
     System.Collections.IEnumerator Grab()
     {
         if (group == null) group = GetComponent<CanvasGroup>();
         if (group == null) group = gameObject.AddComponent<CanvasGroup>();
         group.alpha = 0f;                                   // 이 프레임 화면에 메뉴가 찍히지 않게
+        hiddenUntil = Time.unscaledTime + 0.25f;            // 안전장치: 찍기가 끝나지 않으면(화면 없는 실행 · 오류) 0.25초 뒤 Update 가 메뉴를 다시 보이게
         yield return new WaitForEndOfFrame();
-        Texture2D shot = ScreenCapture.CaptureScreenshotAsTexture();
-        group.alpha = 1f;
+        Texture2D shot = null;
+        try { shot = ScreenCapture.CaptureScreenshotAsTexture(); }
+        finally { group.alpha = 1f; hiddenUntil = -1f; }
         if (shot == null) yield break;
         int w = Mathf.Max(16, shot.width / 8), h = Mathf.Max(9, shot.height / 8);
         if (small == null || small.width != w || small.height != h)
@@ -2485,9 +2488,15 @@ public class EscBackdrop : MonoBehaviour
         if (image != null) { image.texture = small; image.enabled = true; }
     }
 
+    void Update()
+    {
+        if (hiddenUntil > 0f && Time.unscaledTime > hiddenUntil && group != null) { group.alpha = 1f; hiddenUntil = -1f; }
+    }
+
     void OnDisable()
     {
         StopAllCoroutines();
+        hiddenUntil = -1f;
         if (group != null) group.alpha = 1f;
         if (image != null) image.enabled = false;
     }
