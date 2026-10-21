@@ -58,9 +58,9 @@ public static partial class LocTable
         K("왕 {0}/{1}", "Kings {0}/{1}", "王 {0}/{1}", "王者 {0}/{1}");
         K("최종 보스의 체력 구간을 넘길 때마다 영혼 조각을 얻습니다.", "Each time a final boss passes a health threshold, you gain Soul Shards.",
           "最終ボスの体力の区切りを越えるたびに、魂のかけらを得ます。", "最终首领的生命每越过一个阶段，你都会获得灵魂碎片。");
-        K("무한 모드는 레벨 25부터 레벨업에 드는 경험치가 점점 늘어, 레벨 35부터는 4.5배가 됩니다. 최후의 시간 동안에도 계속 자랍니다.",
-          "In Endless, the EXP needed to level up rises from level 25 and reaches 4.5× from level 35. You keep growing through the Final Hour.",
-          "エンドレスではレベル25からレベルアップに必要な経験値が少しずつ増え、レベル35からは4.5倍になります。最後の時の間も成長し続けます。",
-          "在无尽模式中，从25级起升级所需经验逐渐增加，35级起变为4.5倍。在最后时刻里你也会持续成长。");
+        C("무한 모드는 레벨 25부터 레벨업에 드는 경험치가 점점 늘어, 레벨 35부터는 4.5배가 됩니다. 최후의 시간 동안에도 계속 자랍니다.", "무한 모드는 레벨 25부터 레벨업에 드는 경험치가 늘어, 레벨 35부터 4.5배가 됩니다. 최후의 시간에도 계속 자랍니다.",
+          "In Endless, the EXP per level rises from level 25 and reaches 4.5× at level 35. You keep growing in the Final Hour.",
+          "エンドレスではレベル25から必要経験値が増え、レベル35から4.5倍になります。最後の時も成長し続けます。",
+          "无尽模式从25级起升级所需经验增加，35级起为4.5倍。最后时刻里也会持续成长。");
     }
 }

@@ -43,10 +43,10 @@ public static partial class LocTable
         A("지도 접기 뒤 접힌 선에 자국이 남아 닿는 적을 0.3초마다 벱니다. (공격력 40%)", "After Fold the Map, the crease remains and cuts enemies on it every 0.3s. (40% attack)", "地図折りの後、折り目が残り触れた敵を0.3秒ごとに斬ります。（攻撃力40%）", "折叠地图后留下折痕，每0.3秒斩击其上的敌人。（攻击力40%）");
         A("접힌 자국 지속", "Crease duration", "折り目の持続", "折痕持续");
         A("측량 표식", "Survey Mark", "測量標識", "测量标记");
-        A("획에 맞은 적에게 5초 동안 표식을 남깁니다. 표식이 붙은 적은 닫힌 도형 안에서 피해를 더 받습니다.", "Strokes mark enemies for 5s. Marked enemies take more damage inside closed shapes.", "線に当たった敵に5秒間標識を残します。標識の付いた敵は閉じた図形の中で多くダメージを受けます。", "被笔画击中的敌人留下5秒标记。被标记的敌人在闭合图形内受到更多伤害。");
+        K("획에 맞은 적에게 5초 동안 표식을 남깁니다. 표식이 붙은 적은 닫힌 도형 안에서 피해를 더 받습니다.", "획에 맞은 적에게 5초 동안 표식을 남겨 도형 피해를 더 받게 합니다.", "Strokes mark enemies for 5s; marked enemies take more shape damage.", "線に当たった敵に5秒間標識を残し、図形ダメージを多く受けさせます。", "笔画击中的敌人留下5秒标记，使其受到更多图形伤害。");
         A("도형 피해", "Shape damage", "図形ダメージ", "图形伤害");
         A("끊기지 않는 선", "Unbroken Line", "途切れない線", "不断之线");
-        A("도형이 커지고(단계마다 +15%), 도형을 닫을 때마다 필살기 게이지가 찹니다.", "Shapes grow larger (+15% per rank), and closing a shape fills your Ultimate gauge.", "図形が大きくなり（段階ごとに+15%）、図形を閉じるたびに必殺技ゲージがたまります。", "图形变大（每级+15%），每次闭合图形都会充能必杀技。");
+        K("도형이 커지고(단계마다 +15%), 도형을 닫을 때마다 필살기 게이지가 찹니다.", "도형이 커지고(단계마다 +15%), 닫을 때마다 필살기 게이지가 찹니다.", "Shapes grow (+15% per rank), and closing one fills your Ultimate gauge.", "図形が大きくなり（段階ごとに+15%）、閉じるたびに必殺技ゲージがたまります。", "图形变大（每级+15%），每次闭合都会充能必杀技槽。");
         A("게이지", "Gauge", "ゲージ", "充能");
 
         // ---------------- 고유 스킬
@@ -56,9 +56,9 @@ public static partial class LocTable
         A("도형을 닫으면 둘레에서 고리 파동이 한 번 더 퍼집니다.", "Closing a shape sends one more ring wave out from its edge.", "図形を閉じると周りから輪の波動がもう一度広がります。", "闭合图形时，从边缘再扩散一圈环形波动。");
         A("파동 피해", "Wave damage", "波動ダメージ", "波动伤害");
         A("축척", "Scale", "縮尺", "比例尺");
-        A("획이 길수록 피해가 늘어나고, 단계마다 획 사거리가 15% 늘어납니다. (사거리 끝까지 그으면 최대)", "Longer strokes deal more damage, and each level extends stroke range by 15%. (Max at full range)", "線が長いほどダメージが増え、段階ごとに線の射程が15%伸びます。（射程いっぱいで最大）", "笔画越长伤害越高，且每级笔画射程增加15%。（画满射程时最大）");
+        K("획이 길수록 피해가 늘어나고, 단계마다 획 사거리가 15% 늘어납니다. (사거리 끝까지 그으면 최대)", "길게 그을수록 피해가 늘고(끝까지 그으면 최대), 단계마다 획 사거리가 15% 늘어납니다.", "Longer strokes hit harder (max at full range), and each rank adds 15% stroke range.", "長く引くほどダメージが増え（射程いっぱいで最大）、段階ごとに線の射程が15%伸びます。", "笔画越长伤害越高（画满射程时最大），每级笔画射程增加15%。");
         A("북극성", "North Star", "北極星", "北极星");
-        A("지도 접기를 쓰면 접힌 선 가운데에 별이 떠 4초 동안 가까운 적에게 별빛을 쏩니다. (공격력 50%)", "Fold the Map raises a star over the crease that shoots starlight at nearby enemies for 4s. (50% attack)", "地図折りを使うと折り目の中央に星が浮かび、4秒間近くの敵に星の光を撃ちます。（攻撃力50%）", "使用折叠地图时，折线中央升起一颗星，4秒内向附近敌人射出星光。（攻击力50%）");
+        K("지도 접기를 쓰면 접힌 선 가운데에 별이 떠 4초 동안 가까운 적에게 별빛을 쏩니다. (공격력 50%)", "지도 접기 뒤 접힌 선 위에 별이 떠 4초 동안 가까운 적을 쏩니다. (공격력 50%)", "After Fold the Map, a star rises over the crease and shoots nearby enemies for 4s. (50% attack)", "地図折りの後、折り目の上に星が浮かび、4秒間近くの敵を撃ちます。（攻撃力50%）", "折叠地图后，折线上升起一颗星，4秒内射击附近敌人。（攻击力50%）");
         A("쏘는 간격", "Fire interval", "発射間隔", "发射间隔");
         A("여백", "Margin", "余白", "留白");
         A("3초 동안 획을 긋지 않으면 다음 획이 두 배 굵고 더 아픕니다.", "If you don't draw for 3s, your next stroke is twice as thick and hits harder.", "3秒間線を引かないと、次の線が2倍太く強くなります。", "3秒内不画线，下一笔会变为两倍粗且更痛。");
@@ -69,7 +69,7 @@ public static partial class LocTable
         A("적을 쓰러뜨리면 그 자리 둘레의 적 투사체를 지웁니다.", "Defeating an enemy erases enemy projectiles around it.", "敵を倒すとその周りの敵の投射物を消します。", "击败敌人时擦除其周围的敌方投射物。");
         A("지우는 범위", "Erase radius", "消す範囲", "擦除范围");
         A("보물 지도", "Treasure Map", "宝の地図", "藏宝图");
-        A("도형을 닫은 자리에 3초 동안 보물 표시가 남아, 그 안에서 쓰러진 적이 확률로 코인 3개를 줍니다.", "Closed shapes leave a treasure mark for 3s; enemies defeated inside may drop 3 coins.", "図形を閉じた場所に3秒間宝の印が残り、その中で倒れた敵が確率でコイン3枚をくれます。", "闭合图形处留下3秒宝藏标记，在其中被击败的敌人有几率掉落3枚金币。");
+        K("도형을 닫은 자리에 3초 동안 보물 표시가 남아, 그 안에서 쓰러진 적이 확률로 코인 3개를 줍니다.", "닫은 도형에 3초 동안 보물 표시가 남아, 안에서 쓰러진 적이 확률로 코인 3개를 줍니다.", "Closed shapes leave a treasure mark for 3s; enemies defeated inside may drop 3 coins.", "閉じた図形に3秒間宝の印が残り、中で倒れた敵が確率でコイン3枚をくれます。", "闭合图形留下3秒宝藏标记，其中被击败的敌人有几率掉落3枚金币。");
         A("코인 확률", "Coin chance", "コイン確率", "金币几率");
         A("나침도", "Compass Rose", "羅針図", "罗盘玫瑰");
         A("도형을 닫은 자리에 나침도가 그려져 3초 동안 안의 적을 느리게 합니다.", "Closed shapes draw a compass rose that slows enemies inside for 3s.", "図形を閉じた場所に羅針図が描かれ、3秒間中の敵を遅くします。", "闭合图形处绘出罗盘玫瑰，3秒内减速其中的敌人。");
@@ -80,7 +80,7 @@ public static partial class LocTable
 
         // ---------------- 스킬 진화
         A("세계 지도", "World Map", "世界地図", "世界地图");
-        A("도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", "Shape damage becomes 1.5×; once closed, enemies inside are struck twice more and a mark (+20% damage taken) spreads to nearby foes.", "図形ダメージが1.5倍になり、閉じた後に内側の敵がさらに2回傷つき、周りの敵に標識（被ダメージ+20%）が広がります。", "图形伤害变为1.5倍，闭合后内部敌人再受两次伤害，周围敌人被标记（受到伤害+20%）。");
+        K("도형 피해가 1.5배가 되고, 닫힌 뒤 안쪽 적이 두 번 더 다치며 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", "도형 피해가 1.5배가 되고 안쪽 적이 두 번 더 다칩니다. 둘레의 적에게 표식(받는 피해 +20%)이 번집니다.", "Shape damage becomes 1.5× and enemies inside are hit twice more. A mark (+20% damage taken) spreads to nearby foes.", "図形ダメージが1.5倍になり、内側の敵がさらに2回傷つきます。周りの敵に標識（被ダメージ+20%）が広がります。", "图形伤害变为1.5倍，内部敌人再受两次伤害。周围敌人被标记（受到伤害+20%）。");
         A("입체 지도", "Relief Map", "立体地図", "立体地图");
         A("등고선 파동이 세 겹으로 퍼집니다.", "Contour waves ripple out three times.", "等高線の波動が三重に広がります。", "等高线波动扩散三层。");
         A("직행로", "Express Route", "直行路", "直达路线");
@@ -88,11 +88,11 @@ public static partial class LocTable
         A("별자리", "Constellation", "星座", "星座");
         A("북극성이 셋으로 늘고, 별끼리 이어진 선이 닿는 적을 벱니다.", "North Star becomes three stars, and the lines between them cut enemies.", "北極星が3つに増え、星同士をつなぐ線が触れた敵を斬ります。", "北极星增至三颗，星与星之间的连线斩击触碰的敌人。");
         A("먹물 홍수", "Ink Flood", "墨の洪水", "墨水洪流");
-        A("번지는 잉크가 두 배로 번지고, 잉크 폭풍이 지나간 자리에 잉크 웅덩이가 남습니다.", "Spreading Ink spreads twice as wide, and Ink Storm leaves ink pools behind.", "にじむインクが2倍に広がり、インクの嵐の跡にインクの水たまりが残ります。", "晕染墨迹扩大两倍，墨之风暴经过处留下墨池。");
+        K("번지는 잉크가 두 배로 번지고, 잉크 폭풍이 지나간 자리에 잉크 웅덩이가 남습니다.", "번지는 잉크가 두 배로 번지고, 잉크 폭풍 자리에 웅덩이가 남습니다.", "Spreading Ink spreads twice as wide, and Ink Storm leaves pools behind.", "にじむインクが2倍に広がり、インクの嵐の跡に水たまりが残ります。", "晕染墨迹扩大两倍，墨之风暴经过处留下墨池。");
         A("대담한 필치", "Bold Strokes", "大胆な筆致", "大胆笔触");
         A("모든 획이 여백 획(두 배 굵기 · 여백 피해)이 됩니다.", "Every stroke becomes a Margin stroke (double width · Margin damage).", "すべての線が余白の線（2倍の太さ・余白ダメージ）になります。", "所有笔画都变为留白笔画（两倍粗细 · 留白伤害）。");
         A("황금 항로", "Golden Route", "黄金航路", "黄金航线");
-        A("보물 표시가 두 배 넓어지고, 그 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", "Treasure marks are twice as wide, and enemies defeated inside always drop 3 coins.", "宝の印が2倍広くなり、その中で倒れた敵は必ずコイン3枚をくれます。", "宝藏标记扩大两倍，在其中被击败的敌人必定掉落3枚金币。");
+        K("보물 표시가 두 배 넓어지고, 그 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", "보물 표시가 두 배 넓어지고, 안에서 쓰러진 적은 반드시 코인 3개를 줍니다.", "Treasure marks are twice as wide, and enemies defeated inside always drop 3 coins.", "宝の印が2倍広くなり、中で倒れた敵は必ずコイン3枚をくれます。", "宝藏标记扩大两倍，其中被击败的敌人必定掉落3枚金币。");
 
         // ---------------- 무기 진화 (형태 · 궁극기 · 강화) · 패시브
         A("측량 사슬", "Survey Chain", "測量の鎖", "测量锁链");
@@ -105,13 +105,13 @@ public static partial class LocTable
         K("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.", "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해가 30% 늘어납니다.", "Shapes grow 1.5× larger; closing one pulls enemies to the center and raises shape damage by 30%.", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり、図形ダメージが30%増えます。", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害提升30%。");
         K("도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해 +30%.\n궁극기: 자전", "도형이 1.5배 커지고, 닫으면 안쪽 적이 가운데로 모이며 도형 피해가 30% 늘어납니다.\n필살기에 덧붙음: 자전", "Shapes grow 1.5× larger; closing one pulls enemies to the center and raises shape damage by 30%.\nAdded to your Ultimate: Rotation", "図形が1.5倍大きくなり、閉じると内側の敵が中央に集まり、図形ダメージが30%増えます。\n必殺技に上乗せ：自転", "图形变为1.5倍大，闭合时内部敌人聚向中央，图形伤害提升30%。\n附加于必杀技：自转");
         A("삼각 측량", "Triangulation", "三角測量", "三角测量");
-        A("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "Draw three great triangles around you in turn, cutting enemies inside. (220% attack each)", "自分の周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个巨大三角形，斩击其中的敌人。（每个攻击力220%）");
+        K("내 둘레에 커다란 삼각형 세 개를 차례로 그려 안쪽의 적을 벱니다. (공격력 220%씩)", "둘레에 큰 삼각형 셋을 차례로 그려 안쪽 적을 벱니다. (공격력 220%씩)", "Draw three big triangles around you in turn, cutting enemies inside. (220% attack each)", "周りに大きな三角形を3つ順に描き、内側の敵を斬ります。（攻撃力220%ずつ）", "在身边依次画出三个大三角形，斩击其中的敌人。（每个攻击力220%）");
         A("먹물 해일", "Ink Tide", "墨の津波", "墨潮");
         K("마우스 쪽으로 거대한 먹물 파도를 일으켜 휩쓸린 적을 밀어내고 느리게 합니다. (공격력 300%)", "마우스 쪽으로 먹물 파도를 일으켜 적을 밀어내고 느리게 합니다. (공격력 300%)", "Send an ink wave toward the cursor that pushes back and slows enemies. (300% attack)", "マウスの方へ墨の波を起こし、敵を押し出して遅くします。（攻撃力300%）", "向鼠标方向掀起墨浪，击退并减速敌人。（攻击力300%）");
         A("자전", "Rotation", "自転", "自转");
         A("지구본 네 개가 3초 동안 내 둘레를 돌며 닿는 적을 벱니다. (0.25초마다 공격력 60%)", "Four globes orbit you for 3s, cutting enemies they touch. (60% attack every 0.25s)", "地球儀4つが3秒間自分の周りを回り、触れた敵を斬ります。（0.25秒ごとに攻撃力60%）", "四个地球仪在身边环绕3秒，斩击触碰的敌人。（每0.25秒攻击力60%）");
         A("정밀 측량", "Precise Survey", "精密測量", "精密测量");
-        A("획이 적 하나를 지날 때마다 그다음 적에게 주는 피해가 10%씩 오릅니다. (최대 +50%)", "Each enemy a stroke passes raises its damage to the next by 10%. (Up to +50%)", "線が敵を1体通るごとに次の敵へのダメージが10%ずつ上がります。（最大+50%）", "笔画每穿过一名敌人，对下一名的伤害提升10%。（最多+50%）");
+        K("획이 적 하나를 지날 때마다 그다음 적에게 주는 피해가 10%씩 오릅니다. (최대 +50%)", "획이 적을 하나 지날 때마다 다음 적에게 주는 피해가 10%씩 오릅니다. (최대 +50%)", "Each enemy a stroke passes raises its damage to the next by 10%. (Up to +50%)", "線が敵を1体通るごとに次の敵へのダメージが10%ずつ上がります。（最大+50%）", "笔画每穿过一名敌人，对下一名的伤害提升10%。（最多+50%）");
         A("이중 인쇄", "Double Print", "二重刷り", "双重印刷");
         A("획을 그을 때마다 0.3초 뒤 같은 자리에 한 번 더 그어집니다. (피해 50%)", "Every stroke is drawn again in the same place 0.3s later. (50% damage)", "線を引くたびに0.3秒後同じ場所にもう一度引かれます。（ダメージ50%）", "每画一笔，0.3秒后在同一位置再画一次。（伤害50%）");
         A("판화", "Engraving", "版画", "版画");
@@ -177,7 +177,7 @@ public static partial class LocTable
         A("과회전", "Overclock", "過回転", "超频");
         A("정각 톱니가 터지면 3초 동안 공격 속도가 오릅니다.", "When an O'Clock gear bursts, attack speed rises for 3s.", "正時の歯車が爆発すると3秒間攻撃速度が上がります。", "整点齿轮爆炸后3秒内攻击速度提升。");
         A("자명종", "Alarm Clock", "目覚まし時計", "闹钟");
-        A("체력이 30% 아래로 떨어지면 시간이 멈춰 모든 적이 잠깐 멈추고 적 투사체가 사라집니다. (30초에 한 번)", "When health drops below 30%, time stops: all enemies freeze briefly and enemy projectiles vanish. (Once per 30s)", "体力が30%を下回ると時間が止まり、すべての敵が少し止まって敵の投射物が消えます。（30秒に1回）", "生命低于30%时时间停止：所有敌人短暂停住，敌方投射物消失。（每30秒一次）");
+        K("체력이 30% 아래로 떨어지면 시간이 멈춰 모든 적이 잠깐 멈추고 적 투사체가 사라집니다. (30초에 한 번)", "체력이 30% 아래가 되면 시간이 멈춰 모든 적이 잠깐 서고 적 투사체가 사라집니다. (30초에 한 번)", "Below 30% health, time stops: all enemies freeze briefly and enemy projectiles vanish. (Once per 30s)", "体力が30%を下回ると時間が止まり、全ての敵が少し止まって敵の投射物が消えます。（30秒に1回）", "生命低于30%时时间停止，所有敌人短暂停住，敌方投射物消失。（每30秒一次）");
         A("맞물린 톱니", "Meshed Gears", "噛み合う歯車", "啮合齿轮");
         A("톱니가 튕길 때마다 피해가 늘어납니다.", "Gears deal more damage with every bounce.", "歯車が跳ねるたびにダメージが増えます。", "齿轮每次弹跳伤害提升。");
         A("튕길 때마다", "Per bounce", "跳ねるたびに", "每次弹跳");
@@ -188,7 +188,7 @@ public static partial class LocTable
         A("정각 톱니의 피해가 늘어납니다.", "O'Clock gears deal more damage.", "正時の歯車のダメージが増えます。", "整点齿轮的伤害提升。");
         A("정각 톱니 피해", "O'Clock gear damage", "正時の歯車ダメージ", "整点齿轮伤害");
         A("시간의 메아리", "Echo of Time", "時のこだま", "时间回响");
-        A("톱니를 던지고 0.6초 뒤 같은 방향으로 잔상 톱니가 한 번 더 날아갑니다.", "0.6s after each throw, an afterimage gear flies the same way.", "歯車を投げて0.6秒後、同じ方向へ残像の歯車がもう一度飛びます。", "掷出齿轮0.6秒后，残影齿轮朝同一方向再飞一次。");
+        K("톱니를 던지고 0.6초 뒤 같은 방향으로 잔상 톱니가 한 번 더 날아갑니다.", "던진 톱니 0.6초 뒤 같은 방향으로 잔상 톱니가 한 번 더 날아갑니다.", "0.6s after each throw, an afterimage gear flies the same way.", "歯車を投げた0.6秒後、同じ方向へ残像の歯車がもう一度飛びます。", "掷出齿轮0.6秒后，残影齿轮朝同一方向再飞一次。");
         A("잔상 톱니 피해", "Afterimage damage", "残像の歯車ダメージ", "残影齿轮伤害");
         A("태엽 감기", "Winding Up", "ゼンマイ巻き", "上发条");
         A("가만히 서 있으면 시계 눈금이 저절로 찹니다.", "Standing still fills the clock on its own.", "じっと立っていると時計の目盛りがひとりでにたまります。", "站立不动时钟表刻度自动填充。");
@@ -199,12 +199,12 @@ public static partial class LocTable
         K("적을 처치할 때마다 필살기 게이지가 찹니다.", "적을 쓰러뜨릴 때마다 필살기 게이지가 찹니다.", "Each kill fills your Ultimate gauge.", "敵を倒すたびに必殺技ゲージがたまります。", "每击杀一名敌人都会充能必杀技。");
         A("처치당 게이지", "Gauge per kill", "撃破ごとのゲージ", "每次击杀充能");
         A("스톱워치", "Stopwatch", "ストップウォッチ", "秒表");
-        A("되감을 때 지난 3초 동안 준 피해의 일부가 가까운 적들에게 한 번 더 들어갑니다.", "When you rewind, part of the damage you dealt in the last 3s strikes nearby enemies again.", "巻き戻す時、直前3秒間に与えたダメージの一部が近くの敵にもう一度入ります。", "倒带时，过去3秒造成伤害的一部分再次作用于附近敌人。");
+        K("되감을 때 지난 3초 동안 준 피해의 일부가 가까운 적들에게 한 번 더 들어갑니다.", "되감을 때 지난 3초 동안 준 피해의 일부를 가까운 적에게 다시 줍니다.", "When you Rewind, part of the damage dealt in the last 3s hits nearby enemies again.", "巻き戻す時、直前3秒間に与えたダメージの一部を近くの敵にもう一度与えます。", "倒带时，过去3秒造成伤害的一部分再次作用于附近敌人。");
         A("다시 주는 피해", "Damage replayed", "再び与えるダメージ", "再次造成伤害");
 
         // ---------------- 스킬 진화
         A("톱니 폭풍", "Gear Storm", "歯車の嵐", "齿轮风暴");
-        A("톱니가 튕길 때마다 작은 톱니가 하나 더 갈라져 가까운 적에게 날아갑니다.", "Every bounce splits off a small gear that flies at a nearby enemy.", "歯車が跳ねるたびに小さな歯車がもう1つ分かれて近くの敵へ飛びます。", "齿轮每次弹跳都会分出一枚小齿轮飞向附近敌人。");
+        K("톱니가 튕길 때마다 작은 톱니가 하나 더 갈라져 가까운 적에게 날아갑니다.", "톱니가 튕길 때마다 작은 톱니가 갈라져 가까운 적에게 날아갑니다.", "Every bounce splits off a small gear toward a nearby enemy.", "歯車が跳ねるたびに小さな歯車が分かれて近くの敵へ飛びます。", "齿轮每次弹跳都会分出小齿轮飞向附近敌人。");
         A("대종", "Great Bell", "大鐘", "大钟");
         A("정각 톱니가 터지면 둘레 14칸의 모든 적이 0.5초 동안 멈춥니다.", "When an O'Clock gear bursts, every enemy within 14 tiles freezes for 0.5s.", "正時の歯車が爆発すると周囲14マスのすべての敵が0.5秒止まります。", "整点齿轮爆炸时，周围14格内所有敌人停住0.5秒。");
         A("역설", "Paradox", "逆説", "悖论");
@@ -216,7 +216,7 @@ public static partial class LocTable
         A("무한 반향", "Endless Echo", "無限の反響", "无尽回响");
         A("잔상 톱니가 두 번 날아갑니다.", "Afterimage gears fly twice.", "残像の歯車が2回飛びます。", "残影齿轮飞出两次。");
         A("시간 빚", "Time Debt", "時の借り", "时间之债");
-        A("스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", "Stopwatch replays twice as much damage, and each rewind refunds 30% of your Ultimate gauge.", "ストップウォッチのダメージが2倍になり、巻き戻すたびに必殺技ゲージを30%取り戻します。", "秒表效果翻倍，每次倒带返还30%必杀技充能。");
+        K("스톱워치가 두 배로 들어가고, 되감을 때마다 필살기 게이지를 30% 돌려받습니다.", "스톱워치가 두 배로 들고, 되감기마다 필살기 게이지 30%를 돌려받습니다.", "Stopwatch hits twice as hard, and each Rewind refunds 30% of your Ultimate gauge.", "ストップウォッチが2倍になり、巻き戻しごとに必殺技ゲージを30%取り戻します。", "秒表效果翻倍，每次倒带返还30%必杀技槽。");
 
         // ---------------- 무기 진화 · 궁극기 · 강화 · 패시브
         A("뻐꾸기 시계", "Cuckoo Clock", "鳩時計", "布谷鸟钟");
@@ -231,7 +231,7 @@ public static partial class LocTable
         A("뻐꾸기 떼", "Cuckoo Flock", "カッコウの群れ", "布谷鸟群");
         A("뻐꾸기 열두 마리가 가까운 적들을 차례로 덮칩니다. (공격력 150%씩)", "Twelve cuckoos swoop on nearby enemies in turn. (150% attack each)", "カッコウ12羽が近くの敵へ次々と襲いかかります。（攻撃力150%ずつ）", "十二只布谷鸟依次扑向附近敌人。（每只攻击力150%）");
         A("모래 폭풍", "Sandstorm", "砂嵐", "沙暴");
-        K("마우스 자리에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "마우스 위치에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "A sand whirlwind forms at the cursor for 4s, pulling enemies in and cutting every 0.3s. (60% attack)", "マウスの位置に4秒間砂の竜巻が生まれ、敵を引き寄せて0.3秒ごとに斬ります。（攻撃力60%）", "在鼠标处生成持续4秒的沙之旋风，吸引敌人并每0.3秒斩击。（攻击力60%）");
+        K("마우스 자리에 4초 동안 모래 회오리가 생겨 적을 끌어당기고 0.3초마다 벱니다. (공격력 60%)", "마우스 위치에 4초 동안 모래 회오리가 생겨 적을 끌어당겨 벱니다. (0.3초마다 공격력 60%)", "A sand whirlwind forms at the cursor for 4s, pulling enemies in and cutting them. (60% attack every 0.3s)", "マウスの位置に4秒間砂の竜巻が生まれ、敵を引き寄せて斬ります。（0.3秒ごとに攻撃力60%）", "在鼠标处生成持续4秒的沙之旋风，吸引并斩击敌人。（每0.3秒攻击力60%）");
         A("열두 번의 종", "Twelve Tolls", "十二の鐘", "十二响钟");
         A("내 둘레로 종소리 고리가 열두 번 퍼집니다. (공격력 80%씩)", "Twelve rings of bell tolls spread around you. (80% attack each)", "自分の周りに鐘の音の輪が12回広がります。（攻撃力80%ずつ）", "钟声之环在身边扩散十二次。（每次攻击力80%）");
         A("정밀 톱니", "Precision Gear", "精密な歯車", "精密齿轮");
@@ -239,7 +239,7 @@ public static partial class LocTable
         A("이중 톱니", "Twin Gears", "二重の歯車", "双重齿轮");
         A("톱니를 하나 더 던집니다.", "Throw one more gear.", "歯車をもう1つ投げます。", "多掷出一枚齿轮。");
         A("시간 균열", "Time Rift", "時の裂け目", "时间裂隙");
-        A("정각 톱니가 터진 자리에 2초 동안 시간 균열이 생겨 안의 적을 느리게 하고 벱니다.", "O'Clock gear bursts leave a 2s time rift that slows and cuts enemies inside.", "正時の歯車が爆発した場所に2秒間時の裂け目が生まれ、中の敵を遅くして斬ります。", "整点齿轮爆炸处出现持续2秒的时间裂隙，减速并斩击其中敌人。");
+        K("정각 톱니가 터진 자리에 2초 동안 시간 균열이 생겨 안의 적을 느리게 하고 벱니다.", "정각 톱니가 터진 자리에 2초 동안 시간 균열이 남아 안의 적을 늦추고 벱니다.", "O'Clock gear bursts leave a 2s time rift that slows and cuts enemies inside.", "正時の歯車が弾けた場所に2秒間時の裂け目が残り、中の敵を遅くして斬ります。", "整点齿轮爆炸处留下2秒时间裂隙，减速并斩击其中敌人。");
         A("기계 심장", "Clockwork Heart", "機械の心臓", "机械之心");
         A("체력이 초당 0.5씩 회복됩니다.\n진화: 초당 1", "Regenerate 0.5 health per second.\nEvolved: 1 per second", "体力が毎秒0.5ずつ回復します。\n進化：毎秒1", "每秒恢复0.5生命。\n进化：每秒1");
         A("예측", "Foresight", "予測", "预判");
@@ -294,7 +294,7 @@ public static partial class LocTable
         A("움직이는 동안 편지의 피해가 늘어납니다.", "Letters deal more damage while you move.", "動いている間、手紙のダメージが増えます。", "移动中信件伤害提升。");
         A("편지 피해", "Letter damage", "手紙ダメージ", "信件伤害");
         A("행운의 편지", "Chain Letter", "幸運の手紙", "幸运信");
-        A("편지로 적을 쓰러뜨리면 30% 확률로 새 편지가 가까운 적들에게 날아갑니다. (공격력 70%)", "Letter kills have a 30% chance to send new letters to nearby enemies. (70% attack)", "手紙で敵を倒すと30%の確率で新しい手紙が近くの敵たちへ飛びます。（攻撃力70%）", "信件击杀敌人时有30%几率向附近敌人寄出新信件。（攻击力70%）");
+        K("편지로 적을 쓰러뜨리면 30% 확률로 새 편지가 가까운 적들에게 날아갑니다. (공격력 70%)", "편지로 쓰러뜨리면 30% 확률로 새 편지가 가까운 적에게 날아갑니다. (공격력 70%)", "Letter kills have a 30% chance to send new letters to nearby enemies. (70% attack)", "手紙で倒すと30%の確率で新しい手紙が近くの敵へ飛びます。（攻撃力70%）", "信件击杀时有30%几率向附近敌人寄出新信件。（攻击力70%）");
         A("새 편지", "New letters", "新しい手紙", "新信件");
         A("배달 경로", "Delivery Route", "配達ルート", "投递路线");
         A("바로 앞 받는 이와 다른 적에게 배달하면 피해가 늘어납니다.", "Delivering to a different enemy than the last addressee deals more damage.", "直前の宛先と違う敵に配達するとダメージが増えます。", "投递给与上一位收件人不同的敌人时伤害提升。");
@@ -339,7 +339,7 @@ public static partial class LocTable
         A("택배 폭격", "Parcel Barrage", "宅配爆撃", "快递轰炸");
         A("마우스 둘레에 상자 열 개가 차례로 떨어져 터집니다. (공격력 180%씩)", "Ten boxes drop around the cursor in turn and explode. (180% attack each)", "マウスの周りに箱10個が次々と落ちて爆発します。（攻撃力180%ずつ）", "十个箱子依次落在鼠标周围并爆炸。（每个攻击力180%）");
         A("우체통 행렬", "Postbox Parade", "ポストの行列", "邮筒行列");
-        A("내 둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Five postboxes rise around you and throw letters at nearby enemies for 4s.", "自分の周りに郵便ポスト5つが立ち、4秒間近くの敵へ手紙を投げます。", "身边立起五个邮筒，4秒内向附近敌人投掷信件。");
+        K("내 둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다.", "둘레에 우체통 다섯 개가 서서 4초 동안 가까운 적에게 편지를 던집니다.", "Five postboxes rise around you and throw letters at nearby enemies for 4s.", "周りに郵便ポスト5つが立ち、4秒間近くの敵へ手紙を投げます。", "身边立起五个邮筒，4秒内向附近敌人投掷信件。");
         A("두꺼운 봉투", "Thick Envelope", "分厚い封筒", "厚信封");
         A("편지 피해가 25% 늘어납니다.", "Letter damage increases by 25%.", "手紙のダメージが25%増えます。", "信件伤害提升25%。");
         A("다발 배송", "Bundle Delivery", "まとめ配送", "批量投递");
@@ -420,7 +420,7 @@ public static partial class LocTable
 
         // ---------------- 고유 스킬
         A("원한", "Grudge", "怨み", "怨恨");
-        A("냉기가 쌓인 적에게 주는 피해가 쌓인 냉기만큼 늘어납니다. (얼어붙은 적은 3중첩으로)", "Deal more damage to enemies the more chill they carry. (Frozen counts as 3 stacks)", "冷気がたまった敵へのダメージが、たまった冷気の分だけ増えます。（凍った敵は3重扱い）", "对累积寒气的敌人造成的伤害随寒气层数提升。（冻结视为3层）");
+        K("냉기가 쌓인 적에게 주는 피해가 쌓인 냉기만큼 늘어납니다. (얼어붙은 적은 3중첩으로)", "쌓인 냉기만큼 그 적에게 주는 피해가 늘어납니다. (얼어붙은 적은 3중첩)", "Deal more damage to enemies the more chill they carry. (Frozen counts as 3 stacks)", "たまった冷気の分だけその敵へのダメージが増えます。（凍った敵は3重扱い）", "对敌人造成的伤害随其寒气层数提升。（冻结视为3层）");
         A("냉기 하나당", "Per chill", "冷気1つごと", "每层寒气");
         A("곡소리", "Wail", "嘆きの声", "哀嚎");
         K("영혼이 피해를 막을 때 곡소리가 퍼져 둘레 적을 밀치고 다치게 합니다.", "영혼이 피해를 막을 때 곡소리가 퍼져 둘레의 적을 밀치고 다치게 합니다.","When a soul blocks a hit, a wail knocks back and damages nearby enemies.", "魂がダメージを防ぐとき、嘆きの声が広がり周りの敵を押しのけて傷つけます。", "灵魂抵挡伤害时，哀嚎扩散，击退并伤害周围敌人。");
@@ -437,7 +437,7 @@ public static partial class LocTable
         A("거느린 영혼 하나마다 주는 피해가 늘어납니다.", "Each soul you keep increases your damage.", "まとった魂1つごとに与えるダメージが増えます。", "每个环绕的灵魂都会提升造成的伤害。");
         A("영혼 하나당", "Per soul", "魂1つごと", "每个灵魂");
         A("저주", "Curse", "呪い", "诅咒");
-        A("빙의한 적이 쓰러지면 둘레의 적 셋에게 저주가 걸려 5초 동안 받는 피해가 늘어납니다.", "When a possessed enemy dies, three nearby enemies are cursed to take more damage for 5s.", "憑依した敵が倒れると周りの敵3体に呪いがかかり、5秒間受けるダメージが増えます。", "被附身的敌人倒下时，周围三名敌人受到诅咒，5秒内受到的伤害提升。");
+        K("빙의한 적이 쓰러지면 둘레의 적 셋에게 저주가 걸려 5초 동안 받는 피해가 늘어납니다.", "빙의한 적이 쓰러지면 둘레의 적 셋이 5초 동안 저주받아 피해를 더 받습니다.", "When a possessed enemy dies, three nearby enemies are cursed to take more damage for 5s.", "憑依した敵が倒れると、周りの敵3体が5秒間呪われ、受けるダメージが増えます。", "被附身的敌人倒下时，周围三名敌人被诅咒5秒，受到的伤害增加。");
         A("폴터가이스트", "Poltergeist", "ポルターガイスト", "骚灵");
         A("3초마다 가까운 적을 들어 올렸다 내리꽂습니다.", "Every 3s, lift a nearby enemy and slam it down.", "3秒ごとに近くの敵を持ち上げて叩きつけます。", "每3秒将附近敌人举起再砸下。");
         A("내리꽂는 피해", "Slam damage", "叩きつけダメージ", "砸落伤害");
@@ -455,7 +455,7 @@ public static partial class LocTable
         A("흡혈귀", "Vampire", "吸血鬼", "吸血鬼");
         A("생기 흡수가 두 배가 되고, 적이 얼어붙을 때마다 체력을 회복합니다.", "Life Drain is doubled, and you heal whenever an enemy freezes.", "生気吸収が2倍になり、敵が凍るたびに体力を回復します。", "生机吸取翻倍，每当敌人被冻结时恢复生命。");
         A("망령", "Specter", "亡霊", "幽魂");
-        A("실체 없음 확률이 두 배가 되고, 거느린 영혼 하나마다 이동 속도가 2% 오릅니다.", "Incorporeal's chance is doubled, and each soul you keep adds 2% move speed.", "実体なしの確率が2倍になり、まとった魂1つごとに移動速度が2%上がります。", "无形几率翻倍，每个环绕的灵魂提升2%移动速度。");
+        K("실체 없음 확률이 두 배가 되고, 거느린 영혼 하나마다 이동 속도가 2% 오릅니다.", "실체 없음 확률이 두 배가 되고, 영혼 하나마다 이동 속도가 2% 오릅니다.", "Incorporeal's chance doubles, and each soul you keep adds 2% move speed.", "実体なしの確率が2倍になり、魂1つごとに移動速度が2%上がります。", "无形几率翻倍，每个灵魂提升2%移动速度。");
         A("파멸", "Doom", "破滅", "毁灭");
         A("저주가 둘레 20칸의 모든 적에게 걸립니다.", "Curse spreads to every enemy within 20 tiles.", "呪いが周囲20マスのすべての敵にかかります。", "诅咒作用于周围20格内所有敌人。");
         A("소란한 집", "Haunted House", "騒がしい家", "闹鬼之屋");

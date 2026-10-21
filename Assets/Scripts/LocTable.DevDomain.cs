@@ -27,13 +27,13 @@ public static partial class LocTable
         K("통금 시간이다! 들어와!", "Curfew! Get inside!", "門限よ！入りなさい！", "门禁时间到了！快进来！");
 
         // ================================================================= 도감 (개발자 · 엄마 카드 뒤에 붙는 결계 문장)
-        K("필살기 「디버그 모드」 — 12초 동안 결계 안이 디버그 화면으로 바뀝니다. 예상 이동 경로에 찍히는 브레이크포인트, 위에서부터 한 줄씩 실행되는 코드 줄(주석 처리된 한 줄만 안전합니다), 결계 벽에 튕기는 버그, 회전하는 무한 루프 탄막이 이어지고, 결계 끝 무렵에는 플레이어를 가로지르는 거대한 X자 「강제 종료」를 씁니다. 체력이 절반 아래면 「강제 종료」를 한 번 더 씁니다.",
-          "Ultimate 「Debug Mode」 — for 12 seconds the barrier turns into a debug screen. Breakpoints land along your predicted path, code lines execute one by one from the top (only the commented-out line is safe), bugs bounce off the barrier walls, and an infinite-loop spiral of bullets spins out. Near the end it casts 「Force Quit」, a giant X that cuts across your position. Below half health, it casts 「Force Quit」 one more time.",
-          "必殺技「デバッグモード」— 12秒間、結界の中がデバッグ画面に変わります。予測した移動先に打たれるブレークポイント、上から1行ずつ実行されるコード行（コメントアウトされた1行だけが安全です）、結界の壁で跳ね返るバグ、回転する無限ループの弾幕が続き、結界の終わり際にはプレイヤーを横切る巨大なX字の「強制終了」を使います。体力が半分を切ると「強制終了」をもう一度使います。",
-          "必杀技「调试模式」— 12秒内，结界内部变成调试画面。断点会落在你预计的移动路线上，代码行从上到下逐行执行（只有被注释掉的那一行是安全的），Bug 在结界壁上反弹，无限循环的弹幕旋转射出；结界快结束时，会使出横贯玩家位置的巨大 X 形「强制退出」。血量低于一半时，会再使用一次「强制退出」。");
-        K("필살기 「엄마의 대청소」 — 14초 동안 결계 안을 대청소합니다. 내 자리를 내려치는 등짝 스매싱, 몸을 끌어당기며 먼지를 빨아들이는 청소기, 줄지어 떨어지는 빨래, 잔소리와 함께 쏟아지는 탄막이 이어지고, 통금 시간이 되면 결계가 절반 가까이 좁아집니다.",
-          "Ultimate 「Mom's Big Cleanup」 — for 14 seconds she cleans the whole barrier. Back smacks slam down where you stand, a vacuum cleaner drags you in while sucking up dust, laundry drops in rows, and bullets pour out with every nag. When curfew comes, the barrier shrinks to nearly half its size.",
-          "必殺技「ママの大掃除」— 14秒間、結界の中を大掃除します。立っている場所に振り下ろされる背中スマッシュ、体を引き寄せながらほこりを吸い込む掃除機、列になって落ちてくる洗濯物、お小言と一緒に降り注ぐ弾幕が続き、門限になると結界が半分近くまで狭まります。",
-          "必杀技「妈妈的大扫除」— 14秒内对结界进行大扫除。朝你所站位置拍下的后背一巴掌、把你吸过去并吸走灰尘的吸尘器、成排落下的衣物、伴随唠叨倾泻而出的弹幕接连而来；门禁时间一到，结界会缩小到将近一半。");
+        C("필살기 「디버그 모드」 — 12초 동안 결계 안이 디버그 화면으로 바뀝니다. 예상 이동 경로에 찍히는 브레이크포인트, 위에서부터 한 줄씩 실행되는 코드 줄(주석 처리된 한 줄만 안전합니다), 결계 벽에 튕기는 버그, 회전하는 무한 루프 탄막이 이어지고, 결계 끝 무렵에는 플레이어를 가로지르는 거대한 X자 「강제 종료」를 씁니다. 체력이 절반 아래면 「강제 종료」를 한 번 더 씁니다.", "필살기 「디버그 모드」 — 12초 동안 결계 안이 디버그 화면이 됩니다. 브레이크포인트 · 한 줄씩 실행되는 코드(주석 줄만 안전) · 튕기는 버그 · 무한 루프 탄막이 이어지고, 끝 무렵 X자 「강제 종료」를 씁니다. 체력이 절반 아래면 한 번 더 씁니다.",
+          "Ultimate 「Debug Mode」 — for 12s the barrier becomes a debug screen: breakpoints, code lines running top to bottom (only the commented-out line is safe), bouncing bugs and infinite-loop bullets. Near the end it casts the giant X 「Force Quit」, once more below half health.",
+          "必殺技「デバッグモード」— 12秒間、結界の中がデバッグ画面になります。ブレークポイント・1行ずつ実行されるコード（コメント行だけ安全）・跳ね返るバグ・無限ループの弾幕が続き、終わり際にX字の「強制終了」を使います。体力が半分を切るともう一度使います。",
+          "必杀技「调试模式」— 12秒内结界变为调试画面：断点、逐行执行的代码（只有注释行安全）、反弹的 Bug、无限循环弹幕接连而来，临近结束时使出巨大 X 形「强制退出」。生命低于一半时会再用一次。");
+        C("필살기 「엄마의 대청소」 — 14초 동안 결계 안을 대청소합니다. 내 자리를 내려치는 등짝 스매싱, 몸을 끌어당기며 먼지를 빨아들이는 청소기, 줄지어 떨어지는 빨래, 잔소리와 함께 쏟아지는 탄막이 이어지고, 통금 시간이 되면 결계가 절반 가까이 좁아집니다.", "필살기 「엄마의 대청소」 — 14초 동안 결계 안을 대청소합니다. 등짝 스매싱 · 끌어당기는 청소기 · 떨어지는 빨래 · 잔소리 탄막이 이어지고, 통금 시간이 되면 결계가 절반 가까이 좁아집니다.",
+          "Ultimate 「Mom's Big Cleanup」 — for 14s she cleans the barrier: back smacks, a vacuum that drags you in, falling laundry and nagging bullets. At curfew the barrier shrinks to nearly half.",
+          "必殺技「ママの大掃除」— 14秒間、結界の中を大掃除します。背中スマッシュ・引き寄せる掃除機・落ちてくる洗濯物・お小言の弾幕が続き、門限になると結界が半分近くまで狭まります。",
+          "必杀技「妈妈的大扫除」— 14秒内对结界大扫除：后背一巴掌、把你吸过去的吸尘器、落下的衣物、唠叨弹幕接连而来；门禁时间一到，结界缩小到将近一半。");
     }
 }

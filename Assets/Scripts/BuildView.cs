@@ -207,6 +207,7 @@ public static class BuildView
             b.enableAutoSizing = false;
             b.enableWordWrapping = true;
             b.text = body;
+            TermLinks.Apply(b);             // 1.4.8~ 용어에 마우스 → 정의 (밑줄 · 색 태그만 더해 높이는 그대로)
             TopLeft(b.rectTransform, new Vector2(TextX, -38f));
         }
     }
