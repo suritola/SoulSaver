@@ -27,7 +27,7 @@ public partial class Shop
     {
         if (playerControllerd == null || PotionBlocked(id) || !TryPay(potionPrice[id])) return;
         RunCounters.Add("potion");      // 1.2~ 영혼 계약
-        potionPrice[id] = Mathf.CeilToInt(potionPrice[id] * PotionPriceGrowth);
+        potionPrice[id] = Mathf.CeilToInt(potionPrice[id] * GrowthOf(PotionPriceGrowth));
         PotionBuffs buffs = PotionBuffs.Of(playerControllerd);
         switch (id)
         {

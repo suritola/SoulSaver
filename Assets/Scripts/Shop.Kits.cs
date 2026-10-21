@@ -93,7 +93,7 @@ public partial class Shop
                 break;
         }
         kitBuys[slot]++;
-        kitPrice[slot] = Mathf.CeilToInt(kitPrice[slot] * KitPriceGrowth);
+        kitPrice[slot] = Mathf.CeilToInt(kitPrice[slot] * GrowthOf(KitPriceGrowth));
         UpdateShopText();
         return true;
     }

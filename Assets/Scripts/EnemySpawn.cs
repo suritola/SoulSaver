@@ -84,6 +84,9 @@ public class EnemySpawner : MonoBehaviour
     // 1.4.7~ 이야기 모드 적 수 배율 (Chapters.StoryDensity · 이 장이 시작된 뒤 흐른 시간 기준)
     float stageStartedAt;
     float Density => Chapters.StoryDensity(stageIndex, Time.time - stageStartedAt);
+    // 지금 장의 적 수 배율 (EnermyController 가 잡몹 경험치를 이만큼 나눔 · 스포너가 없으면 1)
+    static EnemySpawner live;
+    public static float DensityNow => live != null ? live.Density : 1f;
     // 1.2.5~ 같은 국면의 생성 간격은 고정 (Surge ×16 · 강도 · 3배 부스트가 겹쳐 매 프레임 나오던 것을)
     float NextSpawnDelay => GameMode.IsEndless && EndlessMode.GatheringSouls
         ? EndlessMode.AfterDevSpawnEvery
@@ -98,6 +101,7 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        live = this;
         playerC = FindFirstObjectByType<PlayerController>();
         bossbar = FindFirstObjectByType<bossbar>();
 

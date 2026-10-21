@@ -185,6 +185,11 @@ public partial class Shop : MonoBehaviour
     // 영혼 트리 '흥정' 할인을 뺀 실제 가격
     // 1.0.1: 모든 상점 강화 가격 1.3배 (최고점은 그대로, 상점 성장을 늦춤) · 영혼 트리 「흥정」 할인은 그 위에
     const float GrowthPriceMul = 1.3f;
+    // 1.4.7~ 이야기 모드는 적 수가 판이 갈수록 늘어 코인이 더 들어오므로, 살 때마다 오르는 비율을 ×1.1 (1.3 → 1.43 · 1.45 → 1.6 · 1.5 → 1.65 · 1.6 → 1.76) · 더하는 값은 ×1.5
+    //   무한 모드는 그대로 · 이어하기는 기록을 다시 사며 같은 값으로 오름
+    const float StoryPriceGrowthUp = 1.1f, StoryPriceStepUp = 1.5f;
+    public static float GrowthOf(float g) => GameMode.IsEndless ? g : g * StoryPriceGrowthUp;
+    static int StepOf(int step) => GameMode.IsEndless ? step : Mathf.RoundToInt(step * StoryPriceStepUp);
     static int Discounted(int price) => Mathf.CeilToInt(price * GrowthPriceMul * (SpecialAbilities.SharedInstance != null ? SpecialAbilities.SharedInstance.TreeShopMul : 1f));
 
     bool TryPay(int price)
@@ -216,7 +221,7 @@ public partial class Shop : MonoBehaviour
         playerControllerd.damage += KitDamageStep;
         damageBuys++;                           // 다음 강화는 덜 오름 (Shop.Kits KitDamageStep)
         damage = playerControllerd.damage;
-        damagePrice = Mathf.CeilToInt(damagePrice * damagePriceGrowth);
+        damagePrice = Mathf.CeilToInt(damagePrice * GrowthOf(damagePriceGrowth));
         UpdateShopText();
         Bought(buyAttack);
     }
@@ -233,7 +238,7 @@ public partial class Shop : MonoBehaviour
 
         ShootSpeed = Mathf.Max(minShootSpeed, ShootSpeed * shootSpeedMultiplier);
         playerControllerd.ShootSpeed = ShootSpeed;
-        ShootSpeedPrice += shootSpeedPriceStep;
+        ShootSpeedPrice += StepOf(shootSpeedPriceStep);
         UpdateShopText();
     }
 
@@ -249,7 +254,7 @@ public partial class Shop : MonoBehaviour
 
         ReloadSpeed = Mathf.Max(minReloadTime, ReloadSpeed - reloadStep);
         playerControllerd.reloadTime = ReloadSpeed;
-        ReloadSpeedPrice = Mathf.CeilToInt(ReloadSpeedPrice * reloadPriceGrowth);
+        ReloadSpeedPrice = Mathf.CeilToInt(ReloadSpeedPrice * GrowthOf(reloadPriceGrowth));
         UpdateShopText();
     }
 
@@ -265,7 +270,7 @@ public partial class Shop : MonoBehaviour
 
         MaxBullet++;
         playerControllerd.MaxBullet = MaxBullet;
-        MaxBulletPrice = Mathf.CeilToInt(MaxBulletPrice * maxBulletPriceGrowth);
+        MaxBulletPrice = Mathf.CeilToInt(MaxBulletPrice * GrowthOf(maxBulletPriceGrowth));
         UpdateShopText();
     }
 
@@ -280,7 +285,7 @@ public partial class Shop : MonoBehaviour
 
         moveSpeedBuys++;
         playerControllerd.speed *= moveSpeedMultiplier;
-        moveSpeedPrice = Mathf.CeilToInt(moveSpeedPrice * moveSpeedPriceGrowth);
+        moveSpeedPrice = Mathf.CeilToInt(moveSpeedPrice * GrowthOf(moveSpeedPriceGrowth));
         UpdateShopText();
         Bought(buyMove);
     }

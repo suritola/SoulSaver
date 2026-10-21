@@ -153,7 +153,7 @@ public class EnermyController : MonoBehaviour
             int coinsBefore = Mathf.Max(coinDrop, Mathf.RoundToInt(coinDrop * GameMode.FixedRewardMul));
             if (countsTowardBoss)
             {
-                expReward = Mathf.RoundToInt(expReward * GameMode.RewardMul);
+                expReward = Mathf.Max(expReward > 0 ? 1 : 0, Mathf.RoundToInt(expReward * GameMode.RewardMul / EnemySpawner.DensityNow));      // 1.4.7~ 이야기 모드 적 수가 늘어난 만큼 한 마리 경험치는 줄임 (Chapters.StoryDensity)
                 coinDrop = GameMode.RoundRandom(coinsBefore / GameMode.KillStretch);
                 // 회복약도 처치 수가 늘어난 만큼 덜 나오게 (한 판 총량을 1.8.8 수준으로)
                 hpChance = chanceofHP / GameMode.KillStretch;
