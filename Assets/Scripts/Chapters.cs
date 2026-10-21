@@ -104,7 +104,9 @@ public static class Chapters
         return Mathf.Clamp(Mathf.Pow(2f, StoryDensityRate * (p - 0.5f)), 1f, StoryDensityMax);
     }
     static float StoryHpUpOf(int stage) => stage < 0 ? 1f : StoryHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, StoryHpUp.Length - 1)];
-    public static float HpUp147(int stage, bool boss) => GameMode.IsEndless ? (boss ? EndlessBossHpUp : EndlessMobHpUp) : StoryHpUpOf(stage);
+    // 1.4.9~ 사용자 「이야기 모드에서 모든 적 체력 150% 증가」: 잡몹 · 중간 보스 · 보스 모두 ×2.5 (위 장별 배율에 곱함 · 무한 모드는 그대로)
+    const float StoryAllHpUp = 2.5f;
+    public static float HpUp147(int stage, bool boss) => GameMode.IsEndless ? (boss ? EndlessBossHpUp : EndlessMobHpUp) : StoryHpUpOf(stage) * StoryAllHpUp;
     public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage) * MobHpBoost(stage) * HpUp147(stage, false);
     public static float RewardMul(int stage) => Ratio(Reward, stage) * Ease(EaseReward, stage);
     public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage) * HpUp147(stage, true);
