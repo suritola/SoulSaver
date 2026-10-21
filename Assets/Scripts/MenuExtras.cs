@@ -876,8 +876,10 @@ public static class UIKit
         if (ShadowSprite == null) ShadowSprite = Resources.Load<Sprite>("UI/ui_shadow");
         if (VignetteSprite == null) VignetteSprite = Resources.Load<Sprite>("UI/ui_vignette");
         if (EmberSprite == null) EmberSprite = Resources.Load<Sprite>("UI/ui_ember");
+        if (BarFrameSprite == null) BarFrameSprite = Resources.Load<Sprite>("UI/ui_bar_frame");
+        if (BarFillSprite == null) BarFillSprite = Resources.Load<Sprite>("UI/ui_bar_fill");
     }
-    public static Sprite PanelSprite, DividerSprite, RibbonSprite, ShadowSprite, VignetteSprite, EmberSprite;
+    public static Sprite PanelSprite, DividerSprite, RibbonSprite, ShadowSprite, VignetteSprite, EmberSprite, BarFrameSprite, BarFillSprite;
 
     // 한글(「가」)을 그릴 수 있는 폰트인지 (대체 폰트 포함)
     static bool HasKorean(TMP_FontAsset f) => f != null && f.HasCharacter('가', true, true);
@@ -919,6 +921,16 @@ public static class UIKit
                     bt.fontStyle |= FontStyles.Bold;
                 }
             }
+        }
+        // 1.4.8~ 옛 Theme 그림 → 새 도트 그림 (이름으로): 판(ui_panel) · 막대 틀(ui_bar_frame) · 막대 채움(ui_bar_fill)
+        //   채움은 Filled 방식을 그대로 두고 그림만 (체력이 줄어드는 길이 계산은 그대로)
+        foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (img.gameObject.scene != active || img.sprite == null) continue;
+            string n = img.sprite.name;
+            if (n == "ui_panel" && PanelSprite != null && img.sprite != PanelSprite) { img.sprite = PanelSprite; if (img.type != Image.Type.Filled) img.type = Image.Type.Sliced; }
+            else if (n == "ui_bar_frame" && BarFrameSprite != null && img.sprite != BarFrameSprite) { img.sprite = BarFrameSprite; if (img.type != Image.Type.Filled) img.type = Image.Type.Sliced; }
+            else if (n == "ui_bar_fill" && BarFillSprite != null && img.sprite != BarFillSprite) img.sprite = BarFillSprite;
         }
         if (oldSprites.Count == 0) return;
         foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))

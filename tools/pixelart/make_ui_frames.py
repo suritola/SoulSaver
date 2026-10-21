@@ -197,6 +197,33 @@ def ember():
     return img
 
 
+def bar_frame():
+    # 진행 막대 틀 (64x16 · 테두리 6): 바깥 검정 · 금 테두리 · 안쪽 깊게 파인 어두운 홈 (채움이 그 위에 그려짐)
+    W, H = 64, 16
+    img = Img(W, H)
+    for y in range(H):
+        for x in range(W):
+            d = min(x, W - 1 - x, y, H - 1 - y)
+            if (x in (0, W - 1)) and (y in (0, H - 1)):
+                continue
+            c = OUTL if d == 0 else (G_L if y == 1 else G_D if y == H - 2 else G) if d == 1 else DARK if d == 2 else lerp((12, 8, 18), (22, 16, 30), (y - 3) / max(1, H - 7))
+            img.set(x, y, c)
+    return img
+
+
+def bar_fill():
+    # 진행 막대 채움 (16x8): 밝은 회색 세로 그라데이션 · 위 하이라이트 · 아래 그림자 — 코드가 색을 곱해 빨강(체력) · 파랑(경험치) 등으로
+    W, H = 16, 8
+    img = Img(W, H)
+    for y in range(H):
+        v = 255 if y == 0 else 235 - y * 14
+        if y == H - 1:
+            v = 120
+        for x in range(W):
+            img.set(x, y, (v, v, v, 255))
+    return img
+
+
 def meta(path, border, ppu):
     tpl = open(os.path.join(ROOT, 'Assets', 'Sprites', 'Items', 'hp_potion.png.meta'), encoding='utf-8').read()
     tpl = re.sub(r'guid: [0-9a-f]{32}', 'guid: ' + uuid.uuid4().hex, tpl, count=1)
@@ -220,7 +247,8 @@ def main():
     p, pb = panel()
     for name, img, border, ppu in (('ui_button', button(), 8, 50), ('ui_panel', p, pb, 50), ('ui_divider', divider(), 0, 50),
                                    ('ui_ribbon', ribbon(), (18, 9, 18, 9), 50), ('ui_shadow', shadow(), 24, 50),
-                                   ('ui_vignette', vignette(), 0, 100), ('ui_ember', ember(), 0, 50)):
+                                   ('ui_vignette', vignette(), 0, 100), ('ui_ember', ember(), 0, 50),
+                                   ('ui_bar_frame', bar_frame(), 6, 50), ('ui_bar_fill', bar_fill(), (2, 2, 2, 2), 50)):
         out = os.path.join(OUT, name + '.png')
         write(img, out)
         meta(out + '.meta', border, ppu)

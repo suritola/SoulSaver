@@ -507,7 +507,7 @@ public partial class LevelShop : MonoBehaviour
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
         r.pivot = new Vector2(0.5f, 1f);
         r.anchoredPosition = new Vector2(0f, -222f);       // 알림판 · 포털 카운트다운 아래
-        r.localScale = Vector3.one * 0.4f;
+        r.localScale = Vector3.one * (UIKit.RibbonSprite != null ? 0.75f : 0.4f);     // 1.4.8~ 새 리본(820×92)은 0.75 (≈ 615×69 · 글자 ≈ 34) · 옛 띠(980×200)는 0.4
         foreach (Graphic g in LvUpPanel.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
     }
 
