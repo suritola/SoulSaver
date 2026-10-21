@@ -68,9 +68,9 @@ public static class MenuHeroPanel
         CharacterDef d = CharacterData.Def(id);
         // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
         float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
-        UIKit.Text(panel, "지금 영웅", 22f, Dim, new Vector2(0f, top - 14f), new Vector2(W - 48f, 28f)).fontSizeMin = 20f;
-        const float P = 190f;
-        RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - 30f - P * 0.5f), new Vector2(P, P));
+        // 1.4.8~ 사용자 「너무 많다」: 「지금 영웅」 · 칭호 · 숙련 줄을 빼고 초상 · 이름 · 「영웅 바꾸기」만 (칭호 · 숙련은 이름에 마우스를 올리면)
+        const float P = 150f;
+        RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = CharacterUI.Portrait(id);
         img.preserveAspect = true;
@@ -85,16 +85,16 @@ public static class MenuHeroPanel
             gi.preserveAspect = true;
             gi.raycastTarget = false;
         }
-        float y = top - 30f - P - 2f;
+        float y = top - P - 4f;
         TMP_Text name = UIKit.Text(panel, d.name, 36f, Gold, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
         name.fontSizeMin = 20f;
-        TMP_Text title = UIKit.Text(panel, d.title, 22f, Dim, new Vector2(0f, y - 58f), new Vector2(W - 48f, 28f));
-        title.fontSizeMin = 20f;
-        TMP_Text star = UIKit.Text(panel, "", 20f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(0f, y - 87f), new Vector2(W - 48f, 26f));
-        star.fontSizeMin = 20f;
-        star.text = Mastery.Label(id);
+        name.raycastTarget = true;
+        string sub = d.title + "\n" + Mastery.Label(id);
         string weight = SoulWeight.CardTag(id);
-        if (weight.Length > 0) star.text += "  ·  <color=#C9A0FF>" + weight + "</color>";
+        if (weight.Length > 0) sub += "  ·  " + weight;
+        TooltipTrigger nameTip = name.gameObject.AddComponent<TooltipTrigger>();
+        nameTip.titleProvider = () => d.name;
+        nameTip.bodyProvider = () => sub;
         Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, bottom + 26f), new Vector2(300f, 52f), OpenPicker, 24f);
         change.name = "ChangeHeroButton";
     }

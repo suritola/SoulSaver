@@ -270,8 +270,9 @@ public class ESCmenu : MonoBehaviour
         }
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
-        RunStats.ShowSummary(isEscOpen);
-        PauseBuild.Show(isEscOpen);         // 1.2.5~ 메뉴 왼쪽: 지금 가진 무기 · 레벨업 스킬 · 특수 스킬 · 유물 · 각인 아이콘
+        // 1.4.8~ 사용자 「ESC 화면 같은 데서도 쓰잘데기없이 뭐가 많다」: 양옆 패널(이번 판 통계 · 지금 가진 스킬)을 늘 띄우지 않고 메뉴의 「빌드 보기」 버튼으로
+        RunStats.ShowSummary(false);
+        PauseBuild.Show(false);
         if (isEscOpen) PauseInspect.OnPauseOpened();
         else { BuildView.Close(); HeroGuide.CloseView(); }
 

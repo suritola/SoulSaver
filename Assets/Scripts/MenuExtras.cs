@@ -173,10 +173,17 @@ public static class MenuExtras
         if (st != null) { RectTransform tr = st.rectTransform; tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f); tr.sizeDelta = new Vector2(380f, 90f); tr.anchoredPosition = new Vector2(30f, 0f); }
         InstallContinue(start, st);
 
+        // 1.4.8~ 사용자 「메인화면에 버튼이나 설명창 같은게 너무 많다」: 칸은 한 줄 넷(도감 · 일일 도전 · 설정 · 더 보기)만
+        //   캐릭터는 왼쪽 영웅 패널(누르면 영웅 고르기)이 맡고, 스킨 상점 · 스킬 진화 · 튜토리얼 · 영혼 각인 · 계약 보드 · 순위표 · 기록 · 패치노트는 「더 보기」 창으로
+        //   게임 종료는 왼쪽 아래 작은 버튼 · 숨긴 칸 버튼은 지우지 않고 꺼 둠 (다른 코드가 이름으로 찾음)
+        Transform moreRoot = sr.root;
+        GameObject more = UIKit.CloneButton(start, "MoreButton", "더 보기", () => OpenMore(moreRoot));
+        if (!TutorialRun.Done) more.AddComponent<NewGlow>();
+        foreach (GameObject hide in new[] { character, skins, evo, tutorial })
+            if (hide != null) hide.SetActive(false);
         (GameObject go, string icon)[] tiles =
         {
-            (character, "menu_character"), (skins, "menu_skin"), (codex, "menu_codex"), (evo, "menu_evolution"),
-            (daily, "menu_daily"), (tutorial, "menu_tutorial"), (settings, "menu_settings"), (exit, "menu_exit"),
+            (codex, "menu_codex"), (daily, "menu_daily"), (settings, "menu_settings"), (more, ""),
         };
         for (int i = 0; i < tiles.Length; i++)
         {
@@ -205,6 +212,20 @@ public static class MenuExtras
         // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크
         // 1.1~ 폰트에 ✔ 글자가 없어 빈 네모(□)로 보였으므로 막대 두 개로 그림
         if (tutorial != null && TutorialRun.Done) CheckMark(tutorial.transform, new Vector2(66f, 40f));
+        TMP_Text moreLabel = more.GetComponentInChildren<TMP_Text>(true);       // 「더 보기」는 그림 없이 글자만 가운데
+        if (moreLabel != null) { moreLabel.rectTransform.anchoredPosition = Vector2.zero; moreLabel.fontSizeMax = 28f; }
+        if (exit != null)
+        {
+            // 1.4.8~ 게임 종료: 칸 대신 왼쪽 아래 작은 버튼
+            RectTransform er = (RectTransform)exit.transform;
+            er.anchorMin = er.anchorMax = er.pivot = Vector2.zero;
+            er.sizeDelta = new Vector2(200f, 56f);
+            er.anchoredPosition = new Vector2(30f, 26f);
+            Image ei = exit.GetComponent<Image>();
+            if (ei != null) ei.color = new Color(0.78f, 0.62f, 0.64f);
+            TMP_Text et = exit.GetComponentInChildren<TMP_Text>(true);
+            if (et != null) { et.rectTransform.anchorMin = et.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); et.rectTransform.anchoredPosition = Vector2.zero; et.rectTransform.sizeDelta = new Vector2(190f, 50f); et.enableAutoSizing = true; et.fontSizeMax = 24f; et.fontSizeMin = 20f; }
+        }
 
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
@@ -214,7 +235,7 @@ public static class MenuExtras
         notes.name = "PatchNotesButton";
         SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
-        MenuContracts.Install(sr.parent, sr.root);             // 1.2~ 오른쪽 아래: 이번 판 계약 세 줄 · 계약 보드
+        // 1.4.8~ 이번 판 계약 패널은 메인 화면에서 뺌 → 「더 보기」의 계약 보드 (판을 시작하면 그 판 계약 띠가 뜸)
         DailyRewards.MenuCheck();                              // 1.2~ 연속 출석이 끊겼으면 한 번 알림
         if (daily != null && !dailyLocked && DailyRewards.Streak > 0)
         {
@@ -232,6 +253,14 @@ public static class MenuExtras
             hist.name = "RunHistoryButton";
         }
         LayoutRightColumn(sr.parent);
+        // 1.4.8~ 오른쪽 위는 포인트만: 패치노트 · 영혼 각인 · 순위표 · 기록 버튼은 만들어 두고 끈 채 「더 보기」에서 누름 (각자 여는 방식 · NEW 표시를 그대로 씀)
+        foreach (string n in new[] { "PatchNotesButton", "SoulBrandButton", "LeaderboardButton", "RunHistoryButton" })
+        {
+            Transform t = sr.parent.Find(n);
+            if (t == null) continue;
+            if (t.GetComponent<NewGlow>() != null && more.GetComponent<NewGlow>() == null) more.AddComponent<NewGlow>();      // 안에 새 것이 있으면 「더 보기」가 반짝임
+            t.gameObject.SetActive(false);
+        }
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
@@ -386,9 +415,54 @@ public static class MenuExtras
     public const float ColW = TileW * 4f + Gap * 3f;          // 746
     const float DiffY = 118f, DiffH = 58f, HintY = 66f, StartY = -20f, StartH = 110f, LockY = -106f, TileTopY = -137f;
     public const float SideTop = StartY + StartH * 0.5f;                  // 35
-    public const float SideBottom = TileTopY - TileH * 2f - Gap;          // -395
+    public const float SideBottom = TileTopY - TileH;                     // -259 (1.4.8~ 칸 한 줄)
     public const float ColRight = ColW * 0.5f;                            // 373
     static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
+
+    // 1.4.8~ 「더 보기」: 메인 화면에서 뺀 메뉴를 한 창에 세로로 (누르면 창을 닫고 그 메뉴를 엶)
+    static GameObject moreOpen;
+    static void OpenMore(Transform root)
+    {
+        if (moreOpen != null) return;
+        Transform parent = GameObject.Find("GameStartButton") != null ? GameObject.Find("GameStartButton").transform.parent : null;
+        System.Collections.Generic.List<(string ko, UnityAction act)> items = new System.Collections.Generic.List<(string, UnityAction)>
+        {
+            ("스킨 상점", () => SkinShopUI.Open(root)),
+            ("스킬 진화", () => SkillEvoCodexUI.Open(root)),
+            ("brand.title", () => Press(parent, "SoulBrandButton")),
+            ("board.open", () => ContractBoard.Open(root)),
+        };
+        if (parent != null && parent.Find("LeaderboardButton") != null) items.Add(("lb.button", () => Press(parent, "LeaderboardButton")));
+        if (parent != null && parent.Find("RunHistoryButton") != null) items.Add(("기록", () => Press(parent, "RunHistoryButton")));
+        items.Add(("패치노트", () => PatchNotesUI.OpenHistory(root)));
+        items.Add(("튜토리얼", () => TutorialRun.Begin()));
+        const float BtnW = 420f, BtnH = 60f, BtnGap = 12f;
+        float h = 150f + items.Count * (BtnH + BtnGap);
+        RectTransform win = UIKit.Modal(root, "MoreMenu", new Vector2(520f, h), out moreOpen);
+        UIKit.Text(win, "더 보기", 40f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, h * 0.5f - 50f), new Vector2(460f, 56f));
+        float y = h * 0.5f - 110f - BtnH * 0.5f;
+        foreach (var it in items)
+        {
+            UnityAction act = it.act;
+            UIKit.MakeButton(win, it.ko, new Vector2(0f, y), new Vector2(BtnW, BtnH), () => { CloseMore(); act(); }, 26f);
+            y -= BtnH + BtnGap;
+        }
+        UIKit.EscCancel(moreOpen, CloseMore);
+    }
+
+    static void CloseMore()
+    {
+        if (moreOpen != null) Object.Destroy(moreOpen);
+        moreOpen = null;
+    }
+
+    // 꺼 둔 메뉴 버튼을 대신 누름 (영혼 각인 · 순위표 · 기록은 각자 여는 방식 · 인자가 달라 버튼에 맡김)
+    static void Press(Transform parent, string name)
+    {
+        Transform t = parent != null ? parent.Find(name) : null;
+        Button b = t != null ? t.GetComponent<Button>() : null;
+        if (b != null) b.onClick.Invoke();
+    }
 
     // 1.4.8~ 오른쪽 위 열: 포인트 · 패치노트 · 영혼 각인 · 순위표 · 기록을 같은 폭 · 같은 간격으로 위에서부터 (체험판에서 빠진 버튼은 자리도 당겨짐)
     const float RightW = 280f, RightBadgeH = 64f, RightBtnH = 56f, RightGap = 10f, RightMargin = 30f, RightTop = 26f;
@@ -470,6 +544,9 @@ public static class MenuExtras
         SoulWeight.InstallMenu(parent, new Vector2(0f, LockY));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
+        // 1.4.8~ 사용자 「설명창 같은게 너무 많다」: 난이도 설명 · 잠금 안내 두 줄은 화면에서 빼고 난이도 버튼 툴팁(LadderTip)으로
+        hint.gameObject.SetActive(false);
+        lockHint.gameObject.SetActive(false);
     }
 
     // 1.2~ 난이도 버튼 툴팁: 클리어 보상 (체험판은 쉬움만이라 정식판 안내) · 이미 깼으면 한 줄 더
@@ -477,7 +554,12 @@ public static class MenuExtras
     {
         if (Demo.On && d != Difficulty.Easy) return Loc.T("정식판에서 만날 수 있습니다");
         string[] keys = { "ladder.tip.easy", "ladder.tip.normal", "ladder.tip.hard", "ladder.tip.endless" };
-        string s = Loc.T(keys[Mathf.Clamp((int)d, 0, keys.Length - 1)]);
+        // 1.4.8~ 화면에서 뺀 난이도 설명 · 포인트 배율 · 잠금 안내를 툴팁 맨 위에
+        string s = Loc.T(DifficultyDescs[Mathf.Clamp((int)d, 0, DifficultyDescs.Length - 1)]);
+        float pointRate = GameMode.PointRateOf(d);
+        if (pointRate > 1f) s += " · " + Loc.T("result.diffpoints").Replace("{0}", pointRate.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture));
+        if (!GameMode.IsUnlocked(d)) s += "\n<color=#C9B98A>" + Loc.T(d == Difficulty.Endless ? "ladder.lock.endless" : "쉬움을 클리어하면 보통 · 어려움이 열립니다") + "</color>";
+        s += "\n\n" + Loc.T(keys[Mathf.Clamp((int)d, 0, keys.Length - 1)]);
         if (d == Difficulty.Endless) s += "\n" + Loc.T("ladder.tip.endless.points");
         else if (!Demo.On && GameMode.HasCleared(d)) s += "\n<color=#7CFF9A>" + Loc.T("ladder.tip.cleared") + "</color>";
         return s;
@@ -558,8 +640,9 @@ public static class MenuExtras
         Transform hint = esc.escMenu.transform.Find("ResumeHint");
         if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, rowY - H * 0.5f - 34f);
 
-        // 1.1.9~ 설정 줄을 반으로 나눠 「설정 | 도감」 (편의성 3차 1 — 판 중간에 적 · 보스 · 진화 설명을 찾아봄)
-        GameObject codex = UIKit.CloneButton(lowest.gameObject, "CodexButton", "도감", () => CodexUI.Open(esc.escMenu.transform.root));
+        // 1.1.9~ 설정 줄을 반으로 나눠 「설정 | 도감」 → 1.4.8~ 「설정 | 빌드 보기」 (양옆 패널을 없애고 지금 빌드는 여기서 · 도감은 빌드 보기 · 메인 메뉴에서)
+        Transform escRoot = esc.escMenu.transform.root;
+        GameObject codex = UIKit.CloneButton(lowest.gameObject, "BuildViewButton", "빌드 보기", () => BuildView.Open(escRoot));
         RectTransform cr = (RectTransform)codex.transform;
         r.sizeDelta = cr.sizeDelta = new Vector2(half, H);
         cr.anchoredPosition = new Vector2((half + 16f) * 0.5f, r.anchoredPosition.y);
