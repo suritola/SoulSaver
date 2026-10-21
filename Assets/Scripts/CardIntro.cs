@@ -7,8 +7,9 @@ using UnityEngine;
 //   멈춘 시간(timeScale 0)에도 돌도록 unscaledTime · 꺼지거나 끊기면 원래 모습으로 되돌림 (상태를 남기지 않음)
 public sealed class CardIntro : MonoBehaviour
 {
-    const float Duration = 0.36f;
-    public const float Stagger = 0.13f;
+    // 1.4.8~ UI 정리: 글을 읽어야 하는 카드라 짧고 덜 기울게 (0.36초 · 9도 · 간격 0.13 → 0.26초 · 4도 · 0.09)
+    const float Duration = 0.26f, Tilt = 4f;
+    public const float Stagger = 0.09f;
 
     float startAt;
     Vector3 baseScale;
@@ -66,7 +67,7 @@ public sealed class CardIntro : MonoBehaviour
         float u = t - 1f;
         float s = t <= 0f ? 0.001f : 1f + c3 * u * u * u + c1 * u * u;
         transform.localScale = baseScale * Mathf.Max(0.001f, s);
-        transform.localRotation = baseRot * Quaternion.Euler(0f, 0f, (1f - t) * -9f);
+        transform.localRotation = baseRot * Quaternion.Euler(0f, 0f, (1f - t) * -Tilt);
     }
 
     void Restore()
