@@ -56,8 +56,20 @@ public class NewGlow : MonoBehaviour
         pill.rectTransform.anchoredPosition = br.anchoredPosition;
         pill.rectTransform.sizeDelta = new Vector2(64f, 28f);
         // 1.1~ 버튼 스프라이트는 가운데가 어두운 보라라 어두운 글자가 안 보였음 → 밝은 금색 단색 판
-        pill.sprite = null;
-        pill.color = Gold;
+        // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판(ui_button · 작아서 테두리 반 두께) + 금빛 글자 · 그림이 없으면 예전 금색 단색 판 + 어두운 글자
+        if (RecommendGlow.PillArt)
+        {
+            pill.sprite = UIKit.ButtonSprite;
+            pill.type = Image.Type.Sliced;
+            pill.pixelsPerUnitMultiplier = 2f;
+            pill.color = Color.white;
+            badge.color = Gold;
+        }
+        else
+        {
+            pill.sprite = null;
+            pill.color = Gold;
+        }
         pill.raycastTarget = false;
         pillImage = pill;
         badge.transform.SetAsLastSibling();

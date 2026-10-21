@@ -631,7 +631,9 @@ public class StageManager : MonoBehaviour
         fr.anchorMax = Vector2.one;
         fr.offsetMin = fr.offsetMax = Vector2.zero;
         Image img = face.GetComponent<Image>();
-        img.sprite = specialTree.headerSprite;
+        // 1.4.8~ 새 도트 스타일: 옛 Theme/ui_button 대신 금장 테두리 돌판(ui_button) · 못 찾으면 특수 강화 창의 이름판 그림
+        UIKit.EnsureStyle();
+        img.sprite = RecommendGlow.PillArt ? UIKit.ButtonSprite : specialTree.headerSprite;
         img.type = Image.Type.Sliced;
         Button b = face.GetComponent<Button>();
         ColorBlock cb = b.colors;

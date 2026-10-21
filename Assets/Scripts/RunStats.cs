@@ -365,13 +365,25 @@ public class RunStats : MonoBehaviour
             back.anchorMin = back.anchorMax = back.pivot = new Vector2(0f, 1f);
             back.anchoredPosition = new Vector2(0f, y);
             Image bg = back.gameObject.AddComponent<Image>();
-            bg.color = new Color(1f, 1f, 1f, 0.06f);
+            // 1.4.8~ 새 도트 스타일: 옅은 흰 칸 대신 막대 틀(ui_bar_frame · 테두리 반 두께 3) · 채움(ui_bar_fill)은 틀 안쪽 홈에 · 길이 비율은 그대로
+            //   그림이 없으면 예전 모습
+            bool art = UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null;
+            float inset = art ? 3f : 0f;
+            if (art)
+            {
+                bg.sprite = UIKit.BarFrameSprite;
+                bg.type = Image.Type.Sliced;
+                bg.pixelsPerUnitMultiplier = 2f;
+                bg.color = new Color(1f, 1f, 1f, 0.9f);
+            }
+            else bg.color = new Color(1f, 1f, 1f, 0.06f);
             bg.raycastTarget = false;
-            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2(width * kv.Value / best, 30f));
+            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2((width - inset * 2f) * kv.Value / best, 30f - inset * 2f));
             fill.anchorMin = fill.anchorMax = fill.pivot = new Vector2(0f, 0.5f);
-            fill.anchoredPosition = Vector2.zero;
+            fill.anchoredPosition = new Vector2(inset, 0f);
             Image fi = fill.gameObject.AddComponent<Image>();
-            fi.color = new Color(bar.r, bar.g, bar.b, 0.45f);
+            if (art) fi.sprite = UIKit.BarFillSprite;
+            fi.color = new Color(bar.r, bar.g, bar.b, art ? 0.6f : 0.45f);
             fi.raycastTarget = false;
             TMP_Text name = UIKit.Text(back, "", 20f, new Color(0.95f, 0.92f, 0.86f), new Vector2(10f, 0f), new Vector2(width - 140f, 30f), TextAlignmentOptions.Left);
             name.rectTransform.anchorMin = name.rectTransform.anchorMax = name.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -528,9 +540,16 @@ public class RunStats : MonoBehaviour
         r.anchoredPosition = new Vector2(-30f, -PausePanelTop);
         r.sizeDelta = new Vector2(PausePanelW, h);           // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
-        bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
-        bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
         UIKit.EnsureStyle();
+        // 1.4.8~ 새 도트 스타일: 단색 판 대신 창 판(ui_panel: 금 이중 테두리 · 모서리 보석) · 그림이 없으면 예전 단색
+        if (UIKit.PanelSprite != null)
+        {
+            bg.sprite = UIKit.PanelSprite;
+            bg.type = Image.Type.Sliced;
+            bg.color = new Color(1f, 1f, 1f, 0.94f);
+        }
+        else bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
+        bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
         float innerW = PausePanelW - PausePad * 2f;
 
         // 제목 「이번 판」 (소제목 28)

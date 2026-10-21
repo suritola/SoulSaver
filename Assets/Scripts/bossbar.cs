@@ -551,6 +551,7 @@ public class bossbar : MonoBehaviour
     Image ultFillImg;
     float shownUlt = -1f;
     const float UltWidth = 596f;
+    float ultInset, ultFillH = 10f;      // 1.4.8~ 채움이 틀 안쪽 홈에 들어가는 여백 · 채움 높이 (막대 그림이 없으면 0 · 10)
 
     void UpdateUltGauge()
     {
@@ -561,17 +562,32 @@ public class bossbar : MonoBehaviour
             r.SetParent(backBar.transform, false);
             r.anchorMin = r.anchorMax = new Vector2(0f, 0f);
             r.pivot = new Vector2(0f, 1f);
-            r.sizeDelta = new Vector2(UltWidth, 10f);
+            // 1.4.8~ 새 도트 스타일: 막대 틀(ui_bar_frame · 테두리 반 두께) 안쪽 홈에 채움(ui_bar_fill · 상태 색을 곱함) — 틀이 보이게 높이 10 → 12 (위끝 그대로 · 아래로 2)
+            //   채움 길이 계산은 그대로 (안쪽 폭 기준) · 그림이 없으면 예전 어두운 칸 + 단색 채움
+            UIKit.EnsureStyle();
+            bool art = UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null;
+            ultInset = art ? 3f : 0f;
+            ultFillH = art ? 6f : 10f;
+            r.sizeDelta = new Vector2(UltWidth, art ? 12f : 10f);
             r.anchoredPosition = new Vector2(12f, -4f);
             Image bi = bg.GetComponent<Image>();
-            bi.color = new Color(0.08f, 0.04f, 0.12f, 0.9f);
+            if (art)
+            {
+                bi.sprite = UIKit.BarFrameSprite;
+                bi.type = Image.Type.Sliced;
+                bi.pixelsPerUnitMultiplier = 2f;
+                bi.color = Color.white;
+            }
+            else bi.color = new Color(0.08f, 0.04f, 0.12f, 0.9f);
             bi.raycastTarget = false;
             GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
             ultFill = fill.GetComponent<RectTransform>();
             ultFill.SetParent(r, false);
             ultFill.anchorMin = ultFill.anchorMax = ultFill.pivot = new Vector2(0f, 0.5f);
-            ultFill.anchoredPosition = Vector2.zero;
+            ultFill.anchoredPosition = new Vector2(ultInset, 0f);
+            ultFill.sizeDelta = new Vector2(0f, ultFillH);
             ultFillImg = fill.GetComponent<Image>();
+            if (art) ultFillImg.sprite = UIKit.BarFillSprite;
             ultFillImg.raycastTarget = false;
         }
         // 1.2.5~ 개발자 · 개발자 엄마도 결계(디버그 모드 · 엄마의 대청소)를 씀 → 게이지가 보임 (칸 4 · 5, BossUltimate.Gauge 가 9 · 10 을 바꿔 읽음)
@@ -582,7 +598,7 @@ public class bossbar : MonoBehaviour
         float g = BossUltimate.Active ? BossUltimate.RemainingFrac : shared ? BossUltimate.SharedGauge : BossUltimate.Gauge(bossKind);
         // 최적화: 1/300 단위로 맞춰 바뀔 때만 크기를 씀 (예전엔 매 프레임 같은 값을 썼음)
         float gq = Mathf.Round(g * 300f) / 300f;
-        if (gq != shownUlt) { shownUlt = gq; ultFill.sizeDelta = new Vector2(UltWidth * gq, 10f); }
+        if (gq != shownUlt) { shownUlt = gq; ultFill.sizeDelta = new Vector2((UltWidth - ultInset * 2f) * gq, ultFillH); }
         UltLabel(BossUltimate.Active ? 0f : g, shared);
         Color uc;
         if (BossUltimate.ErosionPending || (shared && !BossUltimate.Active && g >= 1f))

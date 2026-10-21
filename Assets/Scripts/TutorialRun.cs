@@ -483,14 +483,18 @@ public class TutorialRun : MonoBehaviour
         panel.anchoredPosition = new Vector2(0f, -110f);
         ui = panel.gameObject;
         Image bg = ui.AddComponent<Image>();
-        bg.sprite = UIKit.ButtonSprite;
+        // 1.4.8~ 새 도트 스타일: 창 판(ui_panel: 금 이중 테두리 · 모서리 보석)을 칠하지 않고 · 양 끝 글자는 테두리 · 보석 안쪽으로 18
+        //   그림이 없으면 예전처럼 버튼 그림을 어둡게 칠함
+        bool framed = UIKit.PanelSprite != null;
+        bg.sprite = framed ? UIKit.PanelSprite : UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
-        bg.color = new Color(0.08f, 0.06f, 0.12f, 0.88f);
+        bg.color = framed ? new Color(1f, 1f, 1f, 0.94f) : new Color(0.08f, 0.06f, 0.12f, 0.88f);
         bg.raycastTarget = false;
+        float inset = framed ? 18f : 0f;
 
-        counter = UIKit.Text(panel, "", 22f, new Color(0.75f, 0.7f, 0.85f), new Vector2(-400f, 48f), new Vector2(180f, 34f), TextAlignmentOptions.Left);
+        counter = UIKit.Text(panel, "", 22f, new Color(0.75f, 0.7f, 0.85f), new Vector2(-400f + inset, 48f - inset * 0.5f), new Vector2(180f, 34f), TextAlignmentOptions.Left);
         title = UIKit.Text(panel, "", 34f, Gold, new Vector2(0f, 44f), new Vector2(600f, 46f));
-        check = UIKit.Text(panel, "", 28f, DoneColor, new Vector2(390f, 46f), new Vector2(220f, 40f), TextAlignmentOptions.Right);
+        check = UIKit.Text(panel, "", 28f, DoneColor, new Vector2(390f - inset, 46f - inset * 0.5f), new Vector2(220f, 40f), TextAlignmentOptions.Right);
         body = UIKit.Text(panel, "", 24f, Parch, new Vector2(0f, -10f), new Vector2(940f, 64f));
         body.enableWordWrapping = true;
         body.enableAutoSizing = true;
@@ -501,13 +505,23 @@ public class TutorialRun : MonoBehaviour
         Material outlined = Notice.TextMaterial;
         if (outlined != null) foreach (TMP_Text t in new[] { counter, title, check, body }) t.fontSharedMaterial = outlined;
 
-        RectTransform track = UIKit.Rect("Track", panel, new Vector2(0f, -58f), new Vector2(900f, 10f));
+        // 1.4.8~ 새 도트 스타일: 진행 막대 틀(ui_bar_frame · 테두리 반 두께) + 채움(ui_bar_fill · 금색을 곱함) — 틀 안쪽 홈에 채움 · 길이 계산(fillAmount)은 그대로
+        //   그림이 없으면 예전처럼 옅은 흰 칸 + 버튼 그림 채움
+        bool barArt = UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null;
+        RectTransform track = UIKit.Rect("Track", panel, new Vector2(0f, barArt ? -55f : -58f), new Vector2(900f, barArt ? 14f : 10f));
         Image tb = track.gameObject.AddComponent<Image>();
-        tb.color = new Color(1f, 1f, 1f, 0.12f);
+        if (barArt)
+        {
+            tb.sprite = UIKit.BarFrameSprite;
+            tb.type = Image.Type.Sliced;
+            tb.pixelsPerUnitMultiplier = 2f;
+            tb.color = Color.white;
+        }
+        else tb.color = new Color(1f, 1f, 1f, 0.12f);
         tb.raycastTarget = false;
-        RectTransform fill = UIKit.Rect("Fill", track, Vector2.zero, new Vector2(900f, 10f));
+        RectTransform fill = UIKit.Rect("Fill", track, Vector2.zero, barArt ? new Vector2(894f, 8f) : new Vector2(900f, 10f));
         bar = fill.gameObject.AddComponent<Image>();
-        bar.sprite = UIKit.ButtonSprite;
+        bar.sprite = barArt ? UIKit.BarFillSprite : UIKit.ButtonSprite;
         bar.type = Image.Type.Filled;
         bar.fillMethod = Image.FillMethod.Horizontal;
         bar.color = Gold;

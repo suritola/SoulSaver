@@ -112,16 +112,27 @@ public class SceneFlow : MonoBehaviour
         // 로딩바: 금빛 테두리 · 어두운 칸 · 금 → 주황 채움 (왼쪽부터)
         RectTransform frame = UIKit.Rect("BarFrame", loadingBox, new Vector2(0f, 0f), new Vector2(BarW + 8f, 30f));
         Image fi = frame.gameObject.AddComponent<Image>();
-        fi.color = new Color(0.96f, 0.83f, 0.47f, 1f);
+        // 1.4.8~ 새 도트 스타일: 금 단색 테두리 대신 막대 틀 그림(ui_bar_frame · 테두리 반 두께 3 → 안쪽 홈 BarW+2 × 24 에 칸 · 채움이 그대로 들어감)
+        //   칸은 틀의 홈이 대신하므로 투명 · 채움은 막대 채움 그림(ui_bar_fill)에 주황을 곱함 · 크기 · 길이 계산은 그대로 · 그림이 없으면 예전 모습
+        bool art = UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null;
+        if (art)
+        {
+            fi.sprite = UIKit.BarFrameSprite;
+            fi.type = Image.Type.Sliced;
+            fi.pixelsPerUnitMultiplier = 2f;
+            fi.color = Color.white;
+        }
+        else fi.color = new Color(0.96f, 0.83f, 0.47f, 1f);
         fi.raycastTarget = false;
         RectTransform well = UIKit.Rect("BarWell", frame, Vector2.zero, new Vector2(BarW, 22f));
         Image wi = well.gameObject.AddComponent<Image>();
-        wi.color = new Color(0.1f, 0.06f, 0.13f, 1f);
+        wi.color = art ? new Color(0f, 0f, 0f, 0f) : new Color(0.1f, 0.06f, 0.13f, 1f);
         wi.raycastTarget = false;
         barFill = UIKit.Rect("BarFill", well, Vector2.zero, new Vector2(0f, 22f));
         barFill.anchorMin = barFill.anchorMax = barFill.pivot = new Vector2(0f, 0.5f);
         barFill.anchoredPosition = Vector2.zero;
         Image bi = barFill.gameObject.AddComponent<Image>();
+        if (art) bi.sprite = UIKit.BarFillSprite;
         bi.color = new Color(1f, 0.72f, 0.3f, 1f);
         bi.raycastTarget = false;
         RectTransform shine = UIKit.Rect("BarShine", barFill, Vector2.zero, Vector2.zero);

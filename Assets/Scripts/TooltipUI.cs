@@ -48,8 +48,12 @@ public class TooltipUI : MonoBehaviour
         panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
 
         Image bg = go.GetComponent<Image>();
-        bg.sprite = panelSprite;
-        bg.color = tint;
+        // 1.4.8~ 새 도트 스타일: 게임 씬(옛 Theme/ui_panel) · 메뉴(버튼 그림을 어둡게 칠함) 모두 창 판(ui_panel: 금 이중 테두리 · 모서리 보석)
+        //   그림을 못 찾으면 예전처럼 씬에 지정한 그림 · 색
+        UIKit.EnsureStyle();
+        bool framed = UIKit.PanelSprite != null;
+        bg.sprite = framed ? UIKit.PanelSprite : panelSprite;
+        bg.color = framed ? new Color(1f, 1f, 1f, 0.97f) : tint;
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = false;
 

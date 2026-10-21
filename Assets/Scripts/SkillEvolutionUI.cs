@@ -113,6 +113,17 @@ public class SkillEvolutionUI : MonoBehaviour
         title.text = Loc.T("스킬 진화");
         title.fontStyle = FontStyles.Bold;
         title.alpha = 0f;
+        // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 3배 도트) — 제목의 자식 · 투명도는 제목과 함께
+        Image titleLine = null;
+        UIKit.EnsureStyle();
+        if (UIKit.DividerSprite != null)
+        {
+            RectTransform lr = UIKit.Rect("TitleLine", title.rectTransform, new Vector2(0f, -42f), new Vector2(384f, 24f));
+            titleLine = lr.gameObject.AddComponent<Image>();
+            titleLine.sprite = UIKit.DividerSprite;
+            titleLine.color = new Color(1f, 1f, 1f, 0f);
+            titleLine.raycastTarget = false;
+        }
 
         float spin = 0f;
         for (float t = 0f; t < 1.4f; t += Time.unscaledDeltaTime * speed)
@@ -121,6 +132,7 @@ public class SkillEvolutionUI : MonoBehaviour
             float k = t / 1.4f;
             dim.color = new Color(0.03f, 0.01f, 0.06f, 0.9f * Mathf.Clamp01(k * 2.5f));
             title.alpha = Mathf.Clamp01(k * 2f);
+            if (titleLine != null) titleLine.color = new Color(1f, 1f, 1f, title.alpha);
             spin += Time.unscaledDeltaTime * Mathf.Lerp(40f, 260f, k * k);
             float radius = Mathf.Lerp(330f, 250f, k);
             for (int i = 0; i < n; i++)
@@ -199,6 +211,7 @@ public class SkillEvolutionUI : MonoBehaviour
 
         dim.color = new Color(0.03f, 0.01f, 0.06f, 0.9f);           // 1.0.4~ 건너뛰어도 끝 모습으로
         title.alpha = 1f;
+        if (titleLine != null) titleLine.color = Color.white;
         for (float t = 0f; t < 0.5f && !skip; t += Time.unscaledDeltaTime * speed)
         {
             if (SkipPressed(startedAt)) { skip = true; break; }

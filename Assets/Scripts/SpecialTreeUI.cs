@@ -9,6 +9,7 @@ public class SpecialTreeUI : MonoBehaviour
     [Header("모양")]
     public Sprite nodeSprite;       // 능력 노드 틀
     public Sprite headerSprite;     // 갈래 이름판
+    bool newStyle;                  // 1.4.8~ 이름판 그림이 새 도트 판인지 (작은 배지 · 번호는 테두리 반 두께 · 배지 바탕은 흰색 그대로)
     public Sprite panelSprite;      // 아래 설명창
     public Sprite rootIcon;
     public TMP_FontAsset font;
@@ -88,6 +89,9 @@ public class SpecialTreeUI : MonoBehaviour
     {
         built = true;
         RectTransform root = (RectTransform)transform;
+        // 1.4.8~ 새 도트 스타일: 갈래 이름판 · 배지 · 버튼을 옛 Theme/ui_button 대신 금장 테두리 돌판(ui_button) · 못 찾으면 씬에 지정한 그림
+        UIKit.EnsureStyle();
+        if (RecommendGlow.PillArt) { headerSprite = UIKit.ButtonSprite; newStyle = true; }
 
         // 뿌리
         Vector2 rootPos = new Vector2(0f, 255f);
@@ -235,7 +239,8 @@ public class SpecialTreeUI : MonoBehaviour
         Image bimg = badge.GetComponent<Image>();
         bimg.sprite = headerSprite;
         bimg.type = Image.Type.Sliced;
-        bimg.color = new Color(0.25f, 0.2f, 0.3f, 0.95f);
+        bimg.color = newStyle ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.25f, 0.2f, 0.3f, 0.95f);
+        if (newStyle) bimg.pixelsPerUnitMultiplier = 2f;
         bimg.raycastTarget = false;
         TextMeshProUGUI tag = Text(br, "", 14f, Owned, Vector2.zero, new Vector2(80f, 20f), TextAlignmentOptions.Center);
         badge.SetActive(false);
@@ -251,6 +256,7 @@ public class SpecialTreeUI : MonoBehaviour
         nimg.sprite = headerSprite;
         nimg.type = Image.Type.Sliced;
         nimg.color = new Color(0.85f, 0.45f, 0.05f);
+        if (newStyle) nimg.pixelsPerUnitMultiplier = 2f;
         nimg.raycastTarget = false;
         TextMeshProUGUI ntext = Text(nr, "", 22f, Color.white, Vector2.zero, new Vector2(34f, 34f), TextAlignmentOptions.Center);
         num.SetActive(false);
@@ -403,7 +409,10 @@ public class SpecialTreeUI : MonoBehaviour
             nodeNumberTexts[i].text = on ? (picked.IndexOf(i) + 1).ToString() : "";
             nodeTags[i].text = IsMaxed(i) ? Loc.T("진화 완료") : IsOwned(i) ? (on ? Loc.T("진화!") : Loc.T("진화 가능")) : on ? Loc.T("선택됨") : "";
             nodeBadges[i].SetActive(nodeTags[i].text.Length > 0);
-            nodeBadges[i].GetComponent<Image>().color = on ? new Color(0.55f, 0.35f, 0.05f, 0.98f) : new Color(0.25f, 0.2f, 0.3f, 0.95f);
+            // 1.4.8~ 새 도트 판이면 평소 흰색 그대로 · 고른 것만 금빛 (예전엔 판을 어둡게 칠함)
+            nodeBadges[i].GetComponent<Image>().color = newStyle
+                ? (on ? new Color(1f, 0.78f, 0.38f, 0.98f) : new Color(1f, 1f, 1f, 0.95f))
+                : (on ? new Color(0.55f, 0.35f, 0.05f, 0.98f) : new Color(0.25f, 0.2f, 0.3f, 0.95f));
             nodeTags[i].color = on ? new Color(1f, 0.95f, 0.7f) : IsMaxed(i) ? new Color(0.75f, 0.72f, 0.78f) : Owned;
             nodeTips[i].body = SpecialAbilities.AbilityText(i, specials.abilities[i].description)
                 + (IsOwned(i) && !IsMaxed(i) ? "\n\n<color=#F5D478>" + Loc.T("한 번 더 고르면 진화합니다.") + "</color>" : IsMaxed(i) ? "\n\n<color=#A89C86>" + Loc.T("이미 진화한 능력입니다.") + "</color>" : "");

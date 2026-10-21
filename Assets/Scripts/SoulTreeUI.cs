@@ -259,18 +259,38 @@ public class SoulTreeUI : MonoBehaviour
         bottom.rectTransform.anchorMin = Vector2.zero; bottom.rectTransform.anchorMax = new Vector2(1f, 0f);
         bottom.rectTransform.pivot = new Vector2(0.5f, 0f); bottom.rectTransform.sizeDelta = new Vector2(0f, 76f);      // 1.4.8~ 안내 두 줄 (64 → 76)
         bottom.rectTransform.anchoredPosition = Vector2.zero;
+        // 1.4.8~ 새 도트 스타일: 위 · 아래 띠를 금장 돌판(ui_button)으로 — 화면 밖 세 변으로 16 씩 넘겨 안쪽 가장자리의 금 테두리만 보이게 (무겁지 않게)
+        //   띠가 덮는 화면 안쪽 크기 · 자리는 그대로 · 그림이 없으면 예전 단색 띠
+        bool art = RecommendGlow.PillArt;
+        if (art)
+            foreach (Image bar in new[] { top, bottom })
+            {
+                bool isTop = bar == top;
+                bar.sprite = UIKit.ButtonSprite;
+                bar.type = Image.Type.Sliced;
+                bar.color = new Color(1f, 1f, 1f, 0.95f);
+                RectTransform br = bar.rectTransform;
+                br.sizeDelta = new Vector2(32f, br.sizeDelta.y + 16f);
+                br.anchoredPosition = new Vector2(0f, isTop ? 16f : -16f);
+            }
 
         TMP_Text title = UIKit.Text(root, "영혼 트리", 54f, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
         title.fontStyle = FontStyles.Bold;
         UIKit.Pin(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -60f));
+        // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 4배 도트) — 위 띠(136) 안
+        if (UIKit.DividerSprite != null)
+        {
+            Image line = Img("TitleLine", root, Vector2.zero, new Vector2(512f, 32f), UIKit.DividerSprite, Color.white);
+            UIKit.Pin(line.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -110f));
+        }
         shardBox = UIKit.Rect("Shards", root, new Vector2(-735f, 470f), new Vector2(400f, 108f));
         Image sb = shardBox.gameObject.AddComponent<Image>();
         sb.sprite = UIKit.ButtonSprite;
         sb.type = Image.Type.Sliced;
-        sb.color = new Color(0.55f, 0.42f, 0.85f);
+        sb.color = art ? Color.white : new Color(0.55f, 0.42f, 0.85f);      // 1.4.8~ 새 판이면 칠하지 않음 · 안쪽 진한 판도 투명 (돌판이 그대로 보이게)
         sb.raycastTarget = false;
         UIKit.Pin(shardBox, new Vector2(0f, 1f), new Vector2(225f, -70f));
-        Img("Inner", shardBox, Vector2.zero, new Vector2(380f, 88f), null, new Color(0.08f, 0.05f, 0.14f, 0.97f));
+        Img("Inner", shardBox, Vector2.zero, new Vector2(380f, 88f), null, art ? new Color(0f, 0f, 0f, 0f) : new Color(0.08f, 0.05f, 0.14f, 0.97f));
         Img("OrbGlow", shardBox, new Vector2(-148f, 0f), new Vector2(110f, 110f), sp.glowSprite, new Color(0.75f, 0.55f, 1f, 0.7f));
         Img("Orb", shardBox, new Vector2(-148f, 0f), new Vector2(44f, 44f), sp.glowSprite, new Color(0.95f, 0.9f, 1f));
         UIKit.Text(shardBox, "영혼 조각", 20f, new Color(0.8f, 0.7f, 1f), new Vector2(20f, 26f), new Vector2(300f, 28f), TextAlignmentOptions.Left);

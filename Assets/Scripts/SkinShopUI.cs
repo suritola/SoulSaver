@@ -89,7 +89,14 @@ public class SkinShopUI : MonoBehaviour
 
         // 아래 설명줄
         Image bar = UIKit.Rect("DetailBar", win, new Vector2(0f, -360f), new Vector2(1560f, 150f)).gameObject.AddComponent<Image>();
-        bar.color = new Color(0.05f, 0.04f, 0.08f, 0.9f);
+        // 1.4.8~ 새 도트 스타일: 단색 대신 금장 돌판(ui_button · 테두리가 얇아 글자 자리 그대로) · 그림이 없으면 예전 단색
+        if (RecommendGlow.PillArt)
+        {
+            bar.sprite = UIKit.ButtonSprite;
+            bar.type = Image.Type.Sliced;
+            bar.color = new Color(1f, 1f, 1f, 0.95f);
+        }
+        else bar.color = new Color(0.05f, 0.04f, 0.08f, 0.9f);
         // 1.3.3~ 「소리 듣기」 버튼을 없앰 (사용자 지시) → 설명 칸을 그 자리까지 넓힘
         titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-170f, -318f), new Vector2(1200f, 44f), TextAlignmentOptions.Left);
         descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-170f, -382f), new Vector2(1200f, 80f), TextAlignmentOptions.TopLeft);

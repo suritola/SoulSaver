@@ -488,7 +488,8 @@ public static class Contracts
                 Image bg = card.gameObject.AddComponent<Image>();
                 bg.sprite = UIKit.ButtonSprite;
                 bg.type = Image.Type.Sliced;
-                bg.color = new Color(0.1f, 0.08f, 0.14f, 0.94f);
+                // 1.4.8~ 새 도트 판(금장 돌판)이면 흰색 그대로 (예전엔 판을 거의 검게 칠해 금 테두리까지 묻혔음)
+                bg.color = RecommendGlow.PillArt ? new Color(1f, 1f, 1f, 0.94f) : new Color(0.1f, 0.08f, 0.14f, 0.94f);
                 bg.raycastTarget = false;
                 TMP_Text tag = UIKit.Text(card, "", 20f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 32f), new Vector2(W - 24f, 24f), TextAlignmentOptions.Left);
                 tag.text = KindTag(a.def) + (a.carried ? "  ·  <color=#C9A2FF>" + Loc.T("contract.carried.tag") + "</color>" : "");
@@ -541,7 +542,10 @@ public static class Contracts
             r.anchoredPosition = new Vector2(30f, 24f);         // 각인 목록(가운데 -20 · 최대 높이 464 → 아래끝 -252) 밑
             r.sizeDelta = new Vector2(W, h);
             Image bg = panel.GetComponent<Image>();
-            bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
+            // 1.4.8~ 새 도트 스타일: 단색 판 대신 창 판(ui_panel: 금 이중 테두리 · 모서리 보석) · 못 찾으면 예전 단색
+            bool framed = UIKit.PanelSprite != null;
+            if (framed) { bg.sprite = UIKit.PanelSprite; bg.type = Image.Type.Sliced; }
+            bg.color = framed ? new Color(1f, 1f, 1f, 0.94f) : new Color(0.06f, 0.05f, 0.08f, 0.88f);
             bg.raycastTarget = true;        // 일시정지 HUD 툴팁(PauseInspect)이 패널 밑 HUD 칸 · 적을 보지 않게 (RunStats 요약 판과 같게)
             UIKit.Text(r, "contract.run.title", 24f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, h / 2f - 26f), new Vector2(W - 30f, 34f));
             for (int i = 0; i < run.Count; i++)
@@ -552,7 +556,7 @@ public static class Contracts
                 name.text = a.def.Name;
                 TMP_Text cond = UIKit.Text(r, "", 15f, new Color(0.7f, 0.66f, 0.6f), new Vector2(-40f, y - 15f), new Vector2(W - 120f, 24f), TextAlignmentOptions.Left);
                 cond.text = a.def.Cond;
-                TMP_Text prog = UIKit.Text(r, "", 17f, a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(W / 2f - 64f, y), new Vector2(110f, 28f), TextAlignmentOptions.Right);
+                TMP_Text prog = UIKit.Text(r, "", 17f, a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(W / 2f - (framed ? 70f : 64f), y), new Vector2(110f, 28f), TextAlignmentOptions.Right);      // 새 판이면 오른쪽 금 테두리 안쪽으로 6
                 prog.text = a.done ? Loc.T("board.cell.done") : Progress(a.def, Mathf.Max(a.best, a.def.Now));
                 foreach (TMP_Text t in new[] { name, cond, prog }) { t.enableWordWrapping = false; UIKit.Forget(t); }
             }
