@@ -99,21 +99,21 @@ public static partial class LocTable
           "All effects up to the chosen weight stack. Each weight adds {0}% points.",
           "選んだ重みまでの効果がすべて重なります。重み1ごとにポイントが{0}%増えます。",
           "所选重量及以下的效果全部叠加。每1重量点数增加{0}%。");
-        A("transcend.hint", "최대 레벨에 닿은 뒤에는 경험치 막대를 이야기 모드에서 두 번(첫 카드는 한 번), 무한 모드에서 세 번 채울 때마다 초월 카드로 판의 규칙 하나를 바꿉니다. 레벨은 오르지 않고, 같은 카드를 다시 고르면 다음 단계가 됩니다.",
-          "After reaching max level, a Transcendence card changes one rule of the run each time your XP bar fills twice in Story Mode (once for the first card) or three times in Endless Mode. Your level doesn't rise, and picking the same card again advances it to the next stage.",
-          "最大レベルに達した後は、経験値バーをストーリーモードで2回（最初のカードは1回）、エンドレスモードで3回満タンにするたびに、超越カードでこのプレイのルールを1つ変えます。レベルは上がらず、同じカードをもう一度選ぶと次の段階になります。",
-          "达到等级上限后，在故事模式中每填满经验条两次（第一张卡只需一次）、在无尽模式中每填满三次，就用超越卡改变本局的一条规则。等级不会提升，再次选择同一张卡会进入下一阶段。");
-        A("transcend.codex.levelhint", "레벨이 오를 때 세 장 중 하나를 고르거나 건너뜁니다 · 최대 레벨 50 (그 뒤로는 경험치 막대를 이야기 모드 두 번 · 무한 모드 세 번 채울 때마다 초월 카드 · 무한 모드 한계 돌파에서는 레벨 100까지 오르며 레벨업 세 번마다 초월 카드) · 재료를 모두 올리면 스킬 진화",
-          "Pick one of three cards or skip on each level-up · Max level 50 (after that, a Transcendence card every 2 XP bars in Story · every 3 in Endless · in Endless Beyond the Limit you level up to 100 and get a Transcendence card every 3 level-ups) · Max all ingredients to evolve a skill",
-          "レベルアップごとに3枚から1枚を選ぶかスキップ・最大レベル50（その後は経験値バーをストーリー2回・エンドレス3回満タンにするたびに超越カード・エンドレスの限界突破ではレベル100まで上がり、3回レベルアップするごとに超越カード）・素材をすべて上げるとスキル進化",
-          "每次升级从三张中选一张或跳过 · 等级上限50（之后故事模式每填满经验条两次、无尽模式每三次获得超越卡 · 无尽模式突破极限后可升至100级，每升3级获得超越卡）· 素材全部升满即可技能进化");
-        A("transcend.codex.rule", "최대 레벨(50)에 닿은 뒤 경험치 막대를 이야기 모드에서 두 번(첫 카드는 한 번), 무한 모드에서 세 번 채울 때마다 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 레벨은 오르지 않습니다. 같은 카드를 다시 고르면 다음 단계가 됩니다. (최대 3단계 · 맵 지배는 2단계) 무한 모드 한계 돌파에서는 최대 레벨이 100으로 늘어, 100까지는 레벨업 세 번마다 초월 카드를 고릅니다.",
-          "After reaching max level (50), each time your XP bar fills twice in Story Mode (once for the first card) or three times in Endless Mode, you pick one of three gold-framed Transcendence cards to change a rule of the run. Your level doesn't rise. Picking the same card again advances it to the next stage. (Up to stage 3 · Dominion up to stage 2) In Endless Beyond the Limit, the max level rises to 100, and until then you pick a Transcendence card every 3 level-ups.",
-          "最大レベル（50）に達した後、経験値バーをストーリーモードで2回（最初のカードは1回）、エンドレスモードで3回満タンにするたびに、金枠の超越カード3枚から1枚を選んでこのプレイのルールを変えます。レベルは上がりません。同じカードをもう一度選ぶと次の段階になります。（最大3段階・地の支配は2段階）エンドレスの限界突破では最大レベルが100に上がり、100までは3回レベルアップするごとに超越カードを選びます。",
-          "达到等级上限（50）后，在故事模式中每填满经验条两次（第一张卡只需一次）、在无尽模式中每填满三次，就从三张金框超越卡中选择一张，改变本局的规则。等级不会提升。再次选择同一张卡会进入下一阶段。（最多3阶段 · 地图支配最多2阶段）无尽模式突破极限后等级上限提升至100，在此之前每升3级选择一张超越卡。");
-        A("transcend.codex.list", "메아리: 필살기 뒤 영혼 메아리 · 영혼 수확: 처치 수마다 영혼 파동 · 시간의 틈: 위기에 세상이 멈춤 · 연금 손: 코인이 경험치로 연성 · 그림자 분신: 따라오며 쏘는 분신 · 중력장: 멈춰 서면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체가 다시 생김 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터져 번짐 · 영혼 보호막: 맞지 않으면 한 번 막음 · 영혼불 발자국: 지나간 자리가 불탐",
-          "Echo: a soul echo after your ultimate · Reaping: a soul wave every so many kills · Time Rift: the world stops when you're in danger · Alchemist's Touch: coins transmute into XP · Shadow Clones: clones that follow you and shoot · Gravity Well: stand still to pull things in · Reversal: a huge explosion on Last Stand · Dominion: map objects reappear (Story mode) · Cascade: slain enemies burst and spread · Soul Ward: blocks one hit if you avoid damage · Soulfire Steps: your trail burns",
-          "残響：必殺技の後に魂の残響・魂の収穫：撃破数ごとに魂の波動・時の裂け目：危機に世界が止まる・錬金の手：コインが経験値に錬成・影分身：ついて来て撃つ分身・重力場：立ち止まると引き寄せる・逆転：最後の砦で大爆発・地の支配：マップの物体が再び現れる（ストーリーモード）・連鎖崩壊：倒れた敵が破裂して広がる・魂の障壁：被弾しなければ1回防ぐ・魂火の足跡：通った跡が燃える",
-          "回响：必杀技后的灵魂回响 · 灵魂收割：每击败一定数量敌人触发灵魂波动 · 时间裂隙：危急时世界静止 · 炼金之手：金币炼成经验 · 影分身：跟随并射击的分身 · 重力场：静止时吸引周围 · 逆转：最后的堡垒触发大爆炸 · 地图支配：地图物体重新出现（故事模式）· 连锁崩坏：被击败的敌人爆裂扩散 · 灵魂护盾：未受攻击时抵挡一次 · 魂火足迹：走过的地方燃烧");
+        A("transcend.hint", "최대 레벨 뒤에는 경험치 막대를 이야기 모드 두 번(첫 장은 한 번) · 무한 모드 세 번 채울 때마다 초월 카드를 고릅니다. (레벨은 그대로) 같은 카드를 다시 고르면 단계가 오릅니다.",
+          "After max level, fill the XP bar twice in Story (once for the first card) or three times in Endless to pick a Transcendence card. (Your level stays) Pick the same card again to raise its stage.",
+          "最大レベル後は、経験値バーをストーリー2回（最初は1回）・エンドレス3回満たすたびに超越カードを選びます。（レベルはそのまま）同じカードを再び選ぶと段階が上がります。",
+          "达到等级上限后，故事模式每填满经验条两次（第一张一次）、无尽模式每三次可选一张超越卡。（等级不变）再次选择同一张卡会提升阶段。");
+        A("transcend.codex.levelhint", "레벨이 오르면 세 장 중 하나를 고르거나 건너뜁니다. 최대 레벨 50 뒤에는 막대를 이야기 모드 두 번 · 무한 모드 세 번 채울 때마다 초월 카드를 고릅니다. (한계 돌파: 레벨 100까지 · 레벨업 세 번마다) 재료를 모두 올리면 스킬이 진화합니다.",
+          "Each level-up, pick one of three cards or skip. After max level 50, pick a Transcendence card every 2 XP bars in Story or 3 in Endless. (Beyond the Limit: up to level 100, every 3 level-ups) Max all ingredients to evolve a skill.",
+          "レベルアップごとに3枚から1枚を選ぶかスキップします。最大レベル50の後は、バーをストーリー2回・エンドレス3回満たすたびに超越カードを選びます。（限界突破：レベル100まで・3回レベルアップごと）素材をすべて上げるとスキルが進化します。",
+          "每次升级从三张中选一张或跳过。等级上限50之后，故事模式每填满经验条两次、无尽模式每三次可选一张超越卡。（突破极限：可升至100级 · 每升3级）素材全部升满即可进化技能。");
+        A("transcend.codex.rule", "최대 레벨(50) 뒤 경험치 막대를 이야기 모드 두 번(첫 장은 한 번) · 무한 모드 세 번 채울 때마다 금테 초월 카드 세 장 중 하나를 골라 판의 규칙을 바꿉니다. 같은 카드를 다시 고르면 단계가 오릅니다. (최대 3단계 · 맵 지배 2단계 · 한계 돌파는 레벨업 세 번마다)",
+          "After max level (50), fill the XP bar twice in Story (once for the first card) or three times in Endless to pick one of three gold-framed Transcendence cards and change a rule of the run. Pick the same card again to raise its stage. (Up to stage 3 · Dominion 2 · Beyond the Limit: every 3 level-ups)",
+          "最大レベル（50）の後、経験値バーをストーリー2回（最初は1回）・エンドレス3回満たすたびに、金枠の超越カード3枚から1枚を選んでルールを変えます。同じカードを再び選ぶと段階が上がります。（最大3段階・地の支配は2段階・限界突破は3回レベルアップごと）",
+          "达到等级上限（50）后，故事模式每填满经验条两次（第一张一次）、无尽模式每三次，从三张金框超越卡中选一张改变规则。再次选择同一张卡会提升阶段。（最多3阶段 · 地图支配2阶段 · 突破极限每升3级）");
+        A("transcend.codex.list", "메아리: 필살기 뒤 메아리 · 영혼 수확: 처치 수마다 파동 · 시간의 틈: 위기에 시간 정지 · 연금 손: 코인 → 경험치 · 그림자 분신: 따라와 쏘는 분신 · 중력장: 서 있으면 끌어당김 · 역전: 최후의 보루에 대폭발 · 맵 지배: 맵 물체 부활 (이야기 모드) · 연쇄 붕괴: 쓰러진 적이 터짐 · 영혼 보호막: 한 번 막음 · 영혼불 발자국: 불타는 발자국",
+          "Echo: an echo after your Ultimate · Reaping: a wave every so many kills · Time Rift: time stops in danger · Alchemist's Touch: coins → XP · Shadow Clones: clones that shoot · Gravity Well: stand still to pull · Reversal: blast on Last Stand · Dominion: map objects respawn (Story) · Cascade: slain enemies burst · Soul Ward: blocks one hit · Soulfire Steps: a burning trail",
+          "残響：必殺技後の残響・魂の収穫：撃破数ごとに波動・時の裂け目：危機に時間停止・錬金の手：コイン→経験値・影分身：ついて来て撃つ分身・重力場：立ち止まると引き寄せ・逆転：最後の砦で大爆発・地の支配：物体が再出現（ストーリー）・連鎖崩壊：倒れた敵が破裂・魂の障壁：1回防ぐ・魂火の足跡：燃える足跡",
+          "回响：必杀技后回响 · 灵魂收割：按击杀数触发波动 · 时间裂隙：危急时时间静止 · 炼金之手：金币→经验 · 影分身：跟随射击的分身 · 重力场：静止时吸引 · 逆转：最后的堡垒触发大爆炸 · 地图支配：物体重生（故事模式）· 连锁崩坏：被击败的敌人爆裂 · 灵魂护盾：抵挡一次 · 魂火足迹：燃烧的足迹");
     }
 }
