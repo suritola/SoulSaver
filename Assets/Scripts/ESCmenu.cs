@@ -270,6 +270,7 @@ public class ESCmenu : MonoBehaviour
         }
 
         if (escMenu != null) escMenu.SetActive(isEscOpen);
+        if (isEscOpen && escMenu != null) escMenu.transform.SetAsLastSibling();      // 1.4.8~ 어두운 막이 HUD 위로 (뒤에 여는 설정 · 빌드 보기 창은 그 뒤에 붙어 다시 위)
         // 1.4.8~ 사용자 「ESC 화면 같은 데서도 쓰잘데기없이 뭐가 많다」: 양옆 패널(이번 판 통계 · 지금 가진 스킬)을 늘 띄우지 않고 메뉴의 「빌드 보기」 버튼으로
         RunStats.ShowSummary(false);
         PauseBuild.Show(false);

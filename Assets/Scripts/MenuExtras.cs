@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -183,50 +184,57 @@ public static class MenuExtras
         if (clonedIcon != null) Object.Destroy(clonedIcon.gameObject);
         foreach (GameObject hide in new[] { character, skins, evo, tutorial })
             if (hide != null) hide.SetActive(false);
-        (GameObject go, string icon)[] tiles =
+        // 1.4.8~ 사용자 「게임이 덜 완성된 것 같다」: 칸 격자 대신 게임 시작 아래 같은 폭 버튼을 세로로 (도감 · 일일 도전 · 설정 · 더 보기 · 게임 종료)
+        //   글자만 · 같은 폭 · 같은 간격 — 흔한 게임 메인 메뉴 모양 (게임 시작 바로 아래 한 줄은 영혼의 무게 버튼 자리로 비워 둠)
+        GameObject[] list = { codex, daily, settings, more, exit };
         {
-            (codex, "menu_codex"), (daily, "menu_daily"), (settings, "menu_settings"), (more, ""),
-        };
-        for (int i = 0; i < tiles.Length; i++)
+            // 1.4.8~ 메뉴 열 뒤 어두운 판: 빨간 카펫 위 글자가 읽히게 (테두리 없이 · 위아래로 옅어지는 느낌은 두 겹으로)
+            float top = StartY + StartH * 0.5f + 12f, bottom = StartY - StartH * 0.5f - (LockRowH + Gap) - (ListH + ListGap) * list.Length - 6f;
+            for (int layer = 0; layer < 2; layer++)
+            {
+                float pad = layer == 0 ? 40f : 0f;
+                RectTransform back = UIKit.Rect("MenuBack" + layer, sr.parent, new Vector2(0f, (top + bottom) * 0.5f), new Vector2(ListW + 120f + pad * 2f, top - bottom + pad));
+                back.SetSiblingIndex(start.transform.GetSiblingIndex());
+                Image bi = back.gameObject.AddComponent<Image>();
+                bi.color = new Color(0.04f, 0.02f, 0.07f, layer == 0 ? 0.28f : 0.42f);
+                bi.raycastTarget = false;
+            }
+        }
+        float listY = StartY - StartH * 0.5f - (LockRowH + Gap) - ListH * 0.5f;
+        for (int i = 0; i < list.Length; i++)
         {
-            if (tiles[i].go == null) continue;
-            RectTransform r = (RectTransform)tiles[i].go.transform;
-            r.sizeDelta = new Vector2(TileW, TileH);
-            r.anchoredPosition = new Vector2(ColumnX(i % 4), TileTopY - TileH * 0.5f - (TileH + Gap) * (i / 4));
-            Image img = tiles[i].go.GetComponent<Image>();
-            bool locked = dailyLocked && tiles[i].go == daily;
-            if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);
-            AddIcon(tiles[i].go, tiles[i].icon, new Vector2(0f, 20f), 56f);
-            if (locked) MarkLocked(tiles[i].go);
-            TMP_Text t = tiles[i].go.GetComponentInChildren<TMP_Text>(true);
+            GameObject go = list[i];
+            if (go == null) continue;
+            RectTransform r = (RectTransform)go.transform;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+            r.sizeDelta = new Vector2(ListW, ListH);
+            r.anchoredPosition = new Vector2(0f, listY - (ListH + ListGap) * i);
+            Image img = go.GetComponent<Image>();
+            bool locked = dailyLocked && go == daily;
+            if (img != null) img.color = go == exit ? new Color(0.72f, 0.58f, 0.62f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);
+            if (locked) MarkLocked(go);
+            TMP_Text t = go.GetComponentInChildren<TMP_Text>(true);
             if (t == null) continue;
             RectTransform lr = t.rectTransform;
             lr.anchorMin = lr.anchorMax = new Vector2(0.5f, 0.5f);
-            lr.sizeDelta = new Vector2(TileW - 10f, 46f);       // 1.4.8~ 두 줄까지 (en 「Daily Challenge」 · 「Skill Evolution」이 20 아래로 줄지 않게)
-            lr.anchoredPosition = new Vector2(0f, -34f);
+            lr.sizeDelta = new Vector2(ListW - 40f, ListH - 10f);
+            lr.anchoredPosition = Vector2.zero;
             t.enableAutoSizing = true;
             t.fontSizeMin = 20f;
-            t.fontSizeMax = 26f;
-            t.lineSpacing = -12f;
+            t.fontSizeMax = 30f;
+            t.enableWordWrapping = false;
             if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
+            MenuItemFx.Apply(go.GetComponent<Button>(), 32f, false, locked);
         }
-
-        // 1.0.4~: 튜토리얼을 끝까지 마쳤으면 칸 오른쪽 위에 초록 체크
-        // 1.1~ 폰트에 ✔ 글자가 없어 빈 네모(□)로 보였으므로 막대 두 개로 그림
-        if (tutorial != null && TutorialRun.Done) CheckMark(tutorial.transform, new Vector2(66f, 40f));
-        TMP_Text moreLabel = more.GetComponentInChildren<TMP_Text>(true);       // 「더 보기」는 그림 없이 글자만 가운데
-        if (moreLabel != null) { moreLabel.rectTransform.anchoredPosition = Vector2.zero; moreLabel.fontSizeMax = 28f; }
-        if (exit != null)
+        // 1.4.8~ 게임 시작 · 이어하기도 글자 메뉴 (게임 시작이 가장 크게 · 금빛) · ▶ 그림은 뺌
+        foreach (GameObject top in new[] { start, sr.parent.Find("ContinueButton") != null ? sr.parent.Find("ContinueButton").gameObject : null })
         {
-            // 1.4.8~ 게임 종료: 칸 대신 왼쪽 아래 작은 버튼
-            RectTransform er = (RectTransform)exit.transform;
-            er.anchorMin = er.anchorMax = er.pivot = Vector2.zero;
-            er.sizeDelta = new Vector2(200f, 56f);
-            er.anchoredPosition = new Vector2(30f, 26f);
-            Image ei = exit.GetComponent<Image>();
-            if (ei != null) ei.color = new Color(0.78f, 0.62f, 0.64f);
-            TMP_Text et = exit.GetComponentInChildren<TMP_Text>(true);
-            if (et != null) { et.rectTransform.anchorMin = et.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); et.rectTransform.anchoredPosition = Vector2.zero; et.rectTransform.sizeDelta = new Vector2(190f, 50f); et.enableAutoSizing = true; et.fontSizeMax = 24f; et.fontSizeMin = 20f; }
+            if (top == null) continue;
+            Transform ic = top.transform.Find("Icon");
+            if (ic != null) Object.Destroy(ic.gameObject);
+            TMP_Text tl = top.GetComponentInChildren<TMP_Text>(true);
+            if (tl != null) { tl.rectTransform.anchoredPosition = Vector2.zero; tl.rectTransform.sizeDelta = new Vector2(((RectTransform)top.transform).sizeDelta.x - 20f, StartH - 10f); }
+            MenuItemFx.Apply(top.GetComponent<Button>(), 54f, true, false);
         }
 
         InstallDifficulty(sr);
@@ -416,8 +424,10 @@ public static class MenuExtras
     public const float TileW = 176f, TileH = 122f, Gap = 14f;
     public const float ColW = TileW * 4f + Gap * 3f;          // 746
     const float DiffY = 118f, DiffH = 58f, HintY = 66f, StartY = -20f, StartH = 110f, LockY = -106f, TileTopY = -137f;
+    // 1.4.8~ 세로 메뉴: 게임 시작(-75 아래끝) → 영혼의 무게 줄(LockRowH) → 버튼 다섯 (-138 ~ -480)
+    const float ListW = 460f, ListH = 60f, ListGap = 10f, LockRowH = 40f;
     public const float SideTop = StartY + StartH * 0.5f;                  // 35
-    public const float SideBottom = TileTopY - TileH;                     // -259 (1.4.8~ 칸 한 줄)
+    public const float SideBottom = -480f;                                // 1.4.8~ 세로 메뉴 아래끝
     public const float ColRight = ColW * 0.5f;                            // 373
     static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
 
@@ -574,11 +584,24 @@ public static class MenuExtras
             Difficulty d = (Difficulty)i;
             bool open = GameMode.IsUnlocked(d), on = open && GameMode.Current == d;
             buttons[i].interactable = open;
+            // 1.4.8~ 상자 대신 글자 탭: 고른 난이도만 금빛 글자 · 아래 금빛 줄, 나머지는 흐린 글자 (잠긴 것은 더 흐리게)
             Image img = buttons[i].GetComponent<Image>();
-            img.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.6f, 0.58f, 0.65f) : new Color(0.25f, 0.24f, 0.28f, 0.8f);
-            buttons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);     // 1.4.8~ 1.08 → 1.05 (칸 사이 Gap 14 안에서 이웃과 닿지 않게)
+            img.color = new Color(1f, 1f, 1f, 0f);
+            buttons[i].transform.localScale = Vector3.one;
             TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
-            label.color = open ? new Color(0.96f, 0.9f, 0.8f) : new Color(0.55f, 0.52f, 0.5f);
+            label.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.78f, 0.74f, 0.7f) : new Color(0.42f, 0.4f, 0.42f);
+            label.fontSize = 30f;
+            label.enableAutoSizing = false;
+            Transform ul = buttons[i].transform.Find("Underline");
+            if (ul == null)
+            {
+                RectTransform ur = UIKit.Rect("Underline", buttons[i].transform, new Vector2(0f, -DiffH * 0.5f + 6f), new Vector2(TileW * 0.62f, 3f));
+                Image ui = ur.gameObject.AddComponent<Image>();
+                ui.color = new Color(0.96f, 0.83f, 0.47f);
+                ui.raycastTarget = false;
+                ul = ur;
+            }
+            ul.gameObject.SetActive(on);
         }
         // 고른 난이도가 무엇이 다른지 (1.0.4~, 예전엔 잠금 안내만 · 다 열리면 비었음) + 잠긴 난이도가 있으면 여는 방법
         // 체험판은 쉬움만이라 「쉬움을 클리어하면」 대신 정식판 안내 (1.0.4~)
@@ -649,6 +672,54 @@ public static class MenuExtras
         r.sizeDelta = cr.sizeDelta = new Vector2(half, H);
         cr.anchoredPosition = new Vector2((half + 16f) * 0.5f, r.anchoredPosition.y);
         r.anchoredPosition = new Vector2(-(half + 16f) * 0.5f, r.anchoredPosition.y);
+        StyleEsc(esc);
+    }
+
+    // 1.4.8~ 사용자 「큰 돈 주고 산 게임처럼 · ESC 도」: 창 틀 · 빨간 띠를 걷고 화면 전체를 어둡게 덮은 뒤
+    //   제목 「일시정지」 아래 글자 메뉴 한 줄씩 (계속하기 · 빌드 보기 · 설정 · 다시 시작 · 메인 메뉴로) — 메인 메뉴와 같은 MenuItemFx
+    static void StyleEsc(ESCmenu esc)
+    {
+        Transform m = esc.escMenu.transform;
+        RectTransform mr = (RectTransform)m;
+        foreach (string n in new[] { "Window", "Banner" })
+        {
+            Transform t = m.Find(n);
+            if (t != null) t.gameObject.SetActive(false);
+        }
+        // 화면 전체 막 (맨 뒤 · 누름을 받아 뒤 HUD 를 막음)
+        RectTransform dim = UIKit.Rect("Dim", m, Vector2.zero, Vector2.zero);
+        dim.SetAsFirstSibling();
+        dim.anchorMin = Vector2.zero; dim.anchorMax = Vector2.one;
+        dim.offsetMin = new Vector2(-4000f, -4000f); dim.offsetMax = new Vector2(4000f, 4000f);
+        Image di = dim.gameObject.AddComponent<Image>();
+        di.color = new Color(0.02f, 0.01f, 0.04f, 0.82f);
+        Transform title = m.Find("TItle");
+        if (title != null) title.gameObject.SetActive(false);
+        TMP_Text head = UIKit.Text(m, "일시정지", 64f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(800f, 90f));
+        head.name = "PauseTitle";
+        RectTransform hl = UIKit.Rect("PauseTitleLine", m, new Vector2(0f, 200f), new Vector2(360f, 2f));
+        Image hli = hl.gameObject.AddComponent<Image>();
+        hli.color = new Color(0.96f, 0.83f, 0.47f, 0.6f);
+        hli.raycastTarget = false;
+        string[] order = { "resume", "BuildViewButton", "SettingsButton", "RestartButton", "Menu" };
+        float y = 140f;
+        foreach (string n in order)
+        {
+            Transform t = m.Find(n);
+            if (t == null) foreach (Button b in m.GetComponentsInChildren<Button>(true)) if (b.name == n) { t = b.transform; break; }
+            if (t == null) continue;
+            if (t.parent != m) t.SetParent(m, false);
+            RectTransform br = (RectTransform)t;
+            br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 0.5f);
+            br.sizeDelta = new Vector2(460f, 64f);
+            br.anchoredPosition = new Vector2(0f, y);
+            TMP_Text bt = t.GetComponentInChildren<TMP_Text>(true);
+            if (bt != null) { bt.rectTransform.anchorMin = bt.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); bt.rectTransform.anchoredPosition = Vector2.zero; bt.rectTransform.sizeDelta = new Vector2(440f, 60f); }
+            MenuItemFx.Apply(t.GetComponent<Button>(), n == "resume" ? 40f : 34f, n == "resume", false);
+            y -= n == "RestartButton" ? 96f : 74f;        // 「메인 메뉴로」는 한 칸 띄움
+        }
+        Transform hint = m.Find("ResumeHint");
+        if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, y - 30f);
     }
 }
 
@@ -2107,4 +2178,87 @@ public static class LanguagePicker
 public class SettingsInput : MonoBehaviour
 {
     void Update() => SettingsUI.Tick();
+}
+
+// 1.4.8~ 글자 메뉴 버튼 (메인 메뉴 · ESC): 상자 대신 글자 · 마우스를 올리거나 패드로 고르면 금빛 글자 · 은은한 띠 · 아래 줄이 차오름
+//   시간이 멈춘 ESC 에서도 움직이게 실제 시간 · 버튼 상자 그림은 투명으로 두고 누름만 받음
+public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
+{
+    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static readonly Color Parch = new Color(0.9f, 0.86f, 0.8f);
+    static readonly Color Dim = new Color(0.5f, 0.48f, 0.5f);
+
+    Button button;
+    TMP_Text label;
+    Image band, line;
+    bool primary, locked, over, selected;
+    float k;
+
+    public static void Apply(Button b, float size, bool primary, bool locked)
+    {
+        if (b == null) return;
+        MenuItemFx fx = b.GetComponent<MenuItemFx>();
+        if (fx == null) fx = b.gameObject.AddComponent<MenuItemFx>();
+        fx.button = b;
+        fx.primary = primary;
+        fx.locked = locked;
+        b.transition = Selectable.Transition.None;
+        Image img = b.GetComponent<Image>();
+        if (img != null) img.color = new Color(1f, 1f, 1f, 0f);
+        RectTransform r = (RectTransform)b.transform;
+        fx.label = b.GetComponentInChildren<TMP_Text>(true);
+        if (fx.label != null)
+        {
+            fx.label.enableAutoSizing = true;
+            fx.label.fontSizeMax = size;
+            fx.label.fontSizeMin = 20f;
+            fx.label.alignment = TextAlignmentOptions.Center;
+        }
+        if (fx.band == null)
+        {
+            // 뒤 띠: 가운데가 진하고 양끝이 옅은 금빛 (Sliced 버튼 그림을 아주 옅게)
+            RectTransform br = UIKit.Rect("HoverBand", b.transform, Vector2.zero, new Vector2(r.sizeDelta.x, r.sizeDelta.y * 0.86f));
+            br.SetAsFirstSibling();
+            fx.band = br.gameObject.AddComponent<Image>();
+            fx.band.sprite = null;
+            fx.band.raycastTarget = false;
+            RectTransform lr = UIKit.Rect("HoverLine", b.transform, new Vector2(0f, -r.sizeDelta.y * 0.5f + 4f), new Vector2(r.sizeDelta.x * 0.5f, 2f));
+            fx.line = lr.gameObject.AddComponent<Image>();
+            fx.line.color = Gold;
+            fx.line.raycastTarget = false;
+        }
+        fx.Paint(true);
+    }
+
+    public void OnPointerEnter(PointerEventData e) => over = true;
+    public void OnPointerExit(PointerEventData e) => over = false;
+    public void OnSelect(BaseEventData e) => selected = true;
+    public void OnDeselect(BaseEventData e) => selected = false;
+    void OnDisable() { over = selected = false; k = 0f; Paint(true); }
+
+    void Update()
+    {
+        float target = (over || selected) && button != null && button.interactable && !locked ? 1f : 0f;
+        if (Mathf.Approximately(k, target)) return;
+        k = Mathf.MoveTowards(k, target, Time.unscaledDeltaTime * 7f);
+        Paint(false);
+    }
+
+    void Paint(bool force)
+    {
+        if (label != null)
+        {
+            Color rest = locked || (button != null && !button.interactable) ? Dim : primary ? Gold : Parch;
+            label.color = Color.Lerp(rest, primary ? Color.white : Gold, k);
+            label.characterSpacing = Mathf.Lerp(0f, 4f, k);
+        }
+        if (band != null) band.color = new Color(Gold.r, Gold.g, Gold.b, 0.10f * k);
+        if (line != null)
+        {
+            line.color = new Color(Gold.r, Gold.g, Gold.b, primary ? 0.55f + 0.45f * k : k);
+            RectTransform lr = line.rectTransform;
+            float w = ((RectTransform)transform).sizeDelta.x;
+            lr.sizeDelta = new Vector2(Mathf.Lerp(primary ? w * 0.4f : w * 0.2f, w * 0.7f, k), 2f);
+        }
+    }
 }

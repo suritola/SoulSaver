@@ -17,8 +17,8 @@ public static class MenuHeroPanel
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Dim = new Color(0.66f, 0.61f, 0.53f);
-    static readonly Color Back = new Color(0.08f, 0.06f, 0.11f, 0.6f);
-    static readonly Color BackHover = new Color(0.12f, 0.1f, 0.16f, 0.7f);
+    static readonly Color Back = new Color(0.08f, 0.06f, 0.11f, 0f);
+    static readonly Color BackHover = new Color(0.96f, 0.83f, 0.47f, 0.08f);
 
     public static void Install(Transform parent, Transform root)
     {
@@ -36,7 +36,8 @@ public static class MenuHeroPanel
                     break;
                 }
             }
-        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-610f, (MenuExtras.SideTop + MenuExtras.SideBottom) * 0.5f), new Vector2(W, MenuExtras.SideTop - MenuExtras.SideBottom));
+        // 1.4.8~ 상자 없이 영웅을 크게 세움 (카펫 왼쪽) · 뒤판은 투명(누름 · 마우스 받기용) · 마우스를 올리면 은은하게 밝아짐
+        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-600f, -200f), new Vector2(W, 520f));
         Image bg = panel.gameObject.AddComponent<Image>();
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
@@ -69,7 +70,7 @@ public static class MenuHeroPanel
         // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
         float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
         // 1.4.8~ 사용자 「너무 많다」: 「지금 영웅」 · 칭호 · 숙련 줄을 빼고 초상 · 이름 · 「영웅 바꾸기」만 (칭호 · 숙련은 이름에 마우스를 올리면)
-        const float P = 150f;
+        const float P = 300f;
         RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = CharacterUI.Portrait(id);
@@ -95,8 +96,9 @@ public static class MenuHeroPanel
         TooltipTrigger nameTip = name.gameObject.AddComponent<TooltipTrigger>();
         nameTip.titleProvider = () => d.name;
         nameTip.bodyProvider = () => sub;
-        Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, bottom + 26f), new Vector2(300f, 52f), OpenPicker, 24f);
+        Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, y - 76f), new Vector2(300f, 52f), OpenPicker, 24f);
         change.name = "ChangeHeroButton";
+        MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
     }
 
     // 스킨 상점이 닫힌 다음 프레임에 (닫는 중에는 끼운 스킨이 아직 저장 중일 수 있음)

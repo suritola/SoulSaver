@@ -34,8 +34,14 @@ public class NewGlow : MonoBehaviour
         image = GetComponent<Image>();
         if (image != null) baseColor = image.color;
         baseScale = transform.localScale;
-        outline = gameObject.AddComponent<Outline>();
-        outline.useGraphicAlpha = false;
+        // 1.4.8~ 글자 메뉴 버튼(MenuItemFx)은 상자가 없으므로 테두리 · 색 · 크기 맥박 없이 배지만
+        bool textItem = GetComponent<MenuItemFx>() != null;
+        if (textItem) image = null;
+        else
+        {
+            outline = gameObject.AddComponent<Outline>();
+            outline.useGraphicAlpha = false;
+        }
 
         UIKit.EnsureStyle();
         badge = UIKit.Text(transform, "NEW", 22f, new Color(0.15f, 0.08f, 0f), Vector2.zero, new Vector2(64f, 28f));
@@ -67,6 +73,6 @@ public class NewGlow : MonoBehaviour
             outline.effectDistance = Vector2.one * (2f + 4f * pulse);
         }
         if (image != null) image.color = Color.Lerp(baseColor, new Color(1f, 0.9f, 0.6f), 0.35f * pulse);
-        transform.localScale = baseScale * (1f + 0.04f * pulse);
+        if (outline != null) transform.localScale = baseScale * (1f + 0.04f * pulse);
     }
 }
