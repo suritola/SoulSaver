@@ -7,6 +7,7 @@ public static partial class LocTable
 {
     static void AddPathsGhost()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         PA("혹한", "Deep Frost", "酷寒", "酷寒");
         PA("냉기 두 배 · 무리 제어", "Double chill · Crowd control", "冷気二倍 · 群れの制御", "双倍寒气 · 控制敌群");
         PA("서리 손", "Frost Hand", "霜の手", "霜之手");
@@ -15,11 +16,11 @@ public static partial class LocTable
         PA("무리 제어", "Crowd control", "群れの制御", "控制敌群");
         PA("보스 (얼지 않음)", "Bosses (won't stay frozen)", "ボス（凍りにくい）", "首领（难以冻结）");
         PA("얼어붙은 적 둘레 2칸에 냉기 오라가 생겨 0.6초마다 냉기 1을 쌓습니다.", "Frozen enemies give off a chill aura that adds 1 chill every 0.6 seconds within 2 tiles.", "凍った敵の周り2マスに冷気のオーラが生まれ、0.6秒ごとに冷気を1ためます。", "被冻结的敌人周围2格出现寒气光环，每0.6秒叠加1层寒气。");
-        PA("얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 40%)와 냉기 2를 줍니다.", "When the ice thaws, a cold wave deals damage (40% Attack) and 2 chill to enemies within 3 tiles.", "氷が解けるとき冷気の波が広がり、周り3マスの敵にダメージ（攻撃力40%）と冷気2を与えます。", "冰冻解除时扩散寒气波，对周围3格的敌人造成伤害（攻击力40%）并叠加2层寒气。");
+        PK("얼음이 풀릴 때 냉기 파동이 퍼져 둘레 3칸의 적에게 피해(공격력 40%)와 냉기 2를 줍니다.", "얼음이 풀리면 둘레 3칸에 냉기 파동이 퍼져 피해와 냉기 2를 줍니다. (공격력 40%)", "When ice thaws, a cold wave hits enemies within 3 tiles for damage and 2 chill. (40% Attack)", "氷が解けると周り3マスに冷気の波が広がり、ダメージと冷気2を与えます。（攻撃力40%）", "冰冻解除时向周围3格扩散寒气波，造成伤害并叠加2层寒气。（攻击力40%）");
         PA("눈보라의 냉기 안개가 2배 오래 남습니다.", "Blizzard's frost mist lasts twice as long.", "吹雪の冷気の霧が2倍長く残ります。", "暴风雪的寒雾持续时间翻倍。");
         PA("산산조각", "Shatter", "粉砕", "粉碎");
         PA("얼린 적 부수기 · 보스 균열", "Shatter the frozen · Crack bosses", "凍った敵を砕く · ボスに亀裂", "粉碎冻结之敌 · 首领裂痕");
-        PA("얼어붙은 적을 손길로 치면 부서집니다. (잡몹 즉사 · 큰 적은 최대 체력 6%) 보스는 냉기 5중첩마다 균열이 터집니다. (공격력 80% · 같은 보스에 2초에 한 번)", "Striking a frozen enemy with your touch shatters it. (Small foes die instantly · large foes lose 6% max HP) Every 5 chill on a boss bursts a crack. (80% Attack · once per 2 seconds per boss)", "凍った敵を手で打つと砕けます。（雑魚は即死 · 大きな敵は最大体力の6%）ボスには冷気5重ごとに亀裂が走ります。（攻撃力80% · 同じボスに2秒に1回）", "用冰冷之手击中冻结的敌人会将其粉碎。（小怪即死 · 大型敌人损失最大生命6%）首领每叠加5层寒气就会爆发裂痕。（攻击力80% · 同一首领每2秒一次）");
+        PK("얼어붙은 적을 손길로 치면 부서집니다. (잡몹 즉사 · 큰 적은 최대 체력 6%) 보스는 냉기 5중첩마다 균열이 터집니다. (공격력 80% · 같은 보스에 2초에 한 번)", "얼린 적을 손길로 치면 부서집니다. (잡몹 즉사 · 큰 적 최대 체력 6%) 보스는 냉기 5중첩마다 균열이 터집니다. (공격력 80% · 보스당 2초에 한 번)", "Touching a frozen enemy shatters it. (Small foes die · large foes lose 6% max HP) Every 5 chill on a boss bursts a crack. (80% Attack · once per 2s per boss)", "凍った敵を手で打つと砕けます。（雑魚は即死 · 大きな敵は最大体力の6%）ボスは冷気5重ごとに亀裂が走ります。（攻撃力80% · ボスごとに2秒に1回）", "冰冷之手击中冻结的敌人会将其粉碎。（小怪即死 · 大型敌人最大生命6%）首领每叠加5层寒气爆发裂痕。（攻击力80% · 每个首领每2秒一次）");
         PA("얼어붙는 시간이 50% 줄어듭니다.", "Freezes last 50% shorter.", "凍りつく時間が50%短くなります。", "冻结时间缩短50%。");
         PA("보스 · 처형", "Bosses · Executions", "ボス · 処刑", "首领 · 处决");
         PA("냉기 준비 시간", "Time to build chill", "冷気をためる時間", "积累寒气的时间");
@@ -27,9 +28,9 @@ public static partial class LocTable
         PA("보스 균열 세 번째마다 큰 균열이 터집니다. (공격력 200% · 둘레 3칸의 적에게도 80%)", "Every third boss crack is a great crack. (200% Attack · 80% to enemies within 3 tiles)", "ボスの亀裂が3回目ごとに大亀裂になります。（攻撃力200% · 周り3マスの敵にも80%）", "每第三次首领裂痕都会成为大裂痕。（攻击力200% · 周围3格的敌人也受80%）");
         PA("냉기 3중첩이면 균열이 터집니다.", "Cracks burst at 3 chill.", "冷気3重で亀裂が走ります。", "叠加3层寒气即爆发裂痕。");
         PA("영혼 군단", "Soul Legion", "魂の軍団", "灵魂军团");
-        PA("영혼이 돌진 공격 · 자동 화력", "Souls charge foes · Automatic damage", "魂が突進攻撃 · 自動火力", "灵魂冲锋攻击 · 自动火力");
+        PK("영혼이 돌진 공격 · 자동 화력", "영혼 돌진 · 자동 화력", "Soul charges · Auto damage", "魂の突進 · 自動火力", "灵魂冲锋 · 自动火力");
         PA("영혼 거느림", "Soul Retinue", "魂の従え", "统御灵魂");
-        PA("영혼이 1.2초마다 하나씩 가까운 적에게 돌진했다 돌아오고 (공격력 30%), 영혼이 2배로 잘 생깁니다.", "Every 1.2 seconds, one soul charges the nearest enemy and returns (30% Attack), and souls appear twice as often.", "1.2秒ごとに魂が1つずつ近くの敵へ突進して戻り（攻撃力30%）、魂が2倍生まれやすくなります。", "每1.2秒有一个灵魂冲向附近的敌人后返回（攻击力30%），灵魂的出现几率翻倍。");
+        PK("영혼이 1.2초마다 하나씩 가까운 적에게 돌진했다 돌아오고 (공격력 30%), 영혼이 2배로 잘 생깁니다.", "1.2초마다 영혼 하나가 가까운 적에게 돌진했다 돌아오고(공격력 30%), 영혼이 2배 잘 생깁니다.", "Every 1.2s a soul charges the nearest enemy and returns (30% Attack). Souls appear twice as often.", "1.2秒ごとに魂が1つ近くの敵へ突進して戻り（攻撃力30%）、魂が2倍生まれやすくなります。", "每1.2秒一个灵魂冲向附近的敌人后返回（攻击力30%），灵魂出现几率翻倍。");
         PA("영혼이 피해를 막을 확률이 50%가 됩니다.", "Souls only have a 50% chance to block damage.", "魂がダメージを防ぐ確率が50%になります。", "灵魂抵挡伤害的几率变为50%。");
         PA("자동 화력 · 무리", "Automatic damage · Crowds", "自動火力 · 群れ", "自动火力 · 敌群");
         PA("방패 약화", "Weaker shield", "盾が弱まる", "护盾减弱");
@@ -38,17 +39,17 @@ public static partial class LocTable
         PA("영혼 상한이 10이 됩니다.", "Your soul limit becomes 10.", "魂の上限が10になります。", "灵魂上限变为10。");
         PA("사령술", "Necromancy", "死霊術", "死灵术");
         PA("긴 빙의 · 무적 근접 폭딜", "Long possession · Untouchable close-range burst", "長い憑依 · 無敵の接近爆発", "长时间附身 · 无敌近身爆发");
-        PK("빙의가 3초에서 4.5초로 늘고, 빙의한 몸이 부딪친 적에게 냉기와 피해(공격력 30%)를 주며, 빙의 게이지가 25% 덜 듭니다.", "빙의가 3초에서 4.5초로 늘고 게이지가 25% 덜 듭니다. 빙의한 몸에 부딪친 적은 냉기와 피해(공격력 30%)를 받습니다.", "Possession lasts 4.5s instead of 3s and costs 25% less gauge. Enemies the possessed body bumps take chill and damage (30% Attack).", "憑依が3秒から4.5秒に延び、ゲージが25%少なく済みます。憑依した体にぶつかった敵は冷気とダメージ（攻撃力30%）を受けます。", "附身从3秒延长至4.5秒，消耗能量减少25%。附身的身体撞到的敌人受到寒气与伤害（攻击力30%）。");
-        PA("평타 피해가 20% 줄고, 빙의 중 무적은 처음 2초뿐입니다.", "Basic attacks deal 20% less damage, and you are only invincible for the first 2 seconds of Possession.", "通常攻撃のダメージが20%減り、憑依中の無敵は最初の2秒だけです。", "普通攻击伤害降低20%，附身期间仅前2秒无敌。");
-        PA("무적 시간 · 보스 근접 폭딜", "Invincibility · Close-range burst on bosses", "無敵時間 · ボスへの接近爆発", "无敌时间 · 对首领近身爆发");
-        PA("빙의 밖 화력", "Damage outside Possession", "憑依していない時の火力", "附身以外的火力");
+        PK("빙의가 3초에서 4.5초로 늘고, 빙의한 몸이 부딪친 적에게 냉기와 피해(공격력 30%)를 주며, 빙의 게이지가 25% 덜 듭니다.", "빙의가 3초 → 4.5초로 늘고 게이지가 25% 덜 듭니다. 빙의한 몸에 부딪친 적은 냉기와 피해를 받습니다. (공격력 30%)", "Possession lasts 3s → 4.5s and costs 25% less gauge. Enemies the possessed body bumps take chill and damage. (30% Attack)", "憑依が3秒 → 4.5秒に延び、ゲージが25%少なく済みます。憑依した体にぶつかった敵は冷気とダメージを受けます。（攻撃力30%）", "附身从3秒 → 4.5秒，消耗能量减少25%。附身的身体撞到的敌人受到寒气与伤害。（攻击力30%）");
+        PK("평타 피해가 20% 줄고, 빙의 중 무적은 처음 2초뿐입니다.", "평타 피해가 20% 줄고, 빙의 중 무적은 처음 2초뿐입니다.", "Basic attacks -20%. Possession is invincible only for its first 2s.", "通常攻撃のダメージが20%減り、憑依中の無敵は最初の2秒だけです。", "普通攻击伤害降低20%，附身期间仅前2秒无敌。");
+        PK("무적 시간 · 보스 근접 폭딜", "무적 · 보스 근접 폭딜", "Invincibility · Boss burst", "無敵 · ボスへの接近爆発", "无敌 · 首领近身爆发");
+        PK("빙의 밖 화력", "빙의 밖 화력", "Damage unpossessed", "憑依外の火力", "附身外火力");
         PA("빙의 폭발 범위가 1.5배가 되고, 폭발에 휘말린 적(보스 제외)에게 저주가 걸립니다.", "Possession's blast radius becomes 1.5x, and enemies caught in it (except bosses) are cursed.", "憑依の爆発範囲が1.5倍になり、爆発に巻き込まれた敵（ボスを除く）に呪いがかかります。", "附身爆炸范围变为1.5倍，被卷入爆炸的敌人（首领除外）会受到诅咒。");
         PA("터진 몸에서 원혼 셋이 나와 가까운 적을 노립니다. (공격력 50%)", "Three vengeful spirits burst from the body and strike nearby enemies. (50% Attack)", "破裂した体から怨霊が3体出て、近くの敵を狙います。（攻撃力50%）", "爆裂的身体中飞出三个冤魂，袭击附近的敌人。（攻击力50%）");
         PA("터진 뒤 가까운 적에게 한 번 바로 다시 빙의합니다. (3초 · 무적 1.5초 · 폭발 피해 50%)", "After the blast, you immediately possess a nearby enemy once more. (3 seconds · 1.5 seconds invincible · 50% blast damage)", "破裂した後、近くの敵にすぐもう一度憑依します。（3秒 · 無敵1.5秒 · 爆発ダメージ50%）", "爆裂后立即再附身附近的敌人一次。（3秒 · 无敌1.5秒 · 爆炸伤害50%）");
         PA("유체 이탈", "Astral Projection", "幽体離脱", "灵魂出窍");
-        PA("움직이면 접촉 무시 · 기동 생존", "Ignore contact while moving · Mobile survival", "動けば接触無視 · 機動生存", "移动时无视接触 · 机动生存");
-        PA("움직이는 동안 적의 몸을 통과하고, 몸에 닿는 피해를 받지 않습니다.", "While moving, you pass through enemies and take no contact damage.", "動いている間は敵の体をすり抜け、体に触れるダメージを受けません。", "移动期间可穿过敌人的身体，不受接触伤害。");
-        PA("최대 체력 −30%, 몸에 닿는 것이 아닌 피해(투사체 · 패턴)를 30% 더 받습니다.", "Max HP −30%, and you take 30% more damage that isn't from contact (projectiles · patterns).", "最大体力−30%、体に触れる以外のダメージ（投射物 · パターン）を30%多く受けます。", "最大生命−30%，受到的非接触伤害（投射物 · 招式）增加30%。");
+        PK("움직이면 접촉 무시 · 기동 생존", "접촉 무시 · 기동 생존", "Ignore contact · Mobile survival", "接触無視 · 機動生存", "无视接触 · 机动生存");
+        PK("움직이는 동안 적의 몸을 통과하고, 몸에 닿는 피해를 받지 않습니다.", "움직이는 동안 적을 통과하고, 몸에 닿는 피해를 받지 않습니다.", "While moving, you pass through enemies and take no contact damage.", "動いている間は敵をすり抜け、体に触れるダメージを受けません。", "移动期间可穿过敌人，不受接触伤害。");
+        PK("최대 체력 −30%, 몸에 닿는 것이 아닌 피해(투사체 · 패턴)를 30% 더 받습니다.", "최대 체력이 30% 줄고, 투사체 · 패턴 피해를 30% 더 받습니다.", "Max HP -30%. Take 30% more projectile and pattern damage.", "最大体力が30%減り、投射物 · パターンのダメージを30%多く受けます。", "最大生命降低30%，受到的投射物 · 招式伤害增加30%。");
         PA("기동 · 접촉 생존", "Mobility · Contact survival", "機動 · 接触に強い", "机动 · 抵御接触");
         PA("탄막 보스", "Bullet-hell bosses", "弾幕ボス", "弹幕首领");
         PA("통과한 적에게 냉기 1을 쌓습니다.", "Enemies you pass through gain 1 chill.", "すり抜けた敵に冷気を1ためます。", "对穿过的敌人叠加1层寒气。");

@@ -8,6 +8,7 @@ public static partial class LocTable
 {
     static void AddPathsPostman()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         // ---------------- 순회 배달
         PA("순회 배달", "Delivery Round", "巡回配達", "巡回投递");
         PA("편지가 네 명을 돎 · 무리", "Letters visit four foes · Crowds", "手紙が4体を巡る · 群れ", "信件巡访四人 · 群敌");
@@ -66,10 +67,11 @@ public static partial class LocTable
         // ---------------- 자전거 배달
         PA("자전거 배달", "Bike Courier", "自転車配達", "自行车投递");
         PA("달리면 편지가 저절로 · 기동", "Letters fly as you ride · Mobility", "走れば手紙が勝手に · 機動", "骑行时自动寄信 · 机动");
-        PA("이동 속도 +20%, 움직이는 동안 0.5초마다 가장 가까운 적에게 편지가 저절로 날아갑니다. (편지 피해 18%)",
+        PK("이동 속도 +20%, 움직이는 동안 0.5초마다 가장 가까운 적에게 편지가 저절로 날아갑니다. (편지 피해 18%)",
+           "이동 속도가 20% 빨라지고, 움직이는 동안 0.5초마다 가장 가까운 적에게 편지가 날아갑니다. (편지 피해 18%)",
            "+20% move speed. While moving, a letter flies to the nearest enemy every 0.5s. (18% letter damage)",
-           "移動速度+20%。移動中は0.5秒ごとに最も近い敵へ手紙が自動で飛びます。（手紙ダメージ18%）",
-           "移动速度+20%。移动时每0.5秒自动向最近的敌人飞出一封信。（信件伤害18%）");
+           "移動速度が20%上がり、移動中は0.5秒ごとに最も近い敵へ手紙が飛びます。（手紙ダメージ18%）",
+           "移动速度提高20%，移动时每0.5秒向最近的敌人飞出一封信。（信件伤害18%）");
         PA("멈추면 편지 피해가 40% 줄어듭니다.", "Letters deal 40% less damage while you stand still.", "止まっていると手紙のダメージが40%減ります。", "停下时信件伤害降低40%。");
         PA("기동 · 생존", "Mobility · Survival", "機動 · 生存", "机动 · 生存");
         PA("서서 싸우는 보스 · 결계", "Stand-and-fight bosses · Barriers", "立ち止まるボス戦 · 結界", "需要站桩的首领 · 结界");
@@ -87,7 +89,11 @@ public static partial class LocTable
         PA("장거리 배송", "Long-Haul Delivery", "長距離配送", "长途配送");
         PA("사거리 20 · 보스 · 원거리", "Range 20 · Bosses · Long range", "射程20 · ボス · 遠距離", "射程20 · 首领 · 远程");
         PA("사거리가 12칸에서 20칸으로 늘고, 피해가 1.5배가 됩니다.", "Range grows from 12 to 20 tiles, and damage becomes 1.5×.", "射程が12マスから20マスに伸び、ダメージが1.5倍になります。", "射程从12格增至20格，伤害变为1.5倍。");
-        PA("공격 속도 −25%, 5칸 안의 적에게는 피해 −40%.", "−25% attack speed, −40% damage to enemies within 5 tiles.", "攻撃速度−25%、5マス以内の敵へのダメージ−40%。", "攻击速度−25%，对5格内敌人的伤害−40%。");
+        PK("공격 속도 −25%, 5칸 안의 적에게는 피해 −40%.",
+           "공격 속도가 25% 느려지고, 5칸 안의 적에게 주는 피해가 40% 줄어듭니다.",
+           "−25% attack speed. −40% damage to enemies within 5 tiles.",
+           "攻撃速度が25%遅くなり、5マス以内の敵へのダメージが40%減ります。",
+           "攻击速度降低25%，对5格内敌人的伤害降低40%。");
         PA("보스 · 원거리", "Bosses · Long range", "ボス · 遠距離", "首领 · 远程");
         PA("근접 포위", "Being surrounded", "近接での包囲", "近身包围");
         PA("20칸 넘게 날아간 편지는 치명타가 됩니다. (피해 ×1.5)", "Letters that fly over 20 tiles become critical hits. (×1.5 damage)", "20マス以上飛んだ手紙は会心になります。（ダメージ×1.5）", "飞行超过20格的信件成为暴击。（伤害×1.5）");

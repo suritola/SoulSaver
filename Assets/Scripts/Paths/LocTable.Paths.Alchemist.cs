@@ -8,9 +8,10 @@ public static partial class LocTable
 {
     static void AddPathsAlchemist()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         // ================================================================= 늪
         PA("늪", "Swamp", "沼", "沼泽");
-        PA("모든 플라스크가 웅덩이 · 지역", "Every flask leaves a puddle · Area", "すべてのフラスコが水たまりに・範囲", "每个烧瓶都留下水洼 · 区域");
+        PK("모든 플라스크가 웅덩이 · 지역", "웅덩이 · 지역", "Puddles · Area", "水たまり・範囲", "水洼 · 区域");
         PA("늪지기", "Swampkeeper", "沼守り", "沼泽看守");
         PA("모든 플라스크가 작은 산성 웅덩이를 남깁니다. (2초)", "Every flask leaves a small acid puddle. (2s)", "すべてのフラスコが小さな酸の水たまりを残します。（2秒）", "所有烧瓶都会留下小小的酸液水洼。（2秒）");
         PA("폭발 피해가 30% 줄어듭니다.", "Blast damage is reduced by 30%.", "爆発ダメージが30%減ります。", "爆炸伤害降低30%。");
@@ -24,7 +25,11 @@ public static partial class LocTable
         PA("빙결", "Frost", "氷結", "冰结");
         PA("얼리고 산산조각 · 제어", "Freeze and shatter · Control", "凍らせて粉砕・制御", "冰冻并粉碎 · 控制");
         PA("빙결 전문", "Frost Specialist", "氷結の専門家", "冰结专家");
-        PK("빙결 시약이 두 번에 한 번 나와 적을 얼리고, 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)", "빙결 시약이 두 번에 한 번 나옵니다. 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)", "Every other reagent is Frost. Hitting a frozen enemy with a flask shatters it. (8% of max HP · up to 2% for bosses)", "2回に1回は氷結の試薬になります。凍った敵にフラスコを当てると粉砕します。（体力の8%・ボスは体力の2%まで）", "每两次就有一次是冰冻试剂。用烧瓶击中被冻结的敌人会将其粉碎。（生命值8% · 首领最多生命值2%）");
+        PK("빙결 시약이 두 번에 한 번 나와 적을 얼리고, 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)",
+           "두 번에 한 번 빙결 시약이 나옵니다. 언 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 2%까지)",
+           "Every other reagent is Frost. Flasks shatter frozen enemies. (8% max HP · bosses up to 2%)",
+           "2回に1回は氷結の試薬です。凍った敵にフラスコを当てると粉砕します。（体力の8% · ボスは2%まで）",
+           "每两次有一次是冰冻试剂。用烧瓶击中冻结的敌人会将其粉碎。（生命值8% · 首领至多2%）");
         PA("화염 피해가 40% 줄어듭니다.", "Fire damage is reduced by 40%.", "火炎ダメージが40%減ります。", "火焰伤害降低40%。");
         PA("제어 · 생존 · 보스 약화", "Control · Survival · Weakening bosses", "制御・生存・ボス弱体化", "控制 · 生存 · 削弱首领");
         PA("직접 화력", "Raw damage", "直接火力", "直接火力");
@@ -52,7 +57,7 @@ public static partial class LocTable
 
         // ================================================================= 조수
         PA("조수", "Assistants", "助手", "助手");
-        PA("처음부터 호문쿨루스 · 자동 전투", "Homunculus from the start · Auto combat", "最初からホムンクルス・自動戦闘", "开局就有人造小人 · 自动战斗");
+        PK("처음부터 호문쿨루스 · 자동 전투", "호문쿨루스 · 자동 전투", "Homunculus · Auto combat", "ホムンクルス・自動戦闘", "人造小人 · 自动战斗");
         PA("조수 공방", "Assistant Workshop", "助手工房", "助手工坊");
         PA("처음부터 호문쿨루스가 함께하고, 조수가 내 시약 순서를 따라 던집니다.", "A Homunculus joins you from the start, and assistants throw the same reagent you last threw.", "最初からホムンクルスが一緒にいて、助手が自分の試薬の順番に合わせて投げます。", "开局就有人造小人相伴，助手会按照你的试剂顺序投掷。");
         PA("내 투척 속도가 30% 느려집니다.", "Your own throwing speed is 30% slower.", "自分の投てき速度が30%遅くなります。", "自身投掷速度降低30%。");

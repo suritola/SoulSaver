@@ -63,7 +63,8 @@ public partial class LevelShop : MonoBehaviour
         }
         CompactLevelUp();
         CompactTitle();
-        freePick = true;            // 시작할 때 주는 카드는 레벨을 올리지 않음
+        TidyCards();                // 1.4.8~ 카드 칸 정리 · 본문 글씨 26 ~ 20
+        freePick = true;           // 시작할 때 주는 카드는 레벨을 올리지 않음
         SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
@@ -448,6 +449,8 @@ public partial class LevelShop : MonoBehaviour
     // 사격하던 클릭이 열리자마자 카드를 누르지 않도록:
     // 창이 열리고 잠깐 지난 뒤 마우스 버튼을 한 번 떼야 고를 수 있음
     const float SelectDelay = 0.6f;
+    // 1.4.8~ 잠금 동안 흐린 정도 0.6 → 0.85: 등장 연출과 겹쳐 카드가 반투명해, 뒤의 영웅 그림이 카드 글 · 아이콘 위로 비쳤음 (검사 카드)
+    public const float LockAlpha = 0.85f;
     float openedAt;
     float introEnd;             // 1.4.1~ 카드 등장 애니메이션이 끝나는 시각 (unscaledTime)
     bool selectReady;
@@ -465,7 +468,7 @@ public partial class LevelShop : MonoBehaviour
         if (cardGroup != null)
         {
             cardGroup.interactable = false;
-            cardGroup.alpha = 0.6f;
+            cardGroup.alpha = LockAlpha;
         }
     }
 
@@ -474,7 +477,7 @@ public partial class LevelShop : MonoBehaviour
         if (selectReady || LvshopPanel == null || !LvshopPanel.activeInHierarchy) return;
 
         float t = Mathf.Clamp01((Time.unscaledTime - openedAt) / SelectDelay);
-        if (cardGroup != null) cardGroup.alpha = Mathf.Lerp(0.6f, 1f, t);
+        if (cardGroup != null) cardGroup.alpha = Mathf.Lerp(LockAlpha, 1f, t);
 
         bool mouseHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1) || GameInput.FireHeld || GameInput.UltHeld;     // 1.0.4~ 공격 · 필살기를 다른 키로 바꿨어도
         if (t >= 1f && Time.unscaledTime >= introEnd && !mouseHeld)
@@ -518,6 +521,49 @@ public partial class LevelShop : MonoBehaviour
     //   시각으로만 정해 코루틴이 끊겨도 리본이 남지 않음 · 실제 시간이라 카드 · 일시정지 창이 열려도 그 뒤에 멈춰 남지 않음
     const float RibbonTime = 1.2f, RibbonBurst = 1.5f;
     float ribbonUntil = -1f, lastLevelUpAt = -9f;
+
+    // 1.4.8~ 카드(420x600) 칸 정리 (docs/review/2026-10-21-UI-정리-기획.md 1 · 2절): 위끝부터 단계 칸(-30) / 이름 / 아이콘 / 본문
+    //   본문 글씨 26 → 자동 크기 하한 20 (예전 32 → 15 까지 줄어 18 안팎으로 빽빽했음) · 줄(칸)마다 문단 간격
+    //   본문을 아이콘 바로 아래부터 · 좌우 여백 30 (예전 48) · 아래는 카드 아래끝에 걸치는 시너지 배지(위끝 36) 위로
+    //   씬 값을 바꾸지 않고 판 시작 때 한 번 (LiftAbilityAbove 가 이 아래끝을 기준으로 기억)
+    const float CardTitleTop = 44f, CardTitleH = 72f, CardIconY = -170f, CardBodyTop = 236f, CardBodyBottom = 40f, CardBodySide = 30f;
+    public const float CardBodyMax = 26f, CardBodyMin = 20f;
+
+    void TidyCards()
+    {
+        for (int slot = 0; slot < 3; slot++)
+        {
+            TextMeshProUGUI title = slot == 0 ? FirstTitle : slot == 1 ? SecondTitle : ThirdTitle;
+            TextMeshProUGUI body = slot == 0 ? FirstAbility : slot == 1 ? SecondAbility : ThirdAbility;
+            Transform card = CardOf(slot);
+            if (card == null) continue;
+            card.localRotation = Quaternion.identity;       // 멈춘 카드는 0도 (등장 연출 CardIntro 만 잠깐 기울임)
+            if (title != null)
+            {
+                RectTransform tr = title.rectTransform;
+                tr.anchoredPosition = new Vector2(0f, -CardTitleTop);
+                tr.sizeDelta = new Vector2(tr.sizeDelta.x, CardTitleH);
+                title.enableWordWrapping = false;           // 긴 이름은 두 줄로 꺾여 아이콘을 덮지 않고 한 줄 안에서 줄어듦
+            }
+            foreach (string n in new[] { "Divider", "AbilityIconFrame", "AbilityIcon" })
+            {
+                RectTransform r = card.Find(n) as RectTransform;
+                if (r != null) r.anchoredPosition = new Vector2(r.anchoredPosition.x, CardIconY);
+            }
+            if (body != null)
+            {
+                RectTransform br = body.rectTransform;
+                br.offsetMin = new Vector2(CardBodySide, CardBodyBottom);
+                br.offsetMax = new Vector2(-CardBodySide, -CardBodyTop);
+                body.enableAutoSizing = true;
+                body.fontSizeMax = CardBodyMax;
+                body.fontSizeMin = CardBodyMin;
+                body.paragraphSpacing = 14f;                 // 설명 / 대가 / 강점 · 약점 줄 사이 (1.4.8~)
+                body.overflowMode = TextOverflowModes.Overflow;
+            }
+        }
+    }
+
     // 아직 연출하지 않은 레벨업 (한 번에 여러 레벨이 오르면 차례로)
     int levelUpQueued;
 
@@ -653,9 +699,7 @@ public partial class LevelShop : MonoBehaviour
         if (Paths.Active) PathsDraw(reroll);
         else LegacyDraw(reroll);
 
-        // 2026-10-16: 카드 설명을 완결 문장으로 다듬어 영어 · 일본어가 길어짐 — 씬의 최소 18pt 로는 칸 밖으로 넘칠 수 있어 15pt 까지 줄어들게
-        foreach (TextMeshProUGUI ab in new[] { FirstAbility, SecondAbility, ThirdAbility })
-            if (ab != null && ab.fontSizeMin > 15f) ab.fontSizeMin = 15f;
+        // 2026-10-16: 카드 설명이 길어 최소 15pt 까지 줄였었음 → 1.4.8~ 하한 20 (TidyCards) · 넘치면 글을 줄이는 쪽 (기획 3절)
 
         FirstTitle.text = CardTitleOf(first);
         FirstAbility.text = CardBodyOf(first);

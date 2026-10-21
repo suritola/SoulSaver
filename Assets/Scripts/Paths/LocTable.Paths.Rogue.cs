@@ -8,6 +8,7 @@ public static partial class LocTable
 {
     static void AddPathsRogue()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         // ================================================================= 출혈
         PA("출혈", "Bleed", "出血", "出血");
         PA("5중첩 출혈 · 전염", "5-stack bleed · Contagion", "5重ね出血・感染", "5层出血 · 传染");
@@ -17,7 +18,7 @@ public static partial class LocTable
            "すべての手裏剣が出血を与え、出血が5重ねまで重なります。",
            "所有飞镖都会造成出血，出血最多叠加5层。");
         PA("직접 피해가 35% 줄어듭니다.", "Direct damage is reduced by 35%.", "直接ダメージが35%減ります。", "直接伤害降低35%。");
-        PA("보스 지속 · 무리 전염", "Sustained boss damage · Spreads through crowds", "ボスへの持続・群れへの感染", "对首领持续输出 · 在敌群中传染");
+        PK("보스 지속 · 무리 전염", "보스 지속 · 무리 전염", "Boss DoT · Crowd spread", "ボスへの持続・群れへの感染", "对首领持续输出 · 敌群传染");
         PA("즉시 처치", "Instant kills", "即時撃破", "瞬间击杀");
         PA("5중첩 적을 돌진으로 지나가면 출혈 폭발이 바로 터집니다.",
            "Dashing through an enemy with 5 stacks makes its Bleed burst at once.",
@@ -36,12 +37,13 @@ public static partial class LocTable
         PA("그림자", "Shadow", "影", "暗影");
         PA("돌진 2회 · 미끼 분신", "2 Dash charges · Decoy clone", "ダッシュ2回・おとり分身", "2次冲刺 · 诱饵分身");
         PA("그림자 걸음", "Shadow Step", "影歩き", "影步");
-        PA("돌진을 2번 모아 둘 수 있고, 돌진을 시작한 자리에 미끼 분신이 1.5초 동안 남아 적을 끌어들입니다.",
-           "Store up to 2 Dashes. A decoy clone stays where each Dash began for 1.5 seconds and draws enemies to it.",
-           "ダッシュを2回ためておけます。ダッシュを始めた場所におとり分身が1.5秒残り、敵を引きつけます。",
-           "可以储存2次冲刺。冲刺起点会留下诱饵分身1.5秒，吸引敌人。");
+        PK("돌진을 2번 모아 둘 수 있고, 돌진을 시작한 자리에 미끼 분신이 1.5초 동안 남아 적을 끌어들입니다.",
+           "돌진을 2번 모아 두고, 돌진한 자리에 미끼 분신이 1.5초 남아 적을 끌어들입니다.",
+           "Store 2 Dashes. A decoy clone stays at each Dash start for 1.5s, drawing enemies.",
+           "ダッシュを2回ためられ、ダッシュした場所におとり分身が1.5秒残って敵を引きつけます。",
+           "可储存2次冲刺，冲刺起点留下诱饵分身1.5秒，吸引敌人。");
         PA("돌진 출혈이 30% 줄어듭니다.", "Dash Bleed is reduced by 30%.", "ダッシュの出血が30%減ります。", "冲刺造成的出血降低30%。");
-        PA("생존 · 회피 · 보스 시선 돌리기", "Survival · Evasion · Drawing the boss away", "生存・回避・ボスの目をそらす", "生存 · 闪避 · 引开首领");
+        PK("생존 · 회피 · 보스 시선 돌리기", "생존 · 회피 · 보스 유인", "Survival · Evasion · Boss lure", "生存・回避・ボスの引きつけ", "生存 · 闪避 · 引开首领");
         PA("화력", "Firepower", "火力", "火力");
         PA("분신이 사라질 때 연막이 퍼집니다.", "Clones release a Smoke Screen when they vanish.", "分身が消えるとき煙幕が広がります。", "分身消失时会散开烟幕。");
         PA("분신 연막 안에서 던진 표창은 치명타(×2)가 됩니다.",          // 1.4.2~ 분신 연막만
@@ -57,12 +59,14 @@ public static partial class LocTable
         PA("회귀 칼날", "Returning Blade", "回帰の刃", "回旋刃");
         PA("되돌아오는 표창 · 탄 경제", "Returning stars · Ammo economy", "戻ってくる手裏剣・弾の節約", "回旋飞镖 · 弹药经济");
         PA("곡선 투척", "Curved Throw", "曲線投げ", "弧线投掷");
-        PA("표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (두 번 던질 때마다 한 번)",      // 1.4.2~ 두 묶음에 한 번
-           "Throwing Stars turn back after 8 tiles and cut again on the way. (25% damage) Catching a returning star with your body refills 1 shot. (Once every two throws)",
-           "手裏剣が8マス先で戻ってきて、もう一度斬ります。(ダメージ25%) 戻った手裏剣を体で受けると弾倉が1発回復します。(2回投げるごとに1回)",
-           "飞镖飞出8格后折返，再次斩击。（伤害25%）用身体接住飞回的飞镖可补充1发。（每投掷两次1次）");
+        // 1.4.8~ 8칸은 대가 줄(사거리 8칸)과 겹쳐 설명에서 뺌
+        PK("표창이 8칸 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 몸으로 받으면 탄창이 한 발 찹니다. (두 번 던질 때마다 한 번)",      // 1.4.2~ 두 묶음에 한 번
+           "표창이 끝에서 되돌아오며 다시 벱니다. (피해 25%) 돌아온 표창을 받으면 탄창이 한 발 찹니다. (두 번 던질 때마다 한 번)",
+           "Stars turn back at max range and cut again. (25% damage) Catching one refills 1 shot. (Once per two throws)",
+           "手裏剣が端で戻ってきてもう一度斬ります。(ダメージ25%) 戻った手裏剣を受けると弾倉が1発回復します。(2回投げるごとに1回)",
+           "飞镖飞到尽头折返，再次斩击。（伤害25%）接住飞回的飞镖可补充1发。（每投掷两次1次）");
         PA("사거리가 무한에서 8칸으로 줄어듭니다.", "Range drops from unlimited to 8 tiles.", "射程が無限から8マスに縮みます。", "射程从无限缩短为8格。");
-        PA("근중거리 무리 · 탄 경제", "Close-to-mid-range crowds · Ammo economy", "近〜中距離の群れ・弾の節約", "近中距离敌群 · 弹药经济");
+        PK("근중거리 무리 · 탄 경제", "근중거리 무리 · 탄 경제", "Mid-range crowds · Ammo", "近〜中距離の群れ・弾の節約", "近中距离敌群 · 弹药经济");
         PA("원거리", "Long range", "遠距離", "远距离");
         PA("왕복으로 같은 적을 맞히면 던지기 연습이 2중첩 쌓입니다.",
            "Hitting the same enemy on both legs of the trip adds 2 Practiced Throw stacks.",
@@ -79,31 +83,34 @@ public static partial class LocTable
 
         // ================================================================= 질주 암살
         PA("질주 암살", "Dash Assassin", "疾走暗殺", "疾走暗杀");
-        PA("긴 돌진 직접 피해 · 순간 화력", "Long Dash direct damage · Burst damage", "長いダッシュの直接ダメージ・瞬間火力", "长距离冲刺直接伤害 · 瞬间爆发");
-        PA("돌진 거리 ×1.5, 돌진 게이지 −30%, 돌진 경로가 출혈 대신 직접 피해를 줍니다. (공격력 500%)",
-           "Dash distance ×1.5, Dash gauge cost −30%, and the Dash path deals direct damage instead of Bleed. (500% Attack)",
-           "ダッシュ距離×1.5、ダッシュのゲージ−30%、ダッシュの経路が出血のかわりに直接ダメージを与えます。(攻撃力500%)",
-           "冲刺距离×1.5，冲刺能量槽消耗−30%，冲刺路径改为造成直接伤害而非出血。（攻击力500%）");
+        PK("긴 돌진 직접 피해 · 순간 화력", "긴 돌진 · 순간 화력", "Long Dash · Burst", "長いダッシュ・瞬間火力", "长冲刺 · 瞬间爆发");
+        PK("돌진 거리 ×1.5, 돌진 게이지 −30%, 돌진 경로가 출혈 대신 직접 피해를 줍니다. (공격력 500%)",
+           "돌진 거리 ×1.5 · 게이지 −30%, 지나간 길에 출혈 대신 직접 피해를 줍니다. (공격력 500%)",
+           "Dash ×1.5 farther for 30% less gauge, and its path deals direct damage instead of Bleed. (500% Attack)",
+           "ダッシュが1.5倍長くゲージ消費が30%減り、通った道に出血のかわりに直接ダメージを与えます。(攻撃力500%)",
+           "冲刺距离×1.5，能量槽消耗减少30%，路径造成直接伤害而非出血。（攻击力500%）");
         PA("평타 공격 속도가 20% 느려집니다.", "Basic attack speed is 20% slower.", "通常攻撃の攻撃速度が20%遅くなります。", "普通攻击速度降低20%。");
-        PA("기동 · 관통 · 보스 순간 화력", "Mobility · Piercing · Burst on bosses", "機動・貫通・ボスへの瞬間火力", "机动 · 贯穿 · 对首领瞬间爆发");
+        PK("기동 · 관통 · 보스 순간 화력", "기동 · 관통 · 보스 순간 화력", "Mobility · Pierce · Boss burst", "機動・貫通・ボスへの瞬間火力", "机动 · 贯穿 · 首领爆发");
         PA("게이지 의존", "Gauge-dependent", "ゲージ頼み", "依赖能量槽");
         PK("돌진으로 처치하면 게이지 25%를 돌려받습니다. (한 번의 돌진으로 돌려받는 게이지는 모두 합쳐 40%까지)", "돌진으로 처치하면 게이지 25%를 돌려받습니다. (돌진 한 번에 최대 40%)", "Dash kills refund 25% of the gauge. (Up to 40% per Dash)", "ダッシュで倒すとゲージを25%取り戻します。(1回のダッシュで最大40%)", "冲刺击杀返还25%能量槽。（每次冲刺最多40%）");      // 1.4.2~ 반환 상한
         PA("돌진한 길이 X자로 엇갈리면 교차점이 터집니다. (공격력 300%)",
            "When Dash paths cross in an X, the crossing point explodes. (300% Attack)",
            "ダッシュした道がX字に交わると、交点が爆発します。(攻撃力300%)",
            "冲刺路径呈X形交叉时，交叉点会爆炸。（攻击力300%）");
-        PA("돌진 중 처치하면 바로 다시 돌진합니다. (3연속 · 이어지는 돌진은 보스에게 피해 60%)",      // 1.4.2~ 이어지는 돌진 보스 피해 60%
-           "Killing during a Dash lets you Dash again at once. (Up to 3 in a row · follow-up Dashes deal 60% damage to bosses)",
-           "ダッシュ中に倒すと、すぐにもう一度ダッシュします。(3連続・続くダッシュはボスへのダメージ60%)",
-           "冲刺中击杀敌人会立刻再次冲刺。（最多3连 · 后续冲刺对首领伤害为60%）");
+        PK("돌진 중 처치하면 바로 다시 돌진합니다. (3연속 · 이어지는 돌진은 보스에게 피해 60%)",      // 1.4.2~ 이어지는 돌진 보스 피해 60%
+           "돌진 중 처치하면 바로 다시 돌진합니다. (3연속 · 이어진 돌진의 보스 피해 60%)",
+           "A Dash kill lets you Dash again at once. (Up to 3 · follow-ups deal 60% to bosses)",
+           "ダッシュ中に倒すとすぐにもう一度ダッシュします。(3連続・続くダッシュのボスへのダメージ60%)",
+           "冲刺中击杀会立刻再次冲刺。（最多3连 · 后续冲刺对首领伤害60%）");
 
         // ================================================================= 광란
         PA("광란", "Frenzy", "狂乱", "狂乱");
         PA("처치마다 빨라짐 · 무리", "Faster with every kill · Crowds", "倒すたび速くなる・群れ", "每次击杀都更快 · 敌群");
-        PA("탄창 6 → 10, 공격 속도 +25%, 처치할 때마다 1.5초 동안 공격 속도 +3%. (10중첩)",
-           "Magazine 6 → 10, attack speed +25%, and each kill grants +3% attack speed for 1.5 seconds. (Stacks 10 times)",
+        PK("탄창 6 → 10, 공격 속도 +25%, 처치할 때마다 1.5초 동안 공격 속도 +3%. (10중첩)",
+           "탄창 6 → 10, 공격 속도 +25%, 처치할 때마다 1.5초 동안 공격 속도 +3%. (10중첩)",
+           "Magazine 6 → 10, attack speed +25%. Each kill: +3% attack speed for 1.5s. (10 stacks)",
            "弾倉6 → 10、攻撃速度+25%、倒すたびに1.5秒間攻撃速度+3%。(10重ね)",
-           "弹匣6 → 10，攻击速度+25%，每次击杀在1.5秒内攻击速度+3%。（10层）");
+           "弹匣6 → 10，攻击速度+25%，每次击杀1.5秒内攻击速度+3%。（10层）");
         PA("받는 피해가 15% 늘고, 표창 피해가 20% 줄어듭니다.",
            "Damage taken is increased by 15%, and Throwing Star damage is reduced by 20%.",
            "受けるダメージが15%増え、手裏剣のダメージが20%減ります。",

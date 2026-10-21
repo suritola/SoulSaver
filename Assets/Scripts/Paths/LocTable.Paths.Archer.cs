@@ -10,6 +10,7 @@ public static partial class LocTable
 {
     static void AddPathsArcher()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         // ================================================================= 장궁
         PA("장궁", "Longbow", "長弓", "长弓");
         PA("길게 당긴 관통 화살", "Long-drawn piercing arrows", "長く引き絞る貫通の矢", "长久拉满的穿透之箭");
@@ -32,24 +33,27 @@ public static partial class LocTable
 
         // ================================================================= 속사
         PA("속사", "Rapid Fire", "速射", "速射");
-        PA("누르는 동안 연사 · 기동 무리", "Hold to fire nonstop · Mobile crowd-clearing", "押している間連射 · 機動して群れを掃討", "按住连射 · 机动清群");
+        PK("누르는 동안 연사 · 기동 무리", "누르는 동안 연사", "Hold to fire nonstop", "押している間連射", "按住连射");
         PA("단궁 속사", "Shortbow Volley", "短弓速射", "短弓速射");
-        PA("당기지 않고 누르는 동안 초당 4발을 쏩니다. (한 발 피해 28%) 당길 때 느려지지 않고 숨도 닳지 않습니다.",
-           "Fires 4 arrows per second while held, with no drawing. (28% damage per arrow) You don't slow down and Breath doesn't drain.",
-           "引き絞らずに、押している間毎秒4発撃ちます。（1発のダメージ28%）引いても遅くならず、息も減りません。",
-           "无需拉弓，按住时每秒射出4箭。（每箭伤害28%）射击时不减速，气息也不消耗。");
-        PA("관통이 없어지고, 가득 당긴 화살의 효과와 메아리 화살은 다섯 발마다 한 번 나갑니다.",
-           "Arrows no longer pierce, and fully-drawn arrow effects and Echo Arrow trigger only once every 5 shots.",
-           "貫通がなくなり、引き絞った矢の効果とこだまの矢は5発ごとに1回だけ出ます。",
-           "箭矢不再穿透，满弓之箭的效果与回响之箭每5发才触发一次。");
+        // 1.4.8~ 키를 지금 수치(35%)로 — 예전엔 28% 키라 번역이 붙지 않았음
+        PK("당기지 않고 누르는 동안 초당 4발을 쏩니다. (한 발 피해 35%) 당길 때 느려지지 않고 숨도 닳지 않습니다.",
+           "누르는 동안 초당 4발을 쏩니다. (한 발 피해 35%) 당기지 않아 느려지지 않고 숨도 닳지 않습니다.",
+           "Hold to fire 4 arrows per second. (35% damage each) No drawing: no slowdown, no Breath drain.",
+           "押している間毎秒4発撃ちます。（1発のダメージ35%）引き絞らないので遅くならず、息も減りません。",
+           "按住时每秒射出4箭。（每箭伤害35%）无需拉弓，不减速，也不消耗气息。");
+        PK("관통이 없어지고, 가득 당긴 화살의 효과와 메아리 화살은 다섯 발마다 한 번 나갑니다.",
+           "관통이 없고, 가득 당긴 효과 · 메아리 화살은 다섯 발에 한 번입니다.",
+           "No piercing. Full-draw effects and Echo Arrow trigger once every 5 shots.",
+           "貫通がなく、引き絞った矢の効果 · こだまの矢は5発に1回出ます。",
+           "箭矢不穿透，满弓效果与回响之箭每5发触发一次。");
         PA("기동 · 무리", "Mobility · Crowds", "機動 · 群れ", "机动 · 群敌");
-        PA("보스 한 발", "Single big hits on bosses", "ボスへの一撃", "对首领的重击");
+        PK("보스 한 발", "보스 한 발", "Big hits on bosses", "ボスへの一撃", "对首领的重击");
         PA("메아리 화살이 세 발마다 나갑니다.", "Echo Arrow triggers every 3 shots.", "こだまの矢が3発ごとに出ます。", "回响之箭每3发触发一次。");
         PA("같은 적에 열 발을 맞히면 울림 화살촉의 범위가 2배가 됩니다.",
            "After 10 hits on the same enemy, Resonant Tip's radius doubles on it.",
            "同じ敵に10発当てると、共鳴の矢じりの範囲が2倍になります。",
            "对同一敌人命中10箭后，共鸣箭头的范围变为2倍。");
-        PA("초당 6발을 쏩니다. (한 발 피해 20%)", "Fires 6 arrows per second. (20% damage per arrow)", "毎秒6発撃ちます。（1発のダメージ20%）", "每秒射出6箭。（每箭伤害20%）");
+        PA("초당 6발을 쏩니다. (한 발 피해 25%)", "Fires 6 arrows per second. (25% damage per arrow)", "毎秒6発撃ちます。（1発のダメージ25%）", "每秒射出6箭。（每箭伤害25%）");     // 1.4.8~ 키를 지금 수치(25%)로 (예전 20% 키)
 
         // ================================================================= 덫
         PA("덫", "Traps", "罠", "陷阱");
@@ -60,26 +64,29 @@ public static partial class LocTable
            "パーフェクトの矢が落ちた場所に罠を仕掛けます。（最大5個 · 20秒 · 拘束して攻撃力120%）",
            "完美之箭落点处布下陷阱。（最多5个 · 20秒 · 定身并造成120%攻击力伤害）");
         PA("화살의 직접 피해가 20% 줄어듭니다.", "Arrows deal 20% less direct damage.", "矢の直接ダメージが20%減ります。", "箭矢的直接伤害降低20%。");
-        PA("지역 장악 · 카이팅 생존", "Area control · Kiting survival", "地域制圧 · 引き撃ちで生存", "区域控制 · 风筝求生");
+        PK("지역 장악 · 카이팅 생존", "지역 장악 · 카이팅", "Area control · Kiting", "地域制圧 · 引き撃ち", "区域控制 · 风筝");
         PA("움직이는 보스", "Mobile bosses", "動き回るボス", "移动的首领");
         PA("덫이 터지면 그 자리에 가시 덤불이 자랍니다.", "When a trap springs, a Thorn Thicket grows there.", "罠が弾けると、その場所にいばらの茂みが育ちます。", "陷阱触发时，原地长出荆棘丛。");
-        PA("적을 묶은 덫 둘이 3초 안에 가까이 터지면 그 사이에 가시줄이 이어집니다.",
-           "When two traps that rooted enemies spring near each other within 3s, a thorn line links them.",
-           "敵を拘束した罠2つが3秒以内に近くで弾けると、その間にいばらの線がつながります。",
-           "两个定住敌人的陷阱在3秒内于近处触发时，其间会连起荆棘线。");
-        PA("덫이 10개까지 놓이고, 중간 보스도 0.5초 묶습니다. 보스는 2초 동안 받는 피해가 10% 늘어납니다.",
-           "Up to 10 traps, and mid-bosses are rooted for 0.5s. Bosses take 10% more damage for 2s.",
-           "罠を10個まで仕掛けられ、中ボスも0.5秒拘束します。ボスは2秒間受けるダメージが10%増えます。",
-           "最多可布10个陷阱，中首领也会被定身0.5秒。首领在2秒内受到的伤害提升10%。");
+        PK("적을 묶은 덫 둘이 3초 안에 가까이 터지면 그 사이에 가시줄이 이어집니다.",
+           "적을 묶은 덫 둘이 3초 안에 가까이 터지면 가시줄로 이어집니다.",
+           "Two rooting traps that spring close within 3s are linked by a thorn line.",
+           "敵を拘束した罠2つが3秒以内に近くで弾けると、いばらの線でつながります。",
+           "两个定住敌人的陷阱在3秒内于近处触发时，以荆棘线相连。");
+        PK("덫이 10개까지 놓이고, 중간 보스도 0.5초 묶습니다. 보스는 2초 동안 받는 피해가 10% 늘어납니다.",
+           "덫이 10개까지 놓이고 중간 보스도 0.5초 묶으며, 보스는 2초 동안 피해를 10% 더 받습니다.",
+           "Up to 10 traps; mid-bosses are rooted 0.5s, and bosses take 10% more damage for 2s.",
+           "罠が10個まで置け、中ボスも0.5秒拘束し、ボスは2秒間ダメージを10%多く受けます。",
+           "最多10个陷阱，中首领也会被定身0.5秒，首领2秒内多受10%伤害。");
 
         // ================================================================= 바람
         PA("바람", "Wind", "風", "风");
         PA("당기며 달리기 · 생존", "Run while drawing · Survival", "引きながら走る · 生存", "边拉弓边奔跑 · 生存");
         PA("바람 걸음", "Wind Step", "風の歩み", "风之步");
-        PA("당기는 동안 느려지지 않고, 완벽 화살마다 1.5초 동안 이동 속도가 20% 오르며 짧은 바람길이 남습니다.",
-           "You don't slow down while drawing. Each Perfect arrow grants +20% move speed for 1.5s and leaves a short wind lane.",
-           "引き絞っている間も遅くならず、パーフェクトの矢ごとに1.5秒間移動速度が20%上がり、短い風の道が残ります。",
-           "拉弓时不再减速，每支完美之箭使移动速度提升20%，持续1.5秒，并留下一段短风道。");
+        PK("당기는 동안 느려지지 않고, 완벽 화살마다 1.5초 동안 이동 속도가 20% 오르며 짧은 바람길이 남습니다.",
+           "당겨도 느려지지 않고, 완벽 화살마다 1.5초 동안 이동 속도가 20% 오르며 바람길이 남습니다.",
+           "No slowdown while drawing. Each Perfect arrow: +20% move speed for 1.5s and a wind lane.",
+           "引いても遅くならず、パーフェクトの矢ごとに1.5秒間移動速度が20%上がり、風の道が残ります。",
+           "拉弓时不减速，每支完美之箭使移动速度提高20%，持续1.5秒，并留下风道。");
         PA("숨이 2배 빨리 닳습니다.", "Breath drains twice as fast.", "息が2倍速く減ります。", "气息消耗速度变为2倍。");
         PA("기동 · 생존", "Mobility · Survival", "機動 · 生存", "机动 · 生存");
         PA("화력 중간", "Moderate damage", "火力は中程度", "火力中等");
@@ -108,10 +115,11 @@ public static partial class LocTable
            "Enemies in the Arrow Rain area are automatically given a Quarry Mark for 3s.",
            "矢の雨を放った場所の敵に、3秒間獲物の印が自動で付きます。",
            "箭雨区域内的敌人在3秒内会自动被打上猎物标记。");
-        PA("화살비를 쏜 뒤 3초 동안 평타가 하늘로 쏴져 화살비 자리의 적 셋에게 떨어집니다.",
-           "For 3s after Arrow Rain, basic attacks are shot skyward and fall on 3 enemies in the rain area.",
-           "矢の雨を放った後3秒間、通常攻撃が空へ放たれ、矢の雨の場所の敵3体に降り注ぎます。",
-           "施放箭雨后3秒内，普通攻击会射向天空，落在箭雨区域内的3名敌人身上。");
+        PK("화살비를 쏜 뒤 3초 동안 평타가 하늘로 쏴져 화살비 자리의 적 셋에게 떨어집니다.",
+           "화살비 뒤 3초 동안 평타가 하늘로 올라가 화살비 속 적 셋에게 떨어집니다.",
+           "For 3s after Arrow Rain, basic attacks arc skyward onto 3 enemies in the rain.",
+           "矢の雨の後3秒間、通常攻撃が空へ上がり、矢の雨の中の敵3体に降ります。",
+           "箭雨后3秒内，普通攻击射向天空，落在箭雨中的3名敌人身上。");
         PA("화살비를 쏠 때 다른 무리 위에 화살비가 하나 더 쏟아집니다. (피해 40%)",
            "When you call Arrow Rain, a second rain pours onto another group. (40% damage)",
            "矢の雨を放つと、別の群れの上にもう一つ矢の雨が降り注ぎます。（ダメージ40%）",

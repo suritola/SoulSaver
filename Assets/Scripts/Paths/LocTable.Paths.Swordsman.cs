@@ -10,26 +10,30 @@ public static partial class LocTable
     {
         // ================================================================= 검기
         PA("검기", "Sword Wave", "剣気", "剑气");
-        PA("휘두를 때마다 검기 · 안전 거리", "A wave on every swing · Safe distance", "振るたびに剣気 · 安全な間合い", "每次挥砍放出剑气 · 安全距离");
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
+        PK("휘두를 때마다 검기 · 안전 거리", "검기 · 안전 거리", "Sword waves · Safe distance", "剣気 · 安全な間合い", "剑气 · 安全距离");
         PA("검기 방출", "Wave Release", "剣気放出", "剑气释放");
-        PA("휘두를 때마다 검기가 반드시 날아갑니다. (9칸 · 베기 피해 60% · 관통 · 「날아가는 검기」 단계마다 +5%) 휘두르기 범위는 20% 줄어듭니다.",
-           "Every swing always launches a sword wave. (9 tiles · 60% of slash damage · pierces · +5% per Flying Slash rank) Your swing range shrinks by 20%.",
-           "振るたびに必ず剣気が飛びます。（9マス · 斬撃ダメージの60% · 貫通 · 「飛ぶ剣気」1段階ごとに+5%）振りの範囲は20%狭くなります。",
-           "每次挥砍必定放出剑气。（9格 · 斩击伤害的60% · 穿透 · 「飞行剑气」每级+5%）挥砍范围缩小20%。");
-        PA("근접 특성(휘두르는 동안 받는 피해 절반)이 사라집니다.",
-           "You lose your Melee trait (half damage taken while swinging).",
-           "近接特性（振っている間は受けるダメージ半分）がなくなります。",
-           "失去近战特性（挥砍时受到的伤害减半）。");
+        PK("휘두를 때마다 검기가 반드시 날아갑니다. (9칸 · 베기 피해 60% · 관통 · 「날아가는 검기」 단계마다 +5%) 휘두르기 범위는 20% 줄어듭니다.",
+           "휘두를 때마다 검기가 날아갑니다. (9칸 · 관통 · 베기 피해 60% · 「날아가는 검기」 단계당 +5%)",
+           "Every swing fires a sword wave. (9 tiles · pierces · 60% slash damage · +5% per Flying Slash rank)",
+           "振るたびに剣気が飛びます。（9マス · 貫通 · 斬撃ダメージの60% · 「飛ぶ剣気」1段階ごとに+5%）",
+           "每次挥砍放出剑气。（9格 · 穿透 · 斩击伤害的60% · 「飞行剑气」每级+5%）");
+        PK("근접 특성(휘두르는 동안 받는 피해 절반)이 사라집니다.",
+           "근접 특성이 사라지고, 휘두르기 범위가 20% 줄어듭니다.",
+           "You lose your Melee trait. Swing range -20%.",
+           "近接特性がなくなり、振りの範囲が20%狭くなります。",
+           "失去近战特性，挥砍范围缩小20%。");
         PA("안전 거리 · 일렬 · 보스", "Safe distance · Lines · Bosses", "安全な間合い · 一列 · ボス", "安全距离 · 一列敌人 · 首领");
-        PA("근접 생존력", "Close-range survival", "近接での生存力", "近身生存能力");
+        PK("근접 생존력", "근접 생존", "Close-range survival", "近接での生存", "近身生存");
         PA("검기로 같은 적을 세 번 맞히면 균열이 바로 터집니다.",
            "Hitting the same enemy three times with sword waves sets off Fracture at once.",
            "剣気で同じ敵に3回当てると、亀裂がすぐに弾けます。",
            "剑气命中同一敌人三次时，裂痕立即爆发。");
-        PA("검기가 두 줄기 X자로 날아가고(한 줄기 70% 세기), 교차점에서 잔상이 터집니다. (베기 피해 30%)",
-           "Sword waves fly as two streams in an X (70% strength each), and an afterimage bursts where they cross. (30% of slash damage)",
-           "剣気が2本のX字に飛び（1本70%の威力）、交差点で残像が弾けます。（斬撃ダメージの30%）",
-           "剑气化为两道呈X形飞出（每道70%威力），并在交汇点爆发残影。（斩击伤害的30%）");
+        PK("검기가 두 줄기 X자로 날아가고(한 줄기 70% 세기), 교차점에서 잔상이 터집니다. (베기 피해 30%)",
+           "검기가 X자 두 줄기(각 70% 세기)로 날아가고, 교차점에서 잔상이 터집니다. (베기 피해 30%)",
+           "Sword waves fly in an X (70% strength each); an afterimage bursts where they cross. (30% slash damage)",
+           "剣気がX字の2本（各70%の威力）で飛び、交差点で残像が弾けます。（斬撃ダメージの30%）",
+           "剑气呈X形两道飞出（各70%威力），在交汇点爆发残影。（斩击伤害的30%）");
         PA("검기가 끝에서 되돌아옵니다. (80% 세기)",
            "Sword waves return from the end of their flight. (80% strength)",
            "剣気が端から戻ってきます。（80%の威力）",
@@ -38,13 +42,18 @@ public static partial class LocTable
         // ================================================================= 받아치기
         PA("받아치기", "Parry", "受け返し", "招架反击");
         PA("막기 0.5초 · 반격", "0.5s block · Counter", "0.5秒の受け · 反撃", "0.5秒格挡 · 反击");
-        PK("우클릭을 누른 첫 0.5초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "우클릭 뒤 0.5초 동안 막기가 되어 그사이 받는 피해가 0입니다. 투사체 · 보스 공격을 막으면 0.6초 무적과 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.", "For 0.5s after right-click you block, taking 0 damage. Blocking a projectile or boss attack also grants 0.6s invincibility and a ×3 next slash. (Once per 3s · enemy body contact is only blocked) You can block once per 1.2s (once per 2s after a success).", "右クリック後の0.5秒間が受けになり、その間のダメージは0です。弾やボスの攻撃を受けると0.6秒無敵と次の斬撃×3も得ます。（3秒に1回・雑魚の体当たりはダメージを防ぐだけ）受けは1.2秒に1回（成功すると2秒に1回）です。", "按下右键后0.5秒内为格挡，期间受到的伤害为0。格挡弹幕或首领攻击时还获得0.6秒无敌和下一次斩击×3。（每3秒一次 · 小怪身体碰撞只挡伤害）格挡每1.2秒一次（成功后每2秒一次）。");
-        PA("회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.",
-           "Charging Spin Slash to full takes 30% longer.",
-           "回転斬りを最大までためる時間が30%長くなります。",
-           "回旋斩蓄满所需时间增加30%。");
+        PK("우클릭을 누른 첫 0.5초가 막기가 됩니다. 그사이 맞으면 피해 0. 투사체 · 보스 공격을 막으면 0.6초 무적 · 다음 베기 ×3도 얻습니다. (3초에 한 번 · 잡몹 몸통은 피해만 막음) 실패해도 손해는 없지만, 막기는 1.2초에 한 번(성공하면 2초에 한 번)입니다.",
+           "우클릭 뒤 0.5초 동안 막아 피해를 받지 않습니다. (1.2초마다 · 성공하면 2초마다) 투사체 · 보스 공격을 막으면 0.6초 무적과 다음 베기 ×3을 얻습니다. (3초에 한 번 · 잡몹 몸통 제외)",
+           "Right-click blocks all damage for 0.5s. (Every 1.2s · 2s after a success) Blocking a projectile or boss attack grants 0.6s invincibility and a ×3 next slash. (Once per 3s · not enemy bodies)",
+           "右クリック後0.5秒間受けてダメージを受けません。（1.2秒ごと · 成功すると2秒ごと）弾やボスの攻撃を受けると0.6秒無敵と次の斬撃×3を得ます。（3秒に1回 · 雑魚の体当たりは除く）",
+           "右键后0.5秒内格挡，不受伤害。（每1.2秒 · 成功后每2秒）格挡弹幕或首领攻击时获得0.6秒无敌和下一次斩击×3。（每3秒一次 · 小怪身体碰撞除外）");
+        PK("회전 베기를 끝까지 모으는 시간이 30% 늘어납니다.",
+           "회전 베기 모으기가 30% 느려집니다.",
+           "Spin Slash charges 30% slower.",
+           "回転斬りのためが30%遅くなります。",
+           "回旋斩蓄力慢30%。");
         PA("보스 탄막 · 생존", "Boss barrages · Survival", "ボスの弾幕 · 生存", "首领弹幕 · 生存");
-        PA("무리 · 손 기술", "Hordes · Execution skill", "群れ · 操作技術", "敌群 · 操作技巧");
+        PK("무리 · 손 기술", "무리 · 손 기술", "Hordes · Timing", "群れ · 操作技術", "敌群 · 操作技巧");
         PA("투사체 · 보스 공격을 막으면 둘레의 적 투사체를 모두 되돌려 보냅니다.",
            "Blocking a projectile or boss attack sends every nearby enemy projectile back.",
            "弾やボスの攻撃を受けると、周りの敵の弾をすべて打ち返します。",
@@ -53,17 +62,18 @@ public static partial class LocTable
            "Block twice within 3s to enter Counter Stance for 4s. (Range ×1.4 · Damage ×1.5)",
            "3秒以内に2回受けると、4秒間逆襲の構えになります。（射程×1.4 · ダメージ×1.5）",
            "3秒内格挡两次，进入4秒反击架势。（范围×1.4 · 伤害×1.5）");
-        PA("막기가 0.8초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
-           "The block lasts 0.8s, and each projectile or boss attack you block fills 20% of the Ultimate Gauge. (Once per 3s)",
-           "受けが0.8秒に伸び、弾やボスの攻撃を受けるたびに必殺技ゲージが20%たまります。（3秒に1回）",
-           "格挡延长至0.8秒，每次格挡弹幕或首领攻击时充能20%必杀技槽。（每3秒一次）");
+        PK("막기가 0.8초로 늘고, 투사체 · 보스 공격을 막을 때마다 필살기 게이지가 20% 찹니다. (3초에 한 번)",
+           "막기가 0.8초로 늘고, 투사체 · 보스 공격을 막으면 필살기 게이지가 20% 찹니다. (3초에 한 번)",
+           "Blocks last 0.8s, and blocking a projectile or boss attack fills 20% of the Ultimate Gauge. (Once per 3s)",
+           "受けが0.8秒に伸び、弾やボスの攻撃を受けると必殺技ゲージが20%たまります。（3秒に1回）",
+           "格挡延长至0.8秒，格挡弹幕或首领攻击时必杀技槽充能20%。（每3秒一次）");
         PA("막기!", "Parry!", "受け！", "招架！");
         PA("역습 자세!", "Counter Stance!", "逆襲の構え！", "反击架势！");
         PA("반격!", "Counter!", "反撃！", "反击！");
 
         // ================================================================= 피의 맹세
         PA("피의 맹세", "Blood Oath", "血の誓い", "血之誓约");
-        PA("체력을 바쳐 흡혈 · 근접 지속", "Pay health for lifesteal · Sustained melee", "体力を捧げて吸血 · 近接で粘る", "献出生命换取吸血 · 近战持久");
+        PK("체력을 바쳐 흡혈 · 근접 지속", "체력을 바쳐 흡혈", "Health for lifesteal", "体力を捧げて吸血", "献出生命换吸血");
         PA("휘두를 때마다 지금 체력의 2%를 바치고, 베기 피해가 35% 늘며 흡혈이 2배가 됩니다.",
            "Each swing offers 2% of your current health. Slash damage +35% and lifesteal is doubled.",
            "振るたびに現在の体力の2%を捧げ、斬撃ダメージが35%増え、吸血が2倍になります。",
@@ -78,23 +88,26 @@ public static partial class LocTable
            "Below 50% health, damage +25%. Below 25%, +50%.",
            "体力が50%未満ならダメージ+25%、25%未満なら+50%です。",
            "生命低于50%时伤害+25%，低于25%时+50%。");
-        PA("혈갑 보호막이 가득 차면 베기가 피의 파동이 되어 길게 뻗습니다. (9칸 · 베기 피해 50%)",
-           "While your Blood Guard shield is full, slashes become a far-reaching blood wave. (9 tiles · 50% of slash damage)",
-           "血甲のシールドが満タンの間、斬撃が血の波動となって長く伸びます。（9マス · 斬撃ダメージの50%）",
-           "血甲护盾充满时，斩击化为血之波动远远延伸。（9格 · 斩击伤害的50%）");
-        PA("장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
-           "Once per chapter (in Endless, once per boss defeated), survive with 1 health and triple your lifesteal for 3s.",
-           "章ごとに1回（エンドレスモードではボスを倒すたびに）、体力1で耐え、3秒間吸血が3倍になります。",
-           "每章一次（无尽模式中每击败一个首领一次），以1点生命撑住，并在3秒内吸血变为3倍。");
+        PK("혈갑 보호막이 가득 차면 베기가 피의 파동이 되어 길게 뻗습니다. (9칸 · 베기 피해 50%)",
+           "혈갑이 가득 차면 베기가 피의 파동으로 길게 뻗습니다. (9칸 · 베기 피해 50%)",
+           "With Blood Guard full, slashes extend as a blood wave. (9 tiles · 50% slash damage)",
+           "血甲が満タンなら、斬撃が血の波動となって伸びます。（9マス · 斬撃ダメージの50%）",
+           "血甲充满时，斩击化为血之波动延伸。（9格 · 斩击伤害的50%）");
+        PK("장마다 한 번(무한 모드는 보스를 쓰러뜨릴 때마다) 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
+           "장마다 한 번(무한 모드는 보스 처치마다) 체력 1로 버티고, 3초 동안 흡혈이 3배가 됩니다.",
+           "Once per chapter (Endless: per boss kill), survive at 1 health and triple lifesteal for 3s.",
+           "章ごとに1回（エンドレスはボス撃破ごと）体力1で耐え、3秒間吸血が3倍になります。",
+           "每章一次（无尽模式每击败首领一次）以1点生命撑住，3秒内吸血变为3倍。");
 
         // ================================================================= 검무
         PA("검무", "Sword Dance", "剣舞", "剑舞");
         PA("미끄러지며 베기 · 기동", "Gliding slashes · Mobility", "滑りながら斬る · 機動", "滑行斩击 · 机动");
         PA("검무 보법", "Dancing Steps", "剣舞の歩法", "剑舞步法");
-        PA("움직이며 휘두르면 진행 방향으로 1.5칸 미끄러지며 벱니다. 움직이는 동안 공격 속도 +15%.",
-           "Swinging while moving makes you glide 1.5 tiles in your direction as you slash. Attack speed +15% while moving.",
-           "動きながら振ると、進行方向へ1.5マス滑りながら斬ります。移動中は攻撃速度+15%。",
-           "移动中挥砍时，会朝前进方向滑行1.5格并斩击。移动时攻击速度+15%。");
+        PK("움직이며 휘두르면 진행 방향으로 1.5칸 미끄러지며 벱니다. 움직이는 동안 공격 속도 +15%.",
+           "움직이며 휘두르면 1.5칸 미끄러지며 벱니다. 움직이는 동안 공격 속도가 15% 빨라집니다.",
+           "Swinging while moving glides you 1.5 tiles as you slash. Attack speed +15% while moving.",
+           "動きながら振ると1.5マス滑りながら斬ります。移動中は攻撃速度が15%上がります。",
+           "移动中挥砍时滑行1.5格并斩击。移动时攻击速度提高15%。");
         PA("멈춰서 휘두르면 공격 속도가 20% 느려집니다.",
            "Swinging while standing still slows your attack speed by 20%.",
            "止まって振ると攻撃速度が20%遅くなります。",
@@ -105,10 +118,11 @@ public static partial class LocTable
            "Your glide path leaves blade afterimages for 1s. (20% of slash damage every 0.25s)",
            "滑った道に刃の残像が1秒間残ります。（0.25秒ごとに斬撃ダメージの20%）",
            "滑行路径上留下持续1秒的刀刃残影。（每0.25秒造成斩击伤害的20%）");
-        PA("검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 저절로 나갑니다. (30% 세기)",
-           "At max Sword Dance stacks, every fifth swing unleashes a Spin Slash on its own. (30% strength)",
-           "剣舞が最大スタックの間、5回目の振りごとに回転斬りが自動で出ます。（30%の威力）",
-           "剑舞叠满时，每第五次挥砍自动释放回旋斩。（30%威力）");
+        PK("검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 저절로 나갑니다. (30% 세기)",
+           "검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 나갑니다. (30% 세기)",
+           "At max Sword Dance stacks, every 5th swing adds a Spin Slash. (30% strength)",
+           "剣舞が最大スタックなら、5回目の振りごとに回転斬りが出ます。（30%の威力）",
+           "剑舞叠满时，每第五次挥砍释放回旋斩。（30%威力）");
         PA("미끄러질 때 0.1초 무적이 되고(0.6초에 한 번), 2.5칸을 미끄러집니다.",
            "Gliding grants 0.1s of invincibility (once per 0.6s), and you glide 2.5 tiles.",
            "滑る時に0.1秒無敵になり（0.6秒に1回）、2.5マス滑ります。",
@@ -118,10 +132,11 @@ public static partial class LocTable
         PA("회오리", "Whirlwind", "旋風", "旋风");
         PA("원형 베기 · 모으며 베기", "Circular slashes · Slash while charging", "円形斬り · ためながら斬る", "环形斩击 · 蓄力时斩击");
         PA("회전 검사", "Spinning Blade", "回転剣士", "回旋剑士");
-        PA("평타가 몸 둘레 원형 베기가 됩니다. (반경 85% · 피해 80%) 회전 베기를 모으는 동안 0.5초마다 둘레를 벱니다. (베기 피해 50%)",
-           "Your basic attack becomes a circular slash around you. (85% radius · 80% damage) While charging Spin Slash, you cut around you every 0.5s. (50% of slash damage)",
-           "通常攻撃が体の周りを斬る円形斬りになります。（半径85% · ダメージ80%）回転斬りをためている間、0.5秒ごとに周りを斬ります。（斬撃ダメージの50%）",
-           "普通攻击变为环绕自身的环形斩击。（半径85% · 伤害80%）蓄力回旋斩期间，每0.5秒斩击周围。（斩击伤害的50%）");
+        PK("평타가 몸 둘레 원형 베기가 됩니다. (반경 85% · 피해 80%) 회전 베기를 모으는 동안 0.5초마다 둘레를 벱니다. (베기 피해 50%)",
+           "평타가 원형 베기가 됩니다. (반경 85% · 피해 80%) 회전 베기를 모으는 동안에도 0.5초마다 벱니다. (베기 피해 50%)",
+           "Basic attacks become circular slashes. (85% radius · 80% damage) Charging Spin Slash also cuts every 0.5s. (50% slash damage)",
+           "通常攻撃が円形斬りになります。（半径85% · ダメージ80%）回転斬りをためている間も0.5秒ごとに斬ります。（斬撃ダメージの50%）",
+           "普通攻击变为环形斩击。（半径85% · 伤害80%）蓄力回旋斩期间也每0.5秒斩击。（斩击伤害的50%）");
         PA("한 적에게 주는 피해가 낮습니다.", "Low damage against a single enemy.", "単体へのダメージが低めです。", "对单个敌人的伤害较低。");
         PA("포위 무리", "Surrounding hordes", "包囲する群れ", "包围的敌群");
         PA("보스 단일", "Single bosses", "ボス単体", "单个首领");
