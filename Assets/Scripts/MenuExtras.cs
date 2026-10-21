@@ -607,6 +607,19 @@ public static class MenuExtras
         lockHint.gameObject.SetActive(false);
     }
 
+    // 1.5.0~ 난이도 탭 뒤 어두운 도트 판 (빨간 카펫 위에서도 탭이 또렷하게) · 한 번만 만듦
+    static void EnsureDiffPlate(List<Button> buttons)
+    {
+        Transform parent = buttons[0].transform.parent;
+        if (parent == null || parent.Find("DiffPlate") != null) return;
+        RectTransform pr = UIKit.Rect("DiffPlate", parent, new Vector2(0f, DiffY), new Vector2(ColW + 36f, DiffH + 26f));
+        Image pi = pr.gameObject.AddComponent<Image>();
+        if (UIKit.PanelSprite != null) { pi.sprite = UIKit.PanelSprite; pi.type = Image.Type.Sliced; }
+        pi.color = new Color(0.1f, 0.08f, 0.14f, 0.88f);
+        pi.raycastTarget = false;
+        pr.SetSiblingIndex(buttons[0].transform.GetSiblingIndex());     // 탭들 뒤
+    }
+
     // 1.2~ 난이도 버튼 툴팁: 클리어 보상 (체험판은 쉬움만이라 정식판 안내) · 이미 깼으면 한 줄 더
     static string LadderTip(Difficulty d)
     {
@@ -623,19 +636,37 @@ public static class MenuExtras
         return s;
     }
 
+    // 1.5.0~ 난이도 색 (고른 탭의 틀 · 글자 · 표시): 쉬움 초록 · 보통 금 · 어려움 빨강 · 무한 보라
+    static readonly Color[] DiffColors =
+    {
+        new Color(0.55f, 0.95f, 0.55f), new Color(0.98f, 0.82f, 0.42f), new Color(1f, 0.45f, 0.4f), new Color(0.78f, 0.58f, 1f),
+    };
+
     static void HighlightDifficulty(List<Button> buttons, TMP_Text hint, TMP_Text lockHint)
     {
+        // 1.5.0~ 사용자 「난이도 선택 버튼 더 잘 보이게」: 글자만 있던 탭(빨간 카펫 위에서 묻힘) → 어두운 판 위 도트 버튼 틀
+        //   고른 난이도는 난이도 색으로 밝은 틀 · 글자 · 위아래 마름모 · 조금 크게, 나머지는 어두운 틀 · 밝은 글자, 잠긴 것은 더 어둡게
+        UIKit.EnsureStyle();                // 도트 버튼 · 판 그림을 먼저 불러 둠
+        if (buttons.Count > 0) EnsureDiffPlate(buttons);
         for (int i = 0; i < buttons.Count; i++)
         {
             Difficulty d = (Difficulty)i;
             bool open = GameMode.IsUnlocked(d), on = open && GameMode.Current == d;
+            Color dc = DiffColors[Mathf.Clamp(i, 0, DiffColors.Length - 1)];
             buttons[i].interactable = open;
-            // 1.4.8~ 상자 대신 글자 탭: 고른 난이도만 금빛 글자 · 아래 금빛 줄, 나머지는 흐린 글자 (잠긴 것은 더 흐리게)
             Image img = buttons[i].GetComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0f);
-            buttons[i].transform.localScale = Vector3.one;
+            if (UIKit.ButtonSprite != null)
+            {
+                img.sprite = UIKit.ButtonSprite;
+                img.type = Image.Type.Sliced;
+            }
+            img.color = on ? Color.Lerp(Color.white, dc, 0.55f) : open ? new Color(0.36f, 0.32f, 0.42f, 0.95f) : new Color(0.2f, 0.19f, 0.23f, 0.85f);
+            ColorBlock cb = buttons[i].colors;
+            cb.disabledColor = Color.white;     // 잠긴 탭 색은 위에서 정함 (버튼 기본 회색이 덮지 않게)
+            buttons[i].colors = cb;
+            buttons[i].transform.localScale = on ? new Vector3(1.06f, 1.06f, 1f) : Vector3.one;
             TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
-            label.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.78f, 0.74f, 0.7f) : new Color(0.42f, 0.4f, 0.42f);
+            label.color = on ? Color.Lerp(dc, Color.white, 0.35f) : open ? new Color(0.93f, 0.9f, 0.86f) : new Color(0.5f, 0.48f, 0.52f);
             label.fontSize = 30f;
             label.enableAutoSizing = false;
             label.fontStyle |= FontStyles.Bold;
@@ -644,11 +675,27 @@ public static class MenuExtras
             {
                 RectTransform ur = UIKit.Rect("Underline", buttons[i].transform, new Vector2(0f, -DiffH * 0.5f + 6f), new Vector2(TileW * 0.62f, 3f));
                 Image ui = ur.gameObject.AddComponent<Image>();
-                ui.color = new Color(0.96f, 0.83f, 0.47f);
                 ui.raycastTarget = false;
                 ul = ur;
             }
+            ul.GetComponent<Image>().color = dc;
             ul.gameObject.SetActive(on);
+            // 고른 탭 위아래 마름모 (난이도 색)
+            for (int k = 0; k < 2; k++)
+            {
+                string gem = k == 0 ? "GemTop" : "GemBottom";
+                Transform g = buttons[i].transform.Find(gem);
+                if (g == null)
+                {
+                    RectTransform gr = UIKit.Rect(gem, buttons[i].transform, new Vector2(0f, (k == 0 ? 1f : -1f) * (DiffH * 0.5f + 2f)), new Vector2(12f, 12f));
+                    gr.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                    Image gi = gr.gameObject.AddComponent<Image>();
+                    gi.raycastTarget = false;
+                    g = gr;
+                }
+                g.GetComponent<Image>().color = dc;
+                g.gameObject.SetActive(on);
+            }
         }
         // 고른 난이도가 무엇이 다른지 (1.0.4~, 예전엔 잠금 안내만 · 다 열리면 비었음) + 잠긴 난이도가 있으면 여는 방법
         // 체험판은 쉬움만이라 「쉬움을 클리어하면」 대신 정식판 안내 (1.0.4~)
