@@ -49,20 +49,23 @@ public partial class Shop
 
         const float W = 1320f, H = 800f;
         RectTransform win = UIKit.Rect("ShopWindow", shopPanel.transform, Vector2.zero, new Vector2(W, H));
-        Img(win, UIKit.ButtonSprite, new Color(0.66f, 0.52f, 0.3f), true);
+        // 1.4.8~ 새 도트 스타일(금장 돌판)이면 판 색을 칠하지 않음 (금 테두리가 그대로 보이게) · 머리띠 · 코인 칸도 같은 판
+        bool art = RecommendGlow.PillArt;
+        Img(win, UIKit.ButtonSprite, art ? Color.white : new Color(0.66f, 0.52f, 0.3f), true);
         RectTransform inner = UIKit.Rect("Inner", win, Vector2.zero, new Vector2(W - 16f, H - 16f));
         Img(inner, null, new Color(0.075f, 0.06f, 0.1f, 0.98f), false);
 
         // 머리띠: 제목 · 코인 · 닫기
         RectTransform head = UIKit.Rect("Head", inner, new Vector2(0f, H * 0.5f - 62f), new Vector2(W - 16f, 108f));
-        Img(head, null, new Color(0.17f, 0.12f, 0.2f, 1f), false);
+        if (art) Img(head, UIKit.ButtonSprite, Color.white, true);
+        else Img(head, null, new Color(0.17f, 0.12f, 0.2f, 1f), false);
         TMP_Text title = UIKit.Text(head, "떠돌이 상점", 50f, Gold, new Vector2(-W * 0.5f + 230f, 8f), new Vector2(420f, 64f), TextAlignmentOptions.Left);
         title.text = Loc.T("떠돌이 상점");
         TMP_Text sub = UIKit.Text(head, "", 20f, Dim, new Vector2(-W * 0.5f + 330f, -32f), new Vector2(620f, 30f), TextAlignmentOptions.Left);
         sub.text = Loc.T("코인으로 이번 판 동안 능력을 올리고, 물약으로 잠시 힘을 빌립니다");      // 1.0.4~ 「영구히」는 다음 판에도 남는 것처럼 읽혔음
 
         RectTransform coinBox = UIKit.Rect("Coins", head, new Vector2(250f, 0f), new Vector2(260f, 70f));
-        Img(coinBox, UIKit.ButtonSprite, new Color(0.28f, 0.22f, 0.12f), true);
+        Img(coinBox, UIKit.ButtonSprite, art ? new Color(1f, 0.92f, 0.75f) : new Color(0.28f, 0.22f, 0.12f), true);
         Icon(coinBox, "Icons/menu_coin", new Vector2(-88f, 0f), 50f);
         coinLabel = (TextMeshProUGUI)UIKit.Text(coinBox, "", 34f, Gold, new Vector2(30f, 0f), new Vector2(170f, 56f), TextAlignmentOptions.Left);
         closeLabel = UIKit.MakeButton(head, "", new Vector2(W * 0.5f - 120f, 0f), new Vector2(170f, 64f), ToggleShop, 24f).GetComponentInChildren<TMP_Text>();
@@ -158,8 +161,10 @@ public partial class Shop
         t.text = "◆ " + Loc.T(ko);
         // 1.1~ 구분선을 제목 아래(카드 밑에 깔려 토막난 금색 점처럼 보였음) → 제목 오른쪽 같은 줄, 창 안쪽 끝 30 앞까지
         float lineL = pos.x + 190f, lineR = -pos.x + 52f;
-        RectTransform line = UIKit.Rect("Line", parent, new Vector2((lineL + lineR) * 0.5f, pos.y), new Vector2(lineR - lineL, 3f));
-        Img(line, null, new Color(Gold.r, Gold.g, Gold.b, 0.35f), false);
+        // 1.4.8~ 새 도트 스타일: 금 장식선 그림(ui_divider · 양 끝이 빠지고 가운데 마름모) · 못 찾으면 예전 옅은 금 선
+        bool art = UIKit.DividerSprite != null;
+        RectTransform line = UIKit.Rect("Line", parent, new Vector2((lineL + lineR) * 0.5f, pos.y), new Vector2(lineR - lineL, art ? 24f : 3f));
+        Img(line, art ? UIKit.DividerSprite : null, art ? new Color(1f, 1f, 1f, 0.85f) : new Color(Gold.r, Gold.g, Gold.b, 0.35f), false);
     }
 
     static Image Img(RectTransform r, Sprite sprite, Color color, bool sliced)

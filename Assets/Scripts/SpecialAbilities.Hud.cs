@@ -572,7 +572,15 @@ public class RunClock : MonoBehaviour
         br.sizeDelta = new Vector2(150f, 44f);
         br.anchoredPosition = new Vector2(0f, -10f);
         Image bg = box.GetComponent<Image>();
-        bg.color = new Color(0.05f, 0.04f, 0.07f, 0.7f);
+        // 1.4.8~ 새 도트 스타일: 어두운 단색 칸 대신 금장 돌판(ui_button) · 그림이 없으면 예전 칸
+        UIKit.EnsureStyle();
+        if (RecommendGlow.PillArt)
+        {
+            bg.sprite = UIKit.ButtonSprite;
+            bg.type = Image.Type.Sliced;
+            bg.color = new Color(1f, 1f, 1f, 0.85f);
+        }
+        else bg.color = new Color(0.05f, 0.04f, 0.07f, 0.7f);
         bg.raycastTarget = false;
         GameObject go = new GameObject("RunClock", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform r = go.GetComponent<RectTransform>();

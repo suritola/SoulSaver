@@ -528,9 +528,16 @@ public class RunStats : MonoBehaviour
         r.anchoredPosition = new Vector2(-30f, -PausePanelTop);
         r.sizeDelta = new Vector2(PausePanelW, h);           // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
-        bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
-        bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
         UIKit.EnsureStyle();
+        // 1.4.8~ 새 도트 스타일: 단색 판 대신 창 판(ui_panel: 금 이중 테두리 · 모서리 보석) · 그림이 없으면 예전 단색
+        if (UIKit.PanelSprite != null)
+        {
+            bg.sprite = UIKit.PanelSprite;
+            bg.type = Image.Type.Sliced;
+            bg.color = new Color(1f, 1f, 1f, 0.94f);
+        }
+        else bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
+        bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
         float innerW = PausePanelW - PausePad * 2f;
 
         // 제목 「이번 판」 (소제목 28)

@@ -297,6 +297,16 @@ public static partial class Herald
             b.bar.sizeDelta = new Vector2(0f, 210f);
             Image bi = b.bar.gameObject.AddComponent<Image>();
             bi.color = new Color(0f, 0f, 0f, 0.92f);
+            // 1.4.8~ 새 도트 스타일: 띠 위끝에 금 장식선(ui_divider · 6배 도트) — 띠 아래끝은 화면 끝이라 위만 · 그림이 없으면 예전처럼 없음
+            if (UIKit.DividerSprite != null)
+            {
+                RectTransform dl = UIKit.Rect("TopLine", b.bar, Vector2.zero, new Vector2(768f, 48f));
+                dl.anchorMin = dl.anchorMax = new Vector2(0.5f, 1f);
+                dl.anchoredPosition = Vector2.zero;
+                Image di = dl.gameObject.AddComponent<Image>();
+                di.sprite = UIKit.DividerSprite;
+                di.raycastTarget = false;
+            }
 
             // 왼쪽: 이름표 · 쓰러진 영웅 그림 (어둡게)
             Sprite face = CharacterUI.Portrait(CharacterData.Selected);
