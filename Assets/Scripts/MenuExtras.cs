@@ -1003,7 +1003,7 @@ public static class SettingsUI
         RectTransform win = UIKit.Modal(root, "SettingsPanel", new Vector2(1180f, 860f), out open);
         open.AddComponent<SettingsInput>();
 
-        UIKit.Text(win, "설정", 52f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));
+        UIKit.Text(win, "설정", 46f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));      // 1.4.8~ 52 → 제목 46
 
         tabButtons.Clear();
         for (int i = 0; i < TabNames.Length; i++)
@@ -1011,16 +1011,17 @@ public static class SettingsUI
             int t = i;
             Button tb = UIKit.MakeButton(win, TabNames[i], new Vector2(-475f + 190f * i, 272f), new Vector2(180f, 64f), () => ShowTab(t), 24f);
             TMP_Text tl = tb.GetComponentInChildren<TMP_Text>();
-            if (tl != null) { tl.enableAutoSizing = true; tl.fontSizeMin = 16f; tl.fontSizeMax = 24f; }      // 「Accessibility」 · 「アクセシビリティ」
+            if (tl != null) { tl.enableAutoSizing = true; tl.fontSizeMin = 20f; tl.fontSizeMax = 24f; }      // 「Accessibility」 · 「アクセシビリティ」
             tabButtons.Add(tb);
         }
         page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
 
-        UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 76f), Close, 30f);
+        // 1.4.8~ 닫기 76 → 64 높이 · 30 → 28 (옆 「이 탭 기본값으로」와 같은 높이 · 아래끝 맞춤)
+        UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 64f), Close, 28f);
         // 1.1.9~ 탭마다 「이 탭 기본값으로」 (예전엔 조작 탭에만 「기본값으로」) · 실수 방지로 두 번 누르기
         resetButton = UIKit.MakeButton(win, "이 탭 기본값으로", new Vector2(330f, -364f), new Vector2(280f, 64f), ResetTab, 24f);
         TMP_Text resetLabel = resetButton.GetComponentInChildren<TMP_Text>();
-        if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 14f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
+        if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 20f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
         resetArmedAt = resetDoneAt = -99f;
         RowTip(resetLabel, "이 탭 기본값으로", "이 탭의 설정만 처음 값으로 되돌립니다(조작 탭은 모든 키 배치). 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.");
         ShowTab(tab);
@@ -1095,8 +1096,15 @@ public static class SettingsUI
         else BuildHud();
     }
 
-    static TMP_Text RowLabel(string ko, float y) =>
-        UIKit.Text(page, ko, 30f, Parch, new Vector2(-400f, y), new Vector2(280f, 50f), TextAlignmentOptions.Left);
+    // 1.4.8~ 공통 글자 단계: 30 → 본문 26 (하한 12 → 20) · 왼끝 -540 에 맞추고 폭은 줄마다 오른쪽 조작 칸 앞까지
+    //   (슬라이더 · 언어 줄 300, 화면 모드 360, 버튼 · 드롭다운 칸이 x -30 에서 시작하는 줄 490 — en 이 20 아래로 줄지 않게)
+    const float LabelLeft = -540f, LabelW = 300f, LabelWide = 490f;
+    static TMP_Text RowLabel(string ko, float y, float w = LabelW)
+    {
+        TMP_Text t = UIKit.Text(page, ko, 26f, Parch, new Vector2(LabelLeft + w * 0.5f, y), new Vector2(w, 50f), TextAlignmentOptions.Left);
+        t.fontSizeMin = 20f;
+        return t;
+    }
 
     // ================================================================= 일반
     // 1.4.4~ 플레이 데이터 보내기 두 줄을 더하면 8줄: 65 간격 · 높이 56 (서버 주소가 없으면 예전 6줄 그대로)
@@ -1152,7 +1160,7 @@ public static class SettingsUI
             if (root != null) TelemetryConsentUI.Open(root, true);
         }, 24f);
         TMP_Text vl = view.GetComponentInChildren<TMP_Text>();
-        if (vl != null) { vl.fontSizeMin = 14f; vl.fontSizeMax = 24f; }
+        if (vl != null) { vl.fontSizeMin = 20f; vl.fontSizeMax = 24f; }
 
         telemetryIdLabel = RowLabel("", y2);
         telemetryIdLabel.rectTransform.sizeDelta = new Vector2(420f, 50f);
@@ -1165,7 +1173,7 @@ public static class SettingsUI
         deleteSending = false;
         deleteButton = UIKit.MakeButton(page, "telemetry.delete", new Vector2(220f, y2), new Vector2(500f, rowH), DeleteClicked, 24f);
         TMP_Text dl = deleteButton.GetComponentInChildren<TMP_Text>();
-        if (dl != null) { dl.fontSizeMin = 14f; dl.fontSizeMax = 24f; }
+        if (dl != null) { dl.fontSizeMin = 20f; dl.fontSizeMax = 24f; }
         SetDeleteLabel("telemetry.delete", new Color(0.96f, 0.9f, 0.8f));
     }
 
@@ -1223,7 +1231,7 @@ public static class SettingsUI
     static void SensitivityRow(float y)
     {
         RowLabel("마우스 감도", y);
-        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.minValue = GameSettings.MouseSensMin;
         slider.maxValue = GameSettings.MouseSensMax;
@@ -1254,7 +1262,7 @@ public static class SettingsUI
     static void SliderRow(string ko, float y, float value, System.Action<float> set, bool preview = false)
     {
         RowLabel(ko, y);
-        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.value = value;
         percent.text = Mathf.RoundToInt(value * 100f) + "%";
@@ -1320,7 +1328,7 @@ public static class SettingsUI
     // 모니터: 드롭다운 (모니터 1 (1920×1080) …) — 고르면 창을 옮기고, 해상도 목록이 새 모니터 것으로 바뀌므로 창이 옮겨진 뒤 탭을 다시 그림
     static void MonitorRow(float y, List<DisplayInfo> monitors)
     {
-        RowTip(RowLabel("모니터", y), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
+        RowTip(RowLabel("모니터", y, LabelWide), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
         string[] names = new string[monitors.Count];
         for (int i = 0; i < monitors.Count; i++)
             names[i] = Loc.T("모니터 {0}").Replace("{0}", (i + 1).ToString()) + " (" + monitors[i].width + "×" + monitors[i].height + ")";
@@ -1347,7 +1355,7 @@ public static class SettingsUI
 
     static void DisplayModeRow(float y)
     {
-        RowLabel("화면 모드", y);
+        RowLabel("화면 모드", y, 360f);
         Button full = null, windowed = null;
         // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
         chosenRes = new Vector2Int(Screen.width, Screen.height);
@@ -1394,7 +1402,7 @@ public static class SettingsUI
     //   화면 모드 줄이 먼저 그려져 chosenRes · chosenMode 가 정해진 뒤에 부름
     static void ResolutionRow(float y)
     {
-        RowLabel("해상도", y);
+        RowLabel("해상도", y, LabelWide);
         resOptions = ResolutionOptions();
         resDropdown = UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), ResolutionNames(resOptions), false,
             () => resOptions.IndexOf(chosenRes), i =>
@@ -1480,7 +1488,7 @@ public static class SettingsUI
             if (t != null) { t.text = Loc.T("처음부터 다시 보입니다"); UIKit.Remember(t, "처음부터 다시 보입니다"); }
         }, 22f);
         TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
-        if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
+        if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 20f; againLabel.fontSizeMax = 22f; }
         TMP_Text cursorLabel = ToggleRow("게임 커서", y[1], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
         if (GamePad.Active && cursorLabel != null) cursorLabel.color = Off;       // 1.1.9~ 패드 중엔 뜻이 없어 흐리게 (누를 수는 있음 · 스팀 덱)
@@ -1545,14 +1553,14 @@ public static class SettingsUI
     // 1.2.4~ 펼쳐서 고르는 줄 (CycleRow 와 같은 자리 · 크기, 항목 글자는 Loc.T 로 번역)
     static DropdownAssist DropdownRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
     {
-        RowTip(RowLabel(ko, y), ko, tip);
+        RowTip(RowLabel(ko, y, LabelWide), ko, tip);
         return UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), names, true, get, set, 26f, 7);
     }
 
     // 누를 때마다 다음 값으로
     static void CycleRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
     {
-        RowTip(RowLabel(ko, y), ko, tip);
+        RowTip(RowLabel(ko, y, LabelWide), ko, tip);
         TMP_Text label = null;
         Button b = null;
         System.Action refresh = () =>
@@ -1574,7 +1582,7 @@ public static class SettingsUI
 
     static TMP_Text ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set, string tip = null)
     {
-        TMP_Text rowLabel = RowLabel(ko, y);
+        TMP_Text rowLabel = RowLabel(ko, y, LabelWide);
         RowTip(rowLabel, ko, tip);
         Button b = null;
         TMP_Text label = null;
