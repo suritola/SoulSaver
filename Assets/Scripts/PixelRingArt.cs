@@ -30,7 +30,7 @@ public static class PixelRingArt
     //   style: 1.5.0~ 영웅 문양 (HeroAimKind 값, 0 = 기본 — 적 · 공용 고리는 지금 그대로)
     public static Sprite Get(float radius, float charge, bool plain = false, int style = 0)
     {
-        int r = Mathf.Max(2, Mathf.RoundToInt(radius * ArtPPU));
+        int r = Mathf.Clamp(Mathf.RoundToInt(radius * ArtPPU), 2, 256);     // 상한: 그림 한 장 최대 ~530² (거대 반지름이 와도 멈추지 않게)
         if (r > 12) r = (r + 1) & ~1;               // 큰 고리는 반지름 2칸 단위 (퍼지거나 좁혀지는 고리가 프레임마다 새 그림을 덜 만들게 · 어긋남 최대 1칸)
         int step = charge < 0f ? ChargeSteps : Mathf.Clamp(Mathf.FloorToInt(charge * ChargeSteps + 0.0001f), 0, ChargeSteps);
         long key = ((long)style << 40) | ((long)r << 9) | ((long)(plain ? 1 : 0) << 8) | (uint)step;

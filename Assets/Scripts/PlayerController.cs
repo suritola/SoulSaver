@@ -1550,9 +1550,7 @@ void Shoot()
         c.a = (blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f) * bodyAlpha * kitAlpha;
         spriteRenderer.color = c;
         tintWrote = c;
-        // 1.5.0 긴급: 거너 일제 사격 범위표시(DrawVolleyRange)를 켠 빌드 26114161 에서 우클릭을 누르는 순간 게임이 멈추고 튕김(사용자 제보)
-        //   → 원인 확인 전까지 끔 (거너 필살기는 예전 경로 그대로)
-        // DrawVolleyRange();
+        DrawVolleyRange();
     }
 
     // 1.5.0~ 거너 일제 사격 범위표시: 조준 중 표적을 고르는 거리(targetRange · 판정 값 그대로)를 거너 문양 고리로 · 맨 위
@@ -1569,7 +1567,11 @@ void Shoot()
         }
         if (volleyRange == null) { volleyRange = Hostile.NewLine("VolleyRange", Color.white, 0.14f, 25); volleyRange.loop = true; }
         volleyRange.enabled = true;
-        Hostile.SetArc(volleyRange, transform.position, targetRange, 0f, 360f);
+        // 1.5.0 긴급 수정: targetRange 는 장면 값 500(화면 전체)이라 그대로 그리면 거대한 고리 그림(7016²)을 만들다 멈추고 튕겼음 (빌드 26114161)
+        //   → 그리는 반지름만 화면 가장자리(카메라 크기의 85%)로 자름 · 판정(FindNextTarget 의 targetRange)은 그대로
+        float shown = targetRange;
+        if (mainCamera != null) shown = Mathf.Min(shown, mainCamera.orthographicSize * 0.85f);
+        Hostile.SetArc(volleyRange, transform.position, shown, 0f, 360f);
         volleyRange.startColor = volleyRange.endColor = HeroAim.ColorOf(HeroAimKind.Gunner, 0.6f + 0.25f * Mathf.Sin(Time.unscaledTime * 12f));
         volleyRange.startWidth = volleyRange.endWidth = 0.14f;
         HeroAim.Mark(volleyRange, HeroAimKind.Gunner);

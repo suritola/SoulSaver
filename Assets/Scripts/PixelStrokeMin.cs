@@ -19,6 +19,7 @@ public class PixelStrokeMin : MonoBehaviour
     int chargeFrame = -1;
 
     static readonly Vector3[] buf = new Vector3[512];
+    public const float MaxRingRadius = 30f;     // 이보다 큰 원은 도트 고리 그림으로 바꾸지 않음 (그림 크기 상한)
     // 단정한 테로 그릴 고리 (여러 개가 늘 떠 있음 · 퍼져 나감 · 바닥 영역 테두리)
     static readonly System.Collections.Generic.HashSet<string> Plain = new System.Collections.Generic.HashSet<string>
         { "PickupRing", "Ring", "SarcoZone", "PossessMistEdge", "StallNearRing" };
@@ -216,7 +217,7 @@ public class PixelStrokeMin : MonoBehaviour
         center = sum / pts;
         for (int i = 0; i < pts; i++) radius += Vector2.Distance(buf[i], center);
         radius /= pts;
-        if (radius < 0.3f) return false;
+        if (radius < 0.3f || radius > MaxRingRadius) return false;      // 너무 큰 원은 선 그대로 (1.5.0 거너 사거리 500 → 7016² 그림 · 1GB 로 멈추고 튕긴 사고)
         float tol = 0.06f * radius + 0.02f;
         for (int i = 0; i < pts; i++)
             if (Mathf.Abs(Vector2.Distance(buf[i], center) - radius) > tol) return false;

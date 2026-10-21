@@ -419,8 +419,8 @@ public static class HeroAimArt
 
     public static Sprite Parchment(float len, float width, float deg)
     {
-        int L = Mathf.Max(8, Mathf.RoundToInt(len * PPU * 0.5f) * 2);
-        int W = Mathf.Max(8, Mathf.RoundToInt(width * PPU * 0.5f) * 2);
+        int L = Mathf.Clamp(Mathf.RoundToInt(len * PPU * 0.5f) * 2, 8, 400);       // 상한: 거대한 값이 와도 그림이 터지지 않게 (1.5.0 거너 사고 이후)
+        int W = Mathf.Clamp(Mathf.RoundToInt(width * PPU * 0.5f) * 2, 8, 400);
         int step = Mathf.RoundToInt(Mathf.Repeat(deg, 180f) / 5f) % 36;       // 직사각형은 180° 돌려도 같음
         long key = ((long)L << 24) | ((long)W << 8) | (long)step;
         ptick++;
