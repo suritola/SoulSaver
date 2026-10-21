@@ -178,7 +178,8 @@ public class PauseBuild : MonoBehaviour
     }
 
     // ================================================================= 그리기
-    const float Pad = 18f, TitleH = 52f, HintH = 34f, HeadH = 30f, Gap = 8f, GroupGap = 10f, PipH = 8f, PipGap = 4f;
+    // 1.4.8~ 안쪽 여백 18 → 24 · 아래 안내 17 → 20 (두 줄 자리) · 묶음 머리 21 → 22
+    const float Pad = 24f, TitleH = 64f, HintH = 58f, HeadH = 32f, Gap = 8f, GroupGap = 10f, PipH = 8f, PipGap = 4f;
     static readonly float[] Sizes = { 64f, 56f, 50f, 44f };
 
     static void Build(Canvas canvas)
@@ -187,17 +188,16 @@ public class PauseBuild : MonoBehaviour
         RectTransform cr = (RectTransform)canvas.transform;
         Vector2 cs = cr.rect.size;
         // 왼쪽 빈자리 (가운데 ESC 창 폭 720 · 양옆 30 · 틈 12) — 좁은 화면 · 큰 UI 크기에서도 메뉴와 겹치지 않게
-        float w = Mathf.Clamp((cs.x - 720f) * 0.5f - 42f, 240f, 440f);
-        float h = Mathf.Clamp(cs.y - 520f, 360f, 560f);
+        float w = Mathf.Clamp((cs.x - 720f) * 0.5f - 42f, 240f, RunStats.PausePanelW);
+        // 1.4.8~ 예전엔 늘 560 높이라 스킬이 몇 개 없으면 거의 빈 판이었음 → 위끝은 오른쪽 「이번 판」과 같게 두고 높이는 내용만큼 (최대 RunStats.PausePanelMaxH, 넘치면 스크롤)
+        float maxH = RunStats.PausePanelMaxH(cr);
 
         GameObject go = new GameObject("PauseBuild", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
         RectTransform r = (RectTransform)go.transform;
         r.SetParent(canvas.transform, false);
         r.SetAsLastSibling();                       // 일시정지 판 위 (「이번 판」 요약과 같은 자리 규칙)
-        r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
-        r.pivot = new Vector2(0f, 0.5f);
-        r.anchoredPosition = new Vector2(30f, -20f);    // 오른쪽 요약(위 · 아래 끝)과 같은 높이
-        r.sizeDelta = new Vector2(w, h);
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 1f);
+        r.anchoredPosition = new Vector2(30f, -RunStats.PausePanelTop);    // 오른쪽 요약과 같은 위끝
         Image bg = go.GetComponent<Image>();
         bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
         bg.raycastTarget = true;                    // 이 판 아래 HUD 툴팁은 띄우지 않음 (PauseInspect)
@@ -206,15 +206,31 @@ public class PauseBuild : MonoBehaviour
         open = pb;
 
         TMP_Text title = UIKit.Text(r, "pausebuild.title", 28f, Gold, Vector2.zero, new Vector2(w - Pad * 2f, 40f), TextAlignmentOptions.Left);
-        TopLeft(title.rectTransform, new Vector2(Pad, -12f));
-        pb.hint = UIKit.Text(r, "", 17f, Faint, Vector2.zero, new Vector2(w - Pad * 2f, HintH - 6f), TextAlignmentOptions.Left);
+        title.fontSizeMin = 20f;
+        TopLeft(title.rectTransform, new Vector2(Pad, -Pad + 6f));
+        pb.hint = UIKit.Text(r, "", 20f, Faint, Vector2.zero, new Vector2(w - Pad * 2f, HintH - 8f), TextAlignmentOptions.BottomLeft);
+        pb.hint.fontSizeMin = 20f;
         RectTransform hr = pb.hint.rectTransform;
         hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(0f, 0f);
-        hr.anchoredPosition = new Vector2(Pad, 8f);
+        hr.anchoredPosition = new Vector2(Pad, 14f);
         pb.WriteHint();
 
         float innerW = w - Pad * 2f;
-        float viewH = h - TitleH - HintH - 10f;
+        float maxViewH = maxH - TitleH - HintH - 10f;
+        float total;
+        float size = Sizes[Sizes.Length - 1];
+        if (groups.Count == 0) total = 40f;
+        else
+        {
+            // 다 들어가는 가장 큰 칸 (안 되면 가장 작은 칸 + 스크롤)
+            foreach (float s in Sizes)
+                if (Height(groups, s, innerW) <= maxViewH) { size = s; break; }
+            total = Height(groups, size, innerW) - GroupGap;         // 마지막 묶음 아래 틈은 빼고
+        }
+        float viewH = Mathf.Min(total, maxViewH);
+        float h = TitleH + viewH + 10f + HintH;
+        r.sizeDelta = new Vector2(w, h);
+
         RectTransform view = UIKit.Rect("Viewport", r, Vector2.zero, new Vector2(innerW, viewH));
         TopLeft(view, new Vector2(Pad, -TitleH));
         view.gameObject.AddComponent<RectMask2D>();
@@ -225,19 +241,16 @@ public class PauseBuild : MonoBehaviour
 
         if (groups.Count == 0)
         {
-            TMP_Text e = UIKit.Text(content, "pausebuild.empty", 20f, Faint, Vector2.zero, new Vector2(innerW, 34f), TextAlignmentOptions.Left);
+            TMP_Text e = UIKit.Text(content, "pausebuild.empty", 22f, Faint, Vector2.zero, new Vector2(innerW, 34f), TextAlignmentOptions.Left);
+            e.fontSizeMin = 20f;
             TopLeft(e.rectTransform, new Vector2(0f, -4f));
             content.sizeDelta = new Vector2(innerW, 40f);
         }
         else
         {
-            // 다 들어가는 가장 큰 칸 (안 되면 가장 작은 칸 + 스크롤)
-            float size = Sizes[Sizes.Length - 1];
-            foreach (float s in Sizes)
-                if (Height(groups, s, innerW) <= viewH) { size = s; break; }
-            float total = Draw(content, groups, size, innerW);
-            content.sizeDelta = new Vector2(innerW, total);
-            if (total > viewH)
+            float drawn = Draw(content, groups, size, innerW);
+            content.sizeDelta = new Vector2(innerW, drawn);
+            if (drawn - GroupGap > viewH + 0.5f)
             {
                 ScrollRect scroll = view.gameObject.AddComponent<ScrollRect>();
                 scroll.content = content;
@@ -275,7 +288,8 @@ public class PauseBuild : MonoBehaviour
         float y = 0f;
         foreach (Group g in groups)
         {
-            TMP_Text head = UIKit.Text(content, "", 21f, Parch, Vector2.zero, new Vector2(innerW, HeadH - 4f), TextAlignmentOptions.Left);
+            TMP_Text head = UIKit.Text(content, "", 22f, Parch, Vector2.zero, new Vector2(innerW, HeadH - 4f), TextAlignmentOptions.Left);
+            head.fontSizeMin = 20f;
             head.text = Loc.T(g.key) + "  <size=80%><color=#9E968A>" + g.cells.Count + "</color></size>";
             TopLeft(head.rectTransform, new Vector2(0f, -y));
             y += HeadH;

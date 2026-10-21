@@ -56,7 +56,9 @@ public class PauseInspect : MonoBehaviour
         {
             RectTransform at = hint as RectTransform;
             Vector2 pos = at != null ? at.anchoredPosition - new Vector2(0f, 34f) : new Vector2(0f, -300f);
-            hintLine = UIKit.Text(esc.escMenu.transform, "", 18f, new Color(0.66f, 0.61f, 0.53f), pos, new Vector2(700f, 30f));
+            // 1.4.8~ 18 → 20 · 폭 700 → 900 (양옆 패널 안쪽 끝 ±490 사이, en 이 20 아래로 줄지 않게)
+            hintLine = UIKit.Text(esc.escMenu.transform, "", 20f, new Color(0.66f, 0.61f, 0.53f), pos, new Vector2(900f, 30f));
+            hintLine.fontSizeMin = 20f;
             hintLine.gameObject.AddComponent<LocRefresh>().refresh = WriteHint;
         }
         hintLine.gameObject.SetActive(true);

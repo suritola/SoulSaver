@@ -40,84 +40,104 @@ public static class MenuExtras
         if (canvas != null)
         {
             UIKit.EnsureStyle();
-            TMP_Text res = UIKit.Text(canvas.transform, "", 24f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(480f, 520f), TextAlignmentOptions.TopLeft);
+            // 1.4.8~ 왼쪽 반투명 패널 하나에: 다음 목표(위) → 구분선 → 이번 판 결과 → 빌드 자세히 보기(아래) (ResultScreen.BuildLeftPanel)
+            RectTransform left = ResultScreen.BuildLeftPanel(canvas.transform);
+            float goalsH = ResultScreen.BuildGoals(left);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
+            float resTop = ResultScreen.LeftPad;
+            if (goalsH > 0f)
+            {
+                ResultScreen.Divider(left, -(ResultScreen.LeftPad + goalsH + 12f));
+                resTop += goalsH + 24f;
+            }
+            const float BvH = 56f;
+            bool buildView = BuildView.HasSnapshot;
+            // 1.4.8~ 24(하한 14) → 22(하한 20) · 항목 사이 빈 줄을 반 줄로 (넘치면 끝을 … 로 — 전부는 「빌드 자세히 보기」에)
+            TMP_Text res = UIKit.Text(left, "", 22f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, Vector2.zero, TextAlignmentOptions.TopLeft);
             res.enableAutoSizing = true;
-            res.fontSizeMin = 14f;
-            res.fontSizeMax = 24f;
+            res.fontSizeMin = 20f;
+            res.fontSizeMax = 22f;
+            res.overflowMode = TextOverflowModes.Ellipsis;
             RunRecords.CommitBest();         // 1.1.9~ 내 최고 기록 갱신 (판 기록 쓰기와 순서가 보장되지 않아 양쪽에서 부르되 한 번만)
-            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunRecords.WithBest(RunStats.Summary(false));
+            res.text = "<size=127%><color=#C9A0FF>" + Loc.T("이번 판 결과") + "</color></size>" + HalfGap + CompactGaps(RunRecords.WithBest(RunStats.Summary(false)));
             RunRecords.PlayNewRecordSound(canvas.transform);
-            ResultScreen.BuildGoals(canvas.transform);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
             RectTransform rr = res.rectTransform;
-            rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
-            rr.anchoredPosition = new Vector2(60f, 0f);
+            rr.anchorMin = Vector2.zero;
+            rr.anchorMax = Vector2.one;
+            rr.offsetMin = new Vector2(ResultScreen.LeftPad, ResultScreen.LeftPad + (buildView ? BvH + 16f : 0f));
+            rr.offsetMax = new Vector2(-ResultScreen.LeftPad, -resTop);
             RunStats.BuildDamagePanel(canvas.transform);      // 오른쪽: 준 피해 · 받은 피해 · 쓰러진 곳
-            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
+            // [R] 안내: 화면 아래 가장자리 한 줄 (1.4.8~ 24 → 22 · 아래 40 → 16, 위 가운데 줄들이 쌓일 자리를 비움)
+            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 22f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 30f));
+            again.fontSizeMin = 20f;
             RectTransform ar = again.rectTransform;
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
-            ar.anchoredPosition = new Vector2(0f, 40f);
+            ar.anchoredPosition = new Vector2(0f, 31f);
             canvas.gameObject.AddComponent<QuickRestart>();
             ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」 · 「메인 메뉴로」 (1.1.2~ 가운데 세로 한 줄)
             ResultScreen.FitTitle();
             ResultScreen.BuildLeftBehind(canvas.transform);     // 1.2~ 「이번 판이 남긴 것」
             ResultScreen.BuildRecommend(canvas.transform);      // 1.2~ 3연속 사망 추천 한 줄
-            // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (왼쪽 기준 (60, -300) 300×60 · 떠나기 전에 떠 둔 스냅샷)
-            if (BuildView.HasSnapshot)
+            // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (떠나기 전에 떠 둔 스냅샷) · 1.4.8~ 왼쪽 패널 아래끝 안쪽, 결과 글과 같은 폭
+            if (buildView)
             {
                 Transform croot = canvas.transform;
-                Button bv = UIKit.MakeButton(croot, "빌드 자세히 보기", Vector2.zero, new Vector2(300f, 60f), () => BuildView.Open(croot), 24f);
+                Button bv = UIKit.MakeButton(left, "빌드 자세히 보기", Vector2.zero, new Vector2(ResultScreen.ContentW, BvH), () => BuildView.Open(croot), 24f);
                 RectTransform bvr = (RectTransform)bv.transform;
-                bvr.anchorMin = bvr.anchorMax = new Vector2(0f, 0.5f);
-                bvr.pivot = new Vector2(0f, 0.5f);
-                bvr.anchoredPosition = new Vector2(60f, -300f);
+                bvr.anchorMin = bvr.anchorMax = bvr.pivot = new Vector2(0.5f, 0f);
+                bvr.anchoredPosition = new Vector2(0f, ResultScreen.LeftPad);
                 bv.name = "BuildViewButton";
                 bv.navigation = new Navigation { mode = Navigation.Mode.None };
+                TMP_Text bl = bv.GetComponentInChildren<TMP_Text>(true);
+                if (bl != null) bl.fontSizeMin = 20f;
             }
-            // 1.1.9~ 오른쪽 아래 구석 「결과 복사」 (편의성 3차 10)
+            // 1.1.9~ 「결과 복사」 (편의성 3차 10) · 1.4.8~ 자리는 가운데 버튼 열 아래 한 줄 (ResultScreen.StackCenter)
             RunRecords.InstallCopyButton(canvas.transform, RunRecords.ShareText);
         }
-        // 이번 판에 얻은 캐릭터 포인트
+        // 이번 판에 얻은 캐릭터 포인트 (1.4.8~ 자리는 StackCenter · 기록 줄과 같은 30)
         if (canvas != null && CharacterData.RunPoints > 0)
         {
             UIKit.EnsureStyle();
-            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 50f));
+            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 36f));
+            pt.fontSizeMin = 20f;
+            pt.name = "RunPointsLine";
             pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0")
                     + (Point.RunBonus > 0 ? " <size=70%>(" + Loc.T("result.bonus").Replace("{0}", Point.RunBonus.ToString("N0")) + ")</size>" : "")     // 1.1~ 클리어 보너스
                     + "   " + Loc.T("보유 ") + CharacterData.Points.ToString("N0") + " P";
-            RectTransform pr = pt.rectTransform;
-            pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
-            pr.anchoredPosition = new Vector2(0f, 90f);
         }
-        if (EndlessMode.LastSeconds < 0f) return;
-        if (canvas != null)
+        if (EndlessMode.LastSeconds >= 0f && canvas != null)
         {
             UIKit.EnsureStyle();
             bool daily = DailyChallenge.Active;
             string text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
                         + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
                         + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
-            TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 140f : 110f));
+            // 1.4.8~ 34 → 30 (획득 포인트 줄과 같은 크기 · 줄 높이 38) · 자리는 StackCenter (버튼 열 → 순위 보기 · 결과 복사 줄 아래)
+            TMP_Text t = UIKit.Text(canvas.transform, "", 30f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 114f : 76f));
+            t.fontSizeMin = 20f;
+            t.name = "EndlessRecord";
             t.text = text;
-            RectTransform r = t.rectTransform;
-            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 결과 버튼 열(아래끝 -268, ResultScreen.BuildRetry) 아래로, 아래 획득 포인트(-475 ~ -425)와도 안 겹치게
-            r.anchoredPosition = new Vector2(0f, daily ? -345f : -330f);
             // 스팀 순위: 올린 결과가 오면 마지막 줄 끝에 붙임
             DailyChallenge.RankLine line = t.gameObject.AddComponent<DailyChallenge.RankLine>();
             line.text = t;
             line.baseText = text;
             line.daily = daily;
-            // 1.1.5~ 기록 글 오른쪽: 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
+            // 1.1.5~ 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
+            // 1.4.8~ 기록 글 오른쪽(x 600)에 떠 있던 것을 「결과 복사」와 한 줄로 (StackCenter)
             if (!Demo.On)
             {
-                t.rectTransform.sizeDelta = new Vector2(880f, t.rectTransform.sizeDelta.y);       // 버튼 자리 (오른쪽 결과 판 아래끝 -260 보다 아래)
                 Transform root = canvas.transform;
-                Button view = UIKit.MakeButton(root, "lb.view", new Vector2(600f, r.anchoredPosition.y), new Vector2(240f, 72f),
-                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 26f);
+                Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
+                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 24f);
                 view.name = "LeaderboardViewButton";
             }
         }
         EndlessMode.LastSeconds = -1f;
+        if (canvas != null) ResultScreen.StackCenter(canvas.transform);
     }
+
+    // 1.4.8~ 결과 · ESC 이번 판 글: 항목 사이 빈 줄(\n\n)을 반 줄 높이로 (줄이 많아 글씨가 20 아래로 줄던 것)
+    public const string HalfGap = "\n<size=45%>\n</size>";
+    public static string CompactGaps(string s) => string.IsNullOrEmpty(s) ? s : s.Replace("\n\n", HalfGap);
 
     static void InstallMainMenu()
     {
@@ -144,8 +164,10 @@ public static class MenuExtras
 
         // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
         // 2.1~: 스킬 진화 도감이 더해져 4 × 2, 2.1.1~: 일일 도전으로 8칸이 다 참
-        sr.anchoredPosition = new Vector2(0f, -10f);
-        sr.sizeDelta = new Vector2(560f, 110f);
+        // 1.4.8~ 가운데 열을 한 격자로: 난이도 줄 · 게임 시작 · 아이콘 칸이 같은 폭(ColW) · 같은 간격(Gap) — 위에서부터
+        //   난이도 줄(DiffY) → 난이도 설명 한 줄(HintY) → 게임 시작(StartY) → 잠금 안내 · 영혼의 무게 줄(LockY) → 아이콘 칸 2줄
+        sr.anchoredPosition = new Vector2(0f, StartY);
+        sr.sizeDelta = new Vector2(ColW, StartH);
         AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
         TMP_Text st = start.GetComponentInChildren<TMP_Text>(true);
         if (st != null) { RectTransform tr = st.rectTransform; tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f); tr.sizeDelta = new Vector2(380f, 90f); tr.anchoredPosition = new Vector2(30f, 0f); }
@@ -160,8 +182,8 @@ public static class MenuExtras
         {
             if (tiles[i].go == null) continue;
             RectTransform r = (RectTransform)tiles[i].go.transform;
-            r.sizeDelta = new Vector2(176f, 122f);
-            r.anchoredPosition = new Vector2(-282f + 188f * (i % 4), -160f - 138f * (i / 4));
+            r.sizeDelta = new Vector2(TileW, TileH);
+            r.anchoredPosition = new Vector2(ColumnX(i % 4), TileTopY - TileH * 0.5f - (TileH + Gap) * (i / 4));
             Image img = tiles[i].go.GetComponent<Image>();
             bool locked = dailyLocked && tiles[i].go == daily;
             if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);
@@ -171,11 +193,12 @@ public static class MenuExtras
             if (t == null) continue;
             RectTransform lr = t.rectTransform;
             lr.anchorMin = lr.anchorMax = new Vector2(0.5f, 0.5f);
-            lr.sizeDelta = new Vector2(164f, 40f);
-            lr.anchoredPosition = new Vector2(0f, -36f);
+            lr.sizeDelta = new Vector2(TileW - 10f, 46f);       // 1.4.8~ 두 줄까지 (en 「Daily Challenge」 · 「Skill Evolution」이 20 아래로 줄지 않게)
+            lr.anchoredPosition = new Vector2(0f, -34f);
             t.enableAutoSizing = true;
-            t.fontSizeMin = 14f;
-            t.fontSizeMax = 28f;
+            t.fontSizeMin = 20f;
+            t.fontSizeMax = 26f;
+            t.lineSpacing = -12f;
             if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
         }
 
@@ -186,11 +209,8 @@ public static class MenuExtras
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
         MenuHeroPanel.Install(sr.parent, sr.root);         // 1.1.9~ 왼쪽 「지금 영웅」 패널 (씬의 고정 그림 자리)
-        // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~)
-        Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(220f, 56f), () => PatchNotesUI.OpenHistory(sr.root), 24f);
-        RectTransform nr = (RectTransform)notes.transform;
-        nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
-        nr.anchoredPosition = new Vector2(-30f, -102f);
+        // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~) · 1.4.8~ 자리는 아래 LayoutRightColumn 이 한꺼번에
+        Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(RightW, RightBtnH), () => PatchNotesUI.OpenHistory(sr.root), 24f);
         notes.name = "PatchNotesButton";
         SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
@@ -199,7 +219,8 @@ public static class MenuExtras
         if (daily != null && !dailyLocked && DailyRewards.Streak > 0)
         {
             // 1.2~ 일일 도전 칸 아래: 「연속 n일」 (폰트에 없는 그림 글자는 쓰지 않음)
-            TMP_Text streak = UIKit.Text(daily.transform, "", 16f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -76f), new Vector2(176f, 24f));
+            TMP_Text streak = UIKit.Text(daily.transform, "", 20f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -TileH * 0.5f - 16f), new Vector2(TileW + Gap, 26f));     // 1.4.8~ 16 → 20
+            streak.fontSizeMin = 20f;
             streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
             UIKit.Forget(streak);
         }
@@ -207,12 +228,10 @@ public static class MenuExtras
         if (!Demo.On)
         {
             Transform hroot = sr.root;
-            Button hist = UIKit.MakeButton(sr.parent, "기록", Vector2.zero, new Vector2(220f, 56f), () => RunHistoryUI.Open(hroot), 24f);
-            RectTransform hr = (RectTransform)hist.transform;
-            hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(1f, 1f);
-            hr.anchoredPosition = new Vector2(-30f, -306f);
+            Button hist = UIKit.MakeButton(sr.parent, "기록", Vector2.zero, new Vector2(RightW, RightBtnH), () => RunHistoryUI.Open(hroot), 24f);
             hist.name = "RunHistoryButton";
         }
+        LayoutRightColumn(sr.parent);
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
@@ -312,9 +331,11 @@ public static class MenuExtras
         if (saved == null) return;
         GameObject cont = UIKit.CloneButton(start, "ContinueButton", "이어하기", () => RunSave.Continue());
         RectTransform sr = (RectTransform)start.transform, cr = (RectTransform)cont.transform;
-        sr.sizeDelta = cr.sizeDelta = new Vector2(360f, 110f);
-        sr.anchoredPosition = new Vector2(-190f, -10f);
-        cr.anchoredPosition = new Vector2(190f, -10f);
+        // 1.4.8~ 두 버튼이 가운데 열 폭(ColW)을 반씩 · 사이 Gap (아이콘 칸 두 칸씩과 끝이 맞음)
+        float half = (ColW - Gap) * 0.5f;
+        sr.sizeDelta = cr.sizeDelta = new Vector2(half, StartH);
+        sr.anchoredPosition = new Vector2(-(half + Gap) * 0.5f, StartY);
+        cr.anchoredPosition = new Vector2((half + Gap) * 0.5f, StartY);
         foreach (GameObject b in new[] { start, cont })
         {
             Transform icon = b.transform.Find("Icon");
@@ -358,18 +379,55 @@ public static class MenuExtras
         img.raycastTarget = false;
     }
 
+    // 1.4.8~ 메인 메뉴 가운데 열 격자 (1080p 기준 · 캔버스 가운데 기준 y)
+    //   난이도 줄 89 ~ 147 · 설명 한 줄 51 ~ 81 · 게임 시작 -75 ~ 35 · 잠금 안내 줄 -122 ~ -90 · 아이콘 칸 -137 ~ -395
+    //   양옆 패널(영웅 · 이번 판 계약)은 게임 시작 위끝 35 ~ 아이콘 칸 아래끝 -395 에 맞춤 (MenuHeroPanel · MenuContracts)
+    public const float TileW = 176f, TileH = 122f, Gap = 14f;
+    public const float ColW = TileW * 4f + Gap * 3f;          // 746
+    const float DiffY = 118f, DiffH = 58f, HintY = 66f, StartY = -20f, StartH = 110f, LockY = -106f, TileTopY = -137f;
+    public const float SideTop = StartY + StartH * 0.5f;                  // 35
+    public const float SideBottom = TileTopY - TileH * 2f - Gap;          // -395
+    public const float ColRight = ColW * 0.5f;                            // 373
+    static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
+
+    // 1.4.8~ 오른쪽 위 열: 포인트 · 패치노트 · 영혼 각인 · 순위표 · 기록을 같은 폭 · 같은 간격으로 위에서부터 (체험판에서 빠진 버튼은 자리도 당겨짐)
+    const float RightW = 280f, RightBadgeH = 64f, RightBtnH = 56f, RightGap = 10f, RightMargin = 30f, RightTop = 26f;
+    static void LayoutRightColumn(Transform parent)
+    {
+        float y = -RightTop;
+        foreach (string name in new[] { "PointsBadge", "PatchNotesButton", "SoulBrandButton", "LeaderboardButton", "RunHistoryButton" })
+        {
+            RectTransform r = parent.Find(name) as RectTransform;
+            if (r == null) continue;
+            float h = name == "PointsBadge" ? RightBadgeH : RightBtnH;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(1f, 1f);
+            r.sizeDelta = new Vector2(RightW, h);
+            r.anchoredPosition = new Vector2(-RightMargin, y);
+            TMP_Text t = name == "PointsBadge" ? null : r.GetComponentInChildren<TMP_Text>(true);
+            if (t != null)
+            {
+                t.rectTransform.sizeDelta = new Vector2(RightW - 24f, h - 12f);
+                t.fontSizeMax = 24f;
+                t.fontSizeMin = 20f;
+            }
+            y -= h + RightGap;
+        }
+    }
+
     // 오른쪽 위: 보유 포인트 (스킨 상점에서 쓰면 바로 줄어듦)
     static void InstallPoints(Transform parent)
     {
-        RectTransform box = UIKit.Rect("PointsBadge", parent, Vector2.zero, new Vector2(300f, 64f));
+        // 1.4.8~ 아래 버튼 열과 같은 폭(RightW) · 안쪽 여백 16 (자리는 LayoutRightColumn)
+        RectTransform box = UIKit.Rect("PointsBadge", parent, Vector2.zero, new Vector2(RightW, RightBadgeH));
         box.anchorMin = box.anchorMax = box.pivot = new Vector2(1f, 1f);
-        box.anchoredPosition = new Vector2(-30f, -26f);
         Image bg = box.gameObject.AddComponent<Image>();
         bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
         bg.raycastTarget = true;        // 툴팁을 받으려고
         // 1.0.4~: 판 안의 코인과 같은 동전 그림이라 무엇이 다음 판에도 남는지 헷갈렸음 → 그림 대신 「포인트」 글자 + 마우스를 올리면 설명
-        UIKit.Text(box, "포인트", 20f, new Color(0.8f, 0.76f, 0.7f), new Vector2(-88f, 0f), new Vector2(104f, 40f), TextAlignmentOptions.Left);
-        TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(26f, 0f), new Vector2(220f, 50f), TextAlignmentOptions.Right);
+        float inner = RightW * 0.5f - 16f;
+        UIKit.Text(box, "포인트", 22f, new Color(0.8f, 0.76f, 0.7f), new Vector2(-inner + 52f, 0f), new Vector2(104f, 40f), TextAlignmentOptions.Left).fontSizeMin = 20f;
+        TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(inner - 80f, 0f), new Vector2(160f, 50f), TextAlignmentOptions.Right);
+        t.fontSizeMin = 20f;
         box.gameObject.AddComponent<MenuPoints>().text = t;
         TooltipTrigger tip = box.gameObject.AddComponent<TooltipTrigger>();
         tip.titleProvider = () => Loc.T("포인트");
@@ -381,15 +439,22 @@ public static class MenuExtras
     {
         Transform parent = start.parent;
         // 2.1.9: 이어하기가 있으면 게임 시작 버튼이 왼쪽으로 가므로, 난이도 줄은 가운데(x 0)에 고정
-        Vector2 at = new Vector2(0f, start.anchoredPosition.y);
         List<Button> buttons = new List<Button>();
-        // 1.0.4~: 이 줄은 고른 난이도 설명 (예전 잠금 안내 자리), 잠금 안내는 게임 시작 버튼 아래 빈 줄(버튼 아래 끝 -65 ~ 아이콘 칸 위 끝 -99)로
-        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), at + new Vector2(0f, 62f), new Vector2(940f, 26f));
-        TMP_Text lockHint = UIKit.Text(parent, "", 18f, new Color(0.66f, 0.61f, 0.53f), at + new Vector2(0f, -72f), new Vector2(900f, 26f));
+        // 1.0.4~: 이 줄은 고른 난이도 설명 (예전 잠금 안내 자리), 잠금 안내는 게임 시작 버튼 아래 빈 줄로
+        // 1.4.8~ 설명이 게임 시작 버튼 위끝과 겹쳤음 → 난이도 줄(아래끝 DiffY - 29)과 게임 시작(위끝 StartY + 55) 사이 빈 줄 한가운데 한 줄
+        //   폭 1280: 양옆 패널(위끝 StartY + 55)보다 위라 넓게 써도 됨 — en 이 가장 길어 22 → 20 까지 줄고 줄바꿈 없음
+        TMP_Text hint = UIKit.Text(parent, "", 22f, new Color(0.8f, 0.76f, 0.7f), new Vector2(0f, HintY), new Vector2(1280f, 30f));
+        hint.fontSizeMin = 20f;
+        hint.enableWordWrapping = false;
+        hint.overflowMode = TextOverflowModes.Ellipsis;
+        TMP_Text lockHint = UIKit.Text(parent, "", 20f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, LockY), new Vector2(1000f, 30f));
+        lockHint.fontSizeMin = 20f;
+        lockHint.enableWordWrapping = false;
+        lockHint.overflowMode = TextOverflowModes.Ellipsis;
         for (int i = 0; i < 4; i++)
         {
             Difficulty d = (Difficulty)i;
-            Button b = UIKit.MakeButton(parent, GameMode.Names[i], at + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
+            Button b = UIKit.MakeButton(parent, GameMode.Names[i], new Vector2(ColumnX(i), DiffY), new Vector2(TileW, DiffH), () =>
             {
                 GameMode.Current = d;
                 HighlightDifficulty(buttons, hint, lockHint);
@@ -402,7 +467,7 @@ public static class MenuExtras
             tip.bodyProvider = () => LadderTip(d);
         }
         // 1.2~ 영혼의 무게: 어려움을 클리어하면 잠금 안내 줄 자리(이때는 늘 비어 있음)에 버튼 · 어려움을 고를 때만 보임
-        SoulWeight.InstallMenu(parent, at + new Vector2(0f, -72f));
+        SoulWeight.InstallMenu(parent, new Vector2(0f, LockY));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
     }
@@ -427,7 +492,7 @@ public static class MenuExtras
             buttons[i].interactable = open;
             Image img = buttons[i].GetComponent<Image>();
             img.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.6f, 0.58f, 0.65f) : new Color(0.25f, 0.24f, 0.28f, 0.8f);
-            buttons[i].transform.localScale = Vector3.one * (on ? 1.08f : 1f);
+            buttons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);     // 1.4.8~ 1.08 → 1.05 (칸 사이 Gap 14 안에서 이웃과 닿지 않게)
             TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
             label.color = open ? new Color(0.96f, 0.9f, 0.8f) : new Color(0.55f, 0.52f, 0.5f);
         }
@@ -938,7 +1003,7 @@ public static class SettingsUI
         RectTransform win = UIKit.Modal(root, "SettingsPanel", new Vector2(1180f, 860f), out open);
         open.AddComponent<SettingsInput>();
 
-        UIKit.Text(win, "설정", 52f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));
+        UIKit.Text(win, "설정", 46f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));      // 1.4.8~ 52 → 제목 46
 
         tabButtons.Clear();
         for (int i = 0; i < TabNames.Length; i++)
@@ -946,16 +1011,17 @@ public static class SettingsUI
             int t = i;
             Button tb = UIKit.MakeButton(win, TabNames[i], new Vector2(-475f + 190f * i, 272f), new Vector2(180f, 64f), () => ShowTab(t), 24f);
             TMP_Text tl = tb.GetComponentInChildren<TMP_Text>();
-            if (tl != null) { tl.enableAutoSizing = true; tl.fontSizeMin = 16f; tl.fontSizeMax = 24f; }      // 「Accessibility」 · 「アクセシビリティ」
+            if (tl != null) { tl.enableAutoSizing = true; tl.fontSizeMin = 20f; tl.fontSizeMax = 24f; }      // 「Accessibility」 · 「アクセシビリティ」
             tabButtons.Add(tb);
         }
         page = UIKit.Rect("Page", win, new Vector2(0f, -30f), new Vector2(1100f, 560f));
 
-        UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 76f), Close, 30f);
+        // 1.4.8~ 닫기 76 → 64 높이 · 30 → 28 (옆 「이 탭 기본값으로」와 같은 높이 · 아래끝 맞춤)
+        UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 64f), Close, 28f);
         // 1.1.9~ 탭마다 「이 탭 기본값으로」 (예전엔 조작 탭에만 「기본값으로」) · 실수 방지로 두 번 누르기
         resetButton = UIKit.MakeButton(win, "이 탭 기본값으로", new Vector2(330f, -364f), new Vector2(280f, 64f), ResetTab, 24f);
         TMP_Text resetLabel = resetButton.GetComponentInChildren<TMP_Text>();
-        if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 14f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
+        if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 20f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
         resetArmedAt = resetDoneAt = -99f;
         RowTip(resetLabel, "이 탭 기본값으로", "이 탭의 설정만 처음 값으로 되돌립니다(조작 탭은 모든 키 배치). 다른 탭과 언어 · 화면 모드 · 해상도는 그대로 둡니다.");
         ShowTab(tab);
@@ -1030,8 +1096,15 @@ public static class SettingsUI
         else BuildHud();
     }
 
-    static TMP_Text RowLabel(string ko, float y) =>
-        UIKit.Text(page, ko, 30f, Parch, new Vector2(-400f, y), new Vector2(280f, 50f), TextAlignmentOptions.Left);
+    // 1.4.8~ 공통 글자 단계: 30 → 본문 26 (하한 12 → 20) · 왼끝 -540 에 맞추고 폭은 줄마다 오른쪽 조작 칸 앞까지
+    //   (슬라이더 · 언어 줄 300, 화면 모드 360, 버튼 · 드롭다운 칸이 x -30 에서 시작하는 줄 490 — en 이 20 아래로 줄지 않게)
+    const float LabelLeft = -540f, LabelW = 300f, LabelWide = 490f;
+    static TMP_Text RowLabel(string ko, float y, float w = LabelW)
+    {
+        TMP_Text t = UIKit.Text(page, ko, 26f, Parch, new Vector2(LabelLeft + w * 0.5f, y), new Vector2(w, 50f), TextAlignmentOptions.Left);
+        t.fontSizeMin = 20f;
+        return t;
+    }
 
     // ================================================================= 일반
     // 1.4.4~ 플레이 데이터 보내기 두 줄을 더하면 8줄: 65 간격 · 높이 56 (서버 주소가 없으면 예전 6줄 그대로)
@@ -1087,7 +1160,7 @@ public static class SettingsUI
             if (root != null) TelemetryConsentUI.Open(root, true);
         }, 24f);
         TMP_Text vl = view.GetComponentInChildren<TMP_Text>();
-        if (vl != null) { vl.fontSizeMin = 14f; vl.fontSizeMax = 24f; }
+        if (vl != null) { vl.fontSizeMin = 20f; vl.fontSizeMax = 24f; }
 
         telemetryIdLabel = RowLabel("", y2);
         telemetryIdLabel.rectTransform.sizeDelta = new Vector2(420f, 50f);
@@ -1100,7 +1173,7 @@ public static class SettingsUI
         deleteSending = false;
         deleteButton = UIKit.MakeButton(page, "telemetry.delete", new Vector2(220f, y2), new Vector2(500f, rowH), DeleteClicked, 24f);
         TMP_Text dl = deleteButton.GetComponentInChildren<TMP_Text>();
-        if (dl != null) { dl.fontSizeMin = 14f; dl.fontSizeMax = 24f; }
+        if (dl != null) { dl.fontSizeMin = 20f; dl.fontSizeMax = 24f; }
         SetDeleteLabel("telemetry.delete", new Color(0.96f, 0.9f, 0.8f));
     }
 
@@ -1158,7 +1231,7 @@ public static class SettingsUI
     static void SensitivityRow(float y)
     {
         RowLabel("마우스 감도", y);
-        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.minValue = GameSettings.MouseSensMin;
         slider.maxValue = GameSettings.MouseSensMax;
@@ -1189,7 +1262,7 @@ public static class SettingsUI
     static void SliderRow(string ko, float y, float value, System.Action<float> set, bool preview = false)
     {
         RowLabel(ko, y);
-        TMP_Text percent = UIKit.Text(page, "", 30f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.value = value;
         percent.text = Mathf.RoundToInt(value * 100f) + "%";
@@ -1255,7 +1328,7 @@ public static class SettingsUI
     // 모니터: 드롭다운 (모니터 1 (1920×1080) …) — 고르면 창을 옮기고, 해상도 목록이 새 모니터 것으로 바뀌므로 창이 옮겨진 뒤 탭을 다시 그림
     static void MonitorRow(float y, List<DisplayInfo> monitors)
     {
-        RowTip(RowLabel("모니터", y), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
+        RowTip(RowLabel("모니터", y, LabelWide), "모니터", "게임 창을 띄울 모니터입니다. 전체 화면이면 그 모니터의 해상도로 맞춥니다. 「이 탭 기본값으로」는 이 값을 바꾸지 않습니다.");
         string[] names = new string[monitors.Count];
         for (int i = 0; i < monitors.Count; i++)
             names[i] = Loc.T("모니터 {0}").Replace("{0}", (i + 1).ToString()) + " (" + monitors[i].width + "×" + monitors[i].height + ")";
@@ -1282,7 +1355,7 @@ public static class SettingsUI
 
     static void DisplayModeRow(float y)
     {
-        RowLabel("화면 모드", y);
+        RowLabel("화면 모드", y, 360f);
         Button full = null, windowed = null;
         // SetResolution 은 다음 프레임에 적용되므로 Screen 값이 아니라 고른 모드 · 해상도로 표시 (바로 읽으면 반대로 켜졌음)
         chosenRes = new Vector2Int(Screen.width, Screen.height);
@@ -1329,7 +1402,7 @@ public static class SettingsUI
     //   화면 모드 줄이 먼저 그려져 chosenRes · chosenMode 가 정해진 뒤에 부름
     static void ResolutionRow(float y)
     {
-        RowLabel("해상도", y);
+        RowLabel("해상도", y, LabelWide);
         resOptions = ResolutionOptions();
         resDropdown = UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), ResolutionNames(resOptions), false,
             () => resOptions.IndexOf(chosenRes), i =>
@@ -1415,7 +1488,7 @@ public static class SettingsUI
             if (t != null) { t.text = Loc.T("처음부터 다시 보입니다"); UIKit.Remember(t, "처음부터 다시 보입니다"); }
         }, 22f);
         TMP_Text againLabel = again.GetComponentInChildren<TMP_Text>();
-        if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 14f; againLabel.fontSizeMax = 22f; }
+        if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 20f; againLabel.fontSizeMax = 22f; }
         TMP_Text cursorLabel = ToggleRow("게임 커서", y[1], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
         if (GamePad.Active && cursorLabel != null) cursorLabel.color = Off;       // 1.1.9~ 패드 중엔 뜻이 없어 흐리게 (누를 수는 있음 · 스팀 덱)
@@ -1480,14 +1553,14 @@ public static class SettingsUI
     // 1.2.4~ 펼쳐서 고르는 줄 (CycleRow 와 같은 자리 · 크기, 항목 글자는 Loc.T 로 번역)
     static DropdownAssist DropdownRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
     {
-        RowTip(RowLabel(ko, y), ko, tip);
+        RowTip(RowLabel(ko, y, LabelWide), ko, tip);
         return UIKit.MakeDropdown(page, new Vector2(95f, y), new Vector2(250f, rowH), names, true, get, set, 26f, 7);
     }
 
     // 누를 때마다 다음 값으로
     static void CycleRow(string ko, float y, string[] names, System.Func<int> get, System.Action<int> set, string tip = null)
     {
-        RowTip(RowLabel(ko, y), ko, tip);
+        RowTip(RowLabel(ko, y, LabelWide), ko, tip);
         TMP_Text label = null;
         Button b = null;
         System.Action refresh = () =>
@@ -1509,7 +1582,7 @@ public static class SettingsUI
 
     static TMP_Text ToggleRow(string ko, float y, System.Func<bool> get, System.Action<bool> set, string tip = null)
     {
-        TMP_Text rowLabel = RowLabel(ko, y);
+        TMP_Text rowLabel = RowLabel(ko, y, LabelWide);
         RowTip(rowLabel, ko, tip);
         Button b = null;
         TMP_Text label = null;
