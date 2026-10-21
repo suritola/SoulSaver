@@ -85,9 +85,15 @@ public static class Chapters
     //   체험판 · 클래식 순서(IsClassic)에도 걸리게 Ease 와 따로 (보스는 그대로)
     static readonly float[] MobHpUp = { 1.2f, 1.25f, 1.3f, 1.4f };
     public static float MobHpBoost(int stage) => GameMode.IsEndless ? 1.4f : stage < 0 ? 1f : MobHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, MobHpUp.Length - 1)];
-    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage) * MobHpBoost(stage);
+    // 1.4.7~ 사용자 「전체적으로 적들의 체력이 너무 낮다」: 이야기 모드 잡몹(중간 보스 포함) · 보스 모두 1장 +30% · 2장 +40% · 3장 +70% · 4장 +100%
+    //   무한 모드는 잡몹 +100% · 보스 +80% (개발자 · 엄마는 EndlessMode.SummonDeveloper 가 체력을 따로 정하고 difficultyApplied 로 boss.Start 배율을 건너뛰어 그대로)
+    static readonly float[] StoryHpUp = { 1.3f, 1.4f, 1.7f, 2f };
+    const float EndlessMobHpUp = 2f, EndlessBossHpUp = 1.8f;
+    static float StoryHpUpOf(int stage) => stage < 0 ? 1f : StoryHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, StoryHpUp.Length - 1)];
+    public static float HpUp147(int stage, bool boss) => GameMode.IsEndless ? (boss ? EndlessBossHpUp : EndlessMobHpUp) : StoryHpUpOf(stage);
+    public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage) * MobHpBoost(stage) * HpUp147(stage, false);
     public static float RewardMul(int stage) => Ratio(Reward, stage) * Ease(EaseReward, stage);
-    public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage);
+    public static float BossHpMul(int stage) => Ratio(Boss, stage) * Ease(EaseBoss, stage) * HpUp147(stage, true);
     // 플레이어가 받는 모든 피해 (몸통 · 적 스킬 · 보스 스킬 · 결계): 지금 장 기준
     public static float HurtMul => StageManager.Instance != null ? HurtMulOf(StageManager.Instance.CurrentStage) : 1f;
     public static float HurtMulOf(int stage) => Ratio(Hurt, stage) * Ease(EaseHurt, stage);
