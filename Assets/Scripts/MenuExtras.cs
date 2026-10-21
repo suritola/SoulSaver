@@ -738,9 +738,10 @@ public static class MenuExtras
         if (title != null) title.gameObject.SetActive(false);
         TMP_Text head = UIKit.Text(m, "일시정지", 64f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(800f, 90f));
         head.name = "PauseTitle";
-        RectTransform hl = UIKit.Rect("PauseTitleLine", m, new Vector2(0f, 200f), new Vector2(360f, 2f));
+        RectTransform hl = UIKit.Rect("PauseTitleLine", m, new Vector2(0f, 200f), UIKit.DividerSprite != null ? new Vector2(512f, 32f) : new Vector2(360f, 2f));
         Image hli = hl.gameObject.AddComponent<Image>();
-        hli.color = new Color(0.96f, 0.83f, 0.47f, 0.6f);
+        hli.sprite = UIKit.DividerSprite;
+        hli.color = UIKit.DividerSprite != null ? Color.white : new Color(0.96f, 0.83f, 0.47f, 0.6f);
         hli.raycastTarget = false;
         string[] order = { "resume", "BuildViewButton", "SettingsButton", "RestartButton", "Menu" };
         float y = 140f;
@@ -846,8 +847,14 @@ public static class UIKit
             if (Font == null && t.font != null) { Font = t.font; FontMaterial = t.fontSharedMaterial; }
         // 1.4.8~ 사용자 「메인 메뉴 느낌으로 설정창 · 도감 등 UI 가 있는 곳은 모두」: 장면 버튼의 장식 보라 그림 대신
         //   평평한 칸 + 얇은 금빛 테두리를 직접 그려 씀 (코드로 만드는 창 · 버튼 · 칸 전부가 이 그림) — 색을 곱해 상태를 칠하는 기존 코드는 그대로 통함
+        // 1.4.8~ 사용자 「도형에 색만 채우면 싸구려 같다 · 게임 스타일에 맞게 이미지를」: tools/pixelart/make_ui_frames.py 가 그린 도트 틀
+        //   (금장 테두리 · 돌판 · 리벳 / 창은 금 이중 테두리 · 모서리 보석) · 못 찾으면 예전처럼 코드로 그린 평평한 칸
+        if (ButtonSprite == null) ButtonSprite = Resources.Load<Sprite>("UI/ui_button");
         if (ButtonSprite == null) ButtonSprite = FlatSprite();
+        if (PanelSprite == null) PanelSprite = Resources.Load<Sprite>("UI/ui_panel");
+        if (DividerSprite == null) DividerSprite = Resources.Load<Sprite>("UI/ui_divider");
     }
+    public static Sprite PanelSprite, DividerSprite;
 
     // 1.4.8~ 장면에 놓인 UI 를 새 스타일로: 버튼 그림 · 그 그림을 같이 쓰는 창 · 패널(9칸 나눔)을 평평한 칸으로
     //   장면마다 한 번 (MenuExtras.Install) · HUD 의 다른 그림(체력 막대 틀 등)은 건드리지 않음
@@ -934,12 +941,12 @@ public static class UIKit
 
         RectTransform win = Rect("Window", br, Vector2.zero, size);
         Image wi = win.gameObject.AddComponent<Image>();
-        wi.sprite = ButtonSprite;
+        // 1.4.8~ 창 틀 그림(ui_panel: 금 이중 테두리 · 모서리 보석 · 가운데 어두운 돌)이 있으면 그것 · 안쪽 판은 투명 (내용 자리는 그대로)
+        wi.sprite = PanelSprite != null ? PanelSprite : ButtonSprite;
         wi.type = Image.Type.Sliced;
-        wi.color = new Color(1f, 1f, 1f, 1f);
-        // 1.4.8~ 바깥은 평평한 칸 그림의 금빛 테두리만 보이게 안쪽을 바로 덮음 (예전 24px 장식 틀 → 2px 선)
+        wi.color = Color.white;
         RectTransform inner = Rect("Inner", win, Vector2.zero, size - new Vector2(6f, 6f));
-        inner.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.05f, 0.10f, 0.98f);
+        inner.gameObject.AddComponent<Image>().color = PanelSprite != null ? new Color(0f, 0f, 0f, 0f) : new Color(0.07f, 0.05f, 0.10f, 0.98f);
         return inner;
     }
 
