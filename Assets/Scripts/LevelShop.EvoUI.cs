@@ -8,6 +8,9 @@ public partial class LevelShop
 {
     static readonly Color EvoPurple = new Color(0.79f, 0.63f, 1f);
     static readonly Color EvoDone = new Color(0.55f, 1f, 0.55f);
+    // 1.4.8~ 진화 띠 바탕: 새 도트 판(금장 돌판)이면 흰색 그대로 · 가까우면 금빛으로 숨 쉼 (예전 보라 ↔ 금 칠은 판 그림이 없을 때만)
+    static Color EvoRowBase => RecommendGlow.PillArt ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.32f, 0.2f, 0.48f, 0.95f);
+    static Color EvoRowNear => RecommendGlow.PillArt ? new Color(1f, 0.8f, 0.42f, 0.98f) : new Color(0.62f, 0.45f, 0.18f, 0.98f);
 
     // ================================================================= 진화 미리보기 (카드 바로 위 띠)
     // [재료 아이콘 + 단계 칸] [재료] (→) [진화 아이콘] 진화 이름 — 최대 단계인 재료는 초록, 이 카드는 금빛 테두리
@@ -151,7 +154,7 @@ public partial class LevelShop
         Image bg = go.GetComponent<Image>();
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
-        bg.color = new Color(0.32f, 0.2f, 0.48f, 0.95f);
+        bg.color = EvoRowBase;
         bg.raycastTarget = false;
         row.root = r;
         row.bg = bg;
@@ -200,8 +203,7 @@ public partial class LevelShop
         foreach (EvoRow row in evoRows)
         {
             if (row == null || row.root == null || !row.root.gameObject.activeSelf) continue;
-            row.bg.color = row.near ? Color.Lerp(new Color(0.32f, 0.2f, 0.48f, 0.95f), new Color(0.62f, 0.45f, 0.18f, 0.98f), k)
-                                    : new Color(0.32f, 0.2f, 0.48f, 0.95f);
+            row.bg.color = row.near ? Color.Lerp(EvoRowBase, EvoRowNear, k) : EvoRowBase;
             row.evoIcon.rectTransform.localScale = Vector3.one * (row.near ? 1f + 0.12f * k : 1f);
         }
     }

@@ -802,9 +802,17 @@ public static class CodexUI
         r.anchorMin = r.anchorMax = new Vector2(1f, 1f);
         r.anchoredPosition = offset;
         Image pill = r.gameObject.AddComponent<Image>();
-        pill.color = new Color(1f, 0.84f, 0.35f);
+        // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판(작아서 테두리 반 두께) + 금빛 글자 (NewGlow 배지와 같음) · 그림이 없으면 예전 금색 단색
+        bool art = RecommendGlow.PillArt;
+        if (art)
+        {
+            pill.sprite = UIKit.ButtonSprite;
+            pill.type = Image.Type.Sliced;
+            pill.pixelsPerUnitMultiplier = 2f;
+        }
+        pill.color = art ? Color.white : new Color(1f, 0.84f, 0.35f);
         pill.raycastTarget = false;
-        TMP_Text t = UIKit.Text(r, "", 18f, new Color(0.15f, 0.08f, 0f), Vector2.zero, new Vector2(54f, 24f));
+        TMP_Text t = UIKit.Text(r, "", 18f, art ? new Color(1f, 0.84f, 0.35f) : new Color(0.15f, 0.08f, 0f), Vector2.zero, new Vector2(54f, 24f));
         t.text = "NEW";
         return r.gameObject;
     }

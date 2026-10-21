@@ -104,9 +104,27 @@ public class RecommendGlow : MonoBehaviour
             if (UIKit.FontMaterial != null) badge.fontSharedMaterial = UIKit.FontMaterial;
             badge.alignment = TextAlignmentOptions.Center;
             badge.enableWordWrapping = false;
-            badge.outlineWidth = 0.12f;
-            badge.outlineColor = new Color32(255, 240, 200, 255);
+            // 1.4.8~ 새 도트 스타일(금장 돌판 + 금 글자)이면 외곽선 없이 (외곽선은 글자 재질 복사본을 만듦) · 옛 금색 단색 알약이면 예전처럼
+            if (!PillArt)
+            {
+                badge.outlineWidth = 0.12f;
+                badge.outlineColor = new Color32(255, 240, 200, 255);
+            }
             badge.raycastTarget = false;
+        }
+    }
+
+    // 1.4.8~ 버튼 그림이 새 도트 판(ui_button)인지 — 아니면(코드로 그린 평평한 칸 · 장면 버튼 그림) 예전 색
+    //   매 프레임 불려서(숨 쉬기) 그림이 바뀔 때만 이름을 봄 (name 은 부를 때마다 문자열을 만듦)
+    static Sprite pillArtFor;
+    static bool pillArt;
+    internal static bool PillArt
+    {
+        get
+        {
+            Sprite s = UIKit.ButtonSprite;
+            if (!ReferenceEquals(s, pillArtFor)) { pillArtFor = s; pillArt = s != null && s.name == "ui_button"; }
+            return pillArt;
         }
     }
 
@@ -151,8 +169,17 @@ public class RecommendGlow : MonoBehaviour
         rimImg.color = new Color(c.r, c.g, c.b, 0.9f);
 
         // 1.0.1: 어두운 보라 알약 + 금빛 글씨 → 밝은 금빛 알약 + 진한 갈색 글씨 (대비가 훨씬 큼)
-        badge.color = new Color(0.22f, 0.08f, 0f);
-        pill.color = Color.Lerp(Gold, new Color(1f, 0.97f, 0.75f), breathe * 0.5f);
+        // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판(ui_button) + 금빛 글씨 · 판은 숨 쉴 때 살짝 금빛으로 (그림이 없으면 예전 금색 알약)
+        if (PillArt)
+        {
+            badge.color = Gold;
+            pill.color = Color.Lerp(Color.white, new Color(1f, 0.88f, 0.55f), breathe * 0.6f);
+        }
+        else
+        {
+            badge.color = new Color(0.22f, 0.08f, 0f);
+            pill.color = Color.Lerp(Gold, new Color(1f, 0.97f, 0.75f), breathe * 0.5f);
+        }
         pill.rectTransform.localScale = Vector3.one * (1f + 0.1f * breathe);
 
         // 별빛: 테두리 위 아무 데서나 솟았다 사라짐
@@ -206,24 +233,30 @@ public class HintBadge : MonoBehaviour
         RectTransform r = UIKit.Rect(name, parent, pos, size);
         r.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         HintBadge hb = r.gameObject.AddComponent<HintBadge>();
-        hb.rimColor = rimColor;
+        // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판 한 장 · 상태 색(rimColor)은 판에 살짝만 곱함 (두근거릴 때 흰빛으로)
+        //   그림이 없으면 예전처럼 밝은 테두리 판 위에 진한 판
+        bool art = RecommendGlow.PillArt;
+        hb.rimColor = art ? Color.Lerp(Color.white, rimColor, 0.3f) : rimColor;
         hb.phase = Random.value * 6f;
-        // 테두리: 조금 큰 밝은 판 위에 진한 판
         hb.rim = r.gameObject.AddComponent<Image>();
         hb.rim.sprite = UIKit.ButtonSprite;
         hb.rim.type = Image.Type.Sliced;
-        hb.rim.color = rimColor;
+        hb.rim.color = hb.rimColor;
         hb.rim.raycastTarget = false;
-        RectTransform inner = UIKit.Rect("Fill", r, Vector2.zero, Vector2.zero);
-        inner.anchorMin = Vector2.zero;
-        inner.anchorMax = Vector2.one;
-        inner.offsetMin = new Vector2(4f, 4f);
-        inner.offsetMax = new Vector2(-4f, -4f);
-        Image fi = inner.gameObject.AddComponent<Image>();
-        fi.sprite = UIKit.ButtonSprite;
-        fi.type = Image.Type.Sliced;
-        fi.color = fill;
-        fi.raycastTarget = false;
+        if (!art)
+        {
+            // 테두리: 조금 큰 밝은 판 위에 진한 판
+            RectTransform inner = UIKit.Rect("Fill", r, Vector2.zero, Vector2.zero);
+            inner.anchorMin = Vector2.zero;
+            inner.anchorMax = Vector2.one;
+            inner.offsetMin = new Vector2(4f, 4f);
+            inner.offsetMax = new Vector2(-4f, -4f);
+            Image fi = inner.gameObject.AddComponent<Image>();
+            fi.sprite = UIKit.ButtonSprite;
+            fi.type = Image.Type.Sliced;
+            fi.color = fill;
+            fi.raycastTarget = false;
+        }
         TMP_Text t = UIKit.Text(r, "", fontSize, Color.white, Vector2.zero, size - new Vector2(20f, 8f));
         t.fontStyle = FontStyles.Bold;
         t.outlineWidth = 0.25f;
