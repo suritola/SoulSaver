@@ -481,9 +481,9 @@ public partial class CharacterKit
             caught.Add(c);
         }
         // 접히는 종이: 양쪽 띠가 선 쪽으로 닫힘
+        // 1.5.0~ 사용자 「놓는 순간 예전 선 세 개 대신 지금 보이는 지도 그림이 닫히는 표현으로」: 빛줄기 선 → 양피지 두 쪽이 접힘선으로 접혀 닫힘 · 접힌 자국 금빛 번쩍
         Play("whoosh", 0.9f, 0.7f);
-        Fx.Beam(a + (Vector3)(n * half), b + (Vector3)(n * half), 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), 0.22f);
-        Fx.Beam(a - (Vector3)(n * half), b - (Vector3)(n * half), 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), 0.22f);
+        StartCoroutine(FoldCloseArt(center, crease, n, half, (b - a).magnitude));
         var from = new Dictionary<Collider2D, Vector3>();
         foreach (Collider2D c in caught) if (c != null && c.CompareTag("enermy")) from[c] = c.transform.position;
         for (float t = 0f; t < 0.22f; t += Time.deltaTime)
@@ -504,8 +504,6 @@ public partial class CharacterKit
             Specials.Damage(c.gameObject, dmg, n, 0f);
             if (c != null && c.TryGetComponent(out EnermyController e)) e.Slow(0f, 0.8f);
         }
-        Fx.Beam(a, b, 1.8f, new Color(0.75f, 0.85f, 1f, 0.95f), 0.4f, 18);
-        Fx.Beam(a, b, 0.7f, InkGold, 0.5f, 19);
         Fx.Spawn("fx_shock", center, len * 0.8f, new Color(0.45f, 0.6f, 1f, 0.85f), 18f);
         for (int i = 0; i <= 4; i++) Fx.Spawn("fx_slash", Vector3.Lerp(a, b, i / 4f), 3f, new Color(0.8f, 0.9f, 1f), 26f, Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg);
         Hostile.Shake(0.22f);
@@ -514,6 +512,54 @@ public partial class CharacterKit
         Play("crack", 0.6f, 0.8f);
         SignatureSkills.Folded(center, a, b, caught, dmg);
         if (card[3] > 0) StartCoroutine(Crease(a, b, 1f + card[3]));
+    }
+
+    // 1.5.0~ 지도 접기 발동 그림: 양피지 두 쪽(접힘선 양옆 · 폭 half)이 0.22초 동안 접힘선으로 접혀 닫힌 뒤, 접힌 자국(좁은 양피지 띠)이 금빛으로 번쩍이며 0.3초에 사라짐
+    //   그림만 (판정 · 끌어오기는 FoldRoutine 그대로) · 맨 위 · 어떤 경로로 끝나도 finally 에서 파괴
+    IEnumerator FoldCloseArt(Vector3 mid, Vector2 crease, Vector2 n, float half, float len)
+    {
+        float deg = Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg;
+        SpriteRenderer[] sides = new SpriteRenderer[2];
+        try
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                GameObject go = new GameObject("FoldCloseSide");
+                sides[i] = go.AddComponent<SpriteRenderer>();
+                sides[i].sharedMaterial = PixelStrokeMin.TopSpriteMaterial;
+                PixelStrokeMin.PutOnTop(sides[i], -1);
+            }
+            float z = PixelStrokeMin.TopZ(mid.z) + 0.03f;
+            for (float t = 0f; t < 0.22f; t += Time.deltaTime)
+            {
+                float k = t / 0.22f;
+                float w = Mathf.Max(0.15f, half * (1f - k * k));          // 끌려오는 적과 같은 빠르기(k²)로 좁아짐
+                for (int i = 0; i < 2; i++)
+                {
+                    float s = i == 0 ? 1f : -1f;
+                    sides[i].sprite = HeroAimArt.Parchment(len, w, deg);
+                    sides[i].color = new Color(1f, 1f, 1f, 1f);
+                    Vector3 p = mid + (Vector3)(n * (s * w * 0.5f));
+                    sides[i].transform.position = new Vector3(p.x, p.y, z);
+                }
+                yield return null;
+            }
+            // 접힌 자국: 두 쪽이 겹친 좁은 띠가 금빛으로 번쩍였다 사라짐
+            Destroy(sides[1].gameObject);
+            sides[1] = null;
+            sides[0].sprite = HeroAimArt.Parchment(len, 0.6f, deg);
+            sides[0].transform.position = new Vector3(mid.x, mid.y, z);
+            for (float t = 0f; t < 0.3f; t += Time.deltaTime)
+            {
+                float k = t / 0.3f;
+                sides[0].color = Color.Lerp(new Color(1f, 0.85f, 0.4f, 1f), new Color(1f, 0.9f, 0.6f, 0f), k);
+                yield return null;
+            }
+        }
+        finally
+        {
+            for (int i = 0; i < 2; i++) if (sides[i] != null) Destroy(sides[i].gameObject);
+        }
     }
 
     // 접힌 자국 (카드): 접힌 선에 자국이 남아 0.3초마다 벰
