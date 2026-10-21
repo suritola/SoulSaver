@@ -168,6 +168,7 @@ public class ChoiceUI : MonoBehaviour
             TMP_Text descText = UIKit.Text(face, o.desc, LevelShop.CardBodyMax, Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
             descText.fontSizeMin = LevelShop.CardBodyMin;
             descText.paragraphSpacing = 10f;
+            TermLinks.Apply(descText);      // 1.4.8~ 글 속 용어 툴팁 (Glossary)
             TMP_Text key = UIKit.Text(face, "", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
             key.text = "[" + (i + 1) + "]";
         }

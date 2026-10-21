@@ -560,6 +560,7 @@ public partial class LevelShop : MonoBehaviour
                 body.fontSizeMin = CardBodyMin;
                 body.paragraphSpacing = 14f;                 // 설명 / 대가 / 강점 · 약점 줄 사이 (1.4.8~)
                 body.overflowMode = TextOverflowModes.Overflow;
+                TermLinks.Apply(body);                       // 1.4.8~ 글 속 용어에 마우스를 올리면 정의 (Glossary)
             }
         }
     }
