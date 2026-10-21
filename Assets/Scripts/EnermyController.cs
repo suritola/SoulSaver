@@ -154,14 +154,17 @@ public class EnermyController : MonoBehaviour
             if (countsTowardBoss)
             {
                 expReward = Mathf.Max(expReward > 0 ? 1 : 0, Mathf.RoundToInt(expReward * GameMode.RewardMul / EnemySpawner.DensityNow));      // 1.4.7~ 이야기 모드 적 수가 늘어난 만큼 한 마리 경험치는 줄임 (Chapters.StoryDensity)
-                coinDrop = GameMode.RoundRandom(coinsBefore / GameMode.KillStretch);
+                // 1.4.8~ 사용자 「코인 · 물약이 너무 많이 나온다」: 이야기 모드 적 수 배율만큼 나누고(경험치와 같게) · 모든 모드 절반 (DropCut)
+                float density = EnemySpawner.DensityNow;
+                coinDrop = GameMode.RoundRandom(coinsBefore / GameMode.KillStretch / density * DropCut);
                 // 회복약도 처치 수가 늘어난 만큼 덜 나오게 (한 판 총량을 1.8.8 수준으로)
-                hpChance = chanceofHP / GameMode.KillStretch;
+                hpChance = chanceofHP / GameMode.KillStretch / density * DropCut;
             }
             else
             {
                 expReward = Mathf.RoundToInt(expReward * GameMode.FixedRewardMul);
-                coinDrop = coinsBefore;
+                coinDrop = GameMode.RoundRandom(coinsBefore * DropCut);
+                hpChance = chanceofHP * DropCut;
             }
         }
         EnemyHealth = setEnemyHP;
@@ -637,6 +640,7 @@ public class EnermyController : MonoBehaviour
     public GameObject hp;
     [Header("힐팩")]
     public int chanceofHP = 30;
+    const float DropCut = 0.5f;         // 1.4.8~ 코인 · 회복약 공통 ×0.5 (위 난이도 처리에서 곱함)
     float hpChance = -1f;               // 난이도를 반영한 실제 확률 (%), 음수면 chanceofHP 그대로
     static readonly WaitForSeconds DeathWait = new WaitForSeconds(1f);     // 처치마다 새로 만들지 않게
 
