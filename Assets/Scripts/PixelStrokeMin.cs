@@ -101,7 +101,7 @@ public class PixelStrokeMin : MonoBehaviour
         ring.sortingLayerID = lr.sortingLayerID;
         ring.sortingOrder = lr.sortingOrder;
         Transform t = ring.transform;
-        t.position = new Vector3(center.x, center.y, transform.position.z);
+        t.position = center;        // z 도 선 점들 그대로 (선 오브젝트 z 를 쓰면 바닥보다 뒤로 가 안 보였음 · 1.5.0 빌드 26109520)
         t.rotation = Quaternion.identity;
         Vector3 ls = transform.lossyScale;
         t.localScale = new Vector3(ls.x != 0f ? 1f / ls.x : 1f, ls.y != 0f ? 1f / ls.y : 1f, 1f);

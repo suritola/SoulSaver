@@ -162,8 +162,15 @@ public class UiCapture
         In("AutoAim", me + new Vector3(5f, 2f, 0f));
         In("AutoUlt", true);
         In("UltDownFrame", Time.frameCount + 1);
-        yield return Frames(45);                    // 모을수록 고리가 커짐
-        yield return Shot("20_swordsman_ult_aim");
+        Time.captureFramerate = 60;                 // 시간을 실제 게임처럼 1/60초씩 (배치 실행은 프레임이 너무 빨라 모으기가 거의 안 흐름)
+        object kit = Find("CharacterKit");
+        foreach (int f in new[] { 30, 30, 50 })     // 0.5초 · 1초 · 다 참(1.8초)
+        {
+            yield return Frames(f);
+            Debug.Log("[UICAP-CHARGE] charging=" + Get(kit, "charging") + " charge=" + Get(kit, "charge") + " dt=" + Time.deltaTime);
+            yield return Shot("20_swordsman_ult_aim_" + Time.frameCount);
+        }
+        Time.captureFramerate = 0;
         In("AutoUlt", false);
         In("UltUpFrame", Time.frameCount + 1);
         yield return Frames(20);
