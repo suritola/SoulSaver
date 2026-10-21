@@ -171,10 +171,10 @@ public static class Glossary
             "プレイ中に魂のかけらでマスを習得し、武器・必殺技・生存・魂を育てるツリーです。",
             "局内用灵魂碎片学习节点，强化武器、必杀技、生存与灵魂的树。");
         Add("transcend", "초월 카드|초월", "Transcendence card|Transcendence cards|Transcendence Card|Transcendence Cards|Transcendence", "超越のカード|超越カード|超越", "超越卡",
-            "판 후반, 경험치 막대를 세 번 채울 때마다 고르는 카드입니다. 판의 규칙 하나를 바꿉니다.",
-            "Late in a run, chosen every three filled EXP bars. Each changes one rule of the run.",
-            "プレイ終盤、経験値バーを3回満たすごとに選ぶカードです。プレイのルールを一つ変えます。",
-            "局内后期，经验条每满三次可选择一张。会改变本局的一条规则。");
+            "최대 레벨에 닿은 뒤 경험치 막대를 채우면 고르는 카드입니다. 판의 규칙 하나를 바꿉니다.",
+            "Chosen by filling the EXP bar after max level. Each one changes a rule of the run.",
+            "最大レベル到達後、経験値バーを満たすと選べるカードです。プレイのルールを一つ変えます。",
+            "达到最高等级后填满经验条即可选择的卡。会改变本局的一条规则。");
         Add("laststand", "최후의 보루", "Last Stand", "最後の砦", "最后的堡垒",
             "체력이 30% 아래로 떨어지면 장마다 한 번 저절로 발동합니다. 잠깐 무적이 되고 둘레의 적을 밀어냅니다.",
             "Triggers once per chapter when HP drops below 30%. Brief invincibility and a push on nearby enemies.",
@@ -288,7 +288,7 @@ public static class Glossary
             "第2章起出现。停留在旁打破封印即可选择遗物。");
 
         // ---- 판 밖 (모드 · 규칙)
-        Add("brand", "영혼 각인|각인", "Soul Brand|Soul Brands|=Brand|=Brands", "魂の刻印|刻印", "灵魂烙印|烙印",
+        Add("brand", "영혼 각인|각인", "Soul Brand|Soul Brands|=Brand|=Brands", "魂の刻印","灵魂烙印|烙印",
             "이야기 모드 판을 시작할 때 고르는 규칙입니다. 강점과 약점을 함께 줍니다.",
             "A rule chosen at the start of a Story run. It grants a strength and a weakness together.",
             "ストーリーモードの開始時に選ぶルールです。強みと弱みを同時に与えます。",
