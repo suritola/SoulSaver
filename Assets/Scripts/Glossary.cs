@@ -229,7 +229,7 @@ public static class Glossary
             "The 2 seconds after the Rogue's Ultimate ends. Ambush effects are active then.",
             "盗賊の必殺技が終わってから2秒間です。急襲の効果がこの間に発動します。",
             "盗贼必杀技结束后的2秒。突袭效果在此期间生效。");
-        Add("knot", "묶인 적|그림자 줄로 묶여", "knotted", "結ばれた", "被绑定",
+        Add("knot", "그림자 매듭|그림자 줄로 묶여", "Shadow Knot|knotted", "影の結び目", "暗影之结",       // 「묶인 적」은 궁수 덫(묶임)과 겹쳐 쓰지 않음
             "도적의 그림자 매듭에 묶인 적들은 하나가 받은 피해의 일부를 함께 받습니다.",
             "Enemies bound by the Rogue's Shadow Knot share part of the damage any one of them takes.",
             "盗賊の影の結び目に結ばれた敵は、一体が受けたダメージの一部を共に受けます。",
