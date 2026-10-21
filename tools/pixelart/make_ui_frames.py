@@ -125,11 +125,84 @@ def divider():
     return img
 
 
+def ribbon():
+    # 띠 · 리본 (96x32 · 9칸 나눔 좌우 18 · 위아래 9): 어두운 돌 띠 · 위아래 금 테두리 · 양끝 화살 깃 모양 · 끝에 금 보석
+    W, H = 96, 32
+    img = Img(W, H)
+    top_fill, bot_fill = (58, 44, 80), (30, 22, 44)
+    for y in range(H):
+        for x in range(W):
+            e = min(x, W - 1 - x)               # 끝에서의 거리
+            notch = abs(y - (H - 1) / 2.0)      # 가운데 줄에서의 거리
+            if e < 10 and notch > e + 6:        # 양끝 깃 (가운데가 튀어나온 화살촉 모양)
+                continue
+            edge_near = e < 10 and notch > e + 4
+            if y in (2, H - 3) or edge_near:
+                c = OUTL
+            elif y in (3, H - 4):
+                c = G_L if y == 3 else G_D
+            elif y in (4, H - 5):
+                c = G if y == 4 else G_D
+            elif 4 < y < H - 5:
+                t = (y - 5) / max(1, H - 11)
+                c = lerp(top_fill, bot_fill, t)
+                if y == 5:
+                    c = lerp(c, (110, 92, 150), 0.4)
+            else:
+                continue
+            img.set(x, y, c)
+    for cx in (12, W - 13):          # 양끝 금 보석
+        for dx, dy, c in ((0, -1, G_L), (-1, 0, G), (0, 0, GEM), (1, 0, G), (0, 1, G_D)):
+            img.set(cx + dx, H // 2 + dy, c)
+    return img
+
+
+def shadow():
+    # 창 그림자 (64x64 · 테두리 24): 가장자리로 갈수록 옅어지는 검정
+    S = 64
+    img = Img(S, S)
+    for y in range(S):
+        for x in range(S):
+            d = min(x, S - 1 - x, y, S - 1 - y)
+            a = int(170 * min(1.0, d / 24.0) ** 1.6)
+            img.set(x, y, (0, 0, 0, a))
+    return img
+
+
+def vignette():
+    # 화면 가장자리 어둡게 (128x128 · 늘려 씀)
+    S = 128
+    img = Img(S, S)
+    for y in range(S):
+        for x in range(S):
+            dx, dy = (x - 63.5) / 63.5, (y - 63.5) / 63.5
+            r = (dx * dx * 0.8 + dy * dy) ** 0.5
+            a = int(255 * max(0.0, min(1.0, (r - 0.55) / 0.6)) ** 1.5 * 0.85)
+            img.set(x, y, (6, 3, 12, a))
+    return img
+
+
+def ember():
+    # 떠오르는 영혼 불티 (8x8): 금빛 점 + 옅은 빛무리
+    img = Img(8, 8)
+    for y in range(8):
+        for x in range(8):
+            d = ((x - 3.5) ** 2 + (y - 3.5) ** 2) ** 0.5
+            if d < 1.2:
+                img.set(x, y, (255, 236, 170, 255))
+            elif d < 2.3:
+                img.set(x, y, (250, 200, 110, 200))
+            elif d < 3.6:
+                img.set(x, y, (230, 160, 70, 70))
+    return img
+
+
 def meta(path, border, ppu):
     tpl = open(os.path.join(ROOT, 'Assets', 'Sprites', 'Items', 'hp_potion.png.meta'), encoding='utf-8').read()
     tpl = re.sub(r'guid: [0-9a-f]{32}', 'guid: ' + uuid.uuid4().hex, tpl, count=1)
     tpl = re.sub(r'spritePixelsToUnits: \d+', 'spritePixelsToUnits: %d' % ppu, tpl)
-    tpl = re.sub(r'spriteBorder: \{x: 0, y: 0, z: 0, w: 0\}', 'spriteBorder: {x: %d, y: %d, z: %d, w: %d}' % (border, border, border, border), tpl)
+    b = border if isinstance(border, tuple) else (border, border, border, border)      # (왼 · 아래 · 오른 · 위)
+    tpl = re.sub(r'spriteBorder: \{x: 0, y: 0, z: 0, w: 0\}', 'spriteBorder: {x: %d, y: %d, z: %d, w: %d}' % b, tpl)
     tpl = re.sub(r'spriteMeshType: \d', 'spriteMeshType: 0', tpl)          # 9칸 나눔은 FullRect
     open(path, 'w', encoding='utf-8', newline='\n').write(tpl)
 
@@ -145,11 +218,13 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     folder_meta(OUT + '.meta')
     p, pb = panel()
-    for name, img, border, ppu in (('ui_button', button(), 8, 50), ('ui_panel', p, pb, 50), ('ui_divider', divider(), 0, 50)):
+    for name, img, border, ppu in (('ui_button', button(), 8, 50), ('ui_panel', p, pb, 50), ('ui_divider', divider(), 0, 50),
+                                   ('ui_ribbon', ribbon(), (18, 9, 18, 9), 50), ('ui_shadow', shadow(), 24, 50),
+                                   ('ui_vignette', vignette(), 0, 100), ('ui_ember', ember(), 0, 50)):
         out = os.path.join(OUT, name + '.png')
         write(img, out)
         meta(out + '.meta', border, ppu)
-    print('wrote ui_button · ui_panel · ui_divider')
+    print('wrote ui_button · ui_panel · ui_divider · ui_ribbon · ui_shadow · ui_vignette · ui_ember')
 
 
 if __name__ == '__main__':

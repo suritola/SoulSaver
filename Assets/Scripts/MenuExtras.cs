@@ -14,7 +14,7 @@ public static class MenuExtras
     {
         Scene scene = SceneManager.GetActiveScene();
         UIKit.RestyleScene();           // 1.4.8~ 장면에 놓인 버튼 · 창도 새 평평한 칸으로 (먼저 · 아래 설치 코드가 복제하는 버튼까지)
-        if (scene.name == "MainMenu") { InstallMainMenu(); StyleTitle(); }
+        if (scene.name == "MainMenu") { InstallMainMenu(); StyleTitle(); InstallAmbience(); }
         else if (scene.name == "GameScene") InstallEsc();
         else if (scene.name == "GameOver") InstallGameOver();
     }
@@ -419,6 +419,28 @@ public static class MenuExtras
     public const float SideBottom = -480f;                                // 1.4.8~ 세로 메뉴 아래끝
     public const float ColRight = ColW * 0.5f;                            // 373
     static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
+
+    // 1.4.8~ 메인 메뉴 분위기 (MenuAmbience): 비네트 · 불티는 메뉴 버튼들 뒤 · 배경 앞
+    static void InstallAmbience()
+    {
+        GameObject start = GameObject.Find("GameStartButton");
+        if (start == null) return;
+        Transform parent = start.transform.parent;
+        TMP_Text title = null;
+        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            if (t.text == "Soul Saver") { title = t; break; }
+        List<RectTransform> items = new List<RectTransform>();
+        foreach (string n in new[] { "GameStartButton", "ContinueButton", "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
+        {
+            Transform t = parent.Find(n);
+            if (t != null && t.gameObject.activeSelf) items.Add((RectTransform)t);
+        }
+        // 맨 앞 형제(가장 뒤에 그려짐)의 바로 다음 = 배경 그림 앞 · 버튼 뒤
+        Canvas canvas = start.GetComponentInParent<Canvas>();
+        Transform root = canvas != null ? canvas.rootCanvas.transform : parent;
+        Transform behind = root.childCount > 1 ? root.GetChild(1) : null;
+        MenuAmbience.Install(root, behind, title, items.ToArray());
+    }
 
     // 1.4.8~ 사용자 「메인화면에 있는 게임 제목도 스타일 바꿔」: 금빛 그라데이션(위 밝은 금 → 아래 호박) · 어두운 외곽선 · 넓은 글자 간격,
     //   부제는 작은 크림색 · 넓은 간격 · 양옆에 금줄 (메뉴 글자와 같은 결)
@@ -850,8 +872,12 @@ public static class UIKit
         if (ButtonSprite == null) ButtonSprite = FlatSprite();
         if (PanelSprite == null) PanelSprite = Resources.Load<Sprite>("UI/ui_panel");
         if (DividerSprite == null) DividerSprite = Resources.Load<Sprite>("UI/ui_divider");
+        if (RibbonSprite == null) RibbonSprite = Resources.Load<Sprite>("UI/ui_ribbon");
+        if (ShadowSprite == null) ShadowSprite = Resources.Load<Sprite>("UI/ui_shadow");
+        if (VignetteSprite == null) VignetteSprite = Resources.Load<Sprite>("UI/ui_vignette");
+        if (EmberSprite == null) EmberSprite = Resources.Load<Sprite>("UI/ui_ember");
     }
-    public static Sprite PanelSprite, DividerSprite;
+    public static Sprite PanelSprite, DividerSprite, RibbonSprite, ShadowSprite, VignetteSprite, EmberSprite;
 
     // 한글(「가」)을 그릴 수 있는 폰트인지 (대체 폰트 포함)
     static bool HasKorean(TMP_FontAsset f) => f != null && f.HasCharacter('가', true, true);
@@ -868,6 +894,31 @@ public static class UIKit
             if (b.gameObject.scene != active) continue;
             Image img = b.GetComponent<Image>();
             if (img != null && img.sprite != null && img.sprite != ButtonSprite && img.type == Image.Type.Sliced) oldSprites.Add(img.sprite);
+        }
+        foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            // 1.4.8~ 옛 빨간 띠 그림(ui_banner: 「레벨업!」 · 「능력을 하나 선택하세요」)은 새 리본으로 · 띠에 맞게 낮게 · 글자는 가운데 금빛
+            if (RibbonSprite != null && img.gameObject.scene == active && img.sprite != null && img.sprite.name == "ui_banner")
+            {
+                img.sprite = RibbonSprite;
+                img.type = Image.Type.Sliced;
+                img.color = Color.white;
+                RectTransform ir = img.rectTransform;
+                ir.sizeDelta = new Vector2(Mathf.Min(ir.sizeDelta.x, 820f), Mathf.Min(ir.sizeDelta.y, 92f));
+                foreach (TMP_Text bt in img.GetComponentsInChildren<TMP_Text>(true))
+                {
+                    if (bt.transform.parent != img.transform) continue;
+                    RectTransform tr = bt.rectTransform;
+                    tr.anchorMin = tr.anchorMax = tr.pivot = new Vector2(0.5f, 0.5f);
+                    tr.anchoredPosition = Vector2.zero;
+                    tr.sizeDelta = new Vector2(ir.sizeDelta.x - 120f, ir.sizeDelta.y - 24f);
+                    bt.enableAutoSizing = true;
+                    bt.fontSizeMin = 20f;
+                    bt.fontSizeMax = Mathf.Min(bt.fontSizeMax, 46f);
+                    bt.color = new Color(0.98f, 0.86f, 0.52f);
+                    bt.fontStyle |= FontStyles.Bold;
+                }
+            }
         }
         if (oldSprites.Count == 0) return;
         foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -939,7 +990,17 @@ public static class UIKit
         br.SetAsLastSibling();
         blocker.GetComponent<Image>().color = new Color(0.03f, 0.02f, 0.05f, 0.82f);
 
+        // 1.4.8~ 창 뒤 부드러운 그림자 (아래로 조금 · 떠 보이게) · 막 · 창이 서서히 나타남 (WindowIntro)
+        if (ShadowSprite != null)
+        {
+            RectTransform sh = Rect("Shadow", br, new Vector2(0f, -14f), size + new Vector2(70f, 70f));
+            Image si = sh.gameObject.AddComponent<Image>();
+            si.sprite = ShadowSprite;
+            si.type = Image.Type.Sliced;
+            si.raycastTarget = false;
+        }
         RectTransform win = Rect("Window", br, Vector2.zero, size);
+        blocker.AddComponent<WindowIntro>().window = win;
         Image wi = win.gameObject.AddComponent<Image>();
         // 1.4.8~ 창 틀 그림(ui_panel: 금 이중 테두리 · 모서리 보석 · 가운데 어두운 돌)이 있으면 그것 · 안쪽 판은 투명 (내용 자리는 그대로)
         wi.sprite = PanelSprite != null ? PanelSprite : ButtonSprite;
@@ -2319,8 +2380,11 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             RectTransform br = UIKit.Rect("HoverBand", b.transform, Vector2.zero, new Vector2(r.sizeDelta.x, r.sizeDelta.y * 0.86f));
             br.SetAsFirstSibling();
             fx.band = br.gameObject.AddComponent<Image>();
-            fx.band.sprite = null;
+            // 1.4.8~ 사용자 「버튼이 너무 투명해서 누를 수 있는 건지 모르겠다」: 평소에도 도트 판(금 테두리 돌판)을 옅게 · 고르면 진하게
+            fx.band.sprite = UIKit.ButtonSprite;
+            fx.band.type = Image.Type.Sliced;
             fx.band.raycastTarget = false;
+            br.sizeDelta = r.sizeDelta;
             RectTransform lr = UIKit.Rect("HoverLine", b.transform, new Vector2(0f, -r.sizeDelta.y * 0.5f + 4f), new Vector2(r.sizeDelta.x * 0.5f, 2f));
             fx.line = lr.gameObject.AddComponent<Image>();
             fx.line.color = Gold;
@@ -2359,7 +2423,8 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             label.color = Color.Lerp(rest, primary ? Color.white : Gold, k);
             label.characterSpacing = Mathf.Lerp(0f, 4f, k);
         }
-        if (band != null) band.color = new Color(Gold.r, Gold.g, Gold.b, 0.10f * k);
+        if (band != null) band.color = locked ? new Color(0.6f, 0.58f, 0.62f, 0.45f) : Color.Lerp(new Color(0.78f, 0.74f, 0.86f, 0.62f), new Color(1f, 0.94f, 0.78f, 1f), k);
+        transform.localScale = Vector3.one * (1f + 0.035f * k);
         if (line != null)
         {
             line.color = new Color(Gold.r, Gold.g, Gold.b, primary ? 0.55f + 0.45f * k : k);
@@ -2419,5 +2484,125 @@ public class EscBackdrop : MonoBehaviour
     void OnDestroy()
     {
         if (small != null) { small.Release(); Destroy(small); }
+    }
+}
+
+// 1.4.8~ 창 열림 연출: 막은 0.18초에 서서히 · 창은 0.94 → 1 로 커지며 나타남 (실제 시간 · 멈춘 중에도)
+public class WindowIntro : MonoBehaviour
+{
+    public RectTransform window;
+    CanvasGroup group;
+    float t;
+
+    void Start()
+    {
+        group = GetComponent<CanvasGroup>();
+        if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+        Apply(0f);
+    }
+
+    void Update()
+    {
+        t += Time.unscaledDeltaTime / 0.18f;
+        Apply(Mathf.Clamp01(t));
+        if (t >= 1f) enabled = false;
+    }
+
+    void Apply(float k)
+    {
+        float e = 1f - (1f - k) * (1f - k);
+        if (group != null) group.alpha = e;
+        if (window != null) window.localScale = Vector3.one * Mathf.Lerp(0.94f, 1f, e);
+    }
+}
+
+// 1.4.8~ 메인 메뉴 분위기: 가장자리를 어둡게(비네트) · 금빛 영혼 불티가 천천히 떠오름 · 제목이 은은하게 숨 쉼 · 메뉴가 차례로 나타남
+public class MenuAmbience : MonoBehaviour
+{
+    public TMP_Text title;
+    public RectTransform[] items;
+    RectTransform embers;
+    readonly System.Collections.Generic.List<(RectTransform r, Image img, float speed, float life, float age, float sway)> live
+        = new System.Collections.Generic.List<(RectTransform, Image, float, float, float, float)>();
+    float nextEmber, t;
+    Vector2[] itemBase;
+    CanvasGroup[] groups;
+
+    public static void Install(Transform canvasRoot, Transform behind, TMP_Text title, RectTransform[] items)
+    {
+        UIKit.EnsureStyle();
+        GameObject go = new GameObject("MenuAmbience", typeof(RectTransform));
+        RectTransform r = (RectTransform)go.transform;
+        r.SetParent(canvasRoot, false);
+        r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero;
+        if (behind != null) r.SetSiblingIndex(behind.GetSiblingIndex());
+        if (UIKit.VignetteSprite != null)
+        {
+            Image v = go.AddComponent<Image>();
+            v.sprite = UIKit.VignetteSprite;
+            v.raycastTarget = false;
+        }
+        MenuAmbience a = go.AddComponent<MenuAmbience>();
+        a.title = title;
+        a.items = items;
+        GameObject e = new GameObject("Embers", typeof(RectTransform));
+        a.embers = (RectTransform)e.transform;
+        a.embers.SetParent(r, false);
+        a.embers.anchorMin = Vector2.zero; a.embers.anchorMax = Vector2.one; a.embers.offsetMin = a.embers.offsetMax = Vector2.zero;
+    }
+
+    void Start()
+    {
+        if (items == null) items = new RectTransform[0];
+        itemBase = new Vector2[items.Length];
+        groups = new CanvasGroup[items.Length];
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == null) continue;
+            itemBase[i] = items[i].anchoredPosition;
+            groups[i] = items[i].GetComponent<CanvasGroup>();
+            if (groups[i] == null) groups[i] = items[i].gameObject.AddComponent<CanvasGroup>();
+            groups[i].alpha = 0f;
+        }
+    }
+
+    void Update()
+    {
+        float dt = Time.unscaledDeltaTime;
+        t += dt;
+        bool motion = GameSettings.Motion > 0.01f;
+        // 메뉴가 0.25초부터 0.07초 간격으로 아래에서 살짝 올라오며 나타남 (끝나면 제자리 · 움직임 줄이기면 바로)
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == null || groups[i] == null) continue;
+            float k = motion ? Mathf.Clamp01((t - 0.25f - 0.07f * i) / 0.35f) : 1f;
+            float e = 1f - (1f - k) * (1f - k) * (1f - k);
+            groups[i].alpha = e;
+            items[i].anchoredPosition = itemBase[i] + new Vector2(0f, -14f * (1f - e));
+        }
+        // 제목: 밝기가 아주 천천히 오르내림
+        if (title != null) title.color = Color.Lerp(new Color(0.9f, 0.88f, 0.84f), Color.white, 0.5f + 0.5f * Mathf.Sin(t * 1.3f));
+        // 불티
+        if (motion && UIKit.EmberSprite != null && embers != null && t >= nextEmber && live.Count < 28)
+        {
+            nextEmber = t + Random.Range(0.18f, 0.42f);
+            RectTransform er = UIKit.Rect("Ember", embers, Vector2.zero, Vector2.one * Random.Range(10f, 22f));
+            er.anchorMin = er.anchorMax = new Vector2(Random.Range(0.04f, 0.96f), 0f);
+            er.anchoredPosition = new Vector2(0f, Random.Range(-20f, 80f));
+            Image img = er.gameObject.AddComponent<Image>();
+            img.sprite = UIKit.EmberSprite;
+            img.raycastTarget = false;
+            live.Add((er, img, Random.Range(40f, 90f), Random.Range(6f, 11f), 0f, Random.Range(0f, 6.28f)));
+        }
+        for (int i = live.Count - 1; i >= 0; i--)
+        {
+            var p = live[i];
+            p.age += dt;
+            if (p.r == null || p.age >= p.life) { if (p.r != null) Destroy(p.r.gameObject); live.RemoveAt(i); continue; }
+            p.r.anchoredPosition += new Vector2(Mathf.Sin(p.age * 1.2f + p.sway) * 14f * dt, p.speed * dt);
+            float life = p.age / p.life;
+            p.img.color = new Color(1f, 1f, 1f, Mathf.Sin(life * Mathf.PI) * 0.75f);
+            live[i] = p;
+        }
     }
 }

@@ -298,7 +298,10 @@ public partial class LevelShop : MonoBehaviour
             r.pivot = new Vector2(0.5f, 0f);
             r.sizeDelta = new Vector2(900f, 62f);       // 1.0.1: 780 × 48 → 900 × 62 (눈에 잘 띄게)
             Image bg = pendingBadge.GetComponent<Image>();
-            bg.color = new Color(0.35f, 0.22f, 0.02f, 0.85f);
+            UIKit.EnsureStyle();
+            // 1.4.8~ 갈색 단색 막대 → 새 UI 그림체의 리본 (금 테두리 · 양끝 깃 · 보석)
+            if (UIKit.RibbonSprite != null) { bg.sprite = UIKit.RibbonSprite; bg.type = Image.Type.Sliced; }
+            bg.color = UIKit.RibbonSprite != null ? Color.white : new Color(0.35f, 0.22f, 0.02f, 0.85f);
             bg.raycastTarget = true;
             // Button 이 아니라 클릭만 받음: 전투 중 조준이 지나갈 때마다 버튼 소리(UISoundHook)가 나지 않게 · Space 가 다시 누르지 않게
             pendingClick = pendingBadge.AddComponent<BadgeClick>();
@@ -337,8 +340,11 @@ public partial class LevelShop : MonoBehaviour
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
         bool hover = pendingClick != null && pendingClick.Hover;       // 마우스를 올리면 밝고 크게 (누를 수 있음을 보여 줌)
         if (pendingBadgeImg == null) pendingBadgeImg = pendingBadge.GetComponent<Image>();
-        pendingBadgeImg.color = hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
-                                      : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
+        // 1.4.8~ 리본 그림이면 그림 색을 살리고 밝기만 숨 쉼 (마우스를 올리면 금빛) · 그림이 없으면 예전 갈색 단색
+        pendingBadgeImg.color = UIKit.RibbonSprite != null
+            ? (hover ? new Color(1f, 0.9f, 0.62f, 1f) : Color.Lerp(new Color(0.82f, 0.8f, 0.88f, 1f), new Color(1f, 0.95f, 0.85f, 1f), pulse))
+            : hover ? new Color(0.85f, 0.6f, 0.12f, 1f)
+                    : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
         pendingBadge.transform.localScale = Vector3.one * (hover ? 1f + 0.06f * GameSettings.Motion : 1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
         if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)
