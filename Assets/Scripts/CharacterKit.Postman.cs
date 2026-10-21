@@ -567,9 +567,13 @@ public partial class CharacterKit
         if (expressRing == null) { expressRing = Hostile.NewLine("ExpressRing", PostRed, 0.16f, 55); expressRing.loop = true; }
         expressRing.enabled = true;
         Hostile.SetArc(expressRing, me, ExpressRange, 0f, 360f);
-        Color rc = expressCharge >= 1f ? Color.Lerp(PostRed, new Color(1f, 0.85f, 0.4f), 0.6f) : PostRed;
+        Color post = HeroAim.ColorOf(HeroAimKind.Postman);         // 1.5.0~ 범위표시 색: 우편 빨강 (다 차면 금빛은 그대로)
+        Color rc = expressCharge >= 1f ? Color.Lerp(post, new Color(1f, 0.85f, 0.4f), 0.6f) : post;
         expressRing.startColor = expressRing.endColor = new Color(rc.r, rc.g, rc.b, 0.5f + 0.3f * Mathf.Sin(Time.time * 12f));
         expressRing.startWidth = expressRing.endWidth = 0.16f + 0.08f * expressCharge;
+        // 우표 문양 고리 · 표식 붙은 적 → 내 쪽으로 편지가 날아옴 (HeroAimDecor · 목록은 참조만)
+        HeroAim.Mark(expressRing, HeroAimKind.Postman);
+        HeroAim.SetTargets(expressRing, expressMarks);
         // 1.0.2: 쓰러지거나 사라진 적의 표식은 떼고 아이콘도 지움 (예전엔 쓰러진 적이 표식 자리를 차지해 새 적에게 안 붙었음)
         for (int i = expressMarks.Count - 1; i >= 0; i--)
         {

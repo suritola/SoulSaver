@@ -294,12 +294,16 @@ public partial class CharacterKit
             wispFx.RemoveAt(wispFx.Count - 1);
             if (a != null) Destroy(a.gameObject);
         }
+        // 1.5.0~ 빙의 중엔 영혼이 숙주 둘레를 돎 (새 혼불을 더하지 않고 있던 것을 옮김 → 「들어가 있음」이 보이게)
+        bool onHost = possessing && possessHost != null;
+        Vector3 hub = onHost ? possessHost.position : transform.position;
+        float baseR = onHost ? possessHostR : 1.3f;
         for (int i = 0; i < wispFx.Count; i++)
         {
             if (wispFx[i] == null) continue;
             float ang = Time.time * 120f + 360f / Mathf.Max(1, wispFx.Count) * i;
-            float r = 1.3f + 0.1f * Mathf.Sin(Time.time * 3f + i);
-            Vector3 orbit = transform.position + Quaternion.Euler(0f, 0f, ang) * Vector3.right * r + Vector3.up * 0.3f;
+            float r = baseR + 0.1f * Mathf.Sin(Time.time * 3f + i);
+            Vector3 orbit = hub + Quaternion.Euler(0f, 0f, ang) * Vector3.right * r + Vector3.up * 0.3f;
             // 갈래 영혼 군단: 돌진 중인 영혼은 그 적까지 갔다가 돌아옴 (그림만 · 피해는 GhostPaths 가 닿는 순간에)
             if (i < WispDashSlots && wispDashTo[i] != null && Time.time - wispDashAt[i] < WispDashTime)
             {
@@ -395,19 +399,120 @@ public partial class CharacterKit
     //         보스 · 적이 스킬을 쓰는 동안(casting) · 움직이지 않는 것(보스가 만든 등불 · 묘비)은 예전처럼 그 몸에 붙어 따라감 (스킬 동작이 깨지지 않게)
     const float PossessTime = 3f, PossessEnter = 0.15f, PossessGrace = 0.3f;      // 1.3.5: 빙의 뒤 무적 0.65 → 0.3초
     const float PossessSpeedMin = 0.3f, PossessSpeedMax = 1.3f;
-    Color possessBodyColor = Color.white;
-    bool bodyFaded;                     // 빙의로 몸을 흐리게 해 둠 (빙의가 끝나면 UpdatePossess · 루틴 끝에서 되돌림)
+    // 1.5.0~ 빙의 중 몸: body.color 를 직접 바꾸면 PlayerController.LateUpdate 가 매 프레임 투명도를 덮어써 한 번도 안 보였음
+    //   → player.kitAlpha · kitTint · noBlink (따로 곱하는 값 · 거울 분신 bodyAlpha 와 서로 덮지 않음)
+    bool bodyFaded;                     // 빙의로 몸을 흐리게 해 둠 (빙의가 끝나면 끝 연출 · UpdatePossess · 루틴 끝에서 되돌림)
+    int possessGen;                     // 빙의 루틴 세대 — 끝 정리는 자기 세대일 때만 (이어진 빙의가 방금 넣은 값을 지우지 않게)
+    Transform possessHost;              // 지금 들어가 있는 몸 (숙주 고리 · 혼불 · 해골이 따라감)
+    float possessHostR = 1.5f;
+    float possessExitUntil;             // 끝 연출(고리가 커지며 사라짐 · 몸이 돌아옴)이 끝나는 시각 — 그 사이엔 정리를 미룸
+    LineRenderer possessTargetRing, possessHostRing, possessChain;
+    // HUD 용: 빙의해 들어가 있는 중 (UltEngaged 에는 넣지 않음 — 토글 헛누름 풀기와 상관없음)
+    public bool Possessing => possessing;
     void ResetPossess()
     {
         possessUntil = 0f;
         possessSpeed = -1f;
+        possessExitUntil = 0f;
         RestoreBody();
+        HideHostMarks();
+    }
+    void FadeBody(bool exposed)
+    {
+        if (player == null) return;
+        bodyFaded = true;
+        // 들어가 있음: 흐린 몸 + 혼 하늘빛 · 깜빡임 없음 / 사령술 무적이 끝남(맞을 수 있음): 덜 흐리게 · 깜빡임 되살림
+        player.kitAlpha = exposed ? 0.5f : 0.25f;
+        player.kitTint = HeroAim.ColorOf(HeroAimKind.Ghost);
+        player.noBlink = !exposed;
     }
     void RestoreBody()
     {
         if (!bodyFaded) return;
         bodyFaded = false;
-        if (body != null) body.color = new Color(possessBodyColor.r, possessBodyColor.g, possessBodyColor.b, possessBodyColor.a < 0.5f ? 1f : possessBodyColor.a);
+        if (player != null) { player.kitAlpha = 1f; player.kitTint = Color.white; player.noBlink = false; }
+    }
+    void HideHostMarks()
+    {
+        possessHost = null;
+        if (possessHostRing != null) possessHostRing.enabled = false;
+        if (possessChain != null) possessChain.enabled = false;
+    }
+    static float HostRingRadius(Transform t) => t != null && t.TryGetComponent(out Collider2D c) ? Mathf.Max(c.bounds.extents.x, c.bounds.extents.y) + 0.6f : 1.5f;
+
+    // 숙주 고리 (유령 문양 · 머리 위 해골) — 바깥 테가 남은 빙의 시간만큼 줄어듦 · 사령술 무적이 끝나면 빨강
+    //   + 내 몸 ↔ 숙주 영혼 사슬 점선 (몸이 숙주와 떨어져 있을 때만 · 보통은 숙주 몸에 겹쳐 있음)
+    void DrawPossessHost(Transform host, float left, bool exposed)
+    {
+        if (host == null) return;
+        possessHost = host;
+        if (possessHostRing == null) { possessHostRing = Hostile.NewLine("PossessHost", Color.white, 0.14f, 25); possessHostRing.loop = true; }
+        possessHostRing.enabled = true;
+        Hostile.SetArc(possessHostRing, host.position, possessHostR, 0f, 360f);
+        Color col = exposed ? new Color(1f, 0.35f, 0.3f) : HeroAim.ColorOf(HeroAimKind.Ghost);
+        possessHostRing.startColor = possessHostRing.endColor = new Color(col.r, col.g, col.b, 0.9f);
+        possessHostRing.startWidth = possessHostRing.endWidth = 0.14f;
+        PixelStrokeMin.SetCharge(possessHostRing, Mathf.Clamp01(left));
+        HeroAim.Mark(possessHostRing, HeroAimKind.Ghost, HeroAimFx.Skull);
+        if (possessChain == null)
+        {
+            possessChain = Hostile.NewLine("PossessChain", Color.white, 0.12f, 25);
+            PixelLine.Apply(possessChain, true);
+        }
+        Vector3 a = transform.position, b = host.position;
+        if (((Vector2)(b - a)).sqrMagnitude > 0.36f)
+        {
+            possessChain.enabled = true;
+            possessChain.loop = false;
+            possessChain.positionCount = 2;
+            possessChain.SetPosition(0, a);
+            possessChain.SetPosition(1, b);
+            possessChain.startColor = possessChain.endColor = new Color(col.r, col.g, col.b, 0.8f);
+            possessChain.startWidth = possessChain.endWidth = 0.12f;
+            HeroAim.Mark(possessChain, HeroAimKind.Ghost, HeroAimFx.None);
+        }
+        else possessChain.enabled = false;
+    }
+
+    // 끝 연출 (이어진 빙의를 하지 않는 것이 확정된 뒤): 숙주 고리가 커지며 사라짐 · 몸이 돌아옴 · 높은 휙 소리 · 머리 위 「빙의 해제」
+    IEnumerator PossessExit(int gen, Vector3 at)
+    {
+        const float RingTime = 0.25f, BodyTime = 0.15f;
+        possessExitUntil = Time.time + RingTime + 0.05f;
+        Vector3 c = possessHost != null ? possessHost.position : at;
+        float r0 = possessHostR;
+        if (possessChain != null) possessChain.enabled = false;
+        Play("whoosh", 0.6f, 1.9f);
+        SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.8f, Loc.T("빙의 해제"), HeroAim.ColorOf(HeroAimKind.Ghost), 4.5f, 0f, 0.8f);
+        Fx.Spawn("fx_sparkle", transform.position, 1.8f, Color.white, 22f);
+        if (player != null) { player.kitAlpha = 1f; player.noBlink = false; }
+        try
+        {
+            for (float t = 0f; t < RingTime; t += Time.deltaTime)
+            {
+                if (gen != possessGen) yield break;         // 그 사이 새 빙의가 시작됨 (그쪽이 몸 · 고리를 맡음)
+                float k = t / RingTime;
+                // 몸: 혼 하늘빛 → 흰색 (0.15초)
+                if (player != null) player.kitTint = Color.Lerp(HeroAim.ColorOf(HeroAimKind.Ghost), Color.white, Mathf.Clamp01(t / BodyTime));
+                if (possessHostRing != null)
+                {
+                    possessHostRing.enabled = true;
+                    Hostile.SetArc(possessHostRing, c, r0 * (1f + 1.2f * k), 0f, 360f);
+                    possessHostRing.startColor = possessHostRing.endColor = HeroAim.ColorOf(HeroAimKind.Ghost, 0.9f * (1f - k));
+                    HeroAim.Mark(possessHostRing, HeroAimKind.Ghost, HeroAimFx.None);
+                }
+                yield return null;
+            }
+        }
+        finally
+        {
+            if (gen == possessGen)
+            {
+                possessExitUntil = 0f;
+                RestoreBody();
+                HideHostMarks();
+            }
+        }
     }
     // 0 이상이면 빙의한 적의 이동 속도로 움직이는 중 (CharacterKit.MoveMul 이 씀)
     // 2026-10-19~ 「끝나는 시각」 방식: 루틴이 매 프레임 다시 넣고, 끊기면 0.25초 뒤 저절로 -1 (예전엔 루틴 끝에서야 되돌림)
@@ -447,7 +552,9 @@ public partial class CharacterKit
     void HidePossessAim()
     {
         possessAiming = false;
+        if (possessTargetRing != null) possessTargetRing.enabled = false;
         if (ultAimRing != null) ultAimRing.enabled = false;
+        if (ultAimLine != null) ultAimLine.enabled = false;
         if (possessRange != null) possessRange.enabled = false;
     }
 
@@ -457,34 +564,45 @@ public partial class CharacterKit
         // 1.3.8~ 빙의 루틴이 끊기면(예외 · 코루틴 중단) 이동 속도 · 반투명 · 빙의 상태가 남던 것 → 정해진 시간 + 여유가 지나면 되돌림
         // 2026-10-19~ 빙의 상태 · 이동 속도가 「끝나는 시각」 방식이 되어 저절로 풀림 (끝 시각 = 이번 빙의 길이 + 1.5초, 사령술 4.5초도 같이 늘어남)
         //   여기서는 흐려 둔 몸만 되돌림
-        if (!possessing && bodyFaded) RestoreBody();
+        // 1.5.0~ 숙주 고리 · 사슬도 (끝 연출 중이면 그쪽이 맡음 · 끝 연출 루틴이 끊겨도 그 시각이 지나면 여기서)
+        if (!possessing && Time.time >= possessExitUntil)
+        {
+            if (bodyFaded) RestoreBody();
+            if (possessHost != null || (possessHostRing != null && possessHostRing.enabled)) HideHostMarks();
+        }
         if (possessing) { if (possessAiming) HidePossessAim(); return; }
         if (possessAiming && Time.timeScale == 0f) { HidePossessAim(); return; }       // 1.0.2: 멈춤 중엔 조준을 거둠 (멈춘 동안 떼면 풀린 뒤에 빙의하던 것)
         if (!possessAiming && GameInput.UltDown && full && Time.timeScale > 0f) { possessAiming = true; Play("hum", 0.4f, 0.6f); }
         if (!possessAiming) return;
         possessTarget = PossessCandidate();
-        if (ultAimRing == null) { ultAimRing = Hostile.NewLine("UltAimRing", Color.white, 0.12f, 25); ultAimRing.loop = true; }
+        // 1.5.0~ 표적 고리는 따로 (덧붙는 궁극기 범위가 쓰는 ultAimRing 과 나눔 — 같이 쓰면 한쪽이 다른 쪽을 꺼 버림)
+        if (possessTargetRing == null) { possessTargetRing = Hostile.NewLine("PossessTarget", Color.white, 0.12f, 25); possessTargetRing.loop = true; }
         if (possessRange == null) { possessRange = Hostile.NewLine("PossessRange", Color.white, 0.08f, 24); possessRange.loop = true; }
-        ultAimRing.enabled = true;
-        ultAimRing.loop = true;
+        possessTargetRing.enabled = true;
+        possessTargetRing.loop = true;
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 14f);
+        Color soul = HeroAim.ColorOf(HeroAimKind.Ghost);
         if (possessTarget != null)
         {
             // 들어갈 적 (몸 크기에 맞춘 고리) + 터질 범위 (반지름 5칸 · 이 안에 몸이 닿는 적이 피해와 냉기)
-            Hostile.SetArc(ultAimRing, possessTarget.position, TargetRing(possessTarget), 0f, 360f);
-            ultAimRing.startColor = ultAimRing.endColor = new Color(Chill.r, Chill.g, Chill.b, pulse);
+            Hostile.SetArc(possessTargetRing, possessTarget.position, TargetRing(possessTarget), 0f, 360f);
+            possessTargetRing.startColor = possessTargetRing.endColor = new Color(soul.r, soul.g, soul.b, pulse);
+            HeroAim.Mark(possessTargetRing, HeroAimKind.Ghost);            // 혼불 셋이 일렁임 · 머리 위 해골
             possessRange.enabled = true;
             Hostile.SetArc(possessRange, possessTarget.position, PossessR, 0f, 360f);
-            possessRange.startColor = possessRange.endColor = new Color(Chill.r, Chill.g, Chill.b, 0.35f);
+            possessRange.startColor = possessRange.endColor = new Color(soul.r, soul.g, soul.b, 0.35f);
             possessRange.startWidth = possessRange.endWidth = 0.08f;
+            HeroAim.Mark(possessRange, HeroAimKind.Ghost, HeroAimFx.None);
         }
         else
         {
-            Hostile.SetArc(ultAimRing, ClampRange(transform.position, Mouse, 14f), 3f, 0f, 360f);
-            ultAimRing.startColor = ultAimRing.endColor = new Color(0.6f, 0.6f, 0.7f, 0.35f);       // 빙의할 적이 없음
+            Hostile.SetArc(possessTargetRing, ClampRange(transform.position, Mouse, 14f), 3f, 0f, 360f);
+            possessTargetRing.startColor = possessTargetRing.endColor = new Color(0.6f, 0.6f, 0.7f, 0.35f);       // 빙의할 적이 없음 (회색 · 장식 없이 문양 고리만)
+            HeroAim.Mark(possessTargetRing, HeroAimKind.Ghost, HeroAimFx.None);
             possessRange.enabled = false;
         }
-        ultAimRing.startWidth = ultAimRing.endWidth = 0.14f;
+        possessTargetRing.startWidth = possessTargetRing.endWidth = 0.14f;
+        if (AddedUltShown) DrawUltAim(false, true);      // 1.5.0~ 다른 영웅처럼 덧붙는 궁극기 범위도
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
         HidePossessAim();
@@ -502,16 +620,16 @@ public partial class CharacterKit
         // 이번 빙의 길이 · 무적 길이 (사령술 4.5초 · 무적은 처음 2초만 — 대가)
         float len = GhostPaths.PossessLength(PossessTime, chained);
         float safe = GhostPaths.PossessSafeLength(len, chained);
+        int gen = ++possessGen;                 // 1.5.0~ 이 루틴의 세대 (끝 정리는 자기 세대일 때만)
         // 상태 감시: 이번 빙의가 정상으로 끝날 시각 + 1.5초 여유 (빙의를 늘리면 감시 시각도 같이 늘어남)
         possessUntil = Time.time + PossessEnter + len + 1.5f;
-        if (!bodyFaded) possessBodyColor = body.color;
+        possessExitUntil = 0f;
+        possessHostR = HostRingRadius(target);
         // 1.0.4~: 무적을 한 번에 1.8초 주던 것 → 들어가는 동안 + 들어가 있는 동안 계속 이어 주고, 터진 뒤 0.3초
         // 2026-10-19~ 무적은 지금 끝 시각에 Max 로만 합침 · 한 번에 최대 1.5초(Paths.InvulnCap) · 쓰러지는 중엔 주지 않음
         //   Paths.Invuln 은 Hostile.Player 를 거치므로, 갈래 아닌 판 빙의 무적까지 그 값에 묶이지 않게 내 player 로 직접 (PossessInvuln)
         PossessInvuln(PossessEnter + PossessGrace);
-        Color before = possessBodyColor;
         Vector3 from = transform.position;
-        FxAnim glow = null;
         Play("possess", 0.9f, chained ? 1.2f : 1f);
         Play("whoosh", 0.7f, 0.5f);
         try
@@ -519,12 +637,12 @@ public partial class CharacterKit
             for (float t = 0f; t < PossessEnter && target != null; t += Time.deltaTime)
             {
                 transform.position = Vector3.Lerp(from, target.position, t / PossessEnter);
+                DrawPossessHost(target, 1f, false);          // 이어진 빙의면 고리 · 사슬이 다음 숙주로 옮겨감
                 yield return null;
             }
-            body.color = new Color(before.r, before.g, before.b, 0.12f);
-            bodyFaded = true;
-            glow = target != null ? Fx.Play("fx_soulburst", target.position, 2.6f, Wraith, 12f, 0f, 22, true, len) : null;
-            if (glow != null) glow.follow = target;
+            // 1.5.0~ 들어가 있음: 흐린 몸 · 하늘빛 · 깜빡임 없음 (예전 0.12 는 LateUpdate 가 덮어써 안 보였음)
+            //   숙주 둘레에 따라다니던 fx_soulburst 빛은 숙주 고리 · 혼불 · 해골과 겹쳐 뺌
+            FadeBody(false);
             // 1.0.4~: 콜라이더가 자식에 있는 적 · 보스도 몸통(루트)을 찾아 끌고 다님
             EnermyController host = target != null ? target.GetComponentInParent<EnermyController>() : null;
             bosss bossHost = target != null && host == null ? target.GetComponentInParent<bosss>() : null;
@@ -542,7 +660,7 @@ public partial class CharacterKit
                 {
                     // 사령술: 무적이 끝남 → 몸이 다시 보임 (맞을 수 있다는 표시)
                     exposed = true;
-                    body.color = new Color(before.r, before.g, before.b, 0.55f);
+                    FadeBody(true);             // 1.5.0~ 몸이 덜 흐려지고 숙주 고리가 빨강 (DrawPossessHost)
                     Play("hum", 0.35f, 1.6f);
                 }
                 // 2026-10-19 검토: 무적이 끝나는 빙의(사령술 · 이어진 빙의)는 빙의한 그 몸(보스면 보스 몸통)과 겹쳐 접촉 피해를 계속 받던 것
@@ -560,12 +678,11 @@ public partial class CharacterKit
                 else transform.position = target.position;
                 // 갈래 사령술: 빙의한 몸이 부딪친 적에게 냉기 · 피해
                 GhostPaths.PossessBump(this, carry != null ? carry : target);
+                DrawPossessHost(target, 1f - t / Mathf.Max(0.01f, len), exposed);       // 남은 빙의 시간 (len 기준 · 감시 여유 1.5초 뺌)
                 yield return null;
             }
             possessSpeed = -1f;
-            if (glow != null) { Destroy(glow.gameObject); glow = null; }
             Vector3 at = transform.position;
-            RestoreBody();
             if (player == null || player.IsDying) yield break;
             bool boss = target != null && target.CompareTag("boss");
             bool killed = false;
@@ -601,19 +718,29 @@ public partial class CharacterKit
             if (!chained) SignatureSkills.Possessed(at, killed);
             possessUntil = 0f;
             // 사령술 극의: 가까운 적에게 한 번 바로 다시 빙의 (이어진 빙의에서는 다시 잇지 않음)
+            bool chainNext = false;
             if (!chained && GhostPaths.ChainPossess)
             {
                 Transform next = GhostPaths.ChainTarget(at, target);
-                if (next != null) StartCoroutine(PossessRoutine(next, dmg * GhostPaths.ChainDamage, true));
+                if (next != null) { StartCoroutine(PossessRoutine(next, dmg * GhostPaths.ChainDamage, true)); chainNext = true; }
             }
+            // 1.5.0~ 이어진 빙의가 없으면 여기서 확실히 「나왔음」 (이어지면 다음 숙주로 고리 · 사슬이 옮겨가고 끝 연출은 마지막에만)
+            if (!chainNext) StartCoroutine(PossessExit(gen, at));
         }
         finally
         {
-            // 끝나거나 끊기면(예외 · 쓰러짐) 이동 속도 · 흐린 몸 · 빛을 되돌림 — 코루틴이 멈춰 여기까지 못 와도 「끝나는 시각」이 지나면 저절로 풀림
-            //   (빙의 상태 possessUntil 은 건드리지 않음: 정상 끝은 위에서 0 · 이어진 빙의가 방금 새로 넣었을 수 있음 · 끊기면 끝 시각에 저절로)
+            // 끝나거나 끊기면(예외 · 쓰러짐) 이동 속도 · 흐린 몸 · 숙주 고리를 되돌림 — 코루틴이 멈춰 여기까지 못 와도 「끝나는 시각」이 지나면 UpdatePossess 가 풂
+            //   1.5.0~ 자기 세대일 때만 possessUntil · 몸 · 고리 정리 (이어진 빙의가 방금 새로 넣은 값을 지우지 않게) · 끝 연출 중이면 그쪽이 정리
             possessSpeed = -1f;
-            if (glow != null) Destroy(glow.gameObject);
-            RestoreBody();
+            if (gen == possessGen)
+            {
+                possessUntil = 0f;
+                if (Time.time >= possessExitUntil)
+                {
+                    RestoreBody();
+                    HideHostMarks();
+                }
+            }
             RestoreHostBody();
         }
     }
@@ -697,6 +824,9 @@ public partial class CharacterKit
         chillMarks.Clear();
         chillShape.Clear();
         if (possessRange != null) Destroy(possessRange.gameObject);
+        if (possessTargetRing != null) Destroy(possessTargetRing.gameObject);
+        if (possessHostRing != null) Destroy(possessHostRing.gameObject);
+        if (possessChain != null) Destroy(possessChain.gameObject);
         RestoreHostBody();
         ResetPossess();
     }

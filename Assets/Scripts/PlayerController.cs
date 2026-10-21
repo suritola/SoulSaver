@@ -170,6 +170,12 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public float fireRateMultiplier = 1f;
     // 분신 사용 중 반투명 등
     [HideInInspector] public float bodyAlpha = 1f;
+    // 1.5.0~ 영웅 스킬이 따로 곱하는 몸 투명도 · 색 · 깜빡임 끔 (유령 빙의) — 거울 분신의 bodyAlpha 와 서로 덮지 않음
+    //   넣은 쪽이 끝 · 취소 · 쓰러짐 어디서든 1 · 흰색 · false 로 되돌림 (CharacterKit.Ghost RestoreBody)
+    [HideInInspector] public float kitAlpha = 1f;
+    [HideInInspector] public Color kitTint = Color.white;
+    [HideInInspector] public bool noBlink;
+    Color tintBase = Color.white, tintWrote = new Color(-1f, -1f, -1f, -1f);
     // 탄약 표시 대신 보여줄 글자 (과열, 충전 등)
     [HideInInspector] public string ammoTextOverride;
 
@@ -1296,6 +1302,7 @@ void Shoot()
     void OnDestroy()
     {
         EnermyController.Killed -= HealOnKill;
+        if (volleyRange != null) Destroy(volleyRange.gameObject);
     }
 
     int dropCoin;
@@ -1533,10 +1540,38 @@ void Shoot()
     {
         if (spriteRenderer == null) return;
 
-        bool blinking = Time.time < invincibleUntil && !isSkillUsing && !IsDying;
+        bool blinking = Time.time < invincibleUntil && !isSkillUsing && !IsDying && !noBlink;
         UnityEngine.Color c = spriteRenderer.color;
-        c.a = (blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f) * bodyAlpha;
+        // 1.5.0~ 색: 다른 코드가 넣은 색(기준)에 kitTint 를 곱함 — 내가 쓴 색 그대로면 기준을 두어 매 프레임 곱이 쌓이지 않게
+        if (c.r != tintWrote.r || c.g != tintWrote.g || c.b != tintWrote.b) tintBase = c;
+        c.r = tintBase.r * kitTint.r;
+        c.g = tintBase.g * kitTint.g;
+        c.b = tintBase.b * kitTint.b;
+        c.a = (blinking && Mathf.Repeat(Time.time * 12f, 1f) < 0.5f ? 0.35f : 1f) * bodyAlpha * kitAlpha;
         spriteRenderer.color = c;
+        tintWrote = c;
+        DrawVolleyRange();
+    }
+
+    // 1.5.0~ 거너 일제 사격 범위표시: 조준 중 표적을 고르는 거리(targetRange · 판정 값 그대로)를 거너 문양 고리로 · 맨 위
+    //   탄피가 고리를 돌고, 지정한 표적 수 / 최대 수가 고리 위쪽 바깥 탄환 점 (HeroAimDecor)
+    //   조준 중일 때만 매 프레임 그림 → 조준 끝 · 취소 · 쓰러짐이면 같은 프레임에 꺼짐
+    LineRenderer volleyRange;
+    void DrawVolleyRange()
+    {
+        bool show = isSkillUsing && !IsDying && CharacterData.IsGunner;
+        if (!show)
+        {
+            if (volleyRange != null && volleyRange.enabled) volleyRange.enabled = false;
+            return;
+        }
+        if (volleyRange == null) { volleyRange = Hostile.NewLine("VolleyRange", Color.white, 0.14f, 25); volleyRange.loop = true; }
+        volleyRange.enabled = true;
+        Hostile.SetArc(volleyRange, transform.position, targetRange, 0f, 360f);
+        volleyRange.startColor = volleyRange.endColor = HeroAim.ColorOf(HeroAimKind.Gunner, 0.6f + 0.25f * Mathf.Sin(Time.unscaledTime * 12f));
+        volleyRange.startWidth = volleyRange.endWidth = 0.14f;
+        HeroAim.Mark(volleyRange, HeroAimKind.Gunner);
+        HeroAim.SetCount(volleyRange, targets.Count + bossTargets.Count, special != null ? special.MaxTargets(maxTargets) : maxTargets);
     }
 
     // =====================================

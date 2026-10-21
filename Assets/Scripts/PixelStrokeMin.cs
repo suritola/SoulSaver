@@ -22,18 +22,26 @@ public class PixelStrokeMin : MonoBehaviour
     // 단정한 테로 그릴 고리 (여러 개가 늘 떠 있음 · 퍼져 나감 · 바닥 영역 테두리)
     static readonly System.Collections.Generic.HashSet<string> Plain = new System.Collections.Generic.HashSet<string>
         { "PickupRing", "Ring", "SarcoZone", "PossessMistEdge", "StallNearRing" };
-    // 영웅 스킬(우클릭 · 필살기) 범위 · 조준 선: 무조건 맨 위에 그림 (바닥 · 적 · 효과에 가려 안 보였음)
-    static readonly System.Collections.Generic.HashSet<string> Hero = new System.Collections.Generic.HashSet<string>
-    {
-        "UltRing", "UltAimRing", "UltAimLine", "RainAim", "BowDraw", "ChillMark", "ClockDial", "ClockRing", "ExpressRing",
-        "FoldLine", "FoldSideA", "FoldSideB", "MapClose", "MarchTrail", "PossessRange", "RewindPath", "RewindPathCore", "RewindRing"
-    };
-    bool plain, under, hero;
+    // 1.5.0~ 영웅 범위표시(우클릭 필살기): 이름 목록 대신 그리는 코드가 매 프레임 HeroAim.Mark 로 직접 알려 줌
+    //   지정된 선만 맨 위 · 영웅 문양 고리 · 움직이는 장식 (상시 · 평타 표시는 맨 위에서 뺌) · 지정이 끊기면 원래 정렬 · 재질로
+    internal HeroAimKind markKind;
+    internal HeroAimFx markFx;
+    internal int markFrame = -10;
+    internal System.Collections.Generic.List<Transform> markTargets;
+    internal int markCount, markMax;
+    internal float markHalf, markGold;
+    bool onTop;
+    Material origMat;
+    int origLayer, origOrder;
+    HeroAimDecor decor;
+    bool plain, under;
+
+    bool Marked => markFrame >= Time.frameCount - 1 && markKind != HeroAimKind.None;
 
     // ---------------------------------------------------------------- 맨 위 그리기 (모든 반투명 그림 뒤 · 가장 위 정렬 층 · 카메라 바로 앞)
     const int TopQueue = 4000;
-    const int TopOrder = 32000;
-    static Material topSprite, topStroke;
+    public const int TopOrder = 32000;         // 양피지 -1 · 선 · 고리 0 · 장식 · 상징 +1
+    static Material topSprite, topStroke, topDash;
     static int topLayer = int.MinValue;
 
     static Material TopSprite
@@ -43,6 +51,18 @@ public class PixelStrokeMin : MonoBehaviour
             if (topSprite == null)
                 topSprite = new Material(Shader.Find("Sprites/Default")) { renderQueue = TopQueue, hideFlags = HideFlags.DontUnloadUnusedAsset };
             return topSprite;
+        }
+    }
+
+    internal static Material TopSpriteMaterial => TopSprite;
+
+    static Material TopDash
+    {
+        get
+        {
+            if (topDash == null)
+                topDash = new Material(PixelLine.Dash) { renderQueue = TopQueue, hideFlags = HideFlags.DontUnloadUnusedAsset };
+            return topDash;
         }
     }
 
@@ -69,19 +89,32 @@ public class PixelStrokeMin : MonoBehaviour
         }
     }
 
-    static void PutOnTop(Renderer r)
+    public static void PutOnTop(Renderer r, int offset = 0)
     {
         if (r.sortingLayerID != TopLayer) r.sortingLayerID = TopLayer;
-        if (r.sortingOrder != TopOrder) r.sortingOrder = TopOrder;
+        if (r.sortingOrder != TopOrder + offset) r.sortingOrder = TopOrder + offset;
+    }
+
+    // 맨 위 그림의 높이(z): 카메라 바로 앞 → 바닥 · 벽 등 어떤 그림의 깊이에도 가리지 않음
+    public static float TopZ(float fallback)
+    {
+        Camera cam = Camera.main;
+        return cam != null ? cam.transform.position.z + cam.nearClipPlane + 0.5f : fallback;
     }
 
     void Awake()
     {
         lr = GetComponent<LineRenderer>();
         plain = Plain.Contains(gameObject.name);
-        hero = Hero.Contains(gameObject.name);
         under = gameObject.name == "Under";     // 예고 원 밑 검은 바탕 고리: 문양 고리에 어두운 외곽이 있어 원이면 그리지 않음
+        heroTop = HeroTop.Contains(gameObject.name);
     }
+
+    // 우클릭이 아닌 영웅 표시(궁수 시위 · 유령 냉기 표식 · 시계공 발밑 문자판 · 지도 제작자 도형 미리보기 · 행군 경로)도 맨 위 (ff03c4d 때처럼 바닥 · 적에 가리지 않게)
+    //   장식 · 영웅 문양은 붙이지 않음 (HeroAim.Mark 로 지정된 우클릭 범위표시만)
+    static readonly System.Collections.Generic.HashSet<string> HeroTop = new System.Collections.Generic.HashSet<string>
+        { "BowDraw", "ChillMark", "ClockDial", "ClockRing", "MapClose", "MarchTrail" };
+    bool heroTop;
 
     // 모으는 스킬(검사 회전 베기 · 연금술사 대폭발)이 매 프레임 알려 줌 → 바깥 테가 모은 만큼 차오름. 안 알려 주면 다 찬 모습
     public static void SetCharge(LineRenderer lr, float charge)
@@ -96,7 +129,7 @@ public class PixelStrokeMin : MonoBehaviour
     void LateUpdate()
     {
         if (lr == null) return;
-        if (!lr.enabled) { HideRing(); return; }
+        if (!lr.enabled) { HideRing(); if (decor != null) decor.Hide(); return; }
         float s = lr.startWidth, e = lr.endWidth;
         if (!Mathf.Approximately(s, wroteStart) || !Mathf.Approximately(e, wroteEnd)) { baseStart = s; baseEnd = e; }
         float w = Mathf.Max(baseStart, baseEnd);
@@ -106,19 +139,61 @@ public class PixelStrokeMin : MonoBehaviour
         if (!Mathf.Approximately(s, wroteStart)) lr.startWidth = wroteStart;
         if (!Mathf.Approximately(e, wroteEnd)) lr.endWidth = wroteEnd;
 
-        // 영웅 스킬 선은 맨 위 (선을 만든 코드가 정렬을 다시 넣어도 매 프레임 덮어씀)
-        if (hero)
-        {
-            if (lr.sharedMaterial == PixelLine.Stroke) lr.sharedMaterial = TopStroke;
-            PutOnTop(lr);
-        }
+        // 영웅 범위표시는 맨 위 (선을 만든 코드가 정렬을 다시 넣어도 매 프레임 덮어씀) · 지정이 끊기면 원래대로
+        bool marked = Marked;
+        if (marked || heroTop) GoTop();
+        else if (onTop) LeaveTop();
 
-        if (TryCircle(out Vector3 center, out float radius))
+        bool circle = TryCircle(out Vector3 center, out float radius);
+        if (circle)
         {
             if (under) { if (ring != null && ring.enabled) ring.enabled = false; lr.forceRenderingOff = true; }
-            else ShowRing(center, radius);
+            else ShowRing(center, radius, marked ? (int)markKind : 0);
         }
         else HideRing();
+
+        // 움직이는 장식 · 가운데 상징 (지정된 선만 · 꺼지거나 지정이 끊기면 같은 프레임에 숨김)
+        if (marked && markFx != HeroAimFx.None && !under)
+        {
+            if (decor == null) decor = new HeroAimDecor(transform);
+            decor.Begin();
+            try
+            {
+                if (circle) decor.Ring(markKind, markFx, center, radius, chargeFrame >= Time.frameCount - 1 ? charge : -1f, this);
+                else if (lr.positionCount >= 2)
+                {
+                    Vector3 a = lr.GetPosition(0), b = lr.GetPosition(lr.positionCount - 1);
+                    if (!lr.useWorldSpace) { a = transform.TransformPoint(a); b = transform.TransformPoint(b); }
+                    decor.Line(markKind, markFx, a, b, this);
+                }
+            }
+            finally { decor.End(); }
+        }
+        else if (decor != null) decor.Hide();
+    }
+
+    void GoTop()
+    {
+        if (!onTop)
+        {
+            onTop = true;
+            origMat = lr.sharedMaterial;
+            origLayer = lr.sortingLayerID;
+            origOrder = lr.sortingOrder;
+        }
+        Material m = lr.sharedMaterial;
+        if (m == PixelLine.Stroke) lr.sharedMaterial = TopStroke;
+        else if (m == PixelLine.Dash) lr.sharedMaterial = TopDash;
+        PutOnTop(lr);
+    }
+
+    void LeaveTop()
+    {
+        onTop = false;
+        Material m = lr.sharedMaterial;
+        if (origMat != null && (m == topStroke || m == topDash)) lr.sharedMaterial = origMat;
+        lr.sortingLayerID = origLayer;
+        lr.sortingOrder = origOrder;
     }
 
     // 실선 획이고, 점들이 한 바퀴 원 위에 있으면 중심 · 반지름
@@ -148,7 +223,7 @@ public class PixelStrokeMin : MonoBehaviour
         return true;
     }
 
-    void ShowRing(Vector3 center, float radius)
+    void ShowRing(Vector3 center, float radius, int style)
     {
         if (ring == null)
         {
@@ -158,14 +233,12 @@ public class PixelStrokeMin : MonoBehaviour
             ring.sharedMaterial = TopSprite;        // 재질을 직접 지정 (기본 재질에 기대지 않음) · 맨 위 그리기 큐
         }
         bool charged = chargeFrame >= Time.frameCount - 1;
-        ring.sprite = PixelRingArt.Get(radius, charged ? charge : -1f, plain);
+        ring.sprite = PixelRingArt.Get(radius, charged ? charge : -1f, plain, style);
         ring.color = lr.startColor;
         PutOnTop(ring);                             // 범위 고리는 무조건 맨 위
         Transform t = ring.transform;
         // 높이(z)는 카메라 바로 앞 → 바닥 · 벽 등 어떤 그림의 깊이에도 가리지 않음
-        Camera cam = Camera.main;
-        float z = cam != null ? cam.transform.position.z + cam.nearClipPlane + 0.5f : center.z;
-        t.position = new Vector3(center.x, center.y, z);
+        t.position = new Vector3(center.x, center.y, TopZ(center.z));
         t.rotation = Quaternion.identity;
         Vector3 ls = transform.lossyScale;
         t.localScale = new Vector3(ls.x != 0f ? 1f / ls.x : 1f, ls.y != 0f ? 1f / ls.y : 1f, 1f);
@@ -179,5 +252,11 @@ public class PixelStrokeMin : MonoBehaviour
         if (lr != null && lr.forceRenderingOff) lr.forceRenderingOff = false;
     }
 
-    void OnDisable() { HideRing(); }
+    void OnDisable()
+    {
+        HideRing();
+        if (decor != null) decor.Hide();
+        markFrame = -10;
+        if (onTop && lr != null) LeaveTop();
+    }
 }

@@ -376,7 +376,7 @@ public partial class CharacterKit
     // ================================================================= 우클릭: 지도 접기
     bool folding;
     float foldCharge;
-    LineRenderer foldLine, foldSideA, foldSideB;
+    LineRenderer foldLine, foldSideA, foldSideB, foldCompass;
 
     void FoldGeometry(out Vector3 center, out Vector3 a, out Vector3 b, out Vector2 normal, out float half, out float len)
     {
@@ -415,14 +415,29 @@ public partial class CharacterKit
             foldLine = Hostile.NewLine("FoldLine", Ink, 0.16f, 57);
             foldSideA = Hostile.NewLine("FoldSideA", Ink, 0.1f, 56);
             foldSideB = Hostile.NewLine("FoldSideB", Ink, 0.1f, 56);
+            PixelLine.Apply(foldLine, true);                    // 1.5.0~ 접힘선은 점선 잉크
         }
+        if (foldCompass == null) { foldCompass = Hostile.NewLine("FoldCompass", Ink, 0.1f, 57); foldCompass.loop = true; }
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 14f);
-        SetSeg(foldLine, a, b, new Color(0.6f, 0.75f, 1f, pulse), 0.12f + 0.12f * foldCharge);
+        // 1.5.0~ 범위표시 색: 양피지 · 잉크 갈색 (예전 파랑은 시계공 · 유령 하늘색과 겹쳤음) · 다 모이면 금빛 깜빡은 그대로
+        Color map = HeroAim.ColorOf(HeroAimKind.Cartographer);
+        float gold = foldCharge >= 1f ? 0.5f + 0.5f * Mathf.Sin(Time.time * 14f) : 0f;
+        SetSeg(foldLine, a, b, new Color(map.r * 0.75f, map.g * 0.7f, map.b * 0.6f, pulse), 0.12f + 0.12f * foldCharge);
         Vector3 off = (Vector3)(n * half);
-        Color side = Color.Lerp(new Color(0.45f, 0.6f, 1f), InkGold, foldCharge >= 1f ? 0.5f + 0.5f * Mathf.Sin(Time.time * 14f) : 0f);
+        Color side = Color.Lerp(map, InkGold, gold);
         side.a = 0.5f + 0.35f * foldCharge;
         SetSeg(foldSideA, a + off, b + off, side, 0.1f);        // 다 모이면(최대 넓이) 금빛으로 깜빡
         SetSeg(foldSideB, a - off, b - off, side, 0.1f);
+        // 접힐 영역 = 양피지 지도 (판정과 같은 len × 2·half) · 양쪽에서 접힘선으로 흘러드는 화살표 (HeroAimDecor) · 가운데 나침반 고리
+        HeroAim.Mark(foldLine, HeroAimKind.Cartographer);
+        HeroAim.SetArea(foldLine, half, gold);
+        HeroAim.Mark(foldSideA, HeroAimKind.Cartographer, HeroAimFx.None);
+        HeroAim.Mark(foldSideB, HeroAimKind.Cartographer, HeroAimFx.None);
+        foldCompass.enabled = true;
+        Hostile.SetArc(foldCompass, center, 0.9f, 0f, 360f);
+        foldCompass.startColor = foldCompass.endColor = new Color(map.r, map.g, map.b, 0.9f);
+        foldCompass.startWidth = foldCompass.endWidth = 0.1f;
+        HeroAim.Mark(foldCompass, HeroAimKind.Cartographer, HeroAimFx.None);
         if (AddedUltShown) DrawUltAim(false, true);
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;
@@ -438,6 +453,7 @@ public partial class CharacterKit
     {
         folding = false;
         if (foldLine != null) foldLine.enabled = foldSideA.enabled = foldSideB.enabled = false;
+        if (foldCompass != null) foldCompass.enabled = false;
         CancelUltAim();
     }
 
@@ -524,5 +540,6 @@ public partial class CharacterKit
         if (foldLine != null) Destroy(foldLine.gameObject);
         if (foldSideA != null) Destroy(foldSideA.gameObject);
         if (foldSideB != null) Destroy(foldSideB.gameObject);
+        if (foldCompass != null) Destroy(foldCompass.gameObject);
     }
 }

@@ -757,7 +757,8 @@ public partial class CharacterKit : MonoBehaviour
         if (dash)
         {
             origin = DashEnd(dir);
-            Color purple = new Color(0.75f, 0.45f, 1f, pulse);
+            Color purple = HeroAim.ColorOf(HeroAimKind.Rogue, pulse);
+            HeroAim.Mark(ultAimLine, HeroAimKind.Rogue);          // 1.5.0~ 돌진 조준: 표창이 경로를 따라 흘러감
             ultAimLine.enabled = true;
             ultAimLine.positionCount = 2;
             ultAimLine.SetPosition(0, me);
@@ -769,10 +770,15 @@ public partial class CharacterKit : MonoBehaviour
                 ultAimRing.enabled = true;
                 Hostile.SetArc(ultAimRing, origin, 1f, 0f, 360f);
                 ultAimRing.startColor = ultAimRing.endColor = purple;
+                HeroAim.Mark(ultAimRing, HeroAimKind.Rogue);
                 return;
             }
         }
         if (!shape || Special == null) return;
+        // 1.5.0~ 덧붙는 궁극기 범위: 영웅 문양 고리 · 맨 위만 (움직이는 장식 없음 · 색은 진화 무기 색 그대로)
+        HeroAimKind added = HeroAim.Of(Id);
+        HeroAim.Mark(ultAimRing, added, HeroAimFx.None);
+        if (!dash) HeroAim.Mark(ultAimLine, added, HeroAimFx.None);
 
         Color c = SpecialAbilities.ColorOf(Special.UltId);
         c.a = pulse;
@@ -805,6 +811,7 @@ public partial class CharacterKit : MonoBehaviour
                 }
                 ultAimLine.startColor = ultAimLine.endColor = c;
                 ultAimLine.startWidth = ultAimLine.endWidth = 0.18f;
+                HeroAim.Mark(ultAimLine, added, HeroAimFx.None);       // 도적 돌진 경로 선을 덮어 썼으면 표창 장식도 뗌
                 break;
             }
             case SpecialAbilities.UltAimShape.Line:
@@ -854,11 +861,15 @@ public partial class CharacterKit : MonoBehaviour
         Vector3 at = sword ? transform.position : ClampRange(transform.position, Mouse, 14f);
         float radius = (sword ? 5f : (2f + 4f * charge)) * UltMul;
         Hostile.SetArc(ring, at, radius, 0f, 360f);
-        Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
+        Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);        // 반짝이 효과 색 (그대로)
         // 1.5.0~ 도트 문양 고리 (PixelStrokeMin): 바깥 테가 모은 만큼 차오르므로 진하기는 늘 진하게 · 다 차면 깜빡임
-        ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, charge >= 1f ? 0.8f + 0.2f * Mathf.Sin(Time.time * 18f) : 0.85f);
+        //   범위표시 색은 영웅 대표색 (연금술사 초록이 궁수와 겹쳤음 → 자홍) · 영웅 문양 · 장식 (HeroAim)
+        HeroAimKind kind = sword ? HeroAimKind.Swordsman : HeroAimKind.Alchemist;
+        Color rc = HeroAim.ColorOf(kind);
+        ring.startColor = ring.endColor = new Color(rc.r, rc.g, rc.b, charge >= 1f ? 0.8f + 0.2f * Mathf.Sin(Time.time * 18f) : 0.85f);
         ring.startWidth = ring.endWidth = 0.1f + 0.15f * charge;
         PixelStrokeMin.SetCharge(ring, charge);
+        HeroAim.Mark(ring, kind);
         if (sword && Random.value < 0.4f) Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
         if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기(예: 망치 대지 진동의 충격파 길)도 차징하는 동안 보여 줌
 
@@ -1095,7 +1106,8 @@ public partial class CharacterKit : MonoBehaviour
         aimRing.loop = true;
         aimRing.enabled = true;
         Hostile.SetArc(aimRing, at, 4f * UltMul * BowPathRainRadius, 0f, 360f);
-        aimRing.startColor = aimRing.endColor = new Color(0.6f, 1f, 0.5f, 0.5f + 0.3f * Mathf.Sin(Time.time * 14f));
+        aimRing.startColor = aimRing.endColor = HeroAim.ColorOf(HeroAimKind.Archer, 0.5f + 0.3f * Mathf.Sin(Time.time * 14f));     // 1.5.0~ 영웅 대표색 · 문양 · 장식
+        HeroAim.Mark(aimRing, HeroAimKind.Archer);
         if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기 범위도
 
         if (!GameInput.UltUp && GameInput.UltHeld) return;

@@ -340,13 +340,19 @@ public partial class CharacterKit
         rewindPath.positionCount = rewindPathCore.positionCount = 2;
         rewindPath.SetPosition(0, me); rewindPath.SetPosition(1, to);
         rewindPathCore.SetPosition(0, me); rewindPathCore.SetPosition(1, to);
-        rewindPath.startColor = rewindPath.endColor = new Color(0.55f, 0.85f, 1f, 0.16f + 0.08f * pulse);
-        rewindPathCore.startColor = rewindPathCore.endColor = new Color(0.8f, 0.95f, 1f, 0.6f + 0.3f * pulse);
+        // 1.5.0~ 범위표시 색: 놋쇠 금 (예전 하늘색은 유령 · 검사와 겹쳤음) · 잔상 색은 그대로
+        Color brass = HeroAim.ColorOf(HeroAimKind.Clockmaker);
+        rewindPath.startColor = rewindPath.endColor = new Color(brass.r, brass.g, brass.b, 0.16f + 0.08f * pulse);
+        rewindPathCore.startColor = rewindPathCore.endColor = new Color(1f, 0.92f, 0.65f, 0.6f + 0.3f * pulse);
         // 되찾을 체력이 있으면 도착 고리가 초록빛 (잃은 체력의 절반을 되찾음)
         bool heals = pastHp - player.PlayerHealth > 1f;
-        Color ring = heals ? new Color(0.5f, 1f, 0.65f, 0.6f + 0.35f * pulse) : new Color(0.55f, 0.88f, 1f, 0.55f + 0.35f * pulse);
+        Color ring = heals ? new Color(0.5f, 1f, 0.65f, 0.6f + 0.35f * pulse) : new Color(brass.r, brass.g, brass.b, 0.55f + 0.35f * pulse);
         Hostile.SetArc(rewindRing, to, RewindArriveRadius, 0f, 360f);
         rewindRing.startColor = rewindRing.endColor = ring;
+        // 과거 자리 = 문자판 고리 (바늘이 거꾸로 돎) · 지나온 길 위 톱니가 과거 쪽으로 굴러감 (HeroAimDecor)
+        HeroAim.Mark(rewindRing, HeroAimKind.Clockmaker);
+        HeroAim.Mark(rewindPathCore, HeroAimKind.Clockmaker);
+        HeroAim.Mark(rewindPath, HeroAimKind.Clockmaker, HeroAimFx.None);
     }
 
     IEnumerator RewindRoutine(Vector3 to, float pastHp)
