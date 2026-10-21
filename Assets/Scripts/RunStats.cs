@@ -365,13 +365,25 @@ public class RunStats : MonoBehaviour
             back.anchorMin = back.anchorMax = back.pivot = new Vector2(0f, 1f);
             back.anchoredPosition = new Vector2(0f, y);
             Image bg = back.gameObject.AddComponent<Image>();
-            bg.color = new Color(1f, 1f, 1f, 0.06f);
+            // 1.4.8~ 새 도트 스타일: 옅은 흰 칸 대신 막대 틀(ui_bar_frame · 테두리 반 두께 3) · 채움(ui_bar_fill)은 틀 안쪽 홈에 · 길이 비율은 그대로
+            //   그림이 없으면 예전 모습
+            bool art = UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null;
+            float inset = art ? 3f : 0f;
+            if (art)
+            {
+                bg.sprite = UIKit.BarFrameSprite;
+                bg.type = Image.Type.Sliced;
+                bg.pixelsPerUnitMultiplier = 2f;
+                bg.color = new Color(1f, 1f, 1f, 0.9f);
+            }
+            else bg.color = new Color(1f, 1f, 1f, 0.06f);
             bg.raycastTarget = false;
-            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2(width * kv.Value / best, 30f));
+            RectTransform fill = UIKit.Rect("Fill", back, Vector2.zero, new Vector2((width - inset * 2f) * kv.Value / best, 30f - inset * 2f));
             fill.anchorMin = fill.anchorMax = fill.pivot = new Vector2(0f, 0.5f);
-            fill.anchoredPosition = Vector2.zero;
+            fill.anchoredPosition = new Vector2(inset, 0f);
             Image fi = fill.gameObject.AddComponent<Image>();
-            fi.color = new Color(bar.r, bar.g, bar.b, 0.45f);
+            if (art) fi.sprite = UIKit.BarFillSprite;
+            fi.color = new Color(bar.r, bar.g, bar.b, art ? 0.6f : 0.45f);
             fi.raycastTarget = false;
             TMP_Text name = UIKit.Text(back, "", 20f, new Color(0.95f, 0.92f, 0.86f), new Vector2(10f, 0f), new Vector2(width - 140f, 30f), TextAlignmentOptions.Left);
             name.rectTransform.anchorMin = name.rectTransform.anchorMax = name.rectTransform.pivot = new Vector2(0f, 0.5f);

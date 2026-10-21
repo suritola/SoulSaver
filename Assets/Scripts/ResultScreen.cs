@@ -212,11 +212,12 @@ public static class ResultScreen
             Image bg = bar.gameObject.AddComponent<Image>();
             bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
             bg.raycastTarget = false;
-            RectTransform fill = UIKit.Rect("Fill", bar, Vector2.zero, Vector2.zero);
+            RectTransform fill = UIKit.Rect("Fill", BarGroove(bar, bg), Vector2.zero, Vector2.zero);
             fill.anchorMin = Vector2.zero;
             fill.anchorMax = new Vector2(Mathf.Max(0.01f, g.progress), 1f);
             fill.offsetMin = fill.offsetMax = Vector2.zero;
             Image fi = fill.gameObject.AddComponent<Image>();
+            if (BarArt) fi.sprite = UIKit.BarFillSprite;
             fi.color = g.progress >= 1f ? Ready : g.progress >= AlmostAt ? Gold : Fill;
             fi.raycastTarget = false;
             rows.Add((label, detail, hint));
@@ -303,15 +304,17 @@ public static class ResultScreen
             detail.text = g.detail;
             bool almost = g.progress >= AlmostAt && g.progress < 1f;
             hint.text = (almost ? "<color=#F5D478><b>" + Loc.T("result.goal.almost") + "</b></color>  " : "") + (g.hint ?? "");
-            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -2f), new Vector2(W, 4f));
+            // 1.4.8~ 막대 그림이 있으면 틀이 보이게 4 → 12 (위 글 아래끝 4 · 아래 글 위끝 -8 사이)
+            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -2f), new Vector2(W, BarArt ? 12f : 4f));
             Image bg = bar.gameObject.AddComponent<Image>();
             bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
             bg.raycastTarget = false;
-            RectTransform fill = UIKit.Rect("Fill", bar, Vector2.zero, Vector2.zero);
+            RectTransform fill = UIKit.Rect("Fill", BarGroove(bar, bg), Vector2.zero, Vector2.zero);
             fill.anchorMin = Vector2.zero;
             fill.anchorMax = new Vector2(Mathf.Max(0.01f, g.progress), 1f);
             fill.offsetMin = fill.offsetMax = Vector2.zero;
             Image fi = fill.gameObject.AddComponent<Image>();
+            if (BarArt) fi.sprite = UIKit.BarFillSprite;
             fi.color = g.progress >= 1f ? Ready : g.progress >= AlmostAt ? Gold : Fill;
             fi.raycastTarget = false;
             y -= GoalH;
@@ -407,6 +410,29 @@ public static class ResultScreen
             r.anchoredPosition = new Vector2(0f, y - h * 0.5f);
             y -= h + Step;
         }
+    }
+
+    // 1.4.8~ 새 도트 스타일 목표 막대: 막대 틀(ui_bar_frame · 테두리 반 두께) + 채움(ui_bar_fill · 상태 색을 곱함)
+    static bool BarArt
+    {
+        get { UIKit.EnsureStyle(); return UIKit.BarFrameSprite != null && UIKit.BarFillSprite != null; }
+    }
+
+    // 막대 바탕을 틀 그림으로 바꾸고 채움을 넣을 안쪽 홈(테두리 3 안쪽)을 돌려줌 — 채움 길이(anchorMax.x = 진행률)는 홈 폭 기준으로 그대로
+    //   그림이 없으면 바탕 그대로 · 막대 자신
+    static RectTransform BarGroove(RectTransform bar, Image bg)
+    {
+        if (!BarArt) return bar;
+        bg.sprite = UIKit.BarFrameSprite;
+        bg.type = Image.Type.Sliced;
+        bg.pixelsPerUnitMultiplier = 2f;
+        bg.color = Color.white;
+        RectTransform g = UIKit.Rect("Groove", bar, Vector2.zero, Vector2.zero);
+        g.anchorMin = Vector2.zero;
+        g.anchorMax = Vector2.one;
+        g.offsetMin = new Vector2(3f, 3f);
+        g.offsetMax = new Vector2(-3f, -3f);
+        return g;
     }
 
     // 위쪽 가운데에 붙여 y 만큼 아래로
