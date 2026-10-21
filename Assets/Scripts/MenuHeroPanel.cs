@@ -37,7 +37,7 @@ public static class MenuHeroPanel
                 }
             }
         // 1.4.8~ 상자 없이 영웅을 크게 세움 (카펫 왼쪽) · 뒤판은 투명(누름 · 마우스 받기용) · 마우스를 올리면 은은하게 밝아짐
-        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-600f, -200f), new Vector2(W, 520f));
+        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-600f, -190f), new Vector2(W, 600f));
         Image bg = panel.gameObject.AddComponent<Image>();
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
@@ -70,7 +70,7 @@ public static class MenuHeroPanel
         // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
         float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
         // 1.4.8~ 사용자 「너무 많다」: 「지금 영웅」 · 칭호 · 숙련 줄을 빼고 초상 · 이름 · 「영웅 바꾸기」만 (칭호 · 숙련은 이름에 마우스를 올리면)
-        const float P = 300f;
+        const float P = 420f;          // 1.4.8~ 도트 그림 둘레 여백이 커서 실제 몸이 작게 보였음 → 칸을 키움
         RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = CharacterUI.Portrait(id);
@@ -86,7 +86,7 @@ public static class MenuHeroPanel
             gi.preserveAspect = true;
             gi.raycastTarget = false;
         }
-        float y = top - P - 4f;
+        float y = top - P + 50f;        // 그림 아래 여백만큼 이름을 끌어올림
         TMP_Text name = UIKit.Text(panel, d.name, 36f, Gold, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
         name.fontSizeMin = 20f;
         name.raycastTarget = true;

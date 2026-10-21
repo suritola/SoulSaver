@@ -187,19 +187,7 @@ public static class MenuExtras
         // 1.4.8~ 사용자 「게임이 덜 완성된 것 같다」: 칸 격자 대신 게임 시작 아래 같은 폭 버튼을 세로로 (도감 · 일일 도전 · 설정 · 더 보기 · 게임 종료)
         //   글자만 · 같은 폭 · 같은 간격 — 흔한 게임 메인 메뉴 모양 (게임 시작 바로 아래 한 줄은 영혼의 무게 버튼 자리로 비워 둠)
         GameObject[] list = { codex, daily, settings, more, exit };
-        {
-            // 1.4.8~ 메뉴 열 뒤 어두운 판: 빨간 카펫 위 글자가 읽히게 (테두리 없이 · 위아래로 옅어지는 느낌은 두 겹으로)
-            float top = StartY + StartH * 0.5f + 12f, bottom = StartY - StartH * 0.5f - (LockRowH + Gap) - (ListH + ListGap) * list.Length - 6f;
-            for (int layer = 0; layer < 2; layer++)
-            {
-                float pad = layer == 0 ? 40f : 0f;
-                RectTransform back = UIKit.Rect("MenuBack" + layer, sr.parent, new Vector2(0f, (top + bottom) * 0.5f), new Vector2(ListW + 120f + pad * 2f, top - bottom + pad));
-                back.SetSiblingIndex(start.transform.GetSiblingIndex());
-                Image bi = back.gameObject.AddComponent<Image>();
-                bi.color = new Color(0.04f, 0.02f, 0.07f, layer == 0 ? 0.28f : 0.42f);
-                bi.raycastTarget = false;
-            }
-        }
+        // (1.4.8~ 메뉴 뒤 반투명 판은 사용자 「별로」로 뺌 → 글자 자체에 굵기 · 어두운 외곽선 · 그림자 (MenuItemFx))
         float listY = StartY - StartH * 0.5f - (LockRowH + Gap) - ListH * 0.5f;
         for (int i = 0; i < list.Length; i++)
         {
@@ -592,6 +580,9 @@ public static class MenuExtras
             label.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.78f, 0.74f, 0.7f) : new Color(0.42f, 0.4f, 0.42f);
             label.fontSize = 30f;
             label.enableAutoSizing = false;
+            label.fontStyle |= FontStyles.Bold;
+            label.outlineWidth = 0.22f;
+            label.outlineColor = new Color32(18, 8, 24, 255);
             Transform ul = buttons[i].transform.Find("Underline");
             if (ul == null)
             {
@@ -692,7 +683,17 @@ public static class MenuExtras
         dim.anchorMin = Vector2.zero; dim.anchorMax = Vector2.one;
         dim.offsetMin = new Vector2(-4000f, -4000f); dim.offsetMax = new Vector2(4000f, 4000f);
         Image di = dim.gameObject.AddComponent<Image>();
-        di.color = new Color(0.02f, 0.01f, 0.04f, 0.82f);
+        di.color = new Color(0.02f, 0.01f, 0.04f, 0.55f);
+        // 1.4.8~ 흐린 배경: 열 때 화면을 찍어 작게 줄였다 늘려 깜 (막보다 뒤 · 막이 어둡게 덮음)
+        RectTransform blur = UIKit.Rect("Blur", m, Vector2.zero, Vector2.zero);
+        blur.SetAsFirstSibling();
+        blur.anchorMin = Vector2.zero; blur.anchorMax = Vector2.one;
+        blur.offsetMin = Vector2.zero; blur.offsetMax = Vector2.zero;
+        RawImage ri = blur.gameObject.AddComponent<RawImage>();
+        ri.raycastTarget = false;
+        ri.color = new Color(0.62f, 0.58f, 0.68f);
+        ri.enabled = false;
+        m.gameObject.AddComponent<EscBackdrop>().image = ri;
         Transform title = m.Find("TItle");
         if (title != null) title.gameObject.SetActive(false);
         TMP_Text head = UIKit.Text(m, "일시정지", 64f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(800f, 90f));
@@ -2213,6 +2214,14 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             fx.label.fontSizeMax = size;
             fx.label.fontSizeMin = 20f;
             fx.label.alignment = TextAlignmentOptions.Center;
+            // 1.4.8~ 굵게 + 어두운 외곽선 · 아래 그림자: 빨간 카펫 · 밝은 벽 위에서도 판 없이 읽히게
+            //   외곽선은 TMP 가 켜진 뒤에만 넣을 수 있음 (꺼진 ESC 창에서 넣으면 NullReference) → Start 에서 (StyleLabel)
+            fx.label.fontStyle |= FontStyles.Bold;
+            if (fx.label.gameObject.activeInHierarchy) fx.StyleLabel();
+            Shadow sh = fx.label.GetComponent<Shadow>();
+            if (sh == null) sh = fx.label.gameObject.AddComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.6f);
+            sh.effectDistance = new Vector2(0f, -3f);
         }
         if (fx.band == null)
         {
@@ -2228,6 +2237,16 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             fx.line.raycastTarget = false;
         }
         fx.Paint(true);
+    }
+
+    bool styled;
+    void Start() => StyleLabel();
+    void StyleLabel()
+    {
+        if (styled || label == null) return;
+        styled = true;
+        label.outlineWidth = 0.22f;
+        label.outlineColor = new Color32(18, 8, 24, 255);
     }
 
     public void OnPointerEnter(PointerEventData e) => over = true;
@@ -2260,5 +2279,56 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             float w = ((RectTransform)transform).sizeDelta.x;
             lr.sizeDelta = new Vector2(Mathf.Lerp(primary ? w * 0.4f : w * 0.2f, w * 0.7f, k), 2f);
         }
+    }
+}
+
+// 1.4.8~ ESC 흐린 배경: 메뉴가 켜질 때 그 프레임 끝에 화면을 찍어(메뉴는 잠깐 투명) 1/8 로 줄였다가 늘려 흐리게 · 꺼지면 해제
+//   진짜 블러 셰이더 없이 내려 뽑기(쌍선형)로 · 한 번만 찍으므로 멈춘 동안 비용 없음
+public class EscBackdrop : MonoBehaviour
+{
+    public RawImage image;
+    RenderTexture small;
+    CanvasGroup group;
+
+    void OnEnable()
+    {
+        if (image == null) return;
+        image.enabled = false;
+        StartCoroutine(Grab());
+    }
+
+    System.Collections.IEnumerator Grab()
+    {
+        if (group == null) group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0f;                                   // 이 프레임 화면에 메뉴가 찍히지 않게
+        yield return new WaitForEndOfFrame();
+        Texture2D shot = ScreenCapture.CaptureScreenshotAsTexture();
+        group.alpha = 1f;
+        if (shot == null) yield break;
+        int w = Mathf.Max(16, shot.width / 8), h = Mathf.Max(9, shot.height / 8);
+        if (small == null || small.width != w || small.height != h)
+        {
+            if (small != null) small.Release();
+            small = new RenderTexture(w, h, 0) { filterMode = FilterMode.Bilinear };
+        }
+        RenderTexture mid = RenderTexture.GetTemporary(shot.width / 3, shot.height / 3, 0);
+        mid.filterMode = FilterMode.Bilinear;
+        Graphics.Blit(shot, mid);
+        Graphics.Blit(mid, small);
+        RenderTexture.ReleaseTemporary(mid);
+        Destroy(shot);
+        if (image != null) { image.texture = small; image.enabled = true; }
+    }
+
+    void OnDisable()
+    {
+        StopAllCoroutines();
+        if (group != null) group.alpha = 1f;
+        if (image != null) image.enabled = false;
+    }
+
+    void OnDestroy()
+    {
+        if (small != null) { small.Release(); Destroy(small); }
     }
 }
