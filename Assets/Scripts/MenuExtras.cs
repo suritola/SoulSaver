@@ -822,8 +822,7 @@ public static class UIKit
             Remember(t, label);
             if (Font == null && HasKorean(t.font)) { Font = t.font; FontMaterial = t.font.material; }
         }
-        Image img = go.GetComponent<Image>();
-        if (img != null && ButtonSprite == null) ButtonSprite = img.sprite;
+        // (1.4.8~ 복제한 장면 버튼의 옛 그림을 공용 그림으로 잡지 않음 — EnsureStyle 이 새 도트 그림을 불러옴)
         return go;
     }
 
@@ -858,7 +857,7 @@ public static class UIKit
 
     public static void EnsureStyle()
     {
-        if (Font != null && ButtonSprite != null) return;
+        if (Font != null && ButtonSprite != null && PanelSprite != null && RibbonSprite != null && BarFrameSprite != null) return;      // 1.4.8~ 새 그림까지 다 불러왔을 때만 건너뜀
         // 1.4.9 긴급: 장면에서 처음 찾은 글자의 폰트를 쓰다 보니, 장면 설치를 앞당긴 뒤 영문 전용 제목 폰트(「Soul Saver」)가 잡혀
         //   코드로 만드는 모든 한글이 깨졌음 → 한글이 있는 폰트만 · 재질은 그 폰트 원본 재질 (글자별 복사본 재질이 아니라)
         if (Font == null)
