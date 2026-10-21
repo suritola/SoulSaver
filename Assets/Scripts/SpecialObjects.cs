@@ -767,7 +767,8 @@ public class LineFade : MonoBehaviour
     Color a, b;
     float w0, w1;
 
-    void Start()
+    // 1.5.0~ Start → Awake: 붙는 순간의 원래 두께를 읽음 (도트 두께 보정 PixelStrokeMin 이 먼저 돌면 넓힌 값을 읽어 한 번 더 넓어졌음)
+    void Awake()
     {
         lr = GetComponent<LineRenderer>();
         a = lr.startColor; b = lr.endColor;

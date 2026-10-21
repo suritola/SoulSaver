@@ -855,8 +855,10 @@ public partial class CharacterKit : MonoBehaviour
         float radius = (sword ? 5f : (2f + 4f * charge)) * UltMul;
         Hostile.SetArc(ring, at, radius, 0f, 360f);
         Color c = sword ? new Color(0.55f, 0.75f, 1f) : new Color(0.55f, 1f, 0.45f);
-        ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, 0.35f + 0.5f * charge * (0.7f + 0.3f * Mathf.Sin(Time.time * 18f)));
+        // 1.5.0~ 도트 문양 고리 (PixelStrokeMin): 바깥 테가 모은 만큼 차오르므로 진하기는 늘 진하게 · 다 차면 깜빡임
+        ring.startColor = ring.endColor = new Color(c.r, c.g, c.b, charge >= 1f ? 0.8f + 0.2f * Mathf.Sin(Time.time * 18f) : 0.85f);
         ring.startWidth = ring.endWidth = 0.1f + 0.15f * charge;
+        PixelStrokeMin.SetCharge(ring, charge);
         if (sword && Random.value < 0.4f) Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, c, 18f);
         if (AddedUltShown) DrawUltAim(false, true);      // 1.0.1: 덧붙는 궁극기(예: 망치 대지 진동의 충격파 길)도 차징하는 동안 보여 줌
 

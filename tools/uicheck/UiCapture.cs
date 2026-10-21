@@ -69,6 +69,11 @@ public class UiCapture
                 c.sortingOrder = Mathf.Min(32400, 31000 + c.sortingOrder);
             }
         yield return Frames(2);
+        // 실제 화면은 LateUpdate 뒤에 그려짐 → 찍기 전에 선 두께 보정(PixelStrokeMin.LateUpdate)을 한 번 돌려 같은 모습으로
+        Type psm = T("PixelStrokeMin");
+        if (psm != null)
+            foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(psm, FindObjectsSortMode.None))
+                psm.GetMethod("LateUpdate", Any)?.Invoke(o, null);
         Canvas.ForceUpdateCanvases();
         cam.Render();
         RenderTexture.active = rt;
@@ -129,6 +134,66 @@ public class UiCapture
         In("Auto", true);
     }
 
+    // 1.4.8~ 전투 표시만 (CAPTURE_ONLY=fx): 검사 필살기 조준(우클릭 누르는 동안 고리) · 지옥의 군주 스킬(운석 비 예고 · 화염 파동)
+    // 카드 창(입문 갈래 · 레벨업)이 늦게 열려도 닫힐 때까지 계속 첫 카드를 골라 닫음
+    static IEnumerator CloseCards(int frames)
+    {
+        for (int i = 0; i < frames; i++)
+        {
+            yield return null;
+            object shop = Find("LevelShop");
+            if (shop == null || !(bool)shop.GetType().GetProperty("IsOpen").GetValue(shop)) continue;
+            Set(shop, "selectReady", true);
+            Set(shop, "pendingSlot", -1);
+            Call(shop, "onSelect", Get(shop, "first"));
+        }
+        Time.timeScale = 1f;
+    }
+
+    static IEnumerator CaptureFx()
+    {
+        yield return Load("Swordsman", 0);
+        yield return CloseCards(90);
+        Time.timeScale = 1f;
+        object gauge = Find("SkillGauge");
+        if (gauge != null) Call(gauge, "AddSkillPoint", 100000f);
+        Component pc = (Component)UnityEngine.Object.FindFirstObjectByType(T("PlayerController"));
+        Vector3 me = pc != null ? pc.transform.position : Vector3.zero;
+        In("AutoAim", me + new Vector3(5f, 2f, 0f));
+        In("AutoUlt", true);
+        In("UltDownFrame", Time.frameCount + 1);
+        yield return Frames(45);                    // 모을수록 고리가 커짐
+        yield return Shot("20_swordsman_ult_aim");
+        In("AutoUlt", false);
+        In("UltUpFrame", Time.frameCount + 1);
+        yield return Frames(20);
+
+        // 지옥의 군주: 2장으로 옮긴 뒤 보스를 불러 운석 비 · 화염 파동을 바로 씀
+        GoStage(1);
+        yield return CloseCards(30);
+        object sm = Find("StageManager");
+        object sp = Get(sm, "spawner");
+        Array stages = (Array)Get(sp, "stages");
+        object st = stages.GetValue(1);
+        GameObject prefab = (GameObject)st.GetType().GetField("bossPrefab").GetValue(st);
+        pc = (Component)UnityEngine.Object.FindFirstObjectByType(T("PlayerController"));
+        me = pc != null ? pc.transform.position : Vector3.zero;
+        GameObject boss = UnityEngine.Object.Instantiate(prefab, me + new Vector3(0f, 6f, 0f), Quaternion.identity);
+        yield return CloseCards(30);
+        MonoBehaviour skills = (MonoBehaviour)boss.GetComponent(T("BossSkills"));
+        if (skills != null)
+        {
+            MethodInfo meteor = skills.GetType().GetMethod("MeteorRain", Any);
+            if (meteor != null) skills.StartCoroutine((IEnumerator)meteor.Invoke(skills, new object[] { pc }));
+            yield return Frames(25);
+            yield return Shot("21_hell_lord_meteor");
+            MethodInfo wave = skills.GetType().GetMethod("FireWave", Any);
+            if (wave != null) skills.StartCoroutine((IEnumerator)wave.Invoke(skills, null));
+            yield return Frames(40);
+            yield return Shot("22_hell_lord_firewave");
+        }
+    }
+
     [UnityTest]
     public IEnumerator Capture()
     {
@@ -138,6 +203,13 @@ public class UiCapture
         frame = new Texture2D(W, H, TextureFormat.RGBA32, false);
         In("Auto", true);
         T("GameSettings").GetProperty("Language").SetValue(null, Enum.ToObject(T("Loc+Lang"), 0));
+        if (Environment.GetEnvironmentVariable("CAPTURE_ONLY") == "fx")
+        {
+            yield return CaptureFx();
+            In("Auto", false);
+            Debug.Log("[UICAP] done");
+            yield break;
+        }
 
         // ---------------- 거너: HUD · 레벨업 대기 배지 · 도움말
         yield return Load("Gunner", 0);

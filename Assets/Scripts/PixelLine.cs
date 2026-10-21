@@ -56,8 +56,13 @@ public static class PixelLine
         if (lr == null) return;
         lr.sharedMaterial = dashed ? Dash : Stroke;
         lr.textureMode = dashed ? LineTextureMode.RepeatPerSegment : LineTextureMode.Stretch;
-        lr.widthMultiplier = Widen;
+        lr.widthMultiplier = 1f;            // 두께 × Widen · 최소 두께는 PixelStrokeMin 이 두께 값으로 직접 (배율은 startWidth 를 넣을 때 나눠져 효과 없음)
+        if (lr.GetComponent<PixelStrokeMin>() == null) lr.gameObject.AddComponent<PixelStrokeMin>();
     }
+
+    // 1.5.0~ 가는 선(고리 · 외곽선 두께 0.06~0.2)은 화면에서 3~4 화소라 도트 획 8줄이 뭉개져 그냥 가는 선으로 보였음
+    //   → 색 부분 두께를 최소 MinStroke 로 (PixelStrokeMin). 넓은 선(돌진 경로 1.4 등 범위 폭)은 색 부분 그대로 · 외곽만 더해짐
+    public const float MinStroke = 0.24f;
 
     // ---------------------------------------------------------------- 원판 · 띠 그림
     static Sprite disc, floor, band;
