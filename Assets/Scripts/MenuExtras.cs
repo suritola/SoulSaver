@@ -144,8 +144,10 @@ public static class MenuExtras
 
         // 1.8.5~: 큰 게임 시작 버튼 하나 + 그 아래 아이콘 칸 (왼쪽 캐릭터 그림 x -830 ~ -370 과 안 겹치게 폭 740 안)
         // 2.1~: 스킬 진화 도감이 더해져 4 × 2, 2.1.1~: 일일 도전으로 8칸이 다 참
-        sr.anchoredPosition = new Vector2(0f, -10f);
-        sr.sizeDelta = new Vector2(560f, 110f);
+        // 1.4.8~ 가운데 열을 한 격자로: 난이도 줄 · 게임 시작 · 아이콘 칸이 같은 폭(ColW) · 같은 간격(Gap) — 위에서부터
+        //   난이도 줄(DiffY) → 난이도 설명 한 줄(HintY) → 게임 시작(StartY) → 잠금 안내 · 영혼의 무게 줄(LockY) → 아이콘 칸 2줄
+        sr.anchoredPosition = new Vector2(0f, StartY);
+        sr.sizeDelta = new Vector2(ColW, StartH);
         AddIcon(start, "menu_play", new Vector2(-205f, 0f), 64f);
         TMP_Text st = start.GetComponentInChildren<TMP_Text>(true);
         if (st != null) { RectTransform tr = st.rectTransform; tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f); tr.sizeDelta = new Vector2(380f, 90f); tr.anchoredPosition = new Vector2(30f, 0f); }
@@ -160,8 +162,8 @@ public static class MenuExtras
         {
             if (tiles[i].go == null) continue;
             RectTransform r = (RectTransform)tiles[i].go.transform;
-            r.sizeDelta = new Vector2(176f, 122f);
-            r.anchoredPosition = new Vector2(-282f + 188f * (i % 4), -160f - 138f * (i / 4));
+            r.sizeDelta = new Vector2(TileW, TileH);
+            r.anchoredPosition = new Vector2(ColumnX(i % 4), TileTopY - TileH * 0.5f - (TileH + Gap) * (i / 4));
             Image img = tiles[i].go.GetComponent<Image>();
             bool locked = dailyLocked && tiles[i].go == daily;
             if (img != null) img.color = tiles[i].go == exit ? new Color(0.78f, 0.62f, 0.64f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);
@@ -171,11 +173,12 @@ public static class MenuExtras
             if (t == null) continue;
             RectTransform lr = t.rectTransform;
             lr.anchorMin = lr.anchorMax = new Vector2(0.5f, 0.5f);
-            lr.sizeDelta = new Vector2(164f, 40f);
-            lr.anchoredPosition = new Vector2(0f, -36f);
+            lr.sizeDelta = new Vector2(TileW - 10f, 46f);       // 1.4.8~ 두 줄까지 (en 「Daily Challenge」 · 「Skill Evolution」이 20 아래로 줄지 않게)
+            lr.anchoredPosition = new Vector2(0f, -34f);
             t.enableAutoSizing = true;
-            t.fontSizeMin = 14f;
-            t.fontSizeMax = 28f;
+            t.fontSizeMin = 20f;
+            t.fontSizeMax = 26f;
+            t.lineSpacing = -12f;
             if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
         }
 
@@ -186,11 +189,8 @@ public static class MenuExtras
         InstallDifficulty(sr);
         InstallPoints(sr.parent);
         MenuHeroPanel.Install(sr.parent, sr.root);         // 1.1.9~ 왼쪽 「지금 영웅」 패널 (씬의 고정 그림 자리)
-        // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~)
-        Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(220f, 56f), () => PatchNotesUI.OpenHistory(sr.root), 24f);
-        RectTransform nr = (RectTransform)notes.transform;
-        nr.anchorMin = nr.anchorMax = nr.pivot = new Vector2(1f, 1f);
-        nr.anchoredPosition = new Vector2(-30f, -102f);
+        // 오른쪽 위 보유 포인트 아래: 지난 버전까지 패치노트 (2.1.3~) · 1.4.8~ 자리는 아래 LayoutRightColumn 이 한꺼번에
+        Button notes = UIKit.MakeButton(sr.parent, "패치노트", Vector2.zero, new Vector2(RightW, RightBtnH), () => PatchNotesUI.OpenHistory(sr.root), 24f);
         notes.name = "PatchNotesButton";
         SoulBrand.InstallMenuButton(sr.parent, sr.root);       // 1.2~ 패치노트 아래: 영혼 각인 (열린 각인 · 해금 조건)
         LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
@@ -199,7 +199,8 @@ public static class MenuExtras
         if (daily != null && !dailyLocked && DailyRewards.Streak > 0)
         {
             // 1.2~ 일일 도전 칸 아래: 「연속 n일」 (폰트에 없는 그림 글자는 쓰지 않음)
-            TMP_Text streak = UIKit.Text(daily.transform, "", 16f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -76f), new Vector2(176f, 24f));
+            TMP_Text streak = UIKit.Text(daily.transform, "", 20f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -TileH * 0.5f - 16f), new Vector2(TileW + Gap, 26f));     // 1.4.8~ 16 → 20
+            streak.fontSizeMin = 20f;
             streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
             UIKit.Forget(streak);
         }
@@ -207,12 +208,10 @@ public static class MenuExtras
         if (!Demo.On)
         {
             Transform hroot = sr.root;
-            Button hist = UIKit.MakeButton(sr.parent, "기록", Vector2.zero, new Vector2(220f, 56f), () => RunHistoryUI.Open(hroot), 24f);
-            RectTransform hr = (RectTransform)hist.transform;
-            hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(1f, 1f);
-            hr.anchoredPosition = new Vector2(-30f, -306f);
+            Button hist = UIKit.MakeButton(sr.parent, "기록", Vector2.zero, new Vector2(RightW, RightBtnH), () => RunHistoryUI.Open(hroot), 24f);
             hist.name = "RunHistoryButton";
         }
+        LayoutRightColumn(sr.parent);
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
@@ -312,9 +311,11 @@ public static class MenuExtras
         if (saved == null) return;
         GameObject cont = UIKit.CloneButton(start, "ContinueButton", "이어하기", () => RunSave.Continue());
         RectTransform sr = (RectTransform)start.transform, cr = (RectTransform)cont.transform;
-        sr.sizeDelta = cr.sizeDelta = new Vector2(360f, 110f);
-        sr.anchoredPosition = new Vector2(-190f, -10f);
-        cr.anchoredPosition = new Vector2(190f, -10f);
+        // 1.4.8~ 두 버튼이 가운데 열 폭(ColW)을 반씩 · 사이 Gap (아이콘 칸 두 칸씩과 끝이 맞음)
+        float half = (ColW - Gap) * 0.5f;
+        sr.sizeDelta = cr.sizeDelta = new Vector2(half, StartH);
+        sr.anchoredPosition = new Vector2(-(half + Gap) * 0.5f, StartY);
+        cr.anchoredPosition = new Vector2((half + Gap) * 0.5f, StartY);
         foreach (GameObject b in new[] { start, cont })
         {
             Transform icon = b.transform.Find("Icon");
@@ -358,18 +359,55 @@ public static class MenuExtras
         img.raycastTarget = false;
     }
 
+    // 1.4.8~ 메인 메뉴 가운데 열 격자 (1080p 기준 · 캔버스 가운데 기준 y)
+    //   난이도 줄 89 ~ 147 · 설명 한 줄 51 ~ 81 · 게임 시작 -75 ~ 35 · 잠금 안내 줄 -122 ~ -90 · 아이콘 칸 -137 ~ -395
+    //   양옆 패널(영웅 · 이번 판 계약)은 게임 시작 위끝 35 ~ 아이콘 칸 아래끝 -395 에 맞춤 (MenuHeroPanel · MenuContracts)
+    public const float TileW = 176f, TileH = 122f, Gap = 14f;
+    public const float ColW = TileW * 4f + Gap * 3f;          // 746
+    const float DiffY = 118f, DiffH = 58f, HintY = 66f, StartY = -20f, StartH = 110f, LockY = -106f, TileTopY = -137f;
+    public const float SideTop = StartY + StartH * 0.5f;                  // 35
+    public const float SideBottom = TileTopY - TileH * 2f - Gap;          // -395
+    public const float ColRight = ColW * 0.5f;                            // 373
+    static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
+
+    // 1.4.8~ 오른쪽 위 열: 포인트 · 패치노트 · 영혼 각인 · 순위표 · 기록을 같은 폭 · 같은 간격으로 위에서부터 (체험판에서 빠진 버튼은 자리도 당겨짐)
+    const float RightW = 280f, RightBadgeH = 64f, RightBtnH = 56f, RightGap = 10f, RightMargin = 30f, RightTop = 26f;
+    static void LayoutRightColumn(Transform parent)
+    {
+        float y = -RightTop;
+        foreach (string name in new[] { "PointsBadge", "PatchNotesButton", "SoulBrandButton", "LeaderboardButton", "RunHistoryButton" })
+        {
+            RectTransform r = parent.Find(name) as RectTransform;
+            if (r == null) continue;
+            float h = name == "PointsBadge" ? RightBadgeH : RightBtnH;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(1f, 1f);
+            r.sizeDelta = new Vector2(RightW, h);
+            r.anchoredPosition = new Vector2(-RightMargin, y);
+            TMP_Text t = name == "PointsBadge" ? null : r.GetComponentInChildren<TMP_Text>(true);
+            if (t != null)
+            {
+                t.rectTransform.sizeDelta = new Vector2(RightW - 24f, h - 12f);
+                t.fontSizeMax = 24f;
+                t.fontSizeMin = 20f;
+            }
+            y -= h + RightGap;
+        }
+    }
+
     // 오른쪽 위: 보유 포인트 (스킨 상점에서 쓰면 바로 줄어듦)
     static void InstallPoints(Transform parent)
     {
-        RectTransform box = UIKit.Rect("PointsBadge", parent, Vector2.zero, new Vector2(300f, 64f));
+        // 1.4.8~ 아래 버튼 열과 같은 폭(RightW) · 안쪽 여백 16 (자리는 LayoutRightColumn)
+        RectTransform box = UIKit.Rect("PointsBadge", parent, Vector2.zero, new Vector2(RightW, RightBadgeH));
         box.anchorMin = box.anchorMax = box.pivot = new Vector2(1f, 1f);
-        box.anchoredPosition = new Vector2(-30f, -26f);
         Image bg = box.gameObject.AddComponent<Image>();
         bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
         bg.raycastTarget = true;        // 툴팁을 받으려고
         // 1.0.4~: 판 안의 코인과 같은 동전 그림이라 무엇이 다음 판에도 남는지 헷갈렸음 → 그림 대신 「포인트」 글자 + 마우스를 올리면 설명
-        UIKit.Text(box, "포인트", 20f, new Color(0.8f, 0.76f, 0.7f), new Vector2(-88f, 0f), new Vector2(104f, 40f), TextAlignmentOptions.Left);
-        TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(26f, 0f), new Vector2(220f, 50f), TextAlignmentOptions.Right);
+        float inner = RightW * 0.5f - 16f;
+        UIKit.Text(box, "포인트", 22f, new Color(0.8f, 0.76f, 0.7f), new Vector2(-inner + 52f, 0f), new Vector2(104f, 40f), TextAlignmentOptions.Left).fontSizeMin = 20f;
+        TMP_Text t = UIKit.Text(box, "", 30f, new Color(0.96f, 0.83f, 0.47f), new Vector2(inner - 80f, 0f), new Vector2(160f, 50f), TextAlignmentOptions.Right);
+        t.fontSizeMin = 20f;
         box.gameObject.AddComponent<MenuPoints>().text = t;
         TooltipTrigger tip = box.gameObject.AddComponent<TooltipTrigger>();
         tip.titleProvider = () => Loc.T("포인트");
@@ -381,15 +419,22 @@ public static class MenuExtras
     {
         Transform parent = start.parent;
         // 2.1.9: 이어하기가 있으면 게임 시작 버튼이 왼쪽으로 가므로, 난이도 줄은 가운데(x 0)에 고정
-        Vector2 at = new Vector2(0f, start.anchoredPosition.y);
         List<Button> buttons = new List<Button>();
-        // 1.0.4~: 이 줄은 고른 난이도 설명 (예전 잠금 안내 자리), 잠금 안내는 게임 시작 버튼 아래 빈 줄(버튼 아래 끝 -65 ~ 아이콘 칸 위 끝 -99)로
-        TMP_Text hint = UIKit.Text(parent, "", 20f, new Color(0.8f, 0.76f, 0.7f), at + new Vector2(0f, 62f), new Vector2(940f, 26f));
-        TMP_Text lockHint = UIKit.Text(parent, "", 18f, new Color(0.66f, 0.61f, 0.53f), at + new Vector2(0f, -72f), new Vector2(900f, 26f));
+        // 1.0.4~: 이 줄은 고른 난이도 설명 (예전 잠금 안내 자리), 잠금 안내는 게임 시작 버튼 아래 빈 줄로
+        // 1.4.8~ 설명이 게임 시작 버튼 위끝과 겹쳤음 → 난이도 줄(아래끝 DiffY - 29)과 게임 시작(위끝 StartY + 55) 사이 빈 줄 한가운데 한 줄
+        //   폭 1280: 양옆 패널(위끝 StartY + 55)보다 위라 넓게 써도 됨 — en 이 가장 길어 22 → 20 까지 줄고 줄바꿈 없음
+        TMP_Text hint = UIKit.Text(parent, "", 22f, new Color(0.8f, 0.76f, 0.7f), new Vector2(0f, HintY), new Vector2(1280f, 30f));
+        hint.fontSizeMin = 20f;
+        hint.enableWordWrapping = false;
+        hint.overflowMode = TextOverflowModes.Ellipsis;
+        TMP_Text lockHint = UIKit.Text(parent, "", 20f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, LockY), new Vector2(1000f, 30f));
+        lockHint.fontSizeMin = 20f;
+        lockHint.enableWordWrapping = false;
+        lockHint.overflowMode = TextOverflowModes.Ellipsis;
         for (int i = 0; i < 4; i++)
         {
             Difficulty d = (Difficulty)i;
-            Button b = UIKit.MakeButton(parent, GameMode.Names[i], at + new Vector2(-300f + 200f * i, 118f), new Vector2(184f, 58f), () =>
+            Button b = UIKit.MakeButton(parent, GameMode.Names[i], new Vector2(ColumnX(i), DiffY), new Vector2(TileW, DiffH), () =>
             {
                 GameMode.Current = d;
                 HighlightDifficulty(buttons, hint, lockHint);
@@ -402,7 +447,7 @@ public static class MenuExtras
             tip.bodyProvider = () => LadderTip(d);
         }
         // 1.2~ 영혼의 무게: 어려움을 클리어하면 잠금 안내 줄 자리(이때는 늘 비어 있음)에 버튼 · 어려움을 고를 때만 보임
-        SoulWeight.InstallMenu(parent, at + new Vector2(0f, -72f));
+        SoulWeight.InstallMenu(parent, new Vector2(0f, LockY));
         HighlightDifficulty(buttons, hint, lockHint);
         hint.gameObject.AddComponent<LocRefresh>().refresh = () => HighlightDifficulty(buttons, hint, lockHint);
     }
@@ -427,7 +472,7 @@ public static class MenuExtras
             buttons[i].interactable = open;
             Image img = buttons[i].GetComponent<Image>();
             img.color = on ? new Color(0.96f, 0.83f, 0.47f) : open ? new Color(0.6f, 0.58f, 0.65f) : new Color(0.25f, 0.24f, 0.28f, 0.8f);
-            buttons[i].transform.localScale = Vector3.one * (on ? 1.08f : 1f);
+            buttons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);     // 1.4.8~ 1.08 → 1.05 (칸 사이 Gap 14 안에서 이웃과 닿지 않게)
             TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>();
             label.color = open ? new Color(0.96f, 0.9f, 0.8f) : new Color(0.55f, 0.52f, 0.5f);
         }

@@ -7,9 +7,12 @@ using UnityEngine.UI;
 // 1.1.9~ 메인 메뉴 왼쪽 「지금 영웅」 패널 (편의성 2차 2)
 // 예전엔 메뉴 어디에도 지금 고른 영웅이 안 보여 판에 들어가서야 알았음 → 씬의 고정 그림 자리에 초상 · 이름 · 칭호 · 숙련 + 「영웅 바꾸기」
 // 패널 (-610, -120) 440×560 → x -830 ~ -390 · y -400 ~ 160 (난이도 「쉬움」 버튼 왼끝 -392 와 2px 떨어짐)
+// 1.4.8~ 위끝 · 아래끝을 가운데 열의 게임 시작 위끝 · 아이콘 칸 아래끝(MenuExtras.SideTop · SideBottom)에 맞춤 → y -395 ~ 35
+//   (오른쪽 「이번 판 계약」 패널과 같은 높이 · 그 위 난이도 설명 한 줄이 넓게 지나감) · 안쪽 여백 24 · 글씨 20 이상
 public static class MenuHeroPanel
 {
     static RectTransform panel;
+    const float W = 440f;
     static Transform rootRef;
 
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
@@ -33,7 +36,7 @@ public static class MenuHeroPanel
                     break;
                 }
             }
-        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-610f, -120f), new Vector2(440f, 560f));
+        panel = UIKit.Rect("HeroPanel", parent, new Vector2(-610f, (MenuExtras.SideTop + MenuExtras.SideBottom) * 0.5f), new Vector2(W, MenuExtras.SideTop - MenuExtras.SideBottom));
         Image bg = panel.gameObject.AddComponent<Image>();
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
@@ -63,29 +66,36 @@ public static class MenuHeroPanel
         for (int i = panel.childCount - 1; i >= 0; i--) Object.Destroy(panel.GetChild(i).gameObject);
         CharacterId id = CharacterData.Selected;
         CharacterDef d = CharacterData.Def(id);
-        UIKit.Text(panel, "지금 영웅", 18f, Dim, new Vector2(0f, 262f), new Vector2(400f, 26f));
-        RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, 90f), new Vector2(320f, 320f));
+        // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
+        float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
+        UIKit.Text(panel, "지금 영웅", 22f, Dim, new Vector2(0f, top - 14f), new Vector2(W - 48f, 28f)).fontSizeMin = 20f;
+        const float P = 190f;
+        RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - 30f - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = CharacterUI.Portrait(id);
         img.preserveAspect = true;
         img.raycastTarget = false;
         if (d.body == null)
         {
-            // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음 · 캐릭터 창과 같게)
-            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(80f, -30f), new Vector2(90f, 45f));
+            // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음 · 캐릭터 창과 같게) — 1.4.8~ 초상 크기(320 → 190)에 비례
+            float k = P / 320f;
+            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(80f, -30f) * k, new Vector2(90f, 45f) * k);
             Image gi = gr.gameObject.AddComponent<Image>();
             gi.sprite = Resources.Load<Sprite>("Weapons/weapon_pistol");
             gi.preserveAspect = true;
             gi.raycastTarget = false;
         }
-        TMP_Text name = UIKit.Text(panel, d.name, 40f, Gold, new Vector2(0f, -110f), new Vector2(400f, 50f));
+        float y = top - 30f - P - 2f;
+        TMP_Text name = UIKit.Text(panel, d.name, 36f, Gold, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
         name.fontSizeMin = 20f;
-        UIKit.Text(panel, d.title, 22f, Dim, new Vector2(0f, -148f), new Vector2(400f, 30f));
-        TMP_Text star = UIKit.Text(panel, "", 18f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(0f, -178f), new Vector2(400f, 26f));
+        TMP_Text title = UIKit.Text(panel, d.title, 22f, Dim, new Vector2(0f, y - 58f), new Vector2(W - 48f, 28f));
+        title.fontSizeMin = 20f;
+        TMP_Text star = UIKit.Text(panel, "", 20f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(0f, y - 87f), new Vector2(W - 48f, 26f));
+        star.fontSizeMin = 20f;
         star.text = Mastery.Label(id);
         string weight = SoulWeight.CardTag(id);
         if (weight.Length > 0) star.text += "  ·  <color=#C9A0FF>" + weight + "</color>";
-        Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, -235f), new Vector2(300f, 60f), OpenPicker, 24f);
+        Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, bottom + 26f), new Vector2(300f, 52f), OpenPicker, 24f);
         change.name = "ChangeHeroButton";
     }
 
