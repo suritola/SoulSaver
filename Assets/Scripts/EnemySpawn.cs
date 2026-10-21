@@ -78,11 +78,16 @@ public class EnemySpawner : MonoBehaviour
     // 1.2.5~ 무한 모드 영혼을 모으는 국면(개발자 처치 뒤 ~ 엄마 강림 전)은 Surge 로 불어난 수와 상관없이 EndlessMode.AfterDevMaxAlive 까지
     int MaxAlive => GameMode.IsEndless && EndlessMode.GatheringSouls
         ? Mathf.Min(EndlessMode.AfterDevMaxAlive, AliveLimit + GameMode.ExtraAliveCount)
-        : Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+        : Density > 1f
+            ? Mathf.Min(Chapters.StoryAliveCap, Mathf.RoundToInt((Mathf.Min(AliveLimit, Chapters.MaxAlive(stageIndex, Phase.maxAlive)) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0)) * Density))
+            : Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+    // 1.4.7~ 이야기 모드 적 수 배율 (Chapters.StoryDensity · 이 장이 시작된 뒤 흐른 시간 기준)
+    float stageStartedAt;
+    float Density => Chapters.StoryDensity(stageIndex, Time.time - stageStartedAt);
     // 1.2.5~ 같은 국면의 생성 간격은 고정 (Surge ×16 · 강도 · 3배 부스트가 겹쳐 매 프레임 나오던 것을)
     float NextSpawnDelay => GameMode.IsEndless && EndlessMode.GatheringSouls
         ? EndlessMode.AfterDevSpawnEvery
-        : Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex);     // 앞쪽 장은 드물게 (2.1.5)
+        : Phase.spawnInterval * GameMode.SpawnIntervalMul * Chapters.SpawnIntervalMul(stageIndex) / Density;     // 앞쪽 장은 드물게 (2.1.5) · 1.4.7~ 이야기 모드는 갈수록 잦게
 
     void Start()
     {
@@ -512,6 +517,7 @@ public class EnemySpawner : MonoBehaviour
         foreach (GameObject coin in GameObject.FindGameObjectsWithTag("coin")) Destroy(coin);
 
         stageIndex = Mathf.Clamp(index, 0, stages.Length - 1);
+        stageStartedAt = Time.time;
         killedEnemy = 0;
         paze = 1;
         midBossPhase = 1;

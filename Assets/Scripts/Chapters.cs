@@ -87,8 +87,22 @@ public static class Chapters
     public static float MobHpBoost(int stage) => GameMode.IsEndless ? 1.4f : stage < 0 ? 1f : MobHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, MobHpUp.Length - 1)];
     // 1.4.7~ 사용자 「전체적으로 적들의 체력이 너무 낮다」: 이야기 모드 잡몹(중간 보스 포함) · 보스 모두 1장 +30% · 2장 +40% · 3장 +70% · 4장 +100%
     //   무한 모드는 잡몹 +100% · 보스 +80% (개발자 · 엄마는 EndlessMode.SummonDeveloper 가 체력을 따로 정하고 difficultyApplied 로 boss.Start 배율을 건너뛰어 그대로)
-    static readonly float[] StoryHpUp = { 1.3f, 1.4f, 1.7f, 2f };
-    const float EndlessMobHpUp = 2f, EndlessBossHpUp = 1.8f;
+    //   같은 1.4.7 에서 사용자 「늘렸던 체력을 전부 다 30% 감소」: 모두 ×0.7 (1장 ×1.3 → ×0.91 · 2장 ×1.4 → ×0.98 · 3장 ×1.7 → ×1.19 · 4장 ×2 → ×1.4 · 무한 잡몹 ×2 → ×1.4 · 보스 ×1.8 → ×1.26)
+    //   대신 이야기 모드는 판이 갈수록 적 수가 기하급수로 늘어남 (StoryDensity)
+    static readonly float[] StoryHpUp = { 0.91f, 0.98f, 1.19f, 1.4f };
+    const float EndlessMobHpUp = 1.4f, EndlessBossHpUp = 1.26f;
+
+    // 1.4.7~ 사용자 「이야기모드에서 시간이 지날수록 생성되는 적들의 수를 기하급수적으로 · 초반엔 지금처럼 쪼끔씩 · 2스테이지 후반쯤부터 엄청 많이 · 4스테이지에선 정말 너무너무많이」
+    //   진행 p = 몇 번째 장(0~3) + 그 장에서 흐른 시간 / StageSpanSec (장 안에서 최대 1) → 배율 2^(1.1 × (p − 0.5)) (p 0.5 까지 ×1)
+    //   1장 끝 ×1.5 · 2장 후반(p 1.8) ×2.7 · 3장 ×3.4~6.7 · 4장 ×6.7~14 · 생성 간격 ÷배율 · 한 화면 최대 수 ×배율 (StoryAliveCap 까지 · 렉 방지)
+    const float StorySpanSec = 210f, StoryDensityRate = 1.1f, StoryDensityMax = 14f;
+    public const int StoryAliveCap = 110;
+    public static float StoryDensity(int stage, float secondsInStage)
+    {
+        if (GameMode.IsEndless || stage < 0 || TutorialRun.Active) return 1f;
+        float p = Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, 3) + Mathf.Clamp01(secondsInStage / StorySpanSec);
+        return Mathf.Clamp(Mathf.Pow(2f, StoryDensityRate * (p - 0.5f)), 1f, StoryDensityMax);
+    }
     static float StoryHpUpOf(int stage) => stage < 0 ? 1f : StoryHpUp[Mathf.Clamp(IsClassic ? stage : SlotOf(stage), 0, StoryHpUp.Length - 1)];
     public static float HpUp147(int stage, bool boss) => GameMode.IsEndless ? (boss ? EndlessBossHpUp : EndlessMobHpUp) : StoryHpUpOf(stage);
     public static float EnemyHpMul(int stage) => Ratio(Hp, stage) * Ease(EaseHp, stage) * Ease(LateHp, stage) * MobHpBoost(stage) * HpUp147(stage, false);
