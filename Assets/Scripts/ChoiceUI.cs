@@ -106,6 +106,14 @@ public class ChoiceUI : MonoBehaviour
         back.gameObject.AddComponent<Image>().color = new Color(0.02f, 0.01f, 0.04f, 0.85f);
 
         UIKit.Text(r, title, 54f, Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
+        // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 3배 도트) — 부제(292)와 안 겹치게 제목 아래끝(315) 바로 밑 · 그림이 없으면 없음
+        if (UIKit.DividerSprite != null)
+        {
+            RectTransform dl = UIKit.Rect("TitleLine", r, new Vector2(0f, 320f), new Vector2(384f, 24f));
+            Image di = dl.gameObject.AddComponent<Image>();
+            di.sprite = UIKit.DividerSprite;
+            di.raycastTarget = false;
+        }
         if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, 28f, Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
         UIKit.Text(r, GamePad.Active ? "십자키 ← → 로 고르고 [A]로 확정" : OneClick ? "카드를 누르면 바로 확정됩니다" : "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
 

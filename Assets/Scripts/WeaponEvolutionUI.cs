@@ -29,6 +29,7 @@ public class WeaponEvolutionUI : MonoBehaviour
     Image[] cardFrames;
     Button confirmButton;
     TMP_Text confirmText, title, subtitle;
+    Image titleLine;        // 1.4.8~ 제목 아래 금 장식선 (그림이 없으면 null)
 
     // 진화를 고를 때까지 기다림 (고른 무기 번호를 넘겨줌)
     public static IEnumerator Run(SpecialAbilities sp, int[] options, System.Action<int> picked)
@@ -111,6 +112,7 @@ public class WeaponEvolutionUI : MonoBehaviour
             title.rectTransform.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, EaseOut(k));
             title.alpha = k;
             subtitle.alpha = k;
+            if (titleLine != null) titleLine.color = new Color(1f, 1f, 1f, k);
             yield return null;
         }
         flash.color = Color.clear;
@@ -119,6 +121,7 @@ public class WeaponEvolutionUI : MonoBehaviour
         burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.12f);
         title.rectTransform.localScale = Vector3.one;
         title.alpha = subtitle.alpha = 1f;
+        if (titleLine != null) titleLine.color = Color.white;
 
         // 3) 세 카드가 가운데에서 펼쳐짐
         fx?.Play("whoosh", 0.7f, 0.9f);
@@ -238,6 +241,9 @@ public class WeaponEvolutionUI : MonoBehaviour
         title = UIKit.Text(root, "", 72f, Gold, new Vector2(0f, 395f), new Vector2(1500f, 100f));      // 1.1~ 380 → 395 (부제 · 카드와 띄움)
         title.text = tier >= 3 ? Loc.T("무기 각성") : tier >= 2 ? Loc.T("무기 최종 진화") : Loc.T("무기 진화");
         title.fontStyle = FontStyles.Bold;
+        // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 3배 도트) — 제목의 자식이라 켜짐 · 커짐을 따라감 · 투명도는 제목과 함께 바꿈 · 부제(320)와 안 겹치게 352
+        if (UIKit.DividerSprite != null)
+            titleLine = Img("TitleLine", title.rectTransform, new Vector2(0f, -43f), new Vector2(384f, 24f), UIKit.DividerSprite, Color.white);
         title.gameObject.SetActive(false);
         subtitle = UIKit.Text(root, "", 30f, Parch, new Vector2(0f, 320f), new Vector2(1500f, 50f));       // 1.1~ 305 → 320 (커진 카드에 안 가리게)
         subtitle.text = Loc.T("보스의 영혼이 무기에 스며든다. 한 갈래를 고르세요 (되돌릴 수 없음)");
