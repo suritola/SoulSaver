@@ -503,6 +503,11 @@ public class RunStats : MonoBehaviour
     // ================================================================= ESC 메뉴 오른쪽의 이번 판 요약
     static GameObject summaryPanel;
 
+    // 1.4.8~ ESC 양옆 패널(왼쪽 「지금 가진 스킬」 PauseBuild · 오른쪽 「이번 판」)의 위끝 · 아래 여유 — 캔버스 위에서 280 (영혼 트리 버튼 · 스킬 칸 넘김 아래),
+    //   아래에서 175 (탄창 · 레벨 막대 위) 사이. 위끝은 둘이 같고, 높이는 내용만큼 (오른쪽은 남는 만큼 · 최대 720)
+    public const float PausePanelTop = 280f, PausePanelBottom = 175f, PausePanelW = 440f, PausePad = 24f;
+    public static float PausePanelMaxH(RectTransform canvas) => Mathf.Clamp(canvas.rect.height - PausePanelTop - PausePanelBottom, 360f, 720f);
+
     public static void ShowSummary(bool show)
     {
         if (!show)
@@ -517,43 +522,84 @@ public class RunStats : MonoBehaviour
         RectTransform r = summaryPanel.GetComponent<RectTransform>();
         r.SetParent(canvas.transform, false);
         r.SetAsLastSibling();
-        r.anchorMin = r.anchorMax = new Vector2(1f, 0.5f);
-        r.pivot = new Vector2(1f, 0.5f);
-        r.anchoredPosition = new Vector2(-30f, -20f);    // 위쪽 영혼 트리 버튼(위에서 222 ~ 266) 아래부터
-        r.sizeDelta = new Vector2(440f, 560f);          // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
+        // 1.4.8~ 위 오른쪽에 붙임 (예전 가운데 기준 (-30, -20) 440×560 과 위끝 같음) · 높이는 캔버스에 맞춰 (UI 크기 110 · 120% 에서도 탄창 칸과 안 겹침)
+        float h = PausePanelMaxH((RectTransform)canvas.transform);
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(1f, 1f);
+        r.anchoredPosition = new Vector2(-30f, -PausePanelTop);
+        r.sizeDelta = new Vector2(PausePanelW, h);           // 4:3 화면에서도 ESC 창(폭 720)과 안 겹치게
         Image bg = summaryPanel.GetComponent<Image>();
         bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
         bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect) · 빈 곳을 눌러도 아무 일 없음
-
-        GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform tr = tg.GetComponent<RectTransform>();
-        tr.SetParent(r, false);
-        tr.anchorMin = Vector2.zero;
-        tr.anchorMax = Vector2.one;
-        tr.offsetMin = new Vector2(26f, 92f);           // 1.1.9~ 바닥에 버튼 둘 (22 → 92)
-        tr.offsetMax = new Vector2(-26f, -22f);
-        TextMeshProUGUI t = tg.GetComponent<TextMeshProUGUI>();
         UIKit.EnsureStyle();
-        if (UIKit.Font != null) t.font = UIKit.Font;
-        if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;
-        t.fontSize = 22f;
-        t.enableAutoSizing = true;
-        t.fontSizeMin = 12f;         // 1.1~ 14 → 12 + 넘치면 말줄임 (판 후반 카드가 많으면 패널 아래로 글자가 넘쳤음)
-        t.overflowMode = TextOverflowModes.Ellipsis;
-        t.fontSizeMax = 22f;
-        t.color = new Color(0.93f, 0.9f, 0.84f);
-        t.alignment = TextAlignmentOptions.TopLeft;
-        t.raycastTarget = false;
-        t.text = "<size=120%>" + Loc.T("이번 판") + "</size>\n\n" + Summary(true);
-        // 1.1.9~ 「빌드 자세히 보기」 · 「영웅 안내」 (패널 폭 440 안 · 바닥에서 36)
+        float innerW = PausePanelW - PausePad * 2f;
+
+        // 제목 「이번 판」 (소제목 28)
+        TMP_Text title = UIKit.Text(r, "이번 판", 28f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(innerW, 38f), TextAlignmentOptions.Left);
+        title.fontSizeMin = 20f;
+        RectTransform ttr = title.rectTransform;
+        ttr.anchorMin = ttr.anchorMax = ttr.pivot = new Vector2(0f, 1f);
+        ttr.anchoredPosition = new Vector2(PausePad, -PausePad + 6f);
+
+        // 1.4.8~ 예전엔 한 글(22 · 자동 크기 하한 12)이라 항목이 많으면 14 안팎으로 줄었음 → 항목(빈 줄로 나뉜 덩이)마다 글 하나 + 사이 구분선,
+        //   22 → 21 → 20 중 다 들어가는 가장 큰 크기 (20 에서도 넘치면 마지막 덩이 끝을 … 로 — 전부는 「빌드 자세히 보기」)
+        const float BtnH = 52f, SecGap = 16f;
+        float top = PausePad + 38f + 10f;                    // 제목 아래
+        float bottom = PausePad + BtnH + 16f;                 // 버튼 줄 위
+        float avail = h - top - bottom;
+        string[] parts = Summary(true).Split(new[] { "\n\n" }, System.StringSplitOptions.RemoveEmptyEntries);
+        List<TextMeshProUGUI> texts = new List<TextMeshProUGUI>();
+        foreach (string part in parts)
+        {
+            TextMeshProUGUI t = (TextMeshProUGUI)UIKit.Text(r, "", 22f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(innerW, 30f), TextAlignmentOptions.TopLeft);
+            t.enableAutoSizing = false;
+            t.overflowMode = TextOverflowModes.Ellipsis;
+            t.text = part;
+            texts.Add(t);
+        }
+        float size = 20f;
+        foreach (float s in new[] { 22f, 21f, 20f })
+        {
+            float sum = SecGap * Mathf.Max(0, texts.Count - 1);
+            foreach (TextMeshProUGUI t in texts) { t.fontSize = s; sum += t.GetPreferredValues(t.text, innerW, Mathf.Infinity).y; }
+            if (sum <= avail) { size = s; break; }
+        }
+        float y = top;
+        for (int i = 0; i < texts.Count; i++)
+        {
+            TextMeshProUGUI t = texts[i];
+            t.fontSize = size;
+            float th = Mathf.Ceil(t.GetPreferredValues(t.text, innerW, Mathf.Infinity).y);
+            float room = h - bottom - y;
+            if (room < size * 1.3f) { Destroy(t.gameObject); continue; }      // 한 줄도 안 들어가면 뺌 (위 덩이 끝이 …)
+            th = Mathf.Min(th, room);
+            RectTransform tr = t.rectTransform;
+            tr.anchorMin = tr.anchorMax = tr.pivot = new Vector2(0f, 1f);
+            tr.sizeDelta = new Vector2(innerW, th);
+            tr.anchoredPosition = new Vector2(PausePad, -y);
+            y += th;
+            if (i < texts.Count - 1 && h - bottom - (y + SecGap) >= size * 1.3f)
+            {
+                // 항목 사이 구분선 (가운데 · 흐린 보라)
+                RectTransform line = UIKit.Rect("Divider", r, Vector2.zero, new Vector2(innerW, 2f));
+                line.anchorMin = line.anchorMax = line.pivot = new Vector2(0f, 1f);
+                line.anchoredPosition = new Vector2(PausePad, -(y + SecGap * 0.5f - 1f));
+                Image li = line.gameObject.AddComponent<Image>();
+                li.color = new Color(0.79f, 0.63f, 1f, 0.22f);
+                li.raycastTarget = false;
+            }
+            y += SecGap;
+        }
+
+        // 1.1.9~ 「빌드 자세히 보기」 · 「영웅 안내」 · 1.4.8~ 패널 안쪽 여백 24 에 맞춰 반씩 · 사이 12 · 글씨 22 (하한 20)
         Transform root = canvas.transform;
-        Button build = UIKit.MakeButton(r, "빌드 자세히 보기", new Vector2(-100f, -280f + 36f), new Vector2(210f, 52f), () => BuildView.Open(root), 20f);
-        Button guide = UIKit.MakeButton(r, "영웅 안내", new Vector2(115f, -280f + 36f), new Vector2(190f, 52f), () => HeroGuide.OpenView(root), 20f);
+        float bw = (innerW - 12f) * 0.5f, by = -h * 0.5f + PausePad + BtnH * 0.5f;
+        Button build = UIKit.MakeButton(r, "빌드 자세히 보기", new Vector2(-(bw + 12f) * 0.5f, by), new Vector2(bw, BtnH), () => BuildView.Open(root), 22f);
+        Button guide = UIKit.MakeButton(r, "영웅 안내", new Vector2((bw + 12f) * 0.5f, by), new Vector2(bw, BtnH), () => HeroGuide.OpenView(root), 22f);
         foreach (Button b in new[] { build, guide })
         {
             b.navigation = new Navigation { mode = Navigation.Mode.None };
             TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
-            if (bt != null) { bt.fontSizeMin = 13f; bt.fontSizeMax = 20f; }
+            if (bt != null) { bt.fontSizeMin = 20f; bt.fontSizeMax = 22f; }
         }
     }
 }
