@@ -140,23 +140,59 @@ public static class ResultScreen
     static string PointsLeft(int left) =>
         left > 0 ? Loc.T("해금까지") + " " + left.ToString("N0") + " P" : "<color=#7CFF9A>" + Loc.T("result.goal.ready") + "</color>";
 
+    // ================================================================= 1.4.8~ 왼쪽 반투명 패널
+    // 예전엔 다음 목표 · 이번 판 결과 · 빌드 자세히 보기가 배경 위에 14 ~ 24 글씨로 따로 떠 있었음 → 한 패널(폭 528 · 안쪽 여백 24)에 위에서부터
+    //   다음 목표(또는 이번 판 계약 + 영구 목표) → 구분선 → 이번 판 결과 → 빌드 자세히 보기, 글씨 22 (작은 줄 20)
+    //   위아래는 캔버스 높이에 붙임(위아래 16) — 16:10 · 4:3 처럼 캔버스가 길어져도 · UI 크기 110 · 120% 로 짧아져도 화면 안
+    //   오른쪽 끝 x -396 (1080p) — 가운데 제목(폭 800) · 버튼 열(폭 560)과 떨어져 있음
+    public const float LeftW = 528f, LeftPad = 24f, LeftX = 36f;
+    public const float ContentW = LeftW - LeftPad * 2f;        // 480
+
+    public static RectTransform BuildLeftPanel(Transform canvas)
+    {
+        UIKit.EnsureStyle();
+        RectTransform panel = UIKit.Rect("ResultLeftPanel", canvas, Vector2.zero, Vector2.zero);
+        panel.anchorMin = new Vector2(0f, 0f);
+        panel.anchorMax = new Vector2(0f, 1f);
+        panel.pivot = new Vector2(0f, 0.5f);
+        panel.offsetMin = new Vector2(LeftX, 16f);
+        panel.offsetMax = new Vector2(LeftX + LeftW, -16f);
+        Image bg = panel.gameObject.AddComponent<Image>();
+        bg.sprite = UIKit.ButtonSprite;
+        bg.type = Image.Type.Sliced;
+        bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
+        bg.raycastTarget = false;
+        return panel;
+    }
+
+    // 패널 안 가로 구분선 (위끝에서 y 만큼 아래)
+    public static void Divider(RectTransform panel, float y)
+    {
+        RectTransform r = UIKit.Rect("Divider", panel, Vector2.zero, new Vector2(ContentW, 2f));
+        FixTop(r, y);
+        Image img = r.gameObject.AddComponent<Image>();
+        img.color = new Color(0.79f, 0.63f, 1f, 0.25f);
+        img.raycastTarget = false;
+    }
+
     // 결과 화면 왼쪽 위 (이번 판 결과 글 위, 480 폭)
     // 1.2~ 영혼 계약이 있던 판: 「이번 판 계약」 3줄 → 「영구 목표」 2줄 (BuildContracts) · 없던 판(튜토리얼 · 옛 저장)은 예전처럼 다음 목표 3줄
-    public static void BuildGoals(Transform canvas)
+    // 1.4.8~ 왼쪽 패널(BuildLeftPanel) 안 위쪽에 · 쓴 높이를 돌려줌 (없으면 0) — 그 아래에 이번 판 결과 글
+    public static float BuildGoals(RectTransform left)
     {
         Contracts.EnsureEnded();
-        if (Contracts.LastRunOn && Contracts.LastRun.Count > 0) { BuildContracts(canvas); return; }
+        if (Contracts.LastRunOn && Contracts.LastRun.Count > 0) return BuildContracts(left);
         List<Goal> goals = Goals();
-        if (goals.Count == 0) return;
+        if (goals.Count == 0) return 0f;
         UIKit.EnsureStyle();
         // 1.1~ 한 줄: 위 이름(전체 폭) → 막대 → 아래 왼쪽 설명 · 「거의 다!」 + 오른쪽 수치 (예전엔 이름 옆 192 폭 칸에 수치 · 숙련 설명이 다 들어가 12pt 두 줄로 넘쳤음)
-        //   세 줄이면 34 + 72×3 = 250 → 아래 끝 y 265 (이번 판 결과 글 위끝 260 과 안 겹침)
-        const float RowH = 72f, HeadH = 34f, W = 480f;
-        RectTransform panel = UIKit.Rect("NextGoals", canvas, Vector2.zero, new Vector2(W, HeadH + RowH * goals.Count));
-        panel.anchorMin = panel.anchorMax = new Vector2(0f, 0.5f);
-        panel.pivot = new Vector2(0f, 1f);
-        panel.anchoredPosition = new Vector2(60f, 515f);
-        TMP_Text head = UIKit.Text(panel, "result.goal.title", 24f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        // 1.4.8~ 글씨 20 · 16 → 22 · 20, 줄 높이 72 → 82 (줄 사이 9) · 머리 24 → 28
+        const float RowH = 82f, HeadH = 38f, W = ContentW;
+        RectTransform panel = UIKit.Rect("NextGoals", left, Vector2.zero, new Vector2(W, HeadH + RowH * goals.Count));
+        panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 1f);
+        panel.anchoredPosition = new Vector2(0f, -LeftPad);
+        TMP_Text head = UIKit.Text(panel, "result.goal.title", 28f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        head.fontSizeMin = 20f;
         FixTop(head.rectTransform, -HeadH * 0.5f);
 
         List<(TMP_Text label, TMP_Text detail, TMP_Text hint)> rows = new List<(TMP_Text, TMP_Text, TMP_Text)>();
@@ -166,12 +202,13 @@ public static class ResultScreen
             float y = -HeadH - RowH * i - RowH * 0.5f;
             RectTransform row = UIKit.Rect("Goal", panel, Vector2.zero, new Vector2(W, RowH));
             FixTop(row, y);
-            TMP_Text label = UIKit.Text(row, "", 20f, Parch, new Vector2(0f, 21f), new Vector2(W, 28f), TextAlignmentOptions.Left);
-            TMP_Text hint = UIKit.Text(row, "", 16f, Dim, new Vector2(-W * 0.2f, -21f), new Vector2(W * 0.6f, 24f), TextAlignmentOptions.Left);
-            TMP_Text detail = UIKit.Text(row, "", 17f, Dim, new Vector2(W * 0.3f, -21f), new Vector2(W * 0.4f, 24f), TextAlignmentOptions.Right);
+            TMP_Text label = UIKit.Text(row, "", 22f, Parch, new Vector2(0f, 24f), new Vector2(W, 28f), TextAlignmentOptions.Left);
+            TMP_Text hint = UIKit.Text(row, "", 20f, Dim, new Vector2(-W * 0.2f, -22f), new Vector2(W * 0.6f, 26f), TextAlignmentOptions.Left);
+            TMP_Text detail = UIKit.Text(row, "", 20f, Dim, new Vector2(W * 0.3f, -22f), new Vector2(W * 0.4f, 26f), TextAlignmentOptions.Right);
             label.enableWordWrapping = hint.enableWordWrapping = detail.enableWordWrapping = false;      // 줄을 접어 칸 높이를 넘지 않게 (자동 크기로 한 줄에)
+            foreach (TMP_Text t in new[] { label, hint, detail }) { t.fontSizeMin = 20f; t.overflowMode = TextOverflowModes.Ellipsis; }
             // 막대: 어두운 바탕 + 진행률만큼 채움
-            RectTransform bar = UIKit.Rect("Bar", row, Vector2.zero, new Vector2(W, 14f));
+            RectTransform bar = UIKit.Rect("Bar", row, Vector2.zero, new Vector2(W, 12f));
             Image bg = bar.gameObject.AddComponent<Image>();
             bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
             bg.raycastTarget = false;
@@ -200,23 +237,25 @@ public static class ResultScreen
         };
         write();
         panel.gameObject.AddComponent<LocRefresh>().refresh = write;
+        return panel.sizeDelta.y;
     }
 
     // ================================================================= 1.2~ 이번 판 계약 + 영구 목표
     //   계약 한 줄 = 이름(달성 금빛 · 진행) + 아래 작은 글(달성 +P · 다음 판에 이어짐 · 접고 새로 뽑음) 44 높이
     //   위 끝 y 515 · 아래 끝은 이번 판 결과 글 위끝(260) 위: 머리 28 + 계약 40×3 + 머리 28 + 목표 42×2 = 260 → 255 (목표 줄은 이름 · 수치 한 줄 + 얇은 막대 + 작은 설명)
-    static void BuildContracts(Transform canvas)
+    //   1.4.8~ 글씨 18 · 14 · 13 → 22 · 20 (머리 28) · 줄 높이 40 · 42 → 60 · 70 · 머리 38 — 합 38 + 60×3 + 38 + 70×2 = 396
+    static float BuildContracts(RectTransform left)
     {
         UIKit.EnsureStyle();
-        const float W = 480f, HeadH = 28f, RowH = 40f, GoalH = 42f;
+        const float W = ContentW, HeadH = 38f, RowH = 60f, GoalH = 70f;
         List<Goal> goals = Goals(2);
         float h = HeadH + RowH * Contracts.LastRun.Count + (goals.Count > 0 ? HeadH + GoalH * goals.Count : 0f);
-        RectTransform panel = UIKit.Rect("NextGoals", canvas, Vector2.zero, new Vector2(W, h));
-        panel.anchorMin = panel.anchorMax = new Vector2(0f, 0.5f);
-        panel.pivot = new Vector2(0f, 1f);
-        panel.anchoredPosition = new Vector2(60f, 515f);
+        RectTransform panel = UIKit.Rect("NextGoals", left, Vector2.zero, new Vector2(W, h));
+        panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 1f);
+        panel.anchoredPosition = new Vector2(0f, -LeftPad);
         float y = 0f;
-        TMP_Text head = UIKit.Text(panel, "contract.result.title", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        TMP_Text head = UIKit.Text(panel, "contract.result.title", 28f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        head.fontSizeMin = 20f;
         FixTop(head.rectTransform, -HeadH * 0.5f);
         y -= HeadH;
         int i = 0;
@@ -224,9 +263,10 @@ public static class ResultScreen
         {
             RectTransform row = UIKit.Rect("Contract", panel, Vector2.zero, new Vector2(W, RowH));
             FixTop(row, y - RowH * 0.5f);
-            TMP_Text name = UIKit.Text(row, "", 18f, a.done ? Gold : Parch, new Vector2(0f, 10f), new Vector2(W, 24f), TextAlignmentOptions.Left);
-            TMP_Text sub = UIKit.Text(row, "", 14f, Dim, new Vector2(0f, -11f), new Vector2(W, 20f), TextAlignmentOptions.Left);
+            TMP_Text name = UIKit.Text(row, "", 22f, a.done ? Gold : Parch, new Vector2(0f, 13f), new Vector2(W, 28f), TextAlignmentOptions.Left);
+            TMP_Text sub = UIKit.Text(row, "", 20f, Dim, new Vector2(0f, -15f), new Vector2(W, 24f), TextAlignmentOptions.Left);
             name.enableWordWrapping = sub.enableWordWrapping = false;
+            foreach (TMP_Text t in new[] { name, sub }) { t.fontSizeMin = 20f; t.overflowMode = TextOverflowModes.Ellipsis; }
             UIKit.Forget(name);
             UIKit.Forget(sub);
             System.Action write = null;
@@ -245,24 +285,25 @@ public static class ResultScreen
             y -= RowH;
             i++;
         }
-        if (goals.Count == 0) return;
-        TMP_Text gh = UIKit.Text(panel, "contract.result.goals", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        if (goals.Count == 0) return h;
+        TMP_Text gh = UIKit.Text(panel, "contract.result.goals", 28f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(W, HeadH), TextAlignmentOptions.Left);
+        gh.fontSizeMin = 20f;
         FixTop(gh.rectTransform, y - HeadH * 0.5f);
         y -= HeadH;
         foreach (Goal g in goals)
         {
             RectTransform row = UIKit.Rect("Goal", panel, Vector2.zero, new Vector2(W, GoalH));
             FixTop(row, y - GoalH * 0.5f);
-            TMP_Text label = UIKit.Text(row, "", 17f, Parch, new Vector2(-W * 0.18f, 10f), new Vector2(W * 0.64f, 24f), TextAlignmentOptions.Left);
-            TMP_Text detail = UIKit.Text(row, "", 15f, Dim, new Vector2(W * 0.32f, 10f), new Vector2(W * 0.36f, 24f), TextAlignmentOptions.Right);
-            TMP_Text hint = UIKit.Text(row, "", 13f, Dim, new Vector2(0f, -14f), new Vector2(W, 16f), TextAlignmentOptions.Left);
+            TMP_Text label = UIKit.Text(row, "", 22f, Parch, new Vector2(-W * 0.18f, 18f), new Vector2(W * 0.64f, 28f), TextAlignmentOptions.Left);
+            TMP_Text detail = UIKit.Text(row, "", 20f, Dim, new Vector2(W * 0.32f, 18f), new Vector2(W * 0.36f, 28f), TextAlignmentOptions.Right);
+            TMP_Text hint = UIKit.Text(row, "", 20f, Dim, new Vector2(0f, -20f), new Vector2(W, 24f), TextAlignmentOptions.Left);
             label.enableWordWrapping = detail.enableWordWrapping = hint.enableWordWrapping = false;
-            foreach (TMP_Text t in new[] { label, detail, hint }) UIKit.Forget(t);
+            foreach (TMP_Text t in new[] { label, detail, hint }) { UIKit.Forget(t); t.fontSizeMin = 20f; t.overflowMode = TextOverflowModes.Ellipsis; }
             label.text = g.label;
             detail.text = g.detail;
             bool almost = g.progress >= AlmostAt && g.progress < 1f;
             hint.text = (almost ? "<color=#F5D478><b>" + Loc.T("result.goal.almost") + "</b></color>  " : "") + (g.hint ?? "");
-            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -3f), new Vector2(W, 4f));
+            RectTransform bar = UIKit.Rect("Bar", row, new Vector2(0f, -2f), new Vector2(W, 4f));
             Image bg = bar.gameObject.AddComponent<Image>();
             bg.color = new Color(0.14f, 0.12f, 0.17f, 0.92f);
             bg.raycastTarget = false;
@@ -275,6 +316,7 @@ public static class ResultScreen
             fi.raycastTarget = false;
             y -= GoalH;
         }
+        return h;
     }
 
     // 1.2~ 결과 화면 아래 한 줄: 「이번 판이 남긴 것: +4,720P · 계약 2 · 도감 +1 · 기억 +1」 (계약이 있던 판만 · 획득 포인트 줄 위)
@@ -283,9 +325,9 @@ public static class ResultScreen
         if (!Contracts.LastRunOn || DailyChallenge.Active) return;        // 일일 도전은 아래 기록 글(오늘 순위 3줄)이 이 자리까지 내려옴
         UIKit.EnsureStyle();
         TMP_Text t = UIKit.Text(canvas, "", 22f, new Color(0.79f, 0.63f, 1f), Vector2.zero, new Vector2(1200f, 34f));
+        t.fontSizeMin = 20f;
+        t.name = "LeftBehindLine";      // 1.4.8~ 자리는 StackCenter (예전 아래 기준 y 132)
         RectTransform r = t.rectTransform;
-        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
-        r.anchoredPosition = new Vector2(0f, 132f);
         System.Action write = () => t.text = Loc.T("contract.result.left").Replace("{0}", "+" + CharacterData.RunPoints.ToString("N0"))
                                     .Replace("{1}", Contracts.DoneThisRun.ToString()).Replace("{2}", Contracts.CodexGained.ToString()).Replace("{3}", Contracts.MemoryGained.ToString())
                                     + (Contracts.MemoryGained > 0 ? "\n<size=80%><color=#F5D478>" + Loc.T("memory.new") + "</color></size>" : "");
@@ -312,18 +354,58 @@ public static class ResultScreen
         string line = pick != null ? "recommend.hero.noname" : GameMode.Current != Difficulty.Easy ? "recommend.diff" : null;
         if (line == null && Herald.SameCause3) line = "recommend.hint";
         if (line == null) return;
-        TMP_Text t = UIKit.Text(canvas, line, 19f, new Color(0.75f, 0.85f, 1f), new Vector2(0f, -318f), new Vector2(760f, 56f));
-        t.fontSizeMin = 14f;
+        // 1.4.8~ 19 → 22 (하한 14 → 20) · 자리는 StackCenter (얼굴은 글 왼쪽 끝 옆에 같이 옮겨짐)
+        TMP_Text t = UIKit.Text(canvas, line, 22f, new Color(0.75f, 0.85f, 1f), new Vector2(0f, -318f), new Vector2(760f, 58f));
+        t.fontSizeMin = 20f;
+        t.name = "RecommendLine";
         if (pick != null)
         {
             Sprite face = CharacterUI.Portrait(pick.Value);
             if (face != null)
             {
-                Image fi = UIKit.Rect("RecommendHero", canvas, new Vector2(-410f, -318f), new Vector2(48f, 48f)).gameObject.AddComponent<Image>();
+                Image fi = UIKit.Rect("RecommendHero", t.rectTransform, new Vector2(-410f, 0f), new Vector2(48f, 48f)).gameObject.AddComponent<Image>();
                 fi.sprite = face;
                 fi.preserveAspect = true;
                 fi.raycastTarget = false;
             }
+        }
+    }
+
+    // ================================================================= 1.4.8~ 가운데 버튼 열 아래를 위에서부터 차례로 (MenuExtras.InstallGameOver 끝에서)
+    // 예전엔 「순위 보기」(기록 글 오른쪽 x 600) · 「결과 복사」(오른쪽 아래 구석)가 따로 떠 있었고 기록 · 남긴 것 · 포인트 줄이 저마다 다른 기준(가운데 · 아래)이었음
+    //   → 버튼 열 아래끝부터 간격 8 로: 「순위 보기 · 결과 복사」 한 줄 → 무한 · 일일 기록(또는 추천 한 줄) → 이번 판이 남긴 것 → 획득 포인트
+    //   [R] 다시 시작 안내만 화면 아래 가장자리 (1080p 에서 가장 많이 쌓여도(무한 + 기억 조각) 아래끝 -492 · [R] 위끝 -494)
+    public const float RowBtnW = 260f, RowBtnH = 56f;
+    public static void StackCenter(Transform canvas)
+    {
+        if (canvas == null) return;
+        const float Step = 8f;
+        float y = columnBottom - Step;
+        // 버튼 한 줄 (있는 것만, 가운데 맞춤)
+        List<RectTransform> row = new List<RectTransform>();
+        foreach (string n in new[] { "LeaderboardViewButton", "CopyResultButton" })
+            if (canvas.Find(n) is RectTransform b && b.gameObject.activeSelf) row.Add(b);
+        if (row.Count > 0)
+        {
+            float total = RowBtnW * row.Count + 16f * (row.Count - 1);
+            for (int i = 0; i < row.Count; i++)
+            {
+                RectTransform b = row[i];
+                b.anchorMin = b.anchorMax = b.pivot = new Vector2(0.5f, 0.5f);
+                b.sizeDelta = new Vector2(RowBtnW, RowBtnH);
+                b.anchoredPosition = new Vector2(-total * 0.5f + RowBtnW * 0.5f + (RowBtnW + 16f) * i, y - RowBtnH * 0.5f);
+                TMP_Text l = b.GetComponentInChildren<TMP_Text>(true);
+                if (l != null) { l.rectTransform.sizeDelta = new Vector2(RowBtnW - 20f, RowBtnH - 12f); l.fontSizeMax = 24f; l.fontSizeMin = 20f; }
+            }
+            y -= RowBtnH + Step;
+        }
+        foreach (string n in new[] { "EndlessRecord", "RecommendLine", "LeftBehindLine", "RunPointsLine" })
+        {
+            if (!(canvas.Find(n) is RectTransform r)) continue;
+            float h = r.sizeDelta.y;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+            r.anchoredPosition = new Vector2(0f, y - h * 0.5f);
+            y -= h + Step;
         }
     }
 
@@ -342,8 +424,11 @@ public static class ResultScreen
     // 씬의 원래 버튼(ReStart · MainMenu)은 숨기고 복제해서 씀 (SceneLocalizer 가 원래 글자로 되돌리지 않게 · 1초 입력 보호를 메인 메뉴에도)
     // 패드 십자키 · 키보드 방향키 위아래 순서 = 화면 위아래 순서, 패드는 가상 커서가 기본 버튼 위로
     // 캔버스는 1920×1080 Expand 라 16:10 · 4:3 에서도 폭이 1920 아래로 줄지 않음 → 가운데 열(왼쪽 결과 글 x -420 · 오른쪽 피해 패널 x 420 사이)이 늘 같음
-    const float ColW = 560f, MainH = 120f, SubH = 88f, Gap = 16f, MainY = 0f;
-    const float MainFont = 52f, SubFont = 40f;
+    // 1.4.8~ 높이 120 · 88 · 간격 16 → 104 · 76 · 12: 아래에 「순위 보기 · 결과 복사」 한 줄과 기록 · 포인트 줄이 차례로 들어갈 자리 (StackCenter)
+    const float ColW = 560f, MainH = 104f, SubH = 76f, Gap = 12f, MainY = 0f;
+    const float MainFont = 50f, SubFont = 38f;
+    // 버튼 열 아래끝 (BuildRetry 가 씀 · 세 개면 -228, 두 개면 -140) — StackCenter 가 이 밑으로 쌓음
+    static float columnBottom = MainY - MainH * 0.5f;
 
     public static void BuildRetry()
     {
@@ -388,6 +473,7 @@ public static class ResultScreen
             Place(col[i], new Vector2(0f, top - h * 0.5f), new Vector2(ColW, h), i == 0 ? MainFont : SubFont);
             top -= h + Gap;
         }
+        columnBottom = top + Gap;
         // 마우스로 누른 뒤 방향키를 써도 화면 순서대로 (자동 탐색은 숨긴 원래 버튼 · 다른 UI 로 샐 수 있음)
         for (int i = 0; i < col.Count; i++)
         {

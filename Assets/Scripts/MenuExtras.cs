@@ -40,84 +40,104 @@ public static class MenuExtras
         if (canvas != null)
         {
             UIKit.EnsureStyle();
-            TMP_Text res = UIKit.Text(canvas.transform, "", 24f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, new Vector2(480f, 520f), TextAlignmentOptions.TopLeft);
+            // 1.4.8~ 왼쪽 반투명 패널 하나에: 다음 목표(위) → 구분선 → 이번 판 결과 → 빌드 자세히 보기(아래) (ResultScreen.BuildLeftPanel)
+            RectTransform left = ResultScreen.BuildLeftPanel(canvas.transform);
+            float goalsH = ResultScreen.BuildGoals(left);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
+            float resTop = ResultScreen.LeftPad;
+            if (goalsH > 0f)
+            {
+                ResultScreen.Divider(left, -(ResultScreen.LeftPad + goalsH + 12f));
+                resTop += goalsH + 24f;
+            }
+            const float BvH = 56f;
+            bool buildView = BuildView.HasSnapshot;
+            // 1.4.8~ 24(하한 14) → 22(하한 20) · 항목 사이 빈 줄을 반 줄로 (넘치면 끝을 … 로 — 전부는 「빌드 자세히 보기」에)
+            TMP_Text res = UIKit.Text(left, "", 22f, new Color(0.93f, 0.9f, 0.84f), Vector2.zero, Vector2.zero, TextAlignmentOptions.TopLeft);
             res.enableAutoSizing = true;
-            res.fontSizeMin = 14f;
-            res.fontSizeMax = 24f;
+            res.fontSizeMin = 20f;
+            res.fontSizeMax = 22f;
+            res.overflowMode = TextOverflowModes.Ellipsis;
             RunRecords.CommitBest();         // 1.1.9~ 내 최고 기록 갱신 (판 기록 쓰기와 순서가 보장되지 않아 양쪽에서 부르되 한 번만)
-            res.text = "<size=120%>" + Loc.T("이번 판 결과") + "</size>\n\n" + RunRecords.WithBest(RunStats.Summary(false));
+            res.text = "<size=127%><color=#C9A0FF>" + Loc.T("이번 판 결과") + "</color></size>" + HalfGap + CompactGaps(RunRecords.WithBest(RunStats.Summary(false)));
             RunRecords.PlayNewRecordSound(canvas.transform);
-            ResultScreen.BuildGoals(canvas.transform);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
             RectTransform rr = res.rectTransform;
-            rr.anchorMin = rr.anchorMax = rr.pivot = new Vector2(0f, 0.5f);
-            rr.anchoredPosition = new Vector2(60f, 0f);
+            rr.anchorMin = Vector2.zero;
+            rr.anchorMax = Vector2.one;
+            rr.offsetMin = new Vector2(ResultScreen.LeftPad, ResultScreen.LeftPad + (buildView ? BvH + 16f : 0f));
+            rr.offsetMax = new Vector2(-ResultScreen.LeftPad, -resTop);
             RunStats.BuildDamagePanel(canvas.transform);      // 오른쪽: 준 피해 · 받은 피해 · 쓰러진 곳
-            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 24f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 40f));
+            // [R] 안내: 화면 아래 가장자리 한 줄 (1.4.8~ 24 → 22 · 아래 40 → 16, 위 가운데 줄들이 쌓일 자리를 비움)
+            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 22f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 30f));
+            again.fontSizeMin = 20f;
             RectTransform ar = again.rectTransform;
             ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
-            ar.anchoredPosition = new Vector2(0f, 40f);
+            ar.anchoredPosition = new Vector2(0f, 31f);
             canvas.gameObject.AddComponent<QuickRestart>();
             ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」 · 「메인 메뉴로」 (1.1.2~ 가운데 세로 한 줄)
             ResultScreen.FitTitle();
             ResultScreen.BuildLeftBehind(canvas.transform);     // 1.2~ 「이번 판이 남긴 것」
             ResultScreen.BuildRecommend(canvas.transform);      // 1.2~ 3연속 사망 추천 한 줄
-            // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (왼쪽 기준 (60, -300) 300×60 · 떠나기 전에 떠 둔 스냅샷)
-            if (BuildView.HasSnapshot)
+            // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (떠나기 전에 떠 둔 스냅샷) · 1.4.8~ 왼쪽 패널 아래끝 안쪽, 결과 글과 같은 폭
+            if (buildView)
             {
                 Transform croot = canvas.transform;
-                Button bv = UIKit.MakeButton(croot, "빌드 자세히 보기", Vector2.zero, new Vector2(300f, 60f), () => BuildView.Open(croot), 24f);
+                Button bv = UIKit.MakeButton(left, "빌드 자세히 보기", Vector2.zero, new Vector2(ResultScreen.ContentW, BvH), () => BuildView.Open(croot), 24f);
                 RectTransform bvr = (RectTransform)bv.transform;
-                bvr.anchorMin = bvr.anchorMax = new Vector2(0f, 0.5f);
-                bvr.pivot = new Vector2(0f, 0.5f);
-                bvr.anchoredPosition = new Vector2(60f, -300f);
+                bvr.anchorMin = bvr.anchorMax = bvr.pivot = new Vector2(0.5f, 0f);
+                bvr.anchoredPosition = new Vector2(0f, ResultScreen.LeftPad);
                 bv.name = "BuildViewButton";
                 bv.navigation = new Navigation { mode = Navigation.Mode.None };
+                TMP_Text bl = bv.GetComponentInChildren<TMP_Text>(true);
+                if (bl != null) bl.fontSizeMin = 20f;
             }
-            // 1.1.9~ 오른쪽 아래 구석 「결과 복사」 (편의성 3차 10)
+            // 1.1.9~ 「결과 복사」 (편의성 3차 10) · 1.4.8~ 자리는 가운데 버튼 열 아래 한 줄 (ResultScreen.StackCenter)
             RunRecords.InstallCopyButton(canvas.transform, RunRecords.ShareText);
         }
-        // 이번 판에 얻은 캐릭터 포인트
+        // 이번 판에 얻은 캐릭터 포인트 (1.4.8~ 자리는 StackCenter · 기록 줄과 같은 30)
         if (canvas != null && CharacterData.RunPoints > 0)
         {
             UIKit.EnsureStyle();
-            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 50f));
+            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 36f));
+            pt.fontSizeMin = 20f;
+            pt.name = "RunPointsLine";
             pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0")
                     + (Point.RunBonus > 0 ? " <size=70%>(" + Loc.T("result.bonus").Replace("{0}", Point.RunBonus.ToString("N0")) + ")</size>" : "")     // 1.1~ 클리어 보너스
                     + "   " + Loc.T("보유 ") + CharacterData.Points.ToString("N0") + " P";
-            RectTransform pr = pt.rectTransform;
-            pr.anchorMin = pr.anchorMax = new Vector2(0.5f, 0f);
-            pr.anchoredPosition = new Vector2(0f, 90f);
         }
-        if (EndlessMode.LastSeconds < 0f) return;
-        if (canvas != null)
+        if (EndlessMode.LastSeconds >= 0f && canvas != null)
         {
             UIKit.EnsureStyle();
             bool daily = DailyChallenge.Active;
             string text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
                         + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
                         + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
-            TMP_Text t = UIKit.Text(canvas.transform, "", 34f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 140f : 110f));
+            // 1.4.8~ 34 → 30 (획득 포인트 줄과 같은 크기 · 줄 높이 38) · 자리는 StackCenter (버튼 열 → 순위 보기 · 결과 복사 줄 아래)
+            TMP_Text t = UIKit.Text(canvas.transform, "", 30f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 114f : 76f));
+            t.fontSizeMin = 20f;
+            t.name = "EndlessRecord";
             t.text = text;
-            RectTransform r = t.rectTransform;
-            // 위 가운데의 해골(255 ~ 405)과 겹치지 않게 결과 버튼 열(아래끝 -268, ResultScreen.BuildRetry) 아래로, 아래 획득 포인트(-475 ~ -425)와도 안 겹치게
-            r.anchoredPosition = new Vector2(0f, daily ? -345f : -330f);
             // 스팀 순위: 올린 결과가 오면 마지막 줄 끝에 붙임
             DailyChallenge.RankLine line = t.gameObject.AddComponent<DailyChallenge.RankLine>();
             line.text = t;
             line.baseText = text;
             line.daily = daily;
-            // 1.1.5~ 기록 글 오른쪽: 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
+            // 1.1.5~ 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
+            // 1.4.8~ 기록 글 오른쪽(x 600)에 떠 있던 것을 「결과 복사」와 한 줄로 (StackCenter)
             if (!Demo.On)
             {
-                t.rectTransform.sizeDelta = new Vector2(880f, t.rectTransform.sizeDelta.y);       // 버튼 자리 (오른쪽 결과 판 아래끝 -260 보다 아래)
                 Transform root = canvas.transform;
-                Button view = UIKit.MakeButton(root, "lb.view", new Vector2(600f, r.anchoredPosition.y), new Vector2(240f, 72f),
-                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 26f);
+                Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
+                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 24f);
                 view.name = "LeaderboardViewButton";
             }
         }
         EndlessMode.LastSeconds = -1f;
+        if (canvas != null) ResultScreen.StackCenter(canvas.transform);
     }
+
+    // 1.4.8~ 결과 · ESC 이번 판 글: 항목 사이 빈 줄(\n\n)을 반 줄 높이로 (줄이 많아 글씨가 20 아래로 줄던 것)
+    public const string HalfGap = "\n<size=45%>\n</size>";
+    public static string CompactGaps(string s) => string.IsNullOrEmpty(s) ? s : s.Replace("\n\n", HalfGap);
 
     static void InstallMainMenu()
     {
