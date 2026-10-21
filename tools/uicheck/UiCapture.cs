@@ -20,7 +20,23 @@ public class UiCapture
     static Type T(string n) => Type.GetType(n + ", Assembly-CSharp");
     static object Get(object o, string f) => o.GetType().GetField(f, Any)?.GetValue(o);
     static void Set(object o, string f, object v) => o.GetType().GetField(f, Any).SetValue(o, v);
-    static object Call(object o, string m, params object[] a) => o.GetType().GetMethod(m, Any).Invoke(o, a);
+    // 같은 이름이 여럿이면 인자 수가 맞는 것 (선택 인자는 Type.Missing 으로 채움)
+    static object Call(object o, string m, params object[] a)
+    {
+        foreach (MethodInfo mi in o.GetType().GetMethods(Any))
+        {
+            if (mi.Name != m) continue;
+            ParameterInfo[] ps = mi.GetParameters();
+            if (ps.Length < a.Length) continue;
+            bool ok = true;
+            for (int i = a.Length; i < ps.Length; i++) if (!ps[i].IsOptional) { ok = false; break; }
+            if (!ok) continue;
+            object[] full = new object[ps.Length];
+            for (int i = 0; i < ps.Length; i++) full[i] = i < a.Length ? a[i] : Type.Missing;
+            return mi.Invoke(o, BindingFlags.OptionalParamBinding | Any, null, full, null);
+        }
+        throw new MissingMethodException(o.GetType().Name, m);
+    }
     static void In(string f, object v) => T("GameInput").GetField(f).SetValue(null, v);
     static UnityEngine.Object Find(string type) => UnityEngine.Object.FindFirstObjectByType(T(type), FindObjectsInactive.Include);
 
@@ -209,6 +225,15 @@ public class UiCapture
         SceneManager.LoadScene("MainMenu");
         yield return Frames(20);
         yield return Shot("10_main_menu");
+
+        // ---------------- 설정창 (메인 메뉴 위 · 첫 탭)
+        Canvas menuCanvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+        if (menuCanvas != null)
+        {
+            T("SettingsUI").GetMethod("Open", new[] { typeof(Transform) }).Invoke(null, new object[] { menuCanvas.transform });
+            yield return Frames(5);
+            yield return Shot("10b_settings");
+        }
 
         // ---------------- 게임 오버 (무한 모드 기록 · 획득 포인트 포함)
         T("EndlessMode").GetField("LastSeconds").SetValue(null, 754f);
