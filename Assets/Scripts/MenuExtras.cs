@@ -13,7 +13,8 @@ public static class MenuExtras
     public static void Install()
     {
         Scene scene = SceneManager.GetActiveScene();
-        if (scene.name == "MainMenu") InstallMainMenu();
+        UIKit.RestyleScene();           // 1.4.8~ 장면에 놓인 버튼 · 창도 새 평평한 칸으로 (먼저 · 아래 설치 코드가 복제하는 버튼까지)
+        if (scene.name == "MainMenu") { InstallMainMenu(); StyleTitle(); }
         else if (scene.name == "GameScene") InstallEsc();
         else if (scene.name == "GameOver") InstallGameOver();
     }
@@ -419,6 +420,45 @@ public static class MenuExtras
     public const float ColRight = ColW * 0.5f;                            // 373
     static float ColumnX(int i) => -ColW * 0.5f + TileW * 0.5f + (TileW + Gap) * i;
 
+    // 1.4.8~ 사용자 「메인화면에 있는 게임 제목도 스타일 바꿔」: 금빛 그라데이션(위 밝은 금 → 아래 호박) · 어두운 외곽선 · 넓은 글자 간격,
+    //   부제는 작은 크림색 · 넓은 간격 · 양옆에 금줄 (메뉴 글자와 같은 결)
+    static void StyleTitle()
+    {
+        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (t.text == "Soul Saver")
+            {
+                t.enableVertexGradient = true;
+                t.colorGradient = new VertexGradient(new Color(1f, 0.95f, 0.72f), new Color(1f, 0.95f, 0.72f), new Color(0.86f, 0.55f, 0.2f), new Color(0.86f, 0.55f, 0.2f));
+                t.color = Color.white;
+                t.characterSpacing = 8f;
+                t.outlineWidth = 0.18f;
+                t.outlineColor = new Color32(26, 10, 30, 255);
+                Shadow sh = t.GetComponent<Shadow>();
+                if (sh == null) sh = t.gameObject.AddComponent<Shadow>();
+                sh.effectColor = new Color(0f, 0f, 0f, 0.55f);
+                sh.effectDistance = new Vector2(0f, -6f);
+            }
+            else if (t.name == "Subtitle")
+            {
+                t.color = new Color(0.9f, 0.85f, 0.76f);
+                t.fontSize *= 0.8f;
+                t.characterSpacing = 10f;
+                t.fontStyle |= FontStyles.Bold;
+                t.outlineWidth = 0.2f;
+                t.outlineColor = new Color32(18, 8, 24, 255);
+                float w = Mathf.Max(220f, t.preferredWidth) * 0.5f + 34f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    RectTransform line = UIKit.Rect("SubtitleLine", t.transform, new Vector2(side * (w + 60f), 0f), new Vector2(110f, 2f));
+                    Image li = line.gameObject.AddComponent<Image>();
+                    li.color = new Color(0.96f, 0.83f, 0.47f, 0.75f);
+                    li.raycastTarget = false;
+                }
+            }
+        }
+    }
+
     // 1.4.8~ 「더 보기」: 메인 화면에서 뺀 메뉴를 한 창에 세로로 (누르면 창을 닫고 그 메뉴를 엶)
     static GameObject moreOpen;
     static void OpenMore(Transform root)
@@ -804,11 +844,52 @@ public static class UIKit
         if (Font != null && ButtonSprite != null) return;
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (Font == null && t.font != null) { Font = t.font; FontMaterial = t.fontSharedMaterial; }
+        // 1.4.8~ 사용자 「메인 메뉴 느낌으로 설정창 · 도감 등 UI 가 있는 곳은 모두」: 장면 버튼의 장식 보라 그림 대신
+        //   평평한 칸 + 얇은 금빛 테두리를 직접 그려 씀 (코드로 만드는 창 · 버튼 · 칸 전부가 이 그림) — 색을 곱해 상태를 칠하는 기존 코드는 그대로 통함
+        if (ButtonSprite == null) ButtonSprite = FlatSprite();
+    }
+
+    // 1.4.8~ 장면에 놓인 UI 를 새 스타일로: 버튼 그림 · 그 그림을 같이 쓰는 창 · 패널(9칸 나눔)을 평평한 칸으로
+    //   장면마다 한 번 (MenuExtras.Install) · HUD 의 다른 그림(체력 막대 틀 등)은 건드리지 않음
+    static readonly HashSet<Sprite> oldSprites = new HashSet<Sprite>();
+    public static void RestyleScene()
+    {
+        EnsureStyle();
+        Scene active = SceneManager.GetActiveScene();
         foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
+            if (b.gameObject.scene != active) continue;
             Image img = b.GetComponent<Image>();
-            if (ButtonSprite == null && img != null && img.sprite != null) ButtonSprite = img.sprite;
+            if (img != null && img.sprite != null && img.sprite != ButtonSprite && img.type == Image.Type.Sliced) oldSprites.Add(img.sprite);
         }
+        if (oldSprites.Count == 0) return;
+        foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (img.gameObject.scene != active || img.sprite == null || !oldSprites.Contains(img.sprite)) continue;
+            img.sprite = ButtonSprite;
+            img.type = Image.Type.Sliced;
+            TMP_Text t = img.GetComponent<Button>() != null ? img.GetComponentInChildren<TMP_Text>(true) : null;
+            if (t != null) t.fontStyle |= FontStyles.Bold;
+        }
+    }
+
+    // 32×32 · 9칸 나눔 테두리 6 · 점 단위(도트 게임) — 바깥 2px 금빛 테두리 · 안쪽 1px 어두운 선 · 위 1줄 밝은 선 · 네 모서리 1px 비움
+    static Sprite FlatSprite()
+    {
+        const int N = 32;
+        Texture2D tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "FlatButton" };
+        Color edge = new Color(0.80f, 0.67f, 0.44f), inner = new Color(0.12f, 0.09f, 0.16f), fill = new Color(0.30f, 0.25f, 0.42f), top = new Color(0.38f, 0.32f, 0.52f);
+        Color[] px = new Color[N * N];
+        for (int y = 0; y < N; y++)
+            for (int x = 0; x < N; x++)
+            {
+                int d = Mathf.Min(Mathf.Min(x, N - 1 - x), Mathf.Min(y, N - 1 - y));
+                bool corner = (x == 0 || x == N - 1) && (y == 0 || y == N - 1);
+                px[y * N + x] = corner ? Color.clear : d < 2 ? edge : d == 2 ? inner : y == N - 4 ? top : fill;
+            }
+        tex.SetPixels(px);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(6f, 6f, 6f, 6f));
     }
 
     public static RectTransform Rect(string name, Transform parent, Vector2 pos, Vector2 size)
@@ -855,9 +936,10 @@ public static class UIKit
         Image wi = win.gameObject.AddComponent<Image>();
         wi.sprite = ButtonSprite;
         wi.type = Image.Type.Sliced;
-        wi.color = new Color(0.55f, 0.5f, 0.6f, 1f);
-        RectTransform inner = Rect("Inner", win, Vector2.zero, size - new Vector2(24f, 24f));
-        inner.gameObject.AddComponent<Image>().color = new Color(0.09f, 0.07f, 0.12f, 0.97f);
+        wi.color = new Color(1f, 1f, 1f, 1f);
+        // 1.4.8~ 바깥은 평평한 칸 그림의 금빛 테두리만 보이게 안쪽을 바로 덮음 (예전 24px 장식 틀 → 2px 선)
+        RectTransform inner = Rect("Inner", win, Vector2.zero, size - new Vector2(6f, 6f));
+        inner.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.05f, 0.10f, 0.98f);
         return inner;
     }
 
@@ -960,7 +1042,8 @@ public static class UIKit
         cb.selectedColor = Color.white;
         b.colors = cb;
         b.onClick.AddListener(onClick);
-        Text(r, ko, fontSize, new Color(0.96f, 0.9f, 0.8f), Vector2.zero, size - new Vector2(20f, 12f));
+        TMP_Text bt = Text(r, ko, fontSize, new Color(0.96f, 0.9f, 0.8f), Vector2.zero, size - new Vector2(20f, 12f));
+        bt.fontStyle |= FontStyles.Bold;            // 1.4.8~ 평평한 칸 위에서 잘 보이게
         return b;
     }
 
@@ -2299,7 +2382,8 @@ public class EscBackdrop : MonoBehaviour
 
     System.Collections.IEnumerator Grab()
     {
-        if (group == null) group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+        if (group == null) group = GetComponent<CanvasGroup>();
+        if (group == null) group = gameObject.AddComponent<CanvasGroup>();
         group.alpha = 0f;                                   // 이 프레임 화면에 메뉴가 찍히지 않게
         yield return new WaitForEndOfFrame();
         Texture2D shot = ScreenCapture.CaptureScreenshotAsTexture();

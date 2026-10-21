@@ -233,6 +233,16 @@ public class UiCapture
             T("SettingsUI").GetMethod("Open", new[] { typeof(Transform) }).Invoke(null, new object[] { menuCanvas.transform });
             yield return Frames(5);
             yield return Shot("10b_settings");
+            T("SettingsUI").GetMethod("Close").Invoke(null, null);
+            yield return Frames(3);
+            T("CodexUI").GetMethod("Open", new[] { typeof(Transform) }).Invoke(null, new object[] { menuCanvas.transform.root });
+            yield return Frames(5);
+            yield return Shot("10c_codex");
+            T("CodexUI").GetMethod("Close", Any)?.Invoke(null, null);
+            yield return Frames(3);
+            T("CharacterUI").GetMethod("Open", new[] { typeof(Transform) }).Invoke(null, new object[] { menuCanvas.transform.root });
+            yield return Frames(5);
+            yield return Shot("10d_character");
         }
 
         // ---------------- 게임 오버 (무한 모드 기록 · 획득 포인트 포함)

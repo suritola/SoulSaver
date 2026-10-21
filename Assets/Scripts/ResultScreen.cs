@@ -487,6 +487,8 @@ public static class ResultScreen
         Image img = same.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
         same.AddComponent<ResultPadFocus>();
+        // 1.4.8~ 메인 메뉴와 같은 글자 메뉴 (첫 버튼이 가장 크게 · 금빛)
+        for (int i = 0; i < col.Count; i++) MenuItemFx.Apply(col[i].GetComponent<Button>(), i == 0 ? 46f : 34f, i == 0, false);
     }
 
     // 씬 제목(「사망하셨습니다...」 · 「<난이도> 클리어!」)을 가운데 열 폭으로 — 원래 1500 폭이라 긴 글(영어 · 일본어 클리어 문구)이
