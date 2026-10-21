@@ -8,6 +8,7 @@ public static partial class LocTable
 {
     static void AddPathsClockmaker()
     {
+        // 1.4.8~ 입문 카드 · 공명 문구 줄이기 (docs/review/2026-10-21-UI-정리-기획.md 3절): 키는 그대로 · PK 로 화면 문구만
         // ================================================================= 갈래 이름 · 입문 카드 이름 · 한 줄 성격
         PA("톱니 떼", "Gear Swarm", "歯車の群れ", "齿轮群");
         PA("대시계", "Grand Clock", "大時計", "大钟表");
@@ -40,18 +41,21 @@ public static partial class LocTable
            "Throws gears in pairs (65% damage each), and they ricochet 1 more time.",
            "歯車を2つずつ投げ（1つあたりダメージ65%）、跳ね返りが1回増えます。",
            "齿轮每次投出两个（每个伤害65%），弹跳次数增加1次。");
-        PA("정각까지 필요한 눈금이 4 늘어나고, 덧붙은 톱니는 보스에게 피해가 55% 줄어듭니다.",
-           "O'Clock needs 4 more ticks, and the extra gears deal 55% less damage to bosses.",
-           "正時までに必要な目盛りが4増え、追加の歯車はボスへのダメージが55%減ります。",
-           "达到整点所需刻度增加4，追加的齿轮对首领的伤害降低55%。");
-        PA("튕길 때마다 맞은 적에게 녹이 쌓여 받는 피해가 4%씩 늘어납니다. (최대 5중첩 · 4초)",
-           "Each ricochet rusts the enemy it bounced off, making it take 4% more damage per stack. (Up to 5 stacks · 4s)",
-           "跳ね返るたびに当たった敵に錆がたまり、受けるダメージが4%ずつ増えます。（最大5重 · 4秒）",
-           "每次弹跳都会使被击中的敌人积累锈蚀，受到的伤害每层提高4%。（最多5层 · 4秒）");
-        PA("튕김이 2회 더 늘고, 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라집니다. (피해 50%)",
-           "Gears ricochet 2 more times, and a gear that has bounced three or more times splits into two small gears on hit. (50% damage)",
-           "跳ね返りがさらに2回増え、3回以上跳ねた歯車は当たると小さな歯車2つに分かれます。（ダメージ50%）",
-           "弹跳次数再增加2次，弹跳三次及以上的齿轮命中时分裂为两个小齿轮。（伤害50%）");
+        PK("정각까지 필요한 눈금이 4 늘어나고, 덧붙은 톱니는 보스에게 피해가 55% 줄어듭니다.",
+           "정각 눈금이 4 늘고, 덧붙은 톱니는 보스 피해가 55% 줄어듭니다.",
+           "O'Clock needs 4 more ticks. Extra gears deal 55% less to bosses.",
+           "正時の目盛りが4増え、追加の歯車はボスへのダメージが55%減ります。",
+           "整点刻度增加4，追加齿轮对首领伤害降低55%。");
+        PK("튕길 때마다 맞은 적에게 녹이 쌓여 받는 피해가 4%씩 늘어납니다. (최대 5중첩 · 4초)",
+           "튕겨 맞힌 적에게 녹이 쌓여 받는 피해가 4%씩 늘어납니다. (최대 5중첩 · 4초)",
+           "Ricochets rust enemies: +4% damage taken per stack. (Up to 5 stacks · 4s)",
+           "跳ね返って当てた敵に錆がたまり、受けるダメージが4%ずつ増えます。（最大5重 · 4秒）",
+           "弹跳命中的敌人积累锈蚀，受到伤害每层提高4%。（最多5层 · 4秒）");
+        PK("튕김이 2회 더 늘고, 세 번 이상 튕긴 톱니는 맞힐 때 작은 톱니 둘로 갈라집니다. (피해 50%)",
+           "튕김이 2회 더 늘고, 3번 이상 튕긴 톱니는 맞히면 둘로 갈라집니다. (피해 50%)",
+           "+2 ricochets. Gears that bounced 3+ times split in two on hit. (50% damage)",
+           "跳ね返りがさらに2回増え、3回以上跳ねた歯車は当たると2つに分かれます。（ダメージ50%）",
+           "弹跳次数再+2，弹跳3次以上的齿轮命中时一分为二。（伤害50%）");
         PA("톱니를 세 개씩 던집니다. (한 개당 피해 55%)",
            "Throws gears in threes. (55% damage each)",
            "歯車を3つずつ投げます。（1つあたりダメージ55%）",
@@ -80,26 +84,30 @@ public static partial class LocTable
            "每第三个齿轮成为整点齿轮。");
 
         // ================================================================= 시간 여행
-        PA("되감기 재사용 대기 −40%, 3초 전 대신 2초 전으로 돌아가고, 되감은 뒤 1초 동안 무적입니다. (무적은 4초에 한 번)",
-           "Rewind cooldown −40%. You return to 2s ago instead of 3s ago, and are invincible for 1s after rewinding. (Invincibility at most once per 4s)",
-           "巻き戻しの再使用待ち−40%、3秒前の代わりに2秒前へ戻り、巻き戻した後1秒間無敵になります。（無敵は4秒に1回）",
-           "倒带冷却−40%，回到2秒前而不是3秒前，倒带后无敌1秒。（无敌每4秒一次）");
-        PA("되감기가 주는 피해와 되갚는 피해가 40% 줄어듭니다.",
-           "Rewind damage and payback damage are reduced by 40%.",
-           "巻き戻しのダメージと仕返しのダメージが40%減ります。",
-           "倒带造成的伤害和反击伤害降低40%。");
+        PK("되감기 재사용 대기 −40%, 3초 전 대신 2초 전으로 돌아가고, 되감은 뒤 1초 동안 무적입니다. (무적은 4초에 한 번)",
+           "되감기 대기가 40% 줄고 2초 전(원래 3초)으로 돌아갑니다. 되감은 뒤 1초 무적입니다. (4초에 한 번)",
+           "Rewind cooldown −40%, and it returns to 2s ago (was 3s). 1s invincibility after rewinding. (Once per 4s)",
+           "巻き戻しの待ちが40%減り、2秒前（元は3秒）へ戻ります。巻き戻した後1秒無敵です。（4秒に1回）",
+           "倒带冷却缩短40%，回到2秒前（原为3秒）。倒带后无敌1秒。（每4秒一次）");
+        PK("되감기가 주는 피해와 되갚는 피해가 40% 줄어듭니다.",
+           "되감기 피해와 되갚는 피해가 40% 줄어듭니다.",
+           "Rewind and payback damage -40%.",
+           "巻き戻しと仕返しのダメージが40%減ります。",
+           "倒带与反击伤害降低40%。");
         PA("출발점에서 도착점까지 선 위의 적이 0.5초 멈춥니다.",
            "Enemies on the line from your start point to your landing point freeze for 0.5s.",
            "出発点から到着点までの線上の敵が0.5秒止まります。",
            "从出发点到到达点连线上的敌人停住0.5秒。");
-        PA("체력이 낮을수록 되감기 게이지가 빨리 찹니다. (체력이 바닥에 가까우면 최대 +60%)",
-           "The lower your HP, the faster the Rewind gauge fills. (Up to +60% near 0 HP)",
-           "体力が低いほど巻き戻しゲージが速くたまります。（体力がほぼ尽きると最大+60%）",
-           "生命越低，倒带槽充能越快。（生命接近见底时最多+60%）");
-        PA("되감기를 2번 모아 둡니다. (게이지가 가득 찬 뒤 한 번 더 찹니다)",
-           "Stores 2 Rewinds. (The gauge fills once more after it is full)",
-           "巻き戻しを2回ためておけます。（ゲージが満タンになった後もう1回たまります）",
-           "可储存2次倒带。（充满后会再充能一次）");
+        PK("체력이 낮을수록 되감기 게이지가 빨리 찹니다. (체력이 바닥에 가까우면 최대 +60%)",
+           "체력이 낮을수록 되감기 게이지가 빨리 찹니다. (바닥 근처 최대 +60%)",
+           "Lower HP fills the Rewind gauge faster. (Up to +60% near 0 HP)",
+           "体力が低いほど巻き戻しゲージが速くたまります。（尽きかけで最大+60%）",
+           "生命越低，倒带槽充能越快。（接近见底时最多+60%）");
+        PK("되감기를 2번 모아 둡니다. (게이지가 가득 찬 뒤 한 번 더 찹니다)",
+           "되감기를 2번 모아 둡니다.",
+           "Stores 2 Rewinds.",
+           "巻き戻しを2回ためておけます。",
+           "可储存2次倒带。");
 
         // ================================================================= 잔상
         PA("모든 톱니가 0.6초 뒤 던진 자리에서 잔상으로 한 번 더 날아갑니다. (피해 35%)",
@@ -136,10 +144,11 @@ public static partial class LocTable
            "While the gauge is full, attack speed is increased by 20%.",
            "ゲージが満タンの間、攻撃速度が20%上がります。",
            "必杀技槽充满时，攻击速度提高20%。");
-        PA("되감기가 지난 3초 동안 준 피해의 20%를 둘레 적에게 다시 줍니다. (스톱워치 1단계 · 이미 있으면 더 큰 값)",
-           "Rewind deals 20% of the damage you dealt in the last 3s again to nearby enemies. (Same as Stopwatch Lv1 · The higher value if you already have it)",
-           "巻き戻しが直前3秒間に与えたダメージの20%を周りの敵にもう一度与えます。（ストップウォッチ1段階 · すでにあれば大きい方）",
-           "倒带会将过去3秒内造成伤害的20%再次施加给周围敌人。（相当于秒表1级 · 已拥有时取较大值）");
+        PK("되감기가 지난 3초 동안 준 피해의 20%를 둘레 적에게 다시 줍니다. (스톱워치 1단계 · 이미 있으면 더 큰 값)",
+           "되감기가 지난 3초 동안 준 피해의 20%를 둘레에 다시 줍니다. (스톱워치 1단계 · 있으면 큰 값)",
+           "Rewind repeats 20% of your last 3s of damage around you. (Stopwatch Lv1 · higher value kept)",
+           "巻き戻しが直前3秒間のダメージの20%を周りにもう一度与えます。（ストップウォッチ1段階 · あれば大きい方）",
+           "倒带将过去3秒伤害的20%再次施加于周围。（秒表1级 · 已有则取较大值）");
         PA("맞아도 게이지를 잃지 않습니다.",
            "You no longer lose gauge when hit.",
            "被弾してもゲージを失いません。",
