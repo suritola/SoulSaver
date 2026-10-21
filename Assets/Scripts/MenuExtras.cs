@@ -432,8 +432,6 @@ public static class MenuExtras
                 t.colorGradient = new VertexGradient(new Color(1f, 0.95f, 0.72f), new Color(1f, 0.95f, 0.72f), new Color(0.86f, 0.55f, 0.2f), new Color(0.86f, 0.55f, 0.2f));
                 t.color = Color.white;
                 t.characterSpacing = 8f;
-                t.outlineWidth = 0.18f;
-                t.outlineColor = new Color32(26, 10, 30, 255);
                 Shadow sh = t.GetComponent<Shadow>();
                 if (sh == null) sh = t.gameObject.AddComponent<Shadow>();
                 sh.effectColor = new Color(0f, 0f, 0f, 0.55f);
@@ -445,8 +443,6 @@ public static class MenuExtras
                 t.fontSize *= 0.8f;
                 t.characterSpacing = 10f;
                 t.fontStyle |= FontStyles.Bold;
-                t.outlineWidth = 0.2f;
-                t.outlineColor = new Color32(18, 8, 24, 255);
                 float w = Mathf.Max(220f, t.preferredWidth) * 0.5f + 34f;
                 for (int side = -1; side <= 1; side += 2)
                 {
@@ -621,8 +617,6 @@ public static class MenuExtras
             label.fontSize = 30f;
             label.enableAutoSizing = false;
             label.fontStyle |= FontStyles.Bold;
-            label.outlineWidth = 0.22f;
-            label.outlineColor = new Color32(18, 8, 24, 255);
             Transform ul = buttons[i].transform.Find("Underline");
             if (ul == null)
             {
@@ -804,7 +798,7 @@ public static class UIKit
         {
             t.text = Loc.T(label);
             Remember(t, label);
-            if (Font == null) { Font = t.font; FontMaterial = t.fontSharedMaterial; }
+            if (Font == null && HasKorean(t.font)) { Font = t.font; FontMaterial = t.font.material; }
         }
         Image img = go.GetComponent<Image>();
         if (img != null && ButtonSprite == null) ButtonSprite = img.sprite;
@@ -843,8 +837,11 @@ public static class UIKit
     public static void EnsureStyle()
     {
         if (Font != null && ButtonSprite != null) return;
-        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            if (Font == null && t.font != null) { Font = t.font; FontMaterial = t.fontSharedMaterial; }
+        // 1.4.9 긴급: 장면에서 처음 찾은 글자의 폰트를 쓰다 보니, 장면 설치를 앞당긴 뒤 영문 전용 제목 폰트(「Soul Saver」)가 잡혀
+        //   코드로 만드는 모든 한글이 깨졌음 → 한글이 있는 폰트만 · 재질은 그 폰트 원본 재질 (글자별 복사본 재질이 아니라)
+        if (Font == null)
+            foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (HasKorean(t.font)) { Font = t.font; FontMaterial = t.font.material; break; }
         // 1.4.8~ 사용자 「메인 메뉴 느낌으로 설정창 · 도감 등 UI 가 있는 곳은 모두」: 장면 버튼의 장식 보라 그림 대신
         //   평평한 칸 + 얇은 금빛 테두리를 직접 그려 씀 (코드로 만드는 창 · 버튼 · 칸 전부가 이 그림) — 색을 곱해 상태를 칠하는 기존 코드는 그대로 통함
         // 1.4.8~ 사용자 「도형에 색만 채우면 싸구려 같다 · 게임 스타일에 맞게 이미지를」: tools/pixelart/make_ui_frames.py 가 그린 도트 틀
@@ -855,6 +852,9 @@ public static class UIKit
         if (DividerSprite == null) DividerSprite = Resources.Load<Sprite>("UI/ui_divider");
     }
     public static Sprite PanelSprite, DividerSprite;
+
+    // 한글(「가」)을 그릴 수 있는 폰트인지 (대체 폰트 포함)
+    static bool HasKorean(TMP_FontAsset f) => f != null && f.HasCharacter('가', true, true);
 
     // 1.4.8~ 장면에 놓인 UI 를 새 스타일로: 버튼 그림 · 그 그림을 같이 쓰는 창 · 패널(9칸 나눔)을 평평한 칸으로
     //   장면마다 한 번 (MenuExtras.Install) · HUD 의 다른 그림(체력 막대 틀 등)은 건드리지 않음
@@ -2335,8 +2335,6 @@ public class MenuItemFx : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     {
         if (styled || label == null) return;
         styled = true;
-        label.outlineWidth = 0.22f;
-        label.outlineColor = new Color32(18, 8, 24, 255);
     }
 
     public void OnPointerEnter(PointerEventData e) => over = true;
