@@ -681,7 +681,6 @@ public class HazardZone : MonoBehaviour
 public static class Hostile
 {
     static PlayerController player;
-    static Material lineMaterial;
 
     public static PlayerController Player
     {
@@ -717,10 +716,10 @@ public static class Hostile
 
     public static LineRenderer NewLine(string name, Color color, float width, int order = 18)
     {
-        if (lineMaterial == null) lineMaterial = new Material(Shader.Find("Sprites/Default"));
         GameObject go = new GameObject(name);
         LineRenderer lr = go.AddComponent<LineRenderer>();
-        lr.material = lineMaterial;
+        // 1.5.1~ 단색 선 → 도트 획 (어두운 외곽 · 색 · 밝은 심, 색 부분 두께는 그대로 · PixelLine)
+        PixelLine.Apply(lr);
         lr.useWorldSpace = true;
         lr.sortingLayerName = "Effect";
         lr.sortingOrder = order;
@@ -940,6 +939,9 @@ public class Telegraph : MonoBehaviour
     LineRenderer fillLine;
     SpriteRenderer fillDisc;
     SpriteRenderer glow;
+    float groundScale, fillScale;               // 1.5.1~ 바닥 원판 · 채움 원판 크기 (도트 원판 = 판정 지름, 예전 빛이면 예전 배율)
+    float groundBoost = 1f;                     // 도트 바닥 원판은 디더로 반쯤 비어 있어 진하기를 올려 예전 빛 이상으로 보이게
+    SpriteRenderer band;                        // 1.5.1~ 직선 예고의 옅은 띠: 단색 선 → 도트 사선 줄무늬 타일 (판정 띠 크기 그대로)
     FxAnim rune;
 
     // 1.2.4: 끝난 경고는 꺼 두었다가 다시 씀 (원 · 직선은 자식 구성이 달라 따로)
@@ -1023,22 +1025,30 @@ public class Telegraph : MonoBehaviour
             rune.spin = 70f;
             rune.transform.SetParent(transform, true);
         }
-        if (Hostile.Glow != null)
+        // 1.5.1~ 바닥 빛(흐린 Glow · 판정보다 1.2배 번짐) → 도트 바닥 원판(체크 디더 + 테두리, 가장자리 = 판정 원)
+        //   차오르는 채움도 흐린 빛 → 도트 원판 (다 차면 테두리와 딱 맞음). 그림이 없으면 예전 빛 그대로
+        Sprite floorSp = PixelLine.Floor != null ? PixelLine.Floor : Hostile.Glow;
+        Sprite discSp = PixelLine.Disc != null ? PixelLine.Disc : Hostile.Glow;
+        if (floorSp != null && discSp != null)
         {
+            groundScale = floorSp == Hostile.Glow ? radius * 2.4f / 8f : PixelLine.DiscScale(floorSp, radius * 2f);
+            groundBoost = floorSp == Hostile.Glow ? 1f : 1.6f;
+            fillScale = discSp == Hostile.Glow ? radius * 2f / 8f : PixelLine.DiscScale(discSp, radius * 2f);
             if (glow == null)
             {
-                GameObject g = SpecialAbilities.MakeSprite("Ground", Hostile.Glow, transform.position, radius * 2.4f / 8f, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
+                GameObject g = SpecialAbilities.MakeSprite("Ground", floorSp, transform.position, groundScale, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
                 g.transform.SetParent(transform, true);
                 glow = g.GetComponent<SpriteRenderer>();
+                glow.color = new Color(color.r, color.g, color.b, 0.25f * groundBoost);
             }
             else
             {
-                glow.transform.localScale = Vector3.one * (radius * 2.4f / 8f);
-                glow.color = new Color(color.r, color.g, color.b, 0.25f);
+                glow.transform.localScale = Vector3.one * groundScale;
+                glow.color = new Color(color.r, color.g, color.b, 0.25f * groundBoost);
             }
             if (fillDisc == null)
             {
-                GameObject d = SpecialAbilities.MakeSprite("Fill", Hostile.Glow, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
+                GameObject d = SpecialAbilities.MakeSprite("Fill", discSp, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
                 d.transform.SetParent(transform, true);
                 fillDisc = d.GetComponent<SpriteRenderer>();
             }
@@ -1078,6 +1088,7 @@ public class Telegraph : MonoBehaviour
             fillLine.startWidth = fillLine.endWidth = width * 0.7f;
             fillLine.SetPosition(0, a);
             fillLine.SetPosition(1, a);
+            PlaceBand(color);
             Reopen();
             return;
         }
@@ -1100,6 +1111,33 @@ public class Telegraph : MonoBehaviour
         fillLine.positionCount = 2;
         fillLine.SetPosition(0, a);
         fillLine.SetPosition(1, a);
+        PlaceBand(color);
+    }
+
+    // 1.5.1~ 옅은 띠를 도트 사선 줄무늬 타일로: a → b 길이 × 판정 너비 그대로 깔아 씀 (끝을 둥글게 늘이던 선 마개 없이 판정 직사각형 그대로)
+    //   그림이 없으면 예전 단색 띠(outline 선) 그대로
+    void PlaceBand(Color color)
+    {
+        Sprite sp = PixelLine.Band;
+        if (sp == null) { outline.enabled = true; return; }
+        if (band == null)
+        {
+            GameObject go = new GameObject("BandTiles");
+            go.transform.SetParent(transform, false);
+            band = go.AddComponent<SpriteRenderer>();
+            band.sprite = sp;
+            band.drawMode = SpriteDrawMode.Tiled;
+            band.tileMode = SpriteTileMode.Continuous;
+            band.sortingLayerName = "Effect";
+            band.sortingOrder = 1;
+        }
+        outline.enabled = false;
+        Vector3 d = b - a;
+        band.transform.position = (a + b) * 0.5f;
+        band.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+        band.transform.localScale = Vector3.one;
+        band.size = new Vector2(Mathf.Max(0.01f, d.magnitude), Mathf.Max(0.01f, width));
+        band.color = new Color(color.r, color.g, color.b, 0.3f);
     }
 
     LineRenderer Child(LineRenderer lr)
@@ -1123,13 +1161,15 @@ public class Telegraph : MonoBehaviour
             // 발동 순간에 테두리와 겹치도록 바깥에서 좁혀 들어오는 고리
             Hostile.SetArc(closing, transform.position, radius * Mathf.Lerp(1.8f, 1f, k), 0f, 354f);
             closing.startColor = closing.endColor = new Color(1f, 1f, 1f, 0.25f + 0.55f * k);
-            if (fillDisc != null) fillDisc.transform.localScale = Vector3.one * (radius * 2f / 8f) * k;
-            if (glow != null) glow.color = new Color(color.r, color.g, color.b, 0.12f + 0.2f * k * blink);
+            if (fillDisc != null) fillDisc.transform.localScale = Vector3.one * fillScale * k;
+            if (glow != null) glow.color = new Color(color.r, color.g, color.b, Mathf.Min(1f, (0.12f + 0.2f * k * blink) * groundBoost));
         }
         else
         {
             fillLine.SetPosition(1, Vector3.Lerp(a, b, k));
             outline.startColor = outline.endColor = new Color(color.r, color.g, color.b, 0.25f * blink + 0.1f);
+            // 도트 띠는 줄무늬의 옅은 줄이 반쯤 비어 있어 조금 진하게 (예전 단색 띠 이상으로 보이게)
+            if (band != null) band.color = new Color(color.r, color.g, color.b, (0.25f * blink + 0.1f) * 1.25f);
             edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = c;
         }
 

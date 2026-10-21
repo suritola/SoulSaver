@@ -85,7 +85,6 @@ public partial class SpecialAbilities : MonoBehaviour
     GameObject activeScythe;
     readonly List<Transform> orbs = new List<Transform>();
     readonly Dictionary<Collider2D, float> orbHitTimes = new Dictionary<Collider2D, float>();
-    Material lineMaterial;
 
     // 피드백 (소리, 조준 표시, 알림 글자)
     SpecialFeedback fx;
@@ -135,7 +134,6 @@ public partial class SpecialAbilities : MonoBehaviour
         if (player != null) player.special = this;
         EnermyController.Killed += OnEnemyKilled;
         EnermyController.DamageHook = KitDamageHook;
-        lineMaterial = new Material(Shader.Find("Sprites/Default"));
         BuildHud();
 
         Burn.FireSprite = glowSprite;
@@ -717,7 +715,7 @@ public partial class SpecialAbilities : MonoBehaviour
     {
         GameObject go = new GameObject("Bolt");
         LineRenderer lr = go.AddComponent<LineRenderer>();
-        lr.material = lineMaterial;
+        PixelLine.Apply(lr);        // 1.5.1~ 도트 획 (색 부분 두께는 그대로)
         lr.sortingLayerName = "Effect";
         lr.sortingOrder = 22;
         const int seg = 8;
