@@ -1901,6 +1901,7 @@ public static partial class LocTable
         { "{INTERACT} 대사 넘기기 · ESC 건너뛰기", L("{INTERACT} Next line · ESC Skip", "{INTERACT} セリフ送り · ESC スキップ", "{INTERACT} 下一句 · ESC 跳过") },
         { "끌기 · {MOVE} · 화면 끝으로 이동, 휠 확대, [C] 가운데로, [F] 전체 보기", L("Drag · {MOVE} · screen edge to move, wheel to zoom, [C] center, [F] show all", "ドラッグ・{MOVE}・画面端で移動、ホイールで拡大、[C] 中央へ、[F] 全体表示", "拖动 · {MOVE} · 屏幕边缘移动，滚轮缩放，[C] 回到中心，[F] 显示全部") },
         { "[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기", L("[Shift]+[{UPGRADE}] quick-learn without opening the tree", "[Shift]+[{UPGRADE}] ツリーを開かずに素早く習得", "[Shift]+[{UPGRADE}] 不打开灵魂树快速学习") },
+        { "끌기 · {MOVE} 이동 · 휠 확대", L("Drag · {MOVE} to move · Wheel to zoom", "ドラッグ・{MOVE}で移動・ホイールで拡大", "拖动 · {MOVE} 移动 · 滚轮缩放") },      // 1.4.8~ 영혼 트리 아래 안내 줄임 (SoulTreeUI)
         { "레벨업 카드를 한 번 다시 뽑을 수 있습니다 ([{REROLL}]). 레벨이 오를 때마다 1회 채워짐, 최대 1회 보관", E("[{REROLL}]로 레벨업 카드를 한 번 다시 뽑을 수 있습니다. 레벨이 오를 때마다 1회 채워지고, 최대 1회까지 보관합니다.", "Press [{REROLL}] to reroll your level-up cards once. Recharges 1 per level-up and holds up to 1.", "[{REROLL}]でレベルアップカードを1回引き直せます。レベルアップごとに1回補充され、最大1回まで保管します。", "按 [{REROLL}] 可重抽一次升级卡牌。每次升级补充1次，最多保存1次。") },
         { "모든 무기 피해 +6%", L("All weapon damage +6%", "全武器のダメージ +6%", "所有武器伤害 +6%") },
         // 1.0.4 요청 gamepad: 게임패드 지원 (1.0.5~ 버튼 이름 · 패드 안내 · 설정 조작 탭 배치표)

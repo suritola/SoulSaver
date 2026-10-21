@@ -95,7 +95,7 @@ public class CombatStatsHUD : MonoBehaviour
         RectTransform r = t.rectTransform;
         r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 0.5f);
         t.enableWordWrapping = false;
-        t.fontSizeMin = 12f;
+        t.fontSizeMin = 20f;            // 1.4.8~ 최소 글자 20 (UI 정리 기획 · 예전 12)
         return t;
     }
 

@@ -147,6 +147,7 @@ public class StageManager : MonoBehaviour
         SetFade(0f);
 
         BuildUpgradeButton();
+        ArrangeCorner();                // 1.4.8~ 오른쪽 위 포인트 · 영혼 트리 버튼 한 줄 · [ESC] 안내는 첫 60초만
         // 떠돌이 상점의 무기 · 스킬 강화 창은 없어짐: 무기는 진화, 스킬은 트리에서만 강화
 
         StartCoroutine(Opening());
@@ -297,6 +298,7 @@ public class StageManager : MonoBehaviour
 
     void Update()
     {
+        UpdateEscHint();
         if (Evo) { UpdateSoulTreeButton(); return; }
         bool show = specialPoints > 0 && Chapters.SlotOf(CurrentStage) >= 1 && !transitioning && !upgradeOpen;      // 2장부터 (2.1.1~ 장 순서)
         if (upgradeButton != null)
@@ -395,7 +397,8 @@ public class StageManager : MonoBehaviour
             gainUntil = Time.unscaledTime + 1f;
             if (gainText == null)
             {
-                gainText = UIKit.Text(upgradeButton.transform, "", 22f, new Color(0.8f, 0.7f, 1f), new Vector2(-185f, 0f), new Vector2(120f, 36f), TextAlignmentOptions.Right);
+                // 1.4.8~ 버튼 바로 아래 (버튼 왼쪽은 이제 포인트 자리 — ArrangeCorner)
+                gainText = UIKit.Text(upgradeButton.transform, "", 22f, new Color(0.8f, 0.7f, 1f), new Vector2(0f, GainY), new Vector2(CornerTreeW, 32f), TextAlignmentOptions.Right);
             }
         }
         // 1.1.9: 글자는 0.25초에 한 번만 다시 만듦 (처치마다 TMP 메시 재생성)
@@ -413,9 +416,11 @@ public class StageManager : MonoBehaviour
         {
             float k = 1f - left;                                    // 0 → 1
             gainText.alpha = Mathf.Clamp01(left * 2f);
-            gainText.rectTransform.anchoredPosition = new Vector2(-185f, 6f * k);
+            gainText.rectTransform.anchoredPosition = new Vector2(0f, GainY + 6f * k);
         }
     }
+
+    const float GainY = -(CornerRowH * 0.5f + 18f);       // 버튼 가운데 기준 아래 (토스트 줄 위끝 -214 보다 위)
 
     public void OpenSoulTree()
     {
@@ -647,25 +652,82 @@ public class StageManager : MonoBehaviour
         if (specialTree.fontMaterial != null) upgradeText.fontSharedMaterial = specialTree.fontMaterial;
         upgradeText.fontSize = 26f;
         upgradeText.enableAutoSizing = true;
-        upgradeText.fontSizeMin = 14f;
+        upgradeText.fontSizeMin = 20f;          // 1.4.8~ 최소 글자 20 (UI 정리 기획 · 예전 14)
         upgradeText.fontSizeMax = 26f;
         upgradeText.alignment = TextAlignmentOptions.Center;
         upgradeText.raycastTarget = false;
 
-        // 거너: 늘 떠 있는 버튼이라 오른쪽 위 구석(코인 · 포인트 아래)에 작게
+        // 거너: 늘 떠 있는 버튼이라 오른쪽 위 구석에 작게
+        // 1.4.8~ 코인 칸 바로 아래 한 줄(포인트 오른쪽)에 — 예전엔 포인트 · [ESC] 안내 아래 세 번째 줄(-222)에 따로 떠 있었음 (ArrangeCorner)
         if (Evo)
         {
             root.anchorMin = root.anchorMax = root.pivot = new Vector2(1f, 1f);
-            root.sizeDelta = new Vector2(230f, 44f);
-            root.anchoredPosition = new Vector2(-30f, -222f);
-            upgradeGlow.sizeDelta = new Vector2(310f, 100f);
-            upgradeText.fontSize = upgradeText.fontSizeMax = 20f;
-            upgradeText.fontSizeMin = 12f;
+            root.sizeDelta = new Vector2(CornerTreeW, CornerRowH);
+            root.anchoredPosition = new Vector2(-CornerRight, CornerRowTop);
+            upgradeGlow.sizeDelta = new Vector2(CornerTreeW + 80f, 100f);
+            upgradeText.fontSize = upgradeText.fontSizeMax = 22f;
+            upgradeText.fontSizeMin = 20f;
             Notice.ToastsBelow(root);       // 1.2.5~ 오른쪽 위 토스트가 이 버튼 아래에서 시작하고 버튼보다 위에 그려지게 (예전엔 겹쳐 가렸음)
         }
 
         PauseInspect.TipTreeButton(upgradeButton);      // 1.1.9~ 마우스를 올리면 설명 (일시정지 중에는 바로)
         upgradeButton.SetActive(false);
+    }
+
+    // ================================================================= 1.4.8~ 오른쪽 위 구석 정돈 (UI 정리 기획 2026-10-21)
+    // 예전: 코인 칸 아래에 「포인트 : n」(-132) · 「[ESC] 메뉴 · 설정」(-176) · 영혼 트리 버튼(-222)이 저마다 한 줄씩 떠 있었음
+    // → 코인 칸(아래끝 -120) 바로 아래 한 줄: 왼쪽 포인트 · 오른쪽 영혼 트리 버튼(거너 · 진화 영웅만)
+    //   [ESC] 안내는 그 아래 포인트 밑에, 판이 흐른 첫 60초만 (그 뒤엔 숨김 — 메뉴 키는 설정 · 튜토리얼에서도 알려 줌)
+    //   토스트 줄(위끝 -214)은 그대로 이 아래에서 시작
+    const float CornerRowTop = -130f, CornerRowH = 44f, CornerRight = 30f, CornerTreeW = 260f, CornerGap = 16f;
+    const float EscHintFor = 60f;
+    GameObject escHint;
+    float escHintTime;
+
+    void ArrangeCorner()
+    {
+        Canvas canvas = UIKit.HudCanvas();
+        if (canvas == null) return;
+        bool tree = Evo && upgradeButton != null;
+        // 버튼이 잠깐 숨어도(연출 · 창) 포인트가 옆으로 튀지 않게, 이 판에 버튼이 있는지로만 자리를 정함
+        float left = tree ? CornerRight + CornerTreeW + CornerGap : CornerRight;
+        Point pt = FindFirstObjectByType<Point>();
+        if (pt != null && pt.TextInput != null)
+        {
+            TMP_Text t = pt.TextInput;
+            RectTransform r = t.rectTransform;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(1f, 1f);
+            r.sizeDelta = new Vector2(tree ? 300f : 420f, CornerRowH);
+            r.anchoredPosition = new Vector2(-left, CornerRowTop);
+            t.alignment = TextAlignmentOptions.MidlineRight;
+            t.enableWordWrapping = false;
+            t.enableAutoSizing = false;
+            t.fontSize = 26f;                       // 본문 단계 (예전 30 · 버튼 22 와 한 줄에)
+        }
+        Transform hint = canvas.transform.Find("KeyHint");
+        if (hint != null && hint is RectTransform hr)
+        {
+            escHint = hint.gameObject;
+            hr.anchorMin = hr.anchorMax = hr.pivot = new Vector2(1f, 1f);
+            hr.sizeDelta = new Vector2(420f, 32f);
+            hr.anchoredPosition = new Vector2(-left, CornerRowTop - CornerRowH - 4f);      // 포인트 바로 밑 (영혼 트리 버튼 밑은 「+N」 자리)
+            if (hint.TryGetComponent(out TMP_Text ht))
+            {
+                ht.alignment = TextAlignmentOptions.MidlineRight;
+                ht.enableWordWrapping = false;
+                ht.enableAutoSizing = false;
+                ht.fontSize = 22f;                  // 보조 단계
+            }
+        }
+    }
+
+    // 판 시작 뒤 시간이 흐른 첫 60초만 [ESC] 안내 (멈춘 시간 · 시작 이야기는 세지 않음)
+    void UpdateEscHint()
+    {
+        if (escHint == null) return;
+        if (started && Time.timeScale > 0f) escHintTime += Time.deltaTime;
+        bool show = escHintTime < EscHintFor && !GameInput.TrailerRunning;
+        if (escHint.activeSelf != show) escHint.SetActive(show);
     }
 
     void OnDestroy()
@@ -868,7 +930,9 @@ public class StageManager : MonoBehaviour
             left -= Time.deltaTime;            // 멈춘 동안에는 줄지 않음
             bool urgent = left <= portalPullTime;
 
-            if (!countdownText.gameObject.activeSelf) countdownText.gameObject.SetActive(true);
+            // 1.4.8~ 창(영혼 트리 · 특수 트리 · 카드 · 상점 · 일시정지)이 열린 동안은 숨김 — 창 제목 띠 뒤로 비쳐 겹쳐 보였음 (닫히면 다음 프레임에 다시)
+            bool showCount = !Notice.Held;          // 시간이 멈춘 동안 · 창이 열린 동안 모두 (Notice 와 같은 기준)
+            if (countdownText.gameObject.activeSelf != showCount) countdownText.gameObject.SetActive(showCount);
             // 최적화: 표시 초 · 단계 · 언어가 바뀔 때만 글자를 새로 (예전엔 30초 동안 매 프레임)
             int sec = Mathf.CeilToInt(left);
             if (sec != shownCountSec || urgent != shownCountUrgent || Loc.Current != shownCountLang)

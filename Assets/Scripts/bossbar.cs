@@ -242,7 +242,7 @@ public class bossbar : MonoBehaviour
                 TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
                 t.font = nameText.font;
                 t.fontSharedMaterial = nameText.fontSharedMaterial;
-                t.fontSize = 19f;
+                t.fontSize = 20f;           // 1.4.8~ 19 → 20 (UI 정리 기획 최소 글자)
                 t.color = MemLineColor;
                 t.alignment = TextAlignmentOptions.MidlineRight;
                 t.enableWordWrapping = false;
@@ -624,10 +624,10 @@ public class bossbar : MonoBehaviour
             TextMeshProUGUI t = go.GetComponent<TextMeshProUGUI>();
             t.font = nameText.font;
             t.fontSharedMaterial = nameText.fontSharedMaterial;
-            t.fontSize = 18f;
+            t.fontSize = 20f;
             t.enableAutoSizing = true;
-            t.fontSizeMin = 14f;
-            t.fontSizeMax = 18f;
+            t.fontSizeMin = 20f;          // 1.4.8~ 18 · 최소 14 → 20 (UI 정리 기획 최소 글자 · 칸 폭 260 이면 「공간 침식 ×n」 넉넉)
+            t.fontSizeMax = 20f;
             t.color = new Color(0.82f, 0.6f, 1f);
             t.alignment = TextAlignmentOptions.MidlineLeft;
             t.enableWordWrapping = false;

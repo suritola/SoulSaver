@@ -39,6 +39,13 @@ public class GrowthPrompts : MonoBehaviour
         Nag(level, ref levelSince, ref nextLevelNag, ref levelNags, LevelNagAfter, LevelNagEvery, now, sm, LevelBanner);     // 1.0.4~: 용어 통일
         Nag(tree, ref treeSince, ref nextTreeNag, ref treeNags, TreeNagAfter, TreeNagEvery, now, sm, TreeBanner);
 
+        // 1.4.8~ 같은 안내는 한 곳만 (UI 정리 기획 2026-10-21): 레벨업 대기는 화면 아래 띠(LevelShop 배지)가 늘 보여 주므로 머리 위엔 띄우지 않음
+        //   (예전엔 머리 위 「레벨업! [Space] x2」 + 아래 띠 「레벨업! [Space] 카드 고르기 x2」가 늘 함께 떠 있었음 · 오른 순간은 리본 · 빛 · 소리로)
+        //   영혼 트리도 레벨업 대기 중이면 아래 띠가 「[T] 배울 칸 있음」을 함께 보여 주므로 그때는 머리 위를 비움
+        //   재촉(Nag) 알림은 위 그대로 — 오래 놓아두었을 때만 최대 두 번
+        tree &= !level;
+        level = false;
+
         if (!level && !tree)
         {
             if (tag != null && tag.gameObject.activeSelf) tag.gameObject.SetActive(false);
