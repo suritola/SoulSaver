@@ -40,6 +40,8 @@ public static class Notice
     const float BigTop = -212f;
     const float BigIcon = 88f;                 // 1.4.4~ 큰 알림 아이콘 (104 → 88)
     const float BigBgA = 0.6f;                // 큰 알림 바탕 불투명도 (예전 0.88) — 띠 뒤의 탄 · 적이 비쳐 보이게, 글자는 외곽선 · 그림자로 읽힘
+    const float BigRibbonA = 0.86f;           // 1.4.8~ 리본 그림 띠의 불투명도 (그림 자체가 어두운 돌판이라 조금만 비침)
+    static bool bigRibbon;                    // 큰 알림 띠가 리본 그림인지 (못 찾으면 예전 그라데이션 띠)
     const float ToastTop = -214f, ToastRight = -24f, ToastW = 470f, ToastGap = 8f;      // 오른쪽 위 코인(96) · 포인트 · 키 안내(-193까지) 아래
     const int MaxToasts = 4, MaxBigQueue = 6;
     const float ObjectiveY = -150f;
@@ -446,8 +448,14 @@ public static class Notice
         v.cg.blocksRaycasts = false;
         v.cg.interactable = false;
         v.bg = go.GetComponent<Image>();
-        v.bg.sprite = BandSprite;
-        v.bg.color = new Color(0.03f, 0.02f, 0.06f, BigBgA);
+        // 1.4.8~ 새 도트 스타일: 코드로 그린 그라데이션 띠 대신 리본 그림(ui_ribbon: 금 테두리 · 양끝 깃) · 강조색은 띠 색에 살짝 곱하고 가운데 짧은 막대로
+        //   리본 그림을 못 찾으면 예전처럼 양 끝이 투명하게 빠지는 띠
+        UIKit.EnsureStyle();
+        Sprite ribbon = UIKit.RibbonSprite;
+        bigRibbon = ribbon != null;
+        v.bg.sprite = bigRibbon ? ribbon : BandSprite;
+        if (bigRibbon) v.bg.type = Image.Type.Sliced;
+        v.bg.color = bigRibbon ? new Color(1f, 1f, 1f, BigRibbonA) : new Color(0.03f, 0.02f, 0.06f, BigBgA);
         v.bg.raycastTarget = false;
 
         v.lineTop = NewImage(v.band, "LineTop", BandSprite, Gold);
@@ -456,12 +464,23 @@ public static class Notice
         {
             RectTransform r = l.rectTransform;
             bool top = l == v.lineTop;
-            r.anchorMin = new Vector2(0f, top ? 1f : 0f);
-            r.anchorMax = new Vector2(1f, top ? 1f : 0f);
-            r.sizeDelta = new Vector2(0f, 4f);
-            r.anchoredPosition = Vector2.zero;
+            if (bigRibbon)
+            {
+                // 리본 금 테두리 위 가운데에 강조색 짧은 막대 (양 끝이 빠지는 띠 그림이라 테두리에 녹아듦)
+                r.anchorMin = new Vector2(0.25f, top ? 1f : 0f);
+                r.anchorMax = new Vector2(0.75f, top ? 1f : 0f);
+                r.sizeDelta = new Vector2(0f, 4f);
+                r.anchoredPosition = new Vector2(0f, top ? -5f : 5f);
+            }
+            else
+            {
+                r.anchorMin = new Vector2(0f, top ? 1f : 0f);
+                r.anchorMax = new Vector2(1f, top ? 1f : 0f);
+                r.sizeDelta = new Vector2(0f, 4f);
+                r.anchoredPosition = Vector2.zero;
+            }
         }
-        v.flash = NewImage(v.band, "Flash", BandSprite, new Color(1f, 1f, 1f, 0f));
+        v.flash = NewImage(v.band, "Flash", bigRibbon ? ribbon : BandSprite, new Color(1f, 1f, 1f, 0f), bigRibbon);
         Stretch(v.flash.rectTransform, Vector2.zero, Vector2.zero);
 
         v.content = UIKit.Rect("Content", v.band, Vector2.zero, new Vector2(1000f, 120f));
@@ -568,7 +587,8 @@ public static class Notice
         float contentW = iconW + gap + blockW;
         float contentH = Mathf.Max(blockH, hasCap ? 108f : hasIcon ? BigIcon + 4f : 0f);
         // 1.4.4~ 띠 폭 = 글 폭 + 양 끝 투명하게 빠지는 몫 (화면 폭까지) · 위아래 여백 44 → 32
-        float bandW = Mathf.Min(screenW, contentW * S / 0.6f + 80f);
+        // 1.4.8~ 리본 그림은 양 끝이 빠지지 않으므로 빈 몫을 줄임 (글 폭 + 양 깃 · 테두리 몫) — 보이는 폭은 예전과 비슷
+        float bandW = Mathf.Min(screenW, bigRibbon ? contentW * S + 160f : contentW * S / 0.6f + 80f);
         v.band.sizeDelta = new Vector2(bandW, (contentH + 32f) * S);
         v.content.sizeDelta = new Vector2(contentW, contentH);
         v.content.localScale = Vector3.one * S;
@@ -600,7 +620,12 @@ public static class Notice
         if (hasSub) Place(v.sub.rectTransform, bx, y - subH * 0.5f, blockW, subH);
 
         v.lineTop.color = v.lineBot.color = it.accent;
-        v.bg.color = Color.Lerp(new Color(0.03f, 0.02f, 0.06f, BigBgA), new Color(it.accent.r * 0.3f, it.accent.g * 0.3f, it.accent.b * 0.3f, BigBgA + 0.02f), 0.35f);
+        if (bigRibbon)
+        {
+            Color tint = Color.Lerp(Color.white, it.accent, 0.22f);
+            v.bg.color = new Color(tint.r, tint.g, tint.b, BigRibbonA);
+        }
+        else v.bg.color = Color.Lerp(new Color(0.03f, 0.02f, 0.06f, BigBgA), new Color(it.accent.r * 0.3f, it.accent.g * 0.3f, it.accent.b * 0.3f, BigBgA + 0.02f), 0.35f);
         v.cg.alpha = 0f;
         Sound(it.warn ? "warn" : "big");
     }
@@ -706,7 +731,7 @@ public static class Notice
     sealed class ToastItem
     {
         public string key, text;
-        public Color accent;
+        public Color accent, bgBase, bgFlash;       // 1.4.8~ 바탕 평소 색 · 번쩍일 때 색 (새 판은 흰색 곱 · 옛 판은 어두운 색)
         public float life, age, dieT, y, h, bump = 1f;
         public int count = 1;
         public bool dying, placed, soundPending;
@@ -787,21 +812,39 @@ public static class Notice
         t.bg.type = Image.Type.Sliced;
         t.bg.color = BgDark;
         t.bg.raycastTarget = false;
-        // 테두리: 강조색 얇은 판을 뒤에 (바탕보다 3px 크게)
-        Image rim = NewImage(t.r, "Rim", PanelSprite, new Color(accent.r, accent.g, accent.b, 0.55f), true);
-        Stretch(rim.rectTransform, new Vector2(-2f, -2f), new Vector2(2f, 2f));
-        rim.transform.SetAsFirstSibling();
-        Image fill = NewImage(t.r, "Fill", PanelSprite, BgDark, true);
-        Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
-        t.bg.color = new Color(0f, 0f, 0f, 0f);         // 실제 바탕은 Fill (Rim 위)
-        t.bg = fill;
+        // 1.4.8~ 새 도트 스타일: 바탕은 금장 테두리 돌판(ui_button · 토스트는 낮아서 창 판보다 작은 판) · 강조색 테두리 판 대신 왼쪽 막대만
+        //   그림을 못 찾으면 예전처럼 강조색 테두리 + 어두운 둥근 판
+        Sprite frame = FrameSprite(true);
+        if (frame != null)
+        {
+            Image fill = NewImage(t.r, "Fill", frame, FrameTint, true);
+            Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
+            t.bg.color = new Color(0f, 0f, 0f, 0f);
+            t.bg = fill;
+            t.bgBase = FrameTint;
+            t.bgFlash = Color.Lerp(FrameTint, new Color(accent.r, accent.g, accent.b, 1f), 0.75f);
+        }
+        else
+        {
+            // 테두리: 강조색 얇은 판을 뒤에 (바탕보다 3px 크게)
+            Image rim = NewImage(t.r, "Rim", PanelSprite, new Color(accent.r, accent.g, accent.b, 0.55f), true);
+            Stretch(rim.rectTransform, new Vector2(-2f, -2f), new Vector2(2f, 2f));
+            rim.transform.SetAsFirstSibling();
+            Image fill = NewImage(t.r, "Fill", PanelSprite, BgDark, true);
+            Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
+            t.bg.color = new Color(0f, 0f, 0f, 0f);         // 실제 바탕은 Fill (Rim 위)
+            t.bg = fill;
+            t.bgBase = BgDark;
+            t.bgFlash = new Color(accent.r * 0.55f, accent.g * 0.55f, accent.b * 0.55f, 0.95f);
+        }
         t.bar = NewImage(t.r, "Bar", PanelSprite, accent, true);
         RectTransform br = t.bar.rectTransform;
         br.anchorMin = new Vector2(0f, 0f);
         br.anchorMax = new Vector2(0f, 1f);
         br.pivot = new Vector2(0f, 0.5f);
-        br.sizeDelta = new Vector2(7f, -8f);
-        br.anchoredPosition = new Vector2(4f, 0f);
+        // 새 판이면 금 테두리 안쪽에 (테두리를 덮지 않게)
+        br.sizeDelta = frame != null ? new Vector2(6f, -20f) : new Vector2(7f, -8f);
+        br.anchoredPosition = new Vector2(frame != null ? 9f : 4f, 0f);
 
         bool hasIcon = icon != null;
         float textLeft = hasIcon ? 74f : 24f;
@@ -884,7 +927,8 @@ public static class Notice
             if (t.cg.alpha != alpha) t.cg.alpha = alpha;
             // 들어온 순간 · 「×2」 때 바탕이 강조색으로 번쩍
             float f = fx ? Mathf.Clamp01(1f - Mathf.Min(t.age, t.bump) / 0.45f) : 0f;
-            t.bg.color = Color.Lerp(BgDark, new Color(t.accent.r * 0.55f, t.accent.g * 0.55f, t.accent.b * 0.55f, 0.95f), f * 0.6f);
+            Color bc = Color.Lerp(t.bgBase, t.bgFlash, f * 0.6f);
+            if (t.bg.color != bc) t.bg.color = bc;
             float pop = fx && t.bump < 0.15f ? 1f + 0.06f * (1f - t.bump / 0.15f) : 1f;
             Vector3 ps = Vector3.one * pop;
             if (t.r.localScale != ps) t.r.localScale = ps;
@@ -907,17 +951,19 @@ public static class Notice
         objective.anchorMin = objective.anchorMax = objective.pivot = new Vector2(0.5f, 1f);
         objective.anchoredPosition = new Vector2(0f, ObjectiveY);
         Image bg = go.GetComponent<Image>();
-        bg.sprite = PanelSprite;
+        // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판(ui_button) · 못 찾으면 예전 어두운 둥근 판
+        Sprite frame = FrameSprite(true);
+        bg.sprite = frame != null ? frame : PanelSprite;
         bg.type = Image.Type.Sliced;
-        bg.color = BgDark;
+        bg.color = frame != null ? FrameTint : BgDark;
         bg.raycastTarget = false;
         objectiveBar = NewImage(objective, "Bar", PanelSprite, Gold, true);
         RectTransform br = objectiveBar.rectTransform;
         br.anchorMin = new Vector2(0f, 0f);
         br.anchorMax = new Vector2(0f, 1f);
         br.pivot = new Vector2(0f, 0.5f);
-        br.sizeDelta = new Vector2(7f, -10f);
-        br.anchoredPosition = new Vector2(6f, 0f);
+        br.sizeDelta = frame != null ? new Vector2(6f, -20f) : new Vector2(7f, -10f);
+        br.anchoredPosition = new Vector2(frame != null ? 9f : 6f, 0f);
         objectiveLabel = NewText(objective, "Text", 28f, new Color(1f, 0.9f, 0.72f), TextAlignmentOptions.Center);
         objectiveLabel.enableWordWrapping = false;
         objectiveLabel.enableAutoSizing = true;
@@ -953,10 +999,29 @@ public static class Notice
         p.r.anchoredPosition = new Vector2(0f, TipY);      // 레벨업 대기 배지(110 ~ 220) · 특수 강화 버튼 위
         p.cg = go.GetComponent<CanvasGroup>();
         p.cg.blocksRaycasts = false;
-        p.rim = NewImage(p.r, "Rim", PanelSprite, new Color(Sky.r, Sky.g, Sky.b, 0.95f), true);
-        Stretch(p.rim.rectTransform, new Vector2(-3f, -3f), new Vector2(3f, 3f));
-        Image fill = NewImage(p.r, "Fill", PanelSprite, new Color(0.04f, 0.04f, 0.09f, 0.96f), true);
-        Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
+        // 1.4.8~ 새 도트 스타일: 바탕은 창 판(ui_panel: 금 이중 테두리 · 모서리 보석) · 하늘색 테두리 판(Rim) 대신 왼쪽 하늘색 막대
+        //   (RunStats 가 처음 0.5초 Rim 색을 밝게 하는 연출은 막대에서 그대로) · 그림을 못 찾으면 예전 모습
+        Sprite frame = FrameSprite(false);
+        tipFramed = frame != null;
+        if (tipFramed)
+        {
+            Image fill = NewImage(p.r, "Fill", frame, FrameTint, true);
+            Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
+            p.rim = NewImage(p.r, "Rim", PanelSprite, new Color(Sky.r, Sky.g, Sky.b, 0.95f), true);
+            RectTransform rr = p.rim.rectTransform;
+            rr.anchorMin = new Vector2(0f, 0f);
+            rr.anchorMax = new Vector2(0f, 1f);
+            rr.pivot = new Vector2(0f, 0.5f);
+            rr.sizeDelta = new Vector2(6f, -40f);
+            rr.anchoredPosition = new Vector2(14f, 0f);
+        }
+        else
+        {
+            p.rim = NewImage(p.r, "Rim", PanelSprite, new Color(Sky.r, Sky.g, Sky.b, 0.95f), true);
+            Stretch(p.rim.rectTransform, new Vector2(-3f, -3f), new Vector2(3f, 3f));
+            Image fill = NewImage(p.r, "Fill", PanelSprite, new Color(0.04f, 0.04f, 0.09f, 0.96f), true);
+            Stretch(fill.rectTransform, Vector2.zero, Vector2.zero);
+        }
 
         Image icon = NewImage(p.r, "Icon", IconOf(NoticeIcon.Info), Color.white);
         icon.preserveAspect = true;
@@ -986,7 +1051,7 @@ public static class Notice
         p.bar = NewImage(p.r, "Time", BandSprite, Sky);
         RectTransform pr = p.bar.rectTransform;
         pr.anchorMin = pr.anchorMax = pr.pivot = new Vector2(0.5f, 0f);
-        pr.anchoredPosition = new Vector2(0f, 6f);
+        pr.anchoredPosition = new Vector2(0f, tipFramed ? 14f : 6f);      // 새 판이면 아래 금 테두리 안쪽
         go.SetActive(false);
         return p;
     }
@@ -1011,7 +1076,7 @@ public static class Notice
         p.body.rectTransform.sizeDelta = new Vector2(bw, bh);
         p.h = Mathf.Max(104f, 46f + bh + 24f);
         p.r.sizeDelta = new Vector2(TipW, p.h);
-        p.bar.rectTransform.sizeDelta = new Vector2(TipW - 40f, 4f);
+        p.bar.rectTransform.sizeDelta = new Vector2(tipFramed ? TipW - 64f : TipW - 40f, 4f);
     }
 
     // 도움말 닫기 키: [Tab] (다른 동작에 Tab 을 묶었으면 없음) · 패드는 시간이 지나면 저절로
@@ -1211,6 +1276,16 @@ public static class Notice
     }
 
     static Sprite bandSprite, panelSprite;
+    static bool tipFramed;
+
+    // 1.4.8~ 새 도트 스타일 판 그림 (small: 금장 테두리 돌판 ui_button · 아니면 창 판 ui_panel) · 못 찾으면 null (예전 둥근 판)
+    //   UIKit 의 PanelSprite 와 이 파일의 PanelSprite(코드로 그린 둥근 흰 판)는 다른 것
+    static readonly Color FrameTint = new Color(1f, 1f, 1f, 0.94f);
+    static Sprite FrameSprite(bool small)
+    {
+        UIKit.EnsureStyle();
+        return small ? (UIKit.PanelSprite != null ? UIKit.ButtonSprite : null) : UIKit.PanelSprite;
+    }
 
     // 가로로 양 끝이 투명하게 빠지는 띠 (큰 알림 바탕 · 강조 줄 · 번쩍임)
     static Sprite BandSprite
