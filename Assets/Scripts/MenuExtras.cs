@@ -179,6 +179,8 @@ public static class MenuExtras
         Transform moreRoot = sr.root;
         GameObject more = UIKit.CloneButton(start, "MoreButton", "더 보기", () => OpenMore(moreRoot));
         if (!TutorialRun.Done) more.AddComponent<NewGlow>();
+        Transform clonedIcon = more.transform.Find("Icon");          // 게임 시작에서 복제된 ▶ 그림은 뺌 (칸 밖 왼쪽으로 삐져나옴)
+        if (clonedIcon != null) Object.Destroy(clonedIcon.gameObject);
         foreach (GameObject hide in new[] { character, skins, evo, tutorial })
             if (hide != null) hide.SetActive(false);
         (GameObject go, string icon)[] tiles =
