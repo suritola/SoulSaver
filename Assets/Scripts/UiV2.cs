@@ -131,6 +131,15 @@ public static class UiV2
         if (card) return;
         TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
         if (t != null) t.color = on ? UiTokens.Text1 : UiTokens.Text2;
+        // 고른 것 아래 청록 1도트 밑줄 (테두리 밝기만으로는 구분이 약했음 — 설정 캡처 확인)
+        RectTransform br = (RectTransform)b.transform;
+        Transform line = b.transform.Find("ChosenLine");
+        if (line == null && on)
+        {
+            Image li = Line(b.transform, "ChosenLine", new Vector2(0f, -br.rect.height * 0.5f + 12f), Mathf.Max(24f, br.rect.width * 0.4f), true);
+            line = li.transform;
+        }
+        if (line != null) line.gameObject.SetActive(on);
     }
 
     // 켜고 끄는 값: 켜짐 = 청록 주 버튼 그림 + 뼈색 · 꺼짐 = 기본 그림 + 흐린 글자 (같은 모양이라 구분이 약했음)
