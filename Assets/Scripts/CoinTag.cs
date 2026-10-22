@@ -15,9 +15,10 @@ public class CoinTag : MonoBehaviour
     static readonly List<CoinTag> Live = new List<CoinTag>();         // All 과 같은 순서 (오래된 것부터)
     static readonly Dictionary<GameObject, Stack<CoinTag>> pool = new Dictionary<GameObject, Stack<CoinTag>>();
 
-    public const int MaxOnField = 220;         // 바닥에 동시에 있는 코인 수 상한
-    public const int EnemyPieces = 8;          // 일반 적 · 엘리트가 한 번에 떨어뜨리는 코인 개수 상한
-    public const int BossPieces = 40;          // 보스가 한 번에 떨어뜨리는 코인 개수 상한
+    // 1.5.5~: 바닥 코인이 화면을 덮었음 → 개수만 확 줄임 (220 · 8 · 40 → 50 · 2 · 10, 합쳐도 값은 그대로라 획득량은 같음)
+    public const int MaxOnField = 50;          // 바닥에 동시에 있는 코인 수 상한
+    public const int EnemyPieces = 2;          // 일반 적 · 엘리트가 한 번에 떨어뜨리는 코인 개수 상한
+    public const int BossPieces = 10;          // 보스가 한 번에 떨어뜨리는 코인 개수 상한
     const int MaxSparkles = 3;                 // 한 프레임에 줍는 반짝임 이펙트 수 상한
 
     public int value = 1;                      // 이 코인 하나가 코인 몇 개 몫인지

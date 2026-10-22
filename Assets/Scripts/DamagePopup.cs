@@ -40,6 +40,9 @@ public class DamagePopup : MonoBehaviour
     //   → 떠오르기(riseT)는 이어서, 수명(t)만 늘림 · 합칠 때 튀는 크기는 작게
     float riseT, popT, popAmp;
     Vector3 start;
+    // 1.5.5~: 숫자가 맞은 자리에 멈춰 있어 움직이는 적과 떨어졌음 → 맞은 대상을 따라감 (대상이 죽어 꺼지면 그 자리에서 마저 떠오름)
+    Transform follow;
+    Vector3 followOffset;
 
     public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false, HealthBarFeel.Tier tier = HealthBarFeel.Tier.Small)
     {
@@ -90,7 +93,7 @@ public class DamagePopup : MonoBehaviour
             at += new Vector3(Random.Range(-0.25f, 0.25f), 0.3f, 0f);
             Fx.Spawn("fx_sparkle", at, 1.4f, new Color(1f, 0.85f, 0.3f), 24f);
         }
-        p = Take(k, at, isBoss ? 45 : 40, isBoss && bossMaterial != null ? bossMaterial : material);
+        p = Take(k, target, at, isBoss ? 45 : 40, isBoss && bossMaterial != null ? bossMaterial : material);
         p.crit = isCrit;
         p.boss = isBoss;
         p.weak = isWeak;
@@ -112,14 +115,14 @@ public class DamagePopup : MonoBehaviour
         }
         if (active >= MaxActive || !EnsureFont()) return;
         Vector3 at = new Vector3(player.position.x, player.position.y + HurtHeight, 0f);
-        p = Take(k, at, HurtOrder, material);
+        p = Take(k, player, at, HurtOrder, material);
         p.hurt = true;
         byTarget[k] = p;
         p.Add(taken, tier);
     }
 
     // 다 떠오른 숫자를 꺼내 처음 상태로 (풀이 비면 새로 만듦)
-    static DamagePopup Take(int k, Vector3 at, int order, Material mat)
+    static DamagePopup Take(int k, Transform target, Vector3 at, int order, Material mat)
     {
         DamagePopup p = null;
         while (pool.Count > 0 && p == null) p = pool.Pop();
@@ -144,6 +147,8 @@ public class DamagePopup : MonoBehaviour
         p.text.fontSize = GameSettings.DamageNumbers == 1 ? 15f : 11f;
         p.key = k;
         p.start = at;
+        p.follow = target;
+        p.followOffset = target != null ? at - target.position : Vector3.zero;
         p.amount = 0f;
         p.t = 0f;
         p.size = 1f;
@@ -167,6 +172,7 @@ public class DamagePopup : MonoBehaviour
         if (!live) return;
         live = false;
         active--;
+        follow = null;
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
         if (byWeak.TryGetValue(key, out p) && p == this) byWeak.Remove(key);
         gameObject.SetActive(false);
@@ -276,6 +282,12 @@ public class DamagePopup : MonoBehaviour
         float kr = Mathf.Clamp01(riseT / life);
         float up = 1f - (1f - kr) * (1f - kr);
         float pop = popT < 0.08f ? 1f + popAmp * (1f - popT / 0.08f) : 1f;
+        if (follow != null)
+        {
+            // 꺼진 대상(죽어 풀로 돌아감)은 놓아줌 — 다시 쓰인 적을 따라가지 않게
+            if (follow.gameObject.activeInHierarchy) start = follow.position + followOffset;
+            else follow = null;
+        }
         transform.position = start + new Vector3(0f, (boss ? BossRise : Rise) * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
         // 1.1.9: 사라지는 알파를 text.color 로 바꾸면 TMP 가 매 프레임 글자 메시를 통째로 다시 만들었음 (최대 80개)
