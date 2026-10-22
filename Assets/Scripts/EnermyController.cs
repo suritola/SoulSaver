@@ -182,7 +182,8 @@ public class EnermyController : MonoBehaviour
         spriteRenderer.color = baseColor;
 
         // 머리 위 체력바
-        if (swarm == null) healthBar = EnemyHealthBar.Attach(this, spriteRenderer);       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
+        if (swarm == null) healthBar = EnemyHealthBar.Attach(this, spriteRenderer);
+        if (swarm == null) FootShadow.Enemy(gameObject, spriteRenderer, hitbox);       // 1단계-11~ 발밑 그림자       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
 
         if (skill != EnemySkillType.None)
         {
@@ -611,6 +612,7 @@ public class EnermyController : MonoBehaviour
             if (DamageSource.Current == DamageSource.Basic) RunCounters.Add("midboss.basic");
         }
         spriteRenderer.color = baseColor;
+        FootShadow.Hide(gameObject);
 
         // 사망 연출 중에는 총알이나 플레이어와 부딪히지 않음
         if (bodyCollider != null) bodyCollider.enabled = false;

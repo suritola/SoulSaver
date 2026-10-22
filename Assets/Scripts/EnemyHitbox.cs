@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 적 · 보스 히트박스를 그림(불투명한 부분)의 가운데에 맞추고 넉넉하게 키움
 // 그림을 바꾼 뒤에도 프리팹 콜라이더가 옛 그림 기준(아래로 치우침)으로 남아 있던 것을 코드로 바로잡음
@@ -76,6 +76,8 @@ public class EnemyHitbox : MonoBehaviour
 
     // 몸 반지름 (월드) — 적끼리 밀어내기 · 벽 판정은 키운 히트박스가 아니라 예전 크기 그대로
     public float BodyWorldRadius => Mathf.Max(0f, oldLocal) * Scale;
+    // 닿기 판정 원 반지름 (로컬) — 1단계-11 발밑 그림자 폭
+    public float ContactLocal => contactLocal;
 
     // 몸통 피해를 줄 만큼 실제로 닿았는지 (상대 콜라이더가 몸 안쪽 원에 들어옴)
     public bool Touching(Collider2D other)

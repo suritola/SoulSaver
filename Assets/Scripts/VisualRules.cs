@@ -30,6 +30,12 @@ public static class VisualRules
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void CheckLayers()
     {
+        // 1단계-11~ 같은 층 · 같은 순서끼리는 화면 아래(앞)에 있는 것을 앞에 그림 — 적끼리 겹칠 때 누가 앞인지 (예전엔 생긴 순서대로 뒤죽박죽)
+        if (!Legacy)
+        {
+            UnityEngine.Rendering.GraphicsSettings.transparencySortMode = TransparencySortMode.CustomAxis;
+            UnityEngine.Rendering.GraphicsSettings.transparencySortAxis = new Vector3(0f, 1f, 0f);
+        }
         SortingLayer[] all = SortingLayer.layers;
         if (all.Length == 0 || all[all.Length - 1].name != "Player")
             Debug.LogError("[VisualRules] 마지막 정렬 층이 Player 가 아님 — 범위표시가 묻힘 (TagManager 확인)");
