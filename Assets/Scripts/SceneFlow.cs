@@ -187,7 +187,13 @@ public class SceneFlow : MonoBehaviour
     float shownProgress, targetProgress;
 
     // 진행률 (0 ~ 1): 바는 목표를 부드럽게 따라가고, 영웅은 바 끝에서 6프레임으로 걸음 · 영혼 불빛은 아래에서 위로 떠오름 (멈춘 시간과 상관없이 실제 시간)
-    void Tick()
+    // 2026-10-22~ (검토): 로딩 화면 꾸미기(Tick · Dots · ShowLoading)는 안에서 예외를 삼킴 — 그림 · 팁 읽기가 실패해도 씬 불러오기 자체는 끝까지 감
+    //   (예외가 Run 까지 올라오면 allowSceneActivation = false 인 op 가 남아 뒤의 씬 전환이 모두 멈췄음) · QA 가 이름으로 부르므로 이름은 그대로
+    void Tick() { try { TickCore(); } catch (System.Exception e) { Debug.LogException(e); } }
+    void Dots() { try { DotsCore(); } catch (System.Exception e) { Debug.LogException(e); } }
+    void ShowLoading(string scene) { try { ShowLoadingCore(scene); } catch (System.Exception e) { Debug.LogException(e); } }
+
+    void TickCore()
     {
         float dt = Time.unscaledDeltaTime, now = Time.unscaledTime;
         shownProgress = Mathf.MoveTowards(shownProgress, targetProgress, dt * 1.6f);
@@ -231,8 +237,12 @@ public class SceneFlow : MonoBehaviour
         }
     }
 
+    AsyncOperation pendingOp;           // 불러오는 중인 씬 (Recover 가 활성화 막힘을 풀어 뒤 전환이 멈추지 않게)
+    bool stageWorked;                   // 장 전환 work 를 이미 실행했는지 (실패해도 맵 교체는 꼭 함)
+
     void Recover()
     {
+        if (pendingOp != null) { pendingOp.allowSceneActivation = true; pendingOp = null; }
         if (loadingBox != null)
         {
             CanvasGroup g = loadingBox.GetComponent<CanvasGroup>();
@@ -242,11 +252,14 @@ public class SceneFlow : MonoBehaviour
         if (curtain != null) { curtain.color = new Color(0f, 0f, 0f, 0f); curtain.raycastTarget = false; }
         if (canvas != null) canvas.enabled = false;
         Application.backgroundLoadingPriority = ThreadPriority.BelowNormal;
-        if (Time.timeScale == 0f) Time.timeScale = 1f;
+        if (Time.timeScale == 0f && !stageLoading) Time.timeScale = 1f;      // 장 전환이면 호출처(StageManager)가 검은 막 아래서 시간을 직접 풂
+        stageLoading = false;
         loading = false;
         activated = false;
         queued = null;
     }
+
+    bool stageLoading;
 
     IEnumerator Run(string scene)
     {
@@ -260,6 +273,7 @@ public class SceneFlow : MonoBehaviour
         while (scene != null)
         {
             AsyncOperation op = SceneManager.LoadSceneAsync(scene);
+            pendingOp = op;
             if (op == null)
             {
                 Debug.LogWarning("[SceneFlow] 씬 없음: " + scene);
@@ -283,6 +297,7 @@ public class SceneFlow : MonoBehaviour
             activated = true;                                // 새 씬의 sceneLoaded · Awake · Start 가 부르는 Go 는 이어서 받음
             op.allowSceneActivation = true;
             while (!op.isDone) { Dots(); Tick(); yield return null; }
+            pendingOp = null;
             yield return null;                               // 새 씬 Awake · sceneLoaded 핸들러(MenuExtras.Install 등) 끝나기
             // 나머지를 천천히 채움 (무거운 첫 프레임들이 지나가는 동안 · 팁이 바뀜) — 실제 시간 · 이어서 부르는 씬이 있으면 건너뜀
             if (queued == null)
@@ -312,7 +327,12 @@ public class SceneFlow : MonoBehaviour
     {
         if (loading || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { work(); yield break; }
         bool done = false;
-        Ensure().StartCoroutine(instance.Guard(instance.RunStageLoad(work, () => done = true), () => done = true));
+        Ensure().StartCoroutine(instance.Guard(instance.RunStageLoad(work, () => done = true), () =>
+        {
+            // 로딩 화면에서 예외가 나도 맵 교체 · 적 생성 시작은 꼭 (안 하면 그 장에서 적이 나오지 않아 진행이 막힘)
+            if (!instance.stageWorked) { instance.stageWorked = true; try { work(); } catch (System.Exception e) { Debug.LogException(e); } }
+            done = true;
+        }));
         for (float w = 0f; !done && w < 15f; w += Time.unscaledDeltaTime) yield return null;     // 상한: 실제 시간 15초 (멈춰 남지 않게)
     }
 
@@ -320,6 +340,8 @@ public class SceneFlow : MonoBehaviour
     {
         SceneFlow f = this;
         loading = true;
+        stageLoading = true;
+        stageWorked = false;
         f.canvas.enabled = true;
         f.curtain.color = new Color(0f, 0f, 0f, 1f);
         f.curtain.raycastTarget = true;
@@ -335,6 +357,7 @@ public class SceneFlow : MonoBehaviour
         }
         g.alpha = 1f;
         yield return null;                                   // 로딩 화면이 그려진 뒤에 굳게
+        stageWorked = true;
         try { work(); }
         catch (System.Exception e) { Debug.LogException(e); }
         f.targetProgress = 1f;
@@ -346,6 +369,7 @@ public class SceneFlow : MonoBehaviour
         f.curtain.raycastTarget = false;
         f.canvas.enabled = false;
         loading = false;
+        stageLoading = false;
         finished();                                          // 다 걷은 뒤에 호출처가 이어 감 (로딩 화면에 가려진 채 게임이 먼저 풀리지 않게)
     }
 
@@ -360,7 +384,7 @@ public class SceneFlow : MonoBehaviour
         curtain.raycastTarget = to > 0.01f;
     }
 
-    void ShowLoading(string scene)
+    void ShowLoadingCore(string scene)
     {
         loadingBox.gameObject.SetActive(true);
         dotsAt = Time.unscaledTime;
@@ -401,7 +425,7 @@ public class SceneFlow : MonoBehaviour
     }
 
     // 「불러오는 중」 + 점 세 개가 0.4초마다 하나씩 · 팁은 TipEvery 초마다 다음 것
-    void Dots()
+    void DotsCore()
     {
         if (Time.unscaledTime - tipAt >= TipEvery) NextTip();
         int n = Mathf.FloorToInt((Time.unscaledTime - dotsAt) / 0.4f) % 4;

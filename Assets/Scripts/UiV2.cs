@@ -107,7 +107,7 @@ public static class UiV2
             t.fontStyle &= ~FontStyles.Bold;
             t.enableVertexGradient = false;
             t.characterSpacing = 0f;
-            if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;     // 외곽선 재질 대신 원본
+            if (UIKit.FontMaterial != null && t.font == UIKit.Font) t.fontSharedMaterial = UIKit.FontMaterial;     // 외곽선 재질 대신 원본 (다른 글꼴이면 재질이 맞지 않아 그대로)
             t.color = kind == Kind.Danger ? UiTokens.Danger : UiTokens.Text1;
             t.enableAutoSizing = true;
             t.fontSize = t.fontSizeMax = size;
@@ -150,11 +150,18 @@ public class UiAppear : MonoBehaviour
     CanvasGroup group;
     Vector2 home;
     float t;
+    bool started;
 
-    void Start()
+    void Awake()
     {
         group = gameObject.GetComponent<CanvasGroup>();
         if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+        if (!GameSettings.ReduceMotion) group.alpha = 0f;      // 첫 프레임에 한 번 다 보였다가 사라지지 않게
+    }
+
+    void Start()
+    {
+        started = true;
         if (target != null) home = target.anchoredPosition;
         if (GameSettings.ReduceMotion) { t = UiTokens.Base; Apply(1f); enabled = false; return; }
         Apply(0f);
@@ -168,7 +175,7 @@ public class UiAppear : MonoBehaviour
         if (k >= 1f) enabled = false;
     }
 
-    void OnDisable() => Apply(1f);
+    void OnDisable() { if (started) Apply(1f); else if (group != null) group.alpha = 1f; }      // 시작 전이면 자리(home 미정)는 건드리지 않음
 
     void Apply(float k)
     {
@@ -181,6 +188,7 @@ public class UiAppear : MonoBehaviour
 public class UiFocusMark : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler, IPointerDownHandler, IPointerUpHandler
 {
     public RectTransform label;
+    public bool selectOnHover = true;       // Space · Enter 를 직접 처리하는 창(고르기 창 등)의 버튼은 끔 — 지나간 버튼이 Submit 을 가로채지 않게
     GameObject mark;
     bool hover, selected;
     Vector2 labelHome;
@@ -216,10 +224,14 @@ public class UiFocusMark : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public void OnPointerEnter(PointerEventData e)
     {
         hover = true;
-        if (!GamePad.Active && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != gameObject)
+        // 창이 가만히 있는 커서 밑에 떴을 때(움직임 0)는 선택하지 않음 — 위험 확인 창의 기본 선택(취소)이 무너져 Enter 한 번에 판이 날아갈 수 있었음 (검토)
+        EventSystem es = EventSystem.current;
+        GameObject cur = es != null ? es.currentSelectedGameObject : null;
+        bool typing = cur != null && cur.GetComponent<TMP_InputField>() != null;
+        if (selectOnHover && !GamePad.Active && es != null && cur != gameObject && !typing && e != null && e.delta.sqrMagnitude > 0f)
         {
             Selectable sel = GetComponent<Selectable>();
-            if (sel != null && sel.IsInteractable()) EventSystem.current.SetSelectedGameObject(gameObject);
+            if (sel != null && sel.IsInteractable()) es.SetSelectedGameObject(gameObject);
         }
         Refresh();
     }
@@ -233,6 +245,12 @@ public class UiFocusMark : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     void Nudge(bool down)
     {
         if (label != null) label.anchoredPosition = labelHome + (down ? new Vector2(0f, -UiTokens.S1 * 0.5f) : Vector2.zero);
+    }
+
+    void OnEnable()
+    {
+        selected = EventSystem.current != null && EventSystem.current.currentSelectedGameObject == gameObject;     // 창을 다시 열면 남아 있는 선택에도 괄호
+        Refresh();
     }
 
     void OnDisable() { hover = false; selected = false; Nudge(false); Refresh(); }

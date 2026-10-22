@@ -454,7 +454,7 @@ public partial class LevelShop : MonoBehaviour
                 selectHint.outlineWidth = 0f;
                 selectHint.fontSize = selectHint.fontSizeMax = UiTokens.Body;
                 selectHint.fontSizeMin = UiTokens.Small;
-                if (UIKit.FontMaterial != null) selectHint.fontSharedMaterial = UIKit.FontMaterial;
+                if (UIKit.FontMaterial != null && selectHint.font == UIKit.Font) selectHint.fontSharedMaterial = UIKit.FontMaterial;
             }
             selectHint.enableWordWrapping = false;
             selectHint.alignment = TextAlignmentOptions.Center;

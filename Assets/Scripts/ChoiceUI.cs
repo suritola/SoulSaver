@@ -221,7 +221,7 @@ public class ChoiceUI : MonoBehaviour
         {
             Button extra = UIKit.MakeButton(r, extraLabel, new Vector2(0f, -394f), new Vector2(420f, 56f), () => { if (ui.ready) ui.confirmed = n; }, 24f);
             extra.name = "ChoiceExtra";
-            if (v2) UiV2.Restyle(extra, UiV2.Kind.Secondary, UiTokens.Body);
+            if (v2) { UiV2.Restyle(extra, UiV2.Kind.Secondary, UiTokens.Body); extra.GetComponent<UiFocusMark>().selectOnHover = false; }     // Space 확정을 가로채지 않게
             TMP_Text et = extra.GetComponentInChildren<TMP_Text>();
             if (et != null) { UIKit.Forget(et); et.text = Loc.T(extraLabel) + "  <size=70%><color=#A89C86>[" + (GamePad.Active ? "X" : (n + 1).ToString()) + "]</color></size>"; }
             if (!string.IsNullOrEmpty(extraTip))

@@ -13,7 +13,7 @@ public static class UiRules
     {
         bool on = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-uiv2") >= 0;
 #if UNITY_EDITOR
-        on |= UnityEditor.EditorPrefs.GetBool(EditorPrefKey, false);
+        if (!Application.isBatchMode) on |= UnityEditor.EditorPrefs.GetBool(EditorPrefKey, false);     // 자동 봇 · 배치 측정에는 섞지 않음
 #endif
         Legacy = !on;
         sprites.Clear();

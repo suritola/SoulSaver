@@ -246,7 +246,7 @@ public class ESCmenu : MonoBehaviour
         UnityEngine.UI.Button cancelButton = UiV2.Btn(win, "취소", new Vector2(okX - BtnW - UiTokens.S2, y), new Vector2(BtnW, UiTokens.ButtonH), CloseConfirm);
         UIKit.ConfirmKeys(null, okButton, cancelButton, 0f, false);         // ←→ 로 두 버튼만 오감 (기본 선택 · 안내는 아래에서)
         UIKit.SetDefault(destructive ? cancelButton : okButton);
-        UiV2.KeyHint(win, "[Enter] 선택   [ESC] 취소", -H / 2f + Pad - 6f);
+        UiV2.KeyHint(win, "[Enter] 확인   [ESC] 취소", -H / 2f + Pad - 6f);         // 번역 있는 키 (LocTable.Ux2)
     }
 
     void CloseConfirm()

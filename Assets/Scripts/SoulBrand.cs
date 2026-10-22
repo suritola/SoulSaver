@@ -289,7 +289,7 @@ public static class SoulBrand
                     ii.preserveAspect = true;
                     ii.raycastTarget = false;
                 }
-                TMP_Text bn = UIKit.Text(r, b.NameKey, v2 ? UiTokens.Body : 24f, v2 ? UiTokens.Text1 : b.color, new Vector2(46f, y + 34f), new Vector2(320f, 34f), TextAlignmentOptions.Left);
+                TMP_Text bn = UIKit.Text(r, b.NameKey, v2 ? UiTokens.Body : 24f, v2 ? UiTokens.Text1 : b.color, new Vector2(46f, v2 ? y + 34f : y + 30f), new Vector2(320f, 34f), TextAlignmentOptions.Left);
                 TMP_Text d = UIKit.Text(r, "", v2 ? UiTokens.Small : 18f, v2 ? UiTokens.Text2 : new Color(0.93f, 0.9f, 0.84f), new Vector2(46f, v2 ? y - 22f : y - 20f), new Vector2(320f, v2 ? 78f : 64f), TextAlignmentOptions.TopLeft);
                 if (v2) { bn.fontSizeMin = UiTokens.MinSize(UiTokens.Body); d.fontSizeMin = UiTokens.Small; d.overflowMode = TextOverflowModes.Ellipsis; }
                 d.text = CardText(b);

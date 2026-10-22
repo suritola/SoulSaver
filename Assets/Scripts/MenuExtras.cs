@@ -769,7 +769,7 @@ public static class MenuExtras
             Transform ul = b.transform.Find("Underline");
             if (ul == null) ul = UiV2.Line(b.transform, "Underline", new Vector2(0f, -DiffH * 0.5f + 9f), TileW * 0.5f, true).transform;
             Image ui = ul.GetComponent<Image>();
-            if (ui != null) ui.color = d == Difficulty.Hard ? UiTokens.Danger : d == Difficulty.Endless ? UiTokens.GaugeSoul : Color.white;
+            if (ui != null) { ui.sprite = null; ui.color = d == Difficulty.Hard ? UiTokens.Danger : d == Difficulty.Endless ? UiTokens.GaugeSoul : UiTokens.Accent; }     // 단색 (그림에 곱하면 탁해짐)
             ul.gameObject.SetActive(on);
         }
     }
