@@ -162,6 +162,15 @@ public class SoulTreeUI : MonoBehaviour
         foreach (NodeView v in views)
         {
             bool can = sp.CanBuy(v.node);
+            if (!UiRules.Legacy)
+            {
+                // UI 개편: 살 수 있는 칸은 빛 번짐 · 숨쉬기 · 6% 커짐 대신 청록 테 카드 그림 (나머지 기본 카드)
+                v.glow.enabled = false;
+                Sprite cs = UiRules.Sprite(can ? "ui2_card_s" : "ui2_card_n");
+                if (cs != null && v.frame.sprite != cs) { v.frame.sprite = cs; v.frame.type = Image.Type.Tiled; v.frame.pixelsPerUnitMultiplier = 1f; }
+                if (!hovered.Contains(v)) v.rect.localScale = Vector3.one;
+                continue;
+            }
             v.glow.enabled = can;
             if (!can) continue;
             Color c = BranchColor[v.node.branch];
@@ -171,7 +180,7 @@ public class SoulTreeUI : MonoBehaviour
             if (!hovered.Contains(v)) v.rect.localScale = Vector3.one * (1f + 0.06f * pulse);
         }
         // 정련할 수 있으면 버튼이 숨 쉬듯 (1.0.4~)
-        if (refineBtn != null) refineBtn.transform.localScale = Vector3.one * (refineReady ? 1f + 0.04f * pulse : 1f);
+        if (refineBtn != null) refineBtn.transform.localScale = Vector3.one * (refineReady && UiRules.Legacy ? 1f + 0.04f * pulse : 1f);
         // 조각이 바뀌면 숫자 상자가 잠깐 번쩍
         if (shardBox != null)
         {
@@ -263,7 +272,20 @@ public class SoulTreeUI : MonoBehaviour
         // 1.4.8~ 새 도트 스타일: 위 · 아래 띠를 금장 돌판(ui_button)으로 — 화면 밖 세 변으로 16 씩 넘겨 안쪽 가장자리의 금 테두리만 보이게 (무겁지 않게)
         //   띠가 덮는 화면 안쪽 크기 · 자리는 그대로 · 그림이 없으면 예전 단색 띠
         bool art = RecommendGlow.PillArt;
-        if (art)
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null)
+            foreach (Image bar in new[] { top, bottom })
+            {
+                // UI 개편: 보라 판 대신 새긴 석판 띠 (화면 밖으로 16 씩 넘겨 안쪽 가장자리만)
+                bool isTop = bar == top;
+                bar.sprite = UiRules.Sprite("ui2_panel");
+                bar.type = Image.Type.Tiled;
+                bar.pixelsPerUnitMultiplier = 1f;
+                bar.color = Color.white;
+                RectTransform br = bar.rectTransform;
+                br.sizeDelta = new Vector2(32f, br.sizeDelta.y + 16f);
+                br.anchoredPosition = new Vector2(0f, isTop ? 16f : -16f);
+            }
+        else if (art)
             foreach (Image bar in new[] { top, bottom })
             {
                 bool isTop = bar == top;
@@ -275,11 +297,11 @@ public class SoulTreeUI : MonoBehaviour
                 br.anchoredPosition = new Vector2(0f, isTop ? 16f : -16f);
             }
 
-        TMP_Text title = UIKit.Text(root, "영혼 트리", 54f, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
-        title.fontStyle = FontStyles.Bold;
+        TMP_Text title = UIKit.Text(root, "영혼 트리", UiRules.Legacy ? 54f : UiTokens.Title, Gold, new Vector2(0f, 480f), new Vector2(800f, 70f));
+        if (UiRules.Legacy) title.fontStyle = FontStyles.Bold;
         UIKit.Pin(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -60f));
         // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 4배 도트) — 위 띠(136) 안
-        if (UIKit.DividerSprite != null)
+        if (UIKit.DividerSprite != null && UiRules.Legacy)
         {
             Image line = Img("TitleLine", root, Vector2.zero, new Vector2(512f, 32f), UIKit.DividerSprite, Color.white);
             UIKit.Pin(line.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -110f));
@@ -289,14 +311,15 @@ public class SoulTreeUI : MonoBehaviour
         sb.sprite = UIKit.ButtonSprite;
         sb.type = Image.Type.Sliced;
         sb.color = art ? Color.white : new Color(0.55f, 0.42f, 0.85f);      // 1.4.8~ 새 판이면 칠하지 않음 · 안쪽 진한 판도 투명 (돌판이 그대로 보이게)
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null) { sb.sprite = UiRules.Sprite("ui2_panel"); sb.type = Image.Type.Tiled; sb.pixelsPerUnitMultiplier = 1f; sb.color = Color.white; }
         sb.raycastTarget = false;
         UIKit.Pin(shardBox, new Vector2(0f, 1f), new Vector2(225f, -70f));
         Img("Inner", shardBox, Vector2.zero, new Vector2(380f, 88f), null, art ? new Color(0f, 0f, 0f, 0f) : new Color(0.08f, 0.05f, 0.14f, 0.97f));
-        Img("OrbGlow", shardBox, new Vector2(-148f, 0f), new Vector2(110f, 110f), sp.glowSprite, new Color(0.75f, 0.55f, 1f, 0.7f));
+        Img("OrbGlow", shardBox, new Vector2(-148f, 0f), new Vector2(110f, 110f), sp.glowSprite, new Color(0.75f, 0.55f, 1f, 0.7f)).enabled = UiRules.Legacy;      // UI 개편: 빛 번짐 없음
         Img("Orb", shardBox, new Vector2(-148f, 0f), new Vector2(44f, 44f), sp.glowSprite, new Color(0.95f, 0.9f, 1f));
         UIKit.Text(shardBox, "영혼 조각", 20f, new Color(0.8f, 0.7f, 1f), new Vector2(20f, 26f), new Vector2(300f, 28f), TextAlignmentOptions.Left);
-        shardText = UIKit.Text(shardBox, "", 50f, Color.white, new Vector2(20f, -6f), new Vector2(300f, 56f), TextAlignmentOptions.Left);
-        shardText.fontStyle = FontStyles.Bold;
+        shardText = UIKit.Text(shardBox, "", 50f, UiRules.Legacy ? Color.white : UiTokens.Text1, new Vector2(20f, -6f), new Vector2(300f, 56f), TextAlignmentOptions.Left);
+        if (UiRules.Legacy) shardText.fontStyle = FontStyles.Bold;
         affordText = UIKit.Text(root, "", 22f, new Color(0.7f, 1f, 0.6f), new Vector2(-735f, 400f), new Vector2(400f, 30f), TextAlignmentOptions.Center);
         UIKit.Pin(affordText.rectTransform, new Vector2(0f, 1f), new Vector2(225f, -140f));
         refineBtn = UIKit.MakeButton(root, "", Vector2.zero, new Vector2(400f, 72f), RefineClick, 22f);      // 1.4.8~ 64 → 72 (아래 줄 글자 20 이상)
@@ -394,9 +417,10 @@ public class SoulTreeUI : MonoBehaviour
     {
         RectTransform c = UIKit.Rect("Center", board, Vector2.zero, new Vector2(170f, 170f));
         decor.Add(c.gameObject);
-        Img("Glow", c, Vector2.zero, new Vector2(340f, 340f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.35f));
+        Img("Glow", c, Vector2.zero, new Vector2(340f, 340f), sp.glowSprite, new Color(Soul.r, Soul.g, Soul.b, 0.35f)).enabled = UiRules.Legacy;
         Image ring = Img("Ring", c, Vector2.zero, new Vector2(170f, 170f), UIKit.ButtonSprite, Gold);
         ring.type = Image.Type.Sliced;
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_card_h") != null) { ring.sprite = UiRules.Sprite("ui2_card_h"); ring.type = Image.Type.Tiled; ring.pixelsPerUnitMultiplier = 1f; ring.color = Color.white; }
         Img("Inner", c, Vector2.zero, new Vector2(150f, 150f), null, new Color(0.1f, 0.07f, 0.15f, 1f));
         Sprite w = sp.MainWeaponIcon;
         Image icon = Img("Weapon", c, new Vector2(0f, 14f), new Vector2(104f, 104f), w, Color.white);
