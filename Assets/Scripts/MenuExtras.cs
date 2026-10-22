@@ -68,17 +68,11 @@ public static class MenuExtras
             rr.offsetMin = new Vector2(ResultScreen.LeftPad, ResultScreen.LeftPad + (buildView ? BvH + 16f : 0f));
             rr.offsetMax = new Vector2(-ResultScreen.LeftPad, -resTop);
             RunStats.BuildDamagePanel(canvas.transform);      // 오른쪽: 준 피해 · 받은 피해 · 쓰러진 곳
-            // [R] 안내: 화면 아래 가장자리 한 줄 (1.4.8~ 24 → 22 · 아래 40 → 16, 위 가운데 줄들이 쌓일 자리를 비움)
-            TMP_Text again = UIKit.Text(canvas.transform, Loc.T("[{RELOAD}] 같은 캐릭터 · 난이도로 바로 다시 시작"), 22f, new Color(0.6f, 0.9f, 1f), Vector2.zero, new Vector2(900f, 30f));
-            again.fontSizeMin = 20f;
-            RectTransform ar = again.rectTransform;
-            ar.anchorMin = ar.anchorMax = new Vector2(0.5f, 0f);
-            ar.anchoredPosition = new Vector2(0f, 31f);
+            // 2026-10-22~ 결과 화면을 간결하게 (사용자 「난잡하다」): 아래 [R] 안내 줄 · 결과 복사 버튼 · 3연속 사망 추천 줄을 뺌 (R 키 바로 다시 하기는 그대로)
             canvas.gameObject.AddComponent<QuickRestart>();
             ResultScreen.BuildRetry();       // 1.1~ 「같은 설정으로 다시」 · 「캐릭터 바꿔 다시」 · 「메인 메뉴로」 (1.1.2~ 가운데 세로 한 줄)
             ResultScreen.FitTitle();
             ResultScreen.BuildLeftBehind(canvas.transform);     // 1.2~ 「이번 판이 남긴 것」
-            ResultScreen.BuildRecommend(canvas.transform);      // 1.2~ 3연속 사망 추천 한 줄
             // 1.1.9~ 결과 글 아래 「빌드 자세히 보기」 (떠나기 전에 떠 둔 스냅샷) · 1.4.8~ 왼쪽 패널 아래끝 안쪽, 결과 글과 같은 폭
             if (buildView)
             {
@@ -93,7 +87,6 @@ public static class MenuExtras
                 if (bl != null) bl.fontSizeMin = 20f;
             }
             // 1.1.9~ 「결과 복사」 (편의성 3차 10) · 1.4.8~ 자리는 가운데 버튼 열 아래 한 줄 (ResultScreen.StackCenter)
-            RunRecords.InstallCopyButton(canvas.transform, RunRecords.ShareText);
         }
         // 이번 판에 얻은 캐릭터 포인트 (1.4.8~ 자리는 StackCenter · 기록 줄과 같은 30)
         if (canvas != null && CharacterData.RunPoints > 0)

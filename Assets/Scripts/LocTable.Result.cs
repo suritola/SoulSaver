@@ -20,7 +20,8 @@ public static partial class LocTable
         A("result.goal.endless", "업적 · 무한 모드 20분 버티기", "Achievement · Survive 20 min in Endless", "実績・エンドレスで20分耐える", "成就 · 无尽模式坚持20分钟");
         A("result.goal.ready", "지금 살 수 있습니다!", "Ready to buy!", "今すぐ買えます！", "现在就能购买！");
         A("result.goal.almost", "거의 다!", "Almost!", "あと少し！", "就差一点！");
-        A("result.retry.same", "같은 설정으로 다시", "Retry Same Setup", "同じ設定でもう一度", "以相同设置再来");
-        A("result.retry.hero", "영웅 바꿔 다시", "Change Hero", "英雄を変えて再挑戦", "换英雄再来");
+        A("result.retry.same", "다시 하기", "Retry", "もう一度", "再来一次");          // 2026-10-22~ 짧게 (예전 「같은 설정으로 다시」)
+        A("result.retry.hero", "영웅 변경", "Change Hero", "英雄変更", "更换英雄");     // 예전 「영웅 바꿔 다시」
+        A("result.menu", "메인 메뉴", "Main Menu", "メインメニュー", "主菜单");
     }
 }

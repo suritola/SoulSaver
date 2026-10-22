@@ -40,7 +40,7 @@ public static class ResultScreen
 
     // ================================================================= 다음 목표
     // 갈래마다(영웅 · 스킨 · 숙련 · 업적) 가장 가까운 것 하나씩 → 진행률 순으로 셋
-    static List<Goal> Goals(int max = 3)
+    static List<Goal> Goals(int max = 2)      // 2026-10-22~ 3 → 2 (간결하게)
     {
         List<Goal> all = new List<Goal>();
         if (Demo.On || TutorialRun.Active) return all;
@@ -249,7 +249,7 @@ public static class ResultScreen
     {
         UIKit.EnsureStyle();
         const float W = ContentW, HeadH = 38f, RowH = 60f, GoalH = 70f;
-        List<Goal> goals = Goals(2);
+        List<Goal> goals = Goals(1);      // 2026-10-22~ 계약이 있는 판은 영구 목표 한 줄만
         float h = HeadH + RowH * Contracts.LastRun.Count + (goals.Count > 0 ? HeadH + GoalH * goals.Count : 0f);
         RectTransform panel = UIKit.Rect("NextGoals", left, Vector2.zero, new Vector2(W, h));
         panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 1f);
@@ -451,8 +451,8 @@ public static class ResultScreen
     // 패드 십자키 · 키보드 방향키 위아래 순서 = 화면 위아래 순서, 패드는 가상 커서가 기본 버튼 위로
     // 캔버스는 1920×1080 Expand 라 16:10 · 4:3 에서도 폭이 1920 아래로 줄지 않음 → 가운데 열(왼쪽 결과 글 x -420 · 오른쪽 피해 패널 x 420 사이)이 늘 같음
     // 1.4.8~ 높이 120 · 88 · 간격 16 → 104 · 76 · 12: 아래에 「순위 보기 · 결과 복사」 한 줄과 기록 · 포인트 줄이 차례로 들어갈 자리 (StackCenter)
-    const float ColW = 560f, MainH = 104f, SubH = 76f, Gap = 12f, MainY = 0f;
-    const float MainFont = 50f, SubFont = 38f;
+    const float ColW = 480f, MainH = 88f, SubH = 64f, Gap = 10f, MainY = 0f;     // 2026-10-22~ 간결하게: 560 · 104 · 76 → 480 · 88 · 64
+    const float MainFont = 40f, SubFont = 32f;
     // 버튼 열 아래끝 (BuildRetry 가 씀 · 세 개면 -228, 두 개면 -140) — StackCenter 가 이 밑으로 쌓음
     static float columnBottom = MainY - MainH * 0.5f;
 
@@ -481,7 +481,7 @@ public static class ResultScreen
             }));
         if (menu != null)
         {
-            col.Add(UIKit.CloneButton(menu, "ResultMenuButton", "메인 메뉴로", () =>
+            col.Add(UIKit.CloneButton(menu, "ResultMenuButton", "result.menu", () =>
             {
                 if (Time.unscaledTime < readyAt) return;
                 SceneFlow.Go("MainMenu");
@@ -514,7 +514,7 @@ public static class ResultScreen
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
         same.AddComponent<ResultPadFocus>();
         // 1.4.8~ 메인 메뉴와 같은 글자 메뉴 (첫 버튼이 가장 크게 · 금빛)
-        for (int i = 0; i < col.Count; i++) MenuItemFx.Apply(col[i].GetComponent<Button>(), i == 0 ? 46f : 34f, i == 0, false);
+        for (int i = 0; i < col.Count; i++) MenuItemFx.Apply(col[i].GetComponent<Button>(), i == 0 ? 38f : 30f, i == 0, false);      // 2026-10-22~ 46 · 34 → 38 · 30
     }
 
     // 씬 제목(「사망하셨습니다...」 · 「<난이도> 클리어!」)을 가운데 열 폭으로 — 원래 1500 폭이라 긴 글(영어 · 일본어 클리어 문구)이
