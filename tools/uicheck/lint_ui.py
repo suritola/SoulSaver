@@ -11,8 +11,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BASE = os.path.join(ROOT, "docs", "art", "ui-lint-baseline.txt")
 SKIP = {"UiV2.cs", "UiTokens.cs", "UiRules.cs"}
 RULES = [
-    ("ppu-multiplier", re.compile(r"pixelsPerUnitMultiplier\s*=")),
-    ("bold", re.compile(r"FontStyles\.Bold")),
+    ("ppu-multiplier", re.compile(r"pixelsPerUnitMultiplier\s*=(?!\s*1f)")),        # 1 로 고정하는 것은 허용
+    ("bold", re.compile(r"(?<!~)FontStyles\.Bold")),                                # 굵게를 빼는 &= ~ 는 허용
     ("sine-pulse", re.compile(r"Mathf\.(Sin|PingPong)\(")),
     ("scale-state", re.compile(r"\.localScale\s*=")),
     ("gold-literal", re.compile(r"0\.96f,\s*0\.83f,\s*0\.47f")),

@@ -1,10 +1,10 @@
 # UI 린트 기준선 (tools/uicheck/lint_ui.py --baseline) — 이 수보다 늘어나면 안 됨
-ppu-multiplier 16
+ppu-multiplier 14
 bold 33
 sine-pulse 192
 scale-state 182
 gold-literal 71
-text-size 196
+text-size 195
 glow-sprite 29
 gradient-shadow 6
 button-sprite 59
