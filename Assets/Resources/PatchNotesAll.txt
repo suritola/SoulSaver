@@ -4,20 +4,20 @@
 
 무한 모드는 숙련된 플레이어가 어떤 영웅 · 어떤 갈래로든 약 30분에 개발자 엄마를 쓰러뜨리도록 맞추고 있습니다. 지금은 10분이면 성장이 끝나 15분 뒤 보스들이 몇 초 만에 쓰러졌고, 영웅마다 클리어 시간이 크게 달랐습니다. 보스 체력을 늘리는 대신 성장 속도와 최후의 시간 흐름을 바꿨습니다.
 
-## 📈 무한 모드 성장 속도
+## 무한 모드 성장 속도
 - Lv 26부터 레벨업에 필요한 경험치가 점점 늘어납니다. Lv 35~49는 4.5배입니다. 이제 Lv 50은 약 10분이 아니라 22~24분쯤 됩니다.
 - 레벨업을 쌓아 두었다가 나중에 골라도 필요한 경험치가 줄지 않습니다.
 - 시간에 따라 오르던 무한 모드 공격력 보정(×0.82 → ×1.10)이 ×0.82로 고정됩니다.
 - 적이 주는 영혼 조각: ×0.36 → ×0.15 · 중간 보스: ×1 → ×0.5. 대신 개발자의 체력 단계마다 영혼 조각 +30, 엄마의 체력 단계마다 +40을 얻습니다.
 - 이야기 모드는 바뀌지 않습니다.
 
-## 👑 최후의 시간
+## 최후의 시간
 - 15:00에 왕 넷이 한꺼번에 깨어나지 않고, 둘씩 두 무리로 나옵니다. 앞 무리를 모두 쓰러뜨리거나 60초가 지나면 나머지 둘이 깨어납니다.
 - 화면 위에 진행이 보입니다: 「왕 n/4」 · 「개발자 k/3」 · 「엄마 k/4」.
 - 엄마 강림을 기다리는 영혼 구간에는 약한 적만 나오고, 경험치를 2.5배 줍니다.
 - 최후의 시간에 적이 늘어나는 속도: 1분마다 2배 → 2분마다 2배.
 
-## 🦸 영웅 밸런스
+## 영웅 밸런스
 - 검사: 공격력 ×4.75 → ×3.3 · 고유 스킬 위력 ×1.85 → ×1.3 · 특수 능력 위력 ×1.9 → ×1.33
 - 궁수: 공격력 ×2.75 → ×2.0 · 고유 스킬 · 특수 능력 위력 ×1.8 → ×1.3 · 바람 공명 I: 바람길 위에서 언제 놓아도 완벽 → 완벽 판정 폭 2배
 - 궁수 기본 공격: 화살 피해 모두 ×0.8 — 「완벽!」 화살 300% → 240% · 가득 당김 220% → 176% · 속사 한 발 35% → 28% · 속사 극의 한 발 25% → 20% (덜 당긴 화살 · 장궁 관통 광선도 같은 비율)
@@ -26,7 +26,7 @@
 - 거너: 공격력 ×2.7 → ×3.5 · 고유 스킬 · 특수 능력 위력 ×2.0 → ×2.6 · 포탑이 사거리 안의 보스를 먼저 쏩니다
 - 영웅 선택 화면의 공격력 막대는 이제 고정된 기준으로 표시됩니다.
 
-## 🗡️ 도적 바로잡기
+## 도적 바로잡기
 - 출혈 폭발: 「피바다」에서 터진 적이 폭발을 두 번 맞던 문제 수정 · 터진 뒤 출혈 중첩이 비워집니다 · 남은 출혈은 최대 1.5초치만 터집니다.
 - 출혈 갈래: 출혈 세기 = 직접 피해의 55% → 40% · 공명 I 「출혈 터짐」은 남은 출혈 최대 1.5초치 · 돌진 타격은 출혈 세기 계산에서 빠집니다 · 「질주 암살」 돌진에도 출혈 대가(직접 피해 −35%)가 붙습니다.
 - 약한 출혈이 걸려도 더 센 출혈의 시간이 늘어나지 않습니다.
@@ -35,7 +35,7 @@
 - 증강 「연발」은 표창 수에 맞춰 한 개의 피해가 줄어들 수 있습니다 (모든 영웅 공통).
 - 그림자 공명 II 연막 안 치명 ×2는 분신 연막에서만 켜집니다.
 
-## 🎯 피격 판정 · 전투 예고
+## 피격 판정 · 전투 예고
 - 캐릭터가 맞는 판정이 몸 아래쪽(가슴 · 배)으로 내려가고 작아집니다: 적 탄 · 패턴 판정 반지름 0.4 → 0.3, 중심 0.42 아래로. 머리 위로 스친 탄이나 머리 위쪽 장판에는 더 이상 맞지 않습니다.
 - 적 · 보스 몸에 닿는 판정도 작아졌습니다(특히 머리 쪽). 몸 크기가 바뀌면 판정도 함께 바뀝니다.
 - 일반 · 엘리트 적의 장판이 늘 캐릭터 한 점에 떨어지지 않고 둘레에 흩어져, 여러 적의 장판이 한 곳에 겹치지 않습니다. 가만히 서 있으면 그대로 맞습니다.
@@ -45,11 +45,11 @@
 - 떠돌이 상점 알림 · 보스 대사 띠가 화면 가운데에서 화면 위쪽의 반투명 배너로 옮겨져 캐릭터 주변을 가리지 않습니다.
 - 다음 장으로 가는 문 안내선이 더 진하고 굵어지고 어두운 테두리가 생겨, 밝은 바닥의 장에서도 잘 보입니다.
 
-## ✨ 새 기능
+## 새 기능
 - 검사 받아치기: 막기에 성공해 반격을 얻는 순간 0.6초 동안 화면이 멈추고 서서히 당겨졌다 돌아옵니다. (「화면 흔들림」을 끄면 멈춤만) 반격 준비 중에는 몸 둘레에 금빛 불티와 고리가, 반격 베기에는 큰 금빛 참격과 「반격!」이 보입니다.
 - 플레이 데이터 보내기(선택): 게임을 켜면 한 번 동의 여부를 묻습니다. 동의한 경우에만 판이 끝날 때마다 영웅 · 카드 · 결과 같은 플레이 기록을 익명으로 보내 밸런스 조정에 씁니다. 이름 · SteamID · 이메일은 보내지 않습니다. 동의하지 않아도 게임은 똑같이 즐길 수 있고, 설정 > 일반에서 언제든 끌 수 있으며, 「내 데이터 삭제 요청」으로 보낸 기록의 삭제를 요청할 수 있습니다. 자세한 내용은 「전문 보기」에 있습니다.
 
-## 🔧 편의성 · 버그 수정
+## 편의성 · 버그 수정
 - 효과음 · 마우스 감도 같은 슬라이더는 게이지 아무 곳이나 누르면 그 위치로 바로 이동합니다.
 - 장궁 공명 II 관통 광선: 보이는 광선이 몸을 지나도 맞지 않거나, 광선 밖인데 맞던 문제를 고쳤습니다. 여러 부위로 된 적은 한 번만 맞습니다.
 - 능력 설명을 짧고 읽기 쉽게 다듬었습니다. 판 동안 남는 효과는 「쓰러지거나 클리어할 때까지 유지」로 표기를 맞췄습니다.
@@ -62,20 +62,20 @@ New Endless growth pace, tuned hero damage, a fairer player hitbox, and clearer 
 
 We're tuning Endless Mode so a skilled player can defeat the Developer's Mom in about 30 minutes with any hero and any path. Until now growth finished by minute 10, bosses melted in seconds after minute 15, and clear times varied a lot between heroes. Instead of raising boss HP, we changed the growth pace and the Final Hour flow.
 
-## 📈 Endless Growth Pace
+## Endless Growth Pace
 - From Lv 26, the EXP needed to level up gradually increases — ×4.5 at Lv 35–49. Lv 50 now arrives around minute 22–24 instead of minute 10.
 - Saving up level-ups and picking them later no longer lowers the EXP required.
 - The Endless damage modifier that grew over time (×0.82 → ×1.10) is now fixed at ×0.82.
 - Soul shards from enemies: ×0.36 → ×0.15 · mini-bosses: ×1 → ×0.5. In exchange, you gain +30 soul shards at each of the Developer's HP phases and +40 at each of Mom's.
 - Story Mode is unchanged.
 
-## 👑 The Final Hour
+## The Final Hour
 - At 15:00 the four kings no longer wake all at once — they come in two groups of two. The second pair wakes when the first pair is defeated or after 60 seconds.
 - Progress is shown at the top of the screen: "King n/4" · "Developer k/3" · "Mom k/4".
 - While gathering souls for Mom's descent, only weak enemies appear and they give ×2.5 EXP.
 - Enemy growth during the Final Hour: doubles every minute → doubles every 2 minutes.
 
-## 🦸 Hero Balance
+## Hero Balance
 - Swordsman: attack ×4.75 → ×3.3 · signature skill power ×1.85 → ×1.3 · special ability power ×1.9 → ×1.33
 - Archer: attack ×2.75 → ×2.0 · signature skill & special ability power ×1.8 → ×1.3 · Wind Resonance I: always Perfect on the wind path → Perfect window ×2
 - Archer basic attacks: all arrow damage ×0.8 — "Perfect!" arrow 300% → 240% · full draw 220% → 176% · Rapid Fire per arrow 35% → 28% · Rapid Fire Mastery per arrow 25% → 20% (partial draws and the Longbow Piercing Beam scale the same way)
@@ -84,7 +84,7 @@ We're tuning Endless Mode so a skilled player can defeat the Developer's Mom in 
 - Gunner: attack ×2.7 → ×3.5 · signature skill & special ability power ×2.0 → ×2.6 · turrets now target bosses in range first
 - The attack bar on the hero select screen now uses a fixed baseline.
 
-## 🗡️ Rogue Fixes
+## Rogue Fixes
 - Bleed Burst: fixed the target being hit twice by "Sea of Blood" · bleed stacks are now cleared after a burst · only up to 1.5 seconds of remaining bleed bursts.
 - Bleed path: bleed strength = 55% → 40% of direct damage · Resonance I "Bleed Burst" uses up to 1.5 seconds of remaining bleed · dash hits no longer count toward bleed strength · the bleed cost (direct damage −35%) now also applies to the Dash Assassin dash.
 - A weaker bleed no longer extends the duration of a stronger bleed.
@@ -93,7 +93,7 @@ We're tuning Endless Mode so a skilled player can defeat the Developer's Mom in 
 - The "Extra Throw" augment may now reduce per-projectile damage based on projectile count (all heroes).
 - Shadow Resonance II's ×2 crit in smoke now only works in clone smoke.
 
-## 🎯 Hitbox & Combat Telegraphs
+## Hitbox & Combat Telegraphs
 - Your hurtbox moves lower on the body (chest and belly) and gets smaller: enemy bullet and pattern radius 0.4 → 0.3, center 0.42 lower. Bullets grazing over your head and area attacks just above you no longer hit.
 - The hitbox for touching enemy and boss bodies is also smaller (especially around the head). If your body size changes, the hitbox follows.
 - Regular and Elite enemies' area attacks no longer always land on your exact spot — they scatter around you, so attacks from several enemies don't stack on one point. If you stand still, they still hit you.
@@ -103,11 +103,11 @@ We're tuning Endless Mode so a skilled player can defeat the Developer's Mom in 
 - Wandering Shop alerts and boss dialogue bands moved from the middle of the screen to a translucent banner near the top, so they no longer cover the area around your hero.
 - The guide line to the next chapter's door is now bolder with a dark outline, so it's easy to see on bright floors too.
 
-## ✨ New Features
+## New Features
 - Swordsman Parry: the moment a block earns a counter, the screen freezes for 0.6s and slowly zooms in and back. (Freeze only if Screen Shake is off) While the counter is ready, gold sparks and rings circle you, and the counter slash shows a large gold slash and "Counter!".
 - Share Play Data (optional): the game asks once when you launch it. Only if you agree, an anonymous play record (hero, cards, result and so on) is sent after each run and used for balancing. Your name, SteamID and email are never sent. The game plays exactly the same if you decline, you can turn it off anytime in Settings > General, and "Request Deletion of My Data" asks for the records you sent to be deleted. See "Read Full Text" for details.
 
-## 🔧 Quality of Life & Bug Fixes
+## Quality of Life & Bug Fixes
 - Sliders such as Sound Effects and Mouse Sensitivity now jump to wherever you click on the bar.
 - Longbow Resonance II Piercing Beam: fixed the visible beam passing through an enemy without hitting it, or hitting enemies outside it. Enemies made of several parts are hit only once.
 - Ability descriptions are shorter and easier to read. Effects that last for the run now consistently say "lasts until you fall or clear the run".
@@ -120,20 +120,20 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 
 エンドレスは、熟練プレイヤーがどの英雄・どの流派でも約30分で開発者のママを倒せるよう調整しています。これまでは10分で成長が終わり、15分以降のボスが数秒で倒れ、英雄ごとのクリア時間も大きく違いました。ボスの体力を増やす代わりに、成長速度と最後の時の流れを変えました。
 
-## 📈 エンドレスの成長速度
+## エンドレスの成長速度
 - Lv 26 からレベルアップに必要な経験値が少しずつ増えます。Lv 35~49 は 4.5 倍です。Lv 50 は約10分ではなく22~24分ごろになります。
 - レベルアップを溜めて後で選んでも、必要な経験値は減りません。
 - 時間とともに上がっていたエンドレスの攻撃力補正（×0.82 → ×1.10）が ×0.82 に固定されます。
 - 敵が落とす魂の欠片: ×0.36 → ×0.15・中ボス: ×1 → ×0.5。代わりに開発者の体力段階ごとに魂の欠片 +30、ママの体力段階ごとに +40 を得ます。
 - ストーリーモードは変わりません。
 
-## 👑 最後の時
+## 最後の時
 - 15:00 に4人の王が一度に目覚めるのではなく、2人ずつ2組で現れます。前の組をすべて倒すか、60秒経つと残りの2人が目覚めます。
 - 画面上部に進行が表示されます：「王 n/4」・「開発者 k/3」・「ママ k/4」。
 - ママの降臨を待つ魂の区間では弱い敵だけが現れ、経験値が 2.5 倍になります。
 - 最後の時に敵が増える速度：1分ごとに2倍 → 2分ごとに2倍。
 
-## 🦸 英雄バランス
+## 英雄バランス
 - 剣士: 攻撃力 ×4.75 → ×3.3・固有スキルの威力 ×1.85 → ×1.3・特殊能力の威力 ×1.9 → ×1.33
 - 弓使い: 攻撃力 ×2.75 → ×2.0・固有スキル・特殊能力の威力 ×1.8 → ×1.3・風の共鳴I: 風の道ではいつ放ってもパーフェクト → パーフェクト判定の幅 2倍
 - 弓使いの通常攻撃: 矢のダメージすべて ×0.8 —「パーフェクト！」の矢 300% → 240%・引き絞り 220% → 176%・速射 1発 35% → 28%・速射の極意 1発 25% → 20%（引き切らない矢・長弓の貫通光線も同じ割合）
@@ -142,7 +142,7 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - ガンナー: 攻撃力 ×2.7 → ×3.5・固有スキル・特殊能力の威力 ×2.0 → ×2.6・タレットが射程内のボスを優先して撃ちます
 - 英雄選択画面の攻撃力バーは固定の基準で表示されるようになりました。
 
-## 🗡️ 盗賊の修正
+## 盗賊の修正
 - 出血爆発：「血の海」で爆発した敵が2回当たっていた問題を修正・爆発後に出血の重ねがリセットされます・残りの出血は最大1.5秒分だけ爆発します。
 - 出血の流派：出血の強さ＝直接ダメージの55% → 40%・共鳴I「出血の炸裂」は残りの出血最大1.5秒分・突進のヒットは出血の強さの計算に入りません・「疾走暗殺」の突進にも出血の代償（直接ダメージ −35%）が付きます。
 - 弱い出血がかかっても、より強い出血の時間は延びません。
@@ -151,7 +151,7 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 強化「連投」は手裏剣の数に応じて1本あたりのダメージが下がる場合があります（全英雄共通）。
 - 影の共鳴II の煙幕内クリティカル×2は分身の煙幕でのみ発動します。
 
-## 🎯 被弾判定・戦闘の予告
+## 被弾判定・戦闘の予告
 - キャラクターの被弾判定が体の下側（胸・お腹）に下がり、小さくなります：敵の弾・パターンの判定半径 0.4 → 0.3、中心を 0.42 下へ。頭の上をかすめた弾や頭上の範囲攻撃には当たらなくなります。
 - 敵・ボスの体に触れる判定も小さくなりました（特に頭の側）。体の大きさが変わると判定も一緒に変わります。
 - 通常・エリートの敵の範囲攻撃が、いつもキャラクターの1点に落ちるのではなく周りに散らばり、複数の敵の範囲攻撃が1か所に重なりません。立ち止まっていればそのまま当たります。
@@ -161,11 +161,11 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - さすらいのショップの通知・ボスのセリフの帯が、画面中央から画面上部の半透明バナーに移り、キャラクターの周りを隠さなくなりました。
 - 次の章へ向かう扉の案内線がより濃く太くなり、暗い縁取りが付いて、明るい床の章でも見やすくなりました。
 
-## ✨ 新機能
+## 新機能
 - 剣士の受け返し：受けに成功して反撃を得た瞬間、0.6秒間画面が止まり、ゆっくり寄ってから戻ります。（「画面の揺れ」をオフにすると停止のみ）反撃の準備中は体の周りに金色の火の粉と輪が、反撃の斬撃には大きな金色の斬撃と「反撃！」が表示されます。
 - プレイデータ送信（任意）：ゲームを起動すると一度だけ同意を確認します。同意した場合のみ、各プレイの終了時にヒーロー・カード・結果などのプレイ記録を匿名で送信し、バランス調整に使います。名前・SteamID・メールアドレスは送信しません。同意しなくてもゲームは同じように遊べ、設定 > 一般でいつでもオフにでき、「自分のデータの削除を依頼」で送信した記録の削除を依頼できます。詳しくは「全文を読む」をご覧ください。
 
-## 🔧 快適性・バグ修正
+## 快適性・バグ修正
 - 効果音・マウス感度などのスライダーは、ゲージのどこを押してもその位置にすぐ移動します。
 - 長弓の共鳴II の貫通光線：見えている光線が体を通っても当たらない、または光線の外なのに当たる問題を修正しました。複数の部位でできた敵には1回だけ当たります。
 - 能力の説明を短く読みやすくしました。プレイ中ずっと残る効果は「倒れるかクリアするまで持続」に表記を統一しました。
@@ -178,20 +178,20 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 
 我们正在调整无尽模式，让熟练玩家无论使用哪位英雄、哪条流派，都能在约30分钟击败开发者的妈妈。此前成长在10分钟就已结束，15分钟后的首领几秒就倒下，各英雄的通关时间差距也很大。我们没有提高首领生命值，而是改变了成长速度与最后时刻的流程。
 
-## 📈 无尽模式成长速度
+## 无尽模式成长速度
 - 从 Lv 26 起，升级所需经验逐渐增加，Lv 35~49 为 4.5 倍。Lv 50 现在约在第22~24分钟达到，而不是第10分钟。
 - 攒着升级稍后再选，所需经验也不会减少。
 - 随时间提升的无尽模式攻击修正（×0.82 → ×1.10）现固定为 ×0.82。
 - 敌人掉落的灵魂碎片：×0.36 → ×0.15 · 精英首领：×1 → ×0.5。作为补偿，开发者每个生命阶段获得灵魂碎片 +30，妈妈每个生命阶段 +40。
 - 故事模式不受影响。
 
-## 👑 最后时刻
+## 最后时刻
 - 15:00 时四位王不再同时苏醒，而是分两组、每组两位出现。击败第一组或经过60秒后，剩下两位苏醒。
 - 屏幕上方会显示进度：「王 n/4」·「开发者 k/3」·「妈妈 k/4」。
 - 等待妈妈降临的灵魂阶段只会出现弱小的敌人，经验为 2.5 倍。
 - 最后时刻敌人增加的速度：每1分钟2倍 → 每2分钟2倍。
 
-## 🦸 英雄平衡
+## 英雄平衡
 - 剑士：攻击力 ×4.75 → ×3.3 · 固有技能威力 ×1.85 → ×1.3 · 特殊能力威力 ×1.9 → ×1.33
 - 弓箭手：攻击力 ×2.75 → ×2.0 · 固有技能与特殊能力威力 ×1.8 → ×1.3 · 风之共鸣I：在风之路上随时松手都是完美 → 完美判定范围 2倍
 - 弓箭手普通攻击：所有箭矢伤害 ×0.8 —「完美！」箭 300% → 240% · 满弓 220% → 176% · 速射每箭 35% → 28% · 速射极意每箭 25% → 20%（未拉满的箭与长弓穿透光束同比例）
@@ -200,7 +200,7 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 枪手：攻击力 ×2.7 → ×3.5 · 固有技能与特殊能力威力 ×2.0 → ×2.6 · 炮塔会优先射击射程内的首领
 - 英雄选择界面的攻击力条现以固定基准显示。
 
-## 🗡️ 盗贼修正
+## 盗贼修正
 - 流血爆发：修复「血海」中爆发的敌人会被命中两次的问题 · 爆发后流血层数清空 · 剩余流血最多只爆发1.5秒的量。
 - 流血流派：流血强度＝直接伤害的55% → 40% · 共鸣I「流血迸发」最多使用1.5秒的剩余流血 · 突进命中不再计入流血强度 · 「疾驰暗杀」的突进也会附带流血代价（直接伤害 −35%）。
 - 较弱的流血不会再延长较强流血的持续时间。
@@ -209,7 +209,7 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 强化「连投」会根据飞镖数量降低单发伤害（所有英雄通用）。
 - 暗影共鸣II 的烟幕内暴击×2 现在只在分身烟幕中生效。
 
-## 🎯 受击判定 · 战斗预警
+## 受击判定 · 战斗预警
 - 角色的受击判定下移到身体下方（胸部 · 腹部）并缩小：敌人子弹 · 招式的判定半径 0.4 → 0.3，中心下移 0.42。从头顶擦过的子弹和头顶上方的范围攻击不再命中。
 - 与敌人 · 首领身体接触的判定也缩小了（尤其是头部一侧）。体型变化时判定也会随之改变。
 - 普通 · 精英敌人的范围攻击不再总是落在角色所在的同一点，而是散布在周围，多名敌人的范围攻击不会叠在一处。站着不动依然会被命中。
@@ -219,11 +219,11 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 流浪商店提示 · 首领台词横幅从屏幕中央移到屏幕上方的半透明横幅，不再遮挡角色周围。
 - 通往下一章的门的引导线更深更粗，并加上了深色描边，在明亮地面的章节也清晰可见。
 
-## ✨ 新功能
+## 新功能
 - 剑士的招架反击：格挡成功并获得反击的瞬间，画面会停顿0.6秒并缓缓拉近后复原。（关闭「屏幕震动」时仅停顿）准备反击时身体周围会出现金色火星和光环，反击斩击会显示巨大的金色斩痕和「反击！」。
 - 发送游戏数据（可选）：启动游戏时会询问一次是否同意。仅在同意时，每局结束时匿名发送英雄、卡牌、结果等游戏记录，用于平衡调整。不会发送姓名、SteamID 或电子邮箱。即使不同意，游戏体验也完全相同；可随时在 设置 > 常规 中关闭，并可通过「申请删除我的数据」申请删除已发送的记录。详情请见「查看全文」。
 
-## 🔧 便利性 · 错误修复
+## 便利性 · 错误修复
 - 音效 · 鼠标灵敏度等滑块现在点击条上任意位置即可直接跳到该位置。
 - 长弓共鸣II 的穿透光束：修复了可见光束穿过敌人却不命中，或在光束外却命中的问题。由多个部位组成的敌人只会被命中一次。
 - 能力说明更简短易读。整局持续的效果统一标注为「持续到倒下或通关」。
@@ -235,14 +235,14 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 
 이번 업데이트의 중심은 「빌드 갈래」입니다. 지금까지는 한 판에 카드 대부분을 얻어 매판 비슷한 모습이 되었습니다. 이제 영웅마다 공격 방식 자체가 바뀌는 갈래 5개 가운데 한두 개만 골라 깊게 파게 됩니다.
 
-## 🌿 빌드 갈래는 이렇게 동작합니다
+## 빌드 갈래는 이렇게 동작합니다
 - 판을 시작하면 입문 카드 3장 가운데 하나를 고릅니다. 입문 카드는 공격 방식을 바꾸고, 대가도 함께 붙습니다.
 - 갈래 카드를 모으면 공명 I · 공명 II 가 열리고, 효과가 질적으로 바뀝니다. 갈래 카드를 모두 채우면 완성(진화)이 열립니다.
 - 갈림길에서 두 번째 갈래를 고르거나, 한 갈래만 깊게 파는 「외길」을 고릅니다. 외길은 카드 단계가 하나 더 늘고 마지막 「극의」가 열립니다.
 - 두 갈래를 섞으면 생기는 교차 시너지가 영웅마다 있습니다.
 - 레벨업에는 갈래와 상관없이 모든 카드가 나옵니다. 고른 갈래에 맞는 카드를 모으면 공명 · 극의가 열리고, 다르게 골라도 됩니다. 최근에 고른 갈래는 판 시작 때 덜 나와 매판 다른 빌드를 만나게 됩니다.
 
-## ⚔️ 영웅별 갈래
+## 영웅별 갈래
 
 **거너**: 관통 저격 (멈춰서 모아 쏘는 관통 저격탄) · 도탄 난사 (큰 탄창 · 튕기는 난사) · 화염 과열 (장전 대신 열 게이지 · 과열 폭발) · 산탄 돌격 (탄창 4 산탄 · 장전 돌진) · 포탑 설치 (장전할 때 포탑 · 진지 방어)
 
@@ -262,11 +262,11 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 
 **유령**: 혹한 (냉기 두 배 · 무리 제어) · 산산조각 (얼린 적 부수기 · 보스 균열) · 영혼 군단 (영혼이 돌진 공격 · 자동 화력) · 사령술 (긴 빙의 · 무적 근접 폭딜) · 유체 이탈 (움직이면 접촉 무시 · 기동 생존)
 
-## 📈 성장 곡선
+## 성장 곡선
 - 영웅이 주는 모든 피해가 판이 진행될수록 강해집니다: 시작 ×0.85 → 후반 ×1.15 (무한 모드 30분 · 이야기 모드 14분 기준, 한 판 평균은 그대로)
 - 초반은 조금 더 긴장감 있게, 후반은 성장한 만큼 더 강력하게 느껴집니다.
 
-## 🦸 영웅 밸런스
+## 영웅 밸런스
 
 고유 스킬과 지옥의 문 특수 능력에도 이제 영웅마다 위력 배율이 붙습니다. 체력과 생존력은 그대로입니다.
 - 거너: 공격력 ×1.7 → ×2.7 · 공격 속도 ×1.0 → ×1.25 · 필살기 충전 더 빠르게 · 고유 스킬 · 특수 능력 위력 ×2.0
@@ -279,14 +279,14 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 유령: 공격력 ×1.0 → ×0.9 · 원한: 얼어붙은 적 5중첩 → 3중첩 · 동상 +15/22/29/36% → +10/15/20/25%
 - 지도 제작자: 공격력 ×1.15 → ×1.0 · 번지는 잉크 실제 피해를 설명대로 (초당 30/50/70% → 15/25/35%) · 닫힌 도형 피해 ×2.6 → ×2.2
 
-## ✨ 개선
+## 개선
 - 초월 「영혼불 발자국」이 푸른 영혼불로 새로 그려졌습니다.
 - 영웅 선택 화면의 공격력 막대가 거너를 기준(100%)으로 표시되어 영웅끼리 비교하기 쉬워졌습니다.
 - 영혼 트리는 이제 칸을 한 번만 누르면 바로 배웁니다.
 - 일시정지(ESC)의 「지금 가진 스킬」에서 초월을 따로 묶어 보여 줍니다.
 - 연금술사의 불 장판(불타는 늪 · 불꽃 행진)이 그을린 땅 위에 불꽃이 넘실대는 모습으로 바뀌었습니다.
 
-## 🛠️ 버그 수정
+## 버그 수정
 - 기술이 중간에 끊기면 상태가 남을 수 있던 곳들을 막았습니다. (유령 빙의 · 거너 일제 사격 · 궁수 물러서기 · 시계공 회복 · 검사 폭풍의 눈)
 - 거너 장전이 어떤 경우에도 막히지 않도록 안전장치를 더했습니다.
 - 일시정지(ESC) 화면에서 「이번 판 각인」 창이 스킬 목록 위에 겹쳐 고정되어, 다른 스킬 설명을 볼 수 없던 문제를 고쳤습니다.
@@ -300,7 +300,7 @@ We'll keep tuning based on real play data in future patches. If a hero or path f
 - 갈래 · 진화 · 형태가 겹칠 때 효과가 빠지거나 오히려 약해지던 카드 8곳을 고쳤습니다. (유령 · 시계공 · 지도 제작자 · 궁수 · 우체부)
 - 그 밖에 갈래 효과 · 이어하기 · 화면 표시에서 찾은 버그 20여 개를 고쳤습니다.
 
-## ⚖️ 무한 모드 조정
+## 무한 모드 조정
 - 무한 모드 적이 주는 영혼 조각: ×1 → ×0.36 (64% 감소)
 - 개발자 엄마 강림에 필요한 영혼: 1,000 → 500
 
@@ -312,14 +312,14 @@ Every hero now has 5 build paths that fight in completely different ways, so eve
 
 The heart of this update is Build Paths. Until now you collected most cards in a single run, so every run ended up looking similar. Now each hero has 5 paths that change how they attack, and you dig deep into only one or two of them.
 
-## 🌿 How Build Paths Work
+## How Build Paths Work
 - At the start of a run, pick one of 3 Path Seed cards. A Path Seed card changes how you attack, and comes with a cost.
 - Collecting path cards unlocks Resonance I and Resonance II, which change the effect itself. Filling every card of a path unlocks its Completion (evolution).
 - At the crossroads, choose a second path or the Single Path. The Single Path raises card levels by one more and unlocks the final Mastery.
 - Every hero has Crossover synergies that appear when two paths are combined.
 - Level-ups offer every card regardless of your path. Collecting cards that match your path unlocks its Resonance and Mastery, but you're free to pick differently. Recently chosen paths show up less often at the start, so you meet a different build every run.
 
-## ⚔️ Paths by Hero
+## Paths by Hero
 
 **Gunner**: Piercing Snipe (Stand still and charge piercing sniper rounds) · Ricochet Spray (Big magazine · Bouncing spray) · Flame Overheat (A heat gauge instead of reloading · Overheat blast) · Shotgun Rush (4-shell shotgun · Reload dash) · Turret Deploy (Turrets on reload · Hold the line)
 
@@ -339,11 +339,11 @@ The heart of this update is Build Paths. Until now you collected most cards in a
 
 **Ghost**: Deep Frost (Double chill · Crowd control) · Shatter (Shatter the frozen · Crack bosses) · Soul Legion (Souls charge foes · Automatic damage) · Necromancy (Long possession · Untouchable close-range burst) · Astral Projection (Ignore contact while moving · Mobile survival)
 
-## 📈 Growth Curve
+## Growth Curve
 - All damage dealt by heroes now grows as the run goes on: ×0.85 at the start → ×1.15 late (based on 30 minutes in Endless Mode and 14 minutes in Story Mode; the average over a run is unchanged)
 - The early game is a bit tenser, and the late game feels as powerful as you've grown.
 
-## 🦸 Hero Balance
+## Hero Balance
 
 Signature skills and Gate of Hell special abilities now also get a per-hero power multiplier. Health and survivability are unchanged.
 - Gunner: attack ×1.7 → ×2.7 · attack speed ×1.0 → ×1.25 · faster Ultimate charge · signature skill & special ability power ×2.0
@@ -356,14 +356,14 @@ Signature skills and Gate of Hell special abilities now also get a per-hero powe
 - Ghost: attack ×1.0 → ×0.9 · Grudge: frozen enemies count as 5 stacks → 3 · Frostbite +15/22/29/36% → +10/15/20/25%
 - Cartographer: attack ×1.15 → ×1.0 · Spreading Ink now deals the damage its description says (30/50/70% → 15/25/35% per second) · closed shape damage ×2.6 → ×2.2
 
-## ✨ Improvements
+## Improvements
 - Transcend "Soulfire Steps" has been redrawn as blue soulfire.
 - The attack bar on the hero select screen now uses the Gunner as the baseline (100%), making heroes easier to compare.
 - Soul Tree nodes are now learned with a single click.
 - The pause (ESC) 「Current Build」 panel now shows Transcendence in its own group.
 - The Alchemist's fire fields (Burning Swamp · Ember March) are redrawn as flames dancing over scorched ground.
 
-## 🛠️ Bug Fixes
+## Bug Fixes
 - Fixed several places where an interrupted skill could leave a state behind. (Ghost Possession, Gunner volley, Archer retreat, Clockmaker healing, Swordsman Eye of the Storm)
 - Added safeguards so the Gunner's reload can never get stuck.
 - Fixed the 「This Run's Brands」 panel sticking on top of the skill list on the pause (ESC) screen and blocking other skill descriptions.
@@ -377,7 +377,7 @@ Signature skills and Gate of Hell special abilities now also get a per-hero powe
 - Fixed 8 cards whose effects were lost or even weakened when paths, evolutions and forms overlapped. (Ghost · Clockmaker · Cartographer · Archer · Postman)
 - Fixed about 20 other bugs in path effects, continuing runs and screen displays.
 
-## ⚖️ Endless Mode Tuning
+## Endless Mode Tuning
 - Soul Shards from enemies in Endless Mode: ×1 → ×0.36 (−64%)
 - Souls needed for the Developer's Mom to descend: 1,000 → 500
 
@@ -389,14 +389,14 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 今回のアップデートの中心は「ビルド流派」です。これまでは1プレイでカードの大半を手に入れ、毎回似た姿になっていました。これからは英雄ごとに攻撃方法そのものが変わる5つの流派から、1つか2つだけを選んで深く育てます。
 
-## 🌿 ビルド流派の仕組み
+## ビルド流派の仕組み
 - プレイ開始時、入門カード3枚から1枚を選びます。入門カードは攻撃方法を変え、代償も付きます。
 - 流派のカードを集めると共鳴I・共鳴IIが開き、効果そのものが変わります。流派のカードをすべて満たすと完成（進化）が開きます。
 - 分かれ道で2つ目の流派を選ぶか、1つの流派だけを深く育てる「一筋」を選びます。一筋はカードの段階がさらに1つ増え、最後の「極意」が開きます。
 - 2つの流派を組み合わせると生まれる交差のシナジーが英雄ごとにあります。
 - レベルアップには流派に関係なくすべてのカードが出ます。選んだ流派に合うカードを集めると共鳴・極意が開き、別の選び方をしても構いません。最近選んだ流派は開始時に出にくくなり、毎回違うビルドに出会えます。
 
-## ⚔️ 英雄ごとの流派
+## 英雄ごとの流派
 
 **ガンナー**: 貫通狙撃 (足を止めて溜めて撃つ貫通狙撃弾)、跳弾乱射 (大きな弾倉・跳ねる乱射)、火炎過熱 (装填の代わりに熱ゲージ・過熱爆発)、散弾突撃 (4発の散弾・装填ダッシュ)、砲台設置 (装填で砲台・陣地防衛)
 
@@ -416,11 +416,11 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 **幽霊**: 酷寒 (冷気二倍 · 群れの制御)、粉砕 (凍った敵を砕く · ボスに亀裂)、魂の軍団 (魂が突進攻撃 · 自動火力)、死霊術 (長い憑依 · 無敵の接近爆発)、幽体離脱 (動けば接触無視 · 機動生存)
 
-## 📈 成長曲線
+## 成長曲線
 - 英雄が与えるすべてのダメージが、プレイが進むほど強くなります: 開始時 ×0.85 → 後半 ×1.15（エンドレス30分・ストーリー14分基準、1プレイの平均はそのまま）
 - 序盤は少し緊張感が増し、後半は成長した分だけ強く感じられます。
 
-## 🦸 英雄のバランス
+## 英雄のバランス
 
 固有スキルと地獄の門の特殊能力にも、英雄ごとの威力倍率がかかるようになりました。体力と生存力はそのままです。
 - ガンナー: 攻撃力 ×1.7 → ×2.7・攻撃速度 ×1.0 → ×1.25・必殺技チャージが速く・固有スキル・特殊能力の威力 ×2.0
@@ -433,14 +433,14 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 - 幽霊: 攻撃力 ×1.0 → ×0.9・怨み: 凍った敵 5重扱い → 3重・凍傷 +15/22/29/36% → +10/15/20/25%
 - 地図職人: 攻撃力 ×1.15 → ×1.0・にじむインクの実際のダメージを説明どおりに（毎秒30/50/70% → 15/25/35%）・閉じた図形のダメージ ×2.6 → ×2.2
 
-## ✨ 改善
+## 改善
 - 超越「魂火の足跡」が青い魂の炎で新しく描き直されました。
 - 英雄選択画面の攻撃力バーがガンナー基準（100%）で表示され、英雄同士を比べやすくなりました。
 - 魂のツリーのマスは1回押すだけで習得できるようになりました。
 - 一時停止（ESC）の「現在のスキル」で、超越をまとめて表示します。
 - 錬金術師の炎の床（燃える沼・火花の行進）が、焦げた地面の上で炎が揺らめく姿になりました。
 
-## 🛠️ 不具合の修正
+## 不具合の修正
 - 技が途中で中断されたときに状態が残ることがあった箇所を修正しました。（幽霊の憑依・ガンナーの一斉射撃・弓使いの後退・時計職人の回復・剣士の嵐の目）
 - ガンナーのリロードがどんな場合でも止まらないよう安全装置を追加しました。
 - 一時停止（ESC）画面で「今回の刻印」パネルがスキル一覧の上に重なって固定され、他のスキルの説明が見られなかった問題を修正しました。
@@ -454,7 +454,7 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 - 流派・進化・形態が重なると効果が抜けたり逆に弱くなったりしていたカード8か所を修正しました。（幽霊・時計職人・地図職人・弓使い・郵便配達人）
 - そのほか、流派の効果・続きからの再開・画面表示で見つかった不具合を約20件修正しました。
 
-## ⚖️ エンドレスの調整
+## エンドレスの調整
 - エンドレスで敵が落とす魂のかけら: ×1 → ×0.36（64%減少）
 - 開発者のママの降臨に必要な魂: 1,000 → 500
 
@@ -466,14 +466,14 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 本次更新的核心是「构筑流派」。以前一局就能拿到大部分卡牌，每局的样子都差不多。现在每位英雄都有5个改变攻击方式本身的流派，每局只选其中一两个深入培养。
 
-## 🌿 构筑流派的规则
+## 构筑流派的规则
 - 开局时从3张入门卡中选择1张。入门卡会改变攻击方式，同时附带代价。
 - 收集流派卡牌会开启共鸣I与共鸣II，效果本身会发生变化。集满一个流派的所有卡牌即可开启完成（进化）。
 - 在岔路选择第二个流派，或选择只深入一个流派的「专精」。专精会让卡牌等级再多一级，并开启最终的「极意」。
 - 每位英雄都有组合两个流派时出现的交汇协同效果。
 - 无论流派如何，升级时都会出现所有卡牌。收集与所选流派相符的卡牌会开启共鸣与极意，也可以另辟蹊径。最近选过的流派在开局时出现得更少，每局都会遇到不同的构筑。
 
-## ⚔️ 各英雄的流派
+## 各英雄的流派
 
 **枪手**: 贯穿狙击 (站定蓄力，射出贯穿狙击弹)、跳弹扫射 (大弹匣・弹跳扫射)、烈焰过热 (以热量槽代替装填・过热爆炸)、霰弹突击 (4发霰弹・装填冲刺)、架设炮塔 (装填时架炮塔・阵地防守)
 
@@ -493,11 +493,11 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 **幽灵**: 酷寒 (双倍寒气 · 控制敌群)、粉碎 (粉碎冻结之敌 · 首领裂痕)、灵魂军团 (灵魂冲锋攻击 · 自动火力)、死灵术 (长时间附身 · 无敌近身爆发)、灵魂出窍 (移动时无视接触 · 机动生存)
 
-## 📈 成长曲线
+## 成长曲线
 - 英雄造成的所有伤害会随着游戏进行而增强：开局 ×0.85 → 后期 ×1.15（以无尽模式30分钟、故事模式14分钟为基准，一局的平均值不变）
 - 前期更有紧张感，后期则能感受到成长带来的强大。
 
-## 🦸 英雄平衡
+## 英雄平衡
 
 固有技能与地狱之门特殊能力现在也会套用各英雄的威力倍率。生命与生存能力保持不变。
 - 枪手：攻击力 ×1.7 → ×2.7 · 攻击速度 ×1.0 → ×1.25 · 必杀技充能更快 · 固有技能与特殊能力威力 ×2.0
@@ -510,14 +510,14 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 - 幽灵：攻击力 ×1.0 → ×0.9 · 怨恨：冻结视为5层 → 3层 · 冻伤 +15/22/29/36% → +10/15/20/25%
 - 制图师：攻击力 ×1.15 → ×1.0 · 晕染墨迹的实际伤害与说明一致（每秒30/50/70% → 15/25/35%）· 闭合图形伤害 ×2.6 → ×2.2
 
-## ✨ 改进
+## 改进
 - 超越「魂火足迹」重新绘制为蓝色魂火。
 - 英雄选择画面的攻击力条改为以枪手为基准（100%）显示，更方便比较英雄。
 - 灵魂树节点现在单击即可学习。
 - 暂停（ESC）界面的「当前技能」中，超越会单独成组显示。
 - 炼金术士的火焰地带（燃烧沼泽 · 火花行进）改为焦土上摇曳的火焰。
 
-## 🛠️ 问题修复
+## 问题修复
 - 修复了技能中途被打断时可能残留状态的几处问题。（幽灵附身 · 枪手齐射 · 弓箭手后撤 · 钟表匠回复 · 剑士风暴之眼）
 - 为枪手的装填加入了安全机制，任何情况下都不会卡住。
 - 修复了暂停（ESC）界面中「本局刻印」面板固定叠在技能列表上，导致看不到其他技能说明的问题。
@@ -531,7 +531,7 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 - 修复了流派、进化与形态叠加时效果丢失或反而变弱的8张卡。（幽灵 · 钟表匠 · 制图师 · 弓箭手 · 邮差）
 - 另外修复了流派效果、继续游戏和画面显示中的约20个问题。
 
-## ⚖️ 无尽模式调整
+## 无尽模式调整
 - 无尽模式中敌人掉落的灵魂碎片：×1 → ×0.36（减少64%）
 - 开发者的妈妈降临所需的灵魂：1,000 → 500
 
@@ -546,31 +546,31 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 영혼을 구하는 여정에 큰 업데이트가 찾아왔습니다! 무한 모드가 훨씬 깊어지고, 더 편하게 즐길 수 있게 되었습니다.
 
-## 👑 왕들의 영토
+## 왕들의 영토
 
 무한 모드에서 보스를 쓰러뜨리면, 그 왕의 영토가 쓰러진 자리부터 파동처럼 사막을 덮습니다.
 - 묘비와 영혼 수정이 솟아 길과 탄을 막습니다. 어디서 쏘느냐가 중요해집니다.
 - 용암 웅덩이는 밟으면 피해를 입고, 점액 늪은 모두를 느리게 합니다.
 - 15분 「최후의 시간」이 시작되면 모래 폭풍이 지형을 집어삼킵니다.
 
-## 💾 무한 모드 저장 · 이어하기
+## 무한 모드 저장 · 이어하기
 - 무한 모드도 메인 메뉴로 나가거나 게임을 끄면 저장되고, 「이어하기」로 같은 지점부터 다시 할 수 있습니다.
 - 일일 도전은 공정한 순위를 위해 저장되지 않습니다.
 
-## ⚔️ 보스는 기다리지 않습니다
+## 보스는 기다리지 않습니다
 - 보스를 3분 넘게 못 쓰러뜨리면 다음 보스가 함께 나옵니다(동시에 최대 2마리).
 - 오래 버틴 보스는 모래 폭풍에 풍화되어 받는 피해가 점점 늘어납니다.
 - 15분 「최후의 시간」은 보스를 하나 이상 쓰러뜨린 판에만 열립니다.
 - 개발자 · 개발자 엄마와 싸우는 동안 약한 적들이 몰려옵니다.
 
-## ✨ 손맛과 편의
+## 손맛과 편의
 - 피격 시 체력바에 효과가 추가됩니다!
 - 탄이 더 잘 보입니다. 내 탄과 적 탄에 어두운 테두리를 더하고 그림을 조금 키웠습니다(맞는 판정은 그대로입니다).
 - 도적의 회전 표창은 던진 표창이 그대로 꺾여 돌아옵니다.
 - 맵의 통이 부서진 뒤 40초마다 하나씩 다시 생깁니다.
 - 무한 모드 초반이 더 쉬워지고, 첫 보스가 더 늦게 나옵니다.
 
-## ⚖️ 밸런스 조정
+## 밸런스 조정
 - 무한 모드 처음 5분: 잡몹 · 보스 체력 ×0.5, 받는 피해 ×0.6 (5~9분에 서서히 원래대로)
 - 무한 모드 첫 보스 등장: 1분 30초 → 4분
 - 개발자 · 개발자 엄마 필살기 예고 시간: 개발자 ×0.6, 엄마 ×0.5
@@ -580,68 +580,68 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 영혼을 구하는 여정에 큰 업데이트가 찾아왔습니다! 판마다 새 목표가 생기고, 보스는 더 영리해졌으며, 더 부드럽고 편하게 즐길 수 있게 되었습니다.
 
-## 📜 영혼 계약
+## 영혼 계약
 - 판마다 목표 3개가 주어지고, 이루면 바로 포인트를 받습니다. 이루지 못해도 벌칙은 없습니다.
 - 메인 메뉴의 계약 보드 45칸을 채우면 새 유물 9종과 칭호가 열립니다.
 
-## 👻 망자의 전령 · 기억 조각
+## 망자의 전령 · 기억 조각
 - 쓰러지면 상황에 맞는 한마디가 들려옵니다.
 - 영웅마다 기억 조각 6장을 모아 도감 「기억」 탭에서 읽을 수 있습니다.
 
-## 🏆 새 목표와 보상
+## 새 목표와 보상
 - 무한 모드는 보통 클리어, 일일 도전은 쉬움 클리어로 열립니다. 이미 클리어했다면 바로 열립니다.
 - 지도 제작자 · 시계공 · 유령도 이야기 모드에서 여는 길이 생겼습니다.
 - 무한 모드에서 5 · 10 · 15 · 20분 등을 처음 넘기면 포인트를 받습니다. 이미 넘긴 기록도 메인 메뉴 「받기」에서 받을 수 있습니다.
 - 일일 도전에 5 · 10 · 15분 보상, 연속 출석과 완주 보상이 생기고, 규칙이 7종에서 14종으로 늘었습니다.
 
-## 🌀 공간 침식
+## 공간 침식
 
 무한 모드에서 보스가 둘 이상 함께 있으면 필살기 게이지가 하나로 합쳐집니다. 어느 보스를 때려도 같은 게이지가 찹니다.
 - 게이지가 가득 차면 각자의 결계 대신, 아레나 전체를 덮는 거대한 결계 「공간 침식」이 15초 동안 펼쳐집니다.
 - 그 안에서는 모든 보스의 결계 공격이 더 짧은 간격으로 함께 쏟아집니다. 예고 시간은 그대로입니다.
 - 천천히 떠도는 「고요의 눈」 안에는 땅을 치는 공격이 떨어지지 않습니다.
 
-## 💻 개발자 · 엄마의 결계
+## 개발자 · 엄마의 결계
 - 개발자는 「디버그 모드」를 펼칩니다. 브레이크포인트 · 한 줄씩 실행 · 버그 대량 발생 · 무한 루프에 이어, 마지막에는 「강제 종료」가 기다립니다.
 - 개발자 엄마는 「엄마의 대청소」를 펼칩니다. 등짝 스매싱 · 청소기 · 빨래 널기 · 잔소리 폭격에 이어, 통금 시간이 되면 결계가 좁아집니다.
 
-## 🎯 빈틈
+## 빈틈
 - 보스와 중간 보스에게 빛나는 빈틈이 생깁니다. 직접 조준한 공격으로 맞히면 피해가 크게 늘어납니다.
 - 탄은 +75%, 근접 공격과 샷건은 +40%, 던진 공격의 직격은 +60% 피해를 줍니다.
 - 궁수의 「완벽!」 화살과 시계공의 「정각」 톱니가 빈틈에 맞으면 「완벽한 빈틈!」이 뜨며 더 크게 늘어납니다.
 
-## 🧠 기억하는 보스
+## 기억하는 보스
 - 보스의 체력이 정해진 값에 닿으면, 그때까지 가장 많이 맞은 공격을 기억하고 막아 냅니다.
 - 다른 공격으로 기억을 깨면 보스가 잠시 휘청이며 받는 피해가 25% 늘어납니다.
 
-## ✨ 편의 기능
+## 편의 기능
 - ESC 메뉴에서 지금 가진 스킬을 한눈에 볼 수 있고, 일시정지 중 아이콘에 마우스를 올리면 설명이 나옵니다.
 - 빌드 자세히 보기 · 기록 창 · 로딩 화면 · 도감 검색 · 결과 복사를 추가했습니다.
 - 스팀 오버레이를 열거나 게임패드가 빠지면 자동으로 일시정지합니다. 전투 중에는 커서가 창 밖으로 나가지 않습니다.
 - 게임 안의 모든 설명 문구를 더 읽기 쉽게 다듬었습니다.
 
-## ⚙️ 설정
+## 설정
 - 접근성 · 표시 탭을 새로 만들었습니다. 공격 고정 · 필살기 토글 · 대사 속도 · 움직임 줄이기 · 빠른 연출 · 전투 통계를 고를 수 있습니다.
 - 「화면」 탭에 「그래픽 품질」(높음 · 낮음)과 모니터 선택을 추가했습니다. 「낮음」은 잔상 · 불꽃 · 빛 번짐 같은 꾸밈 효과만 줄입니다.
 - 해상도 · 그래픽 품질 · 최대 프레임 · 모니터를 펼쳐서 고르는 목록으로 바꿨습니다.
 
-## ⚡ 최적화
+## 최적화
 - 적과 탄이 많이 몰리는 후반 · 무한 모드 · 보스전에서 프레임이 더 안정적입니다.
 - 오래 플레이할수록 조금씩 쌓이던 메모리를 정리했습니다.
 - 개발자를 쓰러뜨린 뒤 적이 너무 많이 나와 느려지던 문제를 고쳤습니다.
 
-## 🌱 체험판
+## 체험판
 - 체험판이 초원과 킹 슬라임으로 바뀌었습니다. 정식판의 첫 장과 같은 흐름을 즐길 수 있습니다.
 - 거너 · 검사에 더해 유령으로도 플레이할 수 있습니다.
 
-## 🛠️ 버그 수정
+## 버그 수정
 - 회전 표창이 아무것에도 닿지 않았는데 일찍 꺾여 돌아오던 문제를 고쳤습니다.
 - 무한 모드 · 일일 도전의 배경음이 128초마다 갑자기 바뀌던 문제를 고쳤습니다. 이제 보스를 쓰러뜨릴 때 다음 곡으로 넘어갑니다.
 - 스킬 아이콘의 단계 칸 중 가운데 칸이 깨져 보이던 문제를 고쳤습니다.
 - 오른쪽 위 알림이 영혼 트리 버튼에 가려지던 문제를 고쳤습니다.
 - 무한 모드 기록이 다음 결과 화면에 섞이던 문제를 고쳤습니다.
 
-## ⚖️ 밸런스 조정
+## 밸런스 조정
 - 개발자 체력: 200,000 → 100,000
 - 개발자 엄마 체력: 400,000 → 200,000
 - 개발자 엄마 강림에 필요한 영혼: 3,000 → 1,000
@@ -657,14 +657,14 @@ Thank you to everyone who plays. If you find a path combo you love, or a path th
 
 V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 편하게 다듬었습니다.
 
-## ✨ 편의성 개선
+## 편의성 개선
 - 결계 · 공간 침식 중에는 용암 웅덩이가 피해를 주지 않고, 늪도 느려지게 하지 않습니다. (0.6초마다 6 피해 → 피해 없음)
 - 공간 침식 중 결계 공격이 아닌 피해는 한 대에 최대 체력의 25%까지만 받습니다. (40% → 25%)
 - 시전 중인 보스도 필살기 게이지가 찬 뒤 최대 3초 안에 시전을 끊고 결계를 펼칩니다. 결계가 언제 올지 알기 쉬워졌습니다.
 - 보스 보상 가운데 칸에 「생명」 · 「회복」이 더는 나오지 않습니다.
 - 「고요의 눈」이 웅덩이 위에 생기지 않습니다.
 
-## 🛠️ 버그 수정
+## 버그 수정
 - 무한 모드에서 보스를 쓰러뜨려도 「왕들의 영토」 땅이 바뀌지 않던 문제를 고쳤습니다. 이제 영토가 번지고 용암 · 늪이 생깁니다.
 - 15분 「최후의 시간」이 결계 · 공간 침식 도중에 시작되던 문제를 고쳤습니다.
 - 보스가 여럿일 때 체력바와 「기억」 글자가 겹치던 문제, 보스 넷의 체력바가 화면을 너무 가리던 문제를 고쳤습니다.
@@ -677,7 +677,7 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 
 무한 모드의 마지막 두 보스가 영웅 필살기 흉내 말고도 자기다운 공격을 쓰기 시작합니다. 판이 멈출 수 있던 문제들도 모두 고쳤습니다.
 
-## 💻 개발자의 새 공격
+## 개발자의 새 공격
 - 라이브 코딩: 코드 한 줄이 탄이 되어 날아옵니다. 띄어쓰기 자리가 빈틈입니다.
 - 범위 선택: 사각형으로 드래그한 뒤 Del 키로 지웁니다. 체력이 줄면 Ctrl+V 로 한 번 더 붙여 넣습니다.
 - 빌드 실패: 빌드가 다 차면 실패하며 터집니다.
@@ -685,7 +685,7 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 - 로딩 중…: 빙글 도는 고리가 조여 듭니다.
 - 스택 오버플로: 블록 탑이 쌓였다가 무너집니다.
 
-## 🧹 엄마의 새 공격
+## 엄마의 새 공격
 - 슬리퍼 투척: 슬리퍼가 날아와 벽에 튕깁니다.
 - 효자손: 효자손을 크게 휘두릅니다.
 - 타임 세일!: 할인 쿠폰을 따라 매장을 휘젓고 다닙니다.
@@ -695,7 +695,7 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 
 모든 공격은 먼저 경고가 보이고, 결계 · 공간 침식이 시작되면 바로 멈춥니다.
 
-## ✨ 편의성 개선
+## 편의성 개선
 - 새 로딩 화면: 검은 화면 대신 로딩바와 함께 지금 영웅이 달립니다.
 - 불 장판을 그을린 땅 위에 불꽃이 넘실대는 모습으로 새로 그렸습니다. (영웅의 불 공격 · 지옥의 군주의 불 웅덩이)
 - 이펙트 스킨 · 전설 스킨의 연출이 훨씬 크고 잘 보입니다.
@@ -706,14 +706,14 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 - 무한 모드 · 일일 도전 중에 게임을 끄면 지금까지의 기록이 순위표에 올라갑니다.
 - 빈틈이 금이 간 심장처럼 두근거리고 조준 표시가 조여 들어, 더 약점처럼 보입니다.
 
-## 🛠️ 버그 수정
+## 버그 수정
 - 결과 화면이 메인 메뉴와 다음 판까지 화면에 남아 겹쳐 보이던 문제를 고쳤습니다.
 - 무한 모드 이어하기에서 시간이 00:00에서 멈추던 문제를 고쳤습니다. 15분 「최후의 시간」과 적 증가도 제대로 진행됩니다.
 - 보스가 영원히 공격을 받지 않던 문제를 고쳤습니다.
 - 게이지가 가득 차도 공간 침식이 펼쳐지지 않고, 15분 「최후의 시간」과 다음 보스까지 멈추던 문제를 고쳤습니다.
 - 보스가 기술 도중 끊겨 공중에 떠 있던 문제 등 보스전이 멈출 수 있던 문제를 더 막았습니다.
 
-## 🦸 영웅 밸런스
+## 영웅 밸런스
 
 유령에 비해 약하던 영웅들의 화력을 크게 올렸습니다.
 - 거너: 공격력 ×1.15 → ×1.7
@@ -726,7 +726,7 @@ V1.3 업데이트 뒤 찾은 문제들을 고치고, 결계 속 전투를 더 �
 - 우체부: 공격력 ×0.8 → ×1.2
 - 유령: 처치할 때 영혼이 생길 확률 20% → 10% · 최대 영혼 4 → 3 (영혼 수호 5 · 6 · 7 → 4 · 5 · 6) · 빙의가 끝난 뒤 무적 0.65초 → 0.3초
 
-## ⚖️ 밸런스 조정
+## 밸런스 조정
 - 모든 적의 체력: 40% 감소 (잡몹 · 엘리트 · 중간 보스 · 보스 모두)
 - 개발자 체력: 100,000 → 60,000
 - 개발자 엄마 체력: 200,000 → 120,000
@@ -749,31 +749,31 @@ From the Realm of the Kings spreading across Endless Mode to new goals every run
 
 A big update has arrived on your journey to save souls! Endless Mode is now much deeper, and more comfortable to play.
 
-## 👑 Realm of the Kings
+## Realm of the Kings
 
 In Endless Mode, each defeated boss spreads its realm across the desert in a wave from where it fell.
 - Tombstones and soul crystals rise to block movement and shots. Where you shoot from now matters.
 - Lava pools burn you, and slime bogs slow everyone down.
 - When the 15-minute "Final Hour" begins, a sandstorm swallows the terrain.
 
-## 💾 Endless Save & Continue
+## Endless Save & Continue
 - Endless runs are saved when you return to the main menu or quit, and you can pick them up again with "Continue."
 - Daily Challenge is not saved, to keep the leaderboard fair.
 
-## ⚔️ Bosses Don't Wait
+## Bosses Don't Wait
 - If a boss survives more than 3 minutes, the next boss joins in (up to 2 at once).
 - A boss that lingers is weathered by the sandstorm and takes more and more damage.
 - The 15-minute "Final Hour" only opens if you have defeated at least one boss.
 - Weak enemies swarm in while you fight the Developer and the Developer's Mom.
 
-## ✨ Feel & Quality of Life
+## Feel & Quality of Life
 - Health bars now react when you take a hit!
 - Projectiles are easier to see: your shots and enemy shots have a dark outline and are drawn slightly larger (hitboxes are unchanged).
 - The Rogue's Spinning Stars now curve back to you themselves.
 - Barrels on the map reappear one at a time every 40 seconds after being broken.
 - The early game of Endless Mode is easier, and the first boss appears later.
 
-## ⚖️ Balance Changes
+## Balance Changes
 - First 5 minutes of Endless: mob and boss HP ×0.5, damage taken ×0.6 (gradually back to normal from 5 to 9 minutes)
 - First Endless boss: 1:30 → 4:00
 - Developer / Developer's Mom ultimate warning time: Developer ×0.6, Mom ×0.5
@@ -783,68 +783,68 @@ In Endless Mode, each defeated boss spreads its realm across the desert in a wav
 
 A big update has arrived on your journey to save souls! Every run now brings new goals, bosses have grown smarter, and the game is smoother and more comfortable to play.
 
-## 📜 Soul Contracts
+## Soul Contracts
 - Every run gives you three goals, and you earn points as soon as you complete them. There is no penalty for missing them.
 - Fill the 45-slot Contract Board in the main menu to unlock 9 new relics and titles.
 
-## 👻 Herald of the Dead · Memory Shards
+## Herald of the Dead · Memory Shards
 - When you fall, you hear a line that fits the moment.
 - Collect 6 Memory Shards per hero and read them in the new Codex "Memories" tab.
 
-## 🏆 New Goals & Rewards
+## New Goals & Rewards
 - Endless Mode now unlocks by clearing Normal, and Daily Challenge by clearing Easy. If you have already cleared them, they unlock right away.
 - The Cartographer, Clockmaker, and Ghost can also be unlocked through Story Mode.
 - In Endless Mode, earn points the first time you pass 5, 10, 15, or 20 minutes and more. Milestones you already passed can be claimed from "Claim" in the main menu.
 - Daily Challenge adds 5, 10, and 15-minute rewards plus login streak and completion rewards, and its rule sets grow from 7 to 14.
 
-## 🌀 Spatial Erosion
+## Spatial Erosion
 
 In Endless Mode, when two or more bosses are on the field together, their ultimate gauges merge into one. Hitting any boss fills the same gauge.
 - When the gauge is full, instead of separate barriers, a giant barrier called "Spatial Erosion" covers the whole arena for 15 seconds.
 - Inside it, every boss's barrier attacks pour down together at shorter intervals. Warning times stay the same.
 - Ground strikes never land inside the slowly drifting "Eye of Calm."
 
-## 💻 The Developer's and Mom's Barriers
+## The Developer's and Mom's Barriers
 - The Developer casts "Debug Mode." Breakpoints, step-by-step execution, a bug swarm, and an infinite loop lead up to a final "Force Quit."
 - The Developer's Mom casts "Mom's Big Cleanup." Back smacks, a vacuum cleaner, falling laundry, and a nagging barrage lead up to curfew, when the barrier closes in.
 
-## 🎯 Weak Points
+## Weak Points
 - Bosses and mid-bosses now have a glowing weak point. Hit it with an aimed attack to deal much more damage.
 - Shots deal +75%, melee attacks and the shotgun deal +40%, and a thrown attack's direct hit deals +60%.
 - When the Archer's Perfect! arrows or the Clockmaker's O'Clock gears hit a weak point, PERFECT WEAK POINT! appears and the damage rises even more.
 
-## 🧠 Bosses That Remember
+## Bosses That Remember
 - When a boss's health reaches certain points, it remembers the attack that hit it most and blocks it.
 - Break the memory with other attacks, and the boss staggers for a moment and takes 25% more damage.
 
-## ✨ Quality of Life
+## Quality of Life
 - The pause menu shows all the skills you currently have, and hovering over icons while paused shows their details.
 - Added a detailed build view, a run history window, a loading screen, Codex search, and Copy Results.
 - The game pauses automatically when you open the Steam overlay or a gamepad disconnects. The cursor stays inside the window during combat.
 - All in-game descriptions have been rewritten to be easier to read.
 
-## ⚙️ Settings
+## Settings
 - New Accessibility and HUD tabs. Choose Attack Lock, Ultimate Toggle, Dialogue Speed, Reduce Motion, Fast Cutscenes, and Combat Stats.
 - Added "Graphics Quality" (High · Low) and monitor selection to the Display tab. "Low" only reduces decorative effects such as trails, sparks, and glow.
 - Resolution, Graphics Quality, Max Frame Rate, and Monitor are now dropdown lists.
 
-## ⚡ Optimization
+## Optimization
 - Frame rate is more stable in the late game, Endless Mode, and boss fights when many enemies and projectiles pile up.
 - Memory that slowly built up during long sessions is now cleaned up.
 - Fixed slowdowns caused by too many enemies after defeating the Developer.
 
-## 🌱 Demo
+## Demo
 - The demo now takes place in the Meadow with the King Slime, following the same flow as the first chapter of the full game.
 - Along with the Gunner and the Swordsman, you can now also play as the Ghost.
 
-## 🛠️ Bug Fixes
+## Bug Fixes
 - Fixed the Boomerang Star turning back early even when it had not hit anything.
 - Fixed the Endless and Daily Challenge music suddenly switching tracks every 128 seconds. The next track now starts when you defeat a boss.
 - Fixed the middle level pip on skill icons looking broken.
 - Fixed top-right notices being hidden behind the Soul Tree button.
 - Fixed Endless Mode records mixing into the next results screen.
 
-## ⚖️ Balance Changes
+## Balance Changes
 - Developer HP: 200,000 → 100,000
 - Developer's Mom HP: 400,000 → 200,000
 - Souls needed for the Developer's Mom to descend: 3,000 → 1,000
@@ -860,14 +860,14 @@ In Endless Mode, when two or more bosses are on the field together, their ultima
 
 This update fixes issues found after the V1.3 update and makes fighting inside barriers more comfortable.
 
-## ✨ Quality of Life
+## Quality of Life
 - During barriers and Spatial Erosion, lava pools no longer deal damage and bogs no longer slow you. (6 damage every 0.6s → no damage)
 - During Spatial Erosion, damage from non-barrier attacks is capped at 25% of your max HP per hit. (40% → 25%)
 - A boss that is casting now interrupts its cast and opens its barrier within 3 seconds after its ultimate gauge fills. It is easier to tell when a barrier is coming.
 - The middle boss reward no longer offers "Life" or "Heal."
 - The "Eye of Calm" no longer appears on top of pools.
 
-## 🛠️ Bug Fixes
+## Bug Fixes
 - Fixed the ground of "Realm of the Kings" not changing when you defeat a boss in Endless Mode. Realms now spread and lava pools and bogs appear.
 - Fixed the 15-minute "Final Hour" starting in the middle of a barrier or Spatial Erosion.
 - Fixed health bars overlapping the "Memory" text when several bosses appear, and four boss health bars covering too much of the screen.
@@ -880,7 +880,7 @@ This update fixes issues found after the V1.3 update and makes fighting inside b
 
 The last two bosses of Endless Mode now use attacks that are truly their own, on top of imitating hero ultimates. Every issue that could stall a run has been fixed too.
 
-## 💻 The Developer's New Attacks
+## The Developer's New Attacks
 - Live Coding: a line of code flies at you as projectiles. The spaces are your gaps.
 - Select & Delete: a box is dragged out, then erased with the Del key. At lower health, Ctrl+V pastes it once more.
 - Build Failed: when the build bar fills, it fails and explodes.
@@ -888,7 +888,7 @@ The last two bosses of Endless Mode now use attacks that are truly their own, on
 - Loading…: a spinning ring closes in.
 - Stack Overflow: a tower of blocks stacks up, then collapses.
 
-## 🧹 Mom's New Attacks
+## Mom's New Attacks
 - Slipper Toss: slippers fly at you and bounce off walls.
 - Back Scratcher: a big sweeping swing.
 - Time Sale!: she storms through the store following the coupons.
@@ -898,7 +898,7 @@ The last two bosses of Endless Mode now use attacks that are truly their own, on
 
 Every attack shows a warning first and stops the moment a barrier or Spatial Erosion begins.
 
-## ✨ Quality of Life
+## Quality of Life
 - New loading screen: instead of a black screen, your hero runs along a loading bar.
 - Fire fields have been redrawn as flames dancing over scorched ground. (Hero fire attacks and the Demon Lord's fire pools)
 - Effect skins and Legendary skins now have much bigger, clearer effects.
@@ -909,14 +909,14 @@ Every attack shows a warning first and stops the moment a barrier or Spatial Ero
 - Quitting the game during Endless Mode or the Daily Challenge now submits your run so far to the leaderboard.
 - Weak points now pulse like a cracked heart with a tightening target mark, so they look more like weak points.
 
-## 🛠️ Bug Fixes
+## Bug Fixes
 - Fixed the results screen staying on top of the main menu and the next run.
 - Fixed the timer stopping at 00:00 after continuing an Endless run. The 15-minute "Final Hour" and enemy scaling now progress correctly.
 - Fixed bosses becoming permanently immune to damage.
 - Fixed Spatial Erosion not triggering even with a full gauge, which also stalled the 15-minute "Final Hour" and the next boss.
 - Fixed more cases that could stall boss fights, such as bosses staying in the air after an interrupted attack.
 
-## 🦸 Hero Balance
+## Hero Balance
 
 Heroes that fell behind the Ghost now hit much harder.
 - Gunner: attack ×1.15 → ×1.7
@@ -929,7 +929,7 @@ Heroes that fell behind the Ghost now hit much harder.
 - Postman: attack ×0.8 → ×1.2
 - Ghost: soul chance on kill 20% → 10% · max souls 4 → 3 (Soul Guard 5 · 6 · 7 → 4 · 5 · 6) · invincibility after Possession 0.65s → 0.3s
 
-## ⚖️ Balance Changes
+## Balance Changes
 - All enemy health: −40% (mobs, elites, mid-bosses and bosses)
 - Developer health: 100,000 → 60,000
 - Developer's Mom health: 200,000 → 120,000
@@ -952,31 +952,31 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 
 魂を救う旅に大型アップデートが届きました！エンドレスがより奥深く、より遊びやすくなりました。
 
-## 👑 王たちの領土
+## 王たちの領土
 
 エンドレスでボスを倒すと、その王の領土が倒れた場所から波のように砂漠を覆います。
 - 墓石と魂の水晶が現れ、移動と弾を遮ります。どこから撃つかが重要になります。
 - 溶岩だまりは踏むとダメージを受け、粘液の沼はすべてを遅くします。
 - 15分の「最後の時間」が始まると、砂嵐が地形を飲み込みます。
 
-## 💾 エンドレスのセーブ・続きから
+## エンドレスのセーブ・続きから
 - エンドレスもメインメニューに戻るかゲームを終了するとセーブされ、「続きから」で同じところから再開できます。
 - デイリーチャレンジは公平なランキングのためセーブされません。
 
-## ⚔️ ボスは待ってくれません
+## ボスは待ってくれません
 - ボスを3分以上倒せないと、次のボスが一緒に現れます（同時に最大2体）。
 - 長く生き残ったボスは砂嵐に風化し、受けるダメージがだんだん増えます。
 - 15分の「最後の時間」は、ボスを1体以上倒したときだけ開きます。
 - 開発者・開発者の母と戦っている間は、弱い敵が押し寄せてきます。
 
-## ✨ 手触りと便利機能
+## 手触りと便利機能
 - 被弾時に体力バーへ演出が追加されます！
 - 弾が見やすくなりました。自分の弾と敵の弾に暗い縁取りを加え、少し大きく描くようにしました（当たり判定は変わりません）。
 - 盗賊の回転手裏剣は、投げた手裏剣がそのまま曲がって戻ってきます。
 - マップの樽が、壊れたあと40秒ごとにひとつずつ再び現れます。
 - エンドレスの序盤がやさしくなり、最初のボスの登場が遅くなりました。
 
-## ⚖️ バランス調整
+## バランス調整
 - エンドレス最初の5分：雑魚・ボスの体力 ×0.5、被ダメージ ×0.6（5〜9分にかけて徐々に元どおり）
 - エンドレス最初のボスの登場：1分30秒 → 4分
 - 開発者・開発者の母の必殺技の予告時間：開発者 ×0.6、母 ×0.5
@@ -986,68 +986,68 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 
 魂を救う旅に大型アップデートが届きました！毎回のプレイに新しい目標が生まれ、ボスはより賢くなり、より滑らかで快適に遊べるようになりました。
 
-## 📜 魂の契約
+## 魂の契約
 - 毎回のプレイで目標が3つ与えられ、達成するとすぐにポイントを獲得します。達成できなくてもペナルティはありません。
 - メインメニューの契約ボード45マスを埋めると、新しい遺物9種と称号が解放されます。
 
-## 👻 亡者の伝令・記憶のかけら
+## 亡者の伝令・記憶のかけら
 - 倒れると、状況に合ったひと言が聞こえます。
 - 英雄ごとに記憶のかけらを6枚集め、図鑑の「記憶」タブで読めます。
 
-## 🏆 新しい目標と報酬
+## 新しい目標と報酬
 - エンドレスは「普通」クリア、デイリーチャレンジは「やさしい」クリアで解放されます。すでにクリアしている場合はすぐに解放されます。
 - 地図職人・時計職人・幽霊もストーリーモードで解放できるようになりました。
 - エンドレスで5・10・15・20分などを初めて越えるとポイントを獲得します。すでに越えた記録もメインメニューの「受け取る」から受け取れます。
 - デイリーチャレンジに5・10・15分の報酬、連続ログインと完走の報酬が加わり、ルールが7種類から14種類に増えました。
 
-## 🌀 空間侵食
+## 空間侵食
 
 エンドレスでボスが2体以上同時にいると、必殺技ゲージがひとつに合わさります。どのボスを攻撃しても同じゲージがたまります。
 - ゲージが満タンになると、それぞれの結界の代わりに、アリーナ全体を覆う巨大な結界「空間侵食」が15秒間展開されます。
 - その中では、すべてのボスの結界攻撃がより短い間隔で一斉に降り注ぎます。予告時間はそのままです。
 - ゆっくり漂う「静寂の目」の中には、地面を打つ攻撃が落ちてきません。
 
-## 💻 開発者・ママの結界
+## 開発者・ママの結界
 - 開発者は「デバッグモード」を展開します。ブレークポイント・1行ずつ実行・バグの大量発生・無限ループに続き、最後には「強制終了」が待っています。
 - 開発者のママは「ママの大掃除」を展開します。背中バシッ・掃除機・洗濯物干し・小言の嵐に続き、門限になると結界が狭まります。
 
-## 🎯 隙
+## 隙
 - ボスと中ボスに光る隙が現れます。直接狙った攻撃で当てると、ダメージが大きく上がります。
 - 弾は+75%、近接攻撃とショットガンは+40%、投げた攻撃の直撃は+60%のダメージを与えます。
 - 弓使いの「パーフェクト！」の矢と時計職人の「正時」の歯車が隙に当たると、「完璧な隙！」が出てさらに大きく上がります。
 
-## 🧠 記憶するボス
+## 記憶するボス
 - ボスの体力が決まった値に達すると、それまで最も多く受けた攻撃を覚えて防ぎます。
 - ほかの攻撃で記憶を砕くと、ボスがしばらくよろめき、受けるダメージが25%増えます。
 
-## ✨ 便利機能
+## 便利機能
 - ESCメニューで今持っているスキルをひと目で確認でき、一時停止中にアイコンへマウスを乗せると説明が出ます。
 - ビルド詳細・記録ウィンドウ・ロード画面・図鑑検索・結果のコピーを追加しました。
 - Steamオーバーレイを開いたりゲームパッドが外れたりすると、自動で一時停止します。戦闘中はカーソルがウィンドウの外に出ません。
 - ゲーム内のすべての説明文を、より読みやすく書き直しました。
 
-## ⚙️ 設定
+## 設定
 - アクセシビリティ・表示タブを新設しました。攻撃固定・必殺技トグル・セリフ速度・動きを減らす・演出の高速化・戦闘統計を選べます。
 - 「画面」タブに「グラフィック品質」（高・低）とモニター選択を追加しました。「低」は残像・火花・光のにじみなどの装飾効果だけを減らします。
 - 解像度・グラフィック品質・最大フレームレート・モニターを、開いて選ぶリスト形式に変えました。
 
-## ⚡ 最適化
+## 最適化
 - 敵や弾が多く集まる終盤・エンドレス・ボス戦で、フレームレートがより安定しました。
 - 長く遊ぶほど少しずつ溜まっていたメモリを整理しました。
 - 開発者を倒した後に敵が多く出すぎて重くなっていた問題を修正しました。
 
-## 🌱 体験版
+## 体験版
 - 体験版の舞台が草原とキングスライムに変わりました。製品版の第1章と同じ流れを楽しめます。
 - ガンナー・剣士に加えて、幽霊でも遊べるようになりました。
 
-## 🛠️ 不具合の修正
+## 不具合の修正
 - 回転手裏剣が何にも当たっていないのに早く折り返していた問題を修正しました。
 - エンドレス・デイリーチャレンジのBGMが128秒ごとに急に変わっていた問題を修正しました。これからはボスを倒したときに次の曲へ移ります。
 - スキルアイコンの段階マスのうち、真ん中のマスが崩れて見える問題を修正しました。
 - 右上のお知らせが魂のツリーのボタンに隠れていた問題を修正しました。
 - エンドレスの記録が次の結果画面に混ざっていた問題を修正しました。
 
-## ⚖️ バランス調整
+## バランス調整
 - 開発者の体力：200,000 → 100,000
 - 開発者のママの体力：400,000 → 200,000
 - 開発者のママの降臨に必要な魂：3,000 → 1,000
@@ -1063,14 +1063,14 @@ Thank you to everyone who plays. Feel free to share your feedback on the Communi
 
 V1.3 アップデート後に見つかった問題を修正し、結界の中の戦闘をより快適に調整しました。
 
-## ✨ 快適性の改善
+## 快適性の改善
 - 結界・空間侵食中は溶岩の溜まりがダメージを与えず、沼でも遅くなりません。（0.6秒ごとに6ダメージ → ダメージなし）
 - 空間侵食中、結界攻撃以外から受けるダメージは1回につき最大体力の25%までになりました。（40% → 25%）
 - 詠唱中のボスも、必殺技ゲージが満タンになってから最大3秒で詠唱を中断して結界を展開します。結界が来るタイミングが分かりやすくなりました。
 - ボス報酬の中央の枠に「生命」・「回復」が出なくなりました。
 - 「静寂の目」が溜まりの上に現れなくなりました。
 
-## 🛠️ 不具合の修正
+## 不具合の修正
 - エンドレスでボスを倒しても「王たちの領土」の地形が変わらなかった問題を修正しました。領土が広がり、溶岩・沼が現れるようになりました。
 - 15分の「最後の時間」が結界・空間侵食の途中で始まる問題を修正しました。
 - ボスが複数いるとき体力バーと「記憶」の文字が重なる問題、ボス4体の体力バーが画面を覆いすぎる問題を修正しました。
@@ -1083,7 +1083,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 エンドレスの最後の2体のボスが、英雄の必殺技のまねに加えて、自分らしい攻撃を使い始めます。プレイが止まることがあった問題もすべて修正しました。
 
-## 💻 開発者の新しい攻撃
+## 開発者の新しい攻撃
 - ライブコーディング: コード1行が弾になって飛んできます。スペースの部分が隙間です。
 - 範囲選択: 四角形をドラッグしてDelキーで消します。体力が減るとCtrl+Vでもう一度貼り付けます。
 - ビルド失敗: ビルドが満タンになると失敗して爆発します。
@@ -1091,7 +1091,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 読み込み中…: 回るリングが迫ってきます。
 - スタックオーバーフロー: ブロックの塔が積み上がって崩れます。
 
-## 🧹 ママの新しい攻撃
+## ママの新しい攻撃
 - スリッパ投げ: スリッパが飛んできて壁で跳ね返ります。
 - 孫の手: 孫の手を大きく振り回します。
 - タイムセール！: クーポンを追って売り場を駆け回ります。
@@ -1101,7 +1101,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 すべての攻撃は先に警告が表示され、結界・空間侵食が始まるとすぐに止まります。
 
-## ✨ 快適性の改善
+## 快適性の改善
 - 新しいロード画面: 黒い画面の代わりに、ロードバーと一緒に今の英雄が走ります。
 - 炎の床を、焦げた地面の上で炎が揺らめく姿に描き直しました。（英雄の炎の攻撃・地獄の君主の炎の溜まり）
 - エフェクトスキン・伝説スキンの演出がずっと大きく見やすくなりました。
@@ -1112,14 +1112,14 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - エンドレス・デイリーチャレンジ中にゲームを終了すると、ここまでの記録がランキングに登録されるようになりました。
 - 隙がひびの入った心臓のように脈打ち、狙いの印が締まっていくので、より弱点らしく見えます。
 
-## 🛠️ 不具合の修正
+## 不具合の修正
 - 結果画面がメインメニューや次のプレイまで画面に残って重なる問題を修正しました。
 - エンドレスの続きから再開すると時間が00:00で止まる問題を修正しました。15分の「最後の時間」と敵の増加も正しく進みます。
 - ボスがずっとダメージを受けなくなる問題を修正しました。
 - ゲージが満タンでも空間侵食が展開されず、15分の「最後の時間」と次のボスまで止まる問題を修正しました。
 - 技の途中で中断されたボスが空中に浮いたままになるなど、ボス戦が止まりうる問題をさらに防ぎました。
 
-## 🦸 英雄のバランス
+## 英雄のバランス
 
 幽霊に比べて弱かった英雄たちの火力を大きく上げました。
 - ガンナー: 攻撃力 ×1.15 → ×1.7
@@ -1132,7 +1132,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 郵便配達人: 攻撃力 ×0.8 → ×1.2
 - 幽霊: 撃破時に魂が生まれる確率 20% → 10%・最大の魂 4 → 3（魂の守り 5・6・7 → 4・5・6）・憑依が終わった後の無敵 0.65秒 → 0.3秒
 
-## ⚖️ バランス調整
+## バランス調整
 - すべての敵の体力: 40%減少（雑魚・エリート・中ボス・ボスすべて）
 - 開発者の体力: 100,000 → 60,000
 - 開発者のママの体力: 200,000 → 120,000
@@ -1155,31 +1155,31 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 拯救灵魂的旅程迎来了大型更新！无尽模式变得更有深度，也更容易畅玩。
 
-## 👑 王之领地
+## 王之领地
 
 在无尽模式中击败首领后，该王的领地会从它倒下的地方如波浪般覆盖沙漠。
 - 墓碑和灵魂水晶会升起，阻挡移动和子弹。从哪里射击变得更加重要。
 - 熔岩池踩上去会受伤，黏液沼泽会让所有人减速。
 - 15分钟「最后时刻」开始时，沙暴会吞没地形。
 
-## 💾 无尽模式保存与继续
+## 无尽模式保存与继续
 - 无尽模式在返回主菜单或退出游戏时会保存，可通过「继续游戏」从同一位置重新开始。
 - 为了排行榜的公平，每日挑战不会保存。
 
-## ⚔️ 首领不会等待
+## 首领不会等待
 - 如果超过3分钟仍未击败首领，下一个首领会一同出现（同时最多2个）。
 - 存活过久的首领会被沙暴风化，受到的伤害逐渐增加。
 - 15分钟「最后时刻」只有在击败至少1个首领时才会开启。
 - 与开发者 · 开发者妈妈战斗时，会有弱小的敌人蜂拥而来。
 
-## ✨ 手感与便利
+## 手感与便利
 - 受击时生命条会出现特效！
 - 子弹更容易看清了：为自己和敌人的子弹加上深色描边，并稍微放大了显示（命中判定不变）。
 - 盗贼的旋转飞镖现在会让掷出的飞镖直接折返回来。
 - 地图上的木桶被打破后，每40秒会重新出现一个。
 - 无尽模式前期变得更简单，第一个首领登场更晚。
 
-## ⚖️ 平衡调整
+## 平衡调整
 - 无尽模式前5分钟：小怪 · 首领生命 ×0.5，受到伤害 ×0.6（5~9分钟逐渐恢复）
 - 无尽模式第一个首领登场：1分30秒 → 4分钟
 - 开发者 · 开发者妈妈必杀技预警时间：开发者 ×0.6，妈妈 ×0.5
@@ -1189,68 +1189,68 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 拯救灵魂的旅程迎来了大型更新！每局都会出现新的目标，首领变得更聪明，游戏也更流畅、更容易畅玩。
 
-## 📜 灵魂契约
+## 灵魂契约
 - 每局都会给出3个目标，达成后立即获得点数。没有达成也不会受到惩罚。
 - 填满主菜单中45格的契约面板，即可解锁9种新遗物与称号。
 
-## 👻 亡者信使 · 记忆碎片
+## 亡者信使 · 记忆碎片
 - 倒下时会听到一句符合当时情况的话。
 - 每位英雄可收集6块记忆碎片，并在图鉴的「记忆」页阅读。
 
-## 🏆 新目标与奖励
+## 新目标与奖励
 - 无尽模式改为通关「普通」解锁，每日挑战改为通关「简单」解锁。如果已经通关，会立即解锁。
 - 制图师 · 钟表匠 · 幽灵也可以通过故事模式解锁。
 - 在无尽模式中首次坚持到5 · 10 · 15 · 20分钟等时可获得点数。已经达成的记录也可在主菜单的「领取」中领取。
 - 每日挑战新增5 · 10 · 15分钟奖励、连续签到与完成奖励，规则从7种增加到14种。
 
-## 🌀 空间侵蚀
+## 空间侵蚀
 
 在无尽模式中，当场上同时有两名以上首领时，必杀技槽会合而为一。攻击任何一名首领都会充能同一个槽。
 - 槽充满后，会取代各自的结界，展开覆盖整个竞技场的巨大结界「空间侵蚀」，持续15秒。
 - 其中所有首领的结界攻击会以更短的间隔一同倾泻而下。预警时间保持不变。
 - 缓缓漂移的「寂静之眼」内不会落下砸向地面的攻击。
 
-## 💻 开发者 · 妈妈的结界
+## 开发者 · 妈妈的结界
 - 开发者会展开「调试模式」。断点、逐行执行、Bug 大爆发、无限循环之后，最后还有「强制退出」在等着你。
 - 开发者的妈妈会展开「妈妈的大扫除」。拍背、吸尘器、晾衣服、唠叨轰炸之后，门禁时间一到，结界就会缩小。
 
-## 🎯 破绽
+## 破绽
 - 首领和中头目身上会出现发光的破绽。用亲手瞄准的攻击击中，伤害会大幅提高。
 - 弹造成+75%伤害，近战攻击和霰弹枪+40%，投掷攻击的直击+60%。
 - 弓箭手的「完美！」之箭和钟表匠的「整点」齿轮击中破绽时，会显示「完美破绽！」，伤害提高得更多。
 
-## 🧠 会记忆的首领
+## 会记忆的首领
 - 首领的生命降到特定数值时，会记住此前受到最多的攻击并将其挡下。
 - 用其他攻击打破记忆，首领会短暂踉跄，受到的伤害提高25%。
 
-## ✨ 便利功能
+## 便利功能
 - 可以在ESC菜单中一眼查看当前拥有的技能，暂停时将鼠标移到图标上即可查看说明。
 - 新增了构筑详情、记录窗口、加载画面、图鉴搜索和复制结果。
 - 打开Steam界面或游戏手柄断开时会自动暂停。战斗中鼠标不会移出窗口。
 - 重新润色了游戏内的所有说明文字，使其更易阅读。
 
-## ⚙️ 设置
+## 设置
 - 新增辅助功能与显示页。可以选择攻击锁定、必杀技切换、对话速度、减少动态效果、快速演出和战斗统计。
 - 在「画面」页中新增「画质」（高 · 低）与显示器选择。「低」只会减少残影、火花、光晕等装饰效果。
 - 分辨率、画质、最大帧率和显示器改为可展开选择的下拉列表。
 
-## ⚡ 优化
+## 优化
 - 在敌人和子弹大量聚集的后期、无尽模式和首领战中，帧率更加稳定。
 - 清理了长时间游玩时逐渐累积的内存。
 - 修复了击败开发者后敌人出现过多导致卡顿的问题。
 
-## 🌱 试玩版
+## 试玩版
 - 试玩版的舞台改为草原与史莱姆王，可以体验与正式版第一章相同的流程。
 - 除了枪手和剑士，现在也可以使用幽灵游玩。
 
-## 🛠️ 问题修复
+## 问题修复
 - 修复了回旋飞镖没有击中任何东西却过早折返的问题。
 - 修复了无尽模式 · 每日挑战的背景音乐每128秒突然切换的问题。现在击败首领时才会切换到下一首。
 - 修复了技能图标的等级格中，中间一格显示破损的问题。
 - 修复了右上角通知被灵魂树按钮遮挡的问题。
 - 修复了无尽模式的记录混入下一次结算画面的问题。
 
-## ⚖️ 平衡调整
+## 平衡调整
 - 开发者生命：200,000 → 100,000
 - 开发者的妈妈生命：400,000 → 200,000
 - 开发者的妈妈降临所需灵魂：3,000 → 1,000
@@ -1266,14 +1266,14 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 本次更新修复了 V1.3 更新后发现的问题，并让结界中的战斗更加顺手。
 
-## ✨ 便利性改进
+## 便利性改进
 - 结界 · 空间侵蚀期间，熔岩池不再造成伤害，沼泽也不再减速。（每0.6秒6点伤害 → 无伤害）
 - 空间侵蚀期间，非结界攻击造成的单次伤害最多为最大生命的25%。（40% → 25%）
 - 正在施法的首领在必杀技槽充满后，最多3秒内也会打断施法并展开结界。更容易判断结界何时到来。
 - 首领奖励中间格不再出现「生命」 · 「回复」。
 - 「寂静之眼」不再出现在池子上。
 
-## 🛠️ 问题修复
+## 问题修复
 - 修复了在无尽模式中击败首领后「王之领地」地形不变的问题。现在领地会扩散，并出现熔岩与沼泽。
 - 修复了15分钟「最后时刻」在结界 · 空间侵蚀途中开始的问题。
 - 修复了多个首领同时出现时生命条与「记忆」文字重叠的问题，以及四个首领的生命条遮挡画面过多的问题。
@@ -1286,7 +1286,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 无尽模式的最后两名首领除了模仿英雄必杀技之外，开始使用真正属于自己的攻击。所有可能导致游戏停滞的问题也都已修复。
 
-## 💻 开发者的新攻击
+## 开发者的新攻击
 - 现场编程：一行代码化作弹幕飞来，空格处就是空隙。
 - 框选删除：拖出方框后按 Del 键删除。生命降低后还会用 Ctrl+V 再粘贴一次。
 - 构建失败：构建进度条充满后失败并爆炸。
@@ -1294,7 +1294,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 加载中…：旋转的圆环向内收紧。
 - 栈溢出：方块塔堆起后崩塌。
 
-## 🧹 妈妈的新攻击
+## 妈妈的新攻击
 - 拖鞋飞袭：拖鞋飞来并在墙上反弹。
 - 痒痒挠：大幅挥舞痒痒挠。
 - 限时抢购！：追着优惠券在卖场里横冲直撞。
@@ -1304,7 +1304,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 所有攻击都会先显示警告，结界 · 空间侵蚀开始时会立即停止。
 
-## ✨ 便利性改进
+## 便利性改进
 - 新的加载画面：不再是黑屏，当前英雄会沿着加载条奔跑。
 - 重新绘制了火焰地带，现在是焦土上摇曳的火焰。（英雄的火焰攻击 · 地狱领主的火焰池）
 - 特效皮肤 · 传说皮肤的演出变得更大、更醒目。
@@ -1315,14 +1315,14 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 在无尽模式 · 每日挑战中关闭游戏时，至今的记录会上传排行榜。
 - 破绽会像裂开的心脏一样跳动，瞄准标记也会收紧，看起来更像弱点。
 
-## 🛠️ 问题修复
+## 问题修复
 - 修复了结算画面一直留在主菜单和下一局画面上重叠显示的问题。
 - 修复了无尽模式继续游戏后时间停在00:00的问题。15分钟「最后时刻」与敌人增长也会正常推进。
 - 修复了首领永远不受伤害的问题。
 - 修复了槽已充满却不展开空间侵蚀，并导致15分钟「最后时刻」与下一名首领都停滞的问题。
 - 进一步防止了首领招式被打断后停在空中等可能导致首领战停滞的问题。
 
-## 🦸 英雄平衡
+## 英雄平衡
 
 大幅提升了相比幽灵偏弱的英雄们的火力。
 - 枪手：攻击力 ×1.15 → ×1.7
@@ -1335,7 +1335,7 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 - 邮差：攻击力 ×0.8 → ×1.2
 - 幽灵：击败敌人时生成灵魂的几率 20% → 10% · 灵魂上限 4 → 3（灵魂守护 5 · 6 · 7 → 4 · 5 · 6）· 附身结束后的无敌 0.65秒 → 0.3秒
 
-## ⚖️ 平衡调整
+## 平衡调整
 - 所有敌人的生命：降低40%（小怪 · 精英 · 中头目 · 首领全部）
 - 开发者生命：100,000 → 60,000
 - 开发者的妈妈生命：200,000 → 120,000
@@ -1353,12 +1353,12 @@ V1.3 アップデート後に見つかった問題を修正し、結界の中の
 
 플레이 중 프레임이 크게 떨어진다는 제보를 받고 긴급 업데이트를 준비했습니다. 불편을 드려 죄송합니다.
 
-## 🛠️ 프레임 저하 수정
+## 프레임 저하 수정
 - 판이 진행될수록 프레임이 점점 떨어지던 문제를 고쳤습니다. 오래 플레이할수록, 일시정지 중에도 느려지던 렉이 사라집니다.
 - 특히 내장 그래픽 PC와 무한 모드에서 화면을 그리는 부담을 줄였습니다.
 - 적이 많을 때 화면을 그리는 부담과 계산량을 줄였습니다. 게임 플레이와 겉모습은 그대로입니다.
 
-## ⚙️ 프레임 설정 추가
+## 프레임 설정 추가
 - 설정 「화면」 탭에서 최대 프레임(30 · 60 · 120 · 144 · 제한 없음)을 고를 수 있습니다.
 - 수직 동기화를 켜고 끌 수 있습니다.
 - 화면 구석에 프레임(FPS)을 표시할 수 있습니다.
@@ -1371,12 +1371,12 @@ Fixed the lag that worsened as a run went on and added frame settings.
 
 We received reports of severe frame drops during play and prepared this hotfix right away. Sorry for the trouble.
 
-## 🛠️ Frame Drop Fix
+## Frame Drop Fix
 - Fixed the frame rate dropping more and more as a run went on. The lag that kept getting worse the longer you played, even while paused, is gone.
 - Reduced rendering load, especially on integrated graphics and in Endless Mode.
 - Reduced rendering and processing load when many enemies are on screen. Gameplay and visuals are unchanged.
 
-## ⚙️ New Frame Settings
+## New Frame Settings
 - Choose a max frame rate (30 · 60 · 120 · 144 · Unlimited) in the Display tab of Settings.
 - Turn V-Sync on or off.
 - Show an FPS counter in the corner of the screen.
@@ -1389,12 +1389,12 @@ If you still experience lag, please let us know on the Community Discussions boa
 
 プレイ中にフレームレートが大きく下がるというご報告を受け、緊急アップデートを用意しました。ご不便をおかけして申し訳ありません。
 
-## 🛠️ フレームレート低下の修正
+## フレームレート低下の修正
 - プレイが進むほどフレームレートが下がっていく問題を修正しました。長く遊ぶほど、一時停止中でも重くなっていくラグがなくなります。
 - 特に内蔵グラフィックスのPCやエンドレスで、描画の負荷を減らしました。
 - 敵が多いときの描画と処理の負担を減らしました。ゲームプレイと見た目は変わりません。
 
-## ⚙️ フレーム設定の追加
+## フレーム設定の追加
 - 設定の「画面」タブで最大フレームレート（30・60・120・144・無制限）を選べます。
 - 垂直同期のオン・オフを切り替えられます。
 - 画面の隅にFPSを表示できます。
@@ -1407,12 +1407,12 @@ If you still experience lag, please let us know on the Community Discussions boa
 
 我们收到了游戏中帧率大幅下降的反馈，立即准备了这次紧急更新。给您带来不便，非常抱歉。
 
-## 🛠️ 修复帧率下降
+## 修复帧率下降
 - 修复了游戏进行越久帧率越低的问题。玩得越久、甚至暂停时也越来越卡的问题已经消失。
 - 尤其在集成显卡电脑和无尽模式中减轻了画面绘制负担。
 - 减轻了敌人众多时的渲染与运算负担。玩法和画面保持不变。
 
-## ⚙️ 新增帧率设置
+## 新增帧率设置
 - 可在设置的「画面」页中选择最大帧率（30 · 60 · 120 · 144 · 无限制）。
 - 可以开启或关闭垂直同步。
 - 可以在屏幕角落显示帧率（FPS）。
@@ -1422,25 +1422,25 @@ If you still experience lag, please let us know on the Community Discussions boa
 # 1.1 대형 업데이트 — 판마다 달라지는 이벤트, 영혼 각인 · 영혼의 무게 · 유물, 스팀 순위표
 출시 뒤 일곱 번의 업데이트를 한 번에 정리했습니다. 새 콘텐츠 · 보기 쉬워진 화면 · 무한 모드 · 밸런스.
 
-## 🎲 판마다 달라지는 판
+## 판마다 달라지는 판
 - **장 중반 무작위 이벤트 6종** — 습격 · 엘리트 · 황금 고블린 · 저주받은 상자(2장부터) · 영혼 제단 지키기 · 정예 무리. 3초 전에 배너와 화살표로 알려 드립니다
 - **보물 상자 개편** — 보상 12종 중 무작위 3택. 일반 70% · 희귀 25% · 전설 5%(중간 보스 · 정예 상자는 15%). 전설 상자는 룰렛이 돌아 보상 3~5개가 한꺼번에 쏟아지고, 재료를 모은 스킬 진화가 있으면 그 자리에서 진화합니다
 - **봉인된 석관과 유물** — 2장부터 장마다 60% 확률로 석관이 나타납니다. 가까이 1.5초 머물면 열리고, 다른 영웅의 스킬 8종 중 하나를 유물로 고릅니다(한 판 최대 2개, 쿨타임 1.5배). 새 [Q] 유물 칸(패드 Y)
 - **부서지는 맵 물체** — 장마다 항아리 · 화로 · 나무통 · 영혼 수정 6~8개. 몸으로 부딪치면 코인 · 고기 · 금화 · 자석 · 시간 정지 · 정화가 나옵니다
 - **영혼 부스러기 무리** — 한꺼번에 몰려오는 작은 영혼들을 쓸어 담는 재미. 1장은 적도 더 빨리, 더 많이 나옵니다
 
-## 🔱 새 도전: 영혼 각인 · 영혼의 무게
+## 새 도전: 영혼 각인 · 영혼의 무게
 - **영혼 각인** (이야기 모드 「쉬움」 클리어 뒤) — 판을 시작할 때 3택 1, 2장 · 3장 보스를 쓰러뜨릴 때마다 한 장 더. 장점과 단점이 함께 있는 각인 12종(처음 4종 + 기록으로 8종 해금). 예: 유리 대포(공격력 +40% · 최대 체력 −30%), 영혼의 밀물(경험치 · 코인 +25% · 적 생성 간격 −25%). 각인마다 포인트 배율 최대 ×1.35
 - **영혼의 무게** (「어려움」 클리어 뒤, 어려움 판에만) — 무게 1~6, 단계마다 시련이 하나씩 쌓이고 포인트 +5%씩(최대 +30%). 1 잡몹 · 엘리트 체력 +15% · 2 한 화면 적 +3씩 · 3 보스 결계 게이지 35% 빨리 · 4 물약 · 고기 회복 −40% · 5 카드 다시 뽑기 없음 · 6 최후의 보루 없음. 영웅마다 가장 무거운 클리어를 캐릭터 · 결과 화면에 표시
 
-## 🌟 더 오래 성장: 각성 · 초월 카드 · 스킬 진화
+## 더 오래 성장: 각성 · 초월 카드 · 스킬 진화
 - **각성** — 이야기 모드 3장 보스를 쓰러뜨리면 각성 3택
 - **초월 카드 11종** — 최대 레벨(50 · 무한 80) 뒤 경험치 막대 3번마다 3택 1. 숫자가 아니라 판의 규칙이 바뀝니다: 메아리 · 영혼 수확 · 시간의 틈 · 연금 손 · 그림자 분신 · 중력장 · 역전 · 맵 지배 · 연쇄 붕괴 · 영혼 보호막 · 영혼불 발자국(같은 카드는 다음 단계, 최대 3)
 - **스킬 진화가 확실히 세집니다** — 진화 18종의 재료 피해 ×1.25~1.8(명궁의 호흡 ×1.8 · 가시 숲 ×1.7 · 천검 궤적 ×1.6 등), 진화 고유 효과 9종 상향(폭풍의 길 60 → 120% · 사냥꾼의 낙인 120 → 200% · 칼날 곡예 150 → 200% 등). 진화 순간 슬로모션 · 「진화!」 연출, 카드에 「진화까지 1단계!」 표시
 
-## 📖 발견형 도감
+## 발견형 도감
 
-## 👁 보기 쉬워진 것 · 손맛
+## 보기 쉬워진 것 · 손맛
 - **평타가 한눈에** — 모든 영웅의 평타에 영웅색 테두리 · 빛 · 잔상. 판정은 보이는 크기 그대로, 빠른 총알이 적을 뚫고 지나가지 않습니다
 - **안내 메시지 새 단장** — 큰 알림 · 오른쪽 위 알림 · 도움말로 정리. 설정 → 화면 「안내 메시지 크기」(보통 / 크게 / 아주 크게)
 - **키 표시** — 스킬 · 유물을 얻는 순간 어느 키인지 크게 알려 주고, 칸 아래에 키캡
@@ -1449,14 +1449,14 @@ If you still experience lag, please let us know on the Community Discussions boa
 - **손맛** — 보스 처치 슬로모션, 적 피격 번쩍임, 명중음, 이어 줍는 코인 소리, 처치 100 · 250 · 500 · 1,000마다 코인 10 · 25 · 50 · 100
 - 글자 겹침 · 가림 · 잘 안 보이는 색, 끊기던 소리 등 100여 곳 수정
 
-## ♾ 무한 모드
+## 무한 모드
 - **한계 돌파** — 개발자와 개발자 엄마를 모두 쓰러뜨려도 끝나지 않습니다. 클리어 기록 · 업적은 그대로, 5초 뒤 「한계 돌파!」. 적은 끝없이 강해지고 기록은 쓰러질 때까지 늘어납니다
 - **최종 국면 개편** — 개발자 엄마는 30분이 아니라 개발자를 쓰러뜨린 뒤 잡몹 3,000마리를 잡으면 강림합니다(화면 위에 남은 수 표시). 두 보스와 싸우는 동안 다른 적은 나오지 않고, 그 사이에는 잡몹이 3배로
 - **개발자 · 개발자 엄마 전용 배경음** 추가, 보스전 중 배경음이 일반 곡으로 바뀌던 문제 수정
 
-## 🏆 스팀 순위표
+## 스팀 순위표
 
-## ⚖️ 밸런스 조정
+## 밸런스 조정
 
 **전체**
 - 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물) ×0.8
@@ -1491,7 +1491,7 @@ If you still experience lag, please let us know on the Community Discussions boa
 **무한 모드**
 - 개발자 체력 10만 → 20만 · 개발자 엄마 30만 → 40만
 
-## 🐛 수정
+## 수정
 - 보스전 중 배경음이 일반 곡으로 바뀌던 문제
 - 떠돌이 상점을 닫으면 근처 다른 제단이 바로 또 열리던 문제
 - 공격 키를 E · F · C 로 바꾸면 스킬 키와 겹쳐 스킬이 함께 나가던 문제
@@ -1501,31 +1501,31 @@ If you still experience lag, please let us know on the Community Discussions boa
 - 무한 모드 클리어 보너스(1,500P)가 지급되지 않던 문제, 개발자 · 개발자 엄마가 쓰러질 때 배경음이 튀던 문제
 - 도감 · 툴팁 설명이 바뀐 규칙과 다르던 문제
 
-## 💬 의견을 들려주세요
+## 의견을 들려주세요
 
 === en
 # Major Update 1.1 — Random Events, Soul Brands, Relics & Steam Leaderboards
 Seven updates since launch, in one post: new content, a clearer screen, Endless mode and balance.
 
-## 🎲 Every run plays differently
+## Every run plays differently
 - **6 random mid-chapter events** — Ambush · Elite · Golden Goblin · Cursed Chest (from Chapter 2) · Guard the Soul Altar · Elite Pack. A banner and an arrow warn you 3 seconds ahead
 - **Treasure chests reworked** — pick 3 of 12 random rewards. Common 70% · Rare 25% · Legendary 5% (15% for mid-boss · elite chests). A Legendary Chest spins a roulette and pours out 3–5 rewards at once, and if you've gathered a skill evolution's ingredients, it evolves on the spot
 - **Sealed Sarcophagi and Relics** — from Chapter 2, a sarcophagus appears in each chapter with a 60% chance. Stay close for 1.5 seconds to open it, then choose one of 8 skills from other heroes as a Relic (up to 2 per run, 1.5× cooldown). New [Q] relic slot (pad Y)
 - **Breakable map objects** — 6–8 urns · braziers · barrels · soul crystals per chapter. Bump into them for Coins · Meat · Gold Coin · Magnet · Time Stop · Purify
 - **Swarms of soul motes** — sweep up crowds of tiny souls rushing in at once. In Chapter 1, enemies also come faster and in greater numbers
 
-## 🔱 New challenges: Soul Brand · Soul Weight
+## New challenges: Soul Brand · Soul Weight
 - **Soul Brand** (after clearing Easy in Story mode) — pick 1 of 3 at the start of a run, plus one more each time you defeat the Chapter 2 · 3 bosses. 12 brands with both an upside and a downside (4 at first + 8 unlocked through records). e.g. Glass Cannon (attack +40% · max health −30%), Soul Tide (XP · coins +25% · enemy spawn interval −25%). Up to ×1.35 points per brand
 - **Soul Weight** (after clearing Hard, Hard runs only) — Weight 1–6, each step stacks one more trial and +5% points (up to +30%). 1 minion · elite health +15% · 2 enemies on screen +3 per step · 3 boss barrier gauge fills 35% faster · 4 potion · meat healing −40% · 5 no card rerolls · 6 no Last Stand. Each hero's heaviest clear is shown on the character and results screens
 
-## 🌟 Grow for longer: Awakening · Transcendence Cards · Skill evolutions
+## Grow for longer: Awakening · Transcendence Cards · Skill evolutions
 - **Awakening** — defeat the Chapter 3 boss in Story mode to pick 1 of 3 Awakenings
 - **11 Transcendence Cards** — after max level (50 · Endless 80), pick 1 of 3 every third XP bar. They change the rules of the run, not just numbers: Echo · Reaping · Time Rift · Alchemist's Touch · Shadow Clones · Gravity Well · Reversal · Dominion · Cascade · Soul Ward · Soulfire Steps (the same card goes to its next rank, up to 3)
 - **Skill evolutions hit clearly harder** — ingredient damage ×1.25–1.8 for 18 evolutions (Master Archer's Breath ×1.8 · Thorn Forest ×1.7 · Thousand-Blade Trail ×1.6 and more), 9 unique evolution effects raised (Storm Road 60 → 120% · Hunter's Brand 120 → 200% · Blade Acrobatics 150 → 200% and more). Slow motion and an "Evolve!" moment when you evolve, and "1 rank to evolve!" on cards
 
-## 📖 Discovery Codex
+## Discovery Codex
 
-## 👁 Clearer screen · better game feel
+## Clearer screen · better game feel
 - **Basic attacks at a glance** — every hero's basic attack has a hero-colored outline · glow · trail. Hitboxes match what you see, and fast bullets no longer pass through enemies
 - **Notifications redesigned** — organized into big alerts · top-right alerts · tips. Settings → Display → "Message Size" (Normal / Large / Extra Large)
 - **Key display** — the moment you get a skill · relic, a big alert shows which key it uses, with a keycap under its slot
@@ -1534,14 +1534,14 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - **Game feel** — boss-kill slow motion, enemy hit flash, hit sounds, a chime for chained coin pickups, and 10 · 25 · 50 · 100 coins at every 100 · 250 · 500 · 1,000 kills
 - Fixed about 100 spots of overlapping, hidden or hard-to-see text, cut-off sounds and more
 
-## ♾ Endless
+## Endless
 - **Beyond the Limit** — the run doesn't end even after you defeat both the Developer and the Developer's Mom. Your clear record · achievements still count, and 5 seconds later: "Beyond the Limit!" Enemies grow stronger forever and your record keeps rising until you fall
 - **Finale reworked** — the Developer's Mom no longer arrives at 30 minutes: she descends once you kill 3,000 minions after defeating the Developer (remaining count shown at the top of the screen). No other enemies appear while you fight the two bosses, and minions come 3× as fast in between
 - **Dedicated music for the Developer · Developer's Mom** added, and fixed boss music switching to regular music mid-fight
 
-## 🏆 Steam Leaderboards
+## Steam Leaderboards
 
-## ⚖️ Balance Changes
+## Balance Changes
 
 **Overall**
 - All damage the player deals to enemies · bosses (basic attacks · skills · ultimates · evolutions · Transcendence · relics) ×0.8
@@ -1576,7 +1576,7 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 **Endless**
 - Developer health 100k → 200k · Developer's Mom 300k → 400k
 
-## 🐛 Fixes
+## Fixes
 - Boss music switched to regular music during boss fights
 - Closing the Wandering Shop instantly opened another altar nearby
 - Rebinding attack to E · F · C overlapped the skill keys and fired a skill along with it
@@ -1586,31 +1586,31 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - The Endless clear bonus (1,500P) was not granted; the music jumped when the Developer · the Developer's Mom fell
 - Codex · tooltip text did not match the updated rules
 
-## 💬 Tell us what you think
+## Tell us what you think
 
 === ja
 # 1.1 大型アップデート — 毎回変わるイベント、魂の刻印・魂の重み・遺物、Steamランキング
 リリース後7回のアップデートをまとめてお知らせ。新コンテンツ・見やすい画面・エンドレス・バランス。
 
-## 🎲 毎回変わるプレイ
+## 毎回変わるプレイ
 - **章の途中のランダムイベント6種** — 襲撃・エリート・黄金ゴブリン・呪われた箱（2章から）・魂の祭壇を守れ・精鋭の群れ。3秒前にバナーと矢印でお知らせします
 - **宝箱を改良** — 12種の報酬からランダム3択。ノーマル70%・レア25%・伝説5%（中ボス・精鋭の宝箱は15%）。伝説の宝箱はルーレットが回って報酬が3〜5個まとめて出てきます。素材のそろったスキル進化があれば、その場で進化します
 - **封印された石棺と遺物** — 2章から章ごとに60%の確率で石棺が現れます。近くに1.5秒とどまると開き、ほかの英雄のスキル8種から1つを遺物として選べます（1回のプレイで最大2個、クールタイム1.5倍）。新しい[Q]遺物スロット（パッドY）
 - **壊せるマップオブジェクト** — 章ごとに壺・火鉢・木の樽・魂の水晶が6〜8個。体当たりするとコイン・肉・金貨・磁石・時間停止・浄化が出ます
 - **魂の粒の群れ** — 一斉に押し寄せる小さな魂をまとめて倒す爽快感。1章は敵もより速く、より多く出てきます
 
-## 🔱 新しい挑戦：魂の刻印・魂の重み
+## 新しい挑戦：魂の刻印・魂の重み
 - **魂の刻印**（ストーリーモード「イージー」クリア後）— プレイ開始時に3択1、2章・3章ボスを倒すたびにもう1枚。長所と短所をあわせ持つ刻印12種（最初の4種＋記録で8種解放）。例：ガラスの大砲（攻撃力+40%・最大体力−30%）、魂の満ち潮（経験値・コイン+25%・敵の出現間隔−25%）。刻印ごとにポイント倍率は最大×1.35
 - **魂の重み**（「ハード」クリア後、ハードのみ）— 重さ1〜6、段階ごとに試練が1つずつ積み重なり、ポイント+5%ずつ（最大+30%）。1 雑魚・エリートの体力+15%・2 画面内の敵+3ずつ・3 ボスの結界ゲージが35%早くたまる・4 ポーション・肉の回復−40%・5 カードの引き直しなし・6 最後の砦なし。英雄ごとに最も重いクリアをキャラクター画面・リザルト画面に表示
 
-## 🌟 もっと長く成長：覚醒・超越カード・スキル進化
+## もっと長く成長：覚醒・超越カード・スキル進化
 - **覚醒** — ストーリーモードで3章ボスを倒すと覚醒を3択
 - **超越カード11種** — 最大レベル（50・エンドレス80）の後、経験値バー3回ごとに3択1。数字ではなく、プレイのルールが変わります：残響・魂の収穫・時の裂け目・錬金の手・影分身・重力場・逆転・地の支配・連鎖崩壊・魂の障壁・魂火の足跡（同じカードは次の段階へ、最大3）
 - **スキル進化が確実に強く** — 進化18種の素材ダメージ×1.25〜1.8（名弓の呼吸×1.8・茨の森×1.7・千剣の軌跡×1.6など）、進化固有効果9種を強化（嵐の道 60 → 120%・狩人の烙印 120 → 200%・刃の曲芸 150 → 200%など）。進化の瞬間にスローモーションと「進化！」の演出、カードに「進化まであと1段階！」を表示
 
-## 📖 発見型図鑑
+## 発見型図鑑
 
-## 👁 見やすさ・手応え
+## 見やすさ・手応え
 - **通常攻撃がひと目でわかる** — 全英雄の通常攻撃に英雄色の縁取り・光・残像。当たり判定は見た目どおり、速い弾が敵をすり抜けません
 - **案内メッセージを一新** — 大きな通知・右上の通知・ヒントに整理。設定 → 画面「通知の大きさ」（標準 / 大 / 特大）
 - **キー表示** — スキル・遺物を手に入れた瞬間、どのキーかを大きく表示し、スロットの下にキーキャップ
@@ -1619,14 +1619,14 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - **手応え** — ボス撃破スローモーション、被弾フラッシュ、命中音、連続で拾うコイン音、撃破100・250・500・1,000ごとにコイン10・25・50・100
 - 文字の重なり・隠れ・見えにくい色、途切れる音など100か所以上を修正
 
-## ♾ エンドレス
+## エンドレス
 - **限界突破** — 開発者と開発者のママを両方倒しても終わりません。クリア記録・実績はそのまま、5秒後に「限界突破！」。敵は果てしなく強くなり、記録は倒れるまで伸び続けます
 - **最終局面を刷新** — 開発者のママは30分ではなく、開発者を倒した後に雑魚を3,000体倒すと降臨します（画面上部に残り数を表示）。二人のボスとの戦闘中はほかの敵が出ず、その間の雑魚は3倍に
 - **開発者・開発者のママ専用BGM**を追加、ボス戦中にBGMが通常曲に変わる問題を修正
 
-## 🏆 Steamランキング
+## Steamランキング
 
-## ⚖️ バランス調整
+## バランス調整
 
 **全体**
 - プレイヤーが敵・ボスに与えるすべてのダメージ（通常攻撃・スキル・必殺技・進化・超越・遺物）×0.8
@@ -1661,7 +1661,7 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 **エンドレス**
 - 開発者 体力 10万 → 20万・開発者のママ 30万 → 40万
 
-## 🐛 修正
+## 修正
 - ボス戦中にBGMが通常曲に変わる問題
 - さすらいの商店を閉じると、近くのほかの祭壇がすぐまた開く問題
 - 攻撃キーをE・F・Cに変えるとスキルキーと重なり、スキルも一緒に出る問題
@@ -1671,28 +1671,28 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - エンドレスのクリアボーナス（1,500P）がもらえない問題、開発者・開発者のママが倒れるときにBGMが途切れる問題
 - 図鑑・ツールチップの説明が変更後のルールと合わない問題
 
-## 💬 ご意見をお聞かせください
+## ご意見をお聞かせください
 
 === zh
-## 🎲 每局都不一样
+## 每局都不一样
 - **章节中途随机事件6种** — 伏击 · 精英 · 黄金哥布林 · 被诅咒的宝箱（第2章起） · 守护灵魂祭坛 · 精英群。提前3秒用横幅和箭头提示
 - **宝箱改版** — 从12种奖励中随机3选1。普通70% · 稀有25% · 传说5%（中头目 · 精英宝箱为15%）。传说宝箱会转动轮盘，一次掉落3~5个奖励；若有素材已集齐的技能进化，会当场进化
 - **封印的石棺与遗物** — 从第2章起，每章有60%概率出现石棺。在附近停留1.5秒即可打开，从其他英雄的8种技能中选1个作为遗物（每局最多2个，冷却1.5倍）。新增 [Q] 遗物栏（手柄 Y）
 - **可破坏的地图物件** — 每章6~8个陶罐 · 火盆 · 木桶 · 灵魂水晶。用身体撞碎后掉落金币 · 肉 · 大金币 · 磁铁 · 时间停止 · 净化
 - **灵魂碎屑群** — 一口气扫光成群涌来的小灵魂。第1章的敌人也出现得更快、更多
 
-## 🔱 新挑战：灵魂烙印 · 灵魂之重
+## 新挑战：灵魂烙印 · 灵魂之重
 - **灵魂烙印**（通关故事模式「简单」后）— 开局时3选1，每击败第2章 · 第3章首领再多1张。利弊并存的烙印12种（最初4种 + 凭记录解锁8种）。例：玻璃大炮（攻击力 +40% · 最大生命 −30%）、灵魂涨潮（经验 · 金币 +25% · 敌人生成间隔 −25%）。每个烙印的点数倍率最高 ×1.35
 - **灵魂之重**（通关「困难」后，仅限困难）— 重量1~6，每级叠加一项试炼，点数每级 +5%（最多 +30%）。1 小怪 · 精英生命 +15% · 2 同屏敌人每级 +3 · 3 首领结界槽充能快35% · 4 药水 · 肉回复 −40% · 5 无法重抽卡牌 · 6 无最后的堡垒。每位英雄最重的通关记录会显示在角色画面和结算画面
 
-## 🌟 成长更持久：觉醒 · 超越卡 · 技能进化
+## 成长更持久：觉醒 · 超越卡 · 技能进化
 - **觉醒** — 在故事模式击败第3章首领后，觉醒3选1
 - **超越卡11种** — 达到最高等级（50 · 无尽模式80）后，每填满经验条3次就3选1。改变的不是数值，而是本局的规则：回响 · 灵魂收割 · 时间裂隙 · 炼金之手 · 影分身 · 重力场 · 逆转 · 地图支配 · 连锁崩坏 · 灵魂护盾 · 魂火足迹（同一张卡会升到下一级，最多3级）
 - **技能进化明显更强** — 18种进化的素材伤害 ×1.25~1.8（名弓之息 ×1.8 · 荆棘之林 ×1.7 · 千剑轨迹 ×1.6 等），9种进化专属效果提升（风暴之路 60 → 120% · 猎人烙印 120 → 200% · 刀刃杂技 150 → 200% 等）。进化瞬间有慢动作和「进化！」演出，卡牌上显示「距离进化仅差1级！」
 
-## 📖 发现型图鉴
+## 发现型图鉴
 
-## 👁 更清晰的画面 · 手感
+## 更清晰的画面 · 手感
 - **普通攻击一目了然** — 所有英雄的普通攻击都有英雄色描边 · 光晕 · 残影。判定与外观大小一致，高速子弹不会再穿过敌人
 - **提示信息全面翻新** — 整理为大提示 · 右上角通知 · 帮助。设置 → 显示「提示信息大小」（标准 / 大 / 特大）
 - **按键显示** — 获得技能 · 遗物的瞬间，用大提示告诉你按哪个键，技能栏下方也有键帽
@@ -1701,14 +1701,14 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - **手感** — 击败首领慢动作、敌人受击闪光、命中音效、连续拾取金币的音效，击杀每达100 · 250 · 500 · 1,000获得金币10 · 25 · 50 · 100
 - 修复了文字重叠 · 被遮挡 · 颜色难以看清、声音中断等100多处问题
 
-## ♾ 无尽模式
+## 无尽模式
 - **突破极限** — 击败开发者和开发者的妈妈后也不会结束。通关记录 · 成就照常获得，5秒后「突破极限！」。敌人会无止境地变强，记录会一直增加到你倒下为止
 - **最终阶段改版** — 开发者的妈妈不再是30分钟登场，而是击败开发者后再击杀3,000只小怪才会降临（画面上方显示剩余数量）。与两位首领战斗时不会出现其他敌人，其间小怪变为3倍
 - **新增开发者 · 开发者的妈妈专属背景音乐**，修复首领战中背景音乐变成普通曲的问题
 
-## 🏆 Steam 排行榜
+## Steam 排行榜
 
-## ⚖️ 平衡调整
+## 平衡调整
 
 **整体**
 - 玩家对敌人 · 首领造成的所有伤害（普通攻击 · 技能 · 必杀技 · 进化 · 超越 · 遗物）×0.8
@@ -1743,7 +1743,7 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 **无尽模式**
 - 开发者 生命 10万 → 20万 · 开发者的妈妈 30万 → 40万
 
-## 🐛 修复
+## 修复
 - 首领战中背景音乐变成普通曲的问题
 - 关闭流浪商店后，附近其他祭坛立刻又打开的问题
 - 把攻击键改为 E · F · C 时与技能键重叠、技能一起放出的问题
@@ -1753,4 +1753,4 @@ Seven updates since launch, in one post: new content, a clearer screen, Endless 
 - 无尽模式通关奖励（1,500P）未发放的问题，开发者 · 开发者的妈妈倒下时背景音乐跳变的问题
 - 图鉴 · 提示说明与更新后的规则不符的问题
 
-## 💬 欢迎反馈
+## 欢迎反馈

@@ -109,12 +109,27 @@ def convert(path):
     return "\n\n".join(blocks).rstrip() + "\n"
 
 
+# 게임 글꼴(Cafe24Danjunghae SDF)에 없는 이모지는 빼고 씀 (스팀 공지에는 그대로 · 게임에서는 □ 로 바뀌고 TMP 경고가 뜸)
+#   → · ↔ 같은 화살표(2190~21FF)는 글꼴에 있어서 남김
+EMOJI = re.compile("[\U0001F000-\U0001FAFF☀-➿⬀-⯿️‍]")
+
+
+def strip_emoji(text):
+    text = EMOJI.sub("", text)
+    return re.sub(r"(?m)^(#+) +", r"\1 ", text)     # 「## ✨ 새 기능」 → 「## 새 기능」
+
+
 def write(path, text):
     with io.open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
+        f.write(strip_emoji(text))
 
 
 if __name__ == "__main__":
+    # strip <입력> <출력>: 게임 안 노트 파일을 이모지 빼고 복사 (steam-upload.ps1 · release.ps1)
+    if len(sys.argv) >= 4 and sys.argv[1] == "strip":
+        with io.open(sys.argv[2], encoding="utf-8-sig") as f:
+            write(sys.argv[3], f.read())
+        sys.exit(0)
     if len(sys.argv) >= 3 and sys.argv[1] == "all":
         parts = []
         for label, name in POSTS:
