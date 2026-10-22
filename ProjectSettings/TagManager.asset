@@ -50,11 +50,17 @@ TagManager:
   - name: Background
     uniqueID: 80102729
     locked: 0
+  - name: GroundFx
+    uniqueID: 2650317241
+    locked: 0
   - name: Character
     uniqueID: 3182541143
     locked: 0
   - name: Effect
     uniqueID: 1157756807
+    locked: 0
+  - name: Warning
+    uniqueID: 1846092613
     locked: 0
   - name: HitScan
     uniqueID: 3463825159
