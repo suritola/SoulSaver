@@ -506,3 +506,78 @@ text(1632, 1040, '뒤로', 22, T['Text3'][:3], 'lm')
 prev = os.path.join(ROOT, 'docs', 'art', 'ui-v2-preview.png')
 board.convert('RGB').save(prev)
 print('그림 %d장 → %s · 미리보기 %s' % (len(SPRITES), os.path.relpath(OUT, ROOT), os.path.relpath(prev, ROOT)))
+
+
+# ---------------------------------------------------------------- 레벨업 화면 실제 크기 (카드 420x600 · 진화는 카드 안 아래 칸)
+board = Image.open(os.path.join(ROOT, 'Assets', 'Sprites', 'UI', 'Theme', 'menu_bg.png')).convert('RGBA').resize((1920, 1080), Image.NEAREST)
+board = Image.blend(Image.new('RGBA', board.size, (0, 0, 0, 255)), board, 0.3)
+board.alpha_composite(Image.new('RGBA', board.size, T['Void'][:3] + (150,)))
+D = ImageDraw.Draw(board)
+text(960, 120, '레벨업', 48, T['Text1'][:3], 'mm')
+text(960, 174, '카드를 하나 고르세요 · 남은 레벨업 2', 22, T['Text2'][:3], 'mm')
+ICON = lambda n: Image.open(os.path.join(ROOT, 'Assets', 'Sprites', 'UI', 'Theme', n + '.png')).convert('RGBA')
+cards = [
+    dict(st='s', cat='스킬', lv='Lv 2 → 3', cc=T['CatSkill'], icon='ab_multishot', name='연발 사격', pips=(2, 3), rec=True,
+         desc=['공격이 2발 더 나갑니다.', '발마다 피해 70%.'],
+         evo=dict(name='탄막 폭풍', left='1단계 남음', lc=T['Accent'], parts=[('ab_multishot', 2, 3, True), ('ab_pierce', 3, 3, False), ('ab_glare', 1, 2, False)])),
+    dict(st='n', cat='생존', lv='새로', cc=T['CatSurvival'], icon='ab_regen', name='재생', pips=(0, 3), rec=False,
+         desc=['초당 최대 체력의 1%를', '회복합니다.'],
+         evo=dict(name='생명의 샘', left='바로 진화!', lc=T['Bronze'], parts=[('ab_regen', 2, 3, True), ('ab_armor', 3, 3, False), ('ab_exp', 3, 3, False)])),
+    dict(st='n', cat='재물', lv='Lv 1 → 2', cc=T['CatWealth'], icon='ab_coin', name='탐욕', pips=(1, 3), rec=False,
+         desc=['코인 +15%.', '상점 가격 -5%.'], evo=None),
+]
+CW, CH, GAP = 420, 600, 48
+x0 = 960 - (CW * 3 + GAP * 2) // 2
+for i, c in enumerate(cards):
+    cx, cy = x0 + i * (CW + GAP), 228 + (-6 if c['st'] == 's' else 0)
+    place('ui2_card_' + c['st'], cx, cy, CW // 3, CH // 3)
+    if c['st'] == 's':
+        place('ui2_focus', cx - 6, cy - 6, CW // 3 + 4, CH // 3 + 4)
+    D.rectangle([cx + 6, cy + 6, cx + CW - 7, cy + 11], fill=c['cc'][:3])
+    text(cx + 30, cy + 42, c['cat'], 22, c['cc'][:3], 'lm')
+    text(cx + CW - 30, cy + 42, c['lv'], 22, T['Text3'][:3], 'rm')
+    if c['rec']:
+        place('ui2_tag', cx + CW // 2 - 45, cy + 26, 30, 10)
+        text(cx + CW // 2, cy + 41, '추천', 22, T['Accent'][:3], 'mm')
+    place('ui2_inset', cx + CW // 2 - 54, cy + 72, 36, 36)
+    board.alpha_composite(ICON(c['icon']).resize((96, 96), Image.NEAREST), (cx + CW // 2 - 48, cy + 78))
+    text(cx + CW // 2, cy + 222, c['name'], 34, T['Text1'][:3], 'mm')
+    have, mx = c['pips']
+    for s in range(mx):
+        sprite('ui2_seg_on' if s < have + 1 else 'ui2_seg_off', cx + CW // 2 - mx * 9 + s * 18, cy + 252, (T['Accent'] if s == have else T['Text2']) if s < have + 1 else None)
+    for k, line_ in enumerate(c['desc']):
+        text(cx + CW // 2, cy + 306 + k * 36, line_, 26, T['Text2'][:3], 'mm')
+    if c['evo']:
+        e = c['evo']
+        ey = cy + 384
+        board.alpha_composite(up(nine('ui2_line', CW // 3 - 16, 1)), (cx + 24, ey))
+        D.rectangle([cx + 24, ey, cx + 24 + 47, ey + 2], fill=T['GaugeSoul'][:3])
+        text(cx + 30, ey + 30, '진화', 22, T['GaugeSoul'][:3], 'lm')
+        text(cx + 84, ey + 30, e['name'], 26, T['Text1'][:3], 'lm')
+        if e['lc'] == T['Bronze']:
+            place('ui2_tag_bronze', cx + CW - 30 - 150, ey + 15, 50, 10)
+            text(cx + CW - 30 - 75, ey + 30, e['left'], 22, T['Bronze'][:3], 'mm')
+        else:
+            text(cx + CW - 30, ey + 30, e['left'], 22, e['lc'][:3], 'rm')
+        for k, (ic, h, m, me) in enumerate(e['parts']):
+            px_ = cx + 30 + k * 126
+            place('ui2_inset', px_, ey + 54, 18, 18)
+            board.alpha_composite(ICON(ic).resize((48, 48), Image.NEAREST), (px_ + 3, ey + 57))
+            for s in range(m):
+                on = s < h or (me and s == h)
+                sprite('ui2_seg_on' if on else 'ui2_seg_off', px_ + 60 + s * 15, ey + 66, (T['Accent'] if (me and s == h) else T['GaugeSoul']) if on else None)
+            text(px_ + 60, ey + 96, '최대' if h >= m else '%d / %d' % (h, m), 22, (T['GaugeSoul'] if h >= m else T['Text3'])[:3], 'lm')
+    sprite('ui2_keycap', cx + CW - 57, cy + CH - 60)
+    text(cx + CW - 43, cy + CH - 46, str(i + 1), 22, T['Text1'][:3], 'mm')
+place('ui2_btn_secondary_n', 960 - 252, 876, 80, 20)
+text(960 - 132, 906, '다시 뽑기  2', 26, T['Text1'][:3], 'mm')
+text(960 + 132, 906, '건너뛰기', 26, T['Text2'][:3], 'mm')
+sprite('ui2_keycap', 760, 1000)
+text(774, 1014, '1', 22, T['Text1'][:3], 'mm')
+text(800, 1014, '~', 22, T['Text3'][:3], 'mm')
+sprite('ui2_keycap', 812, 1000)
+text(826, 1014, '3', 22, T['Text1'][:3], 'mm')
+text(852, 1014, '고르기 · 같은 카드 한 번 더 확정', 22, T['Text3'][:3], 'lm')
+prev2 = os.path.join(ROOT, 'docs', 'art', 'ui-v2-levelup.png')
+board.convert('RGB').save(prev2)
+print('레벨업 미리보기', os.path.relpath(prev2, ROOT))
