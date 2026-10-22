@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -111,7 +111,9 @@ public partial class CharacterKit
             glow.haloMul = 1.2f;
         }
         // 1.1.2 뒤: 닿는 거리 = 보이는 편지 · 비둘기 몸통 반지름 (가로 · 세로 평균, 외곽선 뺌) — 예전엔 크기와 상관없이 0.45칸
-        float touchR = heavy ? (route.big ? 0.8f : 0.6f) : a != null ? AttackLook.TouchRadius(a.sr, pigeon ? "fx_falcon" : art ? "atk_letter" : "fx_card") : 0.45f;
+        //   2026-10-22~ 그림 배율(VisualRules)이 바뀌어도 닿는 거리는 예전 그대로 (Fx.JudgeKeep)
+        string touchFx = pigeon ? "fx_falcon" : art ? "atk_letter" : "fx_card";
+        float touchR = heavy ? (route.big ? 0.8f : 0.6f) : a != null ? AttackLook.TouchRadius(a.sr, touchFx) * Fx.JudgeKeep(touchFx) : 0.45f;
         Vector3 p = from;
         Vector2 v = dir.sqrMagnitude > 0.01f ? dir.normalized : Vector2.right;
         // 갈래: 순회 배달 -15% · 무거운 소포 절반 속도 (꺾임도 무뎌짐) · 사거리가 늘면 그만큼 오래 날아감

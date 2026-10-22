@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ public partial class BossSkills
     static readonly Color KitWraith = new Color(0.75f, 0.95f, 1f, 0.85f);
 
     // CharacterKit.DecorSize 와 같은 계산 (필살기 출처의 장식 이펙트가 화면에서 visible 크기로 보이게: 장식 1.45배 × 스킬 1.4배를 되돌림)
-    static float UltDecor(float visible) => visible / (1.45f * 1.4f);
+    static float UltDecor(float visible) => visible / (VisualRules.DecorScale * VisualRules.SkillDecor);
 
     // 필살기를 쓰는 순간: 그 영웅 색 충격파 · 섬광 · 빛 번짐 · 솟는 화음 (플레이어와 같은 UltCastFlair)
     void DevCastFlair(CharacterId who)

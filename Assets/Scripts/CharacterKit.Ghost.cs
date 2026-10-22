@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -114,7 +114,7 @@ public partial class CharacterKit
     {
         string s = DamageSource.Current;
         bool skill = s != null && s != DamageSource.Basic && s != DamageSource.Other;
-        return visible / (1.45f * (skill ? 1.4f : 1f));
+        return visible / (VisualRules.DecorScale * (skill ? VisualRules.SkillDecor : 1f));
     }
 
     // 눈보라 (진화): 손이 지난 자리에 1.5초 냉기 안개

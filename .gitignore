@@ -68,3 +68,4 @@ __pycache__/
 /server/telemetry/.wrangler/
 /tools/gemini/.key
 /tools/gemini/.cf_token
+/_check.csproj

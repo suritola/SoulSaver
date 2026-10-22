@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 // 도트 이펙트 재생기: Resources/FX 의 스프라이트 시트(이름_0, 이름_1 ...)를 프레임 애니메이션으로 재생
@@ -72,7 +72,7 @@ public static class Fx
 
     // 1.8.7: 이펙트를 더 잘 보이게 — 장식 이펙트는 1.3배로 키우고, 크기가 곧 판정 범위인 이펙트는 그대로 (범위를 속이지 않게)
     // 모든 이펙트에 짙은 윤곽선 · 채도 · 밝기 (SpriteOutline.EffectMaterial)
-    const float DecorScale = 1.45f;        // 1.0.2: 1.3 → 1.45 (장식만, 판정 범위인 이펙트는 그대로)
+    static float DecorScale => VisualRules.DecorScale;     // 1.0.2: 1.3 → 1.45 (장식만, 판정 범위인 이펙트는 그대로) · 2026-10-22~ VisualRules 로
     static readonly HashSet<string> AreaFx = new HashSet<string>
     {
         "fx_shock", "fx_explosion", "fx_rune", "fx_reticle", "fx_warn", "fx_target_rune", "fx_puddle", "fx_vortex",
@@ -86,12 +86,15 @@ public static class Fx
     // 2.1.3: 플레이어 스킬(필살기 · 특수 능력 · 고유 스킬 · 영혼 트리 · 진화) 이펙트를 확 눈에 띄게
     // 지금 스킬이 쓰는 중인지는 DamageSource 로 앎 (평타 · 적 · 맞은 불꽃 · 처치 연출은 그대로)
     //   더 크게(장식만, 범위가 곧 판정인 이펙트는 그대로) · 더 밝고 진하게 · 적 이펙트 위에 · 밑에 빛 번짐
-    const float SkillDecor = 1.4f;         // 1.0.2: 1.25 → 1.4
+    static float SkillDecor => VisualRules.SkillDecor;     // 1.0.2: 1.25 → 1.4 · 2026-10-22~ VisualRules 로
     const int SkillOrder = 40;
     static readonly HashSet<string> NoBoost = new HashSet<string>
     {
         "fx_spark", "fx_smoke", "fx_bleed", "fx_deathburst", "fx_warn", "fx_reticle", "fx_target_rune",
     };
+    // 이 이름 · 지금 출처의 장식 배율이 바뀌어 보이는 크기로 잰 판정이 달라지는 만큼 되돌리는 값 (판정 범위 이펙트는 1)
+    public static float JudgeKeep(string name) => AreaFx.Contains(name) ? 1f : VisualRules.DecorKeep(SkillFx(name));
+
     static bool SkillFx(string name)
     {
         string s = DamageSource.Current;
