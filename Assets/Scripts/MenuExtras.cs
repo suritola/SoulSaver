@@ -60,7 +60,8 @@ public static class MenuExtras
             res.fontSizeMax = 22f;
             res.overflowMode = TextOverflowModes.Ellipsis;
             RunRecords.CommitBest();         // 1.1.9~ 내 최고 기록 갱신 (판 기록 쓰기와 순서가 보장되지 않아 양쪽에서 부르되 한 번만)
-            res.text = "<size=127%><color=#C9A0FF>" + Loc.T("이번 판 결과") + "</color></size>" + HalfGap + CompactGaps(RunRecords.WithBest(RunStats.Summary(false)));
+            res.text = "<size=127%><color=" + (UiRules.Legacy ? "#C9A0FF" : "#EAE3D2") + ">" + Loc.T("이번 판 결과") + "</color></size>" + HalfGap + CompactGaps(RunRecords.WithBest(RunStats.Summary(false)));
+            if (!UiRules.Legacy) res.color = UiTokens.Text2;          // UI 개편 P0-4c: 본문은 Text2 · 머리는 뼈색
             RunRecords.PlayNewRecordSound(canvas.transform);
             RectTransform rr = res.rectTransform;
             rr.anchorMin = Vector2.zero;
@@ -83,6 +84,7 @@ public static class MenuExtras
                 bvr.anchoredPosition = new Vector2(0f, ResultScreen.LeftPad);
                 bv.name = "BuildViewButton";
                 bv.navigation = new Navigation { mode = Navigation.Mode.None };
+                if (!UiRules.Legacy) UiV2.Restyle(bv, UiV2.Kind.Secondary, UiTokens.Body);
                 TMP_Text bl = bv.GetComponentInChildren<TMP_Text>(true);
                 if (bl != null) bl.fontSizeMin = 20f;
             }
@@ -92,7 +94,7 @@ public static class MenuExtras
         if (canvas != null && CharacterData.RunPoints > 0)
         {
             UIKit.EnsureStyle();
-            TMP_Text pt = UIKit.Text(canvas.transform, "", 30f, new Color(0.96f, 0.83f, 0.47f), Vector2.zero, new Vector2(1200f, 36f));
+            TMP_Text pt = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(0.96f, 0.83f, 0.47f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, 36f));
             pt.fontSizeMin = 20f;
             pt.name = "RunPointsLine";
             pt.text = Loc.T("획득 포인트 ") + "+" + CharacterData.RunPoints.ToString("N0")
@@ -107,7 +109,7 @@ public static class MenuExtras
                         + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
                         + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
             // 1.4.8~ 34 → 30 (획득 포인트 줄과 같은 크기 · 줄 높이 38) · 자리는 StackCenter (버튼 열 → 순위 보기 · 결과 복사 줄 아래)
-            TMP_Text t = UIKit.Text(canvas.transform, "", 30f, new Color(1f, 0.8f, 0.45f), Vector2.zero, new Vector2(1200f, daily ? 114f : 76f));
+            TMP_Text t = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, daily ? 114f : 76f));
             t.fontSizeMin = 20f;
             t.name = "EndlessRecord";
             t.text = text;
@@ -124,6 +126,7 @@ public static class MenuExtras
                 Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
                     () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 24f);
                 view.name = "LeaderboardViewButton";
+                if (!UiRules.Legacy) UiV2.Restyle(view, UiV2.Kind.Secondary, UiTokens.Body);
             }
         }
         EndlessMode.LastSeconds = -1f;

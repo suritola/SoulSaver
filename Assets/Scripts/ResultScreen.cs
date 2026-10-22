@@ -161,6 +161,7 @@ public static class ResultScreen
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
         bg.color = new Color(0.08f, 0.06f, 0.11f, 0.72f);
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null) { bg.sprite = UiRules.Sprite("ui2_panel"); bg.type = Image.Type.Tiled; bg.pixelsPerUnitMultiplier = 1f; bg.color = Color.white; }     // UI 개편 P0-4c: 불투명 석판
         bg.raycastTarget = false;
         return panel;
     }
@@ -173,6 +174,7 @@ public static class ResultScreen
         Image img = r.gameObject.AddComponent<Image>();
         img.color = new Color(0.79f, 0.63f, 1f, 0.25f);
         img.raycastTarget = false;
+        if (!UiRules.Legacy) { r.sizeDelta = new Vector2(ContentW, UiRules.Dot); img.color = UiTokens.LineDim; }        // 1도트 선
     }
 
     // 결과 화면 왼쪽 위 (이번 판 결과 글 위, 480 폭)
@@ -513,6 +515,12 @@ public static class ResultScreen
         Image img = same.GetComponent<Image>();
         if (img != null) img.color = new Color(1f, 0.88f, 0.55f);
         same.AddComponent<ResultPadFocus>();
+        if (!UiRules.Legacy)
+        {
+            // UI 개편 P0-4c: 배치(세로 한 줄)는 그대로 · 「다시 하기」만 주 버튼, 나머지는 보조 석판 (금빛 글자 · 굵게 · 자간 출렁임 없음)
+            for (int i = 0; i < col.Count; i++) UiV2.Restyle(col[i].GetComponent<Button>(), i == 0 ? UiV2.Kind.Primary : UiV2.Kind.Secondary, i == 0 ? UiTokens.Heading : UiTokens.Body);
+            return;
+        }
         // 1.4.8~ 메인 메뉴와 같은 글자 메뉴 (첫 버튼이 가장 크게 · 금빛)
         for (int i = 0; i < col.Count; i++) MenuItemFx.Apply(col[i].GetComponent<Button>(), i == 0 ? 38f : 30f, i == 0, false);      // 2026-10-22~ 46 · 34 → 38 · 30
     }
@@ -529,6 +537,17 @@ public static class ResultScreen
         if (t == null) return;
         t.enableAutoSizing = true;
         t.fontSizeMin = 40f;
+        if (!UiRules.Legacy)
+        {
+            // UI 개편 P0-4c: 120pt 제목 → 제목 단계 48 (쓰러짐 뼈색 · 클리어 청동) · 해골 그림 숨김
+            t.fontSize = t.fontSizeMax = UiTokens.Title;
+            t.fontSizeMin = UiTokens.MinSize(UiTokens.Title);
+            t.fontStyle &= ~FontStyles.Bold;
+            t.enableVertexGradient = false;
+            t.color = RunStats.Cleared ? UiTokens.Bronze : UiTokens.Text1;
+            GameObject skull = GameObject.Find("Skull");
+            if (skull != null) skull.SetActive(false);
+        }
     }
 
     static void Place(GameObject button, Vector2 pos, Vector2 size, float font)
@@ -566,7 +585,7 @@ public class ResultPop : MonoBehaviour
         t += Time.unscaledDeltaTime;
         float k = Mathf.Clamp01((t - delay) / 0.35f);
         if (g != null) g.alpha = k;
-        transform.localScale = Vector3.one * Mathf.Lerp(1f + 0.25f * GameSettings.Motion, 1f, Mathf.SmoothStep(0f, 1f, k));      // 움직임 줄이기면 알파만
+        if (UiRules.Legacy) transform.localScale = Vector3.one * Mathf.Lerp(1f + 0.25f * GameSettings.Motion, 1f, Mathf.SmoothStep(0f, 1f, k));      // 움직임 줄이기면 알파만 · UI 개편(Legacy 끔)도 알파만
         if (k > 0f && t - Time.unscaledDeltaTime - delay <= 0f) Hostile.Play("sparkle", 0.6f, 1.3f);
         if (k >= 1f) { transform.localScale = Vector3.one; enabled = false; }
     }

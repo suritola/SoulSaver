@@ -348,6 +348,7 @@ public class RunStats : MonoBehaviour
             pi.type = Image.Type.Sliced;
             pi.pixelsPerUnitMultiplier = 1f;
             pi.color = new Color(1f, 1f, 1f, 0.92f);
+            if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null) { pi.sprite = UiRules.Sprite("ui2_panel"); pi.type = Image.Type.Tiled; pi.color = Color.white; }     // UI 개편 P0-4c
             pi.raycastTarget = false;
         }
         float y = 0f;
