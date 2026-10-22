@@ -37,6 +37,8 @@ public static class ArenaLayout
     const float SeamMul = 0.92f, CurbMul = 0.88f;
     // 바닥 밖 벽 채움 폭 — 카메라 반 높이 28 · 16:9 반 너비 약 50 (+ 여유) · 그보다 넓은 화면 · 조준 줌은 배경색이 보임
     const int OuterX = 54, OuterY = 32;
+    // 경계 안개: 경계 안쪽 FogInside 칸부터 밖으로 FogWidth 칸에 걸쳐 바닥 밝기를 FogMin 까지
+    const float FogMin = 0.28f, FogInside = 4f, FogWidth = 18f;
     const int SeamEvery = 8, PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
 
     // 깨지는 물체 자리 (월드 좌표 · 칸 가운데) — MapProps 가 씀 (맵 확장 6)
@@ -116,10 +118,13 @@ public static class ArenaLayout
         int cy = Mathf.RoundToInt(ArenaRules.Center.y - 0.5f);         // 가운데 줄 (−3.5 → −4)
         int top = y1 + 1;                                               // 벽 정면 첫 줄
 
-        // 바닥
+        // 바닥 — 2026-10-22~ 끝없어 보이게 (사용자 「아예 맵이 끝이 없어 보이게」): 바닥을 경기장 밖 화면 너머까지 같은 무늬로 잇고
+        //   경계에 가까울수록 · 밖으로 갈수록 어두워지는 안개로 경계를 알림 (벽 띠 · 벽선 기둥은 깔지 않음 · 막는 판정은 벽 상자 4개 그대로)
+        bool open = VisualRules.EndlessLook;
         List<TileChangeData> fl = new List<TileChangeData>();
-        for (int y = y0; y <= y1; y++)
-            for (int x = x0; x <= x1; x++)
+        int fx0 = open ? x0 - OuterX : x0, fx1 = open ? x1 + OuterX : x1, fy0 = open ? y0 - OuterY : y0, fy1 = open ? y1 + OuterY : y1;
+        for (int y = fy0; y <= fy1; y++)
+            for (int x = fx0; x <= fx1; x++)
             {
                 int dy = y - cy, ax = Mathf.Abs(x), ay = Mathf.Abs(dy);
                 Sprite s = Ts(0);
@@ -129,13 +134,18 @@ public static class ArenaLayout
                 bool plazaRim = plaza && (th.square ? Mathf.Max(ax, ay) == PlazaR : ax * ax + dy * dy > (PlazaR - 1) * (PlazaR - 1));
                 bool path = ax <= PathHalf || ay <= PathHalf;
                 bool curb = !path && (ax == PathHalf + 1 || ay == PathHalf + 1);
-                if (y == y1) s = Ts(5);                                  // 벽 바로 아래 그늘
+                if (!open && y == y1) s = Ts(5);                          // 벽 바로 아래 그늘
                 else if (plazaRim) { s = Ts(th.rimSlot); mul = th.rimMul; }
                 else if (plaza || path || yard) { s = Ts(th.pathSlot); mul = th.pathMul; }
                 else
                 {
                     if (curb) mul = CurbMul;
                     else if (x % SeamEvery == 0 || (dy % SeamEvery + SeamEvery) % SeamEvery == 0) mul = SeamMul;      // 8칸 이음매
+                }
+                if (open)
+                {
+                    int d = Mathf.Max(Mathf.Max(x0 - x, x - x1), Mathf.Max(y0 - y, y - y1));      // 경계 밖 칸 수 (안쪽은 음수)
+                    mul *= Mathf.Lerp(1f, FogMin, Mathf.Clamp01((d + FogInside) / FogWidth));
                 }
                 fl.Add(Cell(x, y, s, mul, false));
             }
@@ -145,6 +155,7 @@ public static class ArenaLayout
         //   2026-10-22~ 맵 바깥이 보이지 않게 채움을 화면 반 너비 · 반 높이 너머까지 (사용자 「맵 바깥쪽이 안 보였으면」) — 판정은 벽 상자 4개 그대로
         List<TileChangeData> wl = new List<TileChangeData>();
         int wx0 = x0 - OuterX, wx1 = x1 + OuterX, wy0 = y0 - OuterY, wy1 = y1 + OuterY;
+        if (open) wy1 = wy0 - 1;                                        // 끝없어 보이게: 벽 띠 없음
         for (int y = wy0; y <= wy1; y++)
             for (int x = wx0; x <= wx1; x++)
             {
@@ -163,8 +174,10 @@ public static class ArenaLayout
         void Pair(int x, int y, int slot) { Put(x, y, slot); if (x != 0) Put(-x, y, slot); }
         Put(0, top + 5, 0);                                             // 성문
         Pair(8, top, th.gateSide);                                      // 성문 양옆
-        for (int x = TopStep; x <= x1 - 4; x += TopStep) if (x >= GateClearX) Pair(x, top + 3, th.topPillar);     // 위 벽선
         int k = 0;
+        if (!open)
+        {
+        for (int x = TopStep; x <= x1 - 4; x += TopStep) if (x >= GateClearX) Pair(x, top + 3, th.topPillar);     // 위 벽선
         for (int x = 6; x <= x1 - 4; x += RimStep, k++) Pair(x, y0, th.rimAlt[k % th.rimAlt.Length]);           // 아래 벽선
         k = 0;
         for (int d = RimStep; cy + d <= y1 - 6 || cy - d >= y0 + 4; d += RimStep, k++)                          // 옆 벽선 (길 자리는 비움)
@@ -172,6 +185,7 @@ public static class ArenaLayout
             int slot = th.rimAlt[k % th.rimAlt.Length];
             if (cy + d <= y1 - 6) { Put(x0, cy + d, slot); Put(x1, cy + d, slot); }
             if (cy - d >= y0 + 4) { Put(x0, cy - d, slot); Put(x1, cy - d, slot); }
+        }
         }
         foreach (int dyM in new[] { MarkerDy, -MarkerDy }) Pair(MarkerDx, cy + dyM, th.marker);                // 광장 표지
 
