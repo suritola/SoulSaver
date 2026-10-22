@@ -40,7 +40,9 @@ public static class ArenaLayout
     const int OuterX = 54, OuterY = 32;
     // 경계: 바로 바깥 BorderRows 줄은 어두운 돌 테두리(BorderMul) · 그 밖은 FogStart 에서 FogWidth 칸에 걸쳐 FogMin 까지 · 테두리 위 바위 BorderPost 칸마다
     const int BorderRows = 2, BorderPost = 8;
-    const float BorderMul = 0.5f, FogStart = 0.6f, FogMin = 0.2f, FogWidth = 8f;
+    const float BorderMul = 0.5f, FogStart = 0.6f, FogMin = 0.1f, FogWidth = 8f;
+    // 안개 끝 너머 카메라 배경 = 장 배경색 × 이 값 (바닥이 끝나는 곳이 티 나지 않게 어둡게 이어짐)
+    public const float OutsideBg = 0.25f;
     const int BorderRock = 3;     // 바위 (묘역 · 지옥 바위 · 초원 이끼 바위)
     const int PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
 
@@ -126,7 +128,9 @@ public static class ArenaLayout
         bool open = VisualRules.EndlessLook;
         float seed = th.realm * 37.1f;
         List<TileChangeData> fl = new List<TileChangeData>();
-        int fx0 = open ? x0 - OuterX : x0, fx1 = open ? x1 + OuterX : x1, fy0 = open ? y0 - OuterY : y0, fy1 = open ? y1 + OuterY : y1;
+        // 2026-10-22~ 맵 불러올 때 렉: 화면 끝까지(약 5만 7천 칸) 깔던 것을 안개가 다 어두워지는 곳까지만 — 그 너머는 같은 어두운 배경색 (StageManager)
+        int fo = BorderRows + Mathf.CeilToInt(FogWidth) + 2;
+        int fx0 = open ? x0 - fo : x0, fx1 = open ? x1 + fo : x1, fy0 = open ? y0 - fo : y0, fy1 = open ? y1 + fo : y1;
         for (int y = fy0; y <= fy1; y++)
             for (int x = fx0; x <= fx1; x++)
             {

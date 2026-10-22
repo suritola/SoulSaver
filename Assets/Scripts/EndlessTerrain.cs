@@ -962,7 +962,8 @@ public class EndlessTerrain : MonoBehaviour
         for (int r = 0; r < 5; r++) mix += bg[r] * (count[r] / (float)total);
         mix.a = 1f;
         Color tone = VisualRules.FloorTone(0, true);       // 1단계-7~ 바닥 톤다운 (StageManager.PrepareEndless 와 같은 값)
-        cam.backgroundColor = new Color(mix.r * tone.r, mix.g * tone.g, mix.b * tone.b, 1f);
+        float outside = VisualRules.EndlessLook ? ArenaLayout.OutsideBg : 1f;        // 끝없는 맵: 안개 너머 어둡게
+        cam.backgroundColor = new Color(mix.r * tone.r * outside, mix.g * tone.g * outside, mix.b * tone.b * outside, 1f);
     }
 
     public int RealmAt(Vector3 world)

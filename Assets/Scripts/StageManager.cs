@@ -259,7 +259,7 @@ public class StageManager : MonoBehaviour
         if (spawner == null) return;
         desertMap = EndlessMode.BuildDesertMap(hellMap, spawner.spawnAreaMin, spawner.spawnAreaMax, stage2PlayerStart);
         ToneMap(desertMap, VisualRules.FloorTone(0, true));     // 1단계-7~ 무한 모드 바닥 (영토가 바뀌어도 같은 타일맵이라 한 번)
-        if (Camera.main != null) Camera.main.backgroundColor = Toned(desertBackground, VisualRules.FloorTone(0, true));
+        if (Camera.main != null) Camera.main.backgroundColor = Toned(desertBackground, VisualRules.FloorTone(0, true)) * (VisualRules.EndlessLook ? ArenaLayout.OutsideBg : 1f);
         spawner.stages = EndlessMode.WithEndlessStage(spawner.stages, out endlessBosses);
         CurrentStage = spawner.stages.Length - 1;           // 무한 모드 스테이지는 맨 뒤 (4장 다음)
         spawner.StartStage(CurrentStage);
@@ -880,7 +880,7 @@ public class StageManager : MonoBehaviour
         if (meadowMap != null) meadowMap.SetActive(stage == 2);
         if (abyssMap != null) abyssMap.SetActive(stage == AbyssStage.Index);
         if (Camera.main != null)
-            Camera.main.backgroundColor = Toned(stage == 0 ? caveBackground : stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background, tone);
+            Camera.main.backgroundColor = Toned(stage == 0 ? caveBackground : stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background, tone) * (VisualRules.EndlessLook ? ArenaLayout.OutsideBg : 1f);     // 끝없는 맵: 안개 너머 어둡게
     }
 
     // 다음 장으로 맵 교체: 첫 장을 끝내고 처음 넘어갈 때는 특수 능력 선택 (거너는 보스 처치 때 무기 진화로 대신),

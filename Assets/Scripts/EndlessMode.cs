@@ -868,20 +868,25 @@ public class EndlessMode : MonoBehaviour
             // 2026-10-22~ 맵 확장 4: 타일이 깔린 z 한 층만 (예전엔 cellBounds 의 z 0~100 101층을 모두 훑어 복제마다 약 260만 번 · 사막 시작 · 심연 입장이 끊김)
             BoundsInt b = tm.cellBounds;
             int z = EndlessTerrain.TileZ(tm);
+            //   2026-10-22~ 칸마다 SetTile · SetTileFlags · SetTransformMatrix · SetColor 4번 → 바꿀 칸을 모아 SetTiles 한 번 (맵을 불러올 때 렉)
+            //   이름 바꾸기는 그림마다 한 번만 (Replace 를 칸마다 하지 않게)
+            List<TileChangeData> changes = new List<TileChangeData>();
+            Dictionary<Sprite, Tile> swap = new Dictionary<Sprite, Tile>();
             for (int y = b.yMin; y < b.yMax; y++)
             for (int x = b.xMin; x < b.xMax; x++)
             {
                 Vector3Int pos = new Vector3Int(x, y, z);
                 Sprite s = tm.GetSprite(pos);
-                if (s == null || !desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d)) continue;
-                Tile tile = EndlessTerrain.TileFor(d);
-                Matrix4x4 m = tm.GetTransformMatrix(pos);
-                Color c = tm.GetColor(pos);
-                tm.SetTile(pos, tile);
-                tm.SetTileFlags(pos, TileFlags.None);
-                tm.SetTransformMatrix(pos, m);
-                tm.SetColor(pos, c);
+                if (s == null) continue;
+                if (!swap.TryGetValue(s, out Tile tile))
+                {
+                    tile = desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d) ? EndlessTerrain.TileFor(d) : null;
+                    swap[s] = tile;
+                }
+                if (tile == null) continue;
+                changes.Add(new TileChangeData(pos, tile, tm.GetColor(pos), tm.GetTransformMatrix(pos)));
             }
+            if (changes.Count > 0) tm.SetTiles(changes.ToArray(), true);
         }
 
         return map;
