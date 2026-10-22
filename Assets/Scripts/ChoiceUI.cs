@@ -70,7 +70,7 @@ public class ChoiceUI : MonoBehaviour
         {
             bool on = k == selected;
             frames[k].enabled = on;
-            cards[k].localScale = Vector3.one * (on ? 1.06f : 1f);
+            if (UiRules.Legacy) cards[k].localScale = Vector3.one * (on ? 1.06f : 1f);      // UI 개편(Legacy 끔): 확대 없이 포커스 괄호만
         }
     }
 
@@ -103,19 +103,22 @@ public class ChoiceUI : MonoBehaviour
         RectTransform back = UIKit.Rect("Back", r, Vector2.zero, Vector2.zero);
         back.anchorMin = Vector2.zero; back.anchorMax = Vector2.one;
         back.offsetMin = back.offsetMax = Vector2.zero;
-        back.gameObject.AddComponent<Image>().color = new Color(0.02f, 0.01f, 0.04f, 0.85f);
+        bool v2 = !UiRules.Legacy;          // UI 개편 P0-4d: 막 Scrim · 뼈색 제목 48 · 1도트 선 · 석판 카드(범주색은 위 2도트 띠에만) · 빛 번짐 · 확대 · 맥동 없음
+        back.gameObject.AddComponent<Image>().color = v2 ? UiTokens.Scrim(true) : new Color(0.02f, 0.01f, 0.04f, 0.85f);
 
-        UIKit.Text(r, title, 54f, Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
+        TMP_Text titleText = UIKit.Text(r, title, v2 ? UiTokens.Title : 54f, v2 ? UiTokens.Text1 : Gold, new Vector2(0f, 355f), new Vector2(1400f, 80f));
+        if (v2) titleText.fontSizeMin = UiTokens.MinSize(UiTokens.Title);
+        if (v2) UiV2.Line(r, "TitleLine", new Vector2(0f, 320f), 384f);
         // 1.4.8~ 제목 아래 금 장식선 (ui_divider · 3배 도트) — 부제(292)와 안 겹치게 제목 아래끝(315) 바로 밑 · 그림이 없으면 없음
-        if (UIKit.DividerSprite != null)
+        else if (UIKit.DividerSprite != null)
         {
             RectTransform dl = UIKit.Rect("TitleLine", r, new Vector2(0f, 320f), new Vector2(384f, 24f));
             Image di = dl.gameObject.AddComponent<Image>();
             di.sprite = UIKit.DividerSprite;
             di.raycastTarget = false;
         }
-        if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, 28f, Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
-        UIKit.Text(r, GamePad.Active ? "십자키 ← → 로 고르고 [A]로 확정" : OneClick ? "카드를 누르면 바로 확정됩니다" : "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", 24f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
+        if (!string.IsNullOrEmpty(sub)) UIKit.Text(r, sub, v2 ? UiTokens.Body : 28f, v2 ? UiTokens.Text2 : Parch, new Vector2(0f, 292f), new Vector2(1400f, 50f));
+        UIKit.Text(r, GamePad.Active ? "십자키 ← → 로 고르고 [A]로 확정" : OneClick ? "카드를 누르면 바로 확정됩니다" : "더블클릭 · 같은 숫자 두 번 또는 [Space]로 확정", v2 ? UiTokens.Small : 24f, v2 ? UiTokens.Text3 : new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -330f), new Vector2(1400f, 40f));
 
         const float w = 400f, h = 500f, gap = 44f;
         int n = options.Length;
@@ -136,6 +139,14 @@ public class ChoiceUI : MonoBehaviour
             fi.type = Image.Type.Sliced;
             fi.color = Gold;
             fi.raycastTarget = false;
+            if (v2 && UiRules.Sprite("ui2_focus") != null)
+            {
+                fr.sizeDelta = new Vector2(w + 12f, h + 12f);
+                fr.SetAsLastSibling();              // 괄호는 카드 위에 (아래 Face 를 만든 뒤 다시 맨 위로)
+                fi.sprite = UiRules.Sprite("ui2_focus");
+                fi.pixelsPerUnitMultiplier = 1f;
+                fi.color = Color.white;
+            }
             fi.enabled = false;
             ui.frames[i] = fi;
 
@@ -150,10 +161,34 @@ public class ChoiceUI : MonoBehaviour
             cb.pressedColor = new Color(0.85f, 0.8f, 0.75f);
             b.colors = cb;
             b.onClick.AddListener(() => ui.Click(idx));
+            if (v2 && UiRules.Sprite("ui2_card_n") != null)
+            {
+                ci.sprite = UiRules.Sprite("ui2_card_n"); ci.type = Image.Type.Tiled; ci.pixelsPerUnitMultiplier = 1f; ci.color = Color.white;
+                b.transition = Selectable.Transition.SpriteSwap;
+                b.spriteState = new SpriteState { highlightedSprite = UiRules.Sprite("ui2_card_h"), pressedSprite = UiRules.Sprite("ui2_card_h"), selectedSprite = UiRules.Sprite("ui2_card_n") };
+                RectTransform band = UIKit.Rect("CatBand", face, new Vector2(0f, h * 0.5f - 9f - UiRules.Dot), new Vector2(w - 18f, UiRules.Dot * 2f));
+                Image bi = band.gameObject.AddComponent<Image>();
+                bi.color = o.color;
+                bi.raycastTarget = false;
+                fr.SetAsLastSibling();
+            }
 
             // 그림 (뒤에 옅은 빛)
             Sprite icon = o.sprite != null ? o.sprite : string.IsNullOrEmpty(o.icon) ? null : Resources.Load<Sprite>(IconPath(o.icon));
-            if (icon != null)
+            if (icon != null && v2)
+            {
+                // 정수 배로만 (32 → 128 · 64 → 128) · 뒤 빛 없음 · 홈 칸 안에
+                float px = Mathf.Max(1f, icon.rect.width);
+                float size = px * Mathf.Max(1f, Mathf.Floor(132f / px));
+                RectTransform well = UIKit.Rect("IconWell", face, new Vector2(0f, 120f), new Vector2(size + 18f, size + 18f));
+                UiV2.Slab(well, "ui2_inset", UiTokens.Sunken).raycastTarget = false;
+                RectTransform ir = UIKit.Rect("Icon", face, new Vector2(0f, 120f), new Vector2(size, size));
+                Image ii = ir.gameObject.AddComponent<Image>();
+                ii.sprite = icon;
+                ii.preserveAspect = true;
+                ii.raycastTarget = false;
+            }
+            else if (icon != null)
             {
                 RectTransform glow = UIKit.Rect("Glow", face, new Vector2(0f, 120f), new Vector2(210f, 210f));
                 Image gi = glow.gameObject.AddComponent<Image>();
@@ -167,17 +202,17 @@ public class ChoiceUI : MonoBehaviour
                 ii.raycastTarget = false;
             }
             // 1.4.8~ 이름은 한 줄 (길면 두 줄로 꺾여 그림을 덮지 않고 줄어듦) · 설명 글씨 26 → 하한 20 (예전 UIKit.Text 하한 12) · 줄마다 문단 간격 (레벨업 카드 TidyCards 와 같은 규칙)
-            TMP_Text nameText = UIKit.Text(face, o.name, 38f, o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
+            TMP_Text nameText = UIKit.Text(face, o.name, v2 ? UiTokens.Heading : 38f, v2 ? UiTokens.Text1 : o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
             nameText.enableWordWrapping = false;
-            nameText.fontSizeMin = 24f;
+            nameText.fontSizeMin = v2 ? UiTokens.MinSize(UiTokens.Heading) : 24f;
             // 1.1.2~ 단계 칸이 있으면 이름 바로 아래에 두고 설명을 그만큼 내림 (설명은 UIKit.Text 의 자동 크기라 칸 안에서 줄어듦)
             bool pips = o.pipMax > 0;
             if (pips) LevelPips.Create(face, new Vector2(0f, -32f), new Vector2(w - 120f, 16f)).Set(o.pipLevel, o.pipMax, o.pipAdd);
-            TMP_Text descText = UIKit.Text(face, o.desc, LevelShop.CardBodyMax, Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
-            descText.fontSizeMin = LevelShop.CardBodyMin;
+            TMP_Text descText = UIKit.Text(face, o.desc, LevelShop.CardBodyMax, v2 ? UiTokens.Text2 : Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
+            descText.fontSizeMin = v2 ? UiTokens.Small : LevelShop.CardBodyMin;
             descText.paragraphSpacing = 10f;
             TermLinks.Apply(descText);      // 1.4.8~ 글 속 용어 툴팁 (Glossary)
-            TMP_Text key = UIKit.Text(face, "", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
+            TMP_Text key = UIKit.Text(face, "", 22f, v2 ? UiTokens.Text3 : new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
             key.text = "[" + (i + 1) + "]";
         }
         Hostile.Play("chime", 0.7f, 1.1f);
@@ -186,6 +221,7 @@ public class ChoiceUI : MonoBehaviour
         {
             Button extra = UIKit.MakeButton(r, extraLabel, new Vector2(0f, -394f), new Vector2(420f, 56f), () => { if (ui.ready) ui.confirmed = n; }, 24f);
             extra.name = "ChoiceExtra";
+            if (v2) UiV2.Restyle(extra, UiV2.Kind.Secondary, UiTokens.Body);
             TMP_Text et = extra.GetComponentInChildren<TMP_Text>();
             if (et != null) { UIKit.Forget(et); et.text = Loc.T(extraLabel) + "  <size=70%><color=#A89C86>[" + (GamePad.Active ? "X" : (n + 1).ToString()) + "]</color></size>"; }
             if (!string.IsNullOrEmpty(extraTip))
@@ -238,7 +274,7 @@ public class ChoiceUI : MonoBehaviour
             if (ui.confirmed < 0 && ui.selected >= 0 && (Input.GetKeyDown(KeyCode.Space) || KeyBindings.Down(GameAction.Interact) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
                 ui.confirmed = ui.selected;
             // 고른 카드는 숨 쉬듯 반짝
-            if (ui.selected >= 0) ui.frames[ui.selected].color = Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
+            if (ui.selected >= 0 && UiRules.Legacy) ui.frames[ui.selected].color = Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
             yield return null;
         }
         int pick = ui.confirmed;
