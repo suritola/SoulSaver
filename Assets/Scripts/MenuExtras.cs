@@ -206,6 +206,13 @@ public static class MenuExtras
             t.fontSizeMax = 30f;
             t.enableWordWrapping = false;
             if (locked) t.color = new Color(0.62f, 0.6f, 0.6f);
+            if (!UiRules.Legacy)
+            {
+                // UI 개편 P0-4b: 글자만 있던 메뉴 → 불투명 석판 버튼 (사용자 「투명하면 누를 수 있는지 모름」) · 잠긴 일일 도전은 비활성 그림 + 흐린 글자 (툴팁은 그대로)
+                UiV2.Restyle(go.GetComponent<Button>(), UiV2.Kind.Secondary, UiTokens.Body);
+                if (locked) { Sprite ds = UiRules.Sprite("ui2_btn_secondary_d"); if (img != null && ds != null) img.sprite = ds; t.color = UiTokens.Text3; }
+                continue;
+            }
             MenuItemFx.Apply(go.GetComponent<Button>(), 32f, false, locked);
         }
         // 1.4.8~ 게임 시작 · 이어하기도 글자 메뉴 (게임 시작이 가장 크게 · 금빛) · ▶ 그림은 뺌
@@ -216,6 +223,14 @@ public static class MenuExtras
             if (ic != null) Object.Destroy(ic.gameObject);
             TMP_Text tl = top.GetComponentInChildren<TMP_Text>(true);
             if (tl != null) { tl.rectTransform.anchoredPosition = Vector2.zero; tl.rectTransform.sizeDelta = new Vector2(((RectTransform)top.transform).sizeDelta.x - 20f, StartH - 10f); }
+            if (!UiRules.Legacy)
+            {
+                // 주 버튼은 하나: 이어하기가 있으면 이어하기, 없으면 게임 시작 (금빛 54 글자 대신)
+                bool hasContinue = sr.parent.Find("ContinueButton") != null;
+                bool primary = top.name == "ContinueButton" || !hasContinue;
+                UiV2.Restyle(top.GetComponent<Button>(), primary ? UiV2.Kind.Primary : UiV2.Kind.Secondary, UiTokens.Heading);
+                continue;
+            }
             MenuItemFx.Apply(top.GetComponent<Button>(), 54f, true, false);
         }
 
@@ -439,6 +454,7 @@ public static class MenuExtras
     //   부제는 작은 크림색 · 넓은 간격 · 양옆에 금줄 (메뉴 글자와 같은 결)
     static void StyleTitle()
     {
+        if (!UiRules.Legacy) { StyleTitleV2(); return; }
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (t.text == "Soul Saver")
@@ -560,6 +576,28 @@ public static class MenuExtras
     }
 
     // 게임 시작 버튼 위: 쉬움 · 보통 · 어려움 · 무한 (잠긴 난이도는 회색, 누를 수 없음)
+    // UI 개편 P0-4b: 제목은 뼈색 그대로 (그라데이션 · 그림자 · 넓은 자간 · 숨쉬기 없음 — 도트 로고는 P3 전까지 글자), 부제는 작은 흐린 글자 · 양옆 금줄 없음
+    static void StyleTitleV2()
+    {
+        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (t.text == "Soul Saver")
+            {
+                t.enableVertexGradient = false;
+                t.color = UiTokens.Text1;
+                t.characterSpacing = 2f;
+                foreach (Shadow s in t.GetComponents<Shadow>()) Object.Destroy(s);
+            }
+            else if (t.name == "Subtitle")
+            {
+                t.color = UiTokens.Text3;
+                t.fontStyle &= ~FontStyles.Bold;
+                t.fontSize = t.fontSizeMax = UiTokens.Small;
+                t.characterSpacing = 4f;
+            }
+        }
+    }
+
     static void InstallDifficulty(RectTransform start)
     {
         Transform parent = start.parent;
@@ -609,6 +647,7 @@ public static class MenuExtras
         Image pi = pr.gameObject.AddComponent<Image>();
         if (UIKit.PanelSprite != null) { pi.sprite = UIKit.PanelSprite; pi.type = Image.Type.Sliced; }
         pi.color = new Color(0.1f, 0.08f, 0.14f, 0.88f);
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null) { pi.sprite = UiRules.Sprite("ui2_panel"); pi.type = Image.Type.Tiled; pi.pixelsPerUnitMultiplier = 1f; pi.color = Color.white; }
         pi.raycastTarget = false;
         pr.SetSiblingIndex(buttons[0].transform.GetSiblingIndex());     // 탭들 뒤
     }
@@ -641,6 +680,8 @@ public static class MenuExtras
         //   고른 난이도는 난이도 색으로 밝은 틀 · 글자 · 위아래 마름모 · 조금 크게, 나머지는 어두운 틀 · 밝은 글자, 잠긴 것은 더 어둡게
         UIKit.EnsureStyle();                // 도트 버튼 · 판 그림을 먼저 불러 둠
         if (buttons.Count > 0) EnsureDiffPlate(buttons);
+        if (!UiRules.Legacy) HighlightDifficultyV2(buttons);
+        else
         for (int i = 0; i < buttons.Count; i++)
         {
             Difficulty d = (Difficulty)i;
@@ -701,6 +742,31 @@ public static class MenuExtras
         float pointRate = GameMode.PointRateOf(GameMode.Current);      // 1.1~ 포인트 배율 (보통 ×1.3 · 어려움 ×1.5)
         if (pointRate > 1f) hint.text += " · " + Loc.T("result.diffpoints").Replace("{0}", pointRate.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture));
         lockHint.text = Loc.T(lockText);
+    }
+
+    // UI 개편 P0-4b: 난이도 탭 = 석판 버튼 · 고른 탭은 올림 그림 + 뼈색 글자 + 아래 1도트 밑줄 (청록, 어려움만 위험색 · 무한은 영혼색)
+    //   4색 칠 · 1.06배 확대 · 위아래 마름모 · 굵게 없음 · 잠긴 탭은 비활성 그림 (툴팁은 그대로)
+    static void HighlightDifficultyV2(List<Button> buttons)
+    {
+        Sprite on2 = UiRules.Sprite("ui2_btn_secondary_h"), off2 = UiRules.Sprite("ui2_btn_secondary_n");
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            Difficulty d = (Difficulty)i;
+            bool open = GameMode.IsUnlocked(d), on = open && GameMode.Current == d;
+            Button b = buttons[i];
+            if (b.GetComponent<UiFocusMark>() == null) UiV2.Restyle(b, UiV2.Kind.Secondary, UiTokens.Body);
+            b.interactable = open;
+            b.transform.localScale = Vector3.one;
+            Image img = b.GetComponent<Image>();
+            if (img != null && on2 != null && off2 != null) img.sprite = on ? on2 : off2;
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            if (label != null) label.color = on ? UiTokens.Text1 : open ? UiTokens.Text2 : UiTokens.Text3;
+            Transform ul = b.transform.Find("Underline");
+            if (ul == null) ul = UiV2.Line(b.transform, "Underline", new Vector2(0f, -DiffH * 0.5f + 9f), TileW * 0.5f, true).transform;
+            Image ui = ul.GetComponent<Image>();
+            if (ui != null) ui.color = d == Difficulty.Hard ? UiTokens.Danger : d == Difficulty.Endless ? UiTokens.GaugeSoul : Color.white;
+            ul.gameObject.SetActive(on);
+        }
     }
 
     // 난이도 설명 (1.0.4~ · 수치는 GameMode 배율 그대로 — 보통: 적 체력 1.15 · 적 피해 1.25 · 예고 0.85 · 보상 1.05,
@@ -2638,6 +2704,15 @@ public class MenuAmbience : MonoBehaviour
         r.SetParent(canvasRoot, false);
         r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero;
         if (behind != null) r.SetSiblingIndex(behind.GetSiblingIndex());
+        if (!UiRules.Legacy)
+        {
+            // UI 개편 P0-4b: 채도 높은 배경(보라 벽 · 붉은 카펫)을 어둡게 눌러 메뉴 · 영웅이 앞에 서게
+            RectTransform dk = UIKit.Rect("Darken", r, Vector2.zero, Vector2.zero);
+            dk.anchorMin = Vector2.zero; dk.anchorMax = Vector2.one; dk.offsetMin = dk.offsetMax = Vector2.zero;
+            Image di = dk.gameObject.AddComponent<Image>();
+            di.color = new Color(UiTokens.Void.r, UiTokens.Void.g, UiTokens.Void.b, 0.5f);
+            di.raycastTarget = false;
+        }
         if (UIKit.VignetteSprite != null)
         {
             Image v = go.AddComponent<Image>();
@@ -2653,9 +2728,17 @@ public class MenuAmbience : MonoBehaviour
         a.embers.anchorMin = Vector2.zero; a.embers.anchorMax = Vector2.one; a.embers.offsetMin = a.embers.offsetMax = Vector2.zero;
     }
 
+    static bool enteredOnce;         // UI 개편: 차례로 올라오는 연출은 실행 뒤 첫 진입 때만
+
     void Start()
     {
         if (items == null) items = new RectTransform[0];
+        if (!UiRules.Legacy)
+        {
+            if (enteredOnce) t = 10f;            // 바로 제자리
+            enteredOnce = true;
+            if (title != null) title.color = UiTokens.Text1;
+        }
         itemBase = new Vector2[items.Length];
         groups = new CanvasGroup[items.Length];
         for (int i = 0; i < items.Length; i++)
@@ -2682,6 +2765,7 @@ public class MenuAmbience : MonoBehaviour
             groups[i].alpha = e;
             items[i].anchoredPosition = itemBase[i] + new Vector2(0f, -14f * (1f - e));
         }
+        if (!UiRules.Legacy) return;           // 제목 숨쉬기 · 불티 없음
         // 제목: 밝기가 아주 천천히 오르내림
         if (title != null) title.color = Color.Lerp(new Color(0.9f, 0.88f, 0.84f), Color.white, 0.5f + 0.5f * Mathf.Sin(t * 1.3f));
         // 불티

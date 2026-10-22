@@ -34,6 +34,21 @@ public class NewGlow : MonoBehaviour
         image = GetComponent<Image>();
         if (image != null) baseColor = image.color;
         baseScale = transform.localScale;
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_dot") != null)
+        {
+            // UI 개편 P0-4b: 숨 쉬는 금 테 · 커졌다 작아짐 · NEW 알약 대신 오른쪽 위 청록 점 하나 (맥동 없음)
+            image = null;
+            Image dot = new GameObject("NewDot", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            dot.rectTransform.SetParent(transform, false);
+            dot.rectTransform.anchorMin = dot.rectTransform.anchorMax = new Vector2(1f, 1f);
+            dot.rectTransform.anchoredPosition = new Vector2(-18f, -18f);
+            dot.rectTransform.sizeDelta = new Vector2(12f, 12f);
+            dot.sprite = UiRules.Sprite("ui2_dot");
+            dot.raycastTarget = false;
+            pillImage = dot;
+            started = true;
+            return;
+        }
         // 1.4.8~ 글자 메뉴 버튼(MenuItemFx)은 상자가 없으므로 테두리 · 색 · 크기 맥박 없이 배지만
         bool textItem = GetComponent<MenuItemFx>() != null;
         if (textItem) image = null;

@@ -98,7 +98,8 @@ public static class MenuHeroPanel
         nameTip.bodyProvider = () => sub;
         Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, y - 76f), new Vector2(300f, 52f), OpenPicker, 24f);
         change.name = "ChangeHeroButton";
-        MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
+        if (!UiRules.Legacy) UiV2.Restyle(change, UiV2.Kind.Secondary, UiTokens.Body);      // UI 개편 P0-4b: 석판 보조 버튼
+        else MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
     }
 
     // 스킨 상점이 닫힌 다음 프레임에 (닫는 중에는 끼운 스킨이 아직 저장 중일 수 있음)
