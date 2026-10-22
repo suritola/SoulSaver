@@ -1141,6 +1141,14 @@ public static class UIKit
     // 화면 전체를 어둡게 덮는 판 + 가운데 창
     public static RectTransform Modal(Transform root, string name, Vector2 size, out GameObject blocker)
     {
+        // UI 개편 P0-4e: 모든 창이 새긴 석판 창 (막 Scrim · 그림자 · 0.94 확대 없음) — 돌려주는 내용 칸 크기는 예전과 같게 (size - 6)
+        if (!UiRules.Legacy)
+        {
+            RectTransform w = UiV2.Modal(root, name, size, out blocker);
+            RectTransform innerV2 = Rect("Inner", w, Vector2.zero, size - new Vector2(6f, 6f));
+            innerV2.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            return innerV2;
+        }
         EnsureStyle();
         Canvas canvas = root.GetComponentInChildren<Canvas>();
         Transform parent = canvas != null ? canvas.transform : root;
@@ -1261,6 +1269,9 @@ public static class UIKit
 
     public static Button MakeButton(Transform parent, string ko, Vector2 pos, Vector2 size, UnityAction onClick, float fontSize = 26f)
     {
+        // UI 개편 P0-4e: 코드로 만드는 모든 버튼이 석판 보조 버튼 (글자 크기는 4단계로 맞춤 · 굵게 없음) — 색을 덧칠해 상태를 보이던 곳은 P1 에서 화면별로
+        if (!UiRules.Legacy)
+            return UiV2.Btn(parent, ko, pos, size, onClick, UiV2.Kind.Secondary, fontSize >= 30f ? UiTokens.Heading : fontSize >= 24f ? UiTokens.Body : UiTokens.Small);
         RectTransform r = Rect("Button", parent, pos, size);
         Image img = r.gameObject.AddComponent<Image>();
         img.sprite = ButtonSprite;

@@ -53,7 +53,7 @@ public static class UiV2
     }
 
     // 버튼 (주 · 보조 · 위험) — 기본/올림(=선택)/누름/비활성 그림 · 누르면 글자 1도트 아래 · 올림/선택이면 포커스 괄호
-    public static Button Btn(Transform parent, string ko, Vector2 pos, Vector2 size, UnityAction onClick, Kind kind = Kind.Secondary)
+    public static Button Btn(Transform parent, string ko, Vector2 pos, Vector2 size, UnityAction onClick, Kind kind = Kind.Secondary, float fontSize = UiTokens.Body)
     {
         string k = KindName(kind);
         RectTransform r = UIKit.Rect("Button", parent, pos, size);
@@ -72,8 +72,8 @@ public static class UiV2
             };
         }
         if (onClick != null) b.onClick.AddListener(onClick);
-        TMP_Text t = UIKit.Text(r, ko, UiTokens.Body, kind == Kind.Danger ? UiTokens.Danger : UiTokens.Text1, Vector2.zero, size - new Vector2(UiTokens.S4 * 2f, UiTokens.S2));
-        t.fontSizeMin = UiTokens.MinSize(UiTokens.Body);
+        TMP_Text t = UIKit.Text(r, ko, fontSize, kind == Kind.Danger ? UiTokens.Danger : UiTokens.Text1, Vector2.zero, size - new Vector2(Mathf.Min(UiTokens.S4 * 2f, size.x * 0.2f), UiTokens.S2));
+        t.fontSizeMin = Mathf.Min(fontSize, UiTokens.MinSize(fontSize));
         UiFocusMark m = r.gameObject.AddComponent<UiFocusMark>();
         m.label = t.rectTransform;
         return b;
@@ -186,7 +186,9 @@ public class UiFocusMark : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
         Sprite s = UiRules.Sprite("ui2_focus");
         if (s == null) return;
         RectTransform rt = GetComponent<RectTransform>();
-        RectTransform m = UIKit.Rect("Focus", rt, Vector2.zero, rt.sizeDelta + new Vector2(UiTokens.S2, UiTokens.S2));
+        RectTransform m = UIKit.Rect("Focus", rt, Vector2.zero, Vector2.zero);
+        m.anchorMin = Vector2.zero; m.anchorMax = Vector2.one;          // 버튼 크기를 따라감 (늘어나는 앵커 버튼도 · 바깥 2도트)
+        m.offsetMin = new Vector2(-UiTokens.S1, -UiTokens.S1); m.offsetMax = new Vector2(UiTokens.S1, UiTokens.S1);
         Image mi = m.gameObject.AddComponent<Image>();
         mi.sprite = s;
         mi.type = Image.Type.Sliced;
