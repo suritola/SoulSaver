@@ -21,6 +21,16 @@ for y, x in zip(*np.where(txt)):
             if 0 <= xx < 800 and not txt[y, xx]:
                 bg[y, x] = bg[y, xx]; hit = True; break
         if hit: break
+# 2026-10-22~ 옛 글자의 밝은 테두리 흔적이 글자 띠 안에 남아 새 글자 사이에 보이던 것 → 띠 안(금 선 사이)의 밝은 점은 좌우 가까운 어두운 점으로
+band = np.zeros(bg.shape[:2], bool); band[250:376] = True; band[389:450] = True
+bright = band & (lum(bg) > 75)
+for y, x in zip(*np.where(bright)):
+    for dx in range(1, 80):
+        hit = False
+        for xx in (x - dx, x + dx):
+            if 0 <= xx < 800 and not bright[y, xx]:
+                bg[y, x] = bg[y, xx]; hit = True; break
+        if hit: break
 img = Image.fromarray(bg.astype(np.uint8)); d = ImageDraw.Draw(img)
 def put(t, size, col, ytop, cx=396):
     f = ImageFont.truetype(F, size); b = f.getbbox(t); w = b[2] - b[0]
