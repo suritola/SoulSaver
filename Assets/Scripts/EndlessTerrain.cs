@@ -111,7 +111,7 @@ public class EndlessTerrain : MonoBehaviour
     static readonly Sprite[][][] art = new Sprite[5][][];      // [영토][0 타일셋 · 1 장식][칸] (에셋이라 판끼리 함께 씀 · 사막은 Init 마다)
 
     // ---------------------------------------------------------------- 얼룩 · 칠하기 버퍼 (Init 에서 한 번)
-    const int BlobMax = 8000;     // 맵 확장 8~: 3200 → 8000 (영토 반지름 1.6배 · 넓이 약 2.6배 · 가장 큰 영토 약 6100칸)
+    const int BlobMax = 10000;    // 맵 확장 8~: 3200 → 10000 (영토 반지름 1.8배 · 넓이 약 3.2배 · 가장 큰 영토 약 7700칸)
     readonly int[] blobCells = new int[BlobMax];
     readonly float[] blobDist = new float[BlobMax];
     int blobCount, blobDone, blobRealm;
