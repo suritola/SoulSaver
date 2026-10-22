@@ -14,7 +14,7 @@ public static class MenuExtras
     {
         Scene scene = SceneManager.GetActiveScene();
         UIKit.RestyleScene();           // 1.4.8~ 장면에 놓인 버튼 · 창도 새 평평한 칸으로 (먼저 · 아래 설치 코드가 복제하는 버튼까지)
-        if (scene.name == "MainMenu") { InstallMainMenu(); StyleTitle(); InstallAmbience(); }
+        if (scene.name == "MainMenu") { InstallMainMenu(); StyleTitle(); InstallAmbience(); TitleIntro.PlayOnce(); }      // 2026-10-23~ 게임을 켤 때 한 번 타이틀 시작 연출
         else if (scene.name == "GameScene") InstallEsc();
         else if (scene.name == "GameOver") InstallGameOver();
     }
