@@ -213,7 +213,7 @@ public static class Fx
     // 반복 재생 · life 동안 (Play 와 같은 모습 · 다시 쓸 때 Setup 이 pop 을 끔)
     public static void SpawnPop(string name, Vector3 pos, float size, Color color, float fps, int order, float life)
     {
-        FxAnim a = SpawnGet(name, pos, size, color, fps, 0f, order, true, life, "Effect");
+        FxAnim a = SpawnGet(name, pos, size, color, fps, 0f, order, true, life, VisualRules.WarnLayer);     // 결계 예고 「!」 전용 → 1단계-6~ 경고 층
         if (a == null) return;
         a.pop = true;
         a.popBase = a.transform.localScale;

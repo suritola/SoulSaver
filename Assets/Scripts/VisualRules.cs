@@ -1,4 +1,4 @@
-// 그래픽 가독성 개편 (docs/art/그래픽-개편-기획서.md) 의 공통 값 · 되돌리기 스위치 — 2026-10-22~
+﻿// 그래픽 가독성 개편 (docs/art/그래픽-개편-기획서.md) 의 공통 값 · 되돌리기 스위치 — 2026-10-22~
 //   단계마다 값을 여기로 모으고, Legacy = true 면 개편 전 값으로 돌아감 (A/B 비교 캡처 · 긴급 복구용 · 설정 화면 · 저장 없음)
 using UnityEngine;
 
@@ -8,6 +8,8 @@ public static class VisualRules
     //   층이 없으면 SortingLayer.NameToID 가 0(Default = 맨 아래)을 돌려줘 경고가 바닥 밑으로 사라짐 → 시작 때 한 번 점검
     //   Player 가 마지막이어야 함 (PixelStrokeMin.TopLayer 가 마지막 층을 범위표시 층으로 씀)
     public const string GroundFx = "GroundFx", Warning = "Warning";
+    // 적 경고(Telegraph · 「!」 · 돌진 예고선 · 스킬 이름표 · 적 장판 테)를 그릴 층 — 1단계-6~ 내 이펙트(Effect) · 피해 숫자보다 위
+    public static string WarnLayer => Legacy ? "Effect" : Warning;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void CheckLayers()

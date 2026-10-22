@@ -283,7 +283,7 @@ public class EnermyController : MonoBehaviour
     {
         dashWarning = true;
         float top = spriteRenderer != null ? spriteRenderer.bounds.max.y : transform.position.y + 1f;
-        dashMark = Fx.Play("fx_warn", new Vector3(transform.position.x, top + 0.6f, 0f), 1.1f, Color.white, 1f, 0f, 30, true, warn + 0.1f);
+        dashMark = Fx.Play("fx_warn", new Vector3(transform.position.x, top + 0.6f, 0f), 1.1f, Color.white, 1f, 0f, 30, true, warn + 0.1f, VisualRules.WarnLayer);
         if (dashMark != null) dashMark.transform.SetParent(transform, true);
         // 예고선: 지금 방향으로 돌진 거리만큼 (돌진 중에도 플레이어를 따라 꺾이므로 짧게 · 최대 5칸)
         float len = Mathf.Clamp(speed * GlobalSpeedMultiplier * dashSpeedMultiplier * dashDuration, 2f, 5f);

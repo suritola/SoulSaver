@@ -33,7 +33,7 @@ public class FireGround : MonoBehaviour
     {
         Sprite ring = PixelRingArt.Get(r, -1f, true);
         if (ring == null) return;
-        rim = Part("FireRim", ring, SortingLayer.NameToID(VisualRules.Warning), 0);
+        rim = Part("FireRim", ring, SortingLayer.NameToID(VisualRules.WarnLayer), 0);
         if (rim == null) return;
         float ps = Mathf.Max(0.0001f, Mathf.Abs(transform.lossyScale.x));
         rim.transform.localScale = Vector3.one / ps;

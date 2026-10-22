@@ -159,8 +159,9 @@ public class EnemySkill : MonoBehaviour
     {
         seconds *= GameMode.WindupMul;      // 어려울수록 예고가 짧음
         GameObject aura = Own(Hostile.Glow != null
-            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 0) : null);
-        FxAnim mark = Fx.Play("fx_warn", transform.position + Vector3.up * 1.6f * Size, 1.1f, Color.white, 1f, 0f, 30, true, seconds);
+            ? SpecialAbilities.MakeSprite("WindupAura", Hostile.Glow, transform.position, 0.1f, new Color(color.r, color.g, color.b, 0.8f),
+                VisualRules.Legacy ? "Effect" : "Character", VisualRules.Legacy ? 0 : -5) : null);      // 1단계-6~ 시전 빛은 몸 밑 (몸을 덮지 않게)
+        FxAnim mark = Fx.Play("fx_warn", transform.position + Vector3.up * 1.6f * Size, 1.1f, Color.white, 1f, 0f, 30, true, seconds, VisualRules.WarnLayer);
         if (mark != null) mark.transform.SetParent(transform, true);
         for (float t = 0f; t < seconds; t += Time.deltaTime)
         {
@@ -653,6 +654,21 @@ public class HazardZone : MonoBehaviour
             Vector3 s = z.visual.transform.localScale;
             z.visual.transform.localScale = new Vector3(s.x, s.y, 1f);
         }
+        // 1단계-6~ 적 장판(산성 · 꽃가루 등) 가장자리 경고 테 — 판정 반지름 = 테 가운데 · 스크립트 없는 자식 그림 · 장판과 같이 사라짐
+        if (!VisualRules.Legacy)
+        {
+            Sprite ring = PixelRingArt.Get(radius, -1f, true);
+            if (ring != null)
+            {
+                GameObject rg = new GameObject("HazardRim");
+                rg.transform.SetParent(go.transform, false);
+                SpriteRenderer rr = rg.AddComponent<SpriteRenderer>();
+                rr.sprite = ring;
+                rr.color = new Color(color.r, color.g, color.b, 0.85f);
+                rr.sortingLayerID = SortingLayer.NameToID(VisualRules.WarnLayer);
+                rr.sortingOrder = 0;
+            }
+        }
         return z;
     }
 
@@ -714,14 +730,15 @@ public static class Hostile
         if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Shake(strength, 0.15f);
     }
 
-    public static LineRenderer NewLine(string name, Color color, float width, int order = 18)
+    //   layer: 1단계-6~ 적 경고는 VisualRules.WarnLayer (플레이어 조준선 · 시계공 · 지도 제작자도 이 함수를 써서 기본은 Effect 그대로)
+    public static LineRenderer NewLine(string name, Color color, float width, int order = 18, string layer = "Effect")
     {
         GameObject go = new GameObject(name);
         LineRenderer lr = go.AddComponent<LineRenderer>();
         // 1.5.1~ 단색 선 → 도트 획 (어두운 외곽 · 색 · 밝은 심, 색 부분 두께는 그대로 · PixelLine)
         PixelLine.Apply(lr);
         lr.useWorldSpace = true;
-        lr.sortingLayerName = "Effect";
+        lr.sortingLayerName = layer;
         lr.sortingOrder = order;
         lr.startColor = lr.endColor = color;
         lr.startWidth = lr.endWidth = width;
@@ -995,20 +1012,20 @@ public class Telegraph : MonoBehaviour
         built = true;
         if (!reuse)
         {
-            under = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.42f, 17));
+            under = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.42f, 17, VisualRules.WarnLayer));
             under.loop = true;
         }
         Hostile.SetArc(under, transform.position, radius, 0f, 354f);
         if (!reuse)
         {
-            outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18));
+            outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18, VisualRules.WarnLayer));
             outline.loop = true;
         }
         else outline.startColor = outline.endColor = color;
         Hostile.SetArc(outline, transform.position, radius, 0f, 354f);
         if (!reuse)
         {
-            closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19));
+            closing = Child(Hostile.NewLine("Closing", Color.white, 0.12f, 19, VisualRules.WarnLayer));
             closing.loop = true;
         }
         else
@@ -1019,7 +1036,7 @@ public class Telegraph : MonoBehaviour
         }
         // 바닥에 도는 도트 룬 마법진 (이펙트 단계 · 스킬 강조가 Play 에서 정해지므로 다시 쓸 때도 새로 만듦)
         if (rune != null) Destroy(rune.gameObject);
-        rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration);
+        rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration, VisualRules.WarnLayer);
         if (rune != null)
         {
             rune.spin = 70f;
@@ -1036,7 +1053,7 @@ public class Telegraph : MonoBehaviour
             fillScale = discSp == Hostile.Glow ? radius * 2f / 8f : PixelLine.DiscScale(discSp, radius * 2f);
             if (glow == null)
             {
-                GameObject g = SpecialAbilities.MakeSprite("Ground", floorSp, transform.position, groundScale, new Color(color.r, color.g, color.b, 0.25f), "Effect", 0);
+                GameObject g = SpecialAbilities.MakeSprite("Ground", floorSp, transform.position, groundScale, new Color(color.r, color.g, color.b, 0.25f), VisualRules.WarnLayer, 0);
                 g.transform.SetParent(transform, true);
                 glow = g.GetComponent<SpriteRenderer>();
                 glow.color = new Color(color.r, color.g, color.b, 0.25f * groundBoost);
@@ -1048,7 +1065,7 @@ public class Telegraph : MonoBehaviour
             }
             if (fillDisc == null)
             {
-                GameObject d = SpecialAbilities.MakeSprite("Fill", discSp, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), "Effect", 1);
+                GameObject d = SpecialAbilities.MakeSprite("Fill", discSp, transform.position, 0.01f, new Color(color.r, color.g, color.b, 0.8f), VisualRules.WarnLayer, 1);
                 d.transform.SetParent(transform, true);
                 fillDisc = d.GetComponent<SpriteRenderer>();
             }
@@ -1092,22 +1109,22 @@ public class Telegraph : MonoBehaviour
             Reopen();
             return;
         }
-        outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.3f), width, 1));
+        outline = Child(Hostile.NewLine("Band", new Color(color.r, color.g, color.b, 0.3f), width, 1, VisualRules.WarnLayer));
         outline.positionCount = 2;
         outline.SetPosition(0, a);
         outline.SetPosition(1, b);
         // 양쪽 가장자리 선
-        underL = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
-        underR = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17));
+        underL = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17, VisualRules.WarnLayer));
+        underR = Child(Hostile.NewLine("Under", new Color(0f, 0f, 0f, 0.8f), 0.26f, 17, VisualRules.WarnLayer));
         underL.positionCount = underR.positionCount = 2;
         underL.SetPosition(0, a + side); underL.SetPosition(1, b + side);
         underR.SetPosition(0, a - side); underR.SetPosition(1, b - side);
-        edgeL = Child(Hostile.NewLine("Edge", color, 0.14f, 18));
-        edgeR = Child(Hostile.NewLine("Edge", color, 0.14f, 18));
+        edgeL = Child(Hostile.NewLine("Edge", color, 0.14f, 18, VisualRules.WarnLayer));
+        edgeR = Child(Hostile.NewLine("Edge", color, 0.14f, 18, VisualRules.WarnLayer));
         edgeL.positionCount = edgeR.positionCount = 2;
         edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
         edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
-        fillLine = Child(Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.7f), width * 0.7f, 2));
+        fillLine = Child(Hostile.NewLine("Fill", new Color(color.r, color.g, color.b, 0.7f), width * 0.7f, 2, VisualRules.WarnLayer));
         fillLine.positionCount = 2;
         fillLine.SetPosition(0, a);
         fillLine.SetPosition(1, a);
@@ -1128,7 +1145,7 @@ public class Telegraph : MonoBehaviour
             band.sprite = sp;
             band.drawMode = SpriteDrawMode.Tiled;
             band.tileMode = SpriteTileMode.Continuous;
-            band.sortingLayerName = "Effect";
+            band.sortingLayerName = VisualRules.WarnLayer;
             band.sortingOrder = 1;
         }
         outline.enabled = false;
@@ -1206,7 +1223,7 @@ public class SkillTag : MonoBehaviour
         t.outlineWidth = 0.3f;
         t.outlineColor = new Color32(0, 0, 0, 255);
         t.rectTransform.sizeDelta = new Vector2(20f, 3f);
-        t.sortingLayerID = SortingLayer.NameToID("Effect");
+        t.sortingLayerID = SortingLayer.NameToID(VisualRules.WarnLayer);
         t.sortingOrder = 41;
         SkillTag s = go.AddComponent<SkillTag>();
         s.target = target;
@@ -1257,7 +1274,7 @@ public class ShockRing : MonoBehaviour
         s.t = 0f;
         if (!reuse)
         {
-            s.lr = Hostile.NewLine("Ring", color, width, 19);
+            s.lr = Hostile.NewLine("Ring", color, width, 19, VisualRules.WarnLayer);
             s.lr.transform.SetParent(s.transform, false);
             s.lr.loop = true;
         }
