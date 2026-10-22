@@ -207,9 +207,10 @@ public partial class SpecialAbilities
             t.keyCap.type = Image.Type.Sliced;
             t.keyCap.pixelsPerUnitMultiplier = 0.7f;      // 테두리 · 옆면을 조금 굵게
             t.keyCap.color = Color.white;
+            if (!UiRules.Legacy && UiRules.Sprite("ui2_keycap") != null) { t.keyCap.sprite = UiRules.Sprite("ui2_keycap"); t.keyCap.pixelsPerUnitMultiplier = 1f; }     // UI 개편: 키캡 하나로
             t.keyCap.raycastTarget = false;
             cap.SetActive(false);
-            t.key = HudText(cr, 20f, KeyCapInk, TextAlignmentOptions.Center);
+            t.key = HudText(cr, 20f, UiRules.Legacy ? KeyCapInk : UiTokens.Text1, TextAlignmentOptions.Center);      // 새 키캡은 어두운 판 · 뼈색 글자
             t.key.rectTransform.offsetMin = new Vector2(3f, 4f);       // 아래쪽 옆면(그림자)만큼 글자를 올림
             t.key.rectTransform.offsetMax = new Vector2(-3f, -1f);
             t.key.fontStyle = FontStyles.Bold;
@@ -392,12 +393,12 @@ public partial class SpecialAbilities
             foreach (char ch in keyText) est += ch >= 0x2E80 ? 18f : 12f;
             float capW = Mathf.Clamp(16f + est, KeyCapMinW, TileSize + TileGap - 2f);
             t.keyCap.rectTransform.sizeDelta = new Vector2(capW, KeyCapH);
-            Color face = icons ? Color.white : new Color(0.32f, 0.28f, 0.36f);
+            Color face = icons || !UiRules.Legacy ? Color.white : new Color(0.32f, 0.28f, 0.36f);      // UI 개편: 새 키캡은 덧칠 없이 (쿨타임 중에만 조금 어둡게)
             if (cool > 0f) face *= new Color(0.82f, 0.82f, 0.82f, 1f);
             t.capBase = face;
             t.keyCap.color = face;
         }
-        t.key.color = icons ? KeyCapInk : new Color(1f, 0.86f, 0.4f);
+        t.key.color = !UiRules.Legacy ? UiTokens.Text1 : icons ? KeyCapInk : new Color(1f, 0.86f, 0.4f);
         if (t.key.text != keyText) t.key.text = keyText;
     }
 

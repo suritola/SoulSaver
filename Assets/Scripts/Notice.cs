@@ -493,8 +493,9 @@ public static class Notice
         // 키캡 (새 스킬 · 유물)
         v.capImg = NewImage(v.content, "Cap", SpecialAbilities.KeyCapSprite, Color.white, true);
         v.capImg.pixelsPerUnitMultiplier = 0.3f;          // 테두리 · 옆면을 굵게
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_keycap") != null) { v.capImg.sprite = UiRules.Sprite("ui2_keycap"); v.capImg.pixelsPerUnitMultiplier = 1f; v.capImg.type = Image.Type.Sliced; }     // UI 개편: 키캡 하나로 (두 굵기 통일)
         v.cap = v.capImg.rectTransform;
-        v.capText = NewText(v.cap, "CapText", 54f, new Color(0.1f, 0.08f, 0.12f), TextAlignmentOptions.Center);
+        v.capText = NewText(v.cap, "CapText", 54f, UiRules.Legacy ? new Color(0.1f, 0.08f, 0.12f) : UiTokens.Text1, TextAlignmentOptions.Center);      // 새 키캡은 어두운 판이라 뼈색 글자
         if (UIKit.Font != null && UIKit.Font.material != null) v.capText.fontSharedMaterial = UIKit.Font.material;     // 밝은 키캡 위 진한 글자는 외곽선 없이
         v.capText.enableWordWrapping = false;
         v.capText.enableAutoSizing = true;

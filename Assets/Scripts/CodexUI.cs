@@ -803,6 +803,16 @@ public static class CodexUI
         RectTransform r = UIKit.Rect("NewBadge", parent, Vector2.zero, new Vector2(54f, 24f));
         r.anchorMin = r.anchorMax = new Vector2(1f, 1f);
         r.anchoredPosition = offset;
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_dot") != null)
+        {
+            // UI 개편: 금빛 「NEW」 알약 대신 오른쪽 위 청록 점 하나 (메인 메뉴 NewGlow 와 같음)
+            r.sizeDelta = new Vector2(12f, 12f);
+            r.anchoredPosition = new Vector2(-12f, -12f);
+            Image dot = r.gameObject.AddComponent<Image>();
+            dot.sprite = UiRules.Sprite("ui2_dot");
+            dot.raycastTarget = false;
+            return r.gameObject;
+        }
         Image pill = r.gameObject.AddComponent<Image>();
         // 1.4.8~ 새 도트 스타일: 금장 테두리 돌판(작아서 테두리 반 두께) + 금빛 글자 (NewGlow 배지와 같음) · 그림이 없으면 예전 금색 단색
         bool art = RecommendGlow.PillArt;
