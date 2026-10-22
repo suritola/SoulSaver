@@ -54,14 +54,19 @@ public static class ArenaLayout
 
     public class Plan
     {
-        public readonly List<(GameObject root, Tilemap tm, TileChangeData[] tiles)> maps = new List<(GameObject, Tilemap, TileChangeData[])>();
+        public readonly List<(int realm, GameObject root, Tilemap tm, TileChangeData[] tiles)> maps = new List<(int, GameObject, Tilemap, TileChangeData[])>();
     }
+
+    // 2026-10-22~ 맵 불러올 때 렉 (사용자): 세 장 계산 결과는 배율이 같으면 판끼리 다시 씀 (Tile 은 EndlessTerrain 정적 캐시 · 지워지지 않음)
+    static readonly Dictionary<int, TileChangeData[][]> built = new Dictionary<int, TileChangeData[][]>();
+    static float builtMul = -1f;
 
     // 세 장(묘역 · 지옥 · 초원) 계산 — 하나라도 못 하면 null (그림 · 타일맵이 빠짐)
     public static Plan Prepare(StageManager sm, out string why)
     {
         why = null;
         Plan plan = new Plan();
+        if (!Mathf.Approximately(builtMul, ArenaRules.Mul)) { built.Clear(); builtMul = ArenaRules.Mul; }
         Transform grid = sm.hellMap != null ? sm.hellMap.transform.parent : null;
         GameObject[] roots = { null, sm.hellMap, sm.meadowMap };
         for (int t = 0; t < Themes.Length; t++)
@@ -71,19 +76,29 @@ public static class ArenaLayout
             if (t == 0) { floor = Child(grid, "Floor"); wall = Child(grid, "Wall"); obj = Child(grid, "Object"); }
             else { floor = Find(roots[t], "Floor"); wall = Find(roots[t], "Wall"); obj = Find(roots[t], "Object"); }
             if (floor == null || wall == null || obj == null) { why = "타일맵 없음 (" + th.realm + ")"; return null; }
-            if (!Build(th, out TileChangeData[] f, out TileChangeData[] w, out TileChangeData[] o, out why)) return null;
-            plan.maps.Add((roots[t], floor, f));
-            plan.maps.Add((roots[t], wall, w));
-            plan.maps.Add((roots[t], obj, o));
+            if (!built.TryGetValue(th.realm, out TileChangeData[][] b))
+            {
+                if (!Build(th, out TileChangeData[] f, out TileChangeData[] w, out TileChangeData[] o, out why)) { built.Clear(); return null; }
+                built[th.realm] = b = new[] { f, w, o };
+            }
+            plan.maps.Add((th.realm, roots[t], floor, b[0]));
+            plan.maps.Add((th.realm, roots[t], wall, b[1]));
+            plan.maps.Add((th.realm, roots[t], obj, b[2]));
         }
         return plan;
     }
 
-    // 한 번에 적용 (비활성 맵은 잠깐 켜고 편집 뒤 원래대로)
-    public static void Apply(Plan plan)
+    // 2026-10-22~ 맵마다 처음 보일 때 깖 (판 시작 때 세 장을 한꺼번에 깔아 렉) — 장 전환은 검은 막 아래라 보이지 않음
+    //   StageManager.ShowStageMap · PrepareEndless(사막은 지옥 복제) · 심연(지옥 복제)이 부름 · 장면마다 Bind 로 새로
+    static Plan current;
+    static readonly HashSet<int> laid = new HashSet<int>();
+    public static void Bind(Plan plan) { current = plan; laid.Clear(); }
+    public static void EnsureLaid(int realm)
     {
-        foreach (var m in plan.maps)
+        if (current == null || !laid.Add(realm)) return;
+        foreach (var m in current.maps)
         {
+            if (m.realm != realm || m.tm == null) continue;
             bool was = m.root == null || m.root.activeSelf;
             if (m.root != null && !was) m.root.SetActive(true);
             m.tm.ClearAllTiles();

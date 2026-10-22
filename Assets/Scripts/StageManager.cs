@@ -175,6 +175,7 @@ public class StageManager : MonoBehaviour
         if (TutorialRun.Active)
         {
             if (Chapters.First != 0) PrepareFirstChapter();
+            else ArenaLayout.EnsureLaid(EndlessTerrain.Cave);      // 1장 묘역은 ShowStageMap 을 거치지 않음 — 정돈 배치를 여기서
             if (spawner != null) spawner.spawningEnabled = false;
             started = true;
             yield return TutorialRun.Run(this);
@@ -208,6 +209,7 @@ public class StageManager : MonoBehaviour
         }
         if (endless) PrepareEndless();
         else if (Chapters.First != 0) PrepareFirstChapter();
+        else ArenaLayout.EnsureLaid(EndlessTerrain.Cave);          // 1장 묘역 (ShowStageMap 을 거치지 않음)
         yield return StoryDirector.Intro(endless);
         yield return HeroGuide.Show(this);                  // 1.1.9~ 이 영웅으로 처음이면 평타 · 필살기 · 머리 위 막대 안내 (한 번)
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
@@ -257,6 +259,7 @@ public class StageManager : MonoBehaviour
     {
         foreach (Renderer r in caveRenderers) if (r != null) r.enabled = false;
         if (spawner == null) return;
+        ArenaLayout.EnsureLaid(EndlessTerrain.Hell);        // 사막은 지옥 복제 — 정돈 배치를 먼저 깖
         desertMap = EndlessMode.BuildDesertMap(hellMap, spawner.spawnAreaMin, spawner.spawnAreaMax, stage2PlayerStart);
         ToneMap(desertMap, VisualRules.FloorTone(0, true));     // 1단계-7~ 무한 모드 바닥 (영토가 바뀌어도 같은 타일맵이라 한 번)
         if (Camera.main != null) Camera.main.backgroundColor = Toned(desertBackground, VisualRules.FloorTone(0, true)) * (VisualRules.EndlessLook ? ArenaLayout.OutsideBg : 1f);
@@ -867,6 +870,8 @@ public class StageManager : MonoBehaviour
     void ShowStageMap(int stage)
     {
         ToneMap(hellMap, Color.white);          // 복제 전 원래 색으로 (심연 지도가 지옥을 복제)
+        // 2026-10-22~ 정돈 배치는 처음 보일 때 깖 (심연은 지옥을 복제하므로 지옥부터)
+        ArenaLayout.EnsureLaid(stage == 0 ? EndlessTerrain.Cave : stage == 2 ? EndlessTerrain.Meadow : EndlessTerrain.Hell);
         if (stage == AbyssStage.Index) EnsureAbyssMap();
         Color tone = VisualRules.FloorTone(stage, false);
         foreach (Renderer r in caveRenderers)

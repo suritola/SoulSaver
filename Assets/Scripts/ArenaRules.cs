@@ -105,7 +105,7 @@ public static class ArenaRules
             Compute(1f);
             return;
         }
-        if (plan != null) ArenaLayout.Apply(plan);
+        ArenaLayout.Bind(plan);         // 맵마다 처음 보일 때 깖 (EnsureLaid)
         if (Mathf.Approximately(mul, 1f)) return;
 
         sp.spawnAreaMin = SpawnMin;
