@@ -633,12 +633,14 @@ public static class MenuExtras
     //   → 난이도 탭 한 줄 · 영혼의 무게 → 도감 · 일일 도전 · 설정 · 더 보기 · 종료, 영웅은 오른쪽 (카펫 가운데를 비움)
     //   왼쪽 · 오른쪽 끝에 붙여(앵커) UI 크기 110 · 120% 로 논리 폭이 줄어도 화면 안 · 이름은 그대로 (다른 코드 · QA 가 이름으로 찾음)
     // 2026-10-22~ 사용자 「가운데가 텅 비고 UI 가 작다」: 열 420 → 480 · 목록 글자 26 → 34 · 줄 54 → 64, 영웅은 오른쪽 끝 → 카펫 가운데(무대)
-    const float MainX = 120f, MainW = 480f, MainRowH = 64f, MainRowGap = 12f;
+    // 2026-10-22~ 사용자 「메뉴 버튼들과 캐릭터 위치를 바꾸자」: 메뉴 열은 가운데(카펫 위 · 가운데 앵커), 영웅은 왼쪽(예전 메뉴 자리) · 제목은 왼쪽 위 그대로
+    const float TitleX = 120f, MainW = 480f, MainRowH = 64f, MainRowGap = 12f;
+    const float MainX = -MainW * 0.5f;          // 가운데 앵커 기준 열 왼쪽 끝
     static RectTransform LeftPlace(Transform parent, string name, float y, float h, float w = MainW, float font = 0f)
     {
         RectTransform r = parent.Find(name) as RectTransform;
         if (r == null || !r.gameObject.activeSelf) return null;
-        r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
         r.pivot = new Vector2(0f, 0.5f);
         r.anchoredPosition = new Vector2(MainX, y);
         r.sizeDelta = new Vector2(w, h);
@@ -664,7 +666,7 @@ public static class MenuExtras
             RectTransform r = t.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(MainX, title ? 390f : 312f);
+            r.anchoredPosition = new Vector2(TitleX, title ? 390f : 312f);
             r.sizeDelta = new Vector2(title ? 1000f : 700f, title ? 140f : 34f);
             t.alignment = TextAlignmentOptions.Left;
             if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 120f); t.fontSizeMin = 60f; }
@@ -682,7 +684,7 @@ public static class MenuExtras
         {
             RectTransform r = parent.Find("Difficulty_" + (Difficulty)i) as RectTransform;
             if (r == null) continue;
-            r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
             r.anchoredPosition = new Vector2(MainX + i * (tabW + UiTokens.S1), y);
             r.sizeDelta = new Vector2(tabW, 54f);
@@ -697,7 +699,7 @@ public static class MenuExtras
         bool weightOn = wr != null && SoulWeight.Unlocked;          // 해금했으면 자리를 늘 잡음 (어려움을 고르면 나중에 켜짐 — 켜진 것만 보면 그때 도감과 겹침)
         if (wr != null)
         {
-            wr.anchorMin = wr.anchorMax = new Vector2(0f, 0.5f);
+            wr.anchorMin = wr.anchorMax = new Vector2(0.5f, 0.5f);
             wr.pivot = new Vector2(0f, 0.5f);
             wr.anchoredPosition = new Vector2(MainX, y - 16f);
             wr.sizeDelta = new Vector2(MainW, 32f);
@@ -713,9 +715,9 @@ public static class MenuExtras
         Transform hp = hpo != null ? hpo.transform : null;
         if (hp is RectTransform hr)
         {
-            hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
+            hr.anchorMin = hr.anchorMax = new Vector2(0f, 0.5f);
             hr.pivot = new Vector2(0.5f, 0.5f);
-            hr.anchoredPosition = new Vector2(0f, -30f);
+            hr.anchoredPosition = new Vector2(TitleX + MainW * 0.5f, -70f);     // 왼쪽 끝 120 + 열 폭 절반 (예전 메뉴 열 가운데 · 제목과 같은 왼쪽 줄)
             hr.sizeDelta = new Vector2(Mathf.Max(hr.sizeDelta.x, 540f), 700f);          // 512 그림 + 이름 · 영웅 변경
             MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
