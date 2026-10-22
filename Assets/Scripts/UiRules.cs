@@ -5,7 +5,7 @@ using UnityEngine;
 public static class UiRules
 {
     // 기본 모습: 이 한 줄이 출시 기본값 (승인 ③ 에서 false) — 실행할 때 Init 이 이 값에서 시작해 아래 스위치로만 바뀜 (검토: 필드만 바꾸면 Init 이 덮어썼음)
-    public const bool DefaultLegacy = true;
+    public const bool DefaultLegacy = false;      // 2026-10-23~ 승인 ③: 새 모습이 기본 (되돌리기: 실행 인자 -uilegacy · UserSettings/uilegacy.on · 이 값을 true)
     public static bool Legacy = DefaultLegacy;
 
     // 스위치 (판마다가 아니라 실행할 때 한 번):
