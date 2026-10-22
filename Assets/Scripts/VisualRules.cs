@@ -35,15 +35,15 @@ public static class VisualRules
     }
 
     // 경기장 배율 (ArenaRules · docs/art/맵-확장-기획서.md) — 맵-6 에서 1.4 로 (그때까지 1 = 예전 그대로)
-    public static float ArenaMul => Legacy ? 1f : 1.4f;     // 맵 확장 8 (2026-10-22): 카메라 28 에 맞춰 109×69 → 153×97
+    public static float ArenaMul => Legacy ? 1f : 1.6f;     // 맵 확장 8 (2026-10-22): 109×69 → 1.4배 153×97 → 사용자 「맵 크기를 좀 더 키우자」 1.6배 175×111
     // 정돈된 경기장 배치 (ArenaLayout · 맵 확장 5) — 묘역 · 지옥 · 초원 타일맵을 시작 때 다시 깖
     public static bool TidyArena => !Legacy;
     // 끝없어 보이는 맵 (2026-10-22 사용자) — 벽 띠 대신 바닥을 화면 밖까지 잇고 경계는 어두워지는 안개로 (ArenaLayout)
     public static bool EndlessLook => !Legacy;
 
-    // 카메라를 더 멀리 (직교 크기 20 → 28 · 조준 줌 최대도 같은 배율) — 2026-10-22 사용자 「카메라 좀 더 멀리」 · 「28 정도 해봐」
+    // 카메라를 더 멀리 (직교 크기 20 → 28 → 25 · 조준 줌 최대도 같은 배율) — 2026-10-22 사용자 「카메라 좀 더 멀리」 · 「28 정도 해봐」 · 「조금만 더 가깝게」
     //   적 생성은 화면 범위를 그때그때 읽어(EnemySpawn 뷰포트) 화면 밖에서 나오는 건 그대로
-    public static float CameraMul => Legacy ? 1f : 1.4f;
+    public static float CameraMul => Legacy ? 1f : 1.25f;     // 2026-10-22 28 → 사용자 「카메라를 조금만 더 가깝게」 25
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 
