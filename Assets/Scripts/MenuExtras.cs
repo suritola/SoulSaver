@@ -2640,15 +2640,22 @@ public static class SettingsUI
             // 찌그러진 리벳 버튼 대신 도트 손잡이 (4x8 도트 × 2 = 24x48) · 마우스 올림은 청록
             hi.sprite = UiRules.Sprite("ui2_slider_knob_n");
             hi.type = Image.Type.Simple;
-            // 시안: 가는 홈 막대(높이 약 30% → 가운데 9) + 청록 두 톤 채움
-            foreach (RectTransform tr in new[] { bg, area }) { tr.anchorMin = new Vector2(0f, 0.5f); tr.anchorMax = new Vector2(1f, 0.5f); tr.sizeDelta = new Vector2(0f, 12f); }
+            // 시안 그대로 (사용자 「슬라이드바가 그대로」 — 굵은 청록 막대 · 큰 흰 손잡이라 예전과 거의 같아 보였음):
+            //   테두리 있는 가는 홈(높이 21 · 테두리 6) · 그 안 청록 줄 9 · 작은 청록 손잡이 12x24 (4x8 도트 1배)
+            bg.anchorMin = new Vector2(0f, 0.5f); bg.anchorMax = new Vector2(1f, 0.5f); bg.sizeDelta = new Vector2(0f, 21f);
+            area.anchorMin = new Vector2(0f, 0.5f); area.anchorMax = new Vector2(1f, 0.5f);
+            area.offsetMin = new Vector2(6f, -4.5f); area.offsetMax = new Vector2(-6f, 4.5f);
             Image bgi = bg.GetComponent<Image>();
-            if (UiRules.Sprite("ui2_inset") != null) { bgi.sprite = UiRules.Sprite("ui2_inset"); bgi.type = Image.Type.Sliced; bgi.pixelsPerUnitMultiplier = 2f; bgi.color = Color.white; }      // lint-ok: 높이 12 홈이라 테두리를 반으로
+            if (UiRules.Sprite("ui2_inset") != null) { bgi.sprite = UiRules.Sprite("ui2_inset"); bgi.type = Image.Type.Sliced; bgi.pixelsPerUnitMultiplier = 2f; bgi.color = Color.white; }      // lint-ok: 높이 21 홈이라 테두리를 반으로 (6)
             Image fli = fill.GetComponent<Image>();
-            if (UiRules.Sprite("ui2_fill") != null) { fli.sprite = UiRules.Sprite("ui2_fill"); fli.type = Image.Type.Sliced; fli.pixelsPerUnitMultiplier = 2f; }      // lint-ok: 같은 이유
-            handle.sizeDelta = new Vector2(24f, 12f);      // 막대 높이 36 + 12 = 48 → 4x8 도트 그림 2배 그대로 (24 면 1.25배로 늘어났음)
+            fli.sprite = null;
+            fli.color = UiTokens.Accent;
+            hi.sprite = UiRules.Sprite("ui2_slider_knob_h");          // 시안 손잡이는 늘 청록
+            handle.anchorMin = new Vector2(0f, 0.5f); handle.anchorMax = new Vector2(0f, 0.5f);
+            handle.sizeDelta = new Vector2(12f, 24f);
+            handleArea.offsetMin = new Vector2(6f, 0f); handleArea.offsetMax = new Vector2(-6f, 0f);
             Slider sl = root.GetComponent<Slider>();
-            if (sl != null) { sl.transition = Selectable.Transition.SpriteSwap; sl.spriteState = new SpriteState { highlightedSprite = UiRules.Sprite("ui2_slider_knob_h"), selectedSprite = UiRules.Sprite("ui2_slider_knob_h"), pressedSprite = UiRules.Sprite("ui2_slider_knob_h") }; }
+            if (sl != null) sl.transition = Selectable.Transition.None;
         }
 
         s.fillRect = fill;
