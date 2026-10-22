@@ -8,7 +8,7 @@
 #   py -3.14 tools/gemini/gen.py --name fx_soulstep --prompt "푸른 영혼불이 타오르는 그을린 발자국" \
 #       --ref Assets/Resources/FX/fx_soulstep.png --n 4 --out <스크래치>/gemini/fx_soulstep
 #   py -3.14 tools/gemini/gen.py --list-models
-import argparse, base64, io, json, os, random, sys, urllib.error, urllib.request
+import argparse, base64, io, json, os, sys, urllib.error, urllib.request
 
 API = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_MODEL = "gemini-3-pro-image"
@@ -62,7 +62,7 @@ def call(url, key, body=None, bearer=False):
         msg = e.read().decode("utf-8", "replace")
         if e.code == 429 and "free_tier" in msg and "limit: 0" in msg:
             sys.exit("Gemini 429: 무료 등급은 그림 모델 한도가 0 → AI Studio 에서 이 키의 프로젝트에 결제(Billing)를 연결해야 함")
-        sys.exit("Gemini 오류 %d: %s" % (e.code, msg[:800]))
+        sys.exit("그림 API 오류 %d: %s" % (e.code, msg[:800]))
 
 
 def main():
@@ -137,7 +137,7 @@ def cloudflare(a):
     made = 0
     for i in range(a.n):
         res = call(CF_API % (os.environ.get("CF_ACCOUNT_ID", CF_ACCOUNT), a.model), key,
-                   {"prompt": text[:2048], "steps": 8, "seed": random.randrange(1 << 30)}, bearer=True)
+                   {"prompt": text[:2048], "steps": 8}, bearer=True)
         img = (res.get("result") or {}).get("image")
         if not img:
             print("후보 %d: 그림 없음 (%s)" % (i + 1, json.dumps(res, ensure_ascii=False)[:300]))

@@ -15,7 +15,8 @@ Gemini 가 원본 그림을 그리고 → 도트로 바꾸고 → Claude 가 비
 1. **생성** `gen.py --name <그림 이름> --prompt "<내용>" --ref <지금 게임 그림.png> [--frames N] --n 3 --out <작업 폴더>`
    - 그림체를 맞추려면 `--ref` 로 지금 그림이나 같은 종류 그림을 꼭 넣는다
    - 애니메이션은 `--frames N` (가로 한 줄로 그리게 함). 프레임 사이 일관성이 약하면 프레임 수를 줄이고 나머지는 스크립트로 만든다
-2. **도트화** `pixelize.py <raw.png> --size <칸 WxH> [--frames N] --palette-from <지금 그림.png> -o <후보_px.png>`
+2. **도트화** (배경은 가장자리 색을 읽어 바깥부터 지움 · 마젠타만 지우려면 `--magenta`)
+    `pixelize.py <raw.png> --size <칸 WxH> [--frames N] --palette-from <지금 그림.png> -o <후보_px.png>`
    - 칸 크기는 지금 게임 그림과 같게 (`.meta` 칸 나누기를 그대로 쓰기 위해)
    - 새 색을 써야 하면 `--palette-from` 대신 `--colors 12~24`, 테두리가 약하면 `--outline 1a1020`
 3. **검토** `review.py --current <지금 그림.png> <후보_px...> -o <비교.png>` → 이 한 장만 열어 본다

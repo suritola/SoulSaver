@@ -10,6 +10,31 @@ KEY = (255, 0, 255)
 
 
 def key_out(im, tol):
+    # 가장자리 색(중앙값)을 배경으로 보고 바깥에서부터 비슷한 색만 채워 지운다
+    # (FLUX 등은 마젠타를 정확히 안 지키고, 물체 안의 비슷한 색은 남겨야 함)
+    im = im.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    border = [px[x, y][:3] for x in range(w) for y in (0, h - 1)] + [px[x, y][:3] for y in range(h) for x in (0, w - 1)]
+    bg = tuple(sorted(c[i] for c in border)[len(border) // 2] for i in range(3))
+    dist = lambda c: max(abs(c[0] - bg[0]), abs(c[1] - bg[1]), abs(c[2] - bg[2]))
+    seen = bytearray(w * h)
+    stack = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
+    while stack:
+        x, y = stack.pop()
+        if not (0 <= x < w and 0 <= y < h) or seen[y * w + x]:
+            continue
+        seen[y * w + x] = 1
+        d = dist(px[x, y])
+        if d > tol * 2:
+            continue
+        px[x, y] = (0, 0, 0, 0) if d <= tol else px[x, y][:3] + (int(255 * (d - tol) / tol),)
+        if d <= tol:
+            stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    return im
+
+
+def key_out_magenta(im, tol):
     im = im.convert("RGBA")
     px = im.load()
     w, h = im.size
@@ -119,13 +144,14 @@ def main():
     ap.add_argument("--colors", type=int, default=16, help="팔레트 색 수 (--palette-from 이 없을 때)")
     ap.add_argument("--palette-from", default="", help="이 그림의 색만 쓴다")
     ap.add_argument("--margin", type=int, default=1, help="칸 가장자리 여백 (픽셀)")
-    ap.add_argument("--tol", type=int, default=60, help="마젠타 배경 판정 허용치")
+    ap.add_argument("--tol", type=int, default=48, help="배경 판정 허용치")
+    ap.add_argument("--magenta", action="store_true", help="가장자리 채우기 대신 마젠타(#FF00FF)만 전부 지움")
     ap.add_argument("--alpha-cut", type=int, default=110, help="이 알파 이상만 남김")
     ap.add_argument("--outline", default="", help="바깥 테두리 색 (예 1a1020) · 비우면 안 그림")
     a = ap.parse_args()
 
     size = tuple(int(v) for v in a.size.lower().split("x"))
-    src = key_out(Image.open(a.src), a.tol)
+    src = (key_out_magenta if a.magenta else key_out)(Image.open(a.src), a.tol)
     cw = src.size[0] // a.frames
     frames = [src.crop((i * cw, 0, (i + 1) * cw, src.size[1])) for i in range(a.frames)]
     frames = [hard_alpha(f, a.alpha_cut) for f in fit(frames, size, a.margin)]
