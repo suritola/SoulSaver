@@ -35,6 +35,10 @@ public static class VisualRules
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    // 카메라를 더 멀리 (직교 크기 20 → 28 · 조준 줌 최대도 같은 배율) — 2026-10-22 사용자 「카메라 좀 더 멀리」 · 「28 정도 해봐」
+    //   적 생성은 화면 범위를 그때그때 읽어(EnemySpawn 뷰포트) 화면 밖에서 나오는 건 그대로
+    public static float CameraMul => Legacy ? 1f : 1.4f;
+
     static void CheckLayers()
     {
         // 1단계-11~ 같은 층 · 같은 순서끼리는 화면 아래(앞)에 있는 것을 앞에 그림 — 적끼리 겹칠 때 누가 앞인지 (예전엔 생긴 순서대로 뒤죽박죽)

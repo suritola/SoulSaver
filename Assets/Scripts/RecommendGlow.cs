@@ -145,6 +145,9 @@ public class RecommendGlow : MonoBehaviour
     {
         if (target == null || halo == null || !halo.gameObject.activeSelf) return;
         if (!target.gameObject.activeInHierarchy) { SetActive(false); return; }
+        // 카드 안을 다시 그리며 자식(별빛 · 알약)이 지워졌으면 다시 만듦 (지워진 별빛을 그대로 써서 NullReference 가 나던 것)
+        if (sparkRoot == null) Build(target);
+        if (rim == null || pill == null || badge == null) return;
         Follow();
     }
 

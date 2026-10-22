@@ -8,14 +8,15 @@ public class EnemyHealthBar : MonoBehaviour
 
     const float Width = 2.2f;
     const float LegacyHeight = 0.32f;     // 0.26 → 0.32 (줌 15 에서 9.4 → 11.5px · 흰 게이지 · 흔들림이 픽셀에 묻히지 않게)
-    // 그래픽 개편 1단계-10 (2026-10-22~): 체력이 가득 찬 적은 체력바를 숨기고(몰린 무리 위를 막대가 덮었음) · 얇게 · 원색 대신 회백 (VisualRules.Legacy 면 예전)
-    static float Height => VisualRules.Legacy ? LegacyHeight : 0.22f;
+    // 그래픽 개편 1단계-10 (2026-10-22~): 체력이 가득 찬 적은 체력바를 숨김 (몰린 무리 위를 막대가 덮었음) · 조금 얇게
+    //   회백 막대는 「얼마나 남았는지 구분이 안 된다」(사용자) → 초록 · 노랑 · 빨강은 그대로 둠
+    static float Height => VisualRules.Legacy ? LegacyHeight : 0.28f;
     const float Border = 0.06f;
     const float HeadMargin = 0.25f;
 
-    static Color FullColor => VisualRules.Legacy ? new Color(0.45f, 0.85f, 0.35f) : new Color(0.86f, 0.86f, 0.88f);
-    static Color HalfColor => VisualRules.Legacy ? new Color(0.98f, 0.72f, 0.22f) : new Color(0.88f, 0.82f, 0.66f);
-    static Color LowColor => VisualRules.Legacy ? new Color(0.86f, 0.17f, 0.24f) : new Color(0.9f, 0.6f, 0.5f);
+    static readonly Color FullColor = new Color(0.45f, 0.85f, 0.35f);
+    static readonly Color HalfColor = new Color(0.98f, 0.72f, 0.22f);
+    static readonly Color LowColor = new Color(0.86f, 0.17f, 0.24f);
     static readonly Color BackColor = new Color(0.05f, 0.04f, 0.06f, 0.9f);
     static readonly Color BackHit = new Color(1f, 0.96f, 0.92f);    // Big 이상: 어두운 테두리가 하얗게
 

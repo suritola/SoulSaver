@@ -271,6 +271,8 @@ public class PlayerController : MonoBehaviour
 
         mainCamera = Camera.main;
 
+        normalZoom *= VisualRules.CameraMul;        // 2026-10-22~ 조금 더 멀리 (Start 에서 한 번)
+        maxZoom *= VisualRules.CameraMul;
         if (mainCamera != null) mainCamera.orthographicSize = normalZoom;
 
         if (skillGauge == null) skillGauge = FindFirstObjectByType<SkillGauge>();
