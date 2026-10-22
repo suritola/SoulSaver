@@ -673,6 +673,58 @@ public static class MenuExtras
             MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
         InstallNewsCard(parent);
+        InstallGoalsCard(parent);
+    }
+
+    // 오른쪽 열 「다음 목표」 카드 (사용자 「아직 허전」) — 새 소식 아래 · 아래끝은 왼쪽 「종료」와 맞춤, 결과 화면과 같은 목표 셋 (이름 · 막대 · 수치)
+    //   목표가 없으면(체험판 · 다 이룸) 만들지 않음 · 언어를 바꾸면 다시 씀
+    static void InstallGoalsCard(Transform parent)
+    {
+        List<(string label, string detail, float progress)> goals = ResultScreen.MenuGoals(3);
+        if (goals.Count == 0 || parent.Find("GoalsCard") != null) return;
+        const float W = 480f, Pad = 30f, HeadH = 44f, RowH = 96f;
+        float h = Pad + HeadH + RowH * goals.Count + Pad - 12f;
+        RectTransform card = UIKit.Rect("GoalsCard", parent, Vector2.zero, new Vector2(W, h));
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(1f, 1f);
+        card.anchoredPosition = new Vector2(-UiTokens.Edge, -282f - 176f - UiTokens.S2);
+        UiV2.Slab(card, "ui2_panel", UiTokens.Panel).raycastTarget = false;
+        TMP_Text head = UIKit.Text(card, "result.goal.title", UiTokens.Small, UiTokens.Text3, new Vector2(0f, h * 0.5f - Pad - 12f), new Vector2(W - Pad * 2f, 28f), TextAlignmentOptions.Left);
+        head.fontSizeMin = UiTokens.Small;
+        List<(TMP_Text label, TMP_Text detail)> rows = new List<(TMP_Text, TMP_Text)>();
+        Sprite inset = UiRules.Sprite("ui2_inset"), fill = UiRules.Sprite("ui2_fill");
+        for (int i = 0; i < goals.Count; i++)
+        {
+            float y = h * 0.5f - Pad - HeadH - RowH * i;            // 이 줄 위끝
+            TMP_Text label = UIKit.Text(card, "", UiTokens.Body, UiTokens.Text1, new Vector2(0f, y - 18f), new Vector2(W - Pad * 2f, 34f), TextAlignmentOptions.Left);
+            label.enableWordWrapping = false; label.overflowMode = TextOverflowModes.Ellipsis; label.fontSizeMin = UiTokens.Small;
+            RectTransform bar = UIKit.Rect("GoalBar", card, new Vector2(0f, y - 50f), new Vector2(W - Pad * 2f, 18f));
+            Image bi = bar.gameObject.AddComponent<Image>();
+            if (inset != null) { bi.sprite = inset; bi.type = Image.Type.Tiled; bi.pixelsPerUnitMultiplier = 1f; } else bi.color = UiTokens.Sunken;
+            bi.raycastTarget = false;
+            RectTransform fr = UIKit.Rect("Fill", bar, Vector2.zero, Vector2.zero);
+            fr.anchorMin = Vector2.zero;
+            fr.anchorMax = new Vector2(Mathf.Clamp(goals[i].progress, 0.02f, 1f), 1f);
+            fr.offsetMin = new Vector2(3f, 3f); fr.offsetMax = new Vector2(-3f, -3f);
+            Image fi = fr.gameObject.AddComponent<Image>();
+            if (fill != null) { fi.sprite = fill; fi.type = Image.Type.Sliced; fi.pixelsPerUnitMultiplier = 1f; }
+            fi.color = goals[i].progress >= 1f ? UiTokens.Accent : UiTokens.GaugeSoul;
+            fi.raycastTarget = false;
+            TMP_Text detail = UIKit.Text(card, "", UiTokens.Small, UiTokens.Text3, new Vector2(0f, y - 78f), new Vector2(W - Pad * 2f, 28f), TextAlignmentOptions.Right);
+            detail.enableWordWrapping = false; detail.overflowMode = TextOverflowModes.Ellipsis; detail.fontSizeMin = 18f;
+            rows.Add((label, detail));
+        }
+        System.Action write = () =>
+        {
+            List<(string label, string detail, float progress)> now = ResultScreen.MenuGoals(3);
+            for (int i = 0; i < rows.Count && i < now.Count; i++)
+            {
+                rows[i].label.text = now[i].label;
+                rows[i].detail.text = now[i].detail;
+                UIKit.Forget(rows[i].label); UIKit.Forget(rows[i].detail);
+            }
+        };
+        write();
+        card.gameObject.AddComponent<LocRefresh>().refresh = write;
     }
 
     // 오른쪽 아래 「새 소식」 카드 하나 (사용자 「오른쪽이 텅 비지 않을까」) — 최신 공지 제목 + 패치노트 버튼, 판 하나 · 버튼 하나만 (설명창을 늘리지 않음)

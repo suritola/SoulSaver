@@ -38,6 +38,14 @@ public static class ResultScreen
         public Goal(string label, float progress, string detail, string hint = null) { this.label = label; this.progress = Mathf.Clamp01(progress); this.detail = detail; this.hint = hint; }
     }
 
+    // UI 개편 P1: 메인 메뉴 오른쪽 「다음 목표」 카드가 쓰는 같은 목표 (저장된 기록만으로 계산 · 판과 상관없음)
+    public static List<(string label, string detail, float progress)> MenuGoals(int max = 3)
+    {
+        List<(string, string, float)> list = new List<(string, string, float)>();
+        foreach (Goal g in Goals(max)) list.Add((g.label, g.detail, g.progress));
+        return list;
+    }
+
     // ================================================================= 다음 목표
     // 갈래마다(영웅 · 스킨 · 숙련 · 업적) 가장 가까운 것 하나씩 → 진행률 순으로 셋
     static List<Goal> Goals(int max = 2)      // 2026-10-22~ 3 → 2 (간결하게)
