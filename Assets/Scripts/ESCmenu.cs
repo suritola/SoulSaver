@@ -44,10 +44,28 @@ public class ESCmenu : MonoBehaviour
 
     // Update is called once per frame
     Shop shop;
+    // 2026-10-22~ 판을 시작한 뒤 첫 레벨업 · 갈래 카드 창이 뜨기 전까지는 ESC 를 받지 않음 (사용자 요청)
+    //   이어하기 등 창이 안 뜨는 판에서 영영 잠기지 않게 실제 시간 StartEscLock 초가 지나면 풀림 · 바깥 요인 일시정지(Alt+Tab 등)는 그대로
+    const float StartEscLock = 10f;
+    LevelShop levelShop;
+    bool firstCardSeen;
+    bool EscLocked
+    {
+        get
+        {
+            if (firstCardSeen) return false;
+            if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
+            if (levelShop != null && levelShop.IsOpen) { firstCardSeen = true; return false; }
+            return sceneStartReal >= 0f && Time.realtimeSinceStartup - sceneStartReal < StartEscLock;
+        }
+    }
+
     void Update()
     {
         isShopOpen = shop.isShopOpen;
+        bool locked = EscLocked;         // 매 프레임 봄 (창이 열린 걸 놓치지 않게)
         if (!GameInput.EscDown) return;
+        if (locked) return;
 
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing || Herald.Playing) return;

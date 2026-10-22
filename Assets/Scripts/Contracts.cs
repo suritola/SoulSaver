@@ -476,15 +476,15 @@ public static class Contracts
             s.group.blocksRaycasts = false;
             s.group.interactable = false;
 
-            // 각인 고르기 창의 카드(아래끝 -270) · 안내 줄(-330) 아래: 화면 아래 띠에 한 줄로
-            const float W = 440f, H = 104f, Gap = 18f;      // 1.4.8~ 꼬리표 · 조건 글자 16 · 17 → 20 (UI 정리 기획 최소 글자) · 폭 420 → 440
-            float x0 = -(list.Count - 1) * (W + Gap) * 0.5f;
-            TMP_Text head = UIKit.Text(go.transform, "contract.run.title", 24f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -398f), new Vector2(800f, 32f));
+            // 2026-10-22~ 화면 아래 가운데 띠(다른 UI 와 겹쳐 시야를 가림 — 사용자) → 오른쪽 가운데에 작게 세로로 (고르기 창 카드 · HUD 와 겹치지 않게)
+            const float W = 380f, H = 96f, Gap = 10f, X = 960f - 30f - W * 0.5f;
+            float top = (list.Count - 1) * (H + Gap) * 0.5f + 40f;
+            TMP_Text head = UIKit.Text(go.transform, "contract.run.title", 22f, new Color(0.79f, 0.63f, 1f), new Vector2(X, top + H * 0.5f + 20f), new Vector2(W, 30f));
             head.raycastTarget = false;
             for (int i = 0; i < list.Count; i++)
             {
                 Active a = list[i];
-                RectTransform card = UIKit.Rect("Contract", go.transform, new Vector2(x0 + i * (W + Gap), -470f), new Vector2(W, H));
+                RectTransform card = UIKit.Rect("Contract", go.transform, new Vector2(X, top - i * (H + Gap)), new Vector2(W, H));
                 Image bg = card.gameObject.AddComponent<Image>();
                 bg.sprite = UIKit.ButtonSprite;
                 bg.type = Image.Type.Sliced;
