@@ -27,6 +27,7 @@ public partial class LevelShop
         public TextMeshProUGUI name;
         public bool near;           // 1.1.2~ 이 카드를 고르면 진화하거나 한 단계만 남음 → 띠가 숨 쉬듯 빛남 (EvoRowPulse)
         public Image bg;
+        public TextMeshProUGUI left;        // UI 개편 P1 (Legacy 끔): 진화 칸 오른쪽 위 「n단계 남음」 · 「바로 진화!」
     }
     readonly EvoRow[] evoRows = new EvoRow[3];
 
@@ -41,6 +42,12 @@ public partial class LevelShop
             EvoRow row = evoRows[slot] ??= BuildEvoRow(card);
             SkillEvo e = ids[slot] == SupplyId ? null : EvoUsing(ids[slot]);
             row.root.gameObject.SetActive(e != null);
+            if (!UiRules.Legacy)
+            {
+                // 진화 칸이 있으면 설명 글 아래끝을 칸 위로 (없으면 원래 자리)
+                TextMeshProUGUI body = slot == 0 ? FirstAbility : slot == 1 ? SecondAbility : ThirdAbility;
+                if (body != null) body.rectTransform.offsetMin = new Vector2(CardBodySide, e != null ? EvoSectionPad + EvoSectionH + UiTokens.S2 : CardBodyBottom);
+            }
             if (e == null) continue;
             anyEvo = true;
             bool blockedAny = false;
@@ -59,7 +66,8 @@ public partial class LevelShop
                 // 1.0.4~ (거너): 지금 무기에 맞지 않아 뽑히지 않는 재료는 회색
                 bool blocked = !done && !me && !KitFits(p);
                 blockedAny |= blocked;
-                row.frames[i].color = me ? new Color(0.96f, 0.83f, 0.47f) : done ? EvoDone : blocked ? new Color(0.22f, 0.22f, 0.24f) : new Color(0.35f, 0.3f, 0.45f);
+                row.frames[i].color = !UiRules.Legacy ? (me ? UiTokens.Accent : done ? UiTokens.GaugeSoul : blocked ? new Color(0.5f, 0.5f, 0.5f) : Color.white)
+                                    : me ? new Color(0.96f, 0.83f, 0.47f) : done ? EvoDone : blocked ? new Color(0.22f, 0.22f, 0.24f) : new Color(0.35f, 0.3f, 0.45f);
                 row.parts[i].color = blocked ? new Color(0.45f, 0.45f, 0.45f, 0.6f) : Color.white;
                 // 1.1.2~: 「지금→고른 뒤/최대」 숫자(「0→1/5」) 대신 단계 칸 — 찬 칸 · 이 카드면 차오를 칸이 금빛으로 맥동 · 최대면 전부 금빛
                 //         정확한 숫자는 아이콘에 마우스를 올린 설명 끝 줄(「Lv 2 · 최대 3」, GetAbilityTooltip)
@@ -81,7 +89,14 @@ public partial class LevelShop
                        : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
             if (blockedAny && left > 0) tag = "<color=#A8A8A8>" + Loc.T("지금 무기로는 안 나옴") + "</color>";       // 1.0.4~
             // 1.1~ 앞의 「진화 · 」를 뺌 (칸이 150 이라 영어 · 일본어에서 글자가 9~11px 까지 작아졌음, 보라 띠 · ▶ 가 이미 진화를 뜻함)
-            row.name.text = "<size=70%>" + tag + "</size>\n" + Loc.T(e.name);
+            if (!UiRules.Legacy && row.left != null)
+            {
+                // 새 모습: 이름 · 남은 단계를 따로 (색 태그 없이 · 바로 진화만 보상색 청동, 1단계면 청록)
+                row.name.text = Loc.T(e.name);
+                row.left.text = blockedAny && left > 0 ? Loc.T("지금 무기로는 안 나옴") : left <= 0 ? Loc.T("바로 진화!") : left == 1 ? Loc.T("진화까지 1단계!") : Loc.T("{0}단계 남음").Replace("{0}", left.ToString());
+                row.left.color = blockedAny && left > 0 ? UiTokens.Text3 : left <= 0 ? UiTokens.Bronze : left == 1 ? UiTokens.Accent : UiTokens.Text3;
+            }
+            else row.name.text = "<size=70%>" + tag + "</size>\n" + Loc.T(e.name);
             row.near = !blockedAny && left <= 1;
         }
         ShowEvoIntro(anyEvo);
@@ -193,7 +208,62 @@ public partial class LevelShop
         row.name.enableAutoSizing = true;
         row.name.fontSizeMin = 13f;
         row.name.fontSizeMax = 21f;
+        if (!UiRules.Legacy) LayoutEvoRowV2(row, card);
         return row;
+    }
+
+    // UI 개편 P1 (Legacy 끔): 진화 띠를 카드 위에 뜬 판 대신 카드 안 아래 「진화」 칸으로 (사용자 「진화 띠가 이상」 · docs/art/ui-v2-levelup.png)
+    //   위 1도트 선 · 「진화 · 이름」 + 오른쪽 남은 단계 · 아래 줄 재료 셋(홈 칸 + 단계 칸) ▶ 진화 결과 — 띠 판 · 숨쉬기 없음, 설명 글 아래끝은 ShowEvoHints 가 올림
+    public const float EvoSectionH = 120f, EvoSectionPad = 24f;
+    static void LayoutEvoRowV2(EvoRow row, Transform card)
+    {
+        RectTransform r = row.root;
+        float cw = card is RectTransform crt ? crt.rect.width : 420f;
+        if (cw < 200f) cw = 420f;
+        float w = cw - EvoSectionPad * 2f;
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0f);
+        r.pivot = new Vector2(0.5f, 0f);
+        r.sizeDelta = new Vector2(w, EvoSectionH);
+        r.anchoredPosition = new Vector2(0f, EvoSectionPad);
+        row.bg.enabled = false;
+        UiV2.Line(r, "EvoLine", new Vector2(0f, EvoSectionH * 0.5f - UiRules.Dot * 0.5f), w);
+        Image mark = UiV2.Line(r, "EvoLineMark", new Vector2(-w * 0.5f + 24f, EvoSectionH * 0.5f - UiRules.Dot * 0.5f), 48f);
+        mark.sprite = null;
+        mark.color = UiTokens.GaugeSoul;
+        TextMeshProUGUI head = Label(r, new Vector2(-w * 0.5f + 30f, 28f), new Vector2(60f, 30f), UiTokens.Small);
+        head.text = Loc.T("진화");
+        head.color = UiTokens.GaugeSoul;
+        head.alignment = TextAlignmentOptions.Left;
+        UIKit.Remember(head, "진화");
+        RectTransform nr = row.name.rectTransform;
+        nr.anchoredPosition = new Vector2(-w * 0.5f + 66f + (w * 0.55f) * 0.5f, 28f);
+        nr.sizeDelta = new Vector2(w * 0.55f, 32f);
+        row.name.alignment = TextAlignmentOptions.Left;
+        row.name.color = UiTokens.Text1;
+        row.name.fontSizeMax = UiTokens.Body;
+        row.name.fontSizeMin = UiTokens.Small;
+        row.name.enableWordWrapping = false;
+        row.name.overflowMode = TextOverflowModes.Ellipsis;
+        row.left = Label(r, new Vector2(w * 0.5f - (w * 0.3f) * 0.5f, 28f), new Vector2(w * 0.3f, 30f), UiTokens.Small);
+        row.left.alignment = TextAlignmentOptions.Right;
+        row.left.enableAutoSizing = true;
+        row.left.fontSizeMin = 16f;
+        row.left.fontSizeMax = UiTokens.Small;
+        Sprite inset = UiRules.Sprite("ui2_inset");
+        for (int i = 0; i < 3; i++)
+        {
+            RectTransform fr = row.frames[i].rectTransform;
+            fr.anchoredPosition = new Vector2(-w * 0.5f + 30f + i * 66f, -18f);
+            fr.sizeDelta = new Vector2(54f, 54f);
+            if (inset != null) { row.frames[i].sprite = inset; row.frames[i].type = Image.Type.Tiled; row.frames[i].pixelsPerUnitMultiplier = 1f; }
+            row.parts[i].rectTransform.sizeDelta = new Vector2(48f, 48f);           // 32 · 64 그림 → 48 (1.5 · 0.75 배 — 칸이 작아 정수 배는 P2 아이콘 정리 때)
+            ((RectTransform)row.levels[i].transform).anchoredPosition = new Vector2(0f, -36f);
+        }
+        foreach (TextMeshProUGUI t in r.GetComponentsInChildren<TextMeshProUGUI>(true))
+            if (t.text == "▶") { t.color = UiTokens.Text3; t.rectTransform.anchoredPosition = new Vector2(-w * 0.5f + 30f + 3 * 66f - 12f, -18f); t.fontSize = t.fontSizeMax = UiTokens.Small; }
+        RectTransform er = row.evoIcon.rectTransform;
+        er.anchoredPosition = new Vector2(-w * 0.5f + 30f + 3 * 66f + 30f, -18f);
+        er.sizeDelta = new Vector2(54f, 54f);
     }
 
     // 1.1.2~ 진화가 가까운 카드의 띠: 보라 ↔ 금빛으로 숨 쉬고 진화 아이콘이 살짝 커졌다 작아짐 (게임이 멈춰 있어 실제 시간)

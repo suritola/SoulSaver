@@ -105,6 +105,10 @@ public partial class LevelShop
         if (ab == null) return;
         RectTransform r = ab.rectTransform;
         if (!abilityBottomKnown[slot]) { abilityBottom0[slot] = r.offsetMin.y; abilityBottomKnown[slot] = true; }
-        r.offsetMin = new Vector2(r.offsetMin.x, abilityBottom0[slot] + (lift ? 58f : 0f));
+        float bottom = abilityBottom0[slot];
+        // UI 개편 P1 (Legacy 끔): 진화 칸이 있으면 그 위가 바닥 (처음 기억한 자리로 되돌려 진화 칸과 겹치지 않게)
+        if (!UiRules.Legacy && evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf)
+            bottom = EvoSectionPad + EvoSectionH + UiTokens.S2;
+        r.offsetMin = new Vector2(r.offsetMin.x, bottom + (lift ? 58f : 0f));
     }
 }
