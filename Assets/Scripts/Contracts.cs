@@ -475,6 +475,7 @@ public static class Contracts
             s.group = go.AddComponent<CanvasGroup>();
             s.group.blocksRaycasts = false;
             s.group.interactable = false;
+            s.group.alpha = 0f;                     // 고르기 창이 닫힐 때까지 숨김 (Update)
 
             // 2026-10-22~ 화면 아래 가운데 띠(다른 UI 와 겹쳐 시야를 가림 — 사용자) → 오른쪽 가운데에 작게 세로로 (고르기 창 카드 · HUD 와 겹치지 않게)
             const float W = 380f, H = 96f, Gap = 10f, X = 960f - 30f - W * 0.5f;
@@ -501,9 +502,28 @@ public static class Contracts
             }
         }
 
+        // 2026-10-22~ 판 시작 순서상 바로 뒤에 영혼 각인 3택 1 · 레벨업 입문 창이 떠서 어디에 두든 겹쳤음 (사용자 「아직도 다른 UI 랑 겹친다」)
+        //   → 고르기 창 · 일시정지 · 연출이 모두 닫히고 0.6초 뒤부터 보임 · 보이는 중에 창이 열리면 잠깐 숨고 기다림 · 실제 시간 90초를 넘기면 그냥 사라짐
+        float clearFor, waited;
+        LevelShop levelShop;
+        bool Busy
+        {
+            get
+            {
+                if (levelShop == null) levelShop = FindFirstObjectByType<LevelShop>();
+                return Time.timeScale == 0f || ChoiceUI.Open || SoulTreeUI.IsOpen || ESCmenu.IsOpen || StoryDirector.Playing || Herald.Playing
+                    || (levelShop != null && levelShop.IsOpen);
+            }
+        }
+
         void Update()
         {
-            age += Time.unscaledDeltaTime;
+            float dt = Time.unscaledDeltaTime;
+            waited += dt;
+            if (Busy) { clearFor = 0f; group.alpha = Mathf.MoveTowards(group.alpha, 0f, dt * 6f); if (age <= 0f && waited > 90f) Destroy(gameObject); return; }
+            clearFor += dt;
+            if (clearFor < 0.6f) return;
+            age += dt;
             group.alpha = age < 0.3f ? age / 0.3f : 1f - Mathf.Clamp01((age - (Life - 0.6f)) / 0.6f);
             if (age >= Life) Destroy(gameObject);
         }
