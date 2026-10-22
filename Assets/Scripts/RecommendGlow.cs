@@ -28,7 +28,7 @@ public class RecommendGlow : MonoBehaviour
         bool on = card != null && card.parent != null;
         if (!on) { SetActive(false); return; }
         Build(card);
-        badge.text = "★ " + Loc.T(evolvesNow ? "추천 · 바로 진화!" : "추천");
+        badge.text = (UiRules.Legacy ? "★ " : "") + Loc.T(evolvesNow ? "추천 · 바로 진화!" : "추천");
         // 카드 뒤에 그리려고 버튼(카드)들 가운데 가장 앞 형제 자리로 (옆 카드를 덮지 않게 · 배치는 ignoreLayout 으로 그대로)
         halo.SetAsLastSibling();
         rim.SetAsLastSibling();
@@ -158,6 +158,21 @@ public class RecommendGlow : MonoBehaviour
         Vector2 size = Vector2.Scale(target.rect.size, (Vector2)target.localScale);
         Vector3 center = target.TransformPoint(target.rect.center);
         float breathe = (0.5f + 0.5f * Mathf.Sin(t * 4.2f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
+        if (!UiRules.Legacy)
+        {
+            // UI 개편 P0-4d: 후광 · 금 → 흰 → 보라 테 · 별빛 · 숨쉬기 없이 「추천」 이름표 하나 (청록 테 작은 판 · 청록 글자)
+            haloImg.enabled = false;
+            rimImg.enabled = false;
+            for (int i = 0; i < SparkCount; i++) if (sparks[i] != null) sparks[i].enabled = false;
+            Sprite tg = UiRules.Sprite("ui2_tag");
+            if (tg != null && pill.sprite != tg) { pill.sprite = tg; pill.type = Image.Type.Sliced; pill.pixelsPerUnitMultiplier = 1f; }
+            pill.color = Color.white;
+            pill.rectTransform.localScale = Vector3.one;
+            badge.color = UiTokens.Accent;
+            badge.fontStyle &= ~FontStyles.Bold;
+            badge.fontSizeMax = UiTokens.Small;
+            return;
+        }
 
         halo.anchorMin = halo.anchorMax = target.anchorMin == target.anchorMax ? target.anchorMin : new Vector2(0.5f, 0.5f);
         halo.position = center;
@@ -283,6 +298,7 @@ public class HintBadge : MonoBehaviour
     // 기본 크기는 1 로 고정 (예전엔 켜질 때의 크기를 기억해서, 두근거리던 중에 창이 닫혔다 열릴 때마다 계속 커졌음)
     void Update()
     {
+        if (!UiRules.Legacy) { transform.localScale = Vector3.one; if (rim != null) rim.color = rimColor; return; }      // UI 개편: 두근거림 없음
         float b = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f + phase)) * GameSettings.Motion;
         transform.localScale = Vector3.one * (1f + 0.06f * b);
         if (rim != null) rim.color = Color.Lerp(rimColor, Color.white, 0.55f * b);

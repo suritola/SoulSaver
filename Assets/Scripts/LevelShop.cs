@@ -336,7 +336,7 @@ public partial class LevelShop : MonoBehaviour
         RectTransform badgeRect = (RectTransform)pendingBadge.transform;
         Vector2 badgePos = new Vector2(0f, upgradeShown ? 172f : 110f);
         if (badgeRect.anchoredPosition != badgePos) badgeRect.anchoredPosition = badgePos;
-        float pulse = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
+        float pulse = UiRules.Legacy ? (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion : 0f;      // 1.1.9~ 「움직임 줄이기」 · UI 개편: 숨쉬기 없음 (마우스 올림만 밝게)
         pendingText.color = Color.Lerp(new Color(1f, 0.85f, 0.4f), Color.white, pulse);
         bool hover = pendingClick != null && pendingClick.Hover;       // 마우스를 올리면 밝고 크게 (누를 수 있음을 보여 줌)
         if (pendingBadgeImg == null) pendingBadgeImg = pendingBadge.GetComponent<Image>();
@@ -409,6 +409,16 @@ public partial class LevelShop : MonoBehaviour
             Transform card = CardOf(i);
             if (card == null) continue;
             bool on = i == pendingSlot;
+            if (!UiRules.Legacy && UiRules.Sprite("ui2_card_s") != null && card.TryGetComponent(out Image v2img))
+            {
+                // UI 개편 P0-4d: 확대 · 금빛 칠 없이 그림으로 — 고른 카드 청록 테 · 외길 카드 옅은 청록 테 · 나머지 기본
+                card.localScale = Vector3.one;
+                v2img.sprite = UiRules.Sprite(on ? "ui2_card_s" : IsSingleSlot(i) ? "ui2_card_h" : "ui2_card_n");
+                v2img.type = Image.Type.Tiled;
+                v2img.pixelsPerUnitMultiplier = 1f;
+                v2img.color = Color.white;
+                continue;
+            }
             card.localScale = Vector3.one * (on ? 1.08f : 1f);
             // 갈림길의 외길 카드는 고르지 않아도 옅은 금빛 (LevelShop.Paths)
             if (card.TryGetComponent(out Image img)) img.color = on ? new Color(1f, 0.88f, 0.55f) : IsSingleSlot(i) ? new Color(1f, 0.95f, 0.72f) : Color.white;
@@ -438,6 +448,14 @@ public partial class LevelShop : MonoBehaviour
             selectHint.fontStyle = FontStyles.Bold;     // 1.0.1: 더 잘 보이게 (굵게 + 검은 테두리)
             selectHint.outlineWidth = 0.22f;
             selectHint.outlineColor = new Color32(0, 0, 0, 255);
+            if (!UiRules.Legacy)
+            {
+                selectHint.fontStyle = FontStyles.Normal;       // UI 개편: 굵게 · 외곽선 없이 본문 26
+                selectHint.outlineWidth = 0f;
+                selectHint.fontSize = selectHint.fontSizeMax = UiTokens.Body;
+                selectHint.fontSizeMin = UiTokens.Small;
+                if (UIKit.FontMaterial != null) selectHint.fontSharedMaterial = UIKit.FontMaterial;
+            }
             selectHint.enableWordWrapping = false;
             selectHint.alignment = TextAlignmentOptions.Center;
             selectHint.raycastTarget = false;
@@ -445,7 +463,7 @@ public partial class LevelShop : MonoBehaviour
         if (selectHint != null)
         {
             string picked = pendingSlot == 0 ? FirstTitle.text : pendingSlot == 1 ? SecondTitle.text : pendingSlot == 2 ? ThirdTitle.text : null;
-            selectHint.color = picked != null ? new Color(1f, 0.86f, 0.4f) : Color.white;
+            selectHint.color = !UiRules.Legacy ? (picked != null ? UiTokens.Text1 : UiTokens.Text2) : picked != null ? new Color(1f, 0.86f, 0.4f) : Color.white;
             selectHint.text = picked != null ? Loc.T("[{INTERACT}] 확정 : ") + picked
                             : OneClick ? Loc.T("카드를 클릭하면 바로 확정됩니다")
                                              : Loc.T("카드를 클릭해 고른 뒤 [{INTERACT}]로 확정") + "   <color=#C9BCA4>" + Loc.T("더블클릭 · 같은 숫자 두 번으로 바로") + "</color>";     // 1.0.4~ 숫자 키 방식 통일
@@ -544,6 +562,17 @@ public partial class LevelShop : MonoBehaviour
             Transform card = CardOf(slot);
             if (card == null) continue;
             card.localRotation = Quaternion.identity;       // 멈춘 카드는 0도 (등장 연출 CardIntro 만 잠깐 기울임)
+            if (!UiRules.Legacy)
+            {
+                // UI 개편 P0-4d: 석판 카드 · 이름 뼈색 · 설명 Text2 (하한 22) · 아이콘 틀은 홈 칸 — 배치는 그대로 (P1 에서 진화 칸을 카드 안으로)
+                if (card.TryGetComponent(out Image cimg) && UiRules.Sprite("ui2_card_n") != null) { cimg.sprite = UiRules.Sprite("ui2_card_n"); cimg.type = Image.Type.Tiled; cimg.pixelsPerUnitMultiplier = 1f; cimg.color = Color.white; }
+                Transform fr = card.Find("AbilityIconFrame");
+                if (fr != null && fr.TryGetComponent(out Image fimg) && UiRules.Sprite("ui2_inset") != null) { fimg.sprite = UiRules.Sprite("ui2_inset"); fimg.type = Image.Type.Tiled; fimg.pixelsPerUnitMultiplier = 1f; fimg.color = Color.white; }
+                Transform dv = card.Find("Divider");
+                if (dv != null && dv.TryGetComponent(out Image dimg)) { dimg.sprite = UiRules.Sprite("ui2_line"); dimg.type = Image.Type.Tiled; dimg.color = Color.white; ((RectTransform)dv).sizeDelta = new Vector2(((RectTransform)dv).sizeDelta.x, UiRules.Dot); }
+                if (title != null) { title.color = UiTokens.Text1; title.fontStyle &= ~FontStyles.Bold; title.enableVertexGradient = false; }
+                if (body != null) body.color = UiTokens.Text2;
+            }
             if (title != null)
             {
                 RectTransform tr = title.rectTransform;
@@ -563,7 +592,7 @@ public partial class LevelShop : MonoBehaviour
                 br.offsetMax = new Vector2(-CardBodySide, -CardBodyTop);
                 body.enableAutoSizing = true;
                 body.fontSizeMax = CardBodyMax;
-                body.fontSizeMin = CardBodyMin;
+                body.fontSizeMin = UiRules.Legacy ? CardBodyMin : UiTokens.Small;
                 body.paragraphSpacing = 14f;                 // 설명 / 대가 / 강점 · 약점 줄 사이 (1.4.8~)
                 body.overflowMode = TextOverflowModes.Overflow;
                 TermLinks.Apply(body);                       // 1.4.8~ 글 속 용어에 마우스를 올리면 정의 (Glossary)

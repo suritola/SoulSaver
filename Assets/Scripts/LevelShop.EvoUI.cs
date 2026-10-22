@@ -199,12 +199,13 @@ public partial class LevelShop
     // 1.1.2~ 진화가 가까운 카드의 띠: 보라 ↔ 금빛으로 숨 쉬고 진화 아이콘이 살짝 커졌다 작아짐 (게임이 멈춰 있어 실제 시간)
     void EvoRowPulse()
     {
-        float k = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+        // UI 개편(Legacy 끔): 숨쉬기 · 아이콘 들썩임 없이 가까우면 진한 색으로 고정 (가까움은 「1단계 남음!」 글로도 보임)
+        float k = UiRules.Legacy ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 1f;
         foreach (EvoRow row in evoRows)
         {
             if (row == null || row.root == null || !row.root.gameObject.activeSelf) continue;
             row.bg.color = row.near ? Color.Lerp(EvoRowBase, EvoRowNear, k) : EvoRowBase;
-            row.evoIcon.rectTransform.localScale = Vector3.one * (row.near ? 1f + 0.12f * k : 1f);
+            row.evoIcon.rectTransform.localScale = Vector3.one * (row.near && UiRules.Legacy ? 1f + 0.12f * k : 1f);
         }
     }
 
@@ -287,7 +288,7 @@ public partial class LevelShop
         if (!show) return;
         skipButton.interactable = selectReady;
         if (skipArmedAt > 0f && !SkipArmed) DisarmSkip();
-        float pulse = (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion;      // 1.1.9~ 「움직임 줄이기」
+        float pulse = UiRules.Legacy ? (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f)) * GameSettings.Motion : 0f;      // 1.1.9~ 「움직임 줄이기」 · UI 개편: 두근거림 없음
         skipButton.transform.localScale = Vector3.one * (1f + 0.03f * pulse);
         if (skipText != null) skipText.color = SkipArmed ? Color.Lerp(new Color(1f, 0.45f, 0.4f), Color.white, pulse)
                                                          : Color.Lerp(Color.white, new Color(1f, 0.9f, 0.6f), pulse);
