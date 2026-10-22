@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 손맛 연출: 적 처치 · 레벨업 · 코인 획득 때 도트 이펙트와 소리 (tools/pixelart/make_fx.py 로 만든 시트)
 public static class Juice
@@ -15,16 +15,14 @@ public static class Juice
              : stage == 2 ? new Color(0.65f, 1f, 0.5f) : GameMode.IsEndless ? new Color(1f, 0.82f, 0.42f) : new Color(0.78f, 0.62f, 1f);
     }
 
+    // 그래픽 개편 1단계-3 (2026-10-22~): 처치 연출은 중립 — 작고 옅은 회백 · 바닥 쪽 층(GroundFx) · 개수 줄임
+    //   적의 Die 는 플레이어 피해 호출 안에서 바로 불려 「내 스킬」 출처를 이어받았음 → 스킬 배율 · +40 · 빛 번짐 · 내 투명도가 붙던 것을 「기타」로 끊음
+    //   이펙트 스킨(구매)이 있으면 스킨 색은 그대로 (옅게만) · VisualRules.Legacy 면 예전 그대로
+    static readonly Color KillNeutral = new Color(0.86f, 0.86f, 0.9f);
+
     public static void EnemyDied(Vector3 pos, float size)
     {
-        Color c = SkinFx.KillColor(StageColor());       // 이펙트 스킨이 있으면 스킨 색
-        // 1.1.9: 한꺼번에 많이 죽을 때(무한 모드 초반 · 범위 스킬) 처치 연출이 화면을 덮어 내장 그래픽에서 프레임이 무너졌음
-        //   → 0.05초 동안 처치 폭발 8개 · 충격파 3개까지 (평소 처치 속도에서는 그대로 다 나옴)
-        if (Time.time - burstWindow >= 0.05f) { burstWindow = Time.time; burstCount = 0; shockCount = 0; }
-        // 그래픽 품질 낮음(L6): 0.05초에 폭발 4 · 충격파 1 (높음은 8 · 3 그대로)
-        bool low = GraphicsQuality.Low;
-        if (burstCount < (low ? 4 : 8) || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f); }
-        if (size > 1.2f && shockCount < (low ? 1 : 3)) { shockCount++; Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f); }
+        using (DamageSource.As(DamageSource.Other)) KillBurst(pos, size);
         // 한꺼번에 많이 죽어도 소리가 뭉개지지 않게
         if (Time.time - lastPop > 0.045f)
         {
@@ -33,6 +31,25 @@ public static class Juice
         }
         OnKill();       // 1.1~ 처치 수 이정표 · 판 수
     }
+
+    static void KillBurst(Vector3 pos, float size)
+    {
+        // 1.1.9: 한꺼번에 많이 죽을 때(무한 모드 초반 · 범위 스킬) 처치 연출이 화면을 덮어 내장 그래픽에서 프레임이 무너졌음
+        //   → 0.05초 동안 개수 상한 (평소 처치 속도에서는 그대로 다 나옴) · 그래픽 품질 낮음(L6)은 더 적게
+        if (Time.time - burstWindow >= 0.05f) { burstWindow = Time.time; burstCount = 0; shockCount = 0; }
+        bool low = GraphicsQuality.Low;
+        if (VisualRules.Legacy)
+        {
+            Color c = SkinFx.KillColor(StageColor());       // 이펙트 스킨이 있으면 스킨 색
+            if (burstCount < (low ? 4 : 8) || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 2.4f * size, c, 22f); }
+            if (size > 1.2f && shockCount < (low ? 1 : 3)) { shockCount++; Fx.Spawn("fx_shock", pos, 3.5f * size, new Color(c.r, c.g, c.b, 0.7f), 18f); }
+            return;
+        }
+        Color k = SkinFx.EffectSkin != null ? SkinFx.KillColor(KillNeutral) : KillNeutral;
+        if (burstCount < (low ? 2 : 3) || size > 1.2f) { burstCount++; Fx.Spawn("fx_deathburst", pos, 1.6f * size, new Color(k.r, k.g, k.b, 0.6f), 22f, 0f, 12, false, -1f, VisualRules.GroundFx); }
+        if (size > 1.2f && shockCount < 1) { shockCount++; Fx.Spawn("fx_shock", pos, 2.8f * size, new Color(k.r, k.g, k.b, 0.45f), 18f, 0f, 12, false, -1f, VisualRules.GroundFx); }
+    }
+
 
     public static void LevelUp(Vector3 pos)
     {
