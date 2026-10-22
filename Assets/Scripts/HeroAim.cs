@@ -606,16 +606,14 @@ public class HeroAimDecor
         {
             case HeroAimKind.Swordsman:
             {
-                // 검 여섯 자루가 시계 방향으로 돎 · 모을수록 빨라짐 · 다 차면 칼끝이 바깥을 향해 번쩍
-                bool done = full01 >= 1f;
-                phase += Time.deltaTime * (50f + 250f * full01);
-                for (int i = 0; i < 6; i++)
+                // 2026-10-22~ 간결하게 (사용자 「검이 빙글빙글 도는 거 짜치다」): 도는 검 여섯 자루를 없애고,
+                //   다 모였을 때만 고리 네 방향에 칼끝을 바깥으로 향한 검이 멈춰 섬 (깜빡임 없음 · 모으는 동안은 고리 차오름만)
+                if (full01 < 1f) break;
+                for (int i = 0; i < 4; i++)
                 {
-                    float a = -phase + 60f * i;
-                    Vector2 dir = done ? new Vector2(Mathf.Cos(a * Mathf.Deg2Rad), Mathf.Sin(a * Mathf.Deg2Rad))
-                                       : new Vector2(Mathf.Sin(a * Mathf.Deg2Rad), -Mathf.Cos(a * Mathf.Deg2Rad));
-                    Color sc = done ? Color.Lerp(col, Color.white, 0.5f + 0.5f * Mathf.Sin(t * 18f)) : col;
-                    Draw(HeroAimArt.WeaponAt("weapon_sword", HeroAimArt.Dir(dir)), Polar(c, a, done ? r + 0.5f : r), sc);
+                    float a = 90f * i;
+                    Vector2 dir = new Vector2(Mathf.Cos(a * Mathf.Deg2Rad), Mathf.Sin(a * Mathf.Deg2Rad));
+                    Draw(HeroAimArt.WeaponAt("weapon_sword", HeroAimArt.Dir(dir)), Polar(c, a, r + 0.4f), col);
                 }
                 break;
             }
