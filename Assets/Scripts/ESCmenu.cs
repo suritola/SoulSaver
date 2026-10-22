@@ -239,6 +239,8 @@ public class ESCmenu : MonoBehaviour
             ex.text = extra;
         }
         bool destructive = !selectOk || name == "ConfirmGiveUp";
+        // P0-6 짧은 이름 (질문의 동사 그대로 · 같은 행동은 같은 이름)
+        okLabel = okLabel == "포기하고 결과 보기" ? "ui.btn.giveup" : okLabel == "메인 메뉴로" ? "result.menu" : okLabel == "게임 종료" ? "ui.btn.quit" : okLabel;
         float okX = W / 2f - Pad - BtnW / 2f, y = -H / 2f + Pad + UiTokens.ButtonH / 2f + 30f;
         UnityEngine.UI.Button okButton = UiV2.Btn(win, okLabel, new Vector2(okX, y), new Vector2(BtnW, UiTokens.ButtonH), ok, destructive ? UiV2.Kind.Danger : UiV2.Kind.Primary);
         UnityEngine.UI.Button cancelButton = UiV2.Btn(win, "취소", new Vector2(okX - BtnW - UiTokens.S2, y), new Vector2(BtnW, UiTokens.ButtonH), CloseConfirm);

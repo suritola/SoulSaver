@@ -84,7 +84,7 @@ public static class MenuExtras
                 bvr.anchoredPosition = new Vector2(0f, ResultScreen.LeftPad);
                 bv.name = "BuildViewButton";
                 bv.navigation = new Navigation { mode = Navigation.Mode.None };
-                if (!UiRules.Legacy) UiV2.Restyle(bv, UiV2.Kind.Secondary, UiTokens.Body);
+                if (!UiRules.Legacy) { UiV2.Restyle(bv, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(bv, "ui.btn.build"); }
                 TMP_Text bl = bv.GetComponentInChildren<TMP_Text>(true);
                 if (bl != null) bl.fontSizeMin = 20f;
             }
@@ -126,7 +126,7 @@ public static class MenuExtras
                 Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
                     () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 24f);
                 view.name = "LeaderboardViewButton";
-                if (!UiRules.Legacy) UiV2.Restyle(view, UiV2.Kind.Secondary, UiTokens.Body);
+                if (!UiRules.Legacy) { UiV2.Restyle(view, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(view, "ui.btn.ranks"); }
             }
         }
         EndlessMode.LastSeconds = -1f;
@@ -213,6 +213,7 @@ public static class MenuExtras
             {
                 // UI 개편 P0-4b: 글자만 있던 메뉴 → 불투명 석판 버튼 (사용자 「투명하면 누를 수 있는지 모름」) · 잠긴 일일 도전은 비활성 그림 + 흐린 글자 (툴팁은 그대로)
                 UiV2.Restyle(go.GetComponent<Button>(), UiV2.Kind.Secondary, UiTokens.Body);
+                if (go == exit) UiV2.Label(go.GetComponent<Button>(), "ui.btn.quit");          // P0-6 「게임 종료」 → 「종료」
                 if (locked) { Sprite ds = UiRules.Sprite("ui2_btn_secondary_d"); if (img != null && ds != null) img.sprite = ds; t.color = UiTokens.Text3; }
                 continue;
             }
@@ -232,6 +233,7 @@ public static class MenuExtras
                 bool hasContinue = sr.parent.Find("ContinueButton") != null;
                 bool primary = top.name == "ContinueButton" || !hasContinue;
                 UiV2.Restyle(top.GetComponent<Button>(), primary ? UiV2.Kind.Primary : UiV2.Kind.Secondary, UiTokens.Heading);
+                if (top == start) UiV2.Label(top.GetComponent<Button>(), "ui.btn.start");      // P0-6 「게임 시작」 → 「시작」
                 continue;
             }
             MenuItemFx.Apply(top.GetComponent<Button>(), 54f, true, false);
@@ -920,6 +922,8 @@ public static class MenuExtras
             TMP_Text bt = t.GetComponentInChildren<TMP_Text>(true);
             if (bt != null) { bt.rectTransform.anchorMin = bt.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); bt.rectTransform.anchoredPosition = Vector2.zero; bt.rectTransform.sizeDelta = new Vector2(W - UiTokens.S4 * 2f, H - UiTokens.S1); }
             UiV2.Restyle(t.GetComponent<Button>(), n == "resume" ? UiV2.Kind.Primary : UiV2.Kind.Secondary, n == "resume" ? UiTokens.Heading : UiTokens.Body);
+            string shortName = n == "resume" ? "ui.btn.resume" : n == "BuildViewButton" ? "ui.btn.build" : n == "Menu" ? "result.menu" : null;     // P0-6 짧은 이름
+            if (shortName != null) UiV2.Label(t.GetComponent<Button>(), shortName);
             y -= H + Gap;
         }
         Transform hint = m.Find("ResumeHint");

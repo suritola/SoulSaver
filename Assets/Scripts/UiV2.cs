@@ -116,6 +116,16 @@ public static class UiV2
         if (b.GetComponent<UiFocusMark>() == null) b.gameObject.AddComponent<UiFocusMark>().label = t != null ? t.rectTransform : null;
     }
 
+    // 버튼 글자를 번역 키로 바꿔 닮 (언어를 바꾸면 따라감 · UIKit.Remember) — 짧은 버튼 이름 (LocTable.UiButtons)
+    public static void Label(Button b, string key)
+    {
+        if (b == null) return;
+        TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
+        if (t == null) return;
+        t.text = Loc.T(key);
+        UIKit.Remember(t, key);
+    }
+
     // 1도트 구분선 (높이 3 · 그림이 없으면 단색)
     public static Image Line(Transform parent, string name, Vector2 pos, float width, bool accent = false)
     {

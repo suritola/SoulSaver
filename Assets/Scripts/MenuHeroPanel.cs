@@ -98,7 +98,7 @@ public static class MenuHeroPanel
         nameTip.bodyProvider = () => sub;
         Button change = UIKit.MakeButton(panel, "영웅 바꾸기", new Vector2(0f, y - 76f), new Vector2(300f, 52f), OpenPicker, 24f);
         change.name = "ChangeHeroButton";
-        if (!UiRules.Legacy) UiV2.Restyle(change, UiV2.Kind.Secondary, UiTokens.Body);      // UI 개편 P0-4b: 석판 보조 버튼
+        if (!UiRules.Legacy) { UiV2.Restyle(change, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(change, "result.retry.hero"); }      // UI 개편 P0-4b: 석판 보조 버튼 · P0-6 「영웅 변경」 (결과 화면과 같은 이름)
         else MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
     }
 
