@@ -23,23 +23,26 @@ public static class ArenaLayout
         public int[] rimAlt;                            // 아래 · 옆 벽선 (번갈아)
         public int gateSide, marker;                    // 성문 양옆 · 광장 표지
         public (int slot, int dx)[] motif;              // 구획 무늬 (같은 바닥선 위)
+        public int[] patches;                           // 바닥 얼룩 (덩어리로 섞는 변형 타일 · 길 재료와 겹치지 않게)
     }
     static readonly Theme[] Themes =
     {
         new Theme { realm = EndlessTerrain.Cave, pathSlot = 0, pathMul = 1.08f, rimSlot = 0, rimMul = 0.85f, square = true,
-                    topPillar = 2, rimAlt = new[] { 2, 1 }, gateSide = 7, marker = 2, motif = new[] { (5, -4), (5, 0), (5, 4) } },
+                    topPillar = 2, rimAlt = new[] { 2, 1 }, gateSide = 7, marker = 2, motif = new[] { (5, -4), (5, 0), (5, 4) }, patches = new[] { 1, 2 } },
         new Theme { realm = EndlessTerrain.Hell, pathSlot = 1, pathMul = 1f, rimSlot = 2, rimMul = 1f,
-                    topPillar = 2, rimAlt = new[] { 2, 3 }, gateSide = 7, marker = 2, motif = new[] { (3, -6), (1, 0), (3, 6) } },
+                    topPillar = 2, rimAlt = new[] { 2, 3 }, gateSide = 7, marker = 2, motif = new[] { (3, -6), (1, 0), (3, 6) }, patches = new[] { 2 } },
         new Theme { realm = EndlessTerrain.Meadow, pathSlot = 3, pathMul = 1f, rimSlot = 9, rimMul = 1f,
-                    topPillar = 2, rimAlt = new[] { 2, 4 }, gateSide = 7, marker = 7, motif = new[] { (5, -4), (5, 0), (5, 4) } },
+                    topPillar = 2, rimAlt = new[] { 2, 4 }, gateSide = 7, marker = 7, motif = new[] { (5, -4), (5, 0), (5, 4) }, patches = new[] { 1, 2 } },
     };
 
-    const float SeamMul = 0.92f, CurbMul = 0.88f;
+    const float CurbMul = 0.88f;
     // 바닥 밖 벽 채움 폭 — 카메라 반 높이 28 · 16:9 반 너비 약 50 (+ 여유) · 그보다 넓은 화면 · 조준 줌은 배경색이 보임
     const int OuterX = 54, OuterY = 32;
-    // 경계 안개: 경계 안쪽 FogInside 칸부터 밖으로 FogWidth 칸에 걸쳐 바닥 밝기를 FogMin 까지
-    const float FogMin = 0.28f, FogInside = 4f, FogWidth = 18f;
-    const int SeamEvery = 8, PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
+    // 경계: 바로 바깥 BorderRows 줄은 어두운 돌 테두리(BorderMul) · 그 밖은 FogStart 에서 FogWidth 칸에 걸쳐 FogMin 까지 · 테두리 위 바위 BorderPost 칸마다
+    const int BorderRows = 2, BorderPost = 8;
+    const float BorderMul = 0.5f, FogStart = 0.6f, FogMin = 0.2f, FogWidth = 8f;
+    const int BorderRock = 3;     // 바위 (묘역 · 지옥 바위 · 초원 이끼 바위)
+    const int PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
 
     // 깨지는 물체 자리 (월드 좌표 · 칸 가운데) — MapProps 가 씀 (맵 확장 6)
     public static readonly List<Vector3> PropSockets = new List<Vector3>();
@@ -108,7 +111,7 @@ public static class ArenaLayout
         Sprite Os(int k) => EndlessTerrain.PaletteSprite(th.realm, 1, k);
         int[] needT = { 0, th.pathSlot, th.rimSlot, 5, 6, 7, 8 };
         foreach (int nt in needT) if (Ts(nt) == null) { why = "타일셋 " + th.realm + "_" + nt + " 없음"; return false; }
-        List<int> needO = new List<int> { 0, th.topPillar, th.gateSide, th.marker };
+        List<int> needO = new List<int> { 0, th.topPillar, th.gateSide, th.marker, BorderRock };
         needO.AddRange(th.rimAlt);
         foreach (var m in th.motif) needO.Add(m.slot);
         foreach (int no in needO) if (Os(no) == null) { why = "장식 " + th.realm + "_" + no + " 없음"; return false; }
@@ -121,31 +124,41 @@ public static class ArenaLayout
         // 바닥 — 2026-10-22~ 끝없어 보이게 (사용자 「아예 맵이 끝이 없어 보이게」): 바닥을 경기장 밖 화면 너머까지 같은 무늬로 잇고
         //   경계에 가까울수록 · 밖으로 갈수록 어두워지는 안개로 경계를 알림 (벽 띠 · 벽선 기둥은 깔지 않음 · 막는 판정은 벽 상자 4개 그대로)
         bool open = VisualRules.EndlessLook;
+        float seed = th.realm * 37.1f;
         List<TileChangeData> fl = new List<TileChangeData>();
         int fx0 = open ? x0 - OuterX : x0, fx1 = open ? x1 + OuterX : x1, fy0 = open ? y0 - OuterY : y0, fy1 = open ? y1 + OuterY : y1;
         for (int y = fy0; y <= fy1; y++)
             for (int x = fx0; x <= fx1; x++)
             {
+                // 2026-10-22~ 자연스럽게 (사용자 「바닥이 너무 일정한 패턴이라 대충 만든 것 같다」): 격자 이음매 대신
+                //   부드러운 노이즈로 변형 타일을 덩어리지게 섞고 · 넓은 밝기 얼룩 · 길 가장자리를 구불게 (칸마다 무작위 점무늬는 다시 만들지 않음)
                 int dy = y - cy, ax = Mathf.Abs(x), ay = Mathf.Abs(dy);
                 Sprite s = Ts(0);
-                float mul = 1f;
-                bool yard = ax <= 7 && y >= y1 - 8;                     // 성문 앞뜰
-                bool plaza = th.square ? Mathf.Max(ax, ay) <= PlazaR : ax * ax + dy * dy <= PlazaR * PlazaR;
-                bool plazaRim = plaza && (th.square ? Mathf.Max(ax, ay) == PlazaR : ax * ax + dy * dy > (PlazaR - 1) * (PlazaR - 1));
-                bool path = ax <= PathHalf || ay <= PathHalf;
-                bool curb = !path && (ax == PathHalf + 1 || ay == PathHalf + 1);
+                float mul = 0.93f + 0.14f * Noise(x, y, 0.045f, seed + 3f);                                     // 넓은 밝기 얼룩
+                int pv = PathHalf + Wobble(y, seed + 11f), ph = PathHalf + Wobble(x, seed + 17f);               // 길 반폭 (±1 구불)
+                bool yard = ax <= 7 + Wobble(y, seed + 23f) && y >= y1 - 8;                                      // 성문 앞뜰
+                float pr = PlazaR + (Noise(x, y, 0.35f, seed + 29f) - 0.5f) * 1.6f;                              // 광장 가장자리도 살짝 울퉁불퉁
+                bool plaza = th.square ? Mathf.Max(ax, ay) <= pr : ax * ax + dy * dy <= pr * pr;
+                bool plazaRim = plaza && (th.square ? Mathf.Max(ax, ay) > pr - 1f : ax * ax + dy * dy > (pr - 1f) * (pr - 1f));
+                bool path = ax <= pv || ay <= ph;
+                bool curb = !path && (ax == pv + 1 || ay == ph + 1);
                 if (!open && y == y1) s = Ts(5);                          // 벽 바로 아래 그늘
-                else if (plazaRim) { s = Ts(th.rimSlot); mul = th.rimMul; }
-                else if (plaza || path || yard) { s = Ts(th.pathSlot); mul = th.pathMul; }
+                else if (plazaRim) { s = Ts(th.rimSlot); mul *= th.rimMul; }
+                else if (plaza || path || yard) { s = Ts(th.pathSlot); mul *= th.pathMul; }
                 else
                 {
-                    if (curb) mul = CurbMul;
-                    else if (x % SeamEvery == 0 || (dy % SeamEvery + SeamEvery) % SeamEvery == 0) mul = SeamMul;      // 8칸 이음매
+                    // 얼룩: 큰 덩어리(약 12%) · 작은 덩어리(약 6%) — 변형 타일이 무리 지어 자연스럽게
+                    if (th.patches.Length > 0 && Noise(x, y, 0.08f, seed + 41f) > 0.64f) s = Ts(th.patches[0]);
+                    else if (th.patches.Length > 1 && Noise(x, y, 0.17f, seed + 53f) > 0.72f) s = Ts(th.patches[1]);
+                    if (curb) mul *= CurbMul;
                 }
                 if (open)
                 {
-                    int d = Mathf.Max(Mathf.Max(x0 - x, x - x1), Mathf.Max(y0 - y, y - y1));      // 경계 밖 칸 수 (안쪽은 음수)
-                    mul *= Mathf.Lerp(1f, FogMin, Mathf.Clamp01((d + FogInside) / FogWidth));
+                    // 경계 (2026-10-22~ 사용자 「경계가 불확실해 보인다」): 안쪽은 밝게 그대로, 바로 바깥 두 줄은 어두운 돌 테두리,
+                    //   그 밖은 짧은 폭에 확 어두워지는 안개 → 밝은 경기장과 어두운 바깥이 한눈에 갈림
+                    int d = Mathf.Max(Mathf.Max(x0 - x, x - x1), Mathf.Max(y0 - y, y - y1));      // 경계 밖 칸 수 (안쪽은 0 이하)
+                    if (d >= 1 && d <= BorderRows) { s = Ts(th.rimSlot); mul = BorderMul; }
+                    else if (d > BorderRows) mul *= Mathf.Lerp(FogStart, FogMin, Mathf.Clamp01((d - BorderRows) / FogWidth));
                 }
                 fl.Add(Cell(x, y, s, mul, false));
             }
@@ -188,19 +201,35 @@ public static class ArenaLayout
         }
         }
         foreach (int dyM in new[] { MarkerDy, -MarkerDy }) Pair(MarkerDx, cy + dyM, th.marker);                // 광장 표지
+        if (open)
+        {
+            // 경계 테두리 바위 (좌우 대칭 · 성문 앞 · 길 끝은 비움)
+            int bx = x1 + BorderRows, by0 = y0 - BorderRows, by1 = y1 + BorderRows;
+            for (int x = BorderPost; x <= bx; x += BorderPost)
+            {
+                if (x > PathHalf + 2) Pair(x, by0, BorderRock);
+                if (x > GateClearX) Pair(x, by1, BorderRock);
+            }
+            for (int y = cy + BorderPost; y < by1; y += BorderPost) { Pair(bx, y, BorderRock); }
+            for (int y = cy - BorderPost; y > by0; y -= BorderPost) { Pair(bx, y, BorderRock); }
+        }
 
-        // 구획: x ±20 · ±40 … × y 가운데 ±12 · ±28 (바닥 안쪽) — 바둑판으로 무늬 / 깨지는 물체 자리 (109×69 에서도 자리 8곳 · 물체 6~8개)
+        // 구획: x ±20 · ±36 · ±52 … (16칸 간격) × y 가운데 ±12 · ±28 · ±44 … (바닥 안쪽)
+        //   2026-10-22~ 물체를 풍성하게 (사용자) — 바둑판 절반은 깨지는 물체 자리, 나머지 중 절반만 구획 무늬 (장식이 과해지지 않게)
         if (th.realm == EndlessTerrain.Hell) { PropSockets.Clear(); MotifCenters.Clear(); }
+        List<int> rows = new List<int>();
+        for (int d = 12; cy + d <= y1 - 6 || cy - d >= y0 + 4; d += 16) { if (cy + d <= y1 - 6) rows.Add(d); if (cy - d >= y0 + 4) rows.Add(-d); }
         int ix = 0;
-        for (int gx = 20; gx <= x1 - 12; gx += 20, ix++)
+        for (int gx = 20; gx <= x1 - 10; gx += 16, ix++)
         {
             int iy = 0;
-            foreach (int gdy in new[] { 28, 12, -12, -28 })
+            foreach (int gdy in rows)
             {
                 int gy = cy + gdy;
                 iy++;
-                if (gy > y1 - 6 || gy < y0 + 4) continue;
-                bool motif = ((ix + iy) & 1) == 0;
+                bool socket = ((ix + iy) & 1) == 1;
+                if (!socket && (iy & 1) == 1) continue;               // 무늬는 구획 넷 중 하나꼴
+                bool motif = !socket;
                 foreach (int sx in new[] { gx, -gx })
                 {
                     if (motif)
@@ -242,6 +271,14 @@ public static class ArenaLayout
                 sr.flipX = mc.left;
             }
         return root.transform;
+    }
+
+    static float Noise(int x, int y, float scale, float seed) => Mathf.PerlinNoise((x + 1000f + seed) * scale, (y + 1000f + seed * 1.7f) * scale);
+    // 길을 따라 −1 · 0 · +1 로 천천히 바뀌는 폭 (구불구불)
+    static int Wobble(int along, float seed)
+    {
+        float n = Mathf.PerlinNoise((along + 1000f) * 0.11f, seed);
+        return n > 0.64f ? 1 : n < 0.36f ? -1 : 0;
     }
 
     static TileChangeData Cell(int x, int y, Sprite s, float mul, bool flip)

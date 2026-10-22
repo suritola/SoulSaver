@@ -135,7 +135,9 @@ public class MapProps : MonoBehaviour
         placedStage = stage;
         int slot = Chapters.SlotOf(stage);
         System.Random rng = new System.Random(unchecked(seed + 7349 * (slot + 1) + 131 * stage));
-        int count = rng.Next(MinProps, MaxProps + 1);
+        // 2026-10-22~ 맵이 넓어진 만큼 (넓이 비율 ArenaRules.Mul²) — 사용자 「물체 갯수를 좀 더 풍성하게」 · 1.8배면 19~26개
+        float areaMul = VisualRules.TidyArena ? ArenaRules.Mul * ArenaRules.Mul : 1f;
+        int count = rng.Next(Mathf.RoundToInt(MinProps * areaMul), Mathf.RoundToInt(MaxProps * areaMul) + 1);
         placedFull = count;
         nextRespawn = Time.time + RespawnSeconds;
         bool sarcoRoll = rng.NextDouble() < SarcoChance;
