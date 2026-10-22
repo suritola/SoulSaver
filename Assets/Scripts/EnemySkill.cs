@@ -1284,7 +1284,7 @@ public class ShockRing : MonoBehaviour
         s.t = 0f;
         if (!reuse)
         {
-            s.lr = Hostile.NewLine("Ring", color, width, 19, VisualRules.WarnLayer);
+            s.lr = Hostile.NewLine("Ring", color, width, 19);
             s.lr.transform.SetParent(s.transform, false);
             s.lr.loop = true;
         }
@@ -1297,6 +1297,9 @@ public class ShockRing : MonoBehaviour
             s.spawnFrame = Time.frameCount;
             s.gameObject.SetActive(true);
         }
+        // 1단계-6~ 적이 낸 고리만 경고 층 (내 필살기 · 스킬 고리는 Effect 그대로) — 다시 쓰는 고리도 매번 정함
+        bool mine = DamageSource.Current != null && DamageSource.Current != DamageSource.Other;
+        s.lr.sortingLayerName = mine ? "Effect" : VisualRules.WarnLayer;
     }
 
     void Update()

@@ -126,6 +126,23 @@ public class EnermyController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
+    // 그래픽 개편 1단계-13 (2026-10-22~): 화면 안에서 생기는 적(소환 · 매복 · 화면 밖 자리를 못 찾은 경우)은 예고 없이 튀어나왔음
+    //   → 그 자리 바닥에 옅은 회색 고리 0.3초 (바닥 층 · 0.3초에 8개까지 · 몸 크기 애니메이션은 판정이 바뀌어 하지 않음)
+    static float ringWindow = -9f;
+    static int ringCount;
+    static void SpawnRing(Vector3 at)
+    {
+        if (VisualRules.Legacy) return;
+        Camera cam = Camera.main;
+        if (cam == null) return;
+        Vector3 vp = cam.WorldToViewportPoint(at);
+        if (vp.x < 0f || vp.x > 1f || vp.y < 0f || vp.y > 1f) return;
+        if (Time.time - ringWindow >= 0.3f) { ringWindow = Time.time; ringCount = 0; }
+        if (++ringCount > 8) return;
+        using (DamageSource.As(DamageSource.Other))
+            Fx.Spawn("fx_shock", at, 2.4f, new Color(0.8f, 0.8f, 0.85f, 0.5f), 20f, 0f, 12, false, 0.3f, VisualRules.GroundFx);
+    }
+
     // Start 가 끝나 체력이 정해졌는지 (그 전에 맞으면 체력 0 에서 깎여 바로 죽던 문제)
     bool ready;
 
@@ -182,8 +199,9 @@ public class EnermyController : MonoBehaviour
         spriteRenderer.color = baseColor;
 
         // 머리 위 체력바
-        if (swarm == null) healthBar = EnemyHealthBar.Attach(this, spriteRenderer);
-        if (swarm == null) FootShadow.Enemy(gameObject, spriteRenderer, hitbox);       // 1단계-11~ 발밑 그림자       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
+        if (swarm == null) healthBar = EnemyHealthBar.Attach(this, spriteRenderer);       // 1.1~ 부스러기는 체력 1 이라 체력바 없음
+        if (swarm == null) FootShadow.Enemy(gameObject, spriteRenderer, hitbox);       // 1단계-11~ 발밑 그림자
+        if (swarm == null) SpawnRing(transform.position);                              // 1단계-13~ 화면 안에서 생기면 등장 고리
 
         if (skill != EnemySkillType.None)
         {
