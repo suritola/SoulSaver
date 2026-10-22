@@ -35,7 +35,7 @@ public static class VisualRules
     }
 
     // 경기장 배율 (ArenaRules · docs/art/맵-확장-기획서.md) — 맵-6 에서 1.4 로 (그때까지 1 = 예전 그대로)
-    public static float ArenaMul => Legacy ? 1f : 1f;
+    public static float ArenaMul => Legacy ? 1f : 1.4f;     // 맵 확장 8 (2026-10-22): 카메라 28 에 맞춰 109×69 → 153×97
     // 정돈된 경기장 배치 (ArenaLayout · 맵 확장 5) — 묘역 · 지옥 · 초원 타일맵을 시작 때 다시 깖
     public static bool TidyArena => !Legacy;
 

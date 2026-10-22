@@ -15,7 +15,11 @@ public class EndlessTerrain : MonoBehaviour
     public static EndlessTerrain Instance { get; private set; }
 
     public const int Desert = 0, Cave = 1, Hell = 2, Meadow = 3, Abyss = 4;
-    const float RadiusEarly = 18f, RadiusLate = 21f, RadiusBeyond = 24f, WaveSpeed = 30f;
+    const float WaveSpeed = 30f;
+    // 맵 확장 8~: 영토 반지름도 경기장 배율만큼 (맵에서 차지하는 넓이 비율 유지 · 18/21/24 → 1.4배면 25/29/34) — 저장된 영토는 적힌 반지름 그대로
+    static float RadiusEarly => 18f * ArenaRules.Mul;
+    static float RadiusLate => 21f * ArenaRules.Mul;
+    static float RadiusBeyond => 24f * ArenaRules.Mul;
     const int MaxObstacles = 6, MaxZones = 4, MaxDecor = 300, DecorPerRealm = 8, PiecesPerRealm = 2, SpotTries = 40, PerFrame = 400;
     const float ClearPlayer = 9f, ClearPiece = 7f, ClearEdge = 5f, ClearGate = 12f, ClearEnemy = 2.5f, CenterInset = 6f;
     public const float LavaRadius = 2.6f, BogRadius = 3.0f;
@@ -107,7 +111,7 @@ public class EndlessTerrain : MonoBehaviour
     static readonly Sprite[][][] art = new Sprite[5][][];      // [영토][0 타일셋 · 1 장식][칸] (에셋이라 판끼리 함께 씀 · 사막은 Init 마다)
 
     // ---------------------------------------------------------------- 얼룩 · 칠하기 버퍼 (Init 에서 한 번)
-    const int BlobMax = 3200;
+    const int BlobMax = 6000;     // 맵 확장 8~: 3200 → 6000 (영토 반지름 1.4배 · 넓이 약 2배)
     readonly int[] blobCells = new int[BlobMax];
     readonly float[] blobDist = new float[BlobMax];
     int blobCount, blobDone, blobRealm;
