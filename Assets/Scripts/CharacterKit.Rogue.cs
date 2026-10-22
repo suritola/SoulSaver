@@ -74,6 +74,13 @@ public partial class CharacterKit
                     rpAcc = 0f; rpAccT = 0f;
                 }
             }
+            // 1.5.5~: 덧막대가 차는 중에 게이지를 쓰면 그 몫을 버려 게이지가 0 부터 다시 찼음 → 비운 게이지로 옮겨 이어서 참
+            //   (덧막대는 게이지가 가득일 때만 차므로 여기 남은 것은 방금 쓴 순간의 몫뿐 · 옮긴 양은 빠르기 재기에서 뺌)
+            if (rpBank > 0f)
+            {
+                gauge.AddSkillPoint(Mathf.Min(rpBank, gauge.MaxSkillPoint));
+                pt = gauge.SkillPoint;
+            }
             rpBank = 0f;
         }
         else if (rpStored < cap && Time.timeScale > 0f && rpRate > 0f)
