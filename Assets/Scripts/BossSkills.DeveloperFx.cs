@@ -4,7 +4,7 @@ using UnityEngine;
 
 // 1.0.4~ 개발자(무한 모드 최종 보스)가 쓰는 영웅 필살기를 플레이어가 쓸 때와 똑같은 이펙트 · 소리 · 화면 연출로
 // 플레이어 쪽 구현(PlayerController 조준 사격 · CharacterKit 회전 베기 · 출혈 돌진 · 화살비 · 대폭발 · 지도 접기 · 되감기 · 속달 · 빙의 · UltCastFlair)과
-// 같은 Fx 이름 · 색 · 크기 · 소리를 쓰고, 필살기 출처(DamageSource.Ult)로 그려 크기 · 밝기 · 그리는 순서 · 빛 번짐 · 진화 단계 그림까지 같게
+// 같은 Fx 이름 · 색 · 크기 · 소리를 쓰고, 예전엔 필살기 출처(DamageSource.Ult)로 그려 크기 · 밝기 · 순서까지 같게 했음 → 2026-10-22~ 적 공격 문법(DevDraw)
 // 판정은 예전처럼 경고(Hostile.Circle · Line)가 먼저 보이고 UltHit 으로 횟수(DevMaxHits) · 한 대 피해(MaxHitShare) 제한 (즉사 없음)
 // 플레이어에게 이롭던 효과는 뒤집음: 거너 조준 사격의 시간 느려짐 → 플레이어 · 플레이어 탄이 느려짐 (PlayerController.HostileTimeSlow, 겹쳐 쌓이지 않고 시간만 갱신)
 public partial class BossSkills
@@ -21,12 +21,16 @@ public partial class BossSkills
     static readonly Color KitWraith = new Color(0.75f, 0.95f, 1f, 0.85f);
 
     // CharacterKit.DecorSize 와 같은 계산 (필살기 출처의 장식 이펙트가 화면에서 visible 크기로 보이게: 장식 1.45배 × 스킬 1.4배를 되돌림)
-    static float UltDecor(float visible) => visible / (VisualRules.DecorScale * VisualRules.SkillDecor);
+    //   그래픽 개편 1단계-5 (2026-10-22~): 개발자 공격은 적 공격 — 「기타」 출처로 그려 내 필살기 배율 · +40 순서 · 빛 번짐 · 진화 단계 · 「내 이펙트 투명도」가 붙지 않게
+    //   (예전엔 필살기 출처라 내 이펙트처럼 크고 밝고 위에 그려졌고, 투명도 설정을 낮추면 보스 공격까지 흐려졌음) · 그리기 전용 범위라 피해 · 통계와 무관
+    //   모양 · 색은 영웅 것 그대로 (흉내 내는 재미) · VisualRules.Legacy 면 예전 그대로
+    static DamageSource.Scope DevDraw() => DamageSource.As(VisualRules.Legacy ? DamageSource.Ult : DamageSource.Other);
+    static float UltDecor(float visible) => visible / (VisualRules.DecorScale * (VisualRules.Legacy ? VisualRules.SkillDecor : 1f));
 
     // 필살기를 쓰는 순간: 그 영웅 색 충격파 · 섬광 · 빛 번짐 · 솟는 화음 (플레이어와 같은 UltCastFlair)
     void DevCastFlair(CharacterId who)
     {
-        using (DamageSource.As(DamageSource.Ult)) UltCastFlair.At(transform.position, CharacterData.Def(who).color);
+        using (DevDraw()) UltCastFlair.At(transform.position, CharacterData.Def(who).color);
     }
 
     // ---------------------------------------------------------------- 거너 · 조준 사격
@@ -64,7 +68,7 @@ public partial class BossSkills
             Vector3 at = spots[i];
             pl = Hostile.Player;
             if (pl != null) pl.PlayUltSound(false);
-            using (DamageSource.As(DamageSource.Ult))
+            using (DevDraw())
             {
                 Fx.Beam(transform.position, at, 0.6f, new Color(0.85f, 0.95f, 1f), 0.2f);
                 Fx.Spawn("fx_spark", at, 4f, Dev, 20f);
@@ -105,12 +109,12 @@ public partial class BossSkills
         {
             if (!Alive) yield break;
             if (Random.value < 0.4f)
-                using (DamageSource.As(DamageSource.Ult))
+                using (DevDraw())
                     Fx.Spawn("fx_sparkle", transform.position + (Vector3)(Random.insideUnitCircle * 1.5f), 0.6f, KitSword, 18f);
             yield return null;
         }
         transform.position = at;
-        using (DamageSource.As(DamageSource.Ult))
+        using (DevDraw())
         {
             Fx.Spawn("fx_spinslash", at, r * 2.4f, Color.white, 22f);
             Fx.Spawn("fx_shock", at, r * 2.2f, new Color(0.6f, 0.8f, 1f, 0.8f), 20f);
@@ -142,7 +146,7 @@ public partial class BossSkills
         yield return Windup(Dev, warn);
         if (!Alive) yield break;
         float rot = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
-        using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
+        using (DevDraw()) Fx.Spawn("fx_stealth", from, 3f, Color.white, 16f);
         Hostile.Play("whoosh", 1f, 1.4f);
         Hostile.Play("slash", 0.7f, 1.5f);
         int ghosts = 0;
@@ -160,7 +164,7 @@ public partial class BossSkills
         }
         if (!Alive) yield break;
         transform.position = to;
-        using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
+        using (DevDraw()) Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         pl = Hostile.Player;
         if (UltHit(pl != null && Hostile.HurtToSegment(pl, from, to) < 1.2f)) Hostile.Shake(0.1f);
         yield return new WaitForSeconds(0.3f);
@@ -176,7 +180,7 @@ public partial class BossSkills
             g.GetComponent<SpriteRenderer>().flipX = sr.flipX;
             g.AddComponent<FadeOut>().duration = 0.3f;
         }
-        using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_shadowdash", p - (Vector3)(d * 1.2f), 1.2f, Color.white, 24f, rot, 13);
+        using (DevDraw()) Fx.Spawn("fx_shadowdash", p - (Vector3)(d * 1.2f), 1.2f, Color.white, 24f, rot, 13);
     }
 
     // ---------------------------------------------------------------- 궁수 · 화살비
@@ -210,7 +214,7 @@ public partial class BossSkills
             // 자리마다 화살 넷 (플레이어 화살비처럼 0.06초 간격, 한 번에 20발)
             for (int k = 0; k < 4 && Alive; k++)
             {
-                using (DamageSource.As(DamageSource.Ult))
+                using (DevDraw())
                     for (int i = 0; i < n; i++)
                         Fx.Spawn("fx_arrowrain", spots[i] + (Vector3)(Random.insideUnitCircle * r) + Vector3.up * 1f, 2f, Color.white, 18f);
                 Hostile.Play(k % 2 == 0 ? "arrowfly" : "pluck", 0.35f, Random.Range(0.8f, 1.2f));
@@ -240,7 +244,7 @@ public partial class BossSkills
             yield return Windup(Dev, warn - flight);
             if (!Alive) yield break;
             float size = r * 2.4f;
-            using (DamageSource.As(DamageSource.Ult))       // 날아가는 동안 · 떨어질 때도 필살기 출처 (FlaskLob 이 만들 때의 출처를 이어 감)
+            using (DevDraw())       // 날아가는 동안 · 떨어질 때도 필살기 출처 (FlaskLob 이 만들 때의 출처를 이어 감)
                 FlaskLob.Throw(transform.position, at, flight, 1.6f, KitFlask, p =>
                 {
                     if (!Alive) return;
@@ -281,7 +285,7 @@ public partial class BossSkills
             if (!Alive) yield break;
             Vector3 off = (Vector3)(d * half);
             Hostile.Play("whoosh", 0.9f, 0.7f);
-            using (DamageSource.As(DamageSource.Ult))
+            using (DevDraw())
             {
                 Fx.Beam(a + off, b + off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), close);
                 Fx.Beam(a - off, b - off, 0.8f, new Color(0.5f, 0.65f, 1f, 0.7f), close);
@@ -291,7 +295,7 @@ public partial class BossSkills
             pl = Hostile.Player;
             UltHit(pl != null && Hostile.HurtToSegment(pl, a, b) < half);
             float rot = Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg;
-            using (DamageSource.As(DamageSource.Ult))
+            using (DevDraw())
             {
                 Fx.Beam(a, b, 1.8f, new Color(0.75f, 0.85f, 1f, 0.95f), 0.4f, 18);
                 Fx.Beam(a, b, 0.7f, KitInkGold, 0.5f, 19);
@@ -322,7 +326,7 @@ public partial class BossSkills
             if (pl == null) break;
             Vector3 at = pl.transform.position;
             Hostile.Circle(at, DevClockR, warn, Dev);
-            using (DamageSource.As(DamageSource.Ult)) Fx.Spawn("fx_target_rune", at, DevClockR * 2f, new Color(1f, 0.8f, 0.4f, 0.75f), 12f);
+            using (DevDraw()) Fx.Spawn("fx_target_rune", at, DevClockR * 2f, new Color(1f, 0.8f, 0.4f, 0.75f), 12f);
             Hostile.Play("clank", 0.3f, 2.2f);
             StartCoroutine(DevRewindBlast(at, warn));
             yield return new WaitForSeconds(gap);
@@ -334,7 +338,7 @@ public partial class BossSkills
     {
         yield return new WaitForSeconds(warn);
         if (!Alive) yield break;
-        using (DamageSource.As(DamageSource.Ult))
+        using (DevDraw())
         {
             // 플레이어 되감기의 도착 연출을 표식 크기에 맞춤 (반지름 5 → 2.2 비율: 소용돌이 지름 1.2R · 충격파 지름 2R)
             Fx.Spawn("fx_vortex", at, DevClockR * 1.2f, KitTimeBlue, 18f);
@@ -371,7 +375,7 @@ public partial class BossSkills
             {
                 Vector3 p = spots[icons.Count];
                 FxAnim icon;
-                using (DamageSource.As(DamageSource.Ult))
+                using (DevDraw())
                 {
                     icon = Fx.Play("fx_card", p, 0.9f, KitPostRed, 12f, 0f, 24, true, -1f);
                     Fx.Spawn("fx_spark", p, 0.9f, KitPostRed, 26f);
@@ -393,7 +397,7 @@ public partial class BossSkills
         if (!Alive) yield break;
         SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 1.8f, Loc.T("속달") + " ×" + spots.Count, KitPostRed, 4.5f, 0f);
         bool inside = false;
-        using (DamageSource.As(DamageSource.Ult))
+        using (DevDraw())
             foreach (Vector3 p in spots)
             {
                 Fx.Spawn("fx_explosion", p, r * 2f, new Color(1f, 0.55f, 0.4f), 20f);
@@ -439,7 +443,7 @@ public partial class BossSkills
             if (!Alive) yield break;
             transform.position = at;
             FxAnim glow;
-            using (DamageSource.As(DamageSource.Ult)) glow = Fx.Play("fx_soulburst", at, 2.6f, KitWraith, 12f, 0f, 22, true, inside);
+            using (DevDraw()) glow = Fx.Play("fx_soulburst", at, 2.6f, KitWraith, 12f, 0f, 22, true, inside);
             if (glow != null) { glow.follow = transform; Own(glow); }
             for (float t = 0f; t < inside; t += Time.deltaTime)
             {
@@ -450,7 +454,7 @@ public partial class BossSkills
             if (glow != null) Destroy(glow.gameObject);
             if (sr != null) sr.color = Color.white;
             if (!Alive) yield break;
-            using (DamageSource.As(DamageSource.Ult))
+            using (DevDraw())
             {
                 Fx.Spawn("fx_soulburst", at, UltDecor(R * 2f), KitWraith, 16f);
                 Fx.Spawn("fx_shock", at, R * 2f, KitChill, 18f);
