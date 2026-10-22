@@ -1361,6 +1361,21 @@ public static class UIKit
             }
             else if ((s == BarFillSprite || s.name == "ui_bar_fill") && fill != null) img.sprite = fill;
         }
+        // 버튼이 아닌 옛 테마 판(시간 칸 · 특수 능력 칸 등 금 점선 틀)도 석판으로 — 옛 모습은 이것들을 금장 버튼 그림으로 바꿨음 (HUD 캡처 확인)
+        foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (img.gameObject.scene != active || img.sprite == null || img.GetComponent<Button>() != null) continue;
+            if (img.type != Image.Type.Sliced || (img.sprite != ButtonSprite && !oldSprites.Contains(img.sprite))) continue;      // lint-ok: 옛 그림을 v2 로 바꿔 끼우는 비교
+            img.sprite = panel; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f;
+            img.color = new Color(1f, 1f, 1f, Mathf.Max(img.color.a, 0.9f));
+        }
+        // 장면에 박힌 금색 글자(Lv · 탄 · 코인 · 포인트 등) → 뼈색
+        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (t.gameObject.scene != active) continue;
+            Color c = t.color;
+            if (c.r > 0.85f && c.g > 0.62f && c.g < 0.95f && c.b < 0.6f) t.color = new Color(UiTokens.Text1.r, UiTokens.Text1.g, UiTokens.Text1.b, c.a);
+        }
         Sprite bn = UiRules.Sprite("ui2_btn_secondary_n");
         if (bn == null) return;
         foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))

@@ -59,6 +59,7 @@ public class StageManager : MonoBehaviour
     public GameObject UpgradeButton => upgradeButton;      // 1.0.4~: 튜토리얼이 영혼 트리 버튼을 짚어 줌
     RectTransform upgradeGlow;
     Image upgradeGlowImage;
+    Image upgradeFace;          // UI 개편: 영혼 트리 버튼 판 (살 수 있으면 청록 주 버튼 그림)
     TextMeshProUGUI upgradeText;
     bool upgradeOpen;
 
@@ -360,6 +361,14 @@ public class StageManager : MonoBehaviour
             upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
             upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
             upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
+            if (!UiRules.Legacy && upgradeFace != null)
+            {
+                // 살 수 있는 칸이 있으면 청록 주 버튼 · 없으면 기본 (숨쉬기 없이 그림으로)
+                Sprite s = UiRules.Sprite(affordable ? "ui2_btn_primary_n" : "ui2_btn_secondary_n");
+                if (s != null) upgradeFace.sprite = s;
+                upgradeText.color = affordable ? UiTokens.Text1 : UiTokens.Text2;
+                upgradeGlow.localScale = Vector3.one;
+            }
             glowWritten = affordable;
         }
         // 키 코드 · 언어로 비교 (키 이름 글자를 매 프레임 만들지 않게)
@@ -650,6 +659,8 @@ public class StageManager : MonoBehaviour
         cb.selectedColor = Color.white;
         b.colors = cb;
         b.onClick.AddListener(OpenUpgrade);
+        upgradeFace = img;
+        if (!UiRules.Legacy) { UiV2.Restyle(b, UiV2.Kind.Secondary, UiTokens.Small); upgradeGlowImage.enabled = false; }      // 보라 판 · 숨 쉬는 빛 대신 석판 (상태는 UpdateSoulTreeButton 이 그림으로)
 
         GameObject label = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform lr = label.GetComponent<RectTransform>();
