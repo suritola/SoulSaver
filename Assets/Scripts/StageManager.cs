@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -253,7 +253,8 @@ public class StageManager : MonoBehaviour
         foreach (Renderer r in caveRenderers) if (r != null) r.enabled = false;
         if (spawner == null) return;
         desertMap = EndlessMode.BuildDesertMap(hellMap, spawner.spawnAreaMin, spawner.spawnAreaMax, stage2PlayerStart);
-        if (Camera.main != null) Camera.main.backgroundColor = desertBackground;
+        ToneMap(desertMap, VisualRules.FloorTone(0, true));     // 1단계-7~ 무한 모드 바닥 (영토가 바뀌어도 같은 타일맵이라 한 번)
+        if (Camera.main != null) Camera.main.backgroundColor = Toned(desertBackground, VisualRules.FloorTone(0, true));
         spawner.stages = EndlessMode.WithEndlessStage(spawner.stages, out endlessBosses);
         CurrentStage = spawner.stages.Length - 1;           // 무한 모드 스테이지는 맨 뒤 (4장 다음)
         spawner.StartStage(CurrentStage);
@@ -833,15 +834,48 @@ public class StageManager : MonoBehaviour
     }
 
     // 그 스테이지의 맵만 켜고 배경색을 맞춤 (0 묘역 · 1 지옥 · 2 초원 · 3 심연)
+    // 1단계-7~ 바닥 톤다운 (VisualRules.FloorTone): 타일맵 · 지도 그림 색에 곱함 — 처음 본 색을 기억해 두고 늘 「기억한 색 × 배율」로 (여러 번 불려도 겹쳐 곱하지 않음)
+    //   지옥 지도를 복제해 심연 · 사막을 만들므로, 복제 전에 지옥을 원래 색으로 되돌림 · 신전 문(portal)은 건드리지 않음
+    readonly Dictionary<Object, Color> toneBase = new Dictionary<Object, Color>();
+    void ToneMap(GameObject root, Color mul)
+    {
+        if (root == null) return;
+        foreach (UnityEngine.Tilemaps.Tilemap tm in root.GetComponentsInChildren<UnityEngine.Tilemaps.Tilemap>(true)) ToneOne(tm, mul);
+        foreach (SpriteRenderer sr in root.GetComponentsInChildren<SpriteRenderer>(true))
+            if (sr.sortingLayerName == "Background" && (portal == null || !sr.transform.IsChildOf(portal.transform))) ToneOne(sr, mul);
+    }
+    void ToneOne(Object o, Color mul)
+    {
+        if (o is UnityEngine.Tilemaps.Tilemap tm)
+        {
+            if (!toneBase.TryGetValue(tm, out Color b)) toneBase[tm] = b = tm.color;
+            tm.color = new Color(b.r * mul.r, b.g * mul.g, b.b * mul.b, b.a);
+        }
+        else if (o is SpriteRenderer sr)
+        {
+            if (!toneBase.TryGetValue(sr, out Color b)) toneBase[sr] = b = sr.color;
+            sr.color = new Color(b.r * mul.r, b.g * mul.g, b.b * mul.b, b.a);
+        }
+    }
+    static Color Toned(Color c, Color mul) => new Color(c.r * mul.r, c.g * mul.g, c.b * mul.b, c.a);
+
     void ShowStageMap(int stage)
     {
+        ToneMap(hellMap, Color.white);          // 복제 전 원래 색으로 (심연 지도가 지옥을 복제)
         if (stage == AbyssStage.Index) EnsureAbyssMap();
+        Color tone = VisualRules.FloorTone(stage, false);
+        foreach (Renderer r in caveRenderers)
+            if (r != null && r.TryGetComponent(out UnityEngine.Tilemaps.Tilemap ctm)) ToneOne(ctm, stage == 0 ? tone : Color.white);
+            else if (r is SpriteRenderer csr && csr.sortingLayerName == "Background") ToneOne(csr, stage == 0 ? tone : Color.white);
+        ToneMap(hellMap, stage == 1 ? tone : Color.white);
+        ToneMap(meadowMap, stage == 2 ? tone : Color.white);
+        ToneMap(abyssMap, stage == AbyssStage.Index ? tone : Color.white);
         foreach (Renderer r in caveRenderers) if (r != null) r.enabled = stage == 0;
         if (hellMap != null) hellMap.SetActive(stage == 1);
         if (meadowMap != null) meadowMap.SetActive(stage == 2);
         if (abyssMap != null) abyssMap.SetActive(stage == AbyssStage.Index);
         if (Camera.main != null)
-            Camera.main.backgroundColor = stage == 0 ? caveBackground : stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background;
+            Camera.main.backgroundColor = Toned(stage == 0 ? caveBackground : stage == 1 ? hellBackground : stage == 2 ? meadowBackground : AbyssStage.Background, tone);
     }
 
     // 다음 장으로 맵 교체: 첫 장을 끝내고 처음 넘어갈 때는 특수 능력 선택 (거너는 보스 처치 때 무기 진화로 대신),

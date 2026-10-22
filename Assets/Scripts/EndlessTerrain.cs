@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -889,7 +889,8 @@ public class EndlessTerrain : MonoBehaviour
         Color mix = Color.black;
         for (int r = 0; r < 5; r++) mix += bg[r] * (count[r] / (float)total);
         mix.a = 1f;
-        cam.backgroundColor = mix;
+        Color tone = VisualRules.FloorTone(0, true);       // 1단계-7~ 바닥 톤다운 (StageManager.PrepareEndless 와 같은 값)
+        cam.backgroundColor = new Color(mix.r * tone.r, mix.g * tone.g, mix.b * tone.b, 1f);
     }
 
     public int RealmAt(Vector3 world)

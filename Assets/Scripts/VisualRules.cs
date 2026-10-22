@@ -11,6 +11,22 @@ public static class VisualRules
     // 적 경고(Telegraph · 「!」 · 돌진 예고선 · 스킬 이름표 · 적 장판 테)를 그릴 층 — 1단계-6~ 내 이펙트(Effect) · 피해 숫자보다 위
     public static string WarnLayer => Legacy ? "Effect" : Warning;
 
+    // 1단계-7~ 바닥 톤다운: 바닥이 화면에서 가장 크고 시끄러워 적 · 경고를 묻었음 (사막 명도 170 · 지옥 채도 .66)
+    //   바닥 타일맵 · 지도 그림 · 배경색에 곱함 (위에 막을 덮으면 Background 층의 내 장판 · 룬까지 어두워져서 타일 색으로)
+    //   지옥은 붉은 기를 더 뺌 · 무한 모드는 한 타일맵에 여러 영토를 칠해서 하나의 값
+    public static Color FloorTone(int stage, bool endless)
+    {
+        if (Legacy) return Color.white;
+        if (endless) return new Color(0.55f, 0.56f, 0.6f);
+        switch (stage)
+        {
+            case 0: return new Color(0.85f, 0.85f, 0.9f);       // 묘역 (이미 어두움)
+            case 1: return new Color(0.62f, 0.66f, 0.74f);      // 지옥
+            case 2: return new Color(0.85f, 0.85f, 0.9f);       // 초원 (StageManager.DimMeadow 0.58 위에)
+            default: return new Color(0.8f, 0.8f, 0.85f);       // 심연
+        }
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void CheckLayers()
     {
