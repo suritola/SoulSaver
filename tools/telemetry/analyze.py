@@ -47,7 +47,7 @@ def load(db_path, version, build, since):
     if build:
         q += " AND build = ?"
         args.append(build)
-    rows = []
+    rows, tut = [], []
     for ver, bld, data in db.execute(q, args):
         try:
             d = json.loads(data)
@@ -55,11 +55,10 @@ def load(db_path, version, build, since):
             continue
         if since and s(d.get("date")) < since:
             continue
-        if s(d.get("retry_kind")) == "tutorial":      # 튜토리얼 판은 밸런싱에서 뺌 (1.4.7~ 게임도 보내지 않음)
-            continue
         d["version"], d["build"] = ver, bld
-        rows.append(d)
-    return rows
+        # 튜토리얼 판은 밸런싱에서 빼고 따로 셈 (1.4.7~ 게임도 보내지 않음)
+        (tut if s(d.get("retry_kind")) == "tutorial" else rows).append(d)
+    return rows, tut
 
 
 def is_win(d):
@@ -117,7 +116,7 @@ def main():
     ap.add_argument("--top", type=int, default=30, help="목록 표 최대 줄 수")
     a = ap.parse_args()
 
-    rows = load(a.db, a.version, a.build, a.since)
+    rows, tut = load(a.db, a.version, a.build, a.since)
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
@@ -133,6 +132,17 @@ def main():
     out = ["# Soul Saver 플레이 데이터 분석",
            "",
            "필터: %s · 판 %d · 익명 플레이어 %d · 승률 %s" % (" · ".join(filt) or "전체", len(rows), players, pct(wins, len(rows)))]
+
+    # 튜토리얼 (위 통계에서 빠진 판) · 본게임 이어감 = 같은 익명 ID 가 본게임 판도 남김
+    real_ids = set(s(d.get("anon_id")) for d in rows)
+    body = []
+    for ver, ts in sorted(collections.Counter(d["version"] for d in tut).items()):
+        rs = [d for d in tut if d["version"] == ver]
+        ids = set(s(d.get("anon_id")) for d in rs)
+        body.append([ver, len(rs), len(ids), mmss(sum(num(d.get("seconds")) for d in rs) / len(rs)),
+                     "%d / %d" % (len(ids & real_ids), len(ids))])
+    out.append(table("튜토리얼 (위 통계에서 뺀 판)", ["버전", "판", "플레이어", "평균 시간", "본게임 이어감"], body,
+                     "1.4.7~ 게임은 튜토리얼 판을 보내지 않음"))
 
     head = ["", "판", "승률", "평균 생존", "평균 레벨", "평균 처치"]
     out.append(table("버전 · 판본별", head, group_stats(rows, lambda d: "%s (%s)" % (d["version"], d["build"]))))
