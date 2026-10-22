@@ -170,6 +170,14 @@ public partial class Shop
 
     static Image Img(RectTransform r, Sprite sprite, Color color, bool sliced)
     {
+        if (!UiRules.Legacy && sprite == UIKit.ButtonSprite && UiRules.Sprite("ui2_panel") != null)       // lint-ok: 옛 금장 판을 v2 석판으로 바꿔 끼우는 비교
+        {
+            // UI 개편: 떠돌이 상점의 금장 판 · 색 덧칠(판 · 카드 · 코인 칸) → 새긴 석판 (색은 칠하지 않음)
+            Image p = r.gameObject.AddComponent<Image>();
+            p.sprite = UiRules.Sprite("ui2_panel"); p.type = Image.Type.Tiled; p.pixelsPerUnitMultiplier = 1f; p.color = Color.white;
+            return p;
+        }
+        if (!UiRules.Legacy && sprite == SpecialAbilities.GlowSprite) color.a = 0f;         // lint-ok: 물약 뒤 빛 번짐을 끄는 비교
         Image img = r.gameObject.AddComponent<Image>();
         img.sprite = sprite;
         if (sliced && sprite != null) img.type = Image.Type.Sliced;

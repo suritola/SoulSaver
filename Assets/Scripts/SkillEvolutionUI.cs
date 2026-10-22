@@ -245,7 +245,7 @@ public class SkillEvolutionUI : MonoBehaviour
             shown += Time.unscaledDeltaTime;
             if (shown <= 0.4f) closeRequested = false;
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
-            icon.rectTransform.localScale = Vector3.one * (1f + 0.05f * pulse);
+            icon.rectTransform.localScale = Vector3.one * (UiRules.Legacy ? 1f + 0.05f * pulse : 1f);        // UI 개편: 숨쉬기 없음
             burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Time.unscaledTime * 15f);
             burst.color = new Color(Soul.r, Soul.g, Soul.b, 0.25f + 0.1f * pulse);
             hint.alpha = 0.5f + 0.5f * pulse;

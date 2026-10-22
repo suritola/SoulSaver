@@ -192,8 +192,9 @@ public static class LeaderboardUI
         // 고른 순위표 · 탭 강조, 제목 · 안내
         void RefreshChrome()
         {
-            for (int i = 0; i < 2; i++) boardButtons[i].GetComponent<Image>().color = i == (int)board ? Gold : TabOff;
-            for (int i = 0; i < 3; i++) tabButtons[i].GetComponent<Image>().color = i == (int)tab ? Gold : TabOff;
+            // UI 개편 (Legacy 끔): 금색 칠 대신 그림 + 청록 밑줄 (UiV2.Choose)
+            for (int i = 0; i < 2; i++) if (!UiRules.Legacy) UiV2.Choose(boardButtons[i], i == (int)board); else boardButtons[i].GetComponent<Image>().color = i == (int)board ? Gold : TabOff;
+            for (int i = 0; i < 3; i++) if (!UiRules.Legacy) UiV2.Choose(tabButtons[i], i == (int)tab); else tabButtons[i].GetComponent<Image>().color = i == (int)tab ? Gold : TabOff;
             DateTime day = Day();
             title.text = board == Board.Endless ? Loc.T("무한 모드 순위")
                        : Loc.T("일일 도전") + "  <size=60%><color=#A89C86>" + day.ToString("yyyy-MM-dd") + " (UTC) · " + Loc.T(DailyChallenge.RuleOf(day).name) + "</color></size>";

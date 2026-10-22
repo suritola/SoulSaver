@@ -158,6 +158,15 @@ public class WeaponEvolutionUI : MonoBehaviour
                     if (selected == i) Confirm();
                     else Select(i);
                 }
+                if (!UiRules.Legacy)
+                {
+                    // UI 개편: 고른 카드 1.08배 · 테 맥박 대신 청록 테 카드 그림
+                    cards[i].localScale = Vector3.one;
+                    Sprite cs = UiRules.Sprite(i == selected ? "ui2_card_s" : "ui2_card_n");
+                    if (cs != null && cardFrames[i].sprite != cs) { cardFrames[i].sprite = cs; cardFrames[i].type = Image.Type.Tiled; cardFrames[i].pixelsPerUnitMultiplier = 1f; }
+                    cardFrames[i].color = Color.white;
+                    continue;
+                }
                 float target = i == selected ? 1.08f : 1f;
                 cards[i].localScale = Vector3.one * Mathf.MoveTowards(cards[i].localScale.x, target, Time.unscaledDeltaTime * 1.5f);
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
@@ -165,7 +174,8 @@ public class WeaponEvolutionUI : MonoBehaviour
             }
             burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Time.unscaledTime * 12f);
             confirmButton.interactable = selected >= 0;
-            confirmText.color = selected >= 0 ? Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f)) : new Color(0.6f, 0.56f, 0.62f);
+            confirmText.color = !UiRules.Legacy ? (selected >= 0 ? UiTokens.Text1 : UiTokens.Text3)
+                              : selected >= 0 ? Color.Lerp(Gold, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f)) : new Color(0.6f, 0.56f, 0.62f);
             // 1.0.5~ 패드 십자키 좌우: 카드 고르기 (커서도 그 카드로 옮겨, A 를 누르면 확정)
             int pad = GamePad.TakeDpadX();
             if (pad != 0)

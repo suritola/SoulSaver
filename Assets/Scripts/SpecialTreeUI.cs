@@ -404,7 +404,7 @@ public class SpecialTreeUI : MonoBehaviour
             // 하나라도 골랐으면 안 고른 노드는 더 어둡게
             Color idle = picked.Count > 0 ? new Color(0.55f, 0.52f, 0.58f) : new Color(0.8f, 0.78f, 0.82f);
             nodeFrames[i].color = on ? Selected : IsMaxed(i) ? Maxed : IsOwned(i) ? Owned : idle;
-            nodeFrames[i].transform.localScale = Vector3.one * (on ? 1.18f : 1f);
+            nodeFrames[i].transform.localScale = Vector3.one * (on && UiRules.Legacy ? 1.18f : 1f);        // UI 개편: 확대 없이 테 색 · 번호로
             if (nodePicks[i] != null) nodePicks[i].gameObject.SetActive(on);
             nodeNumbers[i].SetActive(on);
             nodeNumberTexts[i].text = on ? (picked.IndexOf(i) + 1).ToString() : "";
@@ -459,6 +459,7 @@ public class SpecialTreeUI : MonoBehaviour
         foreach (Image p in nodePicks)
         {
             if (p == null || !p.gameObject.activeSelf) continue;
+            if (!UiRules.Legacy) { p.color = UiTokens.Accent; p.transform.localScale = Vector3.one; continue; }      // UI 개편: 금빛 맥박 대신 청록 고정
             p.color = Color.Lerp(new Color(1f, 0.7f, 0.15f), new Color(1f, 0.95f, 0.6f), pulse);
             p.transform.localScale = Vector3.one * (1f + 0.05f * pulse);
         }

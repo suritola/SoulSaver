@@ -104,6 +104,7 @@ public static class SkillEvoCodexUI
         for (int i = 0; i < tabs.Count; i++)
         {
             bool on = i == tab;
+            if (!UiRules.Legacy) { UiV2.Choose(tabs[i], on); continue; }       // UI 개편: 보라 칠 · 확대 대신 그림 + 밑줄
             tabs[i].GetComponent<Image>().color = on ? Purple : new Color(0.6f, 0.58f, 0.65f);
             tabs[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
@@ -197,6 +198,7 @@ public static class SkillEvoCodexUI
         bg.sprite = UIKit.ButtonSprite;
         bg.type = Image.Type.Sliced;
         bg.color = new Color(0.32f, 0.24f, 0.44f, 1f);
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_card_n") != null) { bg.sprite = UiRules.Sprite("ui2_card_n"); bg.type = Image.Type.Tiled; bg.pixelsPerUnitMultiplier = 1f; bg.color = Color.white; }      // UI 개편: 보라 덧칠 대신 카드
         RectTransform inner = UIKit.Rect("Inner", card, Vector2.zero, new Vector2(740f, 234f));
         inner.gameObject.AddComponent<Image>().color = new Color(0.11f, 0.09f, 0.16f, 0.97f);
         return inner;

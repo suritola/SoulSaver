@@ -367,6 +367,12 @@ public static class ContractBoard
         bg.type = Image.Type.Sliced;
         bg.color = isDone ? (isClaimed ? new Color(0.36f, 0.3f, 0.16f, 1f) : new Color(0.62f, 0.5f, 0.2f, 1f))
                  : locked || !visible ? new Color(0.13f, 0.12f, 0.16f, 1f) : new Color(0.2f, 0.17f, 0.26f, 1f);
+        if (!UiRules.Legacy)
+        {
+            // UI 개편: 금 · 갈색 · 보라 덧칠 대신 그림 — 받을 수 있음 청록 테 · 받음 옅은 테 · 잠김/숨김 비활성 · 나머지 기본
+            Sprite cs = UiRules.Sprite(isDone ? (isClaimed ? "ui2_card_h" : "ui2_card_s") : locked || !visible ? "ui2_btn_secondary_d" : "ui2_card_n");
+            if (cs != null) { bg.sprite = cs; bg.type = Image.Type.Tiled; bg.pixelsPerUnitMultiplier = 1f; bg.color = Color.white; }
+        }
         TooltipTrigger tip = cell.gameObject.AddComponent<TooltipTrigger>();
 
         if (!visible)

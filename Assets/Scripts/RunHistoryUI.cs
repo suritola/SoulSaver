@@ -95,6 +95,7 @@ public static class RunHistoryUI
         if (content == null) return;
         for (int i = 0; i < tabButtons.Count; i++)
         {
+            if (!UiRules.Legacy) { UiV2.Choose(tabButtons[i], i == tab); continue; }      // UI 개편: 금색 칠 · 확대 대신 그림 + 밑줄
             tabButtons[i].GetComponent<Image>().color = i == tab ? Gold : Off;
             tabButtons[i].transform.localScale = Vector3.one * (i == tab ? 1.05f : 1f);
         }
