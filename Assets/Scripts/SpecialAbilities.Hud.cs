@@ -574,7 +574,15 @@ public class RunClock : MonoBehaviour
         Image bg = box.GetComponent<Image>();
         // 1.4.8~ 새 도트 스타일: 어두운 단색 칸 대신 금장 돌판(ui_button) · 그림이 없으면 예전 칸
         UIKit.EnsureStyle();
-        if (RecommendGlow.PillArt)
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null)
+        {
+            // UI 개편: 금장 버튼 그림(금 점선 틀) 대신 석판 (HUD 캡처 확인)
+            bg.sprite = UiRules.Sprite("ui2_panel");
+            bg.type = Image.Type.Tiled;
+            bg.pixelsPerUnitMultiplier = 1f;
+            bg.color = new Color(1f, 1f, 1f, 0.9f);
+        }
+        else if (RecommendGlow.PillArt)
         {
             bg.sprite = UIKit.ButtonSprite;
             bg.type = Image.Type.Sliced;
