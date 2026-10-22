@@ -16,5 +16,6 @@ public static partial class LocTable
         C("ui.btn.start", "시작", "Start", "スタート", "开始");
         C("ui.btn.quit", "종료", "Quit", "終了", "退出");
         C("ui.btn.ranks", "순위", "Ranks", "ランキング", "排行");
+        C("ui.card.new", "새로", "New", "新規", "新");          // 레벨업 카드 머리 줄 (처음 배우는 카드)
     }
 }

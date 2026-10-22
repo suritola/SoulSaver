@@ -26,6 +26,14 @@ public partial class LevelShop
             int id = ids[slot];
             int max = id == SupplyId || IsGrowth(id) ? 0 : CapOf(id);      // 외길이면 늘어난 단계까지 (LevelShop.Paths)
             cardPips[slot].Set(LevelOf(id), max, 1);
+            if (!UiRules.Legacy)
+            {
+                // UI 개편 P1: 단계 칸은 이름 바로 아래 · 머리 줄에 「Lv 2 → 3」
+                RectTransform pr = (RectTransform)cardPips[slot].transform;
+                pr.anchoredPosition = new Vector2(0f, V2PipsY);
+                pr.sizeDelta = new Vector2(180f, 12f);
+                ShowCardHeadV2(slot, id, max);
+            }
         }
     }
 }

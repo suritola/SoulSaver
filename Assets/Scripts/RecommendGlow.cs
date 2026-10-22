@@ -168,6 +168,10 @@ public class RecommendGlow : MonoBehaviour
             if (tg != null && pill.sprite != tg) { pill.sprite = tg; pill.type = Image.Type.Sliced; pill.pixelsPerUnitMultiplier = 1f; }
             pill.color = Color.white;
             pill.rectTransform.localScale = Vector3.one;
+            RectTransform prt = pill.rectTransform;            // UI 개편 P1: 카드 아래 테두리 대신 머리 줄 가운데 (진화 칸 · 시너지와 겹치지 않게)
+            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 1f);
+            prt.anchoredPosition = new Vector2(0f, -42f);
+            prt.sizeDelta = new Vector2(Mathf.Max(96f, badge.preferredWidth + 36f), 30f);
             badge.color = UiTokens.Accent;
             badge.fontStyle &= ~FontStyles.Bold;
             badge.fontSizeMax = UiTokens.Small;

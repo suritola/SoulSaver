@@ -46,7 +46,7 @@ public partial class LevelShop
             {
                 // 진화 칸이 있으면 설명 글 아래끝을 칸 위로 (없으면 원래 자리)
                 TextMeshProUGUI body = slot == 0 ? FirstAbility : slot == 1 ? SecondAbility : ThirdAbility;
-                if (body != null) body.rectTransform.offsetMin = new Vector2(CardBodySide, e != null ? EvoSectionPad + EvoSectionH + UiTokens.S2 : CardBodyBottom);
+                if (body != null) body.rectTransform.offsetMin = new Vector2(CardBodySide, e != null ? EvoSectionPad + EvoSectionH + UiTokens.S2 : V2BodyBottom);
             }
             if (e == null) continue;
             anyEvo = true;

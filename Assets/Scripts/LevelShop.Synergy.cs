@@ -89,11 +89,19 @@ public partial class LevelShop
             RectTransform tr = synergyTags[slot].transform.parent as RectTransform;
             tr.pivot = new Vector2(0.5f, slot == recommendedSlot ? 0f : 0.5f);
             tr.anchoredPosition = new Vector2(0f, slot == recommendedSlot ? 34f : 10f);
+            bool evoShown = evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf;
+            if (!UiRules.Legacy)
+            {
+                // UI 개편 P1: 추천 이름표는 머리 줄로 갔으니 시너지는 늘 카드 안 아래(진화 칸이 있으면 그 위) · 설명 글은 그만큼 위로
+                tr.pivot = new Vector2(0.5f, 0f);
+                tr.anchoredPosition = new Vector2(0f, evoShown ? EvoSectionPad + EvoSectionH + 6f : 24f);
+                tr.sizeDelta = new Vector2(360f, 44f);
+            }
             string partner = !ShowSynergyIntro ? null : Paths.Active ? PathBadge(ids[slot]) : SynergyPartner(ids[slot]);
             synergyPartners[slot] = partner;
             synergyTags[slot].transform.parent.gameObject.SetActive(partner != null);
             if (partner != null) synergyTags[slot].text = Paths.Active ? "<color=#B6FF9E>" + partner + "</color>" : "<color=#B6FF9E>" + Loc.T("시너지") + "!</color> " + partner;
-            LiftAbilityAbove(slot, partner != null && slot == recommendedSlot);
+            LiftAbilityAbove(slot, partner != null && (slot == recommendedSlot || !UiRules.Legacy));
         }
     }
 
@@ -106,9 +114,9 @@ public partial class LevelShop
         RectTransform r = ab.rectTransform;
         if (!abilityBottomKnown[slot]) { abilityBottom0[slot] = r.offsetMin.y; abilityBottomKnown[slot] = true; }
         float bottom = abilityBottom0[slot];
-        // UI 개편 P1 (Legacy 끔): 진화 칸이 있으면 그 위가 바닥 (처음 기억한 자리로 되돌려 진화 칸과 겹치지 않게)
-        if (!UiRules.Legacy && evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf)
-            bottom = EvoSectionPad + EvoSectionH + UiTokens.S2;
+        // UI 개편 P1 (Legacy 끔): 진화 칸이 있으면 그 위가 바닥 (처음 기억한 자리로 되돌려 진화 칸과 겹치지 않게) · 없으면 새 배치의 아래끝
+        if (!UiRules.Legacy)
+            bottom = evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf ? EvoSectionPad + EvoSectionH + UiTokens.S2 : V2BodyBottom;
         r.offsetMin = new Vector2(r.offsetMin.x, bottom + (lift ? 58f : 0f));
     }
 }

@@ -572,6 +572,8 @@ public partial class LevelShop : MonoBehaviour
                 if (dv != null && dv.TryGetComponent(out Image dimg)) { dimg.sprite = UiRules.Sprite("ui2_line"); dimg.type = Image.Type.Tiled; dimg.color = Color.white; ((RectTransform)dv).sizeDelta = new Vector2(((RectTransform)dv).sizeDelta.x, UiRules.Dot); }
                 if (title != null) { title.color = UiTokens.Text1; title.fontStyle &= ~FontStyles.Bold; title.enableVertexGradient = false; }
                 if (body != null) body.color = UiTokens.Text2;
+                LayoutCardV2(slot, card, title, body);
+                continue;
             }
             if (title != null)
             {
@@ -598,6 +600,99 @@ public partial class LevelShop : MonoBehaviour
                 TermLinks.Apply(body);                       // 1.4.8~ 글 속 용어에 마우스를 올리면 정의 (Glossary)
             }
         }
+    }
+
+    // UI 개편 P1 (Legacy 끔): 레벨업 카드 배치 (docs/art/ui-v2-levelup.png) — 카드 420x600, 위에서부터
+    //   머리 줄(-42: 왼쪽 「Lv 2 → 3」 · 가운데 추천 이름표) · 아이콘 홈 칸(가운데 -132, 108) · 이름(34, 가운데 -226) · 단계 칸(-258) · 설명(-282 ~ 아래)
+    //   · 아래 진화 칸(LevelShop.EvoUI) · 오른쪽 아래 키캡 [1] — 장식선(Divider)은 숨김
+    const float V2HeadY = -42f, V2IconY = -132f, V2IconWell = 108f, V2TitleY = -204f, V2TitleH = 44f, V2PipsY = -258f, V2BodyTop = 282f, V2BodyBottom = 72f;
+    readonly TextMeshProUGUI[] cardHeadV2 = new TextMeshProUGUI[3];
+
+    static void TopAnchor(RectTransform r, float y)
+    {
+        r.anchorMin = r.anchorMax = new Vector2(0.5f, 1f);
+        r.pivot = new Vector2(0.5f, 0.5f);
+        r.anchoredPosition = new Vector2(0f, y);
+    }
+
+    void LayoutCardV2(int slot, Transform card, TextMeshProUGUI title, TextMeshProUGUI body)
+    {
+        Transform dv = card.Find("Divider");
+        if (dv != null) dv.gameObject.SetActive(false);
+        if (card.Find("AbilityIconFrame") is RectTransform fr) { TopAnchor(fr, V2IconY); fr.sizeDelta = new Vector2(V2IconWell, V2IconWell); }
+        if (card.Find("AbilityIcon") is RectTransform ir)
+        {
+            TopAnchor(ir, V2IconY);
+            Image ii = ir.GetComponent<Image>();
+            float px = ii != null && ii.sprite != null ? Mathf.Max(1f, ii.sprite.rect.width) : 32f;
+            float size = px * Mathf.Max(1f, Mathf.Floor(96f / px));         // 정수 배 (32 → 96 · 64 → 64)
+            ir.sizeDelta = new Vector2(size, size);
+        }
+        if (title != null)
+        {
+            RectTransform tr = title.rectTransform;
+            tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 1f);
+            tr.pivot = new Vector2(0.5f, 1f);
+            tr.anchoredPosition = new Vector2(0f, V2TitleY);
+            tr.sizeDelta = new Vector2(tr.sizeDelta.x, V2TitleH);
+            title.enableWordWrapping = false;
+            title.enableAutoSizing = true;
+            title.fontSizeMax = UiTokens.Heading;
+            title.fontSizeMin = UiTokens.MinSize(UiTokens.Heading);
+        }
+        if (body != null)
+        {
+            RectTransform br = body.rectTransform;
+            br.offsetMin = new Vector2(CardBodySide, V2BodyBottom);
+            br.offsetMax = new Vector2(-CardBodySide, -V2BodyTop);
+            body.alignment = TextAlignmentOptions.Top;
+            body.enableAutoSizing = true;
+            body.fontSizeMax = CardBodyMax;
+            body.fontSizeMin = UiTokens.Small;
+            body.paragraphSpacing = 14f;
+            body.overflowMode = TextOverflowModes.Overflow;
+            TermLinks.Apply(body);
+        }
+        if (cardHeadV2[slot] == null)
+        {
+            RectTransform hr = UIKit.Rect("CardHeadV2", card, Vector2.zero, new Vector2(170f, 30f));
+            hr.anchorMin = hr.anchorMax = new Vector2(0f, 1f);
+            hr.pivot = new Vector2(0f, 0.5f);
+            hr.anchoredPosition = new Vector2(30f, V2HeadY);
+            TextMeshProUGUI ht = hr.gameObject.AddComponent<TextMeshProUGUI>();
+            if (UIKit.Font != null) ht.font = UIKit.Font;
+            if (UIKit.FontMaterial != null) ht.fontSharedMaterial = UIKit.FontMaterial;
+            ht.fontSize = UiTokens.Small;
+            ht.color = UiTokens.Text3;
+            ht.alignment = TextAlignmentOptions.Left;
+            ht.enableWordWrapping = false;
+            ht.raycastTarget = false;
+            cardHeadV2[slot] = ht;
+            // 오른쪽 아래 키캡 [1] · [2] · [3]
+            Sprite cap = UiRules.Sprite("ui2_keycap");
+            if (cap != null)
+            {
+                RectTransform kr = UIKit.Rect("KeyCapV2", card, Vector2.zero, new Vector2(27f, 30f));
+                kr.anchorMin = kr.anchorMax = new Vector2(1f, 0f);
+                kr.pivot = new Vector2(1f, 0f);
+                kr.anchoredPosition = new Vector2(-24f, 24f);
+                Image ki = kr.gameObject.AddComponent<Image>();
+                ki.sprite = cap;
+                ki.raycastTarget = false;
+                TMP_Text kt = UIKit.Text(kr, "", UiTokens.Small, UiTokens.Text1, new Vector2(0f, 2f), new Vector2(27f, 26f));
+                kt.text = (slot + 1).ToString();
+                UIKit.Forget(kt);
+            }
+        }
+    }
+
+    // 머리 줄 글: 「Lv 2 → 3」 · 처음이면 「새로」 · 최대가 없는 카드는 비움 (ShowCardPips 가 부름)
+    void ShowCardHeadV2(int slot, int id, int max)
+    {
+        TextMeshProUGUI ht = cardHeadV2[slot];
+        if (ht == null) return;
+        int lv = LevelOf(id);
+        ht.text = max <= 0 ? "" : lv <= 0 ? Loc.T("ui.card.new") : "Lv " + lv + " → " + Mathf.Min(max, lv + 1);
     }
 
     // 아직 연출하지 않은 레벨업 (한 번에 여러 레벨이 오르면 차례로)
