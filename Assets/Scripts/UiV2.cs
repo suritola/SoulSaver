@@ -153,6 +153,69 @@ public static class UiV2
         if (t != null) t.color = on ? UiTokens.Text1 : UiTokens.Text3;
     }
 
+    // 켜고 끄는 스위치 (시안): 버튼 판은 투명(누름 칸은 줄 전체 그대로) · 왼쪽에 트랙 84x42(14x7 도트 × 2) + 손잡이 30 · 오른쪽에 「켜짐 · 꺼짐」 글자
+    public static void Switch(Button b, bool on)
+    {
+        if (b == null) return;
+        Image img = b.GetComponent<Image>();
+        if (img != null) { img.sprite = null; img.color = new Color(0f, 0f, 0f, 0f); }
+        b.transition = Selectable.Transition.None;
+        RectTransform track = b.transform.Find("Switch") as RectTransform;
+        if (track == null)
+        {
+            track = UIKit.Rect("Switch", b.transform, Vector2.zero, new Vector2(84f, 42f));
+            track.anchorMin = track.anchorMax = track.pivot = new Vector2(0f, 0.5f);
+            track.anchoredPosition = new Vector2(UiTokens.S2, 0f);
+            Image ti = track.gameObject.AddComponent<Image>();
+            ti.type = Image.Type.Sliced; ti.pixelsPerUnitMultiplier = 0.5f;       // lint-ok: 14x7 그림을 정수 2배로 (테두리 3 도트 → 6)
+            ti.raycastTarget = false;
+            RectTransform knob = UIKit.Rect("Knob", track, Vector2.zero, new Vector2(30f, 30f));
+            knob.anchorMin = knob.anchorMax = new Vector2(0f, 0.5f);
+            Image ki = knob.gameObject.AddComponent<Image>();
+            ki.sprite = UiRules.Sprite("ui2_switch_knob");
+            ki.raycastTarget = false;
+        }
+        Image tImg = track.GetComponent<Image>();
+        tImg.sprite = UiRules.Sprite(on ? "ui2_switch_on" : "ui2_switch_off");
+        ((RectTransform)track.Find("Knob")).anchoredPosition = new Vector2(on ? 84f - 21f : 21f, 0f);
+        TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
+        if (t != null)
+        {
+            RectTransform tr = t.rectTransform;
+            tr.anchorMin = Vector2.zero; tr.anchorMax = Vector2.one;
+            tr.offsetMin = new Vector2(84f + UiTokens.S2 * 2f, 0f); tr.offsetMax = Vector2.zero;
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.color = on ? UiTokens.Text1 : UiTokens.Text3;
+        }
+    }
+
+    // ◀ 값 ▶ 스테퍼 (시안): 버튼 양 끝에 화살표 — ◀ 는 이전 값(따로 누름 칸), ▶ · 가운데는 버튼 자신(다음 값)
+    public static void Stepper(Button b, UnityAction prev)
+    {
+        if (b == null || b.transform.Find("StepPrev") != null) return;
+        for (int k = 0; k < 2; k++)
+        {
+            RectTransform ar = UIKit.Rect(k == 0 ? "StepPrev" : "StepNext", b.transform, Vector2.zero, new Vector2(44f, 0f));
+            ar.anchorMin = new Vector2(k, 0f); ar.anchorMax = new Vector2(k, 1f);
+            ar.pivot = new Vector2(k, 0.5f);
+            ar.anchoredPosition = Vector2.zero;
+            ar.sizeDelta = new Vector2(44f, 0f);
+            if (k == 0)
+            {
+                Image hit = ar.gameObject.AddComponent<Image>();
+                hit.color = new Color(0f, 0f, 0f, 0f);
+                Button pb = ar.gameObject.AddComponent<Button>();
+                pb.transition = Selectable.Transition.None;
+                pb.onClick.AddListener(prev);
+            }
+            RectTransform gr = UIKit.Rect("Glyph", ar, Vector2.zero, new Vector2(9f, 15f));
+            Image g = gr.gameObject.AddComponent<Image>();
+            g.sprite = UiRules.Sprite(k == 0 ? "ui2_arrow_l" : "ui2_arrow_r");
+            g.color = UiTokens.Text2;
+            g.raycastTarget = false;
+        }
+    }
+
     // 버튼 글자를 번역 키로 바꿔 닮 (언어를 바꾸면 따라감 · UIKit.Remember) — 짧은 버튼 이름 (LocTable.UiButtons)
     public static void Label(Button b, string key)
     {

@@ -2454,6 +2454,7 @@ public static class SettingsUI
             refresh();
         }, 26f);
         label = b.GetComponentInChildren<TMP_Text>();
+        if (!UiRules.Legacy) UiV2.Stepper(b, () => { set((get() - 1 + names.Length) % names.Length); Deselect(); refresh(); });      // ◀ 이전 값 (시안 스테퍼)
         refresh();
     }
 
@@ -2470,7 +2471,7 @@ public static class SettingsUI
             label.text = Loc.T(text);
             UIKit.Remember(label, text);
             if (UiRules.Legacy) b.GetComponent<Image>().color = on ? Gold : Off;
-            else UiV2.Toggle(b, on);
+            else UiV2.Switch(b, on);          // 시안 스위치
         };
         b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
@@ -2639,6 +2640,12 @@ public static class SettingsUI
             // 찌그러진 리벳 버튼 대신 도트 손잡이 (4x8 도트 × 2 = 24x48) · 마우스 올림은 청록
             hi.sprite = UiRules.Sprite("ui2_slider_knob_n");
             hi.type = Image.Type.Simple;
+            // 시안: 가는 홈 막대(높이 약 30% → 가운데 9) + 청록 두 톤 채움
+            foreach (RectTransform tr in new[] { bg, area }) { tr.anchorMin = new Vector2(0f, 0.5f); tr.anchorMax = new Vector2(1f, 0.5f); tr.sizeDelta = new Vector2(0f, 12f); }
+            Image bgi = bg.GetComponent<Image>();
+            if (UiRules.Sprite("ui2_inset") != null) { bgi.sprite = UiRules.Sprite("ui2_inset"); bgi.type = Image.Type.Sliced; bgi.pixelsPerUnitMultiplier = 2f; bgi.color = Color.white; }      // lint-ok: 높이 12 홈이라 테두리를 반으로
+            Image fli = fill.GetComponent<Image>();
+            if (UiRules.Sprite("ui2_fill") != null) { fli.sprite = UiRules.Sprite("ui2_fill"); fli.type = Image.Type.Sliced; fli.pixelsPerUnitMultiplier = 2f; }      // lint-ok: 같은 이유
             handle.sizeDelta = new Vector2(24f, 12f);      // 막대 높이 36 + 12 = 48 → 4x8 도트 그림 2배 그대로 (24 면 1.25배로 늘어났음)
             Slider sl = root.GetComponent<Slider>();
             if (sl != null) { sl.transition = Selectable.Transition.SpriteSwap; sl.spriteState = new SpriteState { highlightedSprite = UiRules.Sprite("ui2_slider_knob_h"), selectedSprite = UiRules.Sprite("ui2_slider_knob_h"), pressedSprite = UiRules.Sprite("ui2_slider_knob_h") }; }
