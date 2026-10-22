@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -265,7 +265,7 @@ public partial class CharacterKit
     {
         yield return new WaitForSeconds(0.25f);
         if (player == null || player.IsDying) yield break;
-        Hostile.Circle(center, radius, 0.4f, new Color(0.75f, 0.6f, 1f, 0.6f));
+        Friendly.Circle(center, radius, 0.4f, new Color(0.75f, 0.6f, 1f, 0.6f));
         Play("whoosh", 0.6f, 1.1f);
         Dictionary<Collider2D, int> bossHits = new Dictionary<Collider2D, int>();
         for (int i = 0; i < 20; i++)

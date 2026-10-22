@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -1059,7 +1059,7 @@ public partial class CharacterKit : MonoBehaviour
         PlayerMotion.Of(this).Recoil(Vector2.up + (Vector2)(center - transform.position).normalized * 0.3f, 1.5f);     // 몸동작: 하늘로 쏘며 뒤로 젖혀짐 (1.0.1)
         float radius = 4f * UltMul;
         radius *= BowPathRainRadius;                            // 2026-10-19~ 갈래 천공: 범위 ×1.4 (CharacterKit.Archer)
-        Hostile.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
+        Friendly.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         SignatureSkills.Rain(center, radius);
         Play("whoosh", 0.8f, 0.9f);
         // 몸집이 큰 보스는 화살이 거의 다 맞아 피해가 너무 컸음: 한 번의 화살비에 보스 하나당 6발까지만

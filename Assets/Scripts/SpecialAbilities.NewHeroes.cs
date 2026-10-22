@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -113,7 +113,7 @@ public partial class SpecialAbilities
                     for (int i = 0; i < 10; i++)
                     {
                         Vector3 p = KitClamp(at + (Vector3)(Random.insideUnitCircle * r));
-                        Hostile.Circle(p, 1.8f, 0.35f, new Color(0.9f, 0.7f, 0.45f, 0.8f));
+                        Friendly.Circle(p, 1.8f, 0.35f, new Color(0.9f, 0.7f, 0.45f, 0.8f));
                         StartCoroutine(ParcelDrop(p, D * 1.8f));
                         yield return new WaitForSeconds(0.1f);
                     }

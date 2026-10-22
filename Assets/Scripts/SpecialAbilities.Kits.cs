@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -789,7 +789,7 @@ public partial class SpecialAbilities
         List<Vector3> spots = new List<Vector3> { at };
         if (evo)
             for (int i = 0; i < 2; i++) spots.Add(KitClamp(at + (Vector3)(Random.insideUnitCircle.normalized * 4f)));
-        foreach (Vector3 s in spots) Hostile.Circle(s, 3.5f, 0.6f, new Color(1f, 0.85f, 0.4f, 0.7f));
+        foreach (Vector3 s in spots) Friendly.Circle(s, 3.5f, 0.6f, new Color(1f, 0.85f, 0.4f, 0.7f));
         fx.Play("railcharge", 0.5f, 1.2f);
         yield return new WaitForSeconds(0.45f);
         foreach (Vector3 s in spots)
