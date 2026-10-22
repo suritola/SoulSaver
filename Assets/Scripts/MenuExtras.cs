@@ -265,6 +265,7 @@ public static class MenuExtras
             hist.name = "RunHistoryButton";
         }
         LayoutRightColumn(sr.parent);
+        if (!UiRules.Legacy) LayoutMainV2(sr.parent);
         // 1.4.8~ 오른쪽 위는 포인트만: 패치노트 · 영혼 각인 · 순위표 · 기록 버튼은 만들어 두고 끈 채 「더 보기」에서 누름 (각자 여는 방식 · NEW 표시를 그대로 씀)
         foreach (string n in new[] { "PatchNotesButton", "SoulBrandButton", "LeaderboardButton", "RunHistoryButton" })
         {
@@ -581,6 +582,93 @@ public static class MenuExtras
     }
 
     // 게임 시작 버튼 위: 쉬움 · 보통 · 어려움 · 무한 (잠긴 난이도는 회색, 누를 수 없음)
+    // UI 개편 P1 (Legacy 끔): 메인 메뉴 배치 (docs/art/ui-v2-preview.png 왼쪽) — 왼쪽 여백 120 에 한 열(폭 420): 제목 · 부제 → 이어하기 · 시작
+    //   → 난이도 탭 한 줄 · 영혼의 무게 → 도감 · 일일 도전 · 설정 · 더 보기 · 종료, 영웅은 오른쪽 (카펫 가운데를 비움)
+    //   왼쪽 · 오른쪽 끝에 붙여(앵커) UI 크기 110 · 120% 로 논리 폭이 줄어도 화면 안 · 이름은 그대로 (다른 코드 · QA 가 이름으로 찾음)
+    const float MainX = 120f, MainW = 420f, MainRowH = 54f, MainRowGap = 12f;
+    static RectTransform LeftPlace(Transform parent, string name, float y, float h, float w = MainW)
+    {
+        RectTransform r = parent.Find(name) as RectTransform;
+        if (r == null || !r.gameObject.activeSelf) return null;
+        r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+        r.pivot = new Vector2(0f, 0.5f);
+        r.anchoredPosition = new Vector2(MainX, y);
+        r.sizeDelta = new Vector2(w, h);
+        TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
+        if (t != null && t.transform.parent == r)
+        {
+            RectTransform tr = t.rectTransform;
+            tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f);
+            tr.anchoredPosition = Vector2.zero;
+            tr.sizeDelta = new Vector2(w - UiTokens.S4 * 2f, h - UiTokens.S1);
+        }
+        return r;
+    }
+
+    static void LayoutMainV2(Transform parent)
+    {
+        // 제목 · 부제 (장면 글자 · 가운데 앵커 → 왼쪽)
+        foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            bool title = t.text == "Soul Saver", sub = t.name == "Subtitle";
+            if (!title && !sub) continue;
+            RectTransform r = t.rectTransform;
+            r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+            r.pivot = new Vector2(0f, 0.5f);
+            r.anchoredPosition = new Vector2(MainX, title ? 384f : 318f);
+            r.sizeDelta = new Vector2(title ? 900f : 700f, title ? 120f : 34f);
+            t.alignment = TextAlignmentOptions.Left;
+            if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 96f); t.fontSizeMin = 48f; }
+        }
+        float y = 210f;
+        bool cont = parent.Find("ContinueButton") != null && parent.Find("ContinueButton").gameObject.activeSelf;
+        if (cont) { LeftPlace(parent, "ContinueButton", y, 84f); y -= 84f + MainRowGap; }
+        LeftPlace(parent, "GameStartButton", y, 64f);
+        y -= 64f * 0.5f + MainRowGap + 24f;
+        // 난이도 탭 한 줄 (넷이 열 폭을 나눔) · 뒤 판은 숨김
+        Transform plate = parent.Find("DiffPlate");
+        if (plate != null) plate.gameObject.SetActive(false);
+        float tabW = (MainW - UiTokens.S1 * 3f) / 4f;
+        for (int i = 0; i < 4; i++)
+        {
+            RectTransform r = parent.Find("Difficulty_" + (Difficulty)i) as RectTransform;
+            if (r == null) continue;
+            r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+            r.pivot = new Vector2(0f, 0.5f);
+            r.anchoredPosition = new Vector2(MainX + i * (tabW + UiTokens.S1), y);
+            r.sizeDelta = new Vector2(tabW, 48f);
+            TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
+            if (t != null) { t.rectTransform.sizeDelta = new Vector2(tabW - 12f, 42f); t.enableAutoSizing = true; t.fontSizeMin = 16f; t.fontSizeMax = UiTokens.Small; }
+            Transform ul = r.Find("Underline");
+            if (ul is RectTransform ur) { ur.anchoredPosition = new Vector2(0f, -15f); ur.sizeDelta = new Vector2(tabW * 0.5f, UiRules.Dot); }
+        }
+        y -= 24f + MainRowGap;
+        // 영혼의 무게 (어려움 + 해금 때만 켜짐 · 자리는 늘 잡아 둠)
+        RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
+        if (wr != null)
+        {
+            wr.anchorMin = wr.anchorMax = new Vector2(0f, 0.5f);
+            wr.pivot = new Vector2(0f, 0.5f);
+            wr.anchoredPosition = new Vector2(MainX, y - 16f);
+            wr.sizeDelta = new Vector2(MainW, 32f);
+        }
+        y -= 32f + MainRowGap + MainRowH * 0.5f;
+        foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
+        {
+            if (LeftPlace(parent, n, y, MainRowH) == null) continue;
+            y -= MainRowH + MainRowGap + (n == "DailyButton" && DailyRewards.Streak > 0 ? 18f : 0f);       // 일일 도전 아래 「연속 n일」 자리
+        }
+        // 영웅은 오른쪽 (오른쪽 끝에서 160 · 세로 가운데 조금 아래)
+        GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서 (못 찾으면 메뉴 열과 겹침)
+        Transform hp = hpo != null ? hpo.transform : null;
+        if (hp is RectTransform hr)
+        {
+            hr.anchorMin = hr.anchorMax = new Vector2(1f, 0.5f);
+            hr.pivot = new Vector2(1f, 0.5f);
+            hr.anchoredPosition = new Vector2(-160f, -40f);
+        }
+    }
+
     // UI 개편 P0-4b: 제목은 뼈색 그대로 (그라데이션 · 그림자 · 넓은 자간 · 숨쉬기 없음 — 도트 로고는 P3 전까지 글자), 부제는 작은 흐린 글자 · 양옆 금줄 없음
     static void StyleTitleV2()
     {
