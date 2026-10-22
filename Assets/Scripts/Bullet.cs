@@ -227,7 +227,7 @@ public class Bullet : MonoBehaviour
         if (ownBody != null)
         {
             if (ownBody.bodyType != pBodyType) ownBody.bodyType = pBodyType;
-            ownBody.velocity = Vector2.zero;
+            ownBody.linearVelocity = Vector2.zero;
             ownBody.angularVelocity = 0f;
         }
     }

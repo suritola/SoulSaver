@@ -557,7 +557,7 @@ public class PlayerController : MonoBehaviour
         // 몸은 물리(Dynamic)지만 이동은 직접 함: 적과 부딪혀 생긴 속도 · 회전이 남아 플레이어가 휙 밀려나던(순간이동처럼 보이던) 문제
         // 벽 · 적과 겹치지 않게 밀어내는 것은 그대로, 남는 속도만 매 물리 단계마다 지움
         if (body == null) { body = GetComponent<Rigidbody2D>(); if (body != null) body.freezeRotation = true; }
-        if (body != null) { body.velocity = Vector2.zero; body.angularVelocity = 0f; }
+        if (body != null) { body.linearVelocity = Vector2.zero; body.angularVelocity = 0f; }
 
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
         float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
