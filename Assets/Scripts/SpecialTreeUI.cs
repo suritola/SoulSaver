@@ -18,7 +18,8 @@ public class SpecialTreeUI : MonoBehaviour
     [Header("포인트")]
     public int points = 3;              // 고를 수 있는 능력 수
 
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color LineColor = new Color(0.78f, 0.55f, 0.25f, 0.8f);
     static readonly Color Selected = new Color(1f, 0.85f, 0.4f);

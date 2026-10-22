@@ -346,7 +346,8 @@ public static class ClaimRewards
     }
 
     static GameObject window;
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f), Parch = new Color(0.93f, 0.9f, 0.84f), Dim = new Color(0.66f, 0.61f, 0.53f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f), Parch = new Color(0.93f, 0.9f, 0.84f), Dim = new Color(0.66f, 0.61f, 0.53f);
     const int MaxRows = 7;
 
     // 받을 것 · 알릴 것이 없으면 열지 않음

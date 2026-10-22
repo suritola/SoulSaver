@@ -19,7 +19,8 @@ public static class CodexUI
     const float BaseCardH = 240f, HeroCardH = 300f, BossCardH = 500f;     // 보스: 설명 + 빈틈 · 기억 · 결계 줄 (4~5문단) · 개발자 · 엄마 고유 기본 공격 설명으로 400 → 500
     static float CardH = BaseCardH;
 
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color Dim = new Color(0.72f, 0.68f, 0.76f);
     static readonly Color Accent = new Color(1f, 0.72f, 0.55f);
@@ -302,6 +303,7 @@ public static class CodexUI
         for (int i = 0; i < tabButtons.Count; i++)
         {
             bool on = i == tab;
+            if (!UiRules.Legacy) { tabButtons[i].transform.localScale = Vector3.one; UiV2.Choose(tabButtons[i], on); continue; }      // UI 개편: 금색 칠 · 확대 대신 그림 + 밑줄
             tabButtons[i].GetComponent<Image>().color = on ? Gold : new Color(0.6f, 0.58f, 0.65f);
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
@@ -443,7 +445,7 @@ public static class CodexUI
     {
         searching = true;
         for (int i = grid.childCount - 1; i >= 0; i--) { GameObject g = grid.GetChild(i).gameObject; g.SetActive(false); Object.Destroy(g); }
-        foreach (Button b in tabButtons) { b.GetComponent<Image>().color = new Color(0.6f, 0.58f, 0.65f); b.transform.localScale = Vector3.one; }
+        foreach (Button b in tabButtons) { if (!UiRules.Legacy) { UiV2.Choose(b, false); continue; } b.GetComponent<Image>().color = new Color(0.6f, 0.58f, 0.65f); b.transform.localScale = Vector3.one; }
         tabWasOpened = true;                     // 이번 업데이트 NEW 배지를 띄우지 않음
         CardH = BaseCardH;
         if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
@@ -864,10 +866,11 @@ public static class CodexUI
             if (!can)
             {
                 b.interactable = false;
-                b.GetComponent<Image>().color = new Color(0.45f, 0.43f, 0.5f);
+                if (UiRules.Legacy) b.GetComponent<Image>().color = new Color(0.45f, 0.43f, 0.5f);
                 if (!claimed) { TMP_Text bt = b.GetComponentInChildren<TMP_Text>(); if (bt != null) bt.text = Loc.T("잠김"); }
             }
-            else b.GetComponent<Image>().color = Gold;
+            else if (UiRules.Legacy) b.GetComponent<Image>().color = Gold;
+            else UiV2.Toggle(b, true);          // 받을 수 있는 보상: 청록 주 버튼
         }
         UIKit.MakeButton(win, "닫기", new Vector2(0f, -246f), new Vector2(220f, 58f), CloseRewards, 24f);
     }

@@ -14,7 +14,8 @@ public static class PatchNotesUI
     // 이번 실행에서 이미 띄웠는지 (게임을 하고 메인 메뉴로 돌아왔을 때는 다시 안 띄움)
     static bool shown;
 
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
 
     // 1.0.4~: 마지막으로 본 버전을 저장해 새 버전일 때만 띄움 (예전엔 켤 때마다) · 처음 산 사람의 첫 실행에는 띄우지 않음

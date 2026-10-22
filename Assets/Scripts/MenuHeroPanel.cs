@@ -15,7 +15,8 @@ public static class MenuHeroPanel
     const float W = 440f;
     static Transform rootRef;
 
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Dim = new Color(0.66f, 0.61f, 0.53f);
     static readonly Color Back = new Color(0.08f, 0.06f, 0.11f, 0f);
     static readonly Color BackHover = new Color(0.96f, 0.83f, 0.47f, 0.08f);

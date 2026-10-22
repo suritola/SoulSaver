@@ -9,7 +9,8 @@ using UnityEngine.UI;
 // 게임은 멈춰 있으므로 실제 시간(unscaled)으로 움직임. 여러 개가 한꺼번에 진화하면 차례로
 public class SkillEvolutionUI : MonoBehaviour
 {
-    static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
+    static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
+    static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);
     static readonly Color Soul = new Color(0.79f, 0.63f, 1f);
 
