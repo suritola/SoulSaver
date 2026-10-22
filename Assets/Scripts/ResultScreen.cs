@@ -396,7 +396,7 @@ public static class ResultScreen
         float y = columnBottom - Step;
         // 버튼 한 줄 (있는 것만, 가운데 맞춤)
         List<RectTransform> row = new List<RectTransform>();
-        foreach (string n in new[] { "LeaderboardViewButton", "CopyResultButton" })
+        foreach (string n in new[] { "BuildViewButton", "LeaderboardViewButton", "CopyResultButton" })        // 빌드: 새 모습에서 왼쪽 창 대신 (옛 모습은 왼쪽 창 안이라 여기서 못 찾음)
             if (canvas.Find(n) is RectTransform b && b.gameObject.activeSelf) row.Add(b);
         if (row.Count > 0)
         {

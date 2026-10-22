@@ -42,6 +42,9 @@ public static class MenuExtras
         if (canvas != null)
         {
             UIKit.EnsureStyle();
+            if (!UiRules.Legacy) InstallGameOverV2(canvas.transform);
+            else
+            {
             // 1.4.8~ 왼쪽 반투명 패널 하나에: 다음 목표(위) → 구분선 → 이번 판 결과 → 빌드 자세히 보기(아래) (ResultScreen.BuildLeftPanel)
             RectTransform left = ResultScreen.BuildLeftPanel(canvas.transform);
             float goalsH = ResultScreen.BuildGoals(left);       // 1.1~ 다음 목표 막대 3줄 (예전 「다음 해금까지」 글은 이 위로 옮김)
@@ -87,6 +90,7 @@ public static class MenuExtras
                 if (!UiRules.Legacy) { UiV2.Restyle(bv, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(bv, "ui.btn.build"); }
                 TMP_Text bl = bv.GetComponentInChildren<TMP_Text>(true);
                 if (bl != null) bl.fontSizeMin = 20f;
+            }
             }
             // 1.1.9~ 「결과 복사」 (편의성 3차 10) · 1.4.8~ 자리는 가운데 버튼 열 아래 한 줄 (ResultScreen.StackCenter)
         }
@@ -294,6 +298,49 @@ public static class MenuExtras
         }
         // 1.1~ 결과 화면 「캐릭터 바꿔 다시」로 왔으면 캐릭터 창을 바로 엶
         if (ResultScreen.ConsumeHeroPick()) CharacterUI.Open(sr.root);
+    }
+
+    // UI 개편 (Legacy 끔): 결과 화면 왼쪽 창(다음 목표 + 이번 판 결과 긴 목록)을 없앰 (사용자 「왼쪽 잡스러운 창 치워」)
+    //   다음 목표는 메인 메뉴 오른쪽 카드로 · 판 요약은 제목 아래 한 줄 · 긴 빌드 목록은 「빌드」 버튼(가운데 버튼 줄)으로
+    //   계약 마무리(보상 확정)는 예전 왼쪽 창이 부르던 그대로 꼭 부름 · 최고 기록 · 새 기록 소리도 그대로
+    static void InstallGameOverV2(Transform canvas)
+    {
+        Contracts.EnsureEnded();
+        RunRecords.CommitBest();
+        RunRecords.PlayNewRecordSound(canvas);
+        // 판 요약 한 줄: 「이번 판 결과」 글의 앞 두 줄(영웅 · 난이도 / 시간 · 레벨 · 처치)에서 서식 태그를 빼고 이어 붙임
+        string[] lines = RunStats.Summary(false).Replace("\r", "").Split('\n');
+        List<string> parts = new List<string>();
+        foreach (string l in lines)
+        {
+            string plain = System.Text.RegularExpressions.Regex.Replace(l, "<[^>]+>", "").Trim();
+            if (plain.Length == 0) continue;
+            parts.Add(System.Text.RegularExpressions.Regex.Replace(plain, "\\s{2,}", "  ·  "));
+            if (parts.Count >= 2) break;
+        }
+        string summary = string.Join("  ·  ", parts);
+        if (Contracts.LastRunOn && Contracts.LastRun.Count > 0)
+        {
+            int done = 0;
+            foreach (Contracts.Active a in Contracts.LastRun) if (a.done) done++;
+            summary += "\n" + Loc.T("contract.run.title") + "  " + done + " / " + Contracts.LastRun.Count;
+        }
+        GameObject msg = GameObject.Find("GameOverMessage");
+        float titleY = msg != null ? ((RectTransform)msg.transform).anchoredPosition.y : 170f;
+        TMP_Text st = UIKit.Text(canvas, "", UiTokens.Body, UiTokens.Text2, new Vector2(0f, titleY - 70f), new Vector2(1200f, 70f));
+        st.name = "RunSummaryLine";
+        st.fontSizeMin = UiTokens.Small;
+        st.text = summary;
+        RunStats.BuildDamagePanel(canvas);
+        canvas.gameObject.AddComponent<QuickRestart>();
+        ResultScreen.BuildRetry();
+        ResultScreen.FitTitle();
+        ResultScreen.BuildLeftBehind(canvas);
+        if (BuildView.HasSnapshot)
+        {
+            Button bv = UiV2.Btn(canvas, "ui.btn.build", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH), () => BuildView.Open(canvas), UiV2.Kind.Secondary, UiTokens.Body);
+            bv.name = "BuildViewButton";          // 가운데 버튼 줄(StackCenter)에 「순위」와 나란히
+        }
     }
 
     // 1.1~ 초록 체크 표시 (짧은 막대 · 긴 막대가 아래 꼭짓점에서 만남, 어두운 외곽선)
