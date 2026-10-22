@@ -205,6 +205,7 @@ public class ESCmenu : MonoBehaviour
     {
         if (confirm != null) return;
         Transform root = escMenu != null ? escMenu.transform.root : transform.root;
+        if (!UiRules.Legacy) { ConfirmV2(root, name, question, note, okLabel, ok, extra, selectOk); return; }
         RectTransform win = UIKit.Modal(root, name, new Vector2(780f, 340f), out confirm);
         SoulTreeUI.OnTop(confirm, 620);
         UIKit.Text(win, question, 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(720f, 60f));
@@ -218,6 +219,32 @@ public class ESCmenu : MonoBehaviour
         UnityEngine.UI.Button okButton = UIKit.MakeButton(win, okLabel, new Vector2(-150f, -90f), new Vector2(260f, 76f), ok, 28f);
         UnityEngine.UI.Button cancelButton = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
         UIKit.ConfirmKeys(win, okButton, cancelButton, -143f, selectOk);
+    }
+
+    // UI 개편 P0-0d (UiRules.Legacy = false): 새긴 석판 창 · 왼쪽 정렬 글 · 오른쪽 아래 [취소] [확정]
+    //   지금 판을 버리는 확인(selectOk = false: 다시 시작 · 게임 종료 / 포기)은 확정 버튼을 위험 버튼으로 · 기본 선택은 취소 (Enter 한 번에 판이 날아가지 않게)
+    void ConfirmV2(Transform root, string name, string question, string note, string okLabel, UnityEngine.Events.UnityAction ok, string extra, bool selectOk)
+    {
+        const float W = 720f, H = 330f, Pad = UiTokens.WindowPad, BtnW = 240f;
+        RectTransform win = UiV2.Modal(root, name, new Vector2(W, H), out confirm);
+        SoulTreeUI.OnTop(confirm, 620);
+        float textW = W - Pad * 2f;
+        TMPro.TMP_Text q = UIKit.Text(win, question, UiTokens.Heading, UiTokens.Text1, new Vector2(0f, 117f), new Vector2(textW, 48f), TMPro.TextAlignmentOptions.Left);
+        q.fontSizeMin = UiTokens.MinSize(UiTokens.Heading);
+        TMPro.TMP_Text n = UIKit.Text(win, note, UiTokens.Body, UiTokens.Text2, new Vector2(0f, 54f), new Vector2(textW, 72f), TMPro.TextAlignmentOptions.TopLeft);
+        n.fontSizeMin = UiTokens.MinSize(UiTokens.Body);
+        if (!string.IsNullOrEmpty(extra))
+        {
+            TMPro.TMP_Text ex = UIKit.Text(win, "", UiTokens.Small, UiTokens.Text3, new Vector2(0f, 0f), new Vector2(textW, 30f), TMPro.TextAlignmentOptions.Left);
+            ex.text = extra;
+        }
+        bool destructive = !selectOk || name == "ConfirmGiveUp";
+        float okX = W / 2f - Pad - BtnW / 2f, y = -H / 2f + Pad + UiTokens.ButtonH / 2f + 30f;
+        UnityEngine.UI.Button okButton = UiV2.Btn(win, okLabel, new Vector2(okX, y), new Vector2(BtnW, UiTokens.ButtonH), ok, destructive ? UiV2.Kind.Danger : UiV2.Kind.Primary);
+        UnityEngine.UI.Button cancelButton = UiV2.Btn(win, "취소", new Vector2(okX - BtnW - UiTokens.S2, y), new Vector2(BtnW, UiTokens.ButtonH), CloseConfirm);
+        UIKit.ConfirmKeys(null, okButton, cancelButton, 0f, false);         // ←→ 로 두 버튼만 오감 (기본 선택 · 안내는 아래에서)
+        UIKit.SetDefault(destructive ? cancelButton : okButton);
+        UiV2.KeyHint(win, "[Enter] 선택   [ESC] 취소", -H / 2f + Pad - 6f);
     }
 
     void CloseConfirm()

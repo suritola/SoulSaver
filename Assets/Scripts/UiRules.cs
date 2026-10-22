@@ -6,6 +6,27 @@ public static class UiRules
 {
     public static bool Legacy = true;
 
+    // 새 모습 미리 보기: 실행 인자 -uiv2 · 에디터 메뉴 「Soul Saver/UI v2 미리보기」 (Assets/Editor/UiV2Toggle.cs · EditorPrefs) — 판마다가 아니라 실행할 때 한 번
+    public const string EditorPrefKey = "SoulSaver.UiV2";
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void Init()
+    {
+        bool on = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-uiv2") >= 0;
+#if UNITY_EDITOR
+        on |= UnityEditor.EditorPrefs.GetBool(EditorPrefKey, false);
+#endif
+        Legacy = !on;
+        sprites.Clear();
+    }
+
+    // v2 그림 (Assets/Resources/UI/v2 · tools/pixelart/make_ui_v2.py) — 없으면 null (부르는 쪽이 옛 모습으로)
+    static readonly System.Collections.Generic.Dictionary<string, Sprite> sprites = new System.Collections.Generic.Dictionary<string, Sprite>();
+    public static Sprite Sprite(string name)
+    {
+        if (!sprites.TryGetValue(name, out Sprite s) || s == null) sprites[name] = s = Resources.Load<Sprite>("UI/v2/" + name);
+        return s;
+    }
+
     // UI 1도트 = 1080p · UI 크기 100% 에서 3px (PPU 33.333 그림 · pixelsPerUnitMultiplier 1) — 월드 격자와는 따로 (카메라 22 에서 월드 1도트 ≈ 3.07px)
     public const float PixelsPerUnit = 100f / 3f;
     public const float Dot = 3f;
