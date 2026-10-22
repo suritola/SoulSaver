@@ -534,11 +534,32 @@ public class EnemySpawner : MonoBehaviour
 
     // 맵 안에서 플레이어와 충분히 떨어진 위치를 고름
     // 가능하면 화면 밖에서 나오게 하고, 못 찾으면 거리 조건만 지킴
+    const float SceneZoom = 20f;                // 장면의 보통 카메라 크기 (PlayerController.normalZoom · GameScene) — 배율 VisualRules.CameraMul 을 곱해 씀
+    const float RingNear = 2.5f, RingFar = 14f; // 화면 테두리 바깥 거리 (아래 끝 = 큰 적 반폭 · 위 끝은 봇 측정으로 맞춤)
+
     Vector3 GetSpawnPosition(Vector3 playerPos)
     {
         Camera cam = Camera.main;
         Vector3 fallback = Vector3.zero;
         bool hasFallback = false;
+
+        // 맵 확장 7 (2026-10-22~): 경기장을 넓히면(ArenaRules.Mul > 1) 「맵 아무 데나」는 적이 너무 멀리서 생겨(평균 48 → 67칸) 압박이 약해짐
+        //   → 화면 바로 밖 고리(화면 테두리 + 2.5~14칸)에서 · 맵 안 · 벽 · 지형 장애물 밖 · 24번 실패하면 예전 방식
+        //   화면 크기는 보통 줌 기준 (조준 줌 · 줌 펀치 · 첫 적 때의 카메라 크기에 흔들리지 않게)
+        if (ArenaRules.Mul > 1.001f)
+        {
+            float halfH = SceneZoom * VisualRules.CameraMul, halfW = halfH * (cam != null ? cam.aspect : 16f / 9f);
+            for (int i = 0; i < 24; i++)
+            {
+                float a = Random.Range(0f, Mathf.PI * 2f);
+                Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                float edge = Mathf.Min(Mathf.Abs(d.x) > 0.0001f ? halfW / Mathf.Abs(d.x) : float.MaxValue, Mathf.Abs(d.y) > 0.0001f ? halfH / Mathf.Abs(d.y) : float.MaxValue);
+                Vector3 pos = playerPos + (Vector3)(d * (edge + Random.Range(RingNear, RingFar)));
+                pos.z = 0f;
+                if (!Hostile.InArena(pos) || Hostile.WallNear(pos, 1.5f)) continue;
+                return pos;
+            }
+        }
 
         for (int i = 0; i < 40; i++)
         {
