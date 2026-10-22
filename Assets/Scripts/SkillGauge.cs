@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -140,9 +141,83 @@ public class SkillGauge : MonoBehaviour
         return canvasCheckResult;
     }
 
+    // 도적 그림자: 게이지가 가득 찬 뒤 모으는 「다음 돌진」을 보라색 덧막대로, 쓸 수 있는 돌진 수를 끝에 「×2 · ×3」으로
+    //   (예전엔 모으는 중인지 · 몇 번째인지 화면에 안 보였음 — 모이면 반짝임 · 차임뿐)
+    //   모으는 중엔 다음 숫자를 흐리게, 다 모이면 진하게. 도적 그림자가 아니면 만들지 않음 · 숨기기만 함
+    static readonly Color StackPurple = new Color(0.72f, 0.5f, 1f);
+    Image stackFill;
+    TextMeshProUGUI stackLabel;
+    int stackShown = -1;
+    float stackFillShown = -1f;
+
+    void MakeStack()
+    {
+        RectTransform src = gaugeImage.rectTransform;
+        GameObject f = new GameObject("StackFill", typeof(RectTransform), typeof(Image));
+        RectTransform fr = (RectTransform)f.transform;
+        fr.SetParent(src, false);
+        fr.anchorMin = Vector2.zero; fr.anchorMax = Vector2.one; fr.offsetMin = fr.offsetMax = Vector2.zero;
+        stackFill = f.GetComponent<Image>();
+        stackFill.sprite = gaugeImage.sprite;
+        stackFill.type = Image.Type.Filled;
+        stackFill.fillMethod = gaugeImage.fillMethod;
+        stackFill.fillOrigin = gaugeImage.fillOrigin;
+        stackFill.color = StackPurple;
+        stackFill.raycastTarget = false;
+        stackFill.fillAmount = 0f;
+
+        GameObject t = new GameObject("StackCount", typeof(RectTransform));
+        RectTransform tr = (RectTransform)t.transform;
+        tr.SetParent(src, false);
+        tr.anchorMin = new Vector2(1f, 0f); tr.anchorMax = new Vector2(1f, 1f); tr.pivot = new Vector2(1f, 0.5f);
+        tr.anchoredPosition = new Vector2(-4f, 0f);
+        tr.sizeDelta = new Vector2(64f, 6f);
+        stackLabel = t.AddComponent<TextMeshProUGUI>();
+        if (UIKit.Font != null) stackLabel.font = UIKit.Font;
+        stackLabel.enableAutoSizing = true;
+        stackLabel.fontSizeMin = 10f; stackLabel.fontSizeMax = 30f;
+        stackLabel.fontStyle = FontStyles.Bold;
+        stackLabel.alignment = TextAlignmentOptions.Right;
+        stackLabel.enableWordWrapping = false;
+        stackLabel.raycastTarget = false;
+        stackLabel.outlineWidth = 0.25f;
+        stackLabel.outlineColor = new Color32(20, 8, 36, 255);
+        stackLabel.text = "";
+    }
+
+    void UpdateStack()
+    {
+        if (gaugeImage == null) return;
+        CharacterKit k = CharacterKit.Instance;
+        int stored = k != null ? k.RpStored : 0;
+        float bank = k != null ? k.RpBank01 : 0f;
+        if (stackFill == null)
+        {
+            if (stored <= 0 && bank <= 0f) return;      // 도적 그림자가 아니면 아무것도 만들지 않음
+            MakeStack();
+        }
+        bool full = IsFull();
+        int ready = (full ? 1 : 0) + stored;            // 지금 바로 쓸 수 있는 돌진 수
+        bool banking = full && bank > 0f;
+        // 덧막대: 모으는 중인 다음 돌진 (1/100 단위로만 고침 — 매 프레임 다시 그리지 않게)
+        float fa = banking ? Mathf.Floor(bank * 100f) / 100f : 0f;
+        if (fa != stackFillShown) { stackFillShown = fa; stackFill.fillAmount = fa; }
+        // 숫자: 모으는 중이면 다음 숫자를 흐리게, 아니면 쓸 수 있는 수가 2 이상(또는 게이지 밖에 모아 둔 게 있을 때)만
+        int show = banking ? ready + 1 : (stored > 0 ? ready : 0);
+        int key = show * 2 + (banking ? 1 : 0);
+        if (key != stackShown)
+        {
+            stackShown = key;
+            stackLabel.text = show > 0 ? "×" + show : "";
+            Color c = banking ? new Color(0.85f, 0.75f, 1f, 0.55f) : new Color(0.92f, 0.85f, 1f, 1f);
+            stackLabel.color = c;
+        }
+    }
+
     void Update()
     {
         ReadyFeedback();
+        UpdateStack();
         PlayerController p = Hostile.Player;
         // 멈췄을 때나 스킬을 쓰는 중에는 차지 않음
         if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 도적 갈래 효과 중 평타 · 돌진에 붙는 부분 (2026-10-19 · Paths/Paths.Rogue.cs 가 갈래 데이터 · 나머지 효과)
 //   CharacterKit.cs 의 도적 줄이 부르는 곳: UpdateUlt 도적 분기(RpUlt) · DashEnd(RogueDashDist) · Cut(RpCutBleed) · ShadowClone(RpCloneShot)
@@ -16,6 +16,9 @@ public partial class CharacterKit
     int rpVolleyCount;          // 1.4.2~ 지금까지 만든 묶음 수 (회귀 칼날 탄창 환급은 두 묶음에 한 번 — 환급이 장전을 지워 연사가 ×1.3~1.75 되던 문제)
 
     public int RpStored => Paths.Has(RoguePaths.Shadow) ? rpStored : 0;
+    // 다음에 모아 둘 돌진이 찬 정도 0~1 (게이지가 가득 찬 동안만 참 · SkillGauge 가 보라색 덧막대로 그림)
+    public float RpBank01 => Paths.Has(RoguePaths.Shadow) && rpBankMax > 0f && player != null && !player.IsDying ? Mathf.Clamp01(rpBank / rpBankMax) : 0f;
+    float rpBankMax;
     public bool RpChaining => rpChaining;
 
     // ---------------- 1.4.2~ 게이지 돌진 묶음 (게이지 · 모아 둔 돌진으로 시작 → 숙련 4단계 재돌진 · 질주 암살 극의 연속 돌진이 이어 씀)
@@ -53,6 +56,7 @@ public partial class CharacterKit
         if (player == null || player.IsDying) return;
         int cap = Paths.Mastered(RoguePaths.Shadow) ? 2 : 1;        // 게이지 밖에 모아 둘 수 (게이지와 합쳐 2번 · 극의 3번)
         float pt = gauge.SkillPoint, dt = Time.deltaTime;
+        rpBankMax = gauge.MaxSkillPoint;
         bool full = gauge.IsFull();
         if (!full)
         {
