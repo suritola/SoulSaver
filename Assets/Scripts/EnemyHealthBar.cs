@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 적 머리 위에 표시되는 작은 체력바
 // EnermyController가 Start에서 Attach로 붙인다
@@ -7,13 +7,15 @@ public class EnemyHealthBar : MonoBehaviour
     static Sprite pixel;
 
     const float Width = 2.2f;
-    const float Height = 0.32f;     // 0.26 → 0.32 (줌 15 에서 9.4 → 11.5px · 흰 게이지 · 흔들림이 픽셀에 묻히지 않게)
+    const float LegacyHeight = 0.32f;     // 0.26 → 0.32 (줌 15 에서 9.4 → 11.5px · 흰 게이지 · 흔들림이 픽셀에 묻히지 않게)
+    // 그래픽 개편 1단계-10 (2026-10-22~): 체력이 가득 찬 적은 체력바를 숨기고(몰린 무리 위를 막대가 덮었음) · 얇게 · 원색 대신 회백 (VisualRules.Legacy 면 예전)
+    static float Height => VisualRules.Legacy ? LegacyHeight : 0.22f;
     const float Border = 0.06f;
     const float HeadMargin = 0.25f;
 
-    static readonly Color FullColor = new Color(0.45f, 0.85f, 0.35f);
-    static readonly Color HalfColor = new Color(0.98f, 0.72f, 0.22f);
-    static readonly Color LowColor = new Color(0.86f, 0.17f, 0.24f);
+    static Color FullColor => VisualRules.Legacy ? new Color(0.45f, 0.85f, 0.35f) : new Color(0.86f, 0.86f, 0.88f);
+    static Color HalfColor => VisualRules.Legacy ? new Color(0.98f, 0.72f, 0.22f) : new Color(0.88f, 0.82f, 0.66f);
+    static Color LowColor => VisualRules.Legacy ? new Color(0.86f, 0.17f, 0.24f) : new Color(0.9f, 0.6f, 0.5f);
     static readonly Color BackColor = new Color(0.05f, 0.04f, 0.06f, 0.9f);
     static readonly Color BackHit = new Color(1f, 0.96f, 0.92f);    // Big 이상: 어두운 테두리가 하얗게
 
@@ -33,13 +35,15 @@ public class EnemyHealthBar : MonoBehaviour
     float shownGhost = -1f;
     Color fillColor = FullColor;
     Color shownFill = FullColor;     // 지금 칠해 둔 색 (바뀔 때만 다시 씀)
+    SpriteRenderer body;             // 1단계-10~ 체력바를 숨긴 채 맞아도 화면 안이면 첫 피격 연출이 나오게 (보임 판단을 몸으로)
     float shownIgnite = -1f;
 
     public HealthBarFeel.Tier OnDamaged(float amount, float before)
     {
         // 1.2.0: 1.2.0 에서 「이야기 모드 중간 보스만 애니메이션」으로 막았던 것을 되돌림 (모든 적 · 무한 모드도 1.1.8 처럼)
         //   — 렉의 원인은 체력바 애니메이션이 아니라 PlayerHP 의 자기 복제 연쇄였음 (HealthBarFeel.MakeGhost 참고)
-        bool visible = fillRenderer != null && fillRenderer.enabled && fillRenderer.isVisible;
+        if (body == null && enemy != null) enemy.TryGetComponent(out body);
+        bool visible = fillRenderer != null && (VisualRules.Legacy ? fillRenderer.enabled && fillRenderer.isVisible : body != null && body.isVisible);
         HealthBarFeel.Tier tier = feel.OnDamaged(amount, before, enemy != null ? enemy.setEnemyHP : 0f, visible);
         // 화면 밖: 흰 게이지를 지금 체력에 바로 붙임 (Active 가 켜지지 않게 → 예전처럼 체력이 바뀔 때만 다시 그림)
         if (!visible) feel.Reset(before - amount);
@@ -144,9 +148,10 @@ public class EnemyHealthBar : MonoBehaviour
         if (ratio != shownRatio)
         {
             shownRatio = ratio;
-            // 죽으면 숨김
-            backRenderer.enabled = alive;
-            fillRenderer.enabled = alive;
+            // 죽으면 숨김 · 1단계-10~ 가득 찬 적도 숨김 (한 번 맞으면 그 뒤로 보임 — 시간 상태 없이 체력 비율만으로)
+            bool show = alive && (VisualRules.Legacy || ratio < 0.999f);
+            backRenderer.enabled = show;
+            fillRenderer.enabled = show;
             if (alive)
             {
                 fill.localScale = new Vector3(Width * ratio, Height, 1f);

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -15,6 +15,8 @@ public class DamagePopup : MonoBehaviour
     const float HurtLife = 1.0f, HurtSize = 1.1f, HurtHeight = 1.6f;     // 1.2.2~ 1.3 → 1.1
     const int HurtOrder = 50;
     const int MaxActive = 80;
+    // 그래픽 개편 1단계-10 (2026-10-22~): 적이 받은 피해 숫자는 동시에 32개까지 (80개가 적 무리 위를 덮었음 · 설정 「피해 숫자」와 별개) — 내가 받은 피해 숫자는 그대로 80
+    static int EnemyCap => VisualRules.Legacy ? MaxActive : 32;
 
     static TMP_FontAsset font;
     static Material material, bossMaterial;
@@ -62,7 +64,7 @@ public class DamagePopup : MonoBehaviour
             p.Add(damage, tier);
             return;
         }
-        if (active >= MaxActive || !EnsureFont()) return;
+        if (active >= EnemyCap || !EnsureFont()) return;
 
         float top = body != null ? body.bounds.max.y : target.position.y + 1f;
         Vector3 at = new Vector3(target.position.x + Random.Range(-0.3f, 0.3f), top + 0.35f, 0f);

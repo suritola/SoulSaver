@@ -493,6 +493,9 @@ public class EnermyController : MonoBehaviour
         StartCoroutine(HitEffect());
     }
 
+    // 그래픽 개편 1단계-10 (2026-10-22~): 피격 빨강 → 몸을 어둡게 물들임 (계속 맞는 무리가 시뻘건 덩어리가 되어 적 시전 깜빡임 · 위험색과 섞였음)
+    Color HitTint => VisualRules.Legacy ? Color.red : new Color(baseColor.r * 0.55f, baseColor.g * 0.4f, baseColor.b * 0.42f, baseColor.a);
+
     IEnumerator HitEffect()
     {
         hitFxRunning = true;
@@ -501,7 +504,7 @@ public class EnermyController : MonoBehaviour
         {
             bool w = Time.time - whiteAt < WhiteFor;
             if (w != white) { white = w; Juice.SetFlash(spriteRenderer, w); }
-            spriteRenderer.color = w ? baseColor : Color.red;
+            spriteRenderer.color = w ? baseColor : HitTint;
             yield return null;
         }
         if (white) Juice.SetFlash(spriteRenderer, false);
