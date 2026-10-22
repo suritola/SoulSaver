@@ -20,6 +20,7 @@ public class ESCmenu : MonoBehaviour
 
     void Start()
     {
+        sceneStartReal = Time.realtimeSinceStartup;     // 2026-10-22~ 시작 직후 바깥 일시정지 무시 (StartGrace)
         current = this;
         shop = FindFirstObjectByType<Shop>();
         PauseInspect.Install(this);         // 1.1.9~ 멈춘 동안 HUD 아이콘 · 적 위에 마우스 → 설명
@@ -69,12 +70,19 @@ public class ESCmenu : MonoBehaviour
     }
 
     // 창이 포커스를 잃으면 (Alt+Tab 등) 일시정지 메뉴를 열어 둠
-    void OnApplicationFocus(bool focus) { if (!focus) PauseFromOutside(); }
+    void OnApplicationFocus(bool focus) { if (!focus) PauseFromOutside("포커스 잃음"); }
+
+    // 2026-10-22~ 게임을 시작하자마자 일시정지 창이 뜨던 것: 장면을 불러온 직후엔 전체 화면 전환 · 스팀 알림 · 로딩으로 창 포커스가 잠깐 빠짐
+    //   → 장면 시작 2초(실제 시간) 안의 바깥 요인 일시정지는 무시 (그 뒤 Alt+Tab · 오버레이 · 패드 분리는 그대로)
+    const float StartGrace = 2f;
+    float sceneStartReal = -1f;
 
     // 1.1.9~ 바깥 요인(포커스 잃음 · 스팀 오버레이 · 게임패드 분리)으로 멈춰야 할 때 — 이미 멈춘 화면 · 연출 중이면 그대로
-    public void PauseFromOutside()
+    public void PauseFromOutside() => PauseFromOutside("바깥 요청");
+    void PauseFromOutside(string why)
     {
         if (isEscOpen || GameInput.Auto || Application.isBatchMode || StoryDirector.Playing) return;
+        if (sceneStartReal < 0f || Time.realtimeSinceStartup - sceneStartReal < StartGrace) { Debug.Log("[ESCmenu] 장면 시작 직후라 일시정지 안 함: " + why); return; }
         if (Time.timeScale == 0f || (shop != null && (shop.isShopOpen || shop.isPause))) return;
         if (Hostile.Player != null && Hostile.Player.IsDying) return;      // 쓰러지는 연출 중엔 결과 화면으로 그대로
         ToggleEsc();
