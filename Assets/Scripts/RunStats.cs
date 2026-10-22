@@ -333,9 +333,23 @@ public class RunStats : MonoBehaviour
     {
         if (DamageDealt.Count == 0 && DamageTaken.Count == 0) return;
         UIKit.EnsureStyle();
-        RectTransform box = UIKit.Rect("DamagePanel", canvas, Vector2.zero, new Vector2(480f, 520f));
+        RectTransform box = UIKit.Rect("DamagePanel", canvas, Vector2.zero, new Vector2(480f, 600f));     // 2026-10-22~ 520 → 600 (도트 눈금 줄)
         box.anchorMin = box.anchorMax = box.pivot = new Vector2(1f, 0.5f);
         box.anchoredPosition = new Vector2(-60f, 0f);
+        // 2026-10-22~ 도트 패널 판 뒤에 깔기 (사용자 「그리기로 그린 막대 말고 분위기 어울리는 도트로」)
+        if (UIKit.PanelSprite != null)
+        {
+            RectTransform pr = UIKit.Rect("DamagePanelBack", box, Vector2.zero, Vector2.zero);
+            pr.anchorMin = Vector2.zero; pr.anchorMax = Vector2.one;
+            pr.offsetMin = new Vector2(-24f, -24f); pr.offsetMax = new Vector2(24f, 24f);
+            pr.SetAsFirstSibling();
+            Image pi = pr.gameObject.AddComponent<Image>();
+            pi.sprite = UIKit.PanelSprite;
+            pi.type = Image.Type.Sliced;
+            pi.pixelsPerUnitMultiplier = 1f;
+            pi.color = new Color(1f, 1f, 1f, 0.92f);
+            pi.raycastTarget = false;
+        }
         float y = 0f;
         y = Section(box, y, Loc.T("준 피해"), Top(DamageDealt, 6), new Color(0.96f, 0.72f, 0.3f));
         y = Section(box, y - 20f, Loc.T("받은 피해"), Top(DamageTaken, 4), new Color(0.92f, 0.32f, 0.3f));
@@ -357,7 +371,53 @@ public class RunStats : MonoBehaviour
         float best = Mathf.Max(1f, rows[0].Value);
         foreach (KeyValuePair<string, float> kv in rows) best = Mathf.Max(best, kv.Value);
         Line(box, y, "<color=#F5D478><size=110%>" + title + "</size></color>   <color=#A89C86>" + Mathf.RoundToInt(total).ToString("N0") + "</color>", 24f, width);
-        y -= 40f;
+        y -= 36f;
+        // 2026-10-22~ 도트 눈금 게이지 (사용자 「그리기로 그린 막대 말고 도트로」): 제목 아래 도트 구분선 · 줄마다 이름 + 오른쪽 비율, 그 아래 12칸 눈금
+        //   (예전: 작은 도트 그림을 늘려 붙인 매끈한 막대 · 이름이 막대 위에 겹침) · 도트 그림이 없으면 예전 막대
+        if (UIKit.DividerSprite != null && UIKit.BarFillSprite != null)
+        {
+            RectTransform dv = UIKit.Rect("Divider", box, Vector2.zero, new Vector2(width, 8f));
+            dv.anchorMin = dv.anchorMax = dv.pivot = new Vector2(0f, 1f);
+            dv.anchoredPosition = new Vector2(0f, y);
+            Image di = dv.gameObject.AddComponent<Image>();
+            di.sprite = UIKit.DividerSprite;
+            di.color = new Color(1f, 1f, 1f, 0.85f);
+            di.raycastTarget = false;
+            y -= 14f;
+            const int Seg = 12;
+            const float SegGap = 4f, SegH = 10f;
+            float segW = (width - SegGap * (Seg - 1)) / Seg;
+            foreach (KeyValuePair<string, float> kv in rows)
+            {
+                TMP_Text nm = UIKit.Text(box, "", 20f, new Color(0.95f, 0.92f, 0.86f), Vector2.zero, new Vector2(width - 120f, 26f), TextAlignmentOptions.Left);
+                nm.rectTransform.anchorMin = nm.rectTransform.anchorMax = nm.rectTransform.pivot = new Vector2(0f, 1f);
+                nm.rectTransform.anchoredPosition = new Vector2(0f, y);
+                nm.text = SourceName(kv.Key);
+                nm.enableAutoSizing = true; nm.fontSizeMin = 12f; nm.fontSizeMax = 20f; nm.raycastTarget = false;
+                TMP_Text pc = UIKit.Text(box, "", 20f, new Color(0.96f, 0.86f, 0.55f), Vector2.zero, new Vector2(width > 480f ? 260f : 110f, 26f), TextAlignmentOptions.Right);
+                pc.rectTransform.anchorMin = pc.rectTransform.anchorMax = pc.rectTransform.pivot = new Vector2(1f, 1f);
+                pc.rectTransform.anchoredPosition = new Vector2(0f, y);
+                pc.text = (width > 480f ? "<color=#A89C86>" + Mathf.RoundToInt(kv.Value).ToString("N0") + "</color>   " : "") + (kv.Value / Mathf.Max(1f, total) * 100f).ToString("0") + "%";
+                pc.raycastTarget = false;
+                y -= 26f;
+                int on = Mathf.Clamp(Mathf.CeilToInt(Seg * kv.Value / best - 0.001f), kv.Value > 0f ? 1 : 0, Seg);
+                for (int i = 0; i < Seg; i++)
+                {
+                    RectTransform sg = UIKit.Rect("Seg", box, Vector2.zero, new Vector2(segW, SegH));
+                    sg.anchorMin = sg.anchorMax = sg.pivot = new Vector2(0f, 1f);
+                    sg.anchoredPosition = new Vector2(i * (segW + SegGap), y);
+                    Image si = sg.gameObject.AddComponent<Image>();
+                    si.sprite = UIKit.BarFillSprite;
+                    si.type = Image.Type.Sliced;
+                    si.pixelsPerUnitMultiplier = 1f;
+                    si.color = i < on ? new Color(bar.r, bar.g, bar.b, 0.95f) : new Color(0.3f, 0.26f, 0.34f, 0.55f);
+                    si.raycastTarget = false;
+                }
+                y -= SegH + 8f;
+            }
+            return y;
+        }
+        y -= 4f;
         foreach (KeyValuePair<string, float> kv in rows)
         {
             // 막대 (가장 많은 것을 꽉 채운 길이로) · 이름 · 비율
