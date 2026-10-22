@@ -54,6 +54,30 @@ public class EndlessTerrain : MonoBehaviour
     readonly Vector3Int[] off = new Vector3Int[3];      // 바닥 칸 → 층 칸
     readonly byte[][] slot = new byte[3][];              // 칸 번호 k (tileset_*_32_k · objects_*_k), Empty = 빈 칸
     int ux, uy, uw, uh;                                  // 세 층을 덮는 범위 (바닥 칸 좌표)
+    // 2026-10-22~ 맵-3: 기록에 칸 틀을 적어 둠 ("G가로x세로@x,y") — 경기장 크기가 바뀌면(맵 확장) 옛 기록의 칸 번호를 새 틀로 옮김
+    //   틀이 없는 옛 기록 = 확장 전 지옥 세 층 합 (−62,−45) 125×86 · 옛 빌드는 G 항목을 못 읽고 건너뜀 (int.TryParse 실패)
+    const int LegacyUx = -62, LegacyUy = -45, LegacyUw = 125, LegacyUh = 86;
+    int srcUx, srcUy, srcUw, srcUh;                      // 이어하기 중 읽고 있는 기록의 틀
+    bool Remapping => srcUx != ux || srcUy != uy || srcUw != uw || srcUh != uh;
+    string GridTag => "G" + uw + "x" + uh + "@" + ux + "," + uy;
+    // 기록 틀의 칸 번호 → 지금 틀의 칸 번호 (밖이면 −1)
+    int Remap(int i)
+    {
+        if (!Remapping) return i;
+        if (i < 0 || i >= srcUw * srcUh) return -1;
+        int x = srcUx + i % srcUw, y = srcUy + i / srcUw;
+        if (x < ux || y < uy || x >= ux + uw || y >= uy + uh) return -1;
+        return (x - ux) + (y - uy) * uw;
+    }
+    bool ReadGrid(string e)
+    {
+        int xi = e.IndexOf('x'), at = e.IndexOf('@'), comma = e.IndexOf(',');
+        if (xi < 2 || at < xi || comma < at) return false;
+        if (!int.TryParse(e.Substring(1, xi - 1), out int w) || !int.TryParse(e.Substring(xi + 1, at - xi - 1), out int h)
+            || !int.TryParse(e.Substring(at + 1, comma - at - 1), out int x) || !int.TryParse(e.Substring(comma + 1), out int y) || w <= 0 || h <= 0) return false;
+        srcUw = w; srcUh = h; srcUx = x; srcUy = y;
+        return true;
+    }
     byte[] realmOf;                                      // 칸의 영토
     bool[] decorFlag;                                    // 지형이 더한 장식 칸
     readonly List<int> decorAdded = new List<int>();
@@ -194,6 +218,8 @@ public class EndlessTerrain : MonoBehaviour
         stage = entries = 0;
         final = beyond = false;
         log.Length = 0;
+        log.Append(GridTag);             // 맵-3~ 기록 맨 앞은 늘 칸 틀
+        srcUx = ux; srcUy = uy; srcUw = uw; srcUh = uh;
         pendings.Clear();
         ready = true;
     }
@@ -345,6 +371,7 @@ public class EndlessTerrain : MonoBehaviour
             if (newDecorCount >= DecorPerRealm) break;
             int dot = pair.IndexOf('.');
             if (dot <= 0 || !int.TryParse(pair.Substring(0, dot), out int i) || !byte.TryParse(pair.Substring(dot + 1), out byte k)) continue;
+            i = Remap(i);                // 맵-3~ 옛 틀 기록이면 새 칸 번호로
             if (i < 0 || i >= realmOf.Length || k >= MaxSlot || slot[0][i] == Empty) continue;
             newDecorCell[newDecorCount] = i;
             newDecorKind[newDecorCount] = k;
@@ -941,7 +968,7 @@ public class EndlessTerrain : MonoBehaviour
     void Compact()
     {
         Purge();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(GridTag).Append(';');      // 맵-3~ 칸 틀이 늘 맨 앞
         if (final) sb.Append("f;");
         if (beyond) sb.Append("B;");
         sb.Append('S').Append(stage).Append('|');
@@ -981,11 +1008,13 @@ public class EndlessTerrain : MonoBehaviour
         bool wasFinal = final;
         if (runSeed == 0) { Begin(NewSeed()); Sync(wasFinal); return; }     // 옛 저장: 사막 그대로 시작
         Begin(runSeed);
+        srcUx = LegacyUx; srcUy = LegacyUy; srcUw = LegacyUw; srcUh = LegacyUh;        // 맵-3~ 틀이 없으면 옛 틀 (G 항목이 있으면 바뀜)
         if (!string.IsNullOrEmpty(terrain))
             foreach (string raw in terrain.Split(';'))
             {
                 string e = raw.Trim();
                 if (e.Length == 0) continue;
+                if (e[0] == 'G') { ReadGrid(e); continue; }      // 기록의 칸 틀 (Begin 이 지금 틀을 log 맨 앞에 이미 적음)
                 if (e == "f") { final = true; ClearPieces(); Append("f"); continue; }
                 if (e == "B") { beyond = true; Append("B"); continue; }
                 if (e[0] == 'S') { ApplySnapshot(e); continue; }
@@ -1052,8 +1081,8 @@ public class EndlessTerrain : MonoBehaviour
     {
         string[] parts = e.Substring(1).Split('|');
         if (parts.Length < 4 || !int.TryParse(parts[0], out int st)) return;
-        // 칸 영토 (RLE: 영토 글자 a~e + 칸 수)
-        byte[] rs = new byte[realmOf.Length];
+        // 칸 영토 (RLE: 영토 글자 a~e + 칸 수) — 맵-3~ 기록 틀 크기로 읽고 지금 틀로 옮김
+        byte[] rs = new byte[srcUw * srcUh];
         int n = 0;
         string rle = parts[1];
         for (int c = 0; c < rle.Length;)
@@ -1066,6 +1095,13 @@ public class EndlessTerrain : MonoBehaviour
             c = c2;
         }
         if (n != rs.Length) return;
+        bool moved = Remapping;
+        if (moved)
+        {
+            byte[] to = new byte[realmOf.Length];
+            for (int i = 0; i < rs.Length; i++) { int j = Remap(i); if (j >= 0) to[j] = rs[i]; }
+            rs = to;
+        }
         stage = st;
         // 더한 장식 (오래된 순)
         if (parts[2].Length > 0)
@@ -1073,6 +1109,7 @@ public class EndlessTerrain : MonoBehaviour
             {
                 int dot = pair.IndexOf('.');
                 if (dot <= 0 || !int.TryParse(pair.Substring(0, dot), out int i) || !byte.TryParse(pair.Substring(dot + 1), out byte k)) continue;
+                i = Remap(i);
                 if (i < 0 || i >= rs.Length || k >= MaxSlot || decorFlag[i] || slot[0][i] == Empty || slot[2][i] != Empty) continue;
                 slot[2][i] = k;
                 decorFlag[i] = true;
@@ -1115,6 +1152,8 @@ public class EndlessTerrain : MonoBehaviour
                     || !TryF(f[3], out float px) || !TryF(f[4], out float py)) continue;
                 SpawnPiece(realm, new Vector3(px, py, 0f), entry, index, 0f, true);
             }
+        // 맵-3~ 옮긴 기록은 지금 틀로 다시 접어 적음 (받은 문자열을 그대로 붙이면 다음 이어하기에서 칸 수가 안 맞아 지형을 통째로 버림)
+        if (moved) { Compact(); return; }
         if (log.Length > 0) log.Append(';');
         log.Append(e);
         entries = 0;
