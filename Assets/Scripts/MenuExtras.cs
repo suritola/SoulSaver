@@ -1787,7 +1787,7 @@ public static class SettingsUI
         // 1.4.8~ 닫기 76 → 64 높이 · 30 → 28 (옆 「이 탭 기본값으로」와 같은 높이 · 아래끝 맞춤)
         UIKit.MakeButton(win, "닫기", new Vector2(0f, -364f), new Vector2(260f, 64f), Close, 28f);
         // 1.1.9~ 탭마다 「이 탭 기본값으로」 (예전엔 조작 탭에만 「기본값으로」) · 실수 방지로 두 번 누르기
-        resetButton = UIKit.MakeButton(win, "이 탭 기본값으로", new Vector2(330f, -364f), new Vector2(280f, 64f), ResetTab, 24f);
+        resetButton = UIKit.MakeButton(win, ResetKey, new Vector2(330f, -364f), new Vector2(280f, 64f), ResetTab, 24f);
         TMP_Text resetLabel = resetButton.GetComponentInChildren<TMP_Text>();
         if (resetLabel != null) { resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 20f; resetLabel.fontSizeMax = 24f; resetLabelColor = resetLabel.color; }
         resetArmedAt = resetDoneAt = -99f;
@@ -1798,6 +1798,7 @@ public static class SettingsUI
     static Button resetButton;
     static float resetArmedAt = -99f;
     static Color resetLabelColor = Color.white;
+    static string ResetKey => UiRules.Legacy ? "이 탭 기본값으로" : "ui.btn.reset";      // UI 개편 P0-6: 짧은 이름 「초기화」 (두 번 누르기 안내 뒤 되돌리는 글자도 같은 키)
     static float rowH = 64f;                            // 설정 줄 버튼 높이 (게임 탭 7줄 64 · 접근성 탭 9줄 54 · 화면 탭은 BuildDisplay 에서 10줄 48 · 11줄 44)
 
     static float resetDoneAt = -99f;
@@ -1808,7 +1809,7 @@ public static class SettingsUI
     {
         if (!ResetArmed && resetDoneAt <= -99f) return;
         resetArmedAt = resetDoneAt = -99f;
-        if (resetButton != null) SetResetLabel(resetButton.GetComponentInChildren<TMP_Text>(), "이 탭 기본값으로", resetLabelColor);
+        if (resetButton != null) SetResetLabel(resetButton.GetComponentInChildren<TMP_Text>(), ResetKey, resetLabelColor);
     }
 
     static void ResetTab()

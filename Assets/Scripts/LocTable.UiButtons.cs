@@ -16,6 +16,7 @@ public static partial class LocTable
         C("ui.btn.start", "시작", "Start", "スタート", "开始");
         C("ui.btn.quit", "종료", "Quit", "終了", "退出");
         C("ui.btn.ranks", "순위", "Ranks", "ランキング", "排行");
+        C("ui.btn.reset", "초기화", "Reset", "リセット", "重置");       // 설정 「이 탭 기본값으로」 (툴팁이 「이 탭만」이라고 설명)
         C("ui.card.new", "새로", "New", "新規", "新");          // 레벨업 카드 머리 줄 (처음 배우는 카드)
         C("새 소식", "새 소식", "News", "お知らせ", "最新消息");        // 메인 메뉴 오른쪽 아래 카드 머리 (한국어 원문 키 · 다른 표에 없음)
     }
