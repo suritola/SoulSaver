@@ -35,7 +35,21 @@ def split_list(v):
     return [x for x in s(v).split("|") if x.strip()]
 
 
-def load(db_path, version, build, since):
+def dev_ids():
+    """이 PC(개발 기기)의 익명 ID — %LOCALAPPDATA%\Soul Saver*\save.json 의 telemetry.anon_id (2026-10-22~ 전체 판의 70% 가 개발 기기 판이라 기본으로 뺌)"""
+    import glob, re
+    ids = set()
+    base = os.environ.get("LOCALAPPDATA", "")
+    for f in glob.glob(os.path.join(base, "Soul Saver*", "save.json")):
+        try:
+            txt = open(f, encoding="utf-8", errors="ignore").read()
+        except OSError:
+            continue
+        ids.update(re.findall(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", txt))
+    return ids
+
+
+def load(db_path, version, build, since, skip=frozenset()):
     if not os.path.exists(db_path):
         sys.exit("로컬 DB 없음: 먼저 pull.py 실행 (%s)" % db_path)
     db = sqlite3.connect(db_path)
@@ -54,6 +68,8 @@ def load(db_path, version, build, since):
         except ValueError:
             continue
         if since and s(d.get("date")) < since:
+            continue
+        if s(d.get("anon_id")) in skip:
             continue
         d["version"], d["build"] = ver, bld
         # 튜토리얼 판은 밸런싱에서 빼고 따로 셈 (1.4.7~ 게임도 보내지 않음)
@@ -114,9 +130,11 @@ def main():
     ap.add_argument("--since", default="", help="이 날짜(yyyy-MM-dd)부터")
     ap.add_argument("--min", type=int, default=5, help="카드 · 원인 표에 넣을 최소 판 수")
     ap.add_argument("--top", type=int, default=30, help="목록 표 최대 줄 수")
+    ap.add_argument("--include-dev", action="store_true", help="개발 기기(이 PC 저장 파일의 익명 ID) 판도 넣기 (기본은 뺌)")
     a = ap.parse_args()
 
-    rows, tut = load(a.db, a.version, a.build, a.since)
+    skip = frozenset() if a.include_dev else frozenset(dev_ids())
+    rows, tut = load(a.db, a.version, a.build, a.since, skip)
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
@@ -127,6 +145,7 @@ def main():
     if a.version: filt.append("버전 " + a.version)
     if a.build: filt.append({"full": "정식판", "demo": "체험판"}[a.build])
     if a.since: filt.append(a.since + " 부터")
+    if skip: filt.append("개발 기기 %d개 뺌" % len(skip))
     players = len(set(s(d.get("anon_id")) for d in rows))
     wins = sum(1 for d in rows if is_win(d))
     out = ["# Soul Saver 플레이 데이터 분석",
