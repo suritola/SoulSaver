@@ -51,5 +51,12 @@ public static class VisualRules
 
     // 보이는 그림 크기로 닿는 거리를 재는 곳(우체부 편지 · 비둘기 · 카드)이 배율이 바뀌어도 판정을 예전 그대로 두려고 곱하는 값
     //   = 예전 배율 ÷ 지금 배율 (지금은 1)
+    // 1단계-8~ 내 스킬 이펙트에 붙던 과장 — 그리는 순서 +40(적 경고 · 피해 숫자 · 투사체 위로) · 흰 쪽 35% 밝게 + 알파 0.97 이상 · 밑에 흰빛 원판(적 무리를 안개처럼 덮음)
+    public static int SkillOrder => Legacy ? 40 : 0;
+    public static bool SkillBrighten => Legacy;
+    public static bool SkillGlow => Legacy;
+    // 내 장식 이펙트(불꽃 튐 · 반짝임 · 핏방울 · 연기) 0.05초 상한 — 예전엔 그래픽 「낮음」에서만 12개
+    public static int MyDecorCap => Legacy ? int.MaxValue : 6;
+
     public static float DecorKeep(bool skill) => LegacyDecor / DecorScale * (skill ? LegacySkillDecor / SkillDecor : 1f);
 }

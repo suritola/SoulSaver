@@ -87,7 +87,7 @@ public static class Fx
     // 지금 스킬이 쓰는 중인지는 DamageSource 로 앎 (평타 · 적 · 맞은 불꽃 · 처치 연출은 그대로)
     //   더 크게(장식만, 범위가 곧 판정인 이펙트는 그대로) · 더 밝고 진하게 · 적 이펙트 위에 · 밑에 빛 번짐
     static float SkillDecor => VisualRules.SkillDecor;     // 1.0.2: 1.25 → 1.4 · 2026-10-22~ VisualRules 로
-    const int SkillOrder = 40;
+    static int SkillOrder => VisualRules.SkillOrder;      // 2026-10-22~ VisualRules (개편 뒤 0)
     static readonly HashSet<string> NoBoost = new HashSet<string>
     {
         "fx_spark", "fx_smoke", "fx_bleed", "fx_deathburst", "fx_warn", "fx_reticle", "fx_target_rune",
@@ -111,7 +111,7 @@ public static class Fx
     // 이펙트 밑에 잠깐 번지는 빛 (Glow 스프라이트는 지름 약 8칸 = 크기 1)
     static void SkillGlow(Vector3 pos, float size, Color c, int order, string layer)
     {
-        if (Hostile.Glow == null || size < 1.2f) return;
+        if (Hostile.Glow == null || size < 1.2f || !VisualRules.SkillGlow) return;
         if (GraphicsQuality.Low) return;   // 그래픽 품질 낮음(L2): 빛 번짐 생략
         bool evo = forcedTier >= 3;        // 1.1.2~ 진화한 고유 스킬: 빛 번짐도 더 크고 길게
         FadeSprite.Spawn("SkillGlow", Hostile.Glow, pos, size * (evo ? 2.2f : 1.7f) / 8f, MyAlpha(new Color(Mathf.Lerp(c.r, 1f, 0.4f), Mathf.Lerp(c.g, 1f, 0.4f), Mathf.Lerp(c.b, 1f, 0.4f), evo ? 0.85f : 0.7f)), layer, order - 1, evo ? 0.55f : 0.38f);     // 1.0.2: 더 크고 진하게
@@ -119,12 +119,12 @@ public static class Fx
 
     static void Style(SpriteRenderer sr)
     {
-        Material m = SpriteOutline.EffectMaterial;
+        Material m = Mine && !VisualRules.Legacy ? SpriteOutline.MyEffectMaterial : SpriteOutline.EffectMaterial;      // 1단계-8~ 내 이펙트는 짙은 윤곽선 없이
         if (GraphicsQuality.Low)
         {
             // 그래픽 품질 낮음(L3): 이펙트는 기본 스프라이트 재질 (윤곽선 셰이더의 픽셀당 여러 번 읽기를 줄임 · 적 · 플레이어 윤곽선은 그대로)
             //   새 SpriteRenderer 는 이미 기본 재질 · 높음에서 쓰던 것을 다시 쓰면 기본으로 되돌림
-            if (m != null && sr.sharedMaterial == m) sr.sharedMaterial = SpriteDefault;
+            if (sr.sharedMaterial != null && (sr.sharedMaterial == SpriteOutline.EffectMaterial || sr.sharedMaterial == SpriteOutline.MyEffectMaterial)) sr.sharedMaterial = SpriteDefault;
             return;
         }
         if (m != null) sr.sharedMaterial = m;
@@ -151,9 +151,11 @@ public static class Fx
     static int decorCount;
     static bool DecorBudgetFull(string name)
     {
-        if (!GraphicsQuality.Low || !DecorFx.Contains(name)) return false;
+        if (!DecorFx.Contains(name)) return false;
+        int cap = GraphicsQuality.Low ? 12 : Mine ? VisualRules.MyDecorCap : int.MaxValue;     // 1단계-8~ 높음에서도 내 것은 6개
+        if (cap == int.MaxValue) return false;
         if (Time.time - decorWindow >= 0.05f || Time.time < decorWindow) { decorWindow = Time.time; decorCount = 0; }
-        if (decorCount >= 12) return true;
+        if (decorCount >= cap) return true;
         decorCount++;
         return false;
     }
@@ -185,7 +187,7 @@ public static class Fx
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         Style(sr);
         sr.sprite = frames[0];
-        sr.color = MyAlpha(skill ? Brighten(color ?? Color.white) : color ?? Color.white, name);
+        sr.color = MyAlpha(skill && VisualRules.SkillBrighten ? Brighten(color ?? Color.white) : color ?? Color.white, name);
         sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
         float h = frames[0].bounds.size.y;
@@ -242,7 +244,7 @@ public static class Fx
             if (!AreaFx.Contains(name)) size *= SkillDecor;
             order += SkillOrder;
             if (!loop) SkillGlow(pos, Visible(name, size), color ?? Color.white, order, layer);
-            color = Brighten(color ?? Color.white);
+            if (VisualRules.SkillBrighten) color = Brighten(color ?? Color.white);
         }
         Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
         a.gameObject.SetActive(true);

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 도트를 더 잘 보이게 (1.8.7~): 캐릭터 · 적 · 보스 스프라이트에 1도트 윤곽선, 이펙트는 윤곽선 + 채도 · 밝기 (Resources/Shaders/SpriteOutline.shader)
 // 적 · 보스는 짙은 윤곽선으로 배경과 분리, 플레이어는 밝은 윤곽선으로 적 무리 속에서도 바로 보이게
@@ -22,10 +22,29 @@ public static class SpriteOutline
             if (s == null || !s.isSupported) { failed = true; return null; }
             effect = new Material(s) { name = "EffectOutline" };
             effect.SetColor("_OutlineColor", new Color(0.05f, 0.03f, 0.08f, 0.7f));
-            effect.SetFloat("_Saturation", 1.3f);
-            effect.SetFloat("_Brightness", 1.08f);
+            // 그래픽 개편 1단계-8 (2026-10-22~): 채도 1.3 · 밝기 1.08 과장을 뺌 (VisualRules.Legacy 면 예전 값)
+            effect.SetFloat("_Saturation", VisualRules.Legacy ? 1.3f : 1f);
+            effect.SetFloat("_Brightness", VisualRules.Legacy ? 1.08f : 1f);
             effect.SetFloat("_EmptyAlpha", 0.05f);
             return effect;
+        }
+    }
+
+    // 1단계-8~ 내 이펙트용: 짙은 윤곽선 없음 (짙은 테 · 흰 심은 적 공격 문법이라 피아가 섞였음) · 채도 · 밝기 그대로
+    static Material myEffect;
+    public static Material MyEffectMaterial
+    {
+        get
+        {
+            if (myEffect != null || failed) return myEffect;
+            Shader s = Resources.Load<Shader>("Shaders/SpriteOutline");
+            if (s == null || !s.isSupported) { failed = true; return null; }
+            myEffect = new Material(s) { name = "MyEffect" };
+            myEffect.SetColor("_OutlineColor", new Color(0f, 0f, 0f, 0f));
+            myEffect.SetFloat("_Saturation", 1f);
+            myEffect.SetFloat("_Brightness", 1f);
+            myEffect.SetFloat("_EmptyAlpha", 0.05f);
+            return myEffect;
         }
     }
     public static void Player(GameObject go) => Apply(go, ref light, Light);
