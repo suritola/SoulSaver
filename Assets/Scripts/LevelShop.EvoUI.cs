@@ -331,7 +331,14 @@ public partial class LevelShop
         skipText.fontSizeMin = 18f;
         skipText.fontSizeMax = 30f;
         Image img = skipButton.GetComponent<Image>();
-        if (img != null) img.color = new Color(1f, 0.55f, 0.35f);
+        if (!UiRules.Legacy)
+        {
+            // UI 개편: 주황 덧칠 · 굵게 없이 석판 보조 버튼 (색을 곱하면 탁한 갈색이 됐음 — 캡처 확인) · 높이 64 · 본문 26
+            skipText.fontStyle = FontStyles.Normal;
+            skipText.fontSizeMax = UiTokens.Body;
+            ((RectTransform)skipButton.transform).sizeDelta = new Vector2(440f, 64f);
+        }
+        else if (img != null) img.color = new Color(1f, 0.55f, 0.35f);
         TooltipTrigger tip = skipButton.gameObject.AddComponent<TooltipTrigger>();
         tip.title = Loc.T("이번 레벨업 포기");
         tip.body = Loc.T("이번 레벨업에서는 아무것도 배우지 않습니다. 원하는 스킬 · 진화를 노릴 때 쓰세요.") + "\n" + Loc.T("실수로 누르지 않게 두 번 눌러야 포기됩니다.");

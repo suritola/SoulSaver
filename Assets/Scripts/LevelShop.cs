@@ -636,6 +636,9 @@ public partial class LevelShop : MonoBehaviour
             tr.anchoredPosition = new Vector2(0f, V2TitleY);
             tr.sizeDelta = new Vector2(tr.sizeDelta.x, V2TitleH);
             title.enableWordWrapping = false;
+            title.margin = Vector4.zero;                // 장면 글자의 여백 때문에 이름이 오른쪽으로 40 밀려 있었음 (캡처 확인)
+            title.alignment = TextAlignmentOptions.Center;
+            tr.sizeDelta = new Vector2(360f, V2TitleH);
             title.enableAutoSizing = true;
             title.fontSizeMax = UiTokens.Heading;
             title.fontSizeMin = UiTokens.MinSize(UiTokens.Heading);

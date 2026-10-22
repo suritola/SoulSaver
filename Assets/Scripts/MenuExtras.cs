@@ -668,7 +668,9 @@ public static class MenuExtras
         {
             hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
             hr.pivot = new Vector2(0.5f, 0.5f);
-            hr.anchoredPosition = new Vector2(0f, -50f);
+            hr.anchoredPosition = new Vector2(0f, -30f);
+            hr.sizeDelta = new Vector2(Mathf.Max(hr.sizeDelta.x, 540f), 700f);          // 512 그림 + 이름 · 영웅 변경
+            MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
         InstallNewsCard(parent);
     }
