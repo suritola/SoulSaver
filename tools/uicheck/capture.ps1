@@ -7,15 +7,17 @@
 param(
     [string[]]$Sizes = @("1920x1080", "1440x1080"),
     [switch]$UiV2,                  # UI 개편 새 모습으로 찍기 (실행 인자 -uiv2 → UiRules.Legacy = false)
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
+    [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\unity-env.ps1")
+if (-not $Unity) { $Unity = $UnityExe }
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $Sizes = $Sizes -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
 $Project = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
-$CopyDir = Join-Path $Work "Project"
+$CopyDir = Join-Path $Work $UnityCopyName
 $OutRoot = Join-Path $Work "UiCapture"
 
 New-Item -ItemType Directory -Force $CopyDir | Out-Null

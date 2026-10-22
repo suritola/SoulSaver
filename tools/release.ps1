@@ -8,13 +8,15 @@ param(
     [string]$Version,
     [string]$NotesFile,     # 패치노트 파일 (없으면 커밋 목록으로 자동 작성)
     [string]$Repo = "suritola/myFirst2DGame-builds",
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
+    [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "unity-env.ps1")
+if (-not $Unity) { $Unity = $UnityExe }
 
 $Project = Split-Path $PSScriptRoot -Parent
 $Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
-$CopyDir = Join-Path $Work "Project"
+$CopyDir = Join-Path $Work $UnityCopyName
 $OutDir = Join-Path $Work "Out"
 $Gh = (Get-Command gh -ErrorAction SilentlyContinue).Source
 if (-not $Gh) { $Gh = "C:\Program Files\GitHub CLI\gh.exe" }
