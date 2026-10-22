@@ -14,11 +14,11 @@ RULES = [
     ("ppu-multiplier", re.compile(r"pixelsPerUnitMultiplier\s*=(?!\s*1f)")),        # 1 로 고정하는 것은 허용
     ("bold", re.compile(r"(?<!~)FontStyles\.Bold")),                                # 굵게를 빼는 &= ~ 는 허용
     ("sine-pulse", re.compile(r"Mathf\.(Sin|PingPong)\(")),
-    ("scale-state", re.compile(r"\.localScale\s*=")),
+    ("scale-state", re.compile(r"\.localScale\s*=(?!\s*Vector3\.one)")),                 # 제자리로 되돌리기는 허용
     ("gold-literal", re.compile(r"0\.96f,\s*0\.83f,\s*0\.47f")),
     ("text-size", re.compile(r"UIKit\.Text\([^;]*?,\s*([\d.]+)f\s*,")),
     ("glow-sprite", re.compile(r"GlowSprite")),
-    ("gradient-shadow", re.compile(r"enableVertexGradient|AddComponent<(Shadow|Outline)>")),
+    ("gradient-shadow", re.compile(r"enableVertexGradient\s*=\s*true|AddComponent<(Shadow|Outline)>")),   # 끄기는 허용
     ("button-sprite", re.compile(r"\bButtonSprite\b")),
 ]
 ALLOWED_SIZES = {"22", "26", "34", "48"}

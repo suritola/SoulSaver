@@ -2,7 +2,7 @@
 ppu-multiplier 14
 bold 33
 sine-pulse 192
-scale-state 182
+scale-state 51
 gold-literal 71
 text-size 195
 glow-sprite 29
