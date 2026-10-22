@@ -13,6 +13,7 @@ public static class MenuHeroPanel
 {
     static RectTransform panel;
     const float W = 440f;
+    public static float PortraitV2 = 512f;        // UI 개편: 영웅 그림 크기 (32 × 16 · 화면이 좁으면 메인 배치가 384 로)
     static Transform rootRef;
 
     static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
@@ -71,7 +72,7 @@ public static class MenuHeroPanel
         // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
         float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
         // 1.4.8~ 사용자 「너무 많다」: 「지금 영웅」 · 칭호 · 숙련 줄을 빼고 초상 · 이름 · 「영웅 바꾸기」만 (칭호 · 숙련은 이름에 마우스를 올리면)
-        float P = UiRules.Legacy ? 420f : 512f;          // 1.4.8~ 도트 그림 둘레 여백이 커서 실제 몸이 작게 보였음 → 칸을 키움 · UI 개편: 32px × 16 정수 배 (가운데 무대에 서서 더 크게 — 캡처 확인)
+        float P = UiRules.Legacy ? 420f : PortraitV2;          // 1.4.8~ 도트 그림 둘레 여백이 커서 실제 몸이 작게 보였음 → 칸을 키움 · UI 개편: 32px × 16 정수 배 (가운데 무대에 서서 더 크게 — 캡처 확인)
         RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = CharacterUI.Portrait(id);

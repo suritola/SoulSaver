@@ -653,23 +653,26 @@ public static class MenuExtras
     //   왼쪽 · 오른쪽 끝에 붙여(앵커) UI 크기 110 · 120% 로 논리 폭이 줄어도 화면 안 · 이름은 그대로 (다른 코드 · QA 가 이름으로 찾음)
     // 2026-10-22~ 사용자 「가운데가 텅 비고 UI 가 작다」: 열 420 → 480 · 목록 글자 26 → 34 · 줄 54 → 64, 영웅은 오른쪽 끝 → 카펫 가운데(무대)
     // 2026-10-22~ 사용자 「메뉴 버튼들과 캐릭터 위치를 바꾸자」: 메뉴 열은 가운데(카펫 위 · 가운데 앵커), 영웅은 왼쪽(예전 메뉴 자리) · 제목은 왼쪽 위 그대로
-    const float TitleX = 120f, MainW = 480f, MainRowH = 64f, MainRowGap = 12f;
-    const float MainX = -MainW * 0.5f;          // 가운데 앵커 기준 열 왼쪽 끝
+    // 2026-10-23~ 사용자 「시안(docs/art/ui-v2-preview.png)이 마음에 들었는데 왜 이대로 안 하냐」: 시안 그대로 —
+    //   왼쪽 여백 120 · 폭 420 한 열 · 버튼 60 · 글자 왼쪽 정렬, 이어하기(판 정보 한 줄) → 「시작 ◀ 보통 ▶」(난이도 탭 줄 대신 시작 안 스테퍼) → 목록
+    //   영웅은 카펫 가운데(시안에서 견본 창이 있던 자리) · 오른쪽 새 소식 · 다음 목표 카드는 그대로
+    const float TitleX = 120f, MainX = 120f, MainW = 420f, MainRowH = 60f, MainRowGap = 12f, LabelPad = 60f;
     static RectTransform LeftPlace(Transform parent, string name, float y, float h, float w = MainW, float font = 0f)
     {
         RectTransform r = parent.Find(name) as RectTransform;
         if (r == null || !r.gameObject.activeSelf) return null;
-        r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
+        r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
         r.pivot = new Vector2(0f, 0.5f);
         r.anchoredPosition = new Vector2(MainX, y);
         r.sizeDelta = new Vector2(w, h);
         TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
         if (t != null && t.transform.parent == r)
         {
+            // 글자 왼쪽 정렬 (왼쪽 60 은 포커스 영혼불 표식 자리 · 시안과 같게)
             RectTransform tr = t.rectTransform;
-            tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f);
-            tr.anchoredPosition = Vector2.zero;
-            tr.sizeDelta = new Vector2(w - UiTokens.S4 * 2f, h - UiTokens.S1);
+            tr.anchorMin = Vector2.zero; tr.anchorMax = Vector2.one;
+            tr.offsetMin = new Vector2(LabelPad, 3f); tr.offsetMax = new Vector2(-UiTokens.S4, -3f);
+            t.alignment = TextAlignmentOptions.MidlineLeft;
             if (font > 0f) { t.enableAutoSizing = true; t.fontSize = t.fontSizeMax = font; t.fontSizeMin = UiTokens.MinSize(font); }
         }
         return r;
@@ -680,90 +683,83 @@ public static class MenuExtras
     static void LayoutMainV2(Transform parent)
     {
         mainLaidOut = true;
-        // 제목 · 부제 (장면 글자 · 가운데 앵커 → 왼쪽)
+        // 제목 · 부제 (장면 글자 · 가운데 앵커 → 왼쪽 위, 시안처럼 대문자)
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
-            bool title = t.text == "Soul Saver", sub = t.name == "Subtitle";
+            bool title = t.name == "GameTitleV2" || t.text == "Soul Saver", sub = t.name == "Subtitle";
             if (!title && !sub) continue;
             RectTransform r = t.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(TitleX, title ? 390f : 312f);
-            r.sizeDelta = new Vector2(title ? 1000f : 700f, title ? 140f : 34f);
+            r.anchoredPosition = new Vector2(TitleX, title ? 390f : 316f);
+            r.sizeDelta = new Vector2(title ? 1000f : 700f, title ? 120f : 34f);
             t.alignment = TextAlignmentOptions.Left;
-            if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 120f); t.fontSizeMin = 60f; }
+            if (title)
+            {
+                t.name = "GameTitleV2";
+                t.text = "SOUL SAVER";
+                t.enableAutoSizing = true; t.fontSizeMax = 96f; t.fontSizeMin = 60f;
+            }
         }
-        // 2026-10-22~ 사용자 「시작은 왜 저기 있냐 · 배치가 좀 그래」: 고르는 순서대로 한 덩어리 — 난이도 → 시작(이어하기가 있으면 반씩 나란히) → (영혼의 무게) → 목록
-        //   덩어리 위끝은 배경 문(포털) 아래끝 밑 (예전엔 「시작」이 문을 가리고 혼자 떨어져 있었음 — 캡처 확인) · 「시작」과 목록 사이만 넓게 띄워 두 묶음으로
-        float y = 150f;
+        // 난이도 탭 줄은 숨기고 「시작」 안 스테퍼로 (탭 버튼은 지우지 않음 — 누름 동작을 스테퍼가 그대로 부름)
         Transform plate = parent.Find("DiffPlate");
         if (plate != null) plate.gameObject.SetActive(false);
-        float tabW = (MainW - UiTokens.S1 * 3f) / 4f;
-        const float TabH = 54f, StartH2 = 76f;
-        y -= TabH * 0.5f;
         for (int i = 0; i < 4; i++)
         {
-            RectTransform r = parent.Find("Difficulty_" + (Difficulty)i) as RectTransform;
-            if (r == null) continue;
-            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-            r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(MainX + i * (tabW + UiTokens.S1), y);
-            r.sizeDelta = new Vector2(tabW, TabH);
-            TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
-            if (t != null) { t.rectTransform.sizeDelta = new Vector2(tabW - 12f, 46f); t.enableAutoSizing = true; t.fontSizeMin = 18f; t.fontSizeMax = UiTokens.Body; }
-            Transform ul = r.Find("Underline");
-            if (ul is RectTransform ur) { ur.anchoredPosition = new Vector2(0f, -18f); ur.sizeDelta = new Vector2(tabW * 0.5f, UiRules.Dot); }
+            Transform tab = parent.Find("Difficulty_" + (Difficulty)i);
+            if (tab != null) tab.gameObject.SetActive(false);
         }
-        y -= TabH * 0.5f + UiTokens.S1 + StartH2 * 0.5f;
+        float y = 236f;
         bool cont = parent.Find("ContinueButton") != null && parent.Find("ContinueButton").gameObject.activeSelf;
         if (cont)
         {
-            float half = (MainW - UiTokens.S2) * 0.5f;
-            RectTransform cr = LeftPlace(parent, "ContinueButton", y, StartH2, half, UiTokens.Body);
-            RectTransform sr2 = LeftPlace(parent, "GameStartButton", y, StartH2, half, UiTokens.Heading);
-            if (sr2 != null) sr2.anchoredPosition = new Vector2(MainX + half + UiTokens.S2, y);
-            if (cr != null) cr.SetAsLastSibling();
+            LeftPlace(parent, "ContinueButton", y, 84f, MainW, UiTokens.Heading);      // 「이어하기」 + 아래 판 정보 한 줄 (InstallContinue 글)
+            y -= 42f + MainRowGap + MainRowH * 0.5f;
         }
-        else LeftPlace(parent, "GameStartButton", y, StartH2, MainW, UiTokens.Heading);
-        y -= StartH2 * 0.5f;
-        // 영혼의 무게 (해금했으면 시작 바로 아래 자리를 늘 잡음 · 어려움을 고르면 켜짐)
+        RectTransform sr = LeftPlace(parent, "GameStartButton", y, MainRowH, MainW, cont ? UiTokens.Body : UiTokens.Heading);
+        if (sr != null) EnsureDiffStepper(sr, parent);
+        y -= MainRowH * 0.5f;
+        // 영혼의 무게 (어려움일 때만 시작 바로 아래)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
-        bool weightOn = wr != null && SoulWeight.Unlocked && GameMode.Current == Difficulty.Hard;      // 보일 때(어려움)만 자리 · 난이도를 바꾸면 다시 배치 (늘 비워 두면 시작과 목록 사이가 80 벌어졌음 — 캡처 확인)
+        bool weightOn = wr != null && SoulWeight.Unlocked && GameMode.Current == Difficulty.Hard;
         if (wr != null)
         {
-            wr.anchorMin = wr.anchorMax = new Vector2(0.5f, 0.5f);
+            wr.anchorMin = wr.anchorMax = new Vector2(0f, 0.5f);
             wr.pivot = new Vector2(0f, 0.5f);
             wr.anchoredPosition = new Vector2(MainX, y - UiTokens.S1 - 16f);
             wr.sizeDelta = new Vector2(MainW, 32f);
         }
         if (weightOn) y -= UiTokens.S1 + 32f;
-        y -= UiTokens.S6 + MainRowH * 0.5f;        // 「시작」 묶음과 목록 사이만 넓게
+        y -= MainRowGap + MainRowH * 0.5f;
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
-            RectTransform placed = LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading);
+            RectTransform placed = LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Body);
             if (placed == null) continue;
             bool streak = false;
             if (n == "DailyButton" && placed.Find("StreakLabel") is RectTransform sl)
             {
-                // 옛 칸 높이 기준(-77)이라 아래 「설정」 버튼을 28 덮었음 (검토) → 버튼 바로 아래 · 그만큼 다음 줄을 내림
-                sl.anchorMin = sl.anchorMax = new Vector2(0.5f, 0.5f);
-                sl.anchoredPosition = new Vector2(MainW * 0.5f, -MainRowH * 0.5f - 14f);
-                streak = sl.gameObject.activeSelf;
+                // 「연속 n일」: 일일 도전 글자 오른쪽 끝 (버튼 안 · 다음 줄을 덮지 않게)
+                sl.anchorMin = sl.anchorMax = new Vector2(1f, 0.5f);
+                sl.pivot = new Vector2(1f, 0.5f);
+                sl.anchoredPosition = new Vector2(-UiTokens.S4, 0f);
+                sl.sizeDelta = new Vector2(160f, 30f);
+                if (sl.GetComponent<TMP_Text>() is TMP_Text stx) { stx.alignment = TextAlignmentOptions.MidlineRight; stx.color = UiTokens.Text3; stx.fontSize = stx.fontSizeMax = UiTokens.Small; }
+                streak = false;
             }
             y -= MainRowH + MainRowGap + (streak ? 26f : 0f);
         }
-        // 영웅은 카펫 정가운데 · 문(포털) 바로 아래 — 배경의 가운데 축(문 · 카펫)에 맞춰 섬 (+150 으로 비켜 서면 어중간했음: 캡처 확인)
-        GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서 (못 찾으면 메뉴 열과 겹침)
-        Transform hp = hpo != null ? hpo.transform : null;
-        if (hp is RectTransform hr)
+        // 영웅은 카펫 가운데 (시안에서 견본 창이 있던 무대) — UI 110 · 120% 로 화면이 좁으면 메뉴 열 · 오른쪽 카드와 안 겹치게 작게 · 비켜 섬
+        GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서
+        if (hpo != null && hpo.transform is RectTransform hr)
         {
-            hr.anchorMin = hr.anchorMax = new Vector2(0f, 0.5f);
-            hr.pivot = new Vector2(0.5f, 0.5f);
-            // 왼쪽 끝 120 + 열 폭 절반 (제목과 같은 왼쪽 줄) — 단 UI 110 · 120% 로 논리 폭이 줄면 메뉴 열(가운데 ±240)과 24 띄우도록 왼쪽으로 (검토: 120% 에서 70 겹쳐 클릭을 가로챘음)
             float cw = parent is RectTransform pcr && pcr.rect.width > 100f ? pcr.rect.width : 1920f;
-            float hx = Mathf.Min(TitleX + MainW * 0.5f, cw * 0.5f - MainW * 0.5f - UiTokens.S4 - hr.sizeDelta.x * 0.5f);
-            hr.anchoredPosition = new Vector2(hx, -70f);
-            hr.sizeDelta = new Vector2(Mathf.Max(hr.sizeDelta.x, 540f), 700f);          // 512 그림 + 이름 · 영웅 변경
+            MenuHeroPanel.PortraitV2 = cw < 1800f ? 384f : 512f;        // 32 × 12 / × 16 (정수 배)
+            float half = MenuHeroPanel.PortraitV2 * 0.5f + 14f;
+            float colRight = -cw * 0.5f + MainX + MainW + UiTokens.S4;   // 가운데 기준 메뉴 열 오른쪽 끝 + 24
+            hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
+            hr.pivot = new Vector2(0.5f, 0.5f);
+            hr.sizeDelta = new Vector2(half * 2f, MenuHeroPanel.PortraitV2 + 188f);
+            hr.anchoredPosition = new Vector2(Mathf.Max(0f, colRight + half), -60f);
             MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
         InstallNewsCard(parent);
@@ -819,6 +815,65 @@ public static class MenuExtras
         };
         write();
         card.gameObject.AddComponent<LocRefresh>().refresh = write;
+    }
+
+    // 「시작 ◀ 보통 ▶」 (시안): 시작 버튼 안 오른쪽 · 화살표는 잠기지 않은 다음 · 이전 난이도로 (숨긴 난이도 탭의 누름 동작을 그대로 부름) · 이름에 마우스를 올리면 난이도 설명
+    static void EnsureDiffStepper(RectTransform start, Transform parent)
+    {
+        Transform s = start.Find("DiffStepper");
+        TMP_Text label;
+        if (s == null)
+        {
+            RectTransform sr = UIKit.Rect("DiffStepper", start, Vector2.zero, new Vector2(176f, MainRowH - 12f));
+            sr.anchorMin = sr.anchorMax = sr.pivot = new Vector2(1f, 0.5f);
+            sr.anchoredPosition = new Vector2(-UiTokens.S2, 0f);
+            for (int k = 0; k < 2; k++)
+            {
+                int dir = k == 0 ? -1 : 1;
+                RectTransform ar = UIKit.Rect(k == 0 ? "Prev" : "Next", sr, new Vector2(k == 0 ? -70f : 70f, 0f), new Vector2(36f, 44f));
+                Image hit = ar.gameObject.AddComponent<Image>();
+                hit.color = new Color(0f, 0f, 0f, 0f);          // 누름 칸 (그림보다 넓게)
+                Button ab = ar.gameObject.AddComponent<Button>();
+                ab.transition = Selectable.Transition.None;
+                ab.onClick.AddListener(() => StepDifficulty(parent, dir));
+                RectTransform gr = UIKit.Rect("Glyph", ar, Vector2.zero, new Vector2(9f, 15f));
+                Image g = gr.gameObject.AddComponent<Image>();
+                g.sprite = UiRules.Sprite(k == 0 ? "ui2_arrow_l" : "ui2_arrow_r");
+                g.color = UiTokens.Text2;
+                g.raycastTarget = false;
+            }
+            label = UIKit.Text(sr, "", UiTokens.Body, UiTokens.Text1, Vector2.zero, new Vector2(100f, 40f));
+            label.name = "DiffLabel";
+            label.enableWordWrapping = false;
+            label.fontSizeMin = 16f;
+            label.raycastTarget = true;
+            UIKit.Forget(label);
+            TooltipTrigger tip = label.gameObject.AddComponent<TooltipTrigger>();
+            tip.titleProvider = () => GameMode.Name(GameMode.Current);
+            tip.bodyProvider = () => LadderTip(GameMode.Current);
+        }
+        else label = s.Find("DiffLabel")?.GetComponent<TMP_Text>();
+        if (label != null)
+        {
+            label.text = GameMode.Name(GameMode.Current);
+            label.color = GameMode.Current == Difficulty.Hard ? UiTokens.Danger : GameMode.Current == Difficulty.Endless ? UiTokens.GaugeSoul : UiTokens.Text1;
+        }
+    }
+
+    static void StepDifficulty(Transform parent, int dir)
+    {
+        int cur = (int)GameMode.Current;
+        for (int k = 1; k <= 4; k++)
+        {
+            Difficulty d = (Difficulty)(((cur + dir * k) % 4 + 4) % 4);
+            if (!GameMode.IsUnlocked(d)) continue;
+            Transform t = parent.Find("Difficulty_" + d);
+            Button b = t != null ? t.GetComponent<Button>() : null;
+            if (b != null) b.onClick.Invoke();          // 고르기 · 강조 · 다시 배치는 원래 탭 동작이 맡음
+            else GameMode.Current = d;
+            UISound.Click();
+            return;
+        }
     }
 
     // 오른쪽 아래 「새 소식」 카드 하나 (사용자 「오른쪽이 텅 비지 않을까」) — 최신 공지 제목 + 패치노트 버튼, 판 하나 · 버튼 하나만 (설명창을 늘리지 않음)
