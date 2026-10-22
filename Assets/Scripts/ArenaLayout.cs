@@ -35,6 +35,8 @@ public static class ArenaLayout
     };
 
     const float SeamMul = 0.92f, CurbMul = 0.88f;
+    // 바닥 밖 벽 채움 폭 — 카메라 반 높이 28 · 16:9 반 너비 약 50 (+ 여유) · 그보다 넓은 화면 · 조준 줌은 배경색이 보임
+    const int OuterX = 54, OuterY = 32;
     const int SeamEvery = 8, PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
 
     // 깨지는 물체 자리 (월드 좌표 · 칸 가운데) — MapProps 가 씀 (맵 확장 6)
@@ -140,8 +142,9 @@ public static class ArenaLayout
         floorTiles = fl.ToArray();
 
         // 벽 띠 (채움 · 정면 4줄 · 창은 x ≡ 3 (mod 6) 좌우 대칭 · 성문 자리는 비움)
+        //   2026-10-22~ 맵 바깥이 보이지 않게 채움을 화면 반 너비 · 반 높이 너머까지 (사용자 「맵 바깥쪽이 안 보였으면」) — 판정은 벽 상자 4개 그대로
         List<TileChangeData> wl = new List<TileChangeData>();
-        int wx0 = x0 - 8, wx1 = x1 + 8, wy0 = y0 - 7, wy1 = y1 + 10;
+        int wx0 = x0 - OuterX, wx1 = x1 + OuterX, wy0 = y0 - OuterY, wy1 = y1 + OuterY;
         for (int y = wy0; y <= wy1; y++)
             for (int x = wx0; x <= wx1; x++)
             {
