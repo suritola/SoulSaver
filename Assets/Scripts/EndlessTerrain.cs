@@ -33,7 +33,10 @@ public class EndlessTerrain : MonoBehaviour
     {
         new Color(0.95f, 0.78f, 0.5f, 0.35f), new Color(0.6f, 0.65f, 0.8f, 0.3f), new Color(0.9f, 0.4f, 0.2f, 0.35f), new Color(0.7f, 0.9f, 0.5f, 0.3f), new Color(0.45f, 0.4f, 0.75f, 0.25f),
     };
-    static readonly int[][] DecorKinds = { new int[0], new[] { 5, 6, 3, 7 }, new[] { 4, 6, 7, 8 }, new[] { 3, 4, 5, 7 }, new[] { 4, 5, 6, 7 } };
+    static readonly int[][] LegacyDecorKinds = { new int[0], new[] { 5, 6, 3, 7 }, new[] { 4, 6, 7, 8 }, new[] { 3, 4, 5, 7 }, new[] { 4, 5, 6, 7 } };
+    // 맵 확장 6~: 해골 · 가시 · 통 · 화로 · 수정(장애물과 같은 그림) · 묘비(장애물과 같은 그림)를 빼고 구획 무늬 재료만 (바위 · 무너진 벽 · 풀꽃)
+    static readonly int[][] TidyDecorKinds = { new int[0], new[] { 3 }, new[] { 1, 3 }, new[] { 3, 5 }, new[] { 3, 5 } };
+    static int[][] DecorKinds => VisualRules.TidyArena ? TidyDecorKinds : LegacyDecorKinds;
     static readonly string[] Subtitle =
     {
         "",
@@ -53,6 +56,7 @@ public class EndlessTerrain : MonoBehaviour
     readonly Tilemap[] layers = new Tilemap[3];         // 0 바닥 · 1 벽 · 2 장식 (TilemapRenderer.sortingOrder 순)
     readonly Vector3Int[] off = new Vector3Int[3];      // 바닥 칸 → 층 칸
     readonly byte[][] slot = new byte[3][];              // 칸 번호 k (tileset_*_32_k · objects_*_k), Empty = 빈 칸
+    Color[] floorTint;                                   // 맵 확장 5~: 바닥 칸의 원래 색 (ArenaLayout 의 이음매 · 연석) — 영토를 칠해도 곱해서 남김
     int ux, uy, uw, uh;                                  // 세 층을 덮는 범위 (바닥 칸 좌표)
     // 2026-10-22~ 맵-3: 기록에 칸 틀을 적어 둠 ("G가로x세로@x,y") — 경기장 크기가 바뀌면(맵 확장) 옛 기록의 칸 번호를 새 틀로 옮김
     //   틀이 없는 옛 기록 = 확장 전 지옥 세 층 합 (−62,−45) 125×86 · 옛 빌드는 G 항목을 못 읽고 건너뜀 (int.TryParse 실패)
@@ -178,6 +182,11 @@ public class EndlessTerrain : MonoBehaviour
                 if (sprite == null) continue;
                 if (!known.TryGetValue(sprite, out byte k)) known[sprite] = k = SlotOf(sprite.name, l == 2 ? "objects_" : "tileset_");
                 s[i] = k;
+                if (l == 0)
+                {
+                    if (floorTint == null || floorTint.Length != n) { floorTint = new Color[n]; for (int j = 0; j < n; j++) floorTint[j] = Color.white; }
+                    floorTint[i] = tm.GetColor(CellOf(i, l));
+                }
             }
         }
 
@@ -505,6 +514,7 @@ public class EndlessTerrain : MonoBehaviour
         Tilemap tm = layers[l];
         if (tm == null || stagingCount[l] >= staging[l].Length) return;
         Vector3Int cell = CellOf(i, l);
+        if (l == 0 && floorTint != null && i < floorTint.Length) { Color b = floorTint[i]; color = new Color(color.r * b.r, color.g * b.g, color.b * b.b, color.a); }      // 이음매 · 연석 유지 (T4)
         staging[l][stagingCount[l]++] = new TileChangeData(cell, s != null ? TileFor(s) : null, color, tm.GetTransformMatrix(cell));
     }
 
@@ -562,6 +572,8 @@ public class EndlessTerrain : MonoBehaviour
         missing = "용암 " + Has(Hell, 0, 3) + " · 균열 " + Has(Hell, 0, 4) + " · 묘비 " + Has(Cave, 1, 5) + " · 수정 " + Has(Abyss, 1, 4) + " · 늪 " + Has(Meadow, 0, 0);
         return false;
     }
+    // 맵 확장 5~: ArenaLayout 이 정돈된 배치를 깔 때 쓰는 그림 (kind 0 타일셋 · 1 장식, 없으면 null)
+    public static Sprite PaletteSprite(int realm, int kind, int slot) => Has(realm, kind, slot) ? art[realm][kind][slot] : null;
     static bool Has(int realm, int kind, int slot) => art[realm] != null && art[realm][kind] != null && slot < art[realm][kind].Length && art[realm][kind][slot] != null;
 
     static Sprite[][] Art(int realm)
@@ -631,9 +643,21 @@ public class EndlessTerrain : MonoBehaviour
         newDecorCount = 0;
         int[] kinds = DecorKinds[realm];
         if (kinds.Length == 0 || blobCount == 0 || layers[2] == null) return;
+        // 맵 확장 6~: 정돈된 배치면 8칸 이음매 교차점 중 바둑판 절반에만 (ArenaLayout 과 같은 격자 · 가운데 줄 −4)
+        List<int> grid = null;
+        if (VisualRules.TidyArena)
+        {
+            grid = new List<int>();
+            for (int b = 0; b < blobCount; b++)
+            {
+                int c = blobCells[b], x = ux + c % uw, y = uy + c / uw + 4;
+                if (x % 8 == 0 && y % 8 == 0 && ((x / 8 + y / 8) & 1) == 0) grid.Add(c);
+            }
+            if (grid.Count == 0) return;
+        }
         for (int tries = 0; tries < DecorPerRealm * 12 && newDecorCount < DecorPerRealm; tries++)
         {
-            int i = blobCells[rng.Next(blobCount)];
+            int i = grid != null ? grid[rng.Next(grid.Count)] : blobCells[rng.Next(blobCount)];
             byte k = (byte)kinds[rng.Next(kinds.Length)];
             if (slot[2][i] != Empty || slot[0][i] == Empty) continue;
             Vector3 p = WorldOf(i);

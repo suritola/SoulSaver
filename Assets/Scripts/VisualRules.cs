@@ -36,6 +36,8 @@ public static class VisualRules
 
     // 경기장 배율 (ArenaRules · docs/art/맵-확장-기획서.md) — 맵-6 에서 1.4 로 (그때까지 1 = 예전 그대로)
     public static float ArenaMul => Legacy ? 1f : 1f;
+    // 정돈된 경기장 배치 (ArenaLayout · 맵 확장 5) — 묘역 · 지옥 · 초원 타일맵을 시작 때 다시 깖
+    public static bool TidyArena => !Legacy;
 
     // 카메라를 더 멀리 (직교 크기 20 → 28 · 조준 줌 최대도 같은 배율) — 2026-10-22 사용자 「카메라 좀 더 멀리」 · 「28 정도 해봐」
     //   적 생성은 화면 범위를 그때그때 읽어(EnemySpawn 뷰포트) 화면 밖에서 나오는 건 그대로

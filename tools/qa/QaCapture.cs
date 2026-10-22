@@ -506,6 +506,7 @@ public class QaCapture
             Log("Time.time 미리 흘림 → " + Time.time.ToString("0"));
         }
 
+        yield return Safe("map_overview", MapOverview, 300);
         yield return Safe("memory_bar", MemoryBar, 240);
         yield return Safe("terrain", TerrainAndErosion, 420);
         yield return Safe("erosion_pending", ErosionPending, 180);
@@ -583,6 +584,41 @@ public class QaCapture
     }
 
     // ================================================================= 2) graphics-4 · 지형 변화 · 곡 교차 · graphics-5 · balance-3 · 컷신 ESC
+    // 맵 확장 (docs/art/맵-확장-기획서.md): 묘역 · 지옥 · 초원 · 심연 · 무한 사막 맵 전체를 한 장씩 + 경계 · 벽 상자 · 포털 로그
+    static IEnumerator MapOverview()
+    {
+        yield return LoadGame("Gunner", "Easy");
+        object sm = SGet("StageManager", "Instance");
+        Log("경기장 배율 " + SGet("ArenaRules", "Mul") + " · 바닥 " + SGet("ArenaRules", "FloorMin") + "~" + SGet("ArenaRules", "FloorMax") + " · 자리 " + ((System.Collections.IList)SGet("ArenaLayout", "PropSockets")).Count);
+        object sp = Find("EnemySpawner");
+        if (sp != null) Log("spawnArea " + Get(sp, "spawnAreaMin") + "~" + Get(sp, "spawnAreaMax") + " · 보스 " + Get(sp, "bossSpawnPoint"));
+        foreach (BoxCollider2D b in UnityEngine.Object.FindObjectsByType<BoxCollider2D>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            Log("  상자 " + b.name + " offset " + b.offset + " size " + b.size + (b.isTrigger ? " (트리거)" : ""));
+        string[] names = { "cave", "hell", "meadow", "abyss" };
+        for (int st = 0; st < 4; st++)
+        {
+            Call(sm, "JumpToStage", st);
+            yield return Frames(6);
+            ((Component)Player()).transform.position = new Vector3(0.5f, -3.5f, 0f);
+            foreach (Component e in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None).Cast<Component>()) e.gameObject.SetActive(false);
+            Time.timeScale = 0f;
+            yield return Frames(3);
+            shotZoom = 1.6f;
+            yield return Shot("map_" + names[st]);
+            shotZoom = 1f;
+            Time.timeScale = 1f;
+        }
+        yield return LoadGame("Gunner");
+        ((Component)Player()).transform.position = new Vector3(0.5f, -3.5f, 0f);
+        foreach (Component e in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None).Cast<Component>()) e.gameObject.SetActive(false);
+        Time.timeScale = 0f;
+        yield return Frames(3);
+        shotZoom = 1.6f;
+        yield return Shot("map_desert");
+        shotZoom = 1f;
+        Time.timeScale = 1f;
+    }
+
     static IEnumerator TerrainAndErosion()
     {
         yield return LoadGame("Gunner");

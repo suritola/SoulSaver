@@ -894,6 +894,9 @@ public class EndlessMode : MonoBehaviour
             ("prop_cactus", 3f, 1.6f), ("prop_cactus_small", 3f, 1.5f), ("prop_rocks", 3f, 1.6f), ("prop_bush", 3f, 1.5f),
             ("prop_skull", 1.5f, 1.4f), ("prop_ribs", 1.2f, 1.6f), ("prop_brazier", 1f, 1.5f), ("prop_flame_pillar", 1f, 1.6f),
         };
+        // 맵 확장 6~: 정돈된 배치면 무작위 95개 대신 구획 무늬 자리에 선인장 · 덤불 (해골 · 갈비뼈는 해골 적과 닮아 빼고, 불은 성문 양옆 타일만)
+        if (VisualRules.TidyArena && ArenaLayout.MotifCenters.Count > 0
+            && ArenaLayout.PlaceMotifProps(parent.gameObject, desert, "DesertProps", new[] { ("prop_cactus_small", 1.5f), ("prop_cactus", 1.6f), ("prop_bush", 1.5f) }, sorting, order) != null) return;
         float total = 0f;
         foreach (var k in kinds) total += k.weight;
 

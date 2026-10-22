@@ -178,6 +178,9 @@ public static class AbyssStage
             ("prop_grave", 3f, 1.6f), ("prop_bones", 3f, 1.6f), ("prop_crystal", 2.5f, 1.6f), ("prop_statue", 1.5f, 1.7f),
             ("prop_chain_pillar", 1.2f, 1.7f), ("prop_soul_brazier", 1.6f, 1.6f),
         };
+        // 맵 확장 6~: 정돈된 배치면 무작위 85개 대신 구획 무늬 자리에 묘비 · 석상 (뼈 · 수정은 해골 적 · 깨지는 수정과 닮아 뺌)
+        if (VisualRules.TidyArena && ArenaLayout.MotifCenters.Count > 0
+            && ArenaLayout.PlaceMotifProps(parent.gameObject, art, "AbyssProps", new[] { ("prop_grave", 1.6f), ("prop_statue", 1.7f), ("prop_grave", 1.6f) }, sorting, order) != null) return;
         float total = 0f;
         foreach (var k in kinds) total += k.weight;
 

@@ -202,6 +202,20 @@ public class MapProps : MonoBehaviour
     //   못 찾으면 벽이 없는 자리 중 가장 나은 곳 · 그것도 없으면 (거의 없음) 거리만 맞춘 곳
     static Vector3 Spot(EnemySpawner sp, Vector3 me, float minFromPlayer, List<Vector3> taken, float clear)
     {
+        // 맵 확장 6~: 정돈된 배치면 바둑판 자리(ArenaLayout.PropSockets)부터 — 「바닥 구획에 서 있고 빛 테가 있으면 부술 수 있다」가 자리로도 읽히게
+        //   플레이어에게서 떨어지고 · 비어 있고 · 벽 · 지형 장애물이 없는 자리를 무작위 순서로 · 없으면 예전처럼 아무 데나
+        if (VisualRules.TidyArena && ArenaLayout.PropSockets.Count > 0)
+        {
+            List<Vector3> socks = new List<Vector3>(ArenaLayout.PropSockets);
+            for (int i = socks.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (socks[i], socks[j]) = (socks[j], socks[i]); }
+            foreach (Vector3 s in socks)
+            {
+                if (Vector2.Distance(s, me) < minFromPlayer || Hostile.WallNear(s, clear)) continue;
+                bool used = false;
+                foreach (Vector3 t in taken) if (Vector2.Distance(s, t) < 1f) { used = true; break; }
+                if (!used) return s;
+            }
+        }
         Vector2 lo = sp.spawnAreaMin + Vector2.one * 2f, hi = sp.spawnAreaMax - Vector2.one * 2f;
         if (hi.x < lo.x) hi.x = lo.x;
         if (hi.y < lo.y) hi.y = lo.y;

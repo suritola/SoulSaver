@@ -86,9 +86,28 @@ public static class ArenaRules
             Debug.LogError("[ArenaRules] 원본 치수가 예상과 달라 경기장을 바꾸지 않음: " + string.Join(" · ", bad));
             return;
         }
+        // 맵 확장 5~: 정돈된 배치를 먼저 다 계산 (세 장 · 그림 확인) — 하나라도 안 되면 배율 1 · 원본 맵 그대로 (경계만 바뀌면 벽 그림과 어긋남)
+        Compute(mul);
+        ArenaLayout.Plan plan = null;
+        if (VisualRules.TidyArena)
+        {
+            plan = ArenaLayout.Prepare(sm, out string why);
+            if (plan == null)
+            {
+                Debug.LogError("[ArenaRules] 정돈된 배치를 만들 수 없어 경기장을 바꾸지 않음: " + why);
+                Compute(1f);
+                return;
+            }
+        }
+        else if (!Mathf.Approximately(mul, 1f))
+        {
+            Debug.LogError("[ArenaRules] 배율을 바꾸려면 정돈된 배치(VisualRules.TidyArena)가 필요해 경기장을 바꾸지 않음");
+            Compute(1f);
+            return;
+        }
+        if (plan != null) ArenaLayout.Apply(plan);
         if (Mathf.Approximately(mul, 1f)) return;
 
-        Compute(mul);
         sp.spawnAreaMin = SpawnMin;
         sp.spawnAreaMax = SpawnMax;
         sp.bossSpawnPoint = BossSpawn;
