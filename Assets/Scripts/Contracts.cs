@@ -552,14 +552,17 @@ public static class Contracts
             if (canvas == null) return;
             UIKit.EnsureStyle();
             Tick();
-            const float RowH = 66f, W = 440f;
-            float h = 56f + RowH * run.Count;
+            // 2026-10-22~ 이름 · 조건 칸(-200~120)과 진행 칸(95~205)이 겹치고 긴 글자가 테두리 밖으로 넘쳤음 (사용자 「배열이 깨져 있다」)
+            //   → 안쪽 여백 · 진행 칸 · 사이 간격으로 나눠 겹치지 않게, 칸보다 긴 글자는 자동으로 줄임 · 아래 여백 14
+            const float RowH = 66f, W = 480f, Pad = 30f, ProgW = 104f, Gap = 12f;
+            const float TextW = W - Pad * 2f - ProgW - Gap, TextX = -W / 2f + Pad + TextW / 2f, ProgX = W / 2f - Pad - ProgW / 2f;
+            float h = 56f + RowH * run.Count + 14f;
             panel = new GameObject("ContractPanel", typeof(RectTransform), typeof(Image));
             RectTransform r = panel.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);
             r.SetAsLastSibling();
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 0f);
-            r.anchoredPosition = new Vector2(30f, 24f);         // 각인 목록(가운데 -20 · 최대 높이 464 → 아래끝 -252) 밑
+            r.anchoredPosition = new Vector2(30f, 18f);         // 각인 목록(가운데 -20 · 최대 높이 464 → 아래끝 -252) 밑 · 세 줄이면 위끝 -254
             r.sizeDelta = new Vector2(W, h);
             Image bg = panel.GetComponent<Image>();
             // 1.4.8~ 새 도트 스타일: 단색 판 대신 창 판(ui_panel: 금 이중 테두리 · 모서리 보석) · 못 찾으면 예전 단색
@@ -572,13 +575,21 @@ public static class Contracts
             {
                 Active a = run[i];
                 float y = h / 2f - 56f - RowH * (i + 0.5f);
-                TMP_Text name = UIKit.Text(r, "", 20f, a.done ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.93f, 0.9f, 0.84f), new Vector2(-40f, y + 13f), new Vector2(W - 120f, 28f), TextAlignmentOptions.Left);
+                TMP_Text name = UIKit.Text(r, "", 20f, a.done ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.93f, 0.9f, 0.84f), new Vector2(TextX, y + 13f), new Vector2(TextW, 28f), TextAlignmentOptions.Left);
                 name.text = a.def.Name;
-                TMP_Text cond = UIKit.Text(r, "", 15f, new Color(0.7f, 0.66f, 0.6f), new Vector2(-40f, y - 15f), new Vector2(W - 120f, 24f), TextAlignmentOptions.Left);
+                TMP_Text cond = UIKit.Text(r, "", 15f, new Color(0.7f, 0.66f, 0.6f), new Vector2(TextX, y - 15f), new Vector2(TextW, 24f), TextAlignmentOptions.Left);
                 cond.text = a.def.Cond;
-                TMP_Text prog = UIKit.Text(r, "", 17f, a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(W / 2f - (framed ? 70f : 64f), y), new Vector2(110f, 28f), TextAlignmentOptions.Right);      // 새 판이면 오른쪽 금 테두리 안쪽으로 6
+                TMP_Text prog = UIKit.Text(r, "", 17f, a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(ProgX, y), new Vector2(ProgW, 28f), TextAlignmentOptions.Right);
                 prog.text = a.done ? Loc.T("board.cell.done") : Progress(a.def, Mathf.Max(a.best, a.def.Now));
-                foreach (TMP_Text t in new[] { name, cond, prog }) { t.enableWordWrapping = false; UIKit.Forget(t); }
+                foreach (TMP_Text t in new[] { name, cond, prog })
+                {
+                    t.enableWordWrapping = false;
+                    UIKit.Forget(t);
+                    t.fontSizeMax = t.fontSize;
+                    t.fontSizeMin = Mathf.Max(11f, t.fontSize * 0.6f);
+                    t.enableAutoSizing = true;          // 칸보다 길면 줄여서 칸 안에 (넘치지 않게)
+                    t.overflowMode = TextOverflowModes.Ellipsis;
+                }
             }
         }
     }
