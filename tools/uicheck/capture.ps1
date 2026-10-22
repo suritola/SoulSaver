@@ -1,4 +1,4 @@
-# UI 배치 확인용 스크린샷을 배치 모드로 찍는다 (tools/uicheck/UiCapture.cs)
+﻿# UI 배치 확인용 스크린샷을 배치 모드로 찍는다 (tools/uicheck/UiCapture.cs)
 # record.ps1 과 같은 프로젝트 복사본을 써서 에디터가 켜져 있어도 되고 원래 저장 데이터와 섞이지 않는다.
 #
 # 사용법: pwsh tools/uicheck/capture.ps1                          (16:9 1920x1080 · 4:3 1440x1080)
@@ -6,6 +6,7 @@
 # 결과:   %LOCALAPPDATA%\SoulSaverBuild\UiCapture\<가로x세로>\*.png
 param(
     [string[]]$Sizes = @("1920x1080", "1440x1080"),
+    [switch]$UiV2,                  # UI 개편 새 모습으로 찍기 (실행 인자 -uiv2 → UiRules.Legacy = false)
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
 )
 $ErrorActionPreference = "Stop"
@@ -39,11 +40,11 @@ try {
         $env:CAPTURE_H = $h
         $log = Join-Path $Work "uicapture.log"
         Write-Host "촬영 중: $s (로그: $log)"
-        $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
+        $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList (@(
             "-batchmode", "-projectPath", "`"$CopyDir`"",
             "-runTests", "-testPlatform", "PlayMode", "-testFilter", "UiCapture",
             "-testResults", "`"$(Join-Path $Work 'uicapture-results.xml')`"",
-            "-logFile", "`"$log`"")
+            "-logFile", "`"$log`"") + $(if ($UiV2) { @("-uiv2") } else { @() }))
         $n = (Get-ChildItem $Out -Filter *.png).Count
         if ($n -eq 0) { Get-Content $log -Tail 40; throw "$s 스크린샷이 없습니다 (Unity 종료 코드 $($p.ExitCode))" }
         Write-Host "완료: $s 스크린샷 $n 장 → $Out"

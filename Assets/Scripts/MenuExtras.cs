@@ -647,6 +647,7 @@ public static class MenuExtras
         y -= 27f + MainRowGap;
         // 영혼의 무게 (어려움 + 해금 때만 켜짐 · 자리는 늘 잡아 둠)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
+        bool weightOn = wr != null && SoulWeight.Unlocked;          // 해금했으면 자리를 늘 잡음 (어려움을 고르면 나중에 켜짐 — 켜진 것만 보면 그때 도감과 겹침)
         if (wr != null)
         {
             wr.anchorMin = wr.anchorMax = new Vector2(0f, 0.5f);
@@ -654,20 +655,20 @@ public static class MenuExtras
             wr.anchoredPosition = new Vector2(MainX, y - 16f);
             wr.sizeDelta = new Vector2(MainW, 32f);
         }
-        y -= 32f + MainRowGap + MainRowH * 0.5f;
+        y -= (weightOn ? 32f + MainRowGap : UiTokens.S4) + MainRowH * 0.5f;      // 꺼져 있으면 빈칸을 남기지 않음 (사진: 난이도 줄 아래 구멍)
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
             if (LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading) == null) continue;
             y -= MainRowH + MainRowGap + (n == "DailyButton" && DailyRewards.Streak > 0 ? 18f : 0f);       // 일일 도전 아래 「연속 n일」 자리
         }
-        // 영웅은 카펫 가운데(무대) — 화면 주인공이 가운데 서고 메뉴가 왼쪽에서 받침 (오른쪽 위 포인트와 안 겹침)
+        // 영웅은 카펫 정가운데 · 문(포털) 바로 아래 — 배경의 가운데 축(문 · 카펫)에 맞춰 섬 (+150 으로 비켜 서면 어중간했음: 캡처 확인)
         GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서 (못 찾으면 메뉴 열과 겹침)
         Transform hp = hpo != null ? hpo.transform : null;
         if (hp is RectTransform hr)
         {
             hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
             hr.pivot = new Vector2(0.5f, 0.5f);
-            hr.anchoredPosition = new Vector2(150f, -50f);
+            hr.anchoredPosition = new Vector2(0f, -50f);
         }
         InstallNewsCard(parent);
     }
@@ -677,10 +678,11 @@ public static class MenuExtras
     {
         string title = PatchNotesUI.LatestTitle();
         if (string.IsNullOrEmpty(title) || parent.Find("NewsCard") != null) return;
-        const float W = 440f, H = 176f;
+        // 오른쪽 열 위쪽 (포인트 바로 아래 · 위끝을 메뉴 열 「시작」 위끝에 맞춤) — 왼쪽 메뉴 열과 좌우 균형 (오른쪽 아래 구석에 따로 떠 있었음: 캡처 확인)
+        const float W = 480f, H = 176f;
         RectTransform card = UIKit.Rect("NewsCard", parent, Vector2.zero, new Vector2(W, H));
-        card.anchorMin = card.anchorMax = card.pivot = new Vector2(1f, 0f);
-        card.anchoredPosition = new Vector2(-UiTokens.Edge, 96f);
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(1f, 1f);
+        card.anchoredPosition = new Vector2(-UiTokens.Edge, -282f);
         UiV2.Slab(card, "ui2_panel", UiTokens.Panel).raycastTarget = false;
         TMP_Text head = UIKit.Text(card, "새 소식", UiTokens.Small, UiTokens.Text3, new Vector2(0f, H * 0.5f - 34f), new Vector2(W - 60f, 28f), TextAlignmentOptions.Left);
         head.fontSizeMin = UiTokens.Small;

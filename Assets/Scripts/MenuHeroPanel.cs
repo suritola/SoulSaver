@@ -86,8 +86,8 @@ public static class MenuHeroPanel
             gi.preserveAspect = true;
             gi.raycastTarget = false;
         }
-        float y = top - P + 50f;        // 그림 아래 여백만큼 이름을 끌어올림
-        TMP_Text name = UIKit.Text(panel, d.name, 36f, Gold, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
+        float y = top - P + (UiRules.Legacy ? 50f : -6f);        // 그림 아래 여백만큼 이름을 끌어올림 · UI 개편: 끌어올리면 이름이 다리를 덮어서 발아래로
+        TMP_Text name = UIKit.Text(panel, d.name, UiRules.Legacy ? 36f : UiTokens.Heading, UiRules.Legacy ? Gold : UiTokens.Text1, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
         name.fontSizeMin = 20f;
         name.raycastTarget = true;
         string sub = d.title + "\n" + Mastery.Label(id);
