@@ -39,6 +39,8 @@ def count():
     for p, src in ui_files():
         name = os.path.relpath(p, ROOT).replace(os.sep, "/")
         for line in src.splitlines():
+            if "lint-ok" in line:          # 옛 그림을 새 그림으로 바꿔 끼우는 비교처럼 꼭 필요한 줄 (이유를 같은 줄 주석에)
+                continue
             code = line.split("//", 1)[0]
             for key, rx in RULES:
                 for m in rx.finditer(code):

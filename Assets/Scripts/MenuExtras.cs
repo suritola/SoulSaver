@@ -1082,6 +1082,7 @@ public static class UIKit
             else if (n == "ui_bar_frame" && BarFrameSprite != null && img.sprite != BarFrameSprite) { img.sprite = BarFrameSprite; if (img.type != Image.Type.Filled) img.type = Image.Type.Sliced; }
             else if (n == "ui_bar_fill" && BarFillSprite != null && img.sprite != BarFillSprite) img.sprite = BarFillSprite;
         }
+        if (!UiRules.Legacy) { RestyleSceneV2(active); return; }
         if (oldSprites.Count == 0) return;
         foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
@@ -1090,6 +1091,52 @@ public static class UIKit
             img.type = Image.Type.Sliced;
             TMP_Text t = img.GetComponent<Button>() != null ? img.GetComponentInChildren<TMP_Text>(true) : null;
             if (t != null) t.fontStyle |= FontStyles.Bold;
+        }
+    }
+
+    // UI 개편 P0-5 (Legacy 끔): 장면의 판 · 막대 틀 · 채움 · 리본 · 버튼 그림을 v2 로 (위치 · 크기 · Filled 길이 계산은 그대로)
+    //   금 보석 창 판(HUD 네 귀퉁이 판 5개 등) → 새긴 석판 · 금 막대 틀 → 홈 · 그라데이션 채움 → 두 톤 · 리본 → 석판 + 뼈색 글자
+    //   버튼은 그림 상태 바꾸기만 (글자는 각 화면 코드가 맡음) · 높이 200 넘는 것(레벨업 카드 등)은 화면 코드가 맡으므로 건드리지 않음
+    static void RestyleSceneV2(Scene active)
+    {
+        Sprite panel = UiRules.Sprite("ui2_panel"), inset = UiRules.Sprite("ui2_inset"), fill = UiRules.Sprite("ui2_fill");
+        if (panel == null) return;
+        foreach (Image img in Object.FindObjectsByType<Image>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (img.gameObject.scene != active || img.sprite == null) continue;
+            Sprite s = img.sprite;
+            if (s == PanelSprite || s.name == "ui_panel" || s == RibbonSprite)
+            {
+                img.sprite = panel;
+                if (img.type != Image.Type.Filled) { img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; }
+                img.color = new Color(1f, 1f, 1f, Mathf.Max(img.color.a, 0.9f));
+                if (s == RibbonSprite)
+                    foreach (TMP_Text bt in img.GetComponentsInChildren<TMP_Text>(true))
+                        if (bt.transform.parent == img.transform) { bt.color = UiTokens.Text1; bt.fontStyle &= ~FontStyles.Bold; }
+            }
+            else if ((s == BarFrameSprite || s.name == "ui_bar_frame") && inset != null)
+            {
+                img.sprite = inset;
+                if (img.type != Image.Type.Filled) { img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; }
+            }
+            else if ((s == BarFillSprite || s.name == "ui_bar_fill") && fill != null) img.sprite = fill;
+        }
+        Sprite bn = UiRules.Sprite("ui2_btn_secondary_n");
+        if (bn == null) return;
+        foreach (Button b in Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (b.gameObject.scene != active) continue;
+            Image img = b.GetComponent<Image>();
+            if (img == null || img.sprite == null || img.type != Image.Type.Sliced) continue;
+            if (img.sprite != ButtonSprite && !oldSprites.Contains(img.sprite)) continue;       // lint-ok: 옛 버튼 그림을 v2 로 바꿔 끼우는 비교
+            if (((RectTransform)b.transform).rect.height > 200f) continue;
+            img.sprite = bn; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; img.color = Color.white;
+            b.transition = Selectable.Transition.SpriteSwap;
+            b.spriteState = new SpriteState
+            {
+                highlightedSprite = UiRules.Sprite("ui2_btn_secondary_h"), selectedSprite = UiRules.Sprite("ui2_btn_secondary_h"),
+                pressedSprite = UiRules.Sprite("ui2_btn_secondary_p"), disabledSprite = UiRules.Sprite("ui2_btn_secondary_d"),
+            };
         }
     }
 

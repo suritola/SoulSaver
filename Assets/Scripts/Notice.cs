@@ -677,7 +677,7 @@ public static class Notice
             if (cut < bigEnd) bigEnd = cut;
         }
 
-        bool fx = GameSettings.Flashes && GameSettings.Motion > 0f;      // 1.1.9~ 「움직임 줄이기」면 튀어나옴 · 펼침 · 숨 쉬기 없이 제자리 페이드
+        bool fx = UiRules.Legacy && GameSettings.Flashes && GameSettings.Motion > 0f;      // 1.1.9~ 「움직임 줄이기」면 튀어나옴 · 펼침 · 숨 쉬기 없이 제자리 페이드 · UI 개편(Legacy 끔)도 페이드만
         float S = Scale;
         if (bigT < BigIn)
         {
@@ -721,7 +721,7 @@ public static class Notice
         }
         if (v.cap.gameObject.activeSelf)
         {
-            bool pressed = bigT > 0.5f && Mathf.Repeat(bigT - 0.5f, 0.9f) < 0.12f;
+            bool pressed = UiRules.Legacy && bigT > 0.5f && Mathf.Repeat(bigT - 0.5f, 0.9f) < 0.12f;       // UI 개편: 키캡 반복 누름 없음
             v.cap.anchoredPosition = capRest + (pressed ? new Vector2(0f, -6f) : Vector2.zero);
             v.capImg.color = pressed ? new Color(0.84f, 0.84f, 0.84f) : Color.white;
         }

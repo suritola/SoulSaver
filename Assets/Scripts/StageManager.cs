@@ -356,7 +356,7 @@ public class StageManager : MonoBehaviour
         // 1.1.9: 반짝이지 않을 때는 한 번만 씀 (매 프레임 TMP 색 · 크기 쓰기가 캔버스를 다시 묶었음)
         if (affordable || glowWritten)
         {
-            float pulse = affordable ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0f;
+            float pulse = !affordable ? 0f : UiRules.Legacy ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f) : 0.6f;      // UI 개편(Legacy 끔): 숨쉬기 없이 고정 빛
             upgradeGlow.localScale = Vector3.one * (1f + 0.15f * pulse);
             upgradeGlowImage.color = affordable ? new Color(0.72f, 0.55f, 1f, 0.3f + 0.45f * pulse) : Color.clear;
             upgradeText.color = affordable ? Color.Lerp(new Color(0.8f, 0.7f, 1f), Color.white, pulse) : new Color(0.75f, 0.7f, 0.82f);
