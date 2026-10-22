@@ -146,6 +146,7 @@ public static class MenuExtras
         DailyChallenge.End();
         EndlessMode.LastSeconds = -1f;  // 1.2.3~ 무한 판을 저장하고 나오면 남은 기록이 다음 이야기 판 결과 화면에 붙지 않게
         RunSave.EndContinue();          // 1.0.4~: 이어한 판의 캐릭터 · 난이도를 메뉴 선택에서 거둠 (난이도 버튼을 그리기 전에)
+        mainLaidOut = false;
         GameObject start = GameObject.Find("GameStartButton");
         GameObject exit = GameObject.Find("ExitButton");
         if (start == null || GameObject.Find("TutorialButton") != null) return;
@@ -656,8 +657,11 @@ public static class MenuExtras
         return r;
     }
 
+    static bool mainLaidOut;            // 메인 메뉴 배치를 마쳤는지 (난이도를 바꿀 때 다시 배치 · InstallMainMenu 가 처음에 지움)
+
     static void LayoutMainV2(Transform parent)
     {
+        mainLaidOut = true;
         // 제목 · 부제 (장면 글자 · 가운데 앵커 → 왼쪽)
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
@@ -706,7 +710,7 @@ public static class MenuExtras
         y -= StartH2 * 0.5f;
         // 영혼의 무게 (해금했으면 시작 바로 아래 자리를 늘 잡음 · 어려움을 고르면 켜짐)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
-        bool weightOn = wr != null && SoulWeight.Unlocked;
+        bool weightOn = wr != null && SoulWeight.Unlocked && GameMode.Current == Difficulty.Hard;      // 보일 때(어려움)만 자리 · 난이도를 바꾸면 다시 배치 (늘 비워 두면 시작과 목록 사이가 80 벌어졌음 — 캡처 확인)
         if (wr != null)
         {
             wr.anchorMin = wr.anchorMax = new Vector2(0.5f, 0.5f);
@@ -1002,6 +1006,8 @@ public static class MenuExtras
             if (ui != null) { ui.sprite = null; ui.color = d == Difficulty.Hard ? UiTokens.Danger : d == Difficulty.Endless ? UiTokens.GaugeSoul : UiTokens.Accent; }     // 단색 (그림에 곱하면 탁해짐)
             ul.gameObject.SetActive(on);
         }
+        // 어려움을 고르면 영혼의 무게 줄이 생기고 · 다른 난이도면 없어지므로 메뉴 열을 다시 배치
+        if (mainLaidOut && buttons.Count > 0 && buttons[0] != null && buttons[0].transform.parent != null) LayoutMainV2(buttons[0].transform.parent);
     }
 
     // 난이도 설명 (1.0.4~ · 수치는 GameMode 배율 그대로 — 보통: 적 체력 1.15 · 적 피해 1.25 · 예고 0.85 · 보상 1.05,
