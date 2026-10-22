@@ -25,7 +25,7 @@ public sealed class CardIntro : MonoBehaviour
         float now = Time.unscaledTime;
         if (cards == null || cards.Count == 0) return now;
         int n = 0;
-        bool still = GameSettings.Motion <= 0f;
+        bool still = GameSettings.Motion <= 0f || !UiRules.Legacy;      // UI 개편 (Legacy 끔): 튀어나옴 · 기울기 없이 투명도만
         for (int i = 0; i < cards.Count; i++)
         {
             Transform c = cards[i];
@@ -37,7 +37,8 @@ public sealed class CardIntro : MonoBehaviour
             a.Begin(now + firstDelay + n * stagger);
             n++;
         }
-        return now + firstDelay + Mathf.Max(0, n - 1) * stagger + Duration;
+        float end = now + firstDelay + Mathf.Max(0, n - 1) * stagger + Duration;
+        return UiRules.Legacy ? end : UiRules.LockUntil(end);         // 입력 잠금은 연출 길이와 떼어 최소 0.45초 (연타가 다음 창 카드를 고르지 않게)
     }
 
     void Begin(float at)

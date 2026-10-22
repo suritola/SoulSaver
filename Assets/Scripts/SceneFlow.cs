@@ -40,7 +40,7 @@ public class SceneFlow : MonoBehaviour
             if (activated) queued = scene;
             return;
         }
-        Ensure().StartCoroutine(instance.Run(scene));
+        Ensure().StartCoroutine(instance.Guard(instance.Run(scene), null));
     }
 
     static bool activated;
@@ -208,6 +208,46 @@ public class SceneFlow : MonoBehaviour
         }
     }
 
+    // UI 개편 P0-2 (2026-10-22~): 로딩 코루틴을 감쌈 — 로딩 화면을 꾸미는 코드(ShowLoading · Dots · Tick 등)에서 예외가 나면
+    //   예전엔 loading 이 true 로 남아 Go() 가 모든 씬 전환을 조용히 무시하고 막이 클릭까지 막았음 (1.2.7 같은 「남는 상태」) → 막 · 로딩 화면 · 시간을 되돌리고 끝냄
+    IEnumerator Guard(IEnumerator body, System.Action onFail)
+    {
+        while (true)
+        {
+            object cur;
+            try
+            {
+                if (!body.MoveNext()) yield break;
+                cur = body.Current;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                Recover();
+                onFail?.Invoke();
+                yield break;
+            }
+            yield return cur;
+        }
+    }
+
+    void Recover()
+    {
+        if (loadingBox != null)
+        {
+            CanvasGroup g = loadingBox.GetComponent<CanvasGroup>();
+            if (g != null) g.alpha = 1f;
+            loadingBox.gameObject.SetActive(false);
+        }
+        if (curtain != null) { curtain.color = new Color(0f, 0f, 0f, 0f); curtain.raycastTarget = false; }
+        if (canvas != null) canvas.enabled = false;
+        Application.backgroundLoadingPriority = ThreadPriority.BelowNormal;
+        if (Time.timeScale == 0f) Time.timeScale = 1f;
+        loading = false;
+        activated = false;
+        queued = null;
+    }
+
     IEnumerator Run(string scene)
     {
         loading = true;
@@ -272,7 +312,7 @@ public class SceneFlow : MonoBehaviour
     {
         if (loading || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { work(); yield break; }
         bool done = false;
-        Ensure().StartCoroutine(instance.RunStageLoad(work, () => done = true));
+        Ensure().StartCoroutine(instance.Guard(instance.RunStageLoad(work, () => done = true), () => done = true));
         for (float w = 0f; !done && w < 15f; w += Time.unscaledDeltaTime) yield return null;     // 상한: 실제 시간 15초 (멈춰 남지 않게)
     }
 
