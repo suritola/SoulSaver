@@ -792,6 +792,7 @@ public static class MenuExtras
         m.gameObject.AddComponent<EscBackdrop>().image = ri;
         Transform title = m.Find("TItle");
         if (title != null) title.gameObject.SetActive(false);
+        if (!UiRules.Legacy) { di.color = UiTokens.Scrim(false); StyleEscV2(m); return; }
         TMP_Text head = UIKit.Text(m, "일시정지", 64f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(800f, 90f));
         head.name = "PauseTitle";
         RectTransform hl = UIKit.Rect("PauseTitleLine", m, new Vector2(0f, 200f), UIKit.DividerSprite != null ? new Vector2(512f, 32f) : new Vector2(360f, 2f));
@@ -818,6 +819,47 @@ public static class MenuExtras
         }
         Transform hint = m.Find("ResumeHint");
         if (hint != null) ((RectTransform)hint).anchoredPosition = new Vector2(0f, y - 30f);
+    }
+
+    // UI 개편 P0-4a (UiRules.Legacy = false): 가운데 열 그대로 (왼쪽엔 계약 판 · 각인 목록) · 뼈색 제목 48 + 1도트 선 · 불투명 석판 버튼
+    //   「계속」만 주 버튼 · 판을 끝내는 「다시 시작 · 메인 메뉴」는 짧은 선 아래 묶음 · 이름 · 순서 · 누름 동작은 그대로 (QA · 패드가 이름으로 찾음)
+    static void StyleEscV2(Transform m)
+    {
+        const float W = 420f, H = 54f, Gap = 12f;
+        TMP_Text head = UIKit.Text(m, "일시정지", UiTokens.Title, UiTokens.Text1, new Vector2(0f, 250f), new Vector2(800f, 64f));
+        head.name = "PauseTitle";
+        head.fontSizeMin = UiTokens.MinSize(UiTokens.Title);
+        UiV2.Line(m, "PauseTitleLine", new Vector2(0f, 204f), W);
+        string[] order = { "resume", "BuildViewButton", "SettingsButton", "RestartButton", "Menu" };
+        float y = 150f;
+        foreach (string n in order)
+        {
+            Transform t = m.Find(n);
+            if (t == null) foreach (Button b in m.GetComponentsInChildren<Button>(true)) if (b.name == n) { t = b.transform; break; }
+            if (t == null) continue;
+            if (t.parent != m) t.SetParent(m, false);
+            if (n == "RestartButton")
+            {
+                y -= UiTokens.S2;
+                UiV2.Line(m, "EscEndLine", new Vector2(0f, y + H * 0.5f), 120f);
+                y -= UiTokens.S4;
+            }
+            RectTransform br = (RectTransform)t;
+            br.anchorMin = br.anchorMax = br.pivot = new Vector2(0.5f, 0.5f);
+            br.sizeDelta = new Vector2(W, H);
+            br.anchoredPosition = new Vector2(0f, y);
+            TMP_Text bt = t.GetComponentInChildren<TMP_Text>(true);
+            if (bt != null) { bt.rectTransform.anchorMin = bt.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); bt.rectTransform.anchoredPosition = Vector2.zero; bt.rectTransform.sizeDelta = new Vector2(W - UiTokens.S4 * 2f, H - UiTokens.S1); }
+            UiV2.Restyle(t.GetComponent<Button>(), n == "resume" ? UiV2.Kind.Primary : UiV2.Kind.Secondary, n == "resume" ? UiTokens.Heading : UiTokens.Body);
+            y -= H + Gap;
+        }
+        Transform hint = m.Find("ResumeHint");
+        if (hint != null)
+        {
+            ((RectTransform)hint).anchoredPosition = new Vector2(0f, y - 12f);
+            TMP_Text ht = hint.GetComponentInChildren<TMP_Text>(true);
+            if (ht != null) { ht.color = UiTokens.Text3; ht.fontStyle &= ~FontStyles.Bold; ht.fontSize = ht.fontSizeMax = UiTokens.Small; ht.fontSizeMin = UiTokens.Small; }
+        }
     }
 }
 

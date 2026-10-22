@@ -79,6 +79,52 @@ public static class UiV2
         return b;
     }
 
+    // 장면 · 복제 버튼을 새 모습으로 (P0-4a ESC 부터): 그림 바꾸기 · 굵게 · 그라데이션 · 그림자 · 자간 걷기 · 포커스 괄호 — MenuItemFx 는 붙이지 않음
+    public static void Restyle(Button b, Kind kind, float size)
+    {
+        if (b == null) return;
+        string k = KindName(kind);
+        Image img = b.GetComponent<Image>();
+        if (img == null) img = b.gameObject.AddComponent<Image>();
+        Sprite n = UiRules.Sprite("ui2_btn_" + k + "_n");
+        if (n != null)
+        {
+            img.sprite = n; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; img.color = Color.white;
+            b.transition = Selectable.Transition.SpriteSwap;
+            b.spriteState = new SpriteState
+            {
+                highlightedSprite = UiRules.Sprite("ui2_btn_" + k + "_h"),
+                selectedSprite = UiRules.Sprite("ui2_btn_" + k + "_h"),
+                pressedSprite = UiRules.Sprite("ui2_btn_" + k + "_p"),
+                disabledSprite = UiRules.Sprite("ui2_btn_" + k + "_d"),
+            };
+        }
+        b.targetGraphic = img;
+        foreach (Shadow s in b.GetComponentsInChildren<Shadow>(true)) Object.Destroy(s);       // Outline 도 Shadow 를 이음
+        TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
+        if (t != null)
+        {
+            t.fontStyle &= ~FontStyles.Bold;
+            t.enableVertexGradient = false;
+            t.characterSpacing = 0f;
+            if (UIKit.FontMaterial != null) t.fontSharedMaterial = UIKit.FontMaterial;     // 외곽선 재질 대신 원본
+            t.color = kind == Kind.Danger ? UiTokens.Danger : UiTokens.Text1;
+            t.enableAutoSizing = true;
+            t.fontSize = t.fontSizeMax = size;
+            t.fontSizeMin = UiTokens.MinSize(size);
+        }
+        if (b.GetComponent<UiFocusMark>() == null) b.gameObject.AddComponent<UiFocusMark>().label = t != null ? t.rectTransform : null;
+    }
+
+    // 1도트 구분선 (높이 3 · 그림이 없으면 단색)
+    public static Image Line(Transform parent, string name, Vector2 pos, float width, bool accent = false)
+    {
+        RectTransform r = UIKit.Rect(name, parent, pos, new Vector2(width, UiRules.Dot));
+        Image img = Slab(r, accent ? "ui2_line_accent" : "ui2_line", accent ? UiTokens.Accent : UiTokens.LineDim);
+        img.raycastTarget = false;
+        return img;
+    }
+
     // 확인 창 아래 키 안내 (패드면 숨김)
     public static void KeyHint(RectTransform win, string ko, float y)
     {

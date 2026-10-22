@@ -554,8 +554,10 @@ public static class Contracts
             Tick();
             // 2026-10-22~ 이름 · 조건 칸(-200~120)과 진행 칸(95~205)이 겹치고 긴 글자가 테두리 밖으로 넘쳤음 (사용자 「배열이 깨져 있다」)
             //   → 안쪽 여백 · 진행 칸 · 사이 간격으로 나눠 겹치지 않게, 칸보다 긴 글자는 자동으로 줄임 · 아래 여백 14
-            const float RowH = 66f, W = 480f, Pad = 30f, ProgW = 104f, Gap = 12f;
-            const float TextW = W - Pad * 2f - ProgW - Gap, TextX = -W / 2f + Pad + TextW / 2f, ProgX = W / 2f - Pad - ProgW / 2f;
+            bool v2 = !UiRules.Legacy;          // UI 개편 P0-4a: 새긴 석판 · 글자 4단계(이름 26 · 조건 · 진행 22) · 완료는 청록 — 줄 72 · 진행 칸 130
+            float RowH = v2 ? 72f : 66f, ProgW = v2 ? 130f : 104f;
+            const float W = 480f, Pad = 30f, Gap = 12f;
+            float TextW = W - Pad * 2f - ProgW - Gap, TextX = -W / 2f + Pad + TextW / 2f, ProgX = W / 2f - Pad - ProgW / 2f;
             float h = 56f + RowH * run.Count + 14f;
             panel = new GameObject("ContractPanel", typeof(RectTransform), typeof(Image));
             RectTransform r = panel.GetComponent<RectTransform>();
@@ -569,24 +571,25 @@ public static class Contracts
             bool framed = UIKit.PanelSprite != null;
             if (framed) { bg.sprite = UIKit.PanelSprite; bg.type = Image.Type.Sliced; }
             bg.color = framed ? new Color(1f, 1f, 1f, 0.94f) : new Color(0.06f, 0.05f, 0.08f, 0.88f);
+            if (v2 && UiRules.Sprite("ui2_panel") != null) { bg.sprite = UiRules.Sprite("ui2_panel"); bg.type = Image.Type.Tiled; bg.pixelsPerUnitMultiplier = 1f; bg.color = Color.white; }
             bg.raycastTarget = true;        // 일시정지 HUD 툴팁(PauseInspect)이 패널 밑 HUD 칸 · 적을 보지 않게 (RunStats 요약 판과 같게)
-            UIKit.Text(r, "contract.run.title", 24f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, h / 2f - 26f), new Vector2(W - 30f, 34f));
+            UIKit.Text(r, "contract.run.title", v2 ? UiTokens.Body : 24f, v2 ? UiTokens.Text1 : new Color(0.79f, 0.63f, 1f), new Vector2(0f, h / 2f - 26f), new Vector2(W - 30f, 34f));
             for (int i = 0; i < run.Count; i++)
             {
                 Active a = run[i];
                 float y = h / 2f - 56f - RowH * (i + 0.5f);
-                TMP_Text name = UIKit.Text(r, "", 20f, a.done ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.93f, 0.9f, 0.84f), new Vector2(TextX, y + 13f), new Vector2(TextW, 28f), TextAlignmentOptions.Left);
+                TMP_Text name = UIKit.Text(r, "", v2 ? UiTokens.Body : 20f, v2 ? (a.done ? UiTokens.Accent : UiTokens.Text1) : a.done ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.93f, 0.9f, 0.84f), new Vector2(TextX, v2 ? y + 16f : y + 13f), new Vector2(TextW, v2 ? 32f : 28f), TextAlignmentOptions.Left);
                 name.text = a.def.Name;
-                TMP_Text cond = UIKit.Text(r, "", 15f, new Color(0.7f, 0.66f, 0.6f), new Vector2(TextX, y - 15f), new Vector2(TextW, 24f), TextAlignmentOptions.Left);
+                TMP_Text cond = UIKit.Text(r, "", v2 ? UiTokens.Small : 15f, v2 ? UiTokens.Text2 : new Color(0.7f, 0.66f, 0.6f), new Vector2(TextX, v2 ? y - 16f : y - 15f), new Vector2(TextW, v2 ? 28f : 24f), TextAlignmentOptions.Left);
                 cond.text = a.def.Cond;
-                TMP_Text prog = UIKit.Text(r, "", 17f, a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(ProgX, y), new Vector2(ProgW, 28f), TextAlignmentOptions.Right);
+                TMP_Text prog = UIKit.Text(r, "", v2 ? UiTokens.Small : 17f, v2 ? (a.done ? UiTokens.Accent : UiTokens.Text2) : a.done ? new Color(0.49f, 1f, 0.6f) : new Color(0.8f, 0.76f, 0.7f), new Vector2(ProgX, y), new Vector2(ProgW, 28f), TextAlignmentOptions.Right);
                 prog.text = a.done ? Loc.T("board.cell.done") : Progress(a.def, Mathf.Max(a.best, a.def.Now));
                 foreach (TMP_Text t in new[] { name, cond, prog })
                 {
                     t.enableWordWrapping = false;
                     UIKit.Forget(t);
                     t.fontSizeMax = t.fontSize;
-                    t.fontSizeMin = Mathf.Max(11f, t.fontSize * 0.6f);
+                    t.fontSizeMin = v2 ? UiTokens.Small : Mathf.Max(11f, t.fontSize * 0.6f);
                     t.enableAutoSizing = true;          // 칸보다 길면 줄여서 칸 안에 (넘치지 않게)
                     t.overflowMode = TextOverflowModes.Ellipsis;
                 }

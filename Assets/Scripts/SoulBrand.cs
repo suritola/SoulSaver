@@ -261,20 +261,22 @@ public static class SoulBrand
             Canvas canvas = UIKit.HudCanvas();
             if (canvas == null) return;
             UIKit.EnsureStyle();
-            const float rowH = 118f;
+            bool v2 = !UiRules.Legacy;          // UI 개편 P0-4a: 새긴 석판 · 글자 4단계 · 계약 판(왼쪽 아래)과 안 겹치게 30 위로
+            float rowH = v2 ? 120f : 118f;       // 각인 셋 = 높이 470 · 아래끝 -225, 계약 셋 = 위끝 -236 (틈 11)
             float h = 110f + rowH * run.Count;
             panel = new GameObject("SoulBrandPanel", typeof(RectTransform), typeof(Image));
             RectTransform r = panel.GetComponent<RectTransform>();
             r.SetParent(canvas.transform, false);
             r.SetAsLastSibling();
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(30f, -20f);        // 오른쪽 「이번 판」 요약과 마주 보게 · ESC 창(가운데 폭 720)과 안 겹치게
+            r.anchoredPosition = new Vector2(30f, v2 ? 10f : -20f);        // 오른쪽 「이번 판」 요약과 마주 보게 · ESC 창(가운데 폭 720)과 안 겹치게
             r.sizeDelta = new Vector2(440f, h);
             Image bg = panel.GetComponent<Image>();
             bg.color = new Color(0.06f, 0.05f, 0.08f, 0.88f);
+            if (v2 && UiRules.Sprite("ui2_panel") != null) { bg.sprite = UiRules.Sprite("ui2_panel"); bg.type = Image.Type.Tiled; bg.pixelsPerUnitMultiplier = 1f; bg.color = Color.white; }
             bg.raycastTarget = true;        // 1.1.9~ 이 판 위에서는 아래 HUD 툴팁을 띄우지 않음 (PauseInspect)
 
-            UIKit.Text(r, "brand.esc", 28f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, h / 2f - 34f), new Vector2(400f, 40f));
+            UIKit.Text(r, "brand.esc", v2 ? UiTokens.Body : 28f, v2 ? UiTokens.Text1 : new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, h / 2f - 34f), new Vector2(400f, 40f));
             for (int i = 0; i < run.Count; i++)
             {
                 SoulBrandDef b = run[i];
@@ -282,16 +284,17 @@ public static class SoulBrand
                 Sprite icon = Resources.Load<Sprite>(ChoiceUI.IconPath(b.Icon));
                 if (icon != null)
                 {
-                    Image ii = UIKit.Rect("Icon", r, new Vector2(-160f, y), new Vector2(72f, 72f)).gameObject.AddComponent<Image>();
+                    Image ii = UIKit.Rect("Icon", r, new Vector2(-160f, y), v2 ? new Vector2(64f, 64f) : new Vector2(72f, 72f)).gameObject.AddComponent<Image>();
                     ii.sprite = icon;
                     ii.preserveAspect = true;
                     ii.raycastTarget = false;
                 }
-                UIKit.Text(r, b.NameKey, 24f, b.color, new Vector2(46f, y + 30f), new Vector2(320f, 34f), TextAlignmentOptions.Left);
-                TMP_Text d = UIKit.Text(r, "", 18f, new Color(0.93f, 0.9f, 0.84f), new Vector2(46f, y - 20f), new Vector2(320f, 64f), TextAlignmentOptions.TopLeft);
+                TMP_Text bn = UIKit.Text(r, b.NameKey, v2 ? UiTokens.Body : 24f, v2 ? UiTokens.Text1 : b.color, new Vector2(46f, y + 34f), new Vector2(320f, 34f), TextAlignmentOptions.Left);
+                TMP_Text d = UIKit.Text(r, "", v2 ? UiTokens.Small : 18f, v2 ? UiTokens.Text2 : new Color(0.93f, 0.9f, 0.84f), new Vector2(46f, v2 ? y - 22f : y - 20f), new Vector2(320f, v2 ? 78f : 64f), TextAlignmentOptions.TopLeft);
+                if (v2) { bn.fontSizeMin = UiTokens.MinSize(UiTokens.Body); d.fontSizeMin = UiTokens.Small; d.overflowMode = TextOverflowModes.Ellipsis; }
                 d.text = CardText(b);
             }
-            TMP_Text total = UIKit.Text(r, "", 22f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, -h / 2f + 28f), new Vector2(400f, 34f));
+            TMP_Text total = UIKit.Text(r, "", 22f, v2 ? UiTokens.Bronze : new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, -h / 2f + 28f), new Vector2(400f, 34f));
             total.text = Loc.T("brand.esc.total").Replace("{0}", MulText(PointMul));
         }
     }
