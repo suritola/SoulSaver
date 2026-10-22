@@ -259,6 +259,7 @@ public static class MenuExtras
             // 1.2~ 일일 도전 칸 아래: 「연속 n일」 (폰트에 없는 그림 글자는 쓰지 않음)
             TMP_Text streak = UIKit.Text(daily.transform, "", 20f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -TileH * 0.5f - 16f), new Vector2(TileW + Gap, 26f));     // 1.4.8~ 16 → 20
             streak.fontSizeMin = 20f;
+            streak.name = "StreakLabel";        // UI 개편 배치(LayoutMainV2)가 이름으로 찾아 버튼 바로 아래로
             streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
             UIKit.Forget(streak);
         }
@@ -310,7 +311,8 @@ public static class MenuExtras
         RunRecords.CommitBest();
         RunRecords.PlayNewRecordSound(canvas);
         // 판 요약 한 줄: 「이번 판 결과」 글의 앞 두 줄(영웅 · 난이도 / 시간 · 레벨 · 처치)에서 서식 태그를 빼고 이어 붙임
-        string[] lines = RunStats.Summary(false).Replace("\r", "").Split('\n');
+        RunStats.BuildDamagePanel(canvas);          // 먼저 만들어 두고 요약 줄 폭을 그 왼쪽 끝까지로
+        string[] lines = RunRecords.WithBest(RunStats.Summary(false)).Replace("\r", "").Split('\n');      // 「새 기록」 · 「(최고 …)」 표시도 (검토: 빠졌었음)
         List<string> parts = new List<string>();
         foreach (string l in lines)
         {
@@ -319,7 +321,8 @@ public static class MenuExtras
             parts.Add(System.Text.RegularExpressions.Regex.Replace(plain, "\\s{2,}", "  ·  "));
             if (parts.Count >= 2) break;
         }
-        string summary = System.Text.RegularExpressions.Regex.Replace(string.Join("  ·  ", parts), @"(\s*·\s*)+", "  ·  ");      // 원래 「 · 」와 겹친 점을 하나로 (캡처: 「거너 · · · 쉬움」)
+        for (int i = 0; i < parts.Count; i++) parts[i] = System.Text.RegularExpressions.Regex.Replace(parts[i], @"(\s*·\s*)+", "  ·  ");      // 겹친 점을 하나로 (캡처: 「거너 · · · 쉬움」)
+        string summary = string.Join("\n", parts);         // 두 줄 (한 줄이면 UI 110 · 120% 에서 오른쪽 피해 판 밑으로 들어갔음 — 검토)
         if (Contracts.LastRunOn && Contracts.LastRun.Count > 0)
         {
             int done = 0;
@@ -328,11 +331,26 @@ public static class MenuExtras
         }
         GameObject msg = GameObject.Find("GameOverMessage");
         float titleY = msg != null ? ((RectTransform)msg.transform).anchoredPosition.y : 170f;
-        TMP_Text st = UIKit.Text(canvas, "", UiTokens.Body, UiTokens.Text2, new Vector2(0f, titleY - 70f), new Vector2(1200f, 70f));
+        float cw = canvas is RectTransform crt && crt.rect.width > 100f ? crt.rect.width : 1920f;
+        float sw = canvas.Find("DamagePanel") != null ? Mathf.Clamp(2f * (cw * 0.5f - 564f - UiTokens.S3), 420f, 1200f) : 1200f;
+        TMP_Text st = UIKit.Text(canvas, "", UiTokens.Body, UiTokens.Text2, new Vector2(0f, titleY - 84f), new Vector2(sw, 104f));
         st.name = "RunSummaryLine";
-        st.fontSizeMin = UiTokens.Small;
+        st.fontSizeMin = 18f;
         st.text = summary;
-        RunStats.BuildDamagePanel(canvas);
+        if (Contracts.LastRunOn && Contracts.LastRun.Count > 0)
+        {
+            // 계약 상세는 마우스를 올리면 (이룬 계약 · 남은 진행) — 예전 왼쪽 창에서 보이던 것 (검토)
+            st.raycastTarget = true;
+            TooltipTrigger tip = st.gameObject.AddComponent<TooltipTrigger>();
+            tip.titleProvider = () => Loc.T("contract.run.title");
+            tip.bodyProvider = () =>
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                foreach (Contracts.Active a in Contracts.LastRun)
+                    sb.Append(a.done ? "◆ " : "· ").Append(a.def.Name).Append("  ").Append(a.done ? Loc.T("board.cell.done") : Contracts.Progress(a.def, Mathf.Max(a.best, a.def.Now))).Append('\n');
+                return sb.ToString().TrimEnd();
+            };
+        }
         canvas.gameObject.AddComponent<QuickRestart>();
         ResultScreen.BuildRetry();
         ResultScreen.FitTitle();
@@ -722,8 +740,17 @@ public static class MenuExtras
         y -= UiTokens.S6 + MainRowH * 0.5f;        // 「시작」 묶음과 목록 사이만 넓게
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
-            if (LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading) == null) continue;
-            y -= MainRowH + MainRowGap + (n == "DailyButton" && DailyRewards.Streak > 0 ? 18f : 0f);       // 일일 도전 아래 「연속 n일」 자리
+            RectTransform placed = LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading);
+            if (placed == null) continue;
+            bool streak = false;
+            if (n == "DailyButton" && placed.Find("StreakLabel") is RectTransform sl)
+            {
+                // 옛 칸 높이 기준(-77)이라 아래 「설정」 버튼을 28 덮었음 (검토) → 버튼 바로 아래 · 그만큼 다음 줄을 내림
+                sl.anchorMin = sl.anchorMax = new Vector2(0.5f, 0.5f);
+                sl.anchoredPosition = new Vector2(MainW * 0.5f, -MainRowH * 0.5f - 14f);
+                streak = sl.gameObject.activeSelf;
+            }
+            y -= MainRowH + MainRowGap + (streak ? 26f : 0f);
         }
         // 영웅은 카펫 정가운데 · 문(포털) 바로 아래 — 배경의 가운데 축(문 · 카펫)에 맞춰 섬 (+150 으로 비켜 서면 어중간했음: 캡처 확인)
         GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서 (못 찾으면 메뉴 열과 겹침)
@@ -732,7 +759,10 @@ public static class MenuExtras
         {
             hr.anchorMin = hr.anchorMax = new Vector2(0f, 0.5f);
             hr.pivot = new Vector2(0.5f, 0.5f);
-            hr.anchoredPosition = new Vector2(TitleX + MainW * 0.5f, -70f);     // 왼쪽 끝 120 + 열 폭 절반 (예전 메뉴 열 가운데 · 제목과 같은 왼쪽 줄)
+            // 왼쪽 끝 120 + 열 폭 절반 (제목과 같은 왼쪽 줄) — 단 UI 110 · 120% 로 논리 폭이 줄면 메뉴 열(가운데 ±240)과 24 띄우도록 왼쪽으로 (검토: 120% 에서 70 겹쳐 클릭을 가로챘음)
+            float cw = parent is RectTransform pcr && pcr.rect.width > 100f ? pcr.rect.width : 1920f;
+            float hx = Mathf.Min(TitleX + MainW * 0.5f, cw * 0.5f - MainW * 0.5f - UiTokens.S4 - hr.sizeDelta.x * 0.5f);
+            hr.anchoredPosition = new Vector2(hx, -70f);
             hr.sizeDelta = new Vector2(Mathf.Max(hr.sizeDelta.x, 540f), 700f);          // 512 그림 + 이름 · 영웅 변경
             MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
@@ -1366,15 +1396,16 @@ public static class UIKit
         {
             if (img.gameObject.scene != active || img.sprite == null || img.GetComponent<Button>() != null) continue;
             if (img.type != Image.Type.Sliced || (img.sprite != ButtonSprite && !oldSprites.Contains(img.sprite))) continue;      // lint-ok: 옛 그림을 v2 로 바꿔 끼우는 비교
+            if (img.color.a < 0.05f) continue;          // 일부러 투명하게 둔 판(누름 받기용 등)은 그대로
             img.sprite = panel; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f;
-            img.color = new Color(1f, 1f, 1f, Mathf.Max(img.color.a, 0.9f));
+            img.color = new Color(1f, 1f, 1f, img.color.a);        // 원래 투명도 유지 (검토)
         }
         // 장면에 박힌 금색 글자(Lv · 탄 · 코인 · 포인트 등) → 뼈색
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (t.gameObject.scene != active) continue;
             Color c = t.color;
-            if (c.r > 0.85f && c.g > 0.62f && c.g < 0.95f && c.b < 0.6f) t.color = new Color(UiTokens.Text1.r, UiTokens.Text1.g, UiTokens.Text1.b, c.a);
+            if (c.r > 0.9f && c.g > 0.76f && c.g < 0.9f && c.b > 0.35f && c.b < 0.55f) t.color = new Color(UiTokens.Text1.r, UiTokens.Text1.g, UiTokens.Text1.b, c.a);
         }
         Sprite bn = UiRules.Sprite("ui2_btn_secondary_n");
         if (bn == null) return;
@@ -2553,7 +2584,7 @@ public static class SettingsUI
             // 찌그러진 리벳 버튼 대신 도트 손잡이 (4x8 도트 × 2 = 24x48) · 마우스 올림은 청록
             hi.sprite = UiRules.Sprite("ui2_slider_knob_n");
             hi.type = Image.Type.Simple;
-            handle.sizeDelta = new Vector2(24f, 24f);
+            handle.sizeDelta = new Vector2(24f, 12f);      // 막대 높이 36 + 12 = 48 → 4x8 도트 그림 2배 그대로 (24 면 1.25배로 늘어났음)
             Slider sl = root.GetComponent<Slider>();
             if (sl != null) { sl.transition = Selectable.Transition.SpriteSwap; sl.spriteState = new SpriteState { highlightedSprite = UiRules.Sprite("ui2_slider_knob_h"), selectedSprite = UiRules.Sprite("ui2_slider_knob_h"), pressedSprite = UiRules.Sprite("ui2_slider_knob_h") }; }
         }

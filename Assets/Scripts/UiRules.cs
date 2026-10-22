@@ -4,19 +4,29 @@ using UnityEngine;
 
 public static class UiRules
 {
-    public static bool Legacy = true;
+    // 기본 모습: 이 한 줄이 출시 기본값 (승인 ③ 에서 false) — 실행할 때 Init 이 이 값에서 시작해 아래 스위치로만 바뀜 (검토: 필드만 바꾸면 Init 이 덮어썼음)
+    public const bool DefaultLegacy = true;
+    public static bool Legacy = DefaultLegacy;
 
-    // 새 모습 미리 보기: 실행 인자 -uiv2 · 에디터 메뉴 「Soul Saver/UI v2 미리보기」 (Assets/Editor/UiV2Toggle.cs · EditorPrefs) — 판마다가 아니라 실행할 때 한 번
+    // 스위치 (판마다가 아니라 실행할 때 한 번):
+    //   새 모습 강제: 실행 인자 -uiv2 · 에디터 메뉴 「Soul Saver/UI v2 미리보기」(EditorPrefs) · UserSettings/uiv2.on
+    //   옛 모습 강제: 실행 인자 -uilegacy · UserSettings/uilegacy.on (옛 모습이 우선 — 문제가 생겼을 때 되돌리기용)
+    //   배치 실행(자동 봇 · 측정)은 에디터 설정을 보지 않고 실행 인자 · 기본값만
     public const string EditorPrefKey = "SoulSaver.UiV2";
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Init()
     {
-        bool on = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-uiv2") >= 0;
+        string[] args = System.Environment.GetCommandLineArgs();
+        bool v2 = System.Array.IndexOf(args, "-uiv2") >= 0;
+        bool legacy = System.Array.IndexOf(args, "-uilegacy") >= 0;
 #if UNITY_EDITOR
-        if (!Application.isBatchMode) on |= UnityEditor.EditorPrefs.GetBool(EditorPrefKey, false);     // 자동 봇 · 배치 측정에는 섞지 않음
-        if (!Application.isBatchMode) on |= System.IO.File.Exists("UserSettings/uiv2.on");          // 메뉴 대신 파일로도 켬 (프로젝트 폴더 · git 제외)
+        if (!Application.isBatchMode)
+        {
+            v2 |= UnityEditor.EditorPrefs.GetBool(EditorPrefKey, false) || System.IO.File.Exists("UserSettings/uiv2.on");
+            legacy |= System.IO.File.Exists("UserSettings/uilegacy.on");
+        }
 #endif
-        Legacy = !on;
+        Legacy = legacy || (DefaultLegacy && !v2);
         sprites.Clear();
     }
 

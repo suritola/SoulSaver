@@ -304,7 +304,7 @@ public static class RunHistoryUI
         string cause = "-";
         int most = 0;
         foreach (KeyValuePair<string, int> kv in causes) if (kv.Value > most) { most = kv.Value; cause = RunStats.SourceName(kv.Key) + " <color=#A89C86>(" + kv.Value + ")</color>"; }
-        Cell(row, name, xs[0], ws[0], 24f, total ? Gold : Parch);
+        Cell(row, name, xs[0], ws[0], 24f, total ? (UiRules.Legacy ? Gold : UiTokens.Accent) : Parch);
         Cell(row, list.Count.ToString("N0"), xs[1], ws[1], 22f, Parch);
         Cell(row, clears.ToString("N0"), xs[2], ws[2], 22f, Parch);
         Cell(row, bestLevel > 0 ? bestLevel.ToString() : "-", xs[3], ws[3], 22f, Parch);

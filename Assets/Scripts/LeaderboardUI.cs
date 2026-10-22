@@ -317,7 +317,7 @@ public static class LeaderboardUI
             row.entry = e;
             row.r.anchoredPosition = new Vector2(0f, -RowH * (i + 0.5f));
             row.bg.color = e.me ? new Color(0.96f, 0.83f, 0.47f, 0.24f) : new Color(1f, 1f, 1f, i % 2 == 0 ? 0.05f : 0.02f);
-            Color c = e.me ? Gold : Parch;
+            Color c = e.me ? (UiRules.Legacy ? Gold : UiTokens.Accent) : Parch;       // 내 줄 강조 (새 모습: 청록)
             row.rank.text = "#" + e.rank.ToString("N0");
             row.rank.color = e.rank >= 1 && e.rank <= 3 ? Podium[e.rank - 1] : c;
             Sprite icon = HeroIcon(e.character);
@@ -329,7 +329,7 @@ public static class LeaderboardUI
             row.bosses.text = e.bosses >= 0 ? e.bosses.ToString() : "-";
             row.bosses.color = c;
             row.time.text = EndlessMode.Clock(e.score);
-            row.time.color = e.me ? Gold : new Color(1f, 0.8f, 0.45f);
+            row.time.color = e.me ? (UiRules.Legacy ? Gold : UiTokens.Accent) : UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text2;
         }
 
         // 이름만 다시 (스팀이 늦게 알려 줌)

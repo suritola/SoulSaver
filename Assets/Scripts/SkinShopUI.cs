@@ -196,7 +196,7 @@ public class SkinShopUI : MonoBehaviour
         if (frames.Length > 0) pic.sprite = frames[0];
         if (frames.Length > 1) anims.Add((pic, frames));
 
-        TMP_Text name = UIKit.Text(t, "", 26f, s != null && tier == 3 ? Gold : Parch, new Vector2(0f, -80f), new Vector2(260f, 36f));
+        TMP_Text name = UIKit.Text(t, "", 26f, s != null && tier == 3 ? (UiRules.Legacy ? Gold : UiTokens.Bronze) : Parch, new Vector2(0f, -80f), new Vector2(260f, 36f));      // 전설 이름 (새 모습: 청동 — 보상색)
         name.text = s != null ? Loc.T(s.name) : Loc.T("기본");
         TMP_Text state = UIKit.Text(t, "", 22f, equipped ? new Color(0.6f, 1f, 0.5f) : owned ? Parch : Gold, new Vector2(0f, -130f), new Vector2(260f, 32f));
         state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.Price.ToString("N0") + " P";

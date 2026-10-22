@@ -171,7 +171,13 @@ public class RecommendGlow : MonoBehaviour
             RectTransform prt = pill.rectTransform;            // UI 개편 P1: 카드 아래 테두리 대신 머리 줄 가운데 (진화 칸 · 시너지와 겹치지 않게)
             prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 1f);
             prt.anchoredPosition = new Vector2(0f, -42f);
-            prt.sizeDelta = new Vector2(Mathf.Max(96f, badge.preferredWidth + 36f), 30f);
+            if (prt.anchoredPosition.y > -41f || prt.sizeDelta.y != 30f)
+            {
+                // 한 번만: 폭은 96 ~ 180 (「추천 · 바로 진화!」가 왼쪽 「Lv 2 → 3」 머리 글과 겹쳤음 · 매 프레임 계산하던 것 — 검토)
+                badge.enableAutoSizing = true; badge.fontSizeMin = 16f;
+                prt.sizeDelta = new Vector2(Mathf.Clamp(badge.preferredWidth + 36f, 96f, 180f), 30f);
+                prt.anchoredPosition = new Vector2(0f, -42f);
+            }
             badge.color = UiTokens.Accent;
             badge.fontStyle &= ~FontStyles.Bold;
             badge.fontSizeMax = UiTokens.Small;

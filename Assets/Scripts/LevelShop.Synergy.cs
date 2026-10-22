@@ -116,7 +116,18 @@ public partial class LevelShop
         float bottom = abilityBottom0[slot];
         // UI 개편 P1 (Legacy 끔): 진화 칸이 있으면 그 위가 바닥 (처음 기억한 자리로 되돌려 진화 칸과 겹치지 않게) · 없으면 새 배치의 아래끝
         if (!UiRules.Legacy)
-            bottom = evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf ? EvoSectionPad + EvoSectionH + UiTokens.S2 : V2BodyBottom;
+        {
+            // 새 모습: 바닥 = 시너지 배지 위끝 + 6 (진화 칸 있음 · 시너지 있음 200 / 진화만 156 / 시너지만 74 / 없음 72) — 예전처럼 58 을 더 올리면
+            //   진화 + 시너지 카드의 설명 칸이 104 로 줄어 설명이 넘쳐 배지 · 진화 칸을 덮었음 (검토) → 둘 다 있으면 글자 하한 18 · 넘치면 … 로
+            bool evo = evoRows[slot] != null && evoRows[slot].root != null && evoRows[slot].root.gameObject.activeSelf;
+            float badgeBottom = evo ? EvoSectionPad + EvoSectionH + 6f : 24f;
+            float v2Bottom = lift ? badgeBottom + 44f + 6f : evo ? EvoSectionPad + EvoSectionH + UiTokens.S2 : V2BodyBottom;
+            r.offsetMin = new Vector2(r.offsetMin.x, v2Bottom);
+            bool tight = evo && lift;
+            ab.fontSizeMin = tight ? 18f : UiTokens.Small;
+            ab.overflowMode = tight ? TextOverflowModes.Ellipsis : TextOverflowModes.Overflow;
+            return;
+        }
         r.offsetMin = new Vector2(r.offsetMin.x, bottom + (lift ? 58f : 0f));
     }
 }
