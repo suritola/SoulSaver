@@ -25,7 +25,7 @@ public partial class BossSkills
     //   (예전엔 필살기 출처라 내 이펙트처럼 크고 밝고 위에 그려졌고, 투명도 설정을 낮추면 보스 공격까지 흐려졌음) · 그리기 전용 범위라 피해 · 통계와 무관
     //   모양 · 색은 영웅 것 그대로 (흉내 내는 재미) · VisualRules.Legacy 면 예전 그대로
     static DamageSource.Scope DevDraw() => DamageSource.As(VisualRules.Legacy ? DamageSource.Ult : DamageSource.Other);
-    static float UltDecor(float visible) => visible / (VisualRules.DecorScale * (VisualRules.Legacy ? VisualRules.SkillDecor : 1f));
+    static float UltDecor(float visible) => visible / (VisualRules.DecorScaleFor(false) * (VisualRules.Legacy ? VisualRules.SkillDecor : 1f));
 
     // 필살기를 쓰는 순간: 그 영웅 색 충격파 · 섬광 · 빛 번짐 · 솟는 화음 (플레이어와 같은 UltCastFlair)
     void DevCastFlair(CharacterId who)

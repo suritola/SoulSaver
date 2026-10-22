@@ -43,10 +43,11 @@ public static class VisualRules
     public static bool Legacy;
 
     // 장식 이펙트 배율 (판정 범위인 이펙트 Fx.AreaFx 는 늘 그대로) · 스킬 출처면 한 번 더
-    //   지금은 개편 전과 같은 값 — 1단계 8번 커밋(이펙트 과장 제거)에서 1.0 으로
+    //   1단계-8b~ 내 것 1.45 → 1.2 · 스킬 추가 1.4 → 1.0 (합쳐 약 2배 → 1.2배)
+    //   적 장식은 1.45 그대로 — 적 가시 등 그림을 판정에 맞춰 둔 곳이 있어서 (BossUltimate.Domain.cs · BossSkills.Reborn.cs 의 fx_spike)
     const float LegacyDecor = 1.45f, LegacySkillDecor = 1.4f;
-    const float NewDecor = 1.45f, NewSkillDecor = 1.4f;
-    public static float DecorScale => Legacy ? LegacyDecor : NewDecor;
+    const float NewDecorMine = 1.2f, NewDecor = 1.45f, NewSkillDecor = 1f;
+    public static float DecorScaleFor(bool mine) => Legacy ? LegacyDecor : mine ? NewDecorMine : NewDecor;
     public static float SkillDecor => Legacy ? LegacySkillDecor : NewSkillDecor;
 
     // 보이는 그림 크기로 닿는 거리를 재는 곳(우체부 편지 · 비둘기 · 카드)이 배율이 바뀌어도 판정을 예전 그대로 두려고 곱하는 값
@@ -58,5 +59,5 @@ public static class VisualRules
     // 내 장식 이펙트(불꽃 튐 · 반짝임 · 핏방울 · 연기) 0.05초 상한 — 예전엔 그래픽 「낮음」에서만 12개
     public static int MyDecorCap => Legacy ? int.MaxValue : 6;
 
-    public static float DecorKeep(bool skill) => LegacyDecor / DecorScale * (skill ? LegacySkillDecor / SkillDecor : 1f);
+    public static float DecorKeep(bool mine, bool skill) => LegacyDecor / DecorScaleFor(mine) * (skill ? LegacySkillDecor / SkillDecor : 1f);
 }

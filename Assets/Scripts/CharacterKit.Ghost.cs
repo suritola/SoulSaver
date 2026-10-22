@@ -98,7 +98,8 @@ public partial class CharacterKit
         // 1.1.2: 손길을 한눈에 — 판정 폭(반폭 0.9 = 폭 1.8 + 적 몸)까지 굵게 (예전 1칸), 흰 심 줄 · 뼈 손 2배 가까이, 적 · 맵 물체 위 순서
         Fx.Beam(start, end, (main ? 1.8f : 1.3f) * band, SkinFx.Tint(new Color(0.4f, 0.8f, 1f, 0.85f)), 0.2f, AttackLook.AreaOrder - 1);
         Fx.Beam(start, end, (main ? 0.55f : 0.4f) * band, new Color(1f, 1f, 1f, 0.95f), 0.14f, AttackLook.AreaOrder);
-        Fx.Spawn("fx_bonehand", end, (main ? 2f : 1.6f) * band, Wraith, 22f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f, AttackLook.AreaOrder + 1);
+        //   2026-10-22~ 손끝 판정(HandTipRadius)이 예전 장식 배율 그림에 맞춰져 있어, 배율이 줄어도 뼈 손은 예전 크기로 (Fx.JudgeKeep)
+        Fx.Spawn("fx_bonehand", end, (main ? 2f : 1.6f) * band * Fx.JudgeKeep("fx_bonehand"), Wraith, 22f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f, AttackLook.AreaOrder + 1);
         if (SignatureSkills.HandTrail()) StartCoroutine(FrostTrail(start, end));
     }
 
@@ -114,7 +115,7 @@ public partial class CharacterKit
     {
         string s = DamageSource.Current;
         bool skill = s != null && s != DamageSource.Basic && s != DamageSource.Other;
-        return visible / (VisualRules.DecorScale * (skill ? VisualRules.SkillDecor : 1f));
+        return visible / (VisualRules.DecorScaleFor(true) * (skill ? VisualRules.SkillDecor : 1f));
     }
 
     // 눈보라 (진화): 손이 지난 자리에 1.5초 냉기 안개
