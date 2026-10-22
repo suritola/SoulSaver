@@ -5,13 +5,15 @@
 # 결과:   %LOCALAPPDATA%\SoulSaverBuild\Qa\qa_log.txt · *.png
 param(
     [string]$Only = "",
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
+    [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\unity-env.ps1")
+if (-not $Unity) { $Unity = $UnityExe }
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $Project = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Work = Join-Path $env:LOCALAPPDATA "SoulSaverBuild"
-$CopyDir = Join-Path $Work "Project"
+$CopyDir = Join-Path $Work $UnityCopyName
 $Out = Join-Path $Work "Qa"
 
 New-Item -ItemType Directory -Force $CopyDir | Out-Null
