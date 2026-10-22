@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 1.1.2: 평타를 한눈에 — 「여전히 평타가 안 보인다」
 //   예전: 거너 총알은 납작한 흰 실선(3.27 × 0.02) + 작은 흰 빛, 표창 · 화살 · 톱니는 1칸 남짓한 옅은 흰 그림이라
@@ -95,8 +95,9 @@ public static class AttackLook
     public static float GunnerHeight(int tier) => (tier >= 3 ? 1.15f : tier == 2 ? 1f : 0.85f) * SizeScale;
 
     // 빛 무리 진하기 · 잔상 (단계마다 더 밝고 길게)
-    public static float HaloAlpha(int tier) => tier >= 3 ? 0.6f : tier == 2 ? 0.5f : 0.42f;
-    public static float TrailAlpha(int tier) => tier >= 3 ? 0.55f : tier == 2 ? 0.48f : 0.4f;
+    //   그래픽 개편 1단계-9 (2026-10-22~): 빛 무리 · 잔상을 절반 남짓으로 (여러 발이 겹치면 적 무리를 덮었음) · VisualRules.Legacy 면 예전 값
+    public static float HaloAlpha(int tier) => VisualRules.Legacy ? (tier >= 3 ? 0.6f : tier == 2 ? 0.5f : 0.42f) : (tier >= 3 ? 0.3f : tier == 2 ? 0.26f : 0.22f);
+    public static float TrailAlpha(int tier) => VisualRules.Legacy ? (tier >= 3 ? 0.55f : tier == 2 ? 0.48f : 0.4f) : (tier >= 3 ? 0.32f : tier == 2 ? 0.28f : 0.25f);
     public static float TrailLife(int tier) => tier >= 3 ? 0.16f : tier == 2 ? 0.13f : 0.1f;
 
     // ---------------------------------------------------------------- 색

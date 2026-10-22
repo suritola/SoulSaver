@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 평타 투사체를 잘 보이게 (1.1.2~ AttackLook): 밝은 흰 심 + 영웅색 테두리 + 어두운 외곽선 · 가산 혼합 빛 무리 · 짧은 잔상
 //   예광탄 모드: 거너 총알 프리팹(가로 3.3 · 세로 -0.02 로 납작한 흰 실선)은 실선을 숨기고 금빛 예광탄 그림을 자식으로 (판정은 총알 그대로)
@@ -227,8 +227,10 @@ public class BulletGlow : MonoBehaviour
 
     // 1.1.9: 같은 그림을 어두운 색으로 조금 크게 뒤에 깔아 실루엣 테두리 (밝은 모래 · 초원에서도 윤곽이 또렷하게)
     //   기본 스프라이트 재질 그대로 (탄마다 새 재질 없음 · 배칭 유지), 두께는 월드 기준으로 가로 · 세로 같게
+    //   그래픽 개편 1단계-9 (2026-10-22~): 어두운 테두리 + 흰 심은 적 탄 문법이라 내 투사체에선 뺌 (바닥 톤다운 1단계-7 로 사막 모래가 어두워져 대비는 충분)
     SpriteRenderer Outline(SpriteRenderer of, float w, float h, float a)
     {
+        if (!VisualRules.Legacy) return null;
         if (of == null || of.sprite == null || w <= 0.0001f || h <= 0.0001f) return null;
         float t = AttackLook.OutlineWidth(w, h);
         SpriteRenderer o = Child("AtkOutline", of.sprite, Ink(a), AttackLook.OutlineOrder, Vector3.one);
