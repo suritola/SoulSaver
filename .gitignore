@@ -66,3 +66,4 @@ __pycache__/
 /docs/balance/telemetry/
 /tools/telemetry/.token
 /server/telemetry/.wrangler/
+/tools/gemini/.key
