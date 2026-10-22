@@ -190,7 +190,7 @@ public class EndlessTerrain : MonoBehaviour
     }
 
     // 타일이 실제로 깔린 z (위에서부터 찾음 · 씬은 z 100) — cellBounds 의 zMin 은 원점 0 이라 쓸 수 없음 · CompressBounds 는 다른 곳이 쓰는 범위를 바꿀 수 있어 안 씀
-    static int TileZ(Tilemap tm)
+    public static int TileZ(Tilemap tm)
     {
         if (tm == null) return 0;
         BoundsInt b = tm.cellBounds;

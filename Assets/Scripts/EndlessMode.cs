@@ -865,9 +865,13 @@ public class EndlessMode : MonoBehaviour
         {
             TilemapRenderer tr = tm.GetComponent<TilemapRenderer>();
             if (tr != null && tr.sortingOrder >= order) { order = tr.sortingOrder; sorting = tr.sortingLayerID; }
+            // 2026-10-22~ 맵 확장 4: 타일이 깔린 z 한 층만 (예전엔 cellBounds 의 z 0~100 101층을 모두 훑어 복제마다 약 260만 번 · 사막 시작 · 심연 입장이 끊김)
             BoundsInt b = tm.cellBounds;
-            foreach (Vector3Int pos in b.allPositionsWithin)
+            int z = EndlessTerrain.TileZ(tm);
+            for (int y = b.yMin; y < b.yMax; y++)
+            for (int x = b.xMin; x < b.xMax; x++)
             {
+                Vector3Int pos = new Vector3Int(x, y, z);
                 Sprite s = tm.GetSprite(pos);
                 if (s == null || !desert.TryGetValue(s.name.Replace("_hell", suffix), out Sprite d)) continue;
                 Tile tile = EndlessTerrain.TileFor(d);
