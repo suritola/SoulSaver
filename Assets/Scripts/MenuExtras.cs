@@ -1771,7 +1771,7 @@ public static class SettingsUI
         RectTransform win = UIKit.Modal(root, "SettingsPanel", new Vector2(1180f, 860f), out open);
         open.AddComponent<SettingsInput>();
 
-        UIKit.Text(win, "설정", 46f, Gold, new Vector2(0f, 360f), new Vector2(600f, 70f));      // 1.4.8~ 52 → 제목 46
+        UIKit.Text(win, "설정", UiRules.Legacy ? 46f : UiTokens.Title, UiRules.Legacy ? Gold : UiTokens.Text1, new Vector2(0f, 360f), new Vector2(600f, 70f));      // 1.4.8~ 52 → 제목 46 · UI 개편: 뼈색 48
 
         tabButtons.Clear();
         for (int i = 0; i < TabNames.Length; i++)
@@ -1853,8 +1853,7 @@ public static class SettingsUI
         for (int i = page.childCount - 1; i >= 0; i--) Object.Destroy(page.GetChild(i).gameObject);
         for (int i = 0; i < tabButtons.Count; i++)
         {
-            tabButtons[i].GetComponent<Image>().color = i == tab ? Gold : Off;
-            tabButtons[i].transform.localScale = Vector3.one * (i == tab ? 1.06f : 1f);
+            Mark(tabButtons[i], i == tab);
         }
         if (tab == 0) BuildGeneral();
         else if (tab == 1) BuildDisplay();
@@ -1999,7 +1998,7 @@ public static class SettingsUI
     static void SensitivityRow(float y)
     {
         RowLabel("마우스 감도", y);
-        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, UiRules.Legacy ? Gold : UiTokens.Text1, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.minValue = GameSettings.MouseSensMin;
         slider.maxValue = GameSettings.MouseSensMax;
@@ -2018,9 +2017,17 @@ public static class SettingsUI
         for (int i = 0; i < buttons.Count; i++)
         {
             bool on = i == (int)GameSettings.Language;
-            buttons[i].GetComponent<Image>().color = on ? Gold : Off;
-            buttons[i].transform.localScale = Vector3.one * (on ? 1.06f : 1f);
+            Mark(buttons[i], on);
         }
+    }
+
+    // 고른 것 표시: 옛 모습은 금색 칠 + 1.06배 · 새 모습은 그림 (UiV2.Choose — 금색을 새 석판에 곱하면 탁한 갈색이 됐음)
+    static void Mark(Button b, bool on)
+    {
+        if (b == null) return;
+        if (!UiRules.Legacy) { b.transform.localScale = Vector3.one; UiV2.Choose(b, on); return; }
+        b.GetComponent<Image>().color = on ? Gold : Off;
+        b.transform.localScale = Vector3.one * (on ? 1.06f : 1f);
     }
 
     // 0 ~ 100%
@@ -2030,7 +2037,7 @@ public static class SettingsUI
     static void SliderRow(string ko, float y, float value, System.Action<float> set, bool preview = false)
     {
         RowLabel(ko, y);
-        TMP_Text percent = UIKit.Text(page, "", 26f, Gold, new Vector2(450f, y), new Vector2(120f, 50f));
+        TMP_Text percent = UIKit.Text(page, "", 26f, UiRules.Legacy ? Gold : UiTokens.Text1, new Vector2(450f, y), new Vector2(120f, 50f));
         Slider slider = MakeSlider(page, new Vector2(80f, y), new Vector2(560f, 36f));
         slider.value = value;
         percent.text = Mathf.RoundToInt(value * 100f) + "%";
@@ -2130,10 +2137,8 @@ public static class SettingsUI
         chosenMode = Screen.fullScreenMode;
         System.Action<bool> highlightMode = isFull =>
         {
-            full.GetComponent<Image>().color = isFull ? Gold : Off;
-            windowed.GetComponent<Image>().color = isFull ? Off : Gold;
-            full.transform.localScale = Vector3.one * (isFull ? 1.06f : 1f);
-            windowed.transform.localScale = Vector3.one * (isFull ? 1f : 1.06f);
+            Mark(full, isFull);
+            Mark(windowed, !isFull);
         };
         full = UIKit.MakeButton(page, "전체 화면", new Vector2(-40f, y), new Vector2(250f, rowH), () =>
         {
@@ -2336,7 +2341,8 @@ public static class SettingsUI
             string text = names[Mathf.Clamp(get(), 0, names.Length - 1)];
             label.text = Loc.T(text);
             UIKit.Remember(label, text);
-            b.GetComponent<Image>().color = Gold;
+            if (UiRules.Legacy) b.GetComponent<Image>().color = Gold;
+            else UiV2.Choose(b, false);         // 순환 값: 늘 같은 모습 (금색 칠 없이)
         };
         b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
@@ -2360,7 +2366,8 @@ public static class SettingsUI
             string text = on ? "켜짐" : "꺼짐";
             label.text = Loc.T(text);
             UIKit.Remember(label, text);
-            b.GetComponent<Image>().color = on ? Gold : Off;
+            if (UiRules.Legacy) b.GetComponent<Image>().color = on ? Gold : Off;
+            else UiV2.Toggle(b, on);
         };
         b = UIKit.MakeButton(page, "", new Vector2(95f, y), new Vector2(250f, rowH), () =>
         {
@@ -2407,7 +2414,7 @@ public static class SettingsUI
         }
         // 1.0.5~ 게임패드 버튼 배치 (바꿀 수 없음, 엑스박스 배열 · 스팀 덱 · 플레이스테이션은 스팀 입력으로 같은 배열)
         // 1.1~ 두 줄이 폭을 넘어 4줄로 접히며 약 14pt 까지 줄었음 → 위 키 칸(아래 끝 -122) · 아래 안내(위 끝 -233) 사이를 꽉 채움
-        UIKit.Text(page, "게임패드", 24f, Gold, new Vector2(-470f, -172f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
+        UIKit.Text(page, "게임패드", 24f, UiRules.Legacy ? Gold : UiTokens.Text2, new Vector2(-470f, -172f), new Vector2(160f, 40f), TextAlignmentOptions.Left);
         UIKit.Text(page, PadLayoutKo, 19f, Parch, new Vector2(80f, -173f), new Vector2(940f, 98f), TextAlignmentOptions.Left);
         // 1.1.9~ 「기본값으로」 버튼은 창 아래 「이 탭 기본값으로」가 대신함
         UIKit.Text(page, "버튼을 누른 뒤 바꿀 키나 마우스 버튼을 누르세요 (ESC: 취소)", 22f, Off, new Vector2(-160f, -255f), new Vector2(760f, 44f), TextAlignmentOptions.Left);
@@ -2423,7 +2430,7 @@ public static class SettingsUI
             bool waiting = i == capturing;
             bool denied = !waiting && i == blocked;
             keyLabels[j].text = waiting ? Loc.T("키를 누르세요") : denied ? Loc.T("사용 중") : KeyBindings.KeyName(KeyBindings.Get(KeyBindings.All[i]));     // 1.0.5~ 패드를 써도 키보드 키 이름
-            keyLabels[j].color = waiting ? Gold : denied ? new Color(1f, 0.45f, 0.4f) : new Color(0.96f, 0.9f, 0.8f);
+            keyLabels[j].color = waiting ? (UiRules.Legacy ? Gold : UiTokens.Accent) : denied ? new Color(1f, 0.45f, 0.4f) : new Color(0.96f, 0.9f, 0.8f);
         }
     }
 
@@ -2504,7 +2511,7 @@ public static class SettingsUI
         RectTransform bg = UIKit.Rect("Background", root, Vector2.zero, Vector2.zero);
         bg.anchorMin = new Vector2(0f, 0.3f); bg.anchorMax = new Vector2(1f, 0.7f);
         bg.offsetMin = bg.offsetMax = Vector2.zero;
-        bg.gameObject.AddComponent<Image>().color = new Color(0.25f, 0.22f, 0.3f);
+        bg.gameObject.AddComponent<Image>().color = UiRules.Legacy ? new Color(0.25f, 0.22f, 0.3f) : UiTokens.LineDim;
 
         RectTransform area = UIKit.Rect("Fill Area", root, Vector2.zero, Vector2.zero);
         area.anchorMin = new Vector2(0f, 0.3f); area.anchorMax = new Vector2(1f, 0.7f);
@@ -2512,7 +2519,7 @@ public static class SettingsUI
         RectTransform fill = UIKit.Rect("Fill", area, Vector2.zero, Vector2.zero);
         fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(0f, 1f);
         fill.offsetMin = fill.offsetMax = Vector2.zero;
-        fill.gameObject.AddComponent<Image>().color = new Color(0.96f, 0.75f, 0.3f);
+        fill.gameObject.AddComponent<Image>().color = UiRules.Legacy ? new Color(0.96f, 0.75f, 0.3f) : UiTokens.Accent;      // UI 개편: 금 → 청록
 
         RectTransform handleArea = UIKit.Rect("Handle Slide Area", root, Vector2.zero, Vector2.zero);
         handleArea.anchorMin = Vector2.zero; handleArea.anchorMax = Vector2.one;
@@ -2524,6 +2531,15 @@ public static class SettingsUI
         hi.sprite = UIKit.ButtonSprite;
         hi.type = Image.Type.Sliced;
         hi.color = Color.white;
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_slider_knob_n") != null)
+        {
+            // 찌그러진 리벳 버튼 대신 도트 손잡이 (4x8 도트 × 2 = 24x48) · 마우스 올림은 청록
+            hi.sprite = UiRules.Sprite("ui2_slider_knob_n");
+            hi.type = Image.Type.Simple;
+            handle.sizeDelta = new Vector2(24f, 24f);
+            Slider sl = root.GetComponent<Slider>();
+            if (sl != null) { sl.transition = Selectable.Transition.SpriteSwap; sl.spriteState = new SpriteState { highlightedSprite = UiRules.Sprite("ui2_slider_knob_h"), selectedSprite = UiRules.Sprite("ui2_slider_knob_h"), pressedSprite = UiRules.Sprite("ui2_slider_knob_h") }; }
+        }
 
         s.fillRect = fill;
         s.handleRect = handle;
@@ -2746,7 +2762,7 @@ public static class LanguagePicker
         if (GameSettings.LanguageChosen || GameInput.Auto || Application.isBatchMode) { then?.Invoke(); return; }
         RectTransform win = UIKit.Modal(root, "LanguagePicker", new Vector2(1000f, 440f), out open);
         GameObject mine = open;
-        TMP_Text title = UIKit.Text(win, "", 44f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 145f), new Vector2(920f, 64f));
+        TMP_Text title = UIKit.Text(win, "", 44f, UiRules.Legacy ? new Color(0.96f, 0.83f, 0.47f) : UiTokens.Text1, new Vector2(0f, 145f), new Vector2(920f, 64f));
         title.text = Loc.T("언어를 고르세요") + (Loc.Current != Loc.Lang.English ? "  <size=60%><color=#A89C86>Language</color></size>" : "");
         UIKit.Text(win, "설정 → 일반에서 언제든 바꿀 수 있습니다.", 22f, new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -150f), new Vector2(900f, 36f));
         if (GameSettings.DeckApplied)
@@ -2776,8 +2792,12 @@ public static class LanguagePicker
             TMP_FontAsset native = Loc.NativeFont(lang);
             if (native != null) label.font = native;
             bool on = lang == Loc.Current;
-            b.GetComponent<Image>().color = on ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.6f, 0.58f, 0.65f);
-            b.transform.localScale = Vector3.one * (on ? 1.06f : 1f);
+            if (!UiRules.Legacy) UiV2.Choose(b, on);
+            else
+            {
+                b.GetComponent<Image>().color = on ? new Color(0.96f, 0.83f, 0.47f) : new Color(0.6f, 0.58f, 0.65f);
+                b.transform.localScale = Vector3.one * (on ? 1.06f : 1f);
+            }
             if (on) preset = b;
         }
         UIKit.SetDefault(preset);          // 1.1.9~ 미리 고른 언어를 선택해 둠 (Enter · Space 로 확정, ←→ 로 이동)

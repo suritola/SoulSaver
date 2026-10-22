@@ -133,6 +133,17 @@ public static class UiV2
         if (t != null) t.color = on ? UiTokens.Text1 : UiTokens.Text2;
     }
 
+    // 켜고 끄는 값: 켜짐 = 청록 주 버튼 그림 + 뼈색 · 꺼짐 = 기본 그림 + 흐린 글자 (같은 모양이라 구분이 약했음)
+    public static void Toggle(Button b, bool on)
+    {
+        if (b == null) return;
+        Image img = b.GetComponent<Image>();
+        Sprite s = UiRules.Sprite(on ? "ui2_btn_primary_n" : "ui2_btn_secondary_n");
+        if (img != null && s != null) { img.sprite = s; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; img.color = Color.white; }
+        TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
+        if (t != null) t.color = on ? UiTokens.Text1 : UiTokens.Text3;
+    }
+
     // 버튼 글자를 번역 키로 바꿔 닮 (언어를 바꾸면 따라감 · UIKit.Remember) — 짧은 버튼 이름 (LocTable.UiButtons)
     public static void Label(Button b, string key)
     {
