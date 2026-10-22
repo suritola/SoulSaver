@@ -43,7 +43,8 @@ public static class ArenaLayout
     const float BorderMul = 0.5f, FogStart = 0.6f, FogMin = 0.1f, FogWidth = 8f;
     // 안개 끝 너머 카메라 배경 = 장 배경색 × 이 값 (바닥이 끝나는 곳이 티 나지 않게 어둡게 이어짐)
     public const float OutsideBg = 0.25f;
-    const int BorderRock = 3;     // 바위 (묘역 · 지옥 바위 · 초원 이끼 바위)
+    const int BorderRock = 3;
+    const int RuinR = 6, AvenueStep = 14, AvenueGap = 6;     // 폐허 광장 반지름 · 길가 기둥 간격 · 길 가운데에서 떨어진 칸     // 바위 (묘역 · 지옥 바위 · 초원 이끼 바위)
     const int PathHalf = 2, PlazaR = 11, MarkerDx = 12, MarkerDy = 12, GateClearX = 10, TopStep = 13, RimStep = 12;
 
     // 깨지는 물체 자리 (월드 좌표 · 칸 가운데) — MapProps 가 씀 (맵 확장 6)
@@ -127,6 +128,14 @@ public static class ArenaLayout
         //   경계에 가까울수록 · 밖으로 갈수록 어두워지는 안개로 경계를 알림 (벽 띠 · 벽선 기둥은 깔지 않음 · 막는 판정은 벽 상자 4개 그대로)
         bool open = VisualRules.EndlessLook;
         float seed = th.realm * 37.1f;
+        // 2026-10-22~ 구조물 (사용자 「맵 안에 구조물이 너무 없어서 텅 비어 보인다」): 사분면 가운데 폐허 광장 넷 (기둥 고리 + 포장 바닥 · 좌우 대칭)
+        List<Vector2Int> ruins = new List<Vector2Int>();
+        {
+            int rx = Mathf.RoundToInt(x1 * 0.5f), ryUp = Mathf.RoundToInt((y1 + cy) * 0.5f), ryDn = Mathf.RoundToInt((y0 + cy) * 0.5f);
+            if (rx >= RuinR + PathHalf + 6)
+                foreach (int ry in new[] { ryUp, ryDn })
+                    if (ry - cy >= RuinR + 6 || cy - ry >= RuinR + 6) { ruins.Add(new Vector2Int(rx, ry)); ruins.Add(new Vector2Int(-rx, ry)); }
+        }
         List<TileChangeData> fl = new List<TileChangeData>();
         // 2026-10-22~ 맵 불러올 때 렉: 화면 끝까지(약 5만 7천 칸) 깔던 것을 안개가 다 어두워지는 곳까지만 — 그 너머는 같은 어두운 배경색 (StageManager)
         int fo = BorderRows + Mathf.CeilToInt(FogWidth) + 2;
@@ -146,7 +155,11 @@ public static class ArenaLayout
                 bool plazaRim = plaza && (th.square ? Mathf.Max(ax, ay) > pr - 1f : ax * ax + dy * dy > (pr - 1f) * (pr - 1f));
                 bool path = ax <= pv || ay <= ph;
                 bool curb = !path && (ax == pv + 1 || ay == ph + 1);
+                int ruinD2 = int.MaxValue;
+                foreach (Vector2Int rc in ruins) ruinD2 = Mathf.Min(ruinD2, (x - rc.x) * (x - rc.x) + (y - rc.y) * (y - rc.y));
                 if (!open && y == y1) s = Ts(5);                          // 벽 바로 아래 그늘
+                else if (ruinD2 <= (RuinR - 2) * (RuinR - 2)) { s = Ts(th.pathSlot); mul *= th.pathMul; }               // 폐허 광장 포장
+                else if (ruinD2 <= (RuinR - 1) * (RuinR - 1)) { s = Ts(th.rimSlot); mul *= th.rimMul; }                 // 폐허 광장 테
                 else if (plazaRim) { s = Ts(th.rimSlot); mul *= th.rimMul; }
                 else if (plaza || path || yard) { s = Ts(th.pathSlot); mul *= th.pathMul; }
                 else
@@ -205,6 +218,27 @@ public static class ArenaLayout
         }
         }
         foreach (int dyM in new[] { MarkerDy, -MarkerDy }) Pair(MarkerDx, cy + dyM, th.marker);                // 광장 표지
+        // 폐허 광장 기둥 고리 (여섯)
+        foreach (Vector2Int rc in ruins)
+            for (int i = 0; i < 6; i++)
+            {
+                float a = (30f + 60f * i) * Mathf.Deg2Rad;
+                Put(rc.x + Mathf.RoundToInt(Mathf.Cos(a) * RuinR), rc.y + Mathf.RoundToInt(Mathf.Sin(a) * RuinR), th.topPillar);
+            }
+        // 길가 기둥 · 나무 (십자 길 양옆 · 광장 · 앞뜰 · 폐허 · 경계 근처는 비움)
+        bool Free(int x, int y)
+        {
+            if (Mathf.Abs(x) <= PlazaR + 4 && Mathf.Abs(y - cy) <= PlazaR + 4) return false;
+            if (Mathf.Abs(x) <= 10 && y >= y1 - 12) return false;
+            foreach (Vector2Int rc in ruins) if (Mathf.Abs(x - rc.x) <= RuinR + 3 && Mathf.Abs(y - rc.y) <= RuinR + 3) return false;
+            return x > x0 + 3 && x < x1 - 3 && y > y0 + 3 && y < y1 - 6;
+        }
+        for (int d = PlazaR + 6; d <= x1 - 4; d += AvenueStep)
+            foreach (int side in new[] { AvenueGap, -AvenueGap })
+                if (Free(d, cy + side)) Pair(d, cy + side, th.topPillar);
+        for (int d = PlazaR + 6; cy + d <= y1 - 6 || cy - d >= y0 + 4; d += AvenueStep)
+            foreach (int yy in new[] { cy + d, cy - d })
+                if (Free(AvenueGap, yy)) Pair(AvenueGap, yy, th.topPillar);
         if (open)
         {
             // 경계 테두리 바위 (좌우 대칭 · 성문 앞 · 길 끝은 비움)
@@ -232,8 +266,10 @@ public static class ArenaLayout
                 int gy = cy + gdy;
                 iy++;
                 bool socket = ((ix + iy) & 1) == 1;
-                if (!socket && (iy & 1) == 1) continue;               // 무늬는 구획 넷 중 하나꼴
-                bool motif = !socket;
+                bool nearRuin = false;
+                foreach (Vector2Int rc in ruins) if (Mathf.Abs(gx - Mathf.Abs(rc.x)) <= RuinR + 8 && Mathf.Abs(gy - rc.y) <= RuinR + 6) nearRuin = true;
+                if (nearRuin) continue;                                // 폐허 광장 자리
+                bool motif = !socket;                                  // 2026-10-22~ 구조물을 늘려 무늬도 모든 구획에 (넷 중 하나 → 절반)
                 foreach (int sx in new[] { gx, -gx })
                 {
                     if (motif)
