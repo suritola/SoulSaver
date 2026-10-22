@@ -8,7 +8,7 @@
 import argparse, base64, json, os, sys, urllib.error, urllib.request
 
 API = "https://generativelanguage.googleapis.com/v1beta"
-DEFAULT_MODEL = "gemini-2.5-flash-image"
+DEFAULT_MODEL = "gemini-3-pro-image"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STYLE = (
@@ -42,7 +42,10 @@ def call(url, key, body=None):
         with urllib.request.urlopen(req, timeout=180) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
-        sys.exit("Gemini 오류 %d: %s" % (e.code, e.read().decode("utf-8", "replace")[:800]))
+        msg = e.read().decode("utf-8", "replace")
+        if e.code == 429 and "free_tier" in msg and "limit: 0" in msg:
+            sys.exit("Gemini 429: 무료 등급은 그림 모델 한도가 0 → AI Studio 에서 이 키의 프로젝트에 결제(Billing)를 연결해야 함")
+        sys.exit("Gemini 오류 %d: %s" % (e.code, msg[:800]))
 
 
 def main():
