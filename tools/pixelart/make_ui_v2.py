@@ -410,14 +410,14 @@ place('ui2_btn_danger_n', px + 486, py + 228, 72, 20)
 text(px + 486 + 108, py + 228 + 30, '다시 시작', 26, T['Danger'][:3], 'mm')
 
 # 레벨업 카드 셋 (가운데 아래)
-text(1020, 468, '레벨업', 48, T['Text1'][:3], 'mm')
-text(1020, 510, '카드를 하나 고르세요 · 남은 레벨업 2', 22, T['Text2'][:3], 'mm')
+text(1020, 420, '레벨업', 48, T['Text1'][:3], 'mm')
+text(1020, 456, '카드를 하나 고르세요 · 남은 레벨업 2', 22, T['Text2'][:3], 'mm')
 icons = ['ab_multishot', 'ab_regen', 'ab_coin']
 names = [('스킬 · Lv 2→3', '연발 사격', '공격이 2발 더 나갑니다.', T['CatSkill'] if 'CatSkill' in T else T['Line'], 's'),
          ('생존 · 새로', '재생', '초당 체력 1% 회복.', T['CatSurvival'] if 'CatSurvival' in T else T['Line'], 'n'),
          ('재물 · Lv 1→2', '탐욕', '코인 +15%.', T['CatWealth'] if 'CatWealth' in T else T['Line'], 'n')]
 for i, (cat, nm, desc, cc, st) in enumerate(names):
-    cx, cy = 660 + i * 246, 552 + (-6 if st == 's' else 0)
+    cx, cy = 660 + i * 246, 588 + (-6 if st == 's' else 0)
     place('ui2_card_' + st, cx, cy, 76, 110)
     if st == 's':
         place('ui2_focus', cx - 6, cy - 6, 80, 114)
@@ -431,6 +431,22 @@ for i, (cat, nm, desc, cc, st) in enumerate(names):
     text(cx + 114, cy + 246, desc, 22, T['Text2'][:3], 'mm')
     sprite('ui2_keycap', cx + 228 - 45, cy + 330 - 48)
     text(cx + 228 - 31, cy + 330 - 34, str(i + 1), 22, T['Text1'][:3], 'mm')
+    # 진화 띠 (지금처럼 카드 바로 위): 재료 아이콘 셋 + 단계 칸 · 남은 단계 · 진화 이름 — 진화는 영혼색(보라) 선 · 「바로 진화!」만 청동(보상색)
+    evo = [('1단계 남음!', '탄막 폭풍', T['Accent'], [(3, 3), (2, 3), (1, 2)]), ('3단계 남음', '생명의 샘', T['Text3'], [(1, 3), (0, 3), (2, 3)]), None][i]
+    if evo:
+        tagtxt, evname, tagc, lv = evo
+        bx, by = cx, cy - 84
+        place('ui2_card_n', bx, by, 76, 26)
+        D.rectangle([bx + 6, by + 6, bx + 228 - 7, by + 8], fill=T['GaugeSoul'][:3])          # 영혼색 1도트 띠
+        for k, (have, mx) in enumerate(lv):
+            ix = bx + 12 + k * 42
+            place('ui2_inset', ix, by + 15, 12, 12)
+            mi = Image.open(os.path.join(ROOT, 'Assets', 'Sprites', 'UI', 'Theme', ['ab_multishot', 'ab_pierce', 'ab_glare', 'ab_regen', 'ab_armor', 'ab_exp'][k + (0 if i == 0 else 3)] + '.png')).convert('RGBA')
+            board.alpha_composite(mi.resize((32, 32), Image.NEAREST), (ix + 2, by + 17))
+            for s in range(mx):
+                sprite('ui2_seg_on' if s < have else 'ui2_seg_off', ix + s * 12, by + 54, (T['Accent'] if (k == 0 and s == have - 1 and i == 0) else T['GaugeSoul']) if s < have else None, 2)
+        text(bx + 142, by + 26, tagtxt, 22, tagc[:3], 'lm')
+        text(bx + 142, by + 54, evname, 22, T['Text1'][:3], 'lm')
     if i == 0:
         place('ui2_tag', cx + 18, cy + 270, 30, 10)
         text(cx + 18 + 45, cy + 270 + 15, '추천', 22, T['Accent'][:3], 'mm')
