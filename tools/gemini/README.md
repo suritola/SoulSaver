@@ -4,6 +4,8 @@ Gemini 가 원본 그림을 그리고 → 도트로 바꾸고 → Claude 가 비
 모든 명령은 `py -3.14 -X utf8` (Pillow 가 깔린 Windows 파이썬 · 한글 출력)으로 실행한다.
 
 ## 준비 (한 번)
+- **기본 = Cloudflare Workers AI (무료)**: dash.cloudflare.com → 내 프로필 → API 토큰 → 「Workers AI」 템플릿으로 토큰을 만들어 `tools/gemini/.cf_token` 에 저장 (git 제외). 모델 FLUX.1 schnell, 하루 무료 한도 안. 참고 그림을 못 보내므로 그림체는 `pixelize --palette-from` 으로 맞춘다
+- **Gemini (유료)**: `--provider gemini`
 - Google AI Studio 에서 결제(Billing)가 연결된 프로젝트의 API 키를 만들어 (무료 등급은 그림 모델 한도 0) `tools/gemini/.key` 에 한 줄로 저장 (git 제외) 또는 환경 변수 `GEMINI_API_KEY`
 - 모델 확인: `gen.py --list-models` → 기본은 `gemini-3-pro-image` (Nano Banana Pro · 싸게는 `gemini-3.1-flash-image`), 바꾸려면 `--model` 또는 환경 변수 `GEMINI_IMAGE_MODEL`
 

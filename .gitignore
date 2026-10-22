@@ -67,3 +67,4 @@ __pycache__/
 /tools/telemetry/.token
 /server/telemetry/.wrangler/
 /tools/gemini/.key
+/tools/gemini/.cf_token
