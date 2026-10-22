@@ -671,15 +671,14 @@ public static class MenuExtras
             t.alignment = TextAlignmentOptions.Left;
             if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 120f); t.fontSizeMin = 60f; }
         }
-        float y = 220f;
-        bool cont = parent.Find("ContinueButton") != null && parent.Find("ContinueButton").gameObject.activeSelf;
-        if (cont) { LeftPlace(parent, "ContinueButton", y, 96f); y -= 48f + MainRowGap + 38f; }
-        LeftPlace(parent, "GameStartButton", y, 76f, MainW, UiTokens.Heading);
-        y -= 38f + MainRowGap + 27f;
-        // 난이도 탭 한 줄 (넷이 열 폭을 나눔) · 뒤 판은 숨김
+        // 2026-10-22~ 사용자 「시작은 왜 저기 있냐 · 배치가 좀 그래」: 고르는 순서대로 한 덩어리 — 난이도 → 시작(이어하기가 있으면 반씩 나란히) → (영혼의 무게) → 목록
+        //   덩어리 위끝은 배경 문(포털) 아래끝 밑 (예전엔 「시작」이 문을 가리고 혼자 떨어져 있었음 — 캡처 확인) · 「시작」과 목록 사이만 넓게 띄워 두 묶음으로
+        float y = 150f;
         Transform plate = parent.Find("DiffPlate");
         if (plate != null) plate.gameObject.SetActive(false);
         float tabW = (MainW - UiTokens.S1 * 3f) / 4f;
+        const float TabH = 54f, StartH2 = 76f;
+        y -= TabH * 0.5f;
         for (int i = 0; i < 4; i++)
         {
             RectTransform r = parent.Find("Difficulty_" + (Difficulty)i) as RectTransform;
@@ -687,24 +686,36 @@ public static class MenuExtras
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
             r.anchoredPosition = new Vector2(MainX + i * (tabW + UiTokens.S1), y);
-            r.sizeDelta = new Vector2(tabW, 54f);
+            r.sizeDelta = new Vector2(tabW, TabH);
             TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
             if (t != null) { t.rectTransform.sizeDelta = new Vector2(tabW - 12f, 46f); t.enableAutoSizing = true; t.fontSizeMin = 18f; t.fontSizeMax = UiTokens.Body; }
             Transform ul = r.Find("Underline");
             if (ul is RectTransform ur) { ur.anchoredPosition = new Vector2(0f, -18f); ur.sizeDelta = new Vector2(tabW * 0.5f, UiRules.Dot); }
         }
-        y -= 27f + MainRowGap;
-        // 영혼의 무게 (어려움 + 해금 때만 켜짐 · 자리는 늘 잡아 둠)
+        y -= TabH * 0.5f + UiTokens.S1 + StartH2 * 0.5f;
+        bool cont = parent.Find("ContinueButton") != null && parent.Find("ContinueButton").gameObject.activeSelf;
+        if (cont)
+        {
+            float half = (MainW - UiTokens.S2) * 0.5f;
+            RectTransform cr = LeftPlace(parent, "ContinueButton", y, StartH2, half, UiTokens.Body);
+            RectTransform sr2 = LeftPlace(parent, "GameStartButton", y, StartH2, half, UiTokens.Heading);
+            if (sr2 != null) sr2.anchoredPosition = new Vector2(MainX + half + UiTokens.S2, y);
+            if (cr != null) cr.SetAsLastSibling();
+        }
+        else LeftPlace(parent, "GameStartButton", y, StartH2, MainW, UiTokens.Heading);
+        y -= StartH2 * 0.5f;
+        // 영혼의 무게 (해금했으면 시작 바로 아래 자리를 늘 잡음 · 어려움을 고르면 켜짐)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
-        bool weightOn = wr != null && SoulWeight.Unlocked;          // 해금했으면 자리를 늘 잡음 (어려움을 고르면 나중에 켜짐 — 켜진 것만 보면 그때 도감과 겹침)
+        bool weightOn = wr != null && SoulWeight.Unlocked;
         if (wr != null)
         {
             wr.anchorMin = wr.anchorMax = new Vector2(0.5f, 0.5f);
             wr.pivot = new Vector2(0f, 0.5f);
-            wr.anchoredPosition = new Vector2(MainX, y - 16f);
+            wr.anchoredPosition = new Vector2(MainX, y - UiTokens.S1 - 16f);
             wr.sizeDelta = new Vector2(MainW, 32f);
         }
-        y -= (weightOn ? 32f + MainRowGap : UiTokens.S4) + MainRowH * 0.5f;      // 꺼져 있으면 빈칸을 남기지 않음 (사진: 난이도 줄 아래 구멍)
+        if (weightOn) y -= UiTokens.S1 + 32f;
+        y -= UiTokens.S6 + MainRowH * 0.5f;        // 「시작」 묶음과 목록 사이만 넓게
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
             if (LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading) == null) continue;
