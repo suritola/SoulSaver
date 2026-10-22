@@ -1,3 +1,276 @@
+@@@ v1.2.4
+# V1.2.4 — 전투 가독성 개선 · 넓어진 맵
+적과 경고가 더 잘 보이도록 전투 화면을 다듬고, 맵을 넓고 정돈된 모습으로 바꿨습니다.
+
+## 전투 가독성 개선
+- 적의 공격 예고가 내 스킬 이펙트에 가려지지 않도록 항상 위에 보입니다.
+- 내 스킬 이펙트를 덜 눈부시게 다듬어, 적이 몰려도 위치를 알아보기 쉽습니다.
+- 적 발밑에 그림자가 생기고, 겹친 적의 앞뒤가 자연스럽게 보입니다.
+- 바닥을 차분한 색으로 낮춰 적과 경고가 더 눈에 띕니다.
+- 영웅마다 다른 모양의 범위 표시가 생겼습니다.
+
+## 맵 개편
+- 맵이 더 넓어지고 길 · 광장 · 구조물이 정돈된 모습으로 바뀌었습니다.
+- 맵 바깥이 끝없이 이어지는 것처럼 보입니다.
+- 카메라가 조금 더 멀리 보입니다.
+
+## 화면 · 편의성 개선
+- 버튼과 창, 진행 막대, 알림을 새 도트 스타일로 바꿨습니다.
+- 결과 화면을 간결하게 정리했습니다.
+- 다음 장으로 넘어갈 때 검은 화면 대신 로딩 화면이 보이고, 맵을 불러올 때 끊김이 줄었습니다.
+
+## 밸런스 조정
+- 코인 · 회복약 드롭: 모든 모드에서 50% 감소, 이야기 모드는 적이 많이 나오는 만큼 추가로 줄어듭니다 (경험치와 같은 방식).
+
+## 버그 수정
+- 거너가 우클릭을 누르면 게임이 멈추던 문제를 고쳤습니다.
+- 일부 화면에서 한글이 깨지던 문제를 고쳤습니다.
+- 게임을 시작하자마자 일시정지 창이 뜨던 문제를 고쳤습니다.
+- 판 시작 때 계약 안내가 다른 창과 겹치던 문제, 일시정지 화면의 계약 목록 배열이 어긋나던 문제를 고쳤습니다.
+- 일부 문구가 언어를 바꿔도 번역되지 않던 문제를 고쳤습니다.
+
+플레이해 주셔서 감사합니다!
+
+=== en
+# V1.2.4 — Clearer Combat · Bigger Maps
+Combat is easier to read so enemies and warnings stand out, and the maps are now larger and neatly laid out.
+
+## Clearer Combat
+- Enemy attack warnings are now always drawn on top and are no longer hidden by your skill effects.
+- Your skill effects are less blinding, so you can tell where enemies are even in big crowds.
+- Enemies now cast shadows, and overlapping enemies are layered front to back naturally.
+- Floors use calmer colors so enemies and warnings stand out more.
+- Each hero now has their own range indicator design.
+
+## Map Overhaul
+- Maps are larger, with tidier paths, plazas and structures.
+- The edges of the map now look like they go on forever.
+- The camera now shows a little more of the field.
+
+## Interface & Quality of Life
+- Buttons, windows, progress bars and notifications have a new pixel-art style.
+- The results screen has been simplified.
+- Moving to the next chapter now shows a loading screen instead of a black screen, and map loading stutters less.
+
+## Balance Changes
+- Coin and healing potion drops: reduced by 50% in all modes. In Story mode they are reduced further the more enemies appear (same as experience).
+
+## Bug Fixes
+- Fixed the game freezing when the Gunner used right-click.
+- Fixed broken Korean text on some screens.
+- Fixed the pause menu opening right after starting a run.
+- Fixed the contract notice overlapping other windows at the start of a run, and the misaligned contract list on the pause screen.
+- Fixed some text not being translated after changing the language.
+
+Thanks for playing!
+
+=== ja
+# V1.2.4 — 戦闘の見やすさ改善・マップ拡張
+敵や警告が見やすくなるよう戦闘画面を整え、マップを広く整然とした姿に変えました。
+
+## 戦闘の見やすさ改善
+- 敵の攻撃予告が自分のスキルエフェクトに隠れず、常に上に表示されます。
+- 自分のスキルエフェクトのまぶしさを抑え、敵が群がっても位置が分かりやすくなりました。
+- 敵の足元に影が付き、重なった敵の前後が自然に表示されます。
+- 床を落ち着いた色にして、敵と警告がより目立つようにしました。
+- ヒーローごとに異なるデザインの範囲表示が追加されました。
+
+## マップ改編
+- マップが広くなり、道・広場・建造物が整然と配置されました。
+- マップの外側が果てしなく続いているように見えます。
+- カメラが少し遠くまで見えるようになりました。
+
+## 画面・利便性の改善
+- ボタン・ウィンドウ・ゲージ・通知を新しいドット絵スタイルにしました。
+- リザルト画面をすっきり整理しました。
+- 次の章へ進むとき、黒い画面の代わりにロード画面が表示され、マップ読み込み時のカクつきが減りました。
+
+## バランス調整
+- コイン・回復薬のドロップ：全モードで50%減少。ストーリーモードでは敵が多く出るほどさらに減少します（経験値と同じ方式）。
+
+## 不具合修正
+- ガンナーが右クリックするとゲームが止まる不具合を修正しました。
+- 一部の画面で韓国語が文字化けする不具合を修正しました。
+- ゲーム開始直後に一時停止メニューが開く不具合を修正しました。
+- ラン開始時の契約案内が他のウィンドウと重なる不具合と、一時停止画面の契約リストの配置ずれを修正しました。
+- 言語を変えても一部の文が翻訳されない不具合を修正しました。
+
+プレイしていただきありがとうございます！
+
+=== zh
+# V1.2.4 — 战斗清晰度改进 · 地图扩大
+优化了战斗画面，让敌人和预警更醒目，并将地图改为更宽广、更整齐的样子。
+
+## 战斗清晰度改进
+- 敌人的攻击预警始终显示在最上层，不再被自己的技能特效遮挡。
+- 降低了自己技能特效的刺眼程度，即使敌人成群也能看清位置。
+- 敌人脚下增加了阴影，重叠的敌人前后关系显示更自然。
+- 地面改为更柔和的颜色，让敌人和预警更醒目。
+- 每位英雄都有了不同样式的范围指示。
+
+## 地图改版
+- 地图更大，道路、广场和建筑布局更加整齐。
+- 地图边缘看起来像是无限延伸。
+- 镜头可以看到更远一点的范围。
+
+## 界面与便利性改进
+- 按钮、窗口、进度条和通知改为新的像素风格。
+- 简化了结算画面。
+- 进入下一章时会显示加载画面而不是黑屏，加载地图时的卡顿也减少了。
+
+## 平衡调整
+- 金币和回复药掉落：所有模式减少50%，故事模式中敌人出现越多，掉落会进一步减少（与经验值相同的方式）。
+
+## 问题修复
+- 修复了枪手按下右键时游戏卡住的问题。
+- 修复了部分画面中韩文显示乱码的问题。
+- 修复了刚开始游戏时就弹出暂停菜单的问题。
+- 修复了开局时契约提示与其他窗口重叠，以及暂停画面中契约列表排列错位的问题。
+- 修复了更改语言后部分文字没有翻译的问题。
+
+感谢游玩！
+@@@ v1.2.3
+# V1.2.3 — 화면 개선
+메인 메뉴와 일시정지 화면을 비롯해 게임 곳곳의 화면을 더 깔끔하게 다듬었습니다.
+
+## 화면 개선
+- 메인 메뉴와 일시정지 화면을 새롭게 정리했습니다.
+- 전투 화면, 카드, 게임 오버, 설정 화면을 더 보기 쉽게 다듬었습니다.
+- 설명을 더 짧고 읽기 쉽게 바꾸고, 게임 용어에 마우스를 올리면 뜻을 볼 수 있습니다.
+
+플레이해 주셔서 감사합니다!
+
+=== en
+# V1.2.3 — Interface Improvements
+The main menu, pause screen and many other screens have been cleaned up and polished.
+
+## Interface Improvements
+- Redesigned the main menu and pause screen.
+- Polished the battle screen, cards, game over and settings screens for easier reading.
+- Descriptions are shorter and clearer, and hovering over game terms now shows what they mean.
+
+Thanks for playing!
+
+=== ja
+# V1.2.3 — 画面の改善
+メインメニューや一時停止画面をはじめ、ゲームのさまざまな画面をすっきり整えました。
+
+## 画面の改善
+- メインメニューと一時停止画面を新しく整えました。
+- 戦闘画面・カード・ゲームオーバー・設定画面を見やすくしました。
+- 説明を短く読みやすくし、ゲーム用語にマウスを乗せると意味が見られるようになりました。
+
+プレイしていただきありがとうございます！
+
+=== zh
+# V1.2.3 — 界面改进
+重新整理了主菜单、暂停画面等游戏中的多个界面，使其更加简洁。
+
+## 界面改进
+- 重新设计了主菜单和暂停画面。
+- 优化了战斗画面、卡牌、游戏结束和设置画面，更易阅读。
+- 说明更简短易读，将鼠标移到游戏术语上即可查看其含义。
+
+感谢游玩！
+@@@ v1.2.2
+# V1.2.2 — 한계 돌파 레벨 100 · 검사 받아치기 · 결계 버그 수정
+한계 돌파에서 레벨 100까지 오르며 초월 카드도 함께 고르고, 검사 받아치기가 더 쉬워졌습니다. 결계 뒤 맵 밖에 갇히던 문제도 고쳤습니다.
+
+## 한계 돌파 — 최대 레벨 100
+- 무한 모드에서 개발자 엄마를 쓰러뜨려 한계 돌파에 들어가면 최대 레벨이 50에서 100으로 늘어납니다.
+- 레벨 50~100 동안에는 레벨업 카드와 초월 카드를 둘 다 고릅니다. 레벨업할 때마다 초월 칸(◆)이 하나씩 차고, 세 칸이 차면 레벨업 카드를 고른 뒤 초월 카드 창이 열립니다.
+- 대신 레벨 50~100 동안은 레벨업에 필요한 경험치가 레벨 49 때보다 많습니다.
+- 레벨 100에 닿으면 예전처럼 경험치 막대를 세 번 채울 때마다 초월 카드를 고릅니다.
+
+## 밸런스 조정
+- 검사 받아치기: 막기 시간 0.25초 → 0.5초 · 극의 0.4초 → 0.8초
+- 한계 돌파 뒤 적 공격력: 1분마다 ×1.12 → ×1.25 (약 3분마다 2배)
+- 한계 돌파 뒤 적 이동 속도: 1분마다 +5% (최대 ×1.8, 새로 추가)
+- 한계 돌파 레벨 50~99 레벨업에 필요한 경험치: 레벨 49(×4.5)보다 많은 ×6
+
+## 개선
+- 검사 받아치기: 막는 동안 캐릭터가 금빛으로 빛나 언제까지 막는지 알 수 있습니다.
+- 검사 받아치기: 화면이 멈추며 당겨지는 연출이 반격 보상과 상관없이 막기에 성공할 때마다 나옵니다.
+
+## 버그 수정
+- 보스 결계가 끝난 뒤 캐릭터가 맵 밖에 남아 다시 들어오지 못하던 문제를 고쳤습니다. 혹시 맵 테두리 밖에 나가도 곧바로 맵 안으로 돌아옵니다.
+
+플레이해 주셔서 감사합니다! 문제가 생기면 커뮤니티 토론 게시판에 알려 주세요.
+
+=== en
+# V1.2.2 — Beyond the Limit Lv 100 · Swordsman Parry · Barrier Fix
+Beyond the Limit now reaches Lv 100 with Transcendence cards, plus an easier Parry and a boss barrier fix.
+
+## Beyond the Limit — Max Level 100
+- After defeating the Developer's Mom in Endless Mode and entering Beyond the Limit, the max level rises from 50 to 100.
+- From level 50 to 100 you get both level-up cards and Transcendence cards. Each level-up fills one Transcendence slot (◆), and when three are filled, a Transcendence card window opens after your level-up picks.
+- In exchange, levels 50–100 need more EXP per level-up than level 49.
+- At level 100, Transcendence cards come every three EXP bar fills, as before.
+
+## Balance Changes
+- Swordsman Parry: block window 0.25s → 0.5s · Mastery 0.4s → 0.8s
+- Enemy damage after Beyond the Limit: ×1.12 → ×1.25 per minute (doubles about every 3 minutes)
+- Enemy move speed after Beyond the Limit: +5% per minute (up to ×1.8, new)
+- EXP needed per level-up at Beyond the Limit Lv 50–99: ×6, more than Lv 49 (×4.5)
+
+## Improvements
+- Swordsman Parry: your hero glows gold while blocking, so you can see exactly how long the block lasts.
+- Swordsman Parry: the freeze-and-zoom effect now plays on every successful block, whether or not the counter reward is ready.
+
+## Bug Fixes
+- Fixed your hero being left outside the map with no way back in after a boss barrier ended. If you ever end up past the map border, you're brought back inside right away.
+
+Thanks for playing! If you run into any issues, let us know on the Community Discussions board.
+
+=== ja
+# V1.2.2 — 限界突破レベル100・剣士の受け返し・結界バグ修正
+限界突破でレベル100まで上がりながら超越のカードも選べるようになり、剣士の受け返しが使いやすくなりました。結界の後にマップ外へ閉じ込められる問題も修正しました。
+
+## 限界突破 — 最大レベル100
+- エンドレスで開発者のママを倒して限界突破に入ると、最大レベルが50から100に上がります。
+- レベル50〜100の間は、レベルアップカードと超越のカードの両方を選べます。レベルアップするたびに超越の枠（◆）が1つたまり、3つたまるとレベルアップカードを選んだ後に超越のカードの画面が開きます。
+- その代わり、レベル50〜100の間はレベルアップに必要な経験値がレベル49の時より多くなります。
+- レベル100に達すると、以前のように経験値バーを3回満たすごとに超越のカードを選びます。
+
+## バランス調整
+- 剣士の受け返し: 受けの時間 0.25秒 → 0.5秒・極意 0.4秒 → 0.8秒
+- 限界突破後の敵の攻撃力: 1分ごとに ×1.12 → ×1.25（約3分ごとに2倍）
+- 限界突破後の敵の移動速度: 1分ごとに +5%（最大 ×1.8、新規）
+- 限界突破のレベル50〜99でレベルアップに必要な経験値: レベル49（×4.5）より多い ×6
+
+## 改善
+- 剣士の受け返し: 受けている間キャラクターが金色に光り、いつまで受けているか分かります。
+- 剣士の受け返し: 画面が止まって寄る演出が、反撃の報酬に関係なく受けに成功するたびに出ます。
+
+## バグ修正
+- ボスの結界が終わった後、キャラクターがマップ外に残って戻れなくなる問題を修正しました。万が一マップの外に出ても、すぐにマップ内へ戻ります。
+
+プレイしていただきありがとうございます！問題があればコミュニティの掲示板でお知らせください。
+
+=== zh
+# V1.2.2 — 突破极限100级 · 剑士招架反击 · 结界错误修复
+突破极限现在可升至100级并同时选择超越卡，剑士的招架反击更容易使用，也修复了结界结束后被困在地图外的问题。
+
+## 突破极限 — 等级上限100
+- 在无尽模式中击败开发者的妈妈进入突破极限后，等级上限从50提升至100。
+- 在50~100级期间，可以同时选择升级卡和超越卡。每次升级会填满一个超越格（◆），填满三个后，在选完升级卡后打开超越卡窗口。
+- 作为代价，50~100级期间每次升级所需的经验比49级时更多。
+- 达到100级后，与之前一样每填满三次经验条选择一张超越卡。
+
+## 平衡调整
+- 剑士招架反击: 格挡时间 0.25秒 → 0.5秒 · 极意 0.4秒 → 0.8秒
+- 突破极限后敌人攻击力: 每分钟 ×1.12 → ×1.25（约每3分钟翻倍）
+- 突破极限后敌人移动速度: 每分钟 +5%（最高 ×1.8，新增）
+- 突破极限50~99级升级所需经验: ×6，多于49级（×4.5）
+
+## 改进
+- 剑士招架反击: 格挡期间角色会发出金光，可以看清格挡持续到何时。
+- 剑士招架反击: 画面停顿并拉近的演出，现在无论反击奖励是否就绪，每次格挡成功都会出现。
+
+## 错误修复
+- 修复了首领结界结束后，角色留在地图外无法回来的问题。即使走出地图边界，也会立刻回到地图内。
+
+感谢游玩！如果遇到问题，请在社区讨论版告诉我们。
 @@@ v1.2.1
 # V1.2.1 밸런스 패치 — 무한 모드 30분 · 영웅 밸런스 · 피격 판정
 무한 모드 성장 속도와 영웅 화력을 맞추고, 피격 판정과 적 · 보스의 예고를 더 알아보기 쉽게 다듬었습니다.

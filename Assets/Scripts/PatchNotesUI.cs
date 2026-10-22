@@ -75,6 +75,16 @@ public static class PatchNotesUI
         open.AddComponent<EscCloser>();
     }
 
+    // UI 개편 P1: 메인 메뉴 「새 소식」 카드 — 가장 최근 공지의 제목 (지금 언어 · 없으면 빈 글)
+    public static string LatestTitle()
+    {
+        List<(string version, string text)> all = All();
+        if (all.Count == 0) return "";
+        foreach (string line in Localize(all[0].text).Replace("\r", "").Split('\n'))
+            if (line.StartsWith("# ")) return line.Substring(2).Trim();
+        return all[0].version;
+    }
+
     // ================================================================= 지난 버전까지 (메인 메뉴 버튼)
     static List<(string version, string text)> All()
     {

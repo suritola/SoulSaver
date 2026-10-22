@@ -585,8 +585,9 @@ public static class MenuExtras
     // UI 개편 P1 (Legacy 끔): 메인 메뉴 배치 (docs/art/ui-v2-preview.png 왼쪽) — 왼쪽 여백 120 에 한 열(폭 420): 제목 · 부제 → 이어하기 · 시작
     //   → 난이도 탭 한 줄 · 영혼의 무게 → 도감 · 일일 도전 · 설정 · 더 보기 · 종료, 영웅은 오른쪽 (카펫 가운데를 비움)
     //   왼쪽 · 오른쪽 끝에 붙여(앵커) UI 크기 110 · 120% 로 논리 폭이 줄어도 화면 안 · 이름은 그대로 (다른 코드 · QA 가 이름으로 찾음)
-    const float MainX = 120f, MainW = 420f, MainRowH = 54f, MainRowGap = 12f;
-    static RectTransform LeftPlace(Transform parent, string name, float y, float h, float w = MainW)
+    // 2026-10-22~ 사용자 「가운데가 텅 비고 UI 가 작다」: 열 420 → 480 · 목록 글자 26 → 34 · 줄 54 → 64, 영웅은 오른쪽 끝 → 카펫 가운데(무대)
+    const float MainX = 120f, MainW = 480f, MainRowH = 64f, MainRowGap = 12f;
+    static RectTransform LeftPlace(Transform parent, string name, float y, float h, float w = MainW, float font = 0f)
     {
         RectTransform r = parent.Find(name) as RectTransform;
         if (r == null || !r.gameObject.activeSelf) return null;
@@ -601,6 +602,7 @@ public static class MenuExtras
             tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f);
             tr.anchoredPosition = Vector2.zero;
             tr.sizeDelta = new Vector2(w - UiTokens.S4 * 2f, h - UiTokens.S1);
+            if (font > 0f) { t.enableAutoSizing = true; t.fontSize = t.fontSizeMax = font; t.fontSizeMin = UiTokens.MinSize(font); }
         }
         return r;
     }
@@ -615,16 +617,16 @@ public static class MenuExtras
             RectTransform r = t.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
-            r.anchoredPosition = new Vector2(MainX, title ? 384f : 318f);
-            r.sizeDelta = new Vector2(title ? 900f : 700f, title ? 120f : 34f);
+            r.anchoredPosition = new Vector2(MainX, title ? 390f : 312f);
+            r.sizeDelta = new Vector2(title ? 1000f : 700f, title ? 140f : 34f);
             t.alignment = TextAlignmentOptions.Left;
-            if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 96f); t.fontSizeMin = 48f; }
+            if (title) { t.enableAutoSizing = true; t.fontSizeMax = Mathf.Min(t.fontSizeMax, 120f); t.fontSizeMin = 60f; }
         }
-        float y = 210f;
+        float y = 220f;
         bool cont = parent.Find("ContinueButton") != null && parent.Find("ContinueButton").gameObject.activeSelf;
-        if (cont) { LeftPlace(parent, "ContinueButton", y, 84f); y -= 84f + MainRowGap; }
-        LeftPlace(parent, "GameStartButton", y, 64f);
-        y -= 64f * 0.5f + MainRowGap + 24f;
+        if (cont) { LeftPlace(parent, "ContinueButton", y, 96f); y -= 48f + MainRowGap + 38f; }
+        LeftPlace(parent, "GameStartButton", y, 76f, MainW, UiTokens.Heading);
+        y -= 38f + MainRowGap + 27f;
         // 난이도 탭 한 줄 (넷이 열 폭을 나눔) · 뒤 판은 숨김
         Transform plate = parent.Find("DiffPlate");
         if (plate != null) plate.gameObject.SetActive(false);
@@ -636,13 +638,13 @@ public static class MenuExtras
             r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
             r.pivot = new Vector2(0f, 0.5f);
             r.anchoredPosition = new Vector2(MainX + i * (tabW + UiTokens.S1), y);
-            r.sizeDelta = new Vector2(tabW, 48f);
+            r.sizeDelta = new Vector2(tabW, 54f);
             TMP_Text t = r.GetComponentInChildren<TMP_Text>(true);
-            if (t != null) { t.rectTransform.sizeDelta = new Vector2(tabW - 12f, 42f); t.enableAutoSizing = true; t.fontSizeMin = 16f; t.fontSizeMax = UiTokens.Small; }
+            if (t != null) { t.rectTransform.sizeDelta = new Vector2(tabW - 12f, 46f); t.enableAutoSizing = true; t.fontSizeMin = 18f; t.fontSizeMax = UiTokens.Body; }
             Transform ul = r.Find("Underline");
-            if (ul is RectTransform ur) { ur.anchoredPosition = new Vector2(0f, -15f); ur.sizeDelta = new Vector2(tabW * 0.5f, UiRules.Dot); }
+            if (ul is RectTransform ur) { ur.anchoredPosition = new Vector2(0f, -18f); ur.sizeDelta = new Vector2(tabW * 0.5f, UiRules.Dot); }
         }
-        y -= 24f + MainRowGap;
+        y -= 27f + MainRowGap;
         // 영혼의 무게 (어려움 + 해금 때만 켜짐 · 자리는 늘 잡아 둠)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
         if (wr != null)
@@ -655,19 +657,43 @@ public static class MenuExtras
         y -= 32f + MainRowGap + MainRowH * 0.5f;
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
-            if (LeftPlace(parent, n, y, MainRowH) == null) continue;
+            if (LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Heading) == null) continue;
             y -= MainRowH + MainRowGap + (n == "DailyButton" && DailyRewards.Streak > 0 ? 18f : 0f);       // 일일 도전 아래 「연속 n일」 자리
         }
-        // 영웅은 오른쪽 (오른쪽 끝에서 160 · 세로 가운데 조금 아래)
+        // 영웅은 카펫 가운데(무대) — 화면 주인공이 가운데 서고 메뉴가 왼쪽에서 받침 (오른쪽 위 포인트와 안 겹침)
         GameObject hpo = GameObject.Find("HeroPanel");          // 씬 고정 그림의 부모에 붙어 있을 수 있어 장면 전체에서 (못 찾으면 메뉴 열과 겹침)
         Transform hp = hpo != null ? hpo.transform : null;
         if (hp is RectTransform hr)
         {
-            hr.anchorMin = hr.anchorMax = new Vector2(1f, 0.5f);
-            hr.pivot = new Vector2(1f, 0.5f);
-            hr.anchoredPosition = new Vector2(-160f, -40f);
+            hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
+            hr.pivot = new Vector2(0.5f, 0.5f);
+            hr.anchoredPosition = new Vector2(150f, -50f);
         }
+        InstallNewsCard(parent);
     }
+
+    // 오른쪽 아래 「새 소식」 카드 하나 (사용자 「오른쪽이 텅 비지 않을까」) — 최신 공지 제목 + 패치노트 버튼, 판 하나 · 버튼 하나만 (설명창을 늘리지 않음)
+    static void InstallNewsCard(Transform parent)
+    {
+        string title = PatchNotesUI.LatestTitle();
+        if (string.IsNullOrEmpty(title) || parent.Find("NewsCard") != null) return;
+        const float W = 440f, H = 176f;
+        RectTransform card = UIKit.Rect("NewsCard", parent, Vector2.zero, new Vector2(W, H));
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(1f, 0f);
+        card.anchoredPosition = new Vector2(-UiTokens.Edge, 96f);
+        UiV2.Slab(card, "ui2_panel", UiTokens.Panel).raycastTarget = false;
+        TMP_Text head = UIKit.Text(card, "새 소식", UiTokens.Small, UiTokens.Text3, new Vector2(0f, H * 0.5f - 34f), new Vector2(W - 60f, 28f), TextAlignmentOptions.Left);
+        head.fontSizeMin = UiTokens.Small;
+        TMP_Text t = UIKit.Text(card, "", UiTokens.Body, UiTokens.Text1, new Vector2(0f, 6f), new Vector2(W - 60f, 64f), TextAlignmentOptions.TopLeft);
+        t.fontSizeMin = UiTokens.Small;
+        t.text = title;
+        System.Action refresh = () => t.text = PatchNotesUI.LatestTitle();
+        t.gameObject.AddComponent<LocRefresh>().refresh = refresh;
+        Transform root = parent.root;
+        Button b = UiV2.Btn(card, "패치노트", new Vector2(W * 0.5f - 30f - 100f, -H * 0.5f + 24f + 24f), new Vector2(200f, 48f), () => PatchNotesUI.OpenHistory(root), UiV2.Kind.Secondary, UiTokens.Body);
+        b.name = "NewsPatchNotesButton";
+    }
+
 
     // UI 개편 P0-4b: 제목은 뼈색 그대로 (그라데이션 · 그림자 · 넓은 자간 · 숨쉬기 없음 — 도트 로고는 P3 전까지 글자), 부제는 작은 흐린 글자 · 양옆 금줄 없음
     static void StyleTitleV2()
