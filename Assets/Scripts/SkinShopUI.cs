@@ -90,7 +90,15 @@ public class SkinShopUI : MonoBehaviour
         // 아래 설명줄
         Image bar = UIKit.Rect("DetailBar", win, new Vector2(0f, -360f), new Vector2(1560f, 150f)).gameObject.AddComponent<Image>();
         // 1.4.8~ 새 도트 스타일: 단색 대신 금장 돌판(ui_button · 테두리가 얇아 글자 자리 그대로) · 그림이 없으면 예전 단색
-        if (RecommendGlow.PillArt)
+        if (!UiRules.Legacy && UiRules.Sprite("ui2_panel") != null)
+        {
+            // UI 개편: 옛 금장 버튼 그림을 1560x150 으로 늘린 판이 새 석판 사이에서 따로 놀았음 (사용자 「설명칸이 이상」) → 새긴 석판 창 판
+            bar.sprite = UiRules.Sprite("ui2_panel");
+            bar.type = Image.Type.Tiled;
+            bar.pixelsPerUnitMultiplier = 1f;
+            bar.color = Color.white;
+        }
+        else if (RecommendGlow.PillArt)
         {
             bar.sprite = UIKit.ButtonSprite;
             bar.type = Image.Type.Sliced;
@@ -101,6 +109,14 @@ public class SkinShopUI : MonoBehaviour
         titleText = UIKit.Text(win, "", 30f, Gold, new Vector2(-170f, -318f), new Vector2(1200f, 44f), TextAlignmentOptions.Left);
         descText = UIKit.Text(win, "", 22f, Parch, new Vector2(-170f, -382f), new Vector2(1200f, 80f), TextAlignmentOptions.TopLeft);
         descText.fontSizeMin = 14f;         // 1.0.4~ 구매 확인 때 경고 한 줄이 붙어도 칸 안에 (자동 크기)
+        if (!UiRules.Legacy)
+        {
+            // 글자 단계: 이름 34 뼈색 · 설명 26 Text2 (경고가 붙으면 18 까지) — 설명 칸 안쪽 여백 36 으로 맞춤
+            titleText.color = UiTokens.Text1; titleText.fontSize = titleText.fontSizeMax = UiTokens.Heading;
+            descText.color = UiTokens.Text2; descText.fontSize = descText.fontSizeMax = UiTokens.Body; descText.fontSizeMin = 18f;
+            titleText.rectTransform.anchoredPosition = new Vector2(-170f, -314f);
+            descText.rectTransform.anchoredPosition = new Vector2(-170f, -378f);
+        }
         actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -360f), new Vector2(260f, 64f), OnAction, 22f);
         actionLabel = actionButton.GetComponentInChildren<TMP_Text>();
 
@@ -122,12 +138,15 @@ public class SkinShopUI : MonoBehaviour
         pulses.Clear();
         confirm = false;
         pointsText.text = Loc.T("보유 포인트: ") + CharacterData.Points.ToString("N0") + " P";
-        for (int i = 0; i < tabButtons.Count; i++) tabButtons[i].GetComponent<Image>().color = (int)kind == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
+        for (int i = 0; i < tabButtons.Count; i++)
+            if (!UiRules.Legacy) UiV2.Choose(tabButtons[i], (int)kind == i);
+            else tabButtons[i].GetComponent<Image>().color = (int)kind == i ? Gold : new Color(0.72f, 0.7f, 0.78f);
         if (newHeroNote != null) newHeroNote.gameObject.SetActive(!SkinData.IsGlobal(kind));
         foreach (Button b in whoButtons)
         {
             b.gameObject.SetActive(!SkinData.IsGlobal(kind));
-            b.GetComponent<Image>().color = b.name == "Who_" + who ? Gold : new Color(0.72f, 0.7f, 0.78f);
+            if (!UiRules.Legacy) UiV2.Choose(b, b.name == "Who_" + who);
+            else b.GetComponent<Image>().color = b.name == "Who_" + who ? Gold : new Color(0.72f, 0.7f, 0.78f);
         }
 
         // 카드: 기본 + 이 종류 · 캐릭터의 스킨
@@ -153,7 +172,8 @@ public class SkinShopUI : MonoBehaviour
         Button b = UIKit.MakeButton(win, "", pos, new Vector2(290f, 360f), () => { selected = s; confirm = false; Rebuild(); }, 20f);
         Image frame = b.GetComponent<Image>();
         frame.color = isSel ? Color.white : tc;
-        if (tier == 3 && !isSel) pulses.Add((frame, tc));      // 전설: 금빛 테두리가 은은하게 (고른 카드는 흰 테두리 그대로)
+        if (!UiRules.Legacy) UiV2.Choose(b, isSel, true);      // UI 개편: 등급색 덧칠 · 전설 맥동 대신 카드 그림 (등급은 위 띠 색으로)
+        else if (tier == 3 && !isSel) pulses.Add((frame, tc));      // 전설: 금빛 테두리가 은은하게 (고른 카드는 흰 테두리 그대로)
         Transform t = b.transform;
         Image back = UIKit.Rect("Back", t, Vector2.zero, new Vector2(262f, 332f)).gameObject.AddComponent<Image>();
         back.color = new Color(0.08f, 0.06f, 0.11f, 0.97f);

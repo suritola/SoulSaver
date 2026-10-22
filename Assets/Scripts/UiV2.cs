@@ -116,6 +116,23 @@ public static class UiV2
         if (b.GetComponent<UiFocusMark>() == null) b.gameObject.AddComponent<UiFocusMark>().label = t != null ? t.rectTransform : null;
     }
 
+    // 고른 것 표시 (탭 · 영웅 칸 · 카드): 금색 덧칠 대신 그림 — 고른 것은 올림 그림 + 뼈색 글자, 나머지 기본 그림 + Text2
+    //   색을 곱해 상태를 보이던 곳(검토 H2)을 이것으로 · card = true 면 카드 그림(고름 = 청록 테)
+    public static void Choose(Button b, bool on, bool card = false)
+    {
+        if (b == null) return;
+        Image img = b.GetComponent<Image>();
+        if (img != null)
+        {
+            Sprite s = UiRules.Sprite(card ? (on ? "ui2_card_s" : "ui2_card_n") : (on ? "ui2_btn_secondary_h" : "ui2_btn_secondary_n"));
+            if (s != null) { img.sprite = s; img.type = Image.Type.Tiled; img.pixelsPerUnitMultiplier = 1f; }
+            img.color = Color.white;
+        }
+        if (card) return;
+        TMP_Text t = b.GetComponentInChildren<TMP_Text>(true);
+        if (t != null) t.color = on ? UiTokens.Text1 : UiTokens.Text2;
+    }
+
     // 버튼 글자를 번역 키로 바꿔 닮 (언어를 바꾸면 따라감 · UIKit.Remember) — 짧은 버튼 이름 (LocTable.UiButtons)
     public static void Label(Button b, string key)
     {
