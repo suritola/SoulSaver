@@ -157,8 +157,29 @@ public class SceneFlow : MonoBehaviour
         portrait = runner.gameObject.AddComponent<Image>();
         portrait.preserveAspect = true;
         portrait.raycastTarget = false;
+        if (!UiRules.Legacy) StyleV2(bg, fi, wi, bi, shine);
         loadingBox.gameObject.SetActive(false);
         canvas.enabled = false;
+    }
+
+    // UI 개편 (Legacy 끔): 흐린 후광 · 떠다니는 불빛 · 금 막대 틀 · 반사 줄 · 통통 튀는 영웅 대신 — 거의 검은 바탕 · 홈 막대 + 청록 두 톤 채움 · 걷기만 하는 영웅 192 (32 × 6)
+    //   글자: 「불러오는 중」 뼈색 34 · 팁 26 Text2 · % 22 Text3 (씬 전환 · 장 전환 로딩이 같은 화면)
+    void StyleV2(Image bg, Image frame, Image well, Image fill, RectTransform shine)
+    {
+        bg.color = UiTokens.Void;
+        Transform halo = loadingBox.Find("Halo");
+        if (halo != null) halo.gameObject.SetActive(false);
+        foreach (RectTransform m in motes) if (m != null) m.gameObject.SetActive(false);
+        Sprite inset = UiRules.Sprite("ui2_inset"), f2 = UiRules.Sprite("ui2_fill");
+        if (inset != null) { frame.sprite = inset; frame.type = Image.Type.Tiled; frame.pixelsPerUnitMultiplier = 1f; frame.color = Color.white; }
+        well.color = new Color(0f, 0f, 0f, 0f);
+        if (f2 != null) { fill.sprite = f2; fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = 1f; }
+        fill.color = UiTokens.Accent;
+        if (shine != null) shine.gameObject.SetActive(false);
+        title.color = UiTokens.Text1; title.fontSize = title.fontSizeMax = UiTokens.Heading;
+        tip.color = UiTokens.Text2; tip.fontSize = tip.fontSizeMax = UiTokens.Body; tip.fontSizeMin = UiTokens.Small;
+        pct.color = UiTokens.Text3; pct.fontSize = pct.fontSizeMax = UiTokens.Small;
+        runner.sizeDelta = new Vector2(192f, 192f);
     }
 
     // 가운데가 밝고 가장자리로 사라지는 둥근 빛 (64×64, 한 번만)
@@ -200,7 +221,7 @@ public class SceneFlow : MonoBehaviour
         shownProgress = Mathf.Lerp(shownProgress, targetProgress, 1f - Mathf.Exp(-dt * 6f));
         barFill.sizeDelta = new Vector2(BarW * shownProgress, barFill.sizeDelta.y);
         pct.text = Mathf.RoundToInt(shownProgress * 100f) + "%";
-        float bob = Mathf.Abs(Mathf.Sin(now * 9f)) * 6f;
+        float bob = UiRules.Legacy ? Mathf.Abs(Mathf.Sin(now * 9f)) * 6f : 0f;        // UI 개편: 통통 튀지 않고 걷기 그림만
         runner.anchoredPosition = new Vector2(-BarW * 0.5f + BarW * shownProgress, 15f + bob);
         if (runFrames != null && runFrames.Length > 0) portrait.sprite = runFrames[Mathf.FloorToInt(now * 10f) % runFrames.Length];
         for (int i = 0; i < motes.Length; i++)
