@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -543,7 +543,7 @@ public class MapProp : MonoBehaviour
         Sprite art = Resources.Load<Sprite>("Icons/" + def.icon);
         float scale = art != null ? def.size * ArtBody : def.size;
         // 적 떼에 묻히지 않게 적(Character)보다 위 Effect 층 · 보물 상자(8)와 같은 높이 · 스킬 이펙트(12~)보다는 아래
-        GameObject go = SpecialAbilities.MakeSprite("MapProp_" + def.id, art != null ? art : Hostile.Glow, at, scale, art != null ? Color.white : def.color, "Effect", 9);
+        GameObject go = SpecialAbilities.MakeSprite("MapProp_" + def.id, art != null ? art : Hostile.Glow, at, scale, art != null ? Color.white : def.color, VisualRules.PropLayer, VisualRules.PropOrder(9));
         MapProp p = go.AddComponent<MapProp>();
         p.def = def;
         p.home = at;
@@ -556,7 +556,7 @@ public class MapProp : MonoBehaviour
         p.rimArt = Resources.Load<Sprite>("Icons/" + def.icon + "_glow");
         if (p.rimArt != null)
         {
-            GameObject r = SpecialAbilities.MakeSprite("PropRim", p.rimArt, at, scale, new Color(rim.r, rim.g, rim.b, 0.5f), "Effect", 8);
+            GameObject r = SpecialAbilities.MakeSprite("PropRim", p.rimArt, at, scale, new Color(rim.r, rim.g, rim.b, 0.5f), VisualRules.PropLayer, VisualRules.PropOrder(8));
             r.transform.SetParent(go.transform, true);
             p.rimSr = r.GetComponent<SpriteRenderer>();
         }
@@ -570,10 +570,10 @@ public class MapProp : MonoBehaviour
             p.glow = SpecialAbilities.MakeSprite("SarcoGlow", Hostile.Glow, at, 1f, new Color(def.color.r, def.color.g, def.color.b, 0.5f), "Background", 7);
             p.glowSr = p.glow.GetComponent<SpriteRenderer>();
             // 하늘로 솟는 영혼빛 기둥 (보물 상자 기둥보다 굵고 높게 · 바깥 옅은 빛 + 안쪽 밝은 심)
-            p.pillar = SpecialAbilities.MakeSprite("SarcoPillar", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(def.color.r, def.color.g, def.color.b, 0.35f), "Effect", 6);
+            p.pillar = SpecialAbilities.MakeSprite("SarcoPillar", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(def.color.r, def.color.g, def.color.b, 0.35f), VisualRules.Legacy ? "Effect" : "Background", VisualRules.Legacy ? 6 : 30);
             p.pillar.transform.localScale = new Vector3(0.3f, 2.4f, 1f);
             p.pillarSr = p.pillar.GetComponent<SpriteRenderer>();
-            p.pillarCore = SpecialAbilities.MakeSprite("SarcoPillarCore", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(0.95f, 0.9f, 1f, 0.5f), "Effect", 7);
+            p.pillarCore = SpecialAbilities.MakeSprite("SarcoPillarCore", Hostile.Glow, at + Vector3.up * 5f, 1f, new Color(0.95f, 0.9f, 1f, 0.5f), VisualRules.Legacy ? "Effect" : "Background", VisualRules.Legacy ? 7 : 31);
             p.pillarCore.transform.localScale = new Vector3(0.08f, 2.2f, 1f);
             p.coreSr = p.pillarCore.GetComponent<SpriteRenderer>();
             // 머물 자리 (옅은 고리) · 봉인 진행 고리

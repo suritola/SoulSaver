@@ -11,6 +11,13 @@ public static class VisualRules
     // 적 경고(Telegraph · 「!」 · 돌진 예고선 · 스킬 이름표 · 적 장판 테)를 그릴 층 — 1단계-6~ 내 이펙트(Effect) · 피해 숫자보다 위
     public static string WarnLayer => Legacy ? "Effect" : Warning;
 
+    // 1단계-12~ 맵 물체(깨지는 통 · 석관) · 보물 상자 몸통: 적(Character) 위 Effect 층이라 뒤에 선 적을 가렸음 → 적과 같은 층에서 Y 정렬
+    //   빛 기둥은 바닥 층 · 분위기 입자(사막 불티 · 모래 바람 · 심연 영혼 불빛 · 안개)도 적 아래 바닥 층으로 · 개수 절반
+    public static string PropLayer => Legacy ? "Effect" : "Character";
+    public static int PropOrder(int legacy) => Legacy ? legacy : legacy - 9;       // 몸통 9 → 0 · 테 8 → −1 · 빛 7 → −2
+    public static string AmbientLayer => Legacy ? "Effect" : "Background";
+    public static float AmbientRate => Legacy ? 1f : 2f;         // 나오는 간격 배율 (2 = 절반)
+
     // 1단계-7~ 바닥 톤다운: 바닥이 화면에서 가장 크고 시끄러워 적 · 경고를 묻었음 (사막 명도 170 · 지옥 채도 .66)
     //   바닥 타일맵 · 지도 그림 · 배경색에 곱함 (위에 막을 덮으면 Background 층의 내 장판 · 룬까지 어두워져서 타일 색으로)
     //   지옥은 붉은 기를 더 뺌 · 무한 모드는 한 타일맵에 여러 영토를 칠해서 하나의 값

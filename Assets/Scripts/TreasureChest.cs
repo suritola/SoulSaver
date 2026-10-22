@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 // 보물 상자 (1.0.1): 습격을 이겨 내거나 중간 보스 · 엘리트를 쓰러뜨리면 나옴 (ChapterEvents)
@@ -46,13 +46,13 @@ public class TreasureChest : MonoBehaviour
         // 상자 그림 (tools/pixelart/make_choice_icons.py 의 chest) · 뒤에 금빛
         Sprite art = Resources.Load<Sprite>("Icons/choice_chest");
         Color body = tint == Gold ? Color.white : Color.Lerp(Color.white, tint, 0.55f);
-        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? body : tint, "Effect", 8);
+        GameObject go = SpecialAbilities.MakeSprite("TreasureChest", art != null ? art : Hostile.Glow, at, Size, art != null ? body : tint, VisualRules.PropLayer, VisualRules.PropOrder(9));     // 1단계-12~ 적과 같은 층 Y 정렬
         TreasureChest c = go.AddComponent<TreasureChest>();
         c.sr = go.GetComponent<SpriteRenderer>();
         c.home = at;
         c.tint = tint;
-        c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(tint.r, tint.g, tint.b, 0.6f), "Effect", 7);
-        c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(tint.r, tint.g, tint.b, 0.4f), "Effect", 6);
+        c.halo = SpecialAbilities.MakeSprite("ChestGlow", Hostile.Glow, at, 0.6f, new Color(tint.r, tint.g, tint.b, 0.6f), VisualRules.PropLayer, VisualRules.PropOrder(7));
+        c.pillar = SpecialAbilities.MakeSprite("ChestPillar", Hostile.Glow, at + Vector3.up * 3f, 1f, new Color(tint.r, tint.g, tint.b, 0.4f), VisualRules.Legacy ? "Effect" : "Background", VisualRules.Legacy ? 6 : 30);
         c.pillar.transform.localScale = new Vector3(0.22f, 2.6f, 1f);
         // 1.1~ 화면 가장자리 포인터도 몸통과 같은 색 (저주받은 · 정예 상자가 보통 상자 포인터와 똑같이 보였음) · 뒤 빛도 보통 상자가 아니면 크게
         // 1.1.9~ 가장자리 표식은 공용 EdgeMarker (상점 · 고블린 · 중간 보스와 같은 코드 · 설정 「화면 밖 표시」)

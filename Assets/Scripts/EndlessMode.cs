@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -967,15 +967,15 @@ public class DesertAmbience : MonoBehaviour
 
         if (Time.time >= nextEmber && EndlessTerrain.Embers(realm))
         {
-            nextEmber = Time.time + 0.06f;
+            nextEmber = Time.time + 0.06f * VisualRules.AmbientRate;      // 1단계-12~ 절반
             Vector3 p = new Vector3(c.x + Random.Range(-w, w), c.y - h - 0.5f + Random.Range(0f, h * 0.6f), 0f);
             FlameParticle.Spawn(Hostile.Glow, p, new Vector2(Random.Range(-0.6f, 0.6f), Random.Range(1.2f, 2.6f)), Random.Range(1.4f, 2.4f), 0.035f, 0.012f, false);
         }
         if (Time.time >= nextGust)
         {
-            nextGust = Time.time + Random.Range(2.5f, 5f);
+            nextGust = Time.time + Random.Range(2.5f, 5f) * VisualRules.AmbientRate;
             Vector3 from = new Vector3(c.x - w - 2f, c.y + Random.Range(-h, h), 0f);
-            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), EndlessTerrain.Gust(realm), 10f);
+            Fx.Spawn("fx_smoke", from + new Vector3(Random.Range(0f, w * 2f), 0f, 0f), Random.Range(3f, 5f), EndlessTerrain.Gust(realm), 10f, 0f, VisualRules.Legacy ? 12 : 30, false, -1f, VisualRules.AmbientLayer);     // 1단계-12~ 적 아래
         }
     }
 }

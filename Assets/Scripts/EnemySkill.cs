@@ -117,11 +117,21 @@ public class EnemySkill : MonoBehaviour
         EnemySkillType.ReapSweep => "영혼 베기", EnemySkillType.Fissure => "심연 균열", _ => "",
     };
 
+    static readonly System.Collections.Generic.Dictionary<EnemySkillType, int> nameShown = new System.Collections.Generic.Dictionary<EnemySkillType, int>();
+    static bool NameSeen(EnemySkillType t)
+    {
+        nameShown.TryGetValue(t, out int n);
+        if (n >= 3) return false;
+        nameShown[t] = n + 1;
+        return true;
+    }
+
     IEnumerator Run(PlayerController p)
     {
         busy = true;
         enemy.casting = true;
-        GameObject tag = Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 1.5f));
+        // 1단계-12~ 스킬 이름표: 모든 적이 쓸 때마다 뜨던 것 → 중간 보스이거나, 그 스킬을 처음 3번 볼 때만 (무리 위 빨간 글자 잡음)
+        GameObject tag = VisualRules.Legacy || enemy.IsMidBoss || NameSeen(type) ? Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 1.5f)) : null;
         IEnumerator routine = type switch
         {
             EnemySkillType.BoneSpike => BoneSpike(p),

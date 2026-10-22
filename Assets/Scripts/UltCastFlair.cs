@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 필살기를 쓰는 순간 (1.0.2): 모든 캐릭터에게 캐릭터 색 충격파 · 섬광 · 빛 번짐 · 솟는 화음
 // PlayerController.UltUsed 를 받아서 그림만 (판정 없음)
@@ -31,6 +31,8 @@ public static class UltCastFlair
         Fx.Spawn("fx_soulburst", at, 5f, new Color(bright.r, bright.g, bright.b, 0.9f), 20f);
         if (Hostile.Glow != null) FadeSprite.Spawn("UltGlow", Hostile.Glow, at, 7f / 8f, new Color(bright.r, bright.g, bright.b, 0.75f), "Effect", 30, 0.35f);
         Hostile.Play("ultcast", 0.75f, 1f);
-        Hostile.Shake(0.12f);
+        // 1단계-12~ 내 필살기를 쓸 때 화면은 흔들지 않음 (보는 걸 흐림) — 개발자 보스가 쓰는 건(출처 「기타」) 경고라 그대로
+        bool mine = DamageSource.Current != null && DamageSource.Current != DamageSource.Other;
+        if (VisualRules.Legacy || !mine) Hostile.Shake(0.12f);
     }
 }

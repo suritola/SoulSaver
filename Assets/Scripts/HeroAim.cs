@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 // 1.5.0~ 영웅별 범위표시 (docs/review/2026-10-22-범위표시-영웅별-기획.md)
@@ -555,13 +555,13 @@ public class HeroAimDecor
     {
         string[] rows = IconRows(k);
         if (rows == null) return;
-        float want = 2f * r * 0.35f * HeroAimArt.PPU / 13f;         // 그림 13칸(외곽 포함) 기준 배율
+        float want = 2f * r * (VisualRules.Legacy ? 0.35f : 0.25f) * HeroAimArt.PPU / 13f;         // 그림 13칸(외곽 포함) 기준 배율 · 1단계-12~ 지름 25%
         if (want < 0.75f) return;                                    // 너무 작은 고리는 생략 (상징이 고리를 덮음)
         int scale = Mathf.Clamp(Mathf.RoundToInt(want), 1, 3);
         Vector3 at = c;
         // 내 몸 위에 그려지는 고리(검사 · 우체부 · 거너)는 몸을 가리지 않게 고리 위쪽 안에
         if (k == HeroAimKind.Swordsman || k == HeroAimKind.Postman || k == HeroAimKind.Gunner) at = c + Vector3.up * (r * 0.55f);
-        Draw(HeroAimArt.Icon(k.ToString(), rows), at, new Color(col.r, col.g, col.b, 0.42f), scale);
+        Draw(HeroAimArt.Icon(k.ToString(), rows), at, new Color(col.r, col.g, col.b, VisualRules.Legacy ? 0.42f : 0.2f), scale);     // 1단계-12~ 옅게 (고리 안 적 · 적 탄을 가렸음)
     }
 
     static string[] IconRows(HeroAimKind k)

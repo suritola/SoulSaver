@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 // 4장 「영혼의 심연」 (2.1.1~): 씬 · 프리팹을 고치지 않고 게임을 시작할 때 코드로 조립
@@ -293,7 +293,8 @@ public class AbyssAmbience : MonoBehaviour
             go.transform.SetParent(transform, false);
             SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = Hostile.Glow;
-            sr.sortingLayerName = "Effect";
+            sr.sortingLayerName = VisualRules.AmbientLayer;     // 1단계-12~ 적 아래 (색이 적 「영혼」 경고색과 같아 적 위에서 헷갈렸음)
+            if (!VisualRules.Legacy) sr.sortingOrder = 30;
             motes.Add(sr);
             vel.Add(Vector3.zero);
             life.Add(0f);
@@ -316,8 +317,8 @@ public class AbyssAmbience : MonoBehaviour
         }
         if (Time.time >= nextMist)
         {
-            nextMist = Time.time + Random.Range(3f, 6f);
-            Fx.Spawn("fx_smoke", new Vector3(c.x + Random.Range(-w, w), c.y + Random.Range(-h, h), 0f), Random.Range(4f, 6f), new Color(0.45f, 0.4f, 0.75f, 0.25f), 8f);
+            nextMist = Time.time + Random.Range(3f, 6f) * VisualRules.AmbientRate;
+            Fx.Spawn("fx_smoke", new Vector3(c.x + Random.Range(-w, w), c.y + Random.Range(-h, h), 0f), Random.Range(4f, 6f), new Color(0.45f, 0.4f, 0.75f, 0.25f), 8f, 0f, VisualRules.Legacy ? 12 : 30, false, -1f, VisualRules.AmbientLayer);
         }
     }
 }
