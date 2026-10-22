@@ -20,6 +20,12 @@ public class SceneFlow : MonoBehaviour
     TMP_Text title, tip;
     Image portrait;
     float dotsAt;
+    // 2026-10-22~ 팁을 여러 개 (사용자 「렉 걸리는 동안 게이지가 서서히 차고 팁도 여러 개」) — TipEvery 초마다 다음 팁 (같은 팁 연속 없음)
+    const float TipEvery = 2.5f;
+    float tipAt;
+    int tipIndex = -1;
+    // 장면 불러오기는 LoadShare 까지만, 새 장면이 켜진 뒤(맵 다시 깔기 등 Awake · Start 무거운 일) 나머지를 PostLoadSecs 동안 천천히 채움
+    const float LoadShare = 0.7f, PostLoadSecs = 0.9f;
 
     // 모든 LoadScene 을 이것으로
     public static void Go(string scene)
@@ -225,19 +231,27 @@ public class SceneFlow : MonoBehaviour
             ShowLoading(scene);
             while (op.progress < 0.9f)
             {
-                targetProgress = Mathf.Clamp01(op.progress / 0.9f) * 0.95f;
+                targetProgress = Mathf.Clamp01(op.progress / 0.9f) * LoadShare;
                 Dots();
                 Tick();
                 yield return null;
             }
-            // 다 불렀으면 바를 끝까지 채우고 넘어감 (최대 0.35초 · 이어서 부르는 씬이면 0 부터 다시)
-            targetProgress = 1f;
-            for (float w = 0f; w < 0.35f && shownProgress < 0.995f; w += Time.unscaledDeltaTime) { Dots(); Tick(); yield return null; }
+            // 다 불렀으면 LoadShare 까지 채우고 장면을 켬 (켜는 프레임에 새 장면의 무거운 Awake · Start 가 몰림 — 예전엔 100% 에서 멈춘 채 기다렸음)
+            targetProgress = LoadShare;
+            for (float w = 0f; w < 0.3f && shownProgress < LoadShare - 0.005f; w += Time.unscaledDeltaTime) { Dots(); Tick(); yield return null; }
             Time.timeScale = 1f;                             // 새 씬은 늘 1 로 시작 (호출처들이 각자 1 로 두던 것을 한곳에)
             activated = true;                                // 새 씬의 sceneLoaded · Awake · Start 가 부르는 Go 는 이어서 받음
             op.allowSceneActivation = true;
-            while (!op.isDone) yield return null;
+            while (!op.isDone) { Dots(); Tick(); yield return null; }
             yield return null;                               // 새 씬 Awake · sceneLoaded 핸들러(MenuExtras.Install 등) 끝나기
+            // 나머지를 천천히 채움 (무거운 첫 프레임들이 지나가는 동안 · 팁이 바뀜) — 실제 시간 · 이어서 부르는 씬이 있으면 건너뜀
+            if (queued == null)
+                for (float w = 0f; w < PostLoadSecs; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f))
+                {
+                    targetProgress = Mathf.Lerp(LoadShare, 1f, w / PostLoadSecs);
+                    Dots(); Tick();
+                    yield return null;
+                }
             activated = false;
             scene = queued;                                  // 새 씬이 바로 다른 씬으로 보냈으면 막을 걷지 않고 이어서
             queued = null;
@@ -266,8 +280,8 @@ public class SceneFlow : MonoBehaviour
         loadingBox.gameObject.SetActive(true);
         dotsAt = Time.unscaledTime;
         Dots();
-        string[] pool = TipPool();
-        tip.text = pool.Length > 0 ? Loc.T(pool[Random.Range(0, pool.Length)]) : "";
+        tipIndex = -1;
+        NextTip();
         // 1.3.3~ 어느 씬이든 지금 영웅이 바 위를 달림 (스킨 시트 6프레임 · 없으면 초상 한 장)
         Sprite s = CharacterUI.Portrait(CharacterData.Selected);
         runFrames = RunFrames(s);
@@ -290,9 +304,21 @@ public class SceneFlow : MonoBehaviour
         return all;
     }
 
-    // 「불러오는 중」 + 점 세 개가 0.4초마다 하나씩
+    void NextTip()
+    {
+        string[] pool = TipPool();
+        tipAt = Time.unscaledTime;
+        if (pool.Length == 0) { tip.text = ""; return; }
+        int next = Random.Range(0, pool.Length);
+        if (pool.Length > 1 && next == tipIndex) next = (next + 1) % pool.Length;
+        tipIndex = next;
+        tip.text = Loc.T(pool[next]);
+    }
+
+    // 「불러오는 중」 + 점 세 개가 0.4초마다 하나씩 · 팁은 TipEvery 초마다 다음 것
     void Dots()
     {
+        if (Time.unscaledTime - tipAt >= TipEvery) NextTip();
         int n = Mathf.FloorToInt((Time.unscaledTime - dotsAt) / 0.4f) % 4;
         title.text = Loc.T("불러오는 중") + new string('.', n) + "<alpha=#00>" + new string('.', 3 - n);     // 글자 폭이 흔들리지 않게 남은 점은 투명
     }
