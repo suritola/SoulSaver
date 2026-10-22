@@ -3,7 +3,7 @@
 이 저장소에서 작업하는 에이전트가 따라야 할 규칙.
 
 ## 규칙
-
+**0.** 중간 보고, 작업 과정 출력 등 터미널에 표시되는 언어는 모두 **한국어로만**한다
 1. 커밋 메시지는 무조건 한글로 작성한다.
 2. 커밋 전에 `Assets/` 아래 게임 스크립트에 에디터 전용 코드가 없는지 확인한다.
    - `using UnityEditor...`(예: `using static UnityEditor.Experimental.GraphView.GraphView;`)는 빌드를 실패시킨다. IDE 자동완성이 몰래 추가하는 경우가 많다.
