@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 적 머리 위에 표시되는 작은 체력바
 // EnermyController가 Start에서 Attach로 붙인다

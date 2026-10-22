@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 도트를 더 잘 보이게 (1.8.7~): 캐릭터 · 적 · 보스 스프라이트에 1도트 윤곽선, 이펙트는 윤곽선 + 채도 · 밝기 (Resources/Shaders/SpriteOutline.shader)
 // 적 · 보스는 짙은 윤곽선으로 배경과 분리, 플레이어는 밝은 윤곽선으로 적 무리 속에서도 바로 보이게

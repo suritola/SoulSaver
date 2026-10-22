@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 손맛 연출: 적 처치 · 레벨업 · 코인 획득 때 도트 이펙트와 소리 (tools/pixelart/make_fx.py 로 만든 시트)
 public static class Juice

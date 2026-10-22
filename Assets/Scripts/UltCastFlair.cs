@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 필살기를 쓰는 순간 (1.0.2): 모든 캐릭터에게 캐릭터 색 충격파 · 섬광 · 빛 번짐 · 솟는 화음
 // PlayerController.UltUsed 를 받아서 그림만 (판정 없음)

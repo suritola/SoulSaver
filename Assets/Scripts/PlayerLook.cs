@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 플레이어 모습: 들고 있는 무기에 따라 손에 드는 무기 도트가 바뀌고(Resources/Weapons),
 // 쏠 때마다 무기마다 다른 발사 연출 (반동 · 불티 · 탄피 · 연기 등)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 4장 「영혼의 심연」 (2.1.1~): 씬 · 프리팹을 고치지 않고 게임을 시작할 때 코드로 조립

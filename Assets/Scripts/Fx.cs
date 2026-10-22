@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 도트 이펙트 재생기: Resources/FX 의 스프라이트 시트(이름_0, 이름_1 ...)를 프레임 애니메이션으로 재생

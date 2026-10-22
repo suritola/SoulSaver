@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 // 보물 상자 (1.0.1): 습격을 이겨 내거나 중간 보스 · 엘리트를 쓰러뜨리면 나옴 (ChapterEvents)

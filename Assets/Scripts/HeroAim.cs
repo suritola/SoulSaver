@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 1.5.0~ 영웅별 범위표시 (docs/review/2026-10-22-범위표시-영웅별-기획.md)

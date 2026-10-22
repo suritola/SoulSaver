@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 // 도적 갈래 효과 중 평타 · 돌진에 붙는 부분 (2026-10-19 · Paths/Paths.Rogue.cs 가 갈래 데이터 · 나머지 효과)
 //   CharacterKit.cs 의 도적 줄이 부르는 곳: UpdateUlt 도적 분기(RpUlt) · DashEnd(RogueDashDist) · Cut(RpCutBleed) · ShadowClone(RpCloneShot)
