@@ -739,7 +739,7 @@ public class EndlessTerrain : MonoBehaviour
         if (player != null && Vector2.Distance(at, player.transform.position) < ClearPlayer) return false;
         foreach (TerrainPiece piece in pieces) if (piece != null && piece.Alive && Vector2.Distance(at, piece.transform.position) < ClearPiece) return false;
         foreach (Vector3 f in found) if (Vector2.Distance(at, f) < ClearPiece) return false;
-        if (Vector2.Distance(at, gate) < ClearGate || (at.x >= gate.x - 7.5f && at.x <= gate.x + 7.5f && at.y >= 20f)) return false;
+        if (Vector2.Distance(at, gate) < ClearGate || (at.x >= gate.x - 7.5f && at.x <= gate.x + 7.5f && at.y >= ArenaRules.GateForbidY(gate.y))) return false;     // 성문 아래 12칸 (예전 고정 y 20 = 32 − 12)
         if (Hostile.WallNear(at, 2.5f)) return false;
         int n = Physics2D.OverlapCircle(at, ClearEnemy, allFilter, nearBuf);
         for (int i = 0; i < n; i++) if (nearBuf[i] != null && nearBuf[i].CompareTag("enermy")) return false;

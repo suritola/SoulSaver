@@ -99,6 +99,8 @@ public class StageManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        // 2026-10-22~ 경기장 치수 한 곳 (맵-1) — 모든 Start(첫 적 생성 EnemySpawn.Start) 보다 먼저 벽 상자 · 생성 범위 · 보스 · 포털을 배율에 맞춤
+        ArenaRules.Apply(this, VisualRules.ArenaMul);
     }
 
     // 3장 초원: 배경이 너무 밝아 이펙트(밝은 색 불꽃 · 번개 · 피해 숫자)가 묻혀서 바닥 · 장식을 어둡고 탁하게
