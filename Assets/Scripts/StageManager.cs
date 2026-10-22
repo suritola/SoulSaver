@@ -99,6 +99,9 @@ public class StageManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        // 2026-10-22~ 맵-2: 무한 지형 그림을 장면 맵에서 미리 모음 (맵을 다시 깔기 전에 · Art 가 Instance 를 쓰므로 그 뒤에)
+        EndlessTerrain.Preload();
+        if (!EndlessTerrain.PaletteReady(out string missing)) Debug.LogWarning("[EndlessTerrain] 무한 지형 그림이 빠짐: " + missing);
         // 2026-10-22~ 경기장 치수 한 곳 (맵-1) — 모든 Start(첫 적 생성 EnemySpawn.Start) 보다 먼저 벽 상자 · 생성 범위 · 보스 · 포털을 배율에 맞춤
         ArenaRules.Apply(this, VisualRules.ArenaMul);
     }

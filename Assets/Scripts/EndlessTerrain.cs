@@ -520,7 +520,24 @@ public class EndlessTerrain : MonoBehaviour
     }
 
     // ================================================================= 영토 그림 (처음 쓸 때 원본 타일맵 · Resources 에서 · 정적이라 판마다 다시 모으지 않음)
-    Sprite[][] Art(int realm)
+    // 2026-10-22~ 맵-2: StageManager.Awake 가 맵을 다시 깔기(맵-4) 전에 Preload 로 미리 모음 — 다시 깐 맵엔 용암 · 묘비 칸이 없어
+    //   그 뒤에 처음 모으면 무한 용암 웅덩이 · 묘비 · 수정 장애물 그림이 비어 조용히 사라짐 (Art 가 정적 · 인스턴스와 무관하게)
+    public static void Preload()
+    {
+        for (int realm = 0; realm < art.Length; realm++) Art(realm);
+    }
+
+    // 무한 지형이 꼭 쓰는 그림이 다 모였는지 (용암 3 · 균열 4 · 묘역 장식 5 묘비 · 심연 장식 4 수정 · 늪 = 초원 바닥 0)
+    public static bool PaletteReady(out string missing)
+    {
+        missing = null;
+        if (Has(Hell, 0, 3) && Has(Hell, 0, 4) && Has(Cave, 1, 5) && Has(Abyss, 1, 4) && Has(Meadow, 0, 0)) return true;
+        missing = "용암 " + Has(Hell, 0, 3) + " · 균열 " + Has(Hell, 0, 4) + " · 묘비 " + Has(Cave, 1, 5) + " · 수정 " + Has(Abyss, 1, 4) + " · 늪 " + Has(Meadow, 0, 0);
+        return false;
+    }
+    static bool Has(int realm, int kind, int slot) => art[realm] != null && art[realm][kind] != null && slot < art[realm][kind].Length && art[realm][kind][slot] != null;
+
+    static Sprite[][] Art(int realm)
     {
         if (art[realm] != null) return art[realm];
         StageManager sm = StageManager.Instance;
