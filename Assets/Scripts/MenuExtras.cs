@@ -318,7 +318,7 @@ public static class MenuExtras
             parts.Add(System.Text.RegularExpressions.Regex.Replace(plain, "\\s{2,}", "  ·  "));
             if (parts.Count >= 2) break;
         }
-        string summary = string.Join("  ·  ", parts);
+        string summary = System.Text.RegularExpressions.Regex.Replace(string.Join("  ·  ", parts), @"(\s*·\s*)+", "  ·  ");      // 원래 「 · 」와 겹친 점을 하나로 (캡처: 「거너 · · · 쉬움」)
         if (Contracts.LastRunOn && Contracts.LastRun.Count > 0)
         {
             int done = 0;
