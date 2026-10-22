@@ -17,7 +17,9 @@ public static partial class LocTable
         C("ui.btn.quit", "종료", "Quit", "終了", "退出");
         C("ui.btn.ranks", "순위", "Ranks", "ランキング", "排行");
         C("ui.btn.reset", "초기화", "Reset", "リセット", "重置");       // 설정 「이 탭 기본값으로」 (툴팁이 「이 탭만」이라고 설명)
-        C("ui.card.new", "새로", "New", "新規", "新");          // 레벨업 카드 머리 줄 (처음 배우는 카드)
+        C("ui.card.new", "새로", "New", "新規", "新");
+        C("ui.tree.foot", "칸을 누르면 배웁니다. ◆ 표시는 추천 칸, 청록 테는 지금 배울 수 있는 칸입니다.", "Click a node to learn it. ◆ marks recommended nodes; teal borders can be learned now.",
+          "マスをクリックで習得します。◆ はおすすめ、青緑の枠は今習得できるマスです。", "点击节点即可学习。◆ 为推荐节点，青绿色边框为现在可学习的节点。");      // 영혼 트리 아래 안내 (새 모습)          // 레벨업 카드 머리 줄 (처음 배우는 카드)
         C("새 소식", "새 소식", "News", "お知らせ", "最新消息");        // 메인 메뉴 오른쪽 아래 카드 머리 (한국어 원문 키 · 다른 표에 없음)
     }
 }

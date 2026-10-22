@@ -399,7 +399,7 @@ public class SoulTreeUI : MonoBehaviour
         }
         // 1.4.8~ 한 줄에 다 넣어 너무 길었음 → 두 줄 · 핵심만 (UI 정리 기획 2026-10-21)
         //   첫 줄: 배우는 법 · 숨은 칸 / 둘째 줄: 움직이는 법 · 빠르게 배우기 — [F] 전체 보기는 위 버튼에 있고 [C] 가운데로는 뺌 (키는 그대로 동작)
-        footText.text = Loc.T("칸을 누르면 배웁니다 · 금빛 표시는 추천 칸") + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount + "\n"
+        footText.text = Loc.T(UiRules.Legacy ? "칸을 누르면 배웁니다 · 금빛 표시는 추천 칸" : "ui.tree.foot")      // UI 개편: 금빛이 아니라 ◆ 표시라 문구도 + "  ·  " + Loc.T("숨은 칸") + " " + hiddenCount + "\n"
                       + (GamePad.Active ? Loc.T("오른쪽 스틱 · 화면 끝으로 이동, RT · LT 확대 · 축소, 십자키로 칸 고르기")      // 1.0.5~ 패드 안내
                                         : Loc.T("끌기 · {MOVE} 이동 · 휠 확대") + "  ·  " + Loc.T("[Shift]+[{UPGRADE}] 트리를 열지 않고 빠르게 배우기"));      // 1.0.4~ 숨은 단축키 안내 · 바꾼 키를 따름 · 1.1~ 패드엔 없는 조합(「[Shift]+[View]」)이라 패드일 땐 뺌
         // 보이는 칸의 범위 (이동 한도 · 전체 보기)
