@@ -911,12 +911,16 @@ public class StageManager : MonoBehaviour
             specialPanel.SetActive(false);
         }
 
-        ShowStageMap(stage);
-        if (portal != null) portal.SetActive(false);
-        if (bossBar != null) bossBar.bossSpawn = false;
-
-        CurrentStage = stage;
-        spawner.StartStage(stage);
+        // 2026-10-22~ 맵 교체(처음 보이는 맵 깔기 등)를 로딩 화면 아래에서 — 예전엔 검은 화면에서 굳어 멈춘 것처럼 보였음 (사용자)
+        yield return SceneFlow.StageLoad(() =>
+        {
+            ShowStageMap(stage);
+            if (portal != null) portal.SetActive(false);
+            if (bossBar != null) bossBar.bossSpawn = false;
+            CurrentStage = stage;
+            spawner.StartStage(stage);
+        });
+        CurrentStage = stage;           // work 가 중간에 예외를 내도 장 번호는 넘어가게
         Curse.MarkPending(stage);       // 페이드 중에 나가도 이어할 때 제단이 나오게 (1.0.4~)
         if (player != null) player.position = stage == 0 ? caveStart : (Vector3)stage2PlayerStart;
         LastStand.ResetChapter();

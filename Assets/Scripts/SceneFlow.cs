@@ -264,6 +264,51 @@ public class SceneFlow : MonoBehaviour
         loading = false;
     }
 
+    // 2026-10-22~ 장 전환(같은 씬 안에서 맵 교체)도 로딩 화면 — 예전엔 검은 막 아래서 맵을 까는 동안 그냥 검은 화면이라 멈춘 것처럼 보였음 (사용자)
+    //   호출처가 검은 막을 다 내린 뒤 부름: 로딩 화면을 띄워 한 프레임 그린 다음 work(무거운 동기 작업) → 게이지를 채우고 걷음 (다시 호출처의 검은 막 위)
+    //   씬 불러오는 중 · 테스트 · 트레일러면 그냥 work 만
+    //   화면 정리는 SceneFlow(씬이 바뀌어도 남음)에서 돌림 — 호출처가 도중에 사라지거나 work 가 예외를 내도 막 · 로딩 화면 · loading 이 남지 않게
+    public static IEnumerator StageLoad(System.Action work)
+    {
+        if (loading || GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { work(); yield break; }
+        bool done = false;
+        Ensure().StartCoroutine(instance.RunStageLoad(work, () => done = true));
+        for (float w = 0f; !done && w < 15f; w += Time.unscaledDeltaTime) yield return null;     // 상한: 실제 시간 15초 (멈춰 남지 않게)
+    }
+
+    IEnumerator RunStageLoad(System.Action work, System.Action finished)
+    {
+        SceneFlow f = this;
+        loading = true;
+        f.canvas.enabled = true;
+        f.curtain.color = new Color(0f, 0f, 0f, 1f);
+        f.curtain.raycastTarget = true;
+        CanvasGroup g = f.loadingBox.GetComponent<CanvasGroup>();
+        if (g == null) g = f.loadingBox.gameObject.AddComponent<CanvasGroup>();
+        f.ShowLoading(null);
+        for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime)
+        {
+            g.alpha = t / 0.2f;
+            f.targetProgress = 0.3f;
+            f.Dots(); f.Tick();
+            yield return null;
+        }
+        g.alpha = 1f;
+        yield return null;                                   // 로딩 화면이 그려진 뒤에 굳게
+        try { work(); }
+        catch (System.Exception e) { Debug.LogException(e); }
+        f.targetProgress = 1f;
+        for (float w = 0f; w < 0.6f && f.shownProgress < 0.995f; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f)) { f.Dots(); f.Tick(); yield return null; }
+        for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime) { g.alpha = 1f - t / 0.2f; yield return null; }
+        g.alpha = 1f;
+        f.loadingBox.gameObject.SetActive(false);
+        f.curtain.color = new Color(0f, 0f, 0f, 0f);
+        f.curtain.raycastTarget = false;
+        f.canvas.enabled = false;
+        loading = false;
+        finished();                                          // 다 걷은 뒤에 호출처가 이어 감 (로딩 화면에 가려진 채 게임이 먼저 풀리지 않게)
+    }
+
     IEnumerator Fade(float from, float to, float time)
     {
         for (float t = 0f; t < time; t += Time.unscaledDeltaTime)
