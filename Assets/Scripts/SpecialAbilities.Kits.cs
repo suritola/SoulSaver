@@ -426,7 +426,7 @@ public partial class SpecialAbilities
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null && stun > 0f) e.Slow(0f, stun);
         }
-        Fx.Spawn("fx_shock", at, r * 2.2f, new Color(1f, 0.85f, 0.55f, 0.9f), 20f);
+        Fx.Spawn("fx_quake", at, r * 2.2f, Color.white, 16f);       // 갈라지는 땅 · 솟구치는 바위 조각 (예전 충격파 고리 fx_shock)
         Fx.Spawn("fx_fissure", at, r * 1.6f, Color.white, 16f);
         Hostile.Shake(0.12f);
         fx.Play("boom", 0.5f, 0.7f);
@@ -451,7 +451,7 @@ public partial class SpecialAbilities
         for (float t = 0.6f; t <= len; t += 0.6f)
         {
             Vector3 p = a + (Vector3)(dir * t + side * Mathf.Sin(t / len * Mathf.PI) * 0.9f);
-            Fx.Spawn("fx_trail_dot", p, t > len * 0.66f ? 0.9f : 0.6f, new Color(0.75f, 0.85f, 1f), 1f, rot, 16, false, 0.08f + t * 0.012f);
+            Fx.Spawn("fx_whipblade", p, t > len * 0.66f ? 0.9f : 0.6f, Color.white, 1f, rot, 16, false, 0.08f + t * 0.012f);     // 채찍검 칼날 마디 (예전 점 fx_trail_dot)
         }
         Fx.Spawn("fx_spark", b, 1.4f, new Color(1f, 0.9f, 0.5f), 24f);
         fx.Play("whoosh", 0.55f, 1.5f);
@@ -475,8 +475,8 @@ public partial class SpecialAbilities
         player.transform.position = to;
         Vector3 tip = to + (Vector3)(dir * 1.8f);
         DamageLine(from, tip, 1.1f, dmg, knock);
-        for (float k = 0f; k <= 1f; k += 0.2f) Fx.Spawn("fx_trail_dot", Vector3.Lerp(from, tip, k), 0.9f, new Color(0.8f, 0.9f, 1f), 1f, rot, 16, false, 0.15f);
-        Fx.Spawn("fx_spark", tip, 1.4f, Color.white, 24f);
+        for (float k = 0f; k <= 1f; k += 0.2f) Fx.Spawn("fx_lanceghost", Vector3.Lerp(from, tip, k), 0.9f, Color.white, 26f, rot, 16);     // 지나간 길에 창 잔상 (예전 점 fx_trail_dot)
+        Fx.Spawn("fx_lancetip", tip, 2.2f, Color.white, 24f, rot, 17);        // 창끝 충돌 (예전 fx_spark)
         fx.Play("crack", 0.6f, 1.2f);
         lancing = false;
     }

@@ -179,7 +179,7 @@ public partial class CharacterKit
             using (var ovl = PhysHits.Circle(origin, r)) foreach (Collider2D c in ovl)
                 if (c.TryGetComponent(out EnermyController e) && !e.IsDead) e.Slow(0f, 0.6f);
             DamageCircle(origin, r, Damage * 1.5f * formPower, 2f);
-            Fx.Spawn("fx_shock", origin, r * 2.4f, new Color(0.8f, 0.85f, 1f, 0.8f), 20f);
+            Fx.Spawn("fx_quake", origin, r * 2.4f, Color.white, 16f);      // 갈라지는 땅 · 바위 조각 (예전 충격파 고리 fx_shock)
             Hostile.Shake(0.12f);
             Play("thump", 0.8f, 0.8f);
         }
