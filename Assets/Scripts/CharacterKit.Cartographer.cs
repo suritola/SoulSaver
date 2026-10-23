@@ -203,8 +203,12 @@ public partial class CharacterKit
         mapPrevShape = poly;
         mapPrevShapeAt = Time.time;
         // 그림: 닫힌 테두리를 금색으로 한 번 더 · 가운데 섬광
+        //   1.5.6~ 사용자 「네모난 도형이 안 보여」: 순서 16 은 획(AreaOrder 32) · 적 이펙트 밑이라 획 · 충격파에 묻혔음 → 획 위로 · 조금 더 오래
         for (int i = 0; i < poly.Count; i++)
-            Fx.Beam(poly[i], poly[(i + 1) % poly.Count], 0.5f, InkGold, 0.6f, 16);
+        {
+            Fx.Beam(poly[i], poly[(i + 1) % poly.Count], 0.75f, new Color(0.08f, 0.1f, 0.3f, 0.85f), 0.9f, AttackLook.AreaOrder + 1);      // 어두운 테 (밝은 바닥에서도 모양이 보이게)
+            Fx.Beam(poly[i], poly[(i + 1) % poly.Count], 0.45f, InkGold, 0.9f, AttackLook.AreaOrder + 2);
+        }
         Fx.Spawn("fx_shock", center, Mathf.Max(3f, reach * 2.2f), new Color(0.45f, 0.6f, 1f, 0.8f), 18f);
         ShockRing.Spawn(center, 0.3f, Mathf.Max(1.5f, reach), 0.35f, InkGold, 0.22f);
         if (augment == AugEngrave)
