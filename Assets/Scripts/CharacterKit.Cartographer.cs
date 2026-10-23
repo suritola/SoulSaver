@@ -149,7 +149,7 @@ public partial class CharacterKit
             Transform t = Specials.NearestEnemy(to, 6f);
             if (t != null)
             {
-                Fx.Bolt(to, t.position, 0.6f, new Color(0.7f, 0.8f, 1f));
+                Fx.Links("fx_surveylink", to, t.position, 0.4f, Color.white, 0.25f, 16);       // 튀는 측량 사슬 (예전 번개 Fx.Bolt)
                 Specials.Damage(t.gameObject, dmg * 0.5f * formPower, ((Vector2)(t.position - to)).normalized, 0.5f);
             }
         }
@@ -157,7 +157,7 @@ public partial class CharacterKit
         {
             // 잉크병: 획 끝에서 잉크병이 깨져 작게 터짐
             DamageCircle(to, 1.5f, dmg * 0.6f * formPower, 1f);
-            Fx.Spawn("fx_puddle", to, 3f, new Color(0.2f, 0.25f, 0.7f, 0.85f), 18f);
+            Fx.Spawn("fx_inkshatter", to, 3f, Color.white, 18f);         // 깨지는 유리병 · 튀는 먹 (예전 원 웅덩이 fx_puddle)
             Play("glassclink", 0.35f, 1.4f);
         }
     }

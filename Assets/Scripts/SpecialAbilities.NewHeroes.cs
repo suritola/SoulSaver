@@ -26,7 +26,8 @@ public partial class SpecialAbilities
                     }
                     for (int i = 0; i < 3; i++)
                     {
-                        Fx.Beam(tri[i], tri[(i + 1) % 3], 0.7f, new Color(1f, 0.82f, 0.35f, 0.95f), 0.5f, 16);
+                        Fx.Links("fx_surveylink", tri[i], tri[(i + 1) % 3], 0.45f, Color.white, 0.5f, 16);      // 놋쇠 측량 사슬 (예전 단색 선 Fx.Beam)
+                        Fx.Spawn("fx_surveystake", tri[i], 1.6f, Color.white, 10f, 0f, 17, true, 0.6f);     // 꼭짓점 측량 말뚝 · 깃발
                         DamageLine(tri[i], tri[(i + 1) % 3], 0.9f, D * 1.1f, 1f);
                     }
                     using (var ovl = PhysHits.Circle(c, r)) foreach (Collider2D col in ovl)
@@ -35,7 +36,6 @@ public partial class SpecialAbilities
                         if (!InTriangle(col.transform.position, tri[0], tri[1], tri[2])) continue;
                         Specials.Damage(col.gameObject, D * 2.2f, (col.transform.position - c).normalized, 1.5f);
                     }
-                    Fx.Spawn("fx_shock", c, r * 2f, new Color(0.45f, 0.6f, 1f, 0.75f), 18f);
                     fx.Play("chime", 0.6f, 1f + 0.15f * k);
                     yield return new WaitForSeconds(0.3f);
                 }
@@ -47,10 +47,16 @@ public partial class SpecialAbilities
                     float len = evo ? 20f : 16f, width = evo ? 4f : 3.2f;
                     HashSet<Collider2D> hit = new HashSet<Collider2D>();
                     Vector3 start = me;
+                    // 그림: 깨지는 잉크병 → 말려 오는 먹물 파도 마루(앞줄을 따라감) · 뒤로 튀는 먹 (예전 원 웅덩이 fx_puddle 을 뿌림)
+                    float waveRot = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                    Fx.Spawn("fx_inkshatter", start + (Vector3)(dir * 1.2f), 3f, Color.white, 16f);
+                    FxAnim crest = Fx.Play("fx_inkwave", start, width * 2f, Color.white, 14f, waveRot, 14, true, 0.6f);
+                    Vector2 side = new Vector2(-dir.y, dir.x);
                     for (float t = 0f; t < 0.5f; t += Time.deltaTime)
                     {
                         Vector3 front = KitClamp(start + (Vector3)(dir * len * (t / 0.5f)));
-                        if (Random.value < 0.7f) Fx.Spawn("fx_puddle", front + (Vector3)(Random.insideUnitCircle * width * 0.5f), 3f, new Color(0.18f, 0.25f, 0.75f, 0.85f), 18f);
+                        if (crest != null) crest.transform.position = front;
+                        if (Random.value < 0.5f) Fx.Spawn("fx_inkspatter", front - (Vector3)(dir * 1.2f) + (Vector3)(side * Random.Range(-width, width)), 1.4f, Color.white, 16f, Random.Range(0f, 360f));
                         using (var ovl = PhysHits.Circle(front, width)) foreach (Collider2D col in ovl)
                         {
                             if ((!col.CompareTag("enermy") && !col.CompareTag("boss")) || !hit.Add(col)) continue;
@@ -59,6 +65,7 @@ public partial class SpecialAbilities
                         }
                         yield return null;
                     }
+                    if (crest != null) Destroy(crest.gameObject);
                     fx.Play("whoosh", 1f, 0.55f);
                     fx.Play("fizz", 0.8f, 0.6f);
                     Hostile.Shake(0.2f);
@@ -70,7 +77,7 @@ public partial class SpecialAbilities
                     int n = 4;
                     float r = evo ? 4f : 3.2f, life = evo ? 4f : 3f;
                     List<FxAnim> globes = new List<FxAnim>();
-                    for (int i = 0; i < n; i++) globes.Add(Fx.Play("fx_orb", player.transform.position, 1.6f, new Color(0.45f, 0.75f, 1f), 12f, 0f, 20, true, life));
+                    for (int i = 0; i < n; i++) globes.Add(Fx.Play("fx_globe", player.transform.position, 1.6f, Color.white, 12f, 0f, 20, true, life));      // 도는 지구본 (예전 파란 구슬 fx_orb)
                     float nextHit = 0f;
                     for (float t = 0f; t < life; t += Time.deltaTime)
                     {
