@@ -313,7 +313,7 @@ public partial class CharacterKit
                     {
                         using (var ovl = PhysHits.Circle(c.transform.position, 2.6f)) foreach (Collider2D o in ovl)
                             if (o.TryGetComponent(out EnermyController e)) e.Slow(0f, 0.8f + 0.6f * draw);
-                        Fx.Spawn("fx_shock", c.transform.position, 5.2f, new Color(0.7f, 1f, 0.6f, 0.7f), 18f);
+                        Fx.Spawn("fx_net", c.transform.position, 5.2f, Color.white, 14f, Random.Range(0f, 90f), 11);      // 덮치는 그물 (예전 충격파 고리 fx_shock)
                     };
                 break;
             case SpecialAbilities.KitBurstBow:
