@@ -286,6 +286,7 @@ public static class Fx
         SpriteRenderer sr = a.sr;
         Style(sr);
         sr.sprite = frames[0];
+        sr.flipX = sr.flipY = false;        // 2026-10-23~ 편지 비둘기가 flipX 를 켜 둔 채 풀로 돌아가면 다음 이펙트가 좌우로 뒤집혀 나왔음
         sr.color = MyAlpha(color ?? Color.white, name);
         sr.sortingLayerID = LayerId(layer);
         sr.sortingOrder = order;
