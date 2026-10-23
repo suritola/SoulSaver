@@ -183,7 +183,13 @@ public static class GameMode
     // 1.3.3~ 사용자 「전체적인 적들의 체력을 40%씩 감소」: 모든 적(잡몹 · 엘리트 · 중간 보스 · 장 보스 · 개발자 · 엄마) 체력 공통 배율
     //   EnemyHpMul · BossHpMul 에 곱하고, 고정 체력인 개발자 · 엄마는 EndlessMode.SummonDeveloper 에서 곱함 (이어하기로 되살린 보스는 저장한 체력 그대로)
     public const float GlobalEnemyHpMul = 0.6f;
-    public static float EnemyHpMul => GlobalEnemyHpMul * EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp);     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
+    public static float EnemyHpMul => GlobalEnemyHpMul * EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp) * BeyondHpMul;     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
+    // 1.5.6~ 한계 돌파 뒤 잡몹 · 중간 보스 체력: 1분마다 ×1.15 (10분 ×4 · 20분 ×16 · 약 66분에 ×1만에서 멈춤 · int 체력 넘침 방지)
+    //   MobRamp 는 27분에 ×10 에서 멈추고 Lv100 · 초월로 화력은 계속 커져 몹이 닿기 전에 다 녹음 → 공격력 상승(BeyondDamageMul)이 의미가 없었음 (1.5.2 한계 돌파 2시간 넘게 버틴 판)
+    //   보스는 그대로 (기본 체력이 커서 넘침 위험 · 보스 기술은 한 대 상한)
+    public const float BeyondHpGrowthPerMin = 1.15f, BeyondHpMax = 10000f;
+    static float BeyondHpMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
+        ? Mathf.Min(BeyondHpMax, Mathf.Pow(BeyondHpGrowthPerMin, EndlessMode.Instance.BeyondMinutes)) : 1f;
     // 1.1.6~ 「전체적인 데미지 밸런스 하향」: 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물)에 공통으로 곱함
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     // 1.3.3~ 사용자 「모든 캐릭터들의 모든 데미지를 20% 정도 상향」: 0.8 → 0.96 (×1.2)
