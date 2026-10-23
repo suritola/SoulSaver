@@ -183,13 +183,7 @@ public static class GameMode
     // 1.3.3~ 사용자 「전체적인 적들의 체력을 40%씩 감소」: 모든 적(잡몹 · 엘리트 · 중간 보스 · 장 보스 · 개발자 · 엄마) 체력 공통 배율
     //   EnemyHpMul · BossHpMul 에 곱하고, 고정 체력인 개발자 · 엄마는 EndlessMode.SummonDeveloper 에서 곱함 (이어하기로 되살린 보스는 저장한 체력 그대로)
     public const float GlobalEnemyHpMul = 0.6f;
-    public static float EnemyHpMul => GlobalEnemyHpMul * EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp) * BeyondHpMul;     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
-    // 1.5.6~ 한계 돌파 뒤 잡몹 · 중간 보스 체력: 1분마다 ×1.15 (10분 ×4 · 20분 ×16 · 약 66분에 ×1만에서 멈춤 · int 체력 넘침 방지)
-    //   MobRamp 는 27분에 ×10 에서 멈추고 Lv100 · 초월로 화력은 계속 커져 몹이 닿기 전에 다 녹음 → 공격력 상승(BeyondDamageMul)이 의미가 없었음 (1.5.2 한계 돌파 2시간 넘게 버틴 판)
-    //   보스는 그대로 (기본 체력이 커서 넘침 위험 · 보스 기술은 한 대 상한)
-    public const float BeyondHpGrowthPerMin = 1.15f, BeyondHpMax = 10000f;
-    static float BeyondHpMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
-        ? Mathf.Min(BeyondHpMax, Mathf.Pow(BeyondHpGrowthPerMin, EndlessMode.Instance.BeyondMinutes)) : 1f;
+    public static float EnemyHpMul => GlobalEnemyHpMul * EnemyHp[I] * MobRamp * Harder * D(DailyStat.EnemyHp) * Curse.HpMul * SoulWeight.EnemyHpMul * Early(EarlyHp);     // 저주 제단 (1.0.1) · 영혼의 무게 1 (1.2~)
     // 1.1.6~ 「전체적인 데미지 밸런스 하향」: 플레이어가 적 · 보스에게 주는 모든 피해(평타 · 스킬 · 필살기 · 진화 · 초월 · 유물)에 공통으로 곱함
     //   (EnermyController · bosss.TakeDamage 입구 한 곳씩) — 피해 숫자 표시도 줄어든 값
     // 1.3.3~ 사용자 「모든 캐릭터들의 모든 데미지를 20% 정도 상향」: 0.8 → 0.96 (×1.2)
@@ -207,12 +201,15 @@ public static class GameMode
     // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
     //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)
     // 1.4.7~ 사용자 「개발자 엄마 처치 이후 몹들의 이동속도, 공격력을 훨씬 더 빠르게」(한계 돌파에서 1시간 가까이 버틴 판): 1분마다 ×1.12 → ×1.25 (약 3분마다 2배 · 10분 ×9.3 · 20분 ×87)
-    public const float BeyondDamageGrowthPerMin = 1.25f;
+    // 1.5.7~ 사용자 「체력은 늘리지 말고 이동속도랑 공격력을」 (1.5.6 의 한계 돌파 체력 ×1.15/분은 뺌): ×1.25 → ×1.35 (10분 ×20 · 20분 ×405)
+    //   지수는 200분에서 멈춤 — 예전 600분 상한은 1.25^600 ≈ 10^58 로 float 를 넘어 무한대가 됐음 (1.35^200 ≈ 10^26)
+    public const float BeyondDamageGrowthPerMin = 1.35f, BeyondDamageMaxMinutes = 200f;
     static float BeyondDamageMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
-        ? Mathf.Pow(BeyondDamageGrowthPerMin, Mathf.Min(600f, EndlessMode.Instance.BeyondMinutes)) : 1f;
+        ? Mathf.Pow(BeyondDamageGrowthPerMin, Mathf.Min(BeyondDamageMaxMinutes, EndlessMode.Instance.BeyondMinutes)) : 1f;
     public static float EnemySpeedMul => EnemySpeed[I] * D(DailyStat.EnemySpeed) * BeyondSpeedMul;
     // 1.4.7~ 한계 돌파 뒤 몹 이동 속도: 1분마다 +5% · 16분에 ×1.8 에서 멈춤 (새로 나오는 몹부터 · 보스는 그대로)
-    public const float BeyondSpeedPerMin = 0.05f, BeyondSpeedMax = 1.8f;
+    // 1.5.7~ 1분마다 +5% · ×1.8 → +10% · ×3 (20분에 멈춤) — 화력이 커져도 몹이 플레이어에게 닿게
+    public const float BeyondSpeedPerMin = 0.1f, BeyondSpeedMax = 3f;
     static float BeyondSpeedMul => IsEndless && EndlessMode.Instance != null && EndlessMode.Instance.Beyond
         ? Mathf.Min(BeyondSpeedMax, 1f + BeyondSpeedPerMin * EndlessMode.Instance.BeyondMinutes) : 1f;
     public static float WindupMul => Windup[I];
