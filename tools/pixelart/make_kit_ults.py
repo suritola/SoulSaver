@@ -1230,9 +1230,126 @@ SHEETS = {
     'fx_railring': rail_ring,
 }
 
+# ------------------------------------------------------------------ 진화 단계 그림 (_t2 · _t3)
+#   Fx.TierOf: 무기 1차 강화 → _t2, 2차 진화 · 진화한 능력 → _t3 (Fx.TieredFrames 가 Play · Spawn · Stretch · Links 에서 고름)
+#   칸 크기 · 모양은 그대로(범위 그림은 크기 = 범위라서) — 안쪽만 화려하게:
+#     _t2: 테를 그 무기 빛깔로 물들이고 밝은 곳을 더 밝게 · 바깥 한 칸에 성긴 빛 디더 · 가장자리 곁에 작은 반짝임
+#     _t3: 테가 무기 빛깔로 빛나고 안쪽 한 겹도 물듦 · 색을 진하게 · 바깥 한 칸 체크무늬 빛 · 더 많고 큰 십자 반짝임(흰 심)
+#   반짝임은 그 프레임의 그림 테두리 상자 안 빈칸에만 (보이는 범위가 넓어지지 않게) · 사라지는 프레임은 칠한 화소 수만큼 줄어듦
+#   Fx.Frames 로만 읽는 그림(투사체: fx_playcard · fx_javelin · fx_mercury · atk_*)은 단계 그림을 쓰지 않아 만들지 않음
+TIER_ACCENT = {
+    'fx_quake': (255, 150, 60), 'fx_whipblade': (120, 220, 255), 'fx_lanceghost': (150, 200, 255), 'fx_lancetip': (255, 230, 120),
+    'fx_poisonfog': (170, 255, 90), 'fx_poisonbubble': (170, 255, 90), 'fx_jokerburst': (255, 90, 200), 'fx_webring': (220, 200, 255),
+    'fx_silk': (230, 220, 255), 'fx_blackhole': (190, 110, 255), 'fx_magfield': (120, 180, 255), 'fx_fwstar': (255, 230, 120),
+    'fx_surveylink': (255, 230, 140), 'fx_surveystake': (255, 220, 120), 'fx_inkwave': (110, 150, 255), 'fx_inkspatter': (110, 150, 255),
+    'fx_inkshatter': (110, 170, 255), 'fx_globe': (120, 220, 255), 'fx_cuckoo': (255, 200, 90), 'fx_pigeon': (150, 240, 190),
+    'fx_sandstorm': (255, 215, 120), 'fx_chimering': (255, 210, 100), 'fx_parcelbox': (255, 200, 110), 'fx_parcelburst': (255, 210, 120),
+    'fx_postbox': (255, 200, 90), 'fx_soullink': (160, 255, 255), 'fx_soulshackle': (160, 255, 255), 'fx_icenova': (190, 245, 255),
+    'fx_shade': (190, 120, 255), 'fx_tendril': (190, 120, 255), 'fx_railring': (255, 255, 236),
+}
+
+
+def mix(c, d, t):
+    return tuple(round(c[i] + (d[i] - c[i]) * t) for i in range(3))
+
+
+def tier_frames(name, frames, tier):
+    acc = TIER_ACCENT[name]
+    light = mix(acc, (255, 255, 255), 0.6)
+    W = (255, 255, 255)
+    rnd = random.Random(f'{name}:{tier}')
+    most = max(sum(1 for row in f.px for p in row if p[3]) for f in frames) or 1
+    out = []
+    for f in frames:
+        w, h = f.w, f.h
+        src = [row[:] for row in f.px]
+        img = blank(w, h)
+        img.px = [row[:] for row in src]
+        op = lambda x, y: 0 <= x < w and 0 <= y < h and src[y][x][3] > 0
+        cells = [(x, y) for y in range(h) for x in range(w) if src[y][x][3]]
+        if not cells:
+            out.append(img)
+            continue
+        # 가장자리에서 몇 칸 안쪽인지 (1 = 테)
+        depth = {}
+        for x, y in cells:
+            if any(not op(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                depth[(x, y)] = 1
+        for x, y in cells:
+            if (x, y) not in depth and any(depth.get((x + dx, y + dy)) == 1 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                depth[(x, y)] = 2
+        luma = sorted(0.3 * src[y][x][0] + 0.59 * src[y][x][1] + 0.11 * src[y][x][2] for x, y in cells)
+        hi = luma[int(len(luma) * 0.82)]
+        for x, y in cells:
+            r, g, b, a = src[y][x]
+            c = (r, g, b)
+            if tier >= 3:
+                gray = (r + g + b) / 3
+                c = tuple(max(0, min(255, round(gray + (v - gray) * 1.2))) for v in c)
+            d = depth.get((x, y), 3)
+            lone = not any(op(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            dark = 0.3 * r + 0.59 * g + 0.11 * b < 120
+            if lone:                        # 홀로 떠 있는 알갱이 · 디더 화소: 빛깔만
+                c = mix(c, acc, 0.4 if tier >= 3 else 0.25)
+            elif d == 1 and dark:           # 짙은 테: 짙은 채로 무기 빛깔을 띰 (t3 은 빛나는 중간 톤)
+                c = mix(c, mix(acc, (0, 0, 0), 0.3), 0.7) if tier >= 3 else mix(c, mix(acc, (0, 0, 0), 0.5), 0.55)
+            elif d == 1:                    # 밝은 가장자리: 빛깔 쪽으로
+                c = mix(c, acc, 0.4 if tier >= 3 else 0.3)
+            elif d == 2 and tier >= 3:
+                c = mix(c, acc, 0.3)
+            if 0.3 * r + 0.59 * g + 0.11 * b >= hi and d > 1:
+                c = mix(c, light, 0.4 if tier >= 3 else 0.3)
+            img.px[y][x] = c + (a,)
+        # 반짝임: 그림 테두리 상자 안, 칠한 화소에서 1~3칸 떨어진 빈칸
+        xs = [x for x, _ in cells]; ys = [y for _, y in cells]
+        x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+        near = []
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if op(x, y):
+                    continue
+                dmin = min((max(abs(dx), abs(dy)) for dy in range(-3, 4) for dx in range(-3, 4) if op(x + dx, y + dy)), default=9)
+                if 1 <= dmin <= 3:
+                    near.append((x, y))
+        area = (x1 - x0 + 1) * (y1 - y0 + 1)
+        # 테두리 빛: 그림 바로 바깥 한 칸에 무기 빛깔 디더 (t3 은 체크무늬, t2 는 네 칸에 하나) — 반투명 대신
+        glow = mix(acc, (0, 0, 0), 0.25 if tier >= 3 else 0.4)
+        keep = len(cells) / most
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if op(x, y) or not any(op(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                    continue
+                if BAYER[y % 4][x % 4] >= keep * 20:      # 사라지는 프레임은 빛도 그만큼 덜
+                    continue
+                if ((x + y) % 2 == 0) if tier >= 3 else (x % 2 == 0 and y % 2 == 0):
+                    img.set(x, y, glow)
+        if area < 100:
+            n = 1 if tier >= 3 else 0
+        else:
+            n = max(len(cells) / (55 if tier >= 3 else 120), math.sqrt(area) / (6 if tier >= 3 else 12))
+            n = min(12 if tier >= 3 else 6, max(1, round(n * (0.4 + 0.6 * len(cells) / most))))
+        rnd.shuffle(near)
+        free = lambda x, y: x0 <= x <= x1 and y0 <= y <= y1 and not op(x, y)
+        for x, y in near[:n]:
+            if not free(x, y):
+                continue
+            big = tier >= 3 and area >= 100 and rnd.random() < 0.6
+            img.set(x, y, W if tier >= 3 else light)
+            if big or (tier == 2 and area >= 100 and rnd.random() < 0.4):
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    if free(x + dx, y + dy):
+                        img.set(x + dx, y + dy, light if tier >= 3 else acc)
+        out.append(img)
+    return out
+
+
 if __name__ == '__main__':
     only = sys.argv[1:]
     for name, fn in SHEETS.items():
         if only and name not in only:
             continue
-        save_sheet(name, fn())
+        frames = fn()
+        save_sheet(name, frames)
+        if name in TIER_ACCENT:
+            save_sheet(name + '_t2', tier_frames(name, frames, 2))
+            save_sheet(name + '_t3', tier_frames(name, frames, 3))
