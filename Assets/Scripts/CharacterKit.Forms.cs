@@ -282,7 +282,7 @@ public partial class CharacterKit
                     b.onHitEnemy += (s, c) =>
                     {
                         DamageCircle(c.transform.position, 2.2f, Damage * 1.8f * formPower, 2f);
-                        Fx.Spawn("fx_explosion", c.transform.position, 4.4f, Color.white, 16f);
+                        Fx.Spawn("fx_jokerburst", c.transform.position, 4.4f, Color.white, 16f);     // 조커 카드가 찢어지며 색종이 · 카드 조각 (예전 폭발 fx_explosion)
                         Play("boom", 0.5f, 1.3f);
                     };
                 break;
@@ -361,7 +361,7 @@ public partial class CharacterKit
         Transform other = NearestOther(c.transform.position, 6f, c.transform, Vector2.right, 360f);
         if (other == null) return;
         if (other.TryGetComponent(out EnermyController b)) b.Slow(0.3f, 1f);
-        SparkLine(c.transform.position, other.position, new Color(0.85f, 0.85f, 1f));
+        Fx.Stretch("fx_silk", c.transform.position, other.position, 0.35f, Color.white, 0.5f, 16, 10f);      // 두 적을 묶은 와이어 실 (예전 불티 점 SparkLine)
     }
     // ================================================================= 연금술사
     float FlaskRadiusMul => augment == AugGiant ? 1.4f : 1f;

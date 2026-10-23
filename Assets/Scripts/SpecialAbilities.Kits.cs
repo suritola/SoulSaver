@@ -487,7 +487,7 @@ public partial class SpecialAbilities
         bool joker = Random.value < jokerChance;
         float mul = joker ? 1f : Random.Range(0.3f, 2.5f);
         Color tint = joker ? new Color(1f, 0.35f, 0.4f) : mul > 1.8f ? new Color(1f, 0.85f, 0.35f) : Color.white;
-        Bullet b = KitProjectile(s, d, baseDmg * mul, player.pene, 42f, "fx_card", 0.8f, tint, true);
+        Bullet b = KitProjectile(s, d, baseDmg * mul, player.pene, 42f, "fx_playcard", 0.8f, tint, true);     // 트럼프 카드 (예전 편지 봉투 fx_card · 같은 16칸 높이라 크기 그대로)
         if (b == null || !joker) return;
         float boom = baseDmg * 2f;
         b.onHitEnemy += (bb, c) => Explode(c.transform.position, 2.2f, boom, 1.5f, new Color(1f, 0.3f, 0.4f, 0.85f));

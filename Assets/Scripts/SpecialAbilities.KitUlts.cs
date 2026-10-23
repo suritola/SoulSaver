@@ -174,7 +174,7 @@ public partial class SpecialAbilities
                 {
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 6f : 5f;
-                    Fx.Spawn("fx_cloud", at, r * 2.2f, new Color(0.5f, 1f, 0.4f, 0.6f), 6f, 0f, 3, true, 5f);
+                    Fx.Spawn("fx_poisonfog", at, r * 2.3f, Color.white, 6f, 0f, 3, true, 5f);       // 가장자리 독 연기 띠 = 범위 · 속은 비움 (예전 화면을 덮던 반투명 구름 fx_cloud)
                     fx.Play("hiss", 0.9f, 0.7f);
                     for (float t = 0f; t < 5f; t += 0.5f)
                     {
@@ -183,7 +183,7 @@ public partial class SpecialAbilities
                             if (!c.CompareTag("enermy") && !c.CompareTag("boss")) continue;
                             Poison.Apply(c.gameObject, D * 0.3f, 12);
                         }
-                        Fx.Spawn("fx_cloud", at + (Vector3)(Random.insideUnitCircle * r), 2.5f, new Color(0.5f, 1f, 0.4f, 0.5f), 10f);
+                        Fx.Spawn("fx_poisonbubble", at + (Vector3)(Random.insideUnitCircle * r), 2f, Color.white, 10f);     // 터지는 독 거품
                         yield return new WaitForSeconds(0.5f);
                     }
                     break;
@@ -202,17 +202,19 @@ public partial class SpecialAbilities
                 PlayerMotion.Of(player).Cast(1.2f);
                 {
                     Vector3 c0 = player.transform.position;
-                    LineRenderer web = fx.NewLine("WebPrison", false, 18);
-                    web.loop = true;
-                    web.enabled = true;
-                    web.startWidth = web.endWidth = 0.1f;
-                    web.startColor = web.endColor = new Color(0.9f, 0.85f, 1f, 0.9f);
                     float from = evo ? 11f : 9f, tick = 0f;
+                    // 마디로 끊긴 거미줄 테 (그림의 테 반지름 29/64 → 지름 from × 2.2 가 테 = r) · 예전 한 줄 LineRenderer 원
+                    FxAnim web = Fx.Play("fx_webring", c0, from * 2.2f, Color.white, 6f, 0f, 18, true, 2.1f);
+                    Vector3 webScale = web != null ? web.transform.localScale : Vector3.one;
                     fx.Play("clank", 0.8f, 1.4f);
                     for (float t = 0f; t < 2f; t += Time.deltaTime)
                     {
                         float r = Mathf.Lerp(from, 1f, t / 2f);
-                        Hostile.SetArc(web, c0, r, 0f, 360f);
+                        if (web != null)
+                        {
+                            web.transform.localScale = webScale * (r / from);
+                            web.transform.rotation = Quaternion.Euler(0f, 0f, t * 40f);
+                        }
                         tick -= Time.deltaTime;
                         if (tick <= 0f)
                         {
@@ -228,7 +230,7 @@ public partial class SpecialAbilities
                         }
                         yield return null;
                     }
-                    Destroy(web.gameObject);
+                    if (web != null) Destroy(web.gameObject);
                     break;
                 }
 
