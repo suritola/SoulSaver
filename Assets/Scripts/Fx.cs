@@ -80,6 +80,9 @@ public static class Fx
         "fx_beam", "fx_bolt", "fx_orb", "fx_slash", "fx_swordswing", "fx_spinslash", "fx_bigsword", "fx_swordwave",
         "fx_slipper", "fx_scratcher", "fx_broom", "fx_codeblock",       // 개발자 · 엄마 고유 공격 (그림 크기 = 판정 크기)
         "fx_ind_disc", "fx_ind_floor", "fx_ind_band", "fx_ind_cone",    // 1.5.1~ 범위 · 예고 도트 그림 (가장자리 = 판정 · PixelLine)
+        // 2026-10-23~ 진화 무기 필살기 · 덧효과 전용 그림 (예전 fx_shock · fx_puddle · fx_orb 자리라 그 크기 = 범위 그대로, tools/pixelart/make_kit_ults.py)
+        "fx_quake", "fx_poisonfog", "fx_jokerburst", "fx_webring", "fx_blackhole", "fx_magfield", "fx_fwstar", "fx_inkwave", "fx_inkshatter",
+        "fx_globe", "fx_sandstorm", "fx_chimering", "fx_parcelburst", "fx_icenova",
     };
     static float Visible(string name, float size) => AreaFx.Contains(name) ? size : size * DecorScale;
 
@@ -301,6 +304,35 @@ public static class Fx
             a.transform.localScale = new Vector3(d.magnitude / unit, s.y, 1f);
         }
         return a;
+    }
+
+    // 두 점 사이를 잇는 그림 (Beam 과 같되 그림을 고름 — 거미줄 실 · 그림자 손길처럼 가로로 그린 시트)
+    public static FxAnim Stretch(string name, Vector3 from, Vector3 to, float width, Color color, float life, int order = 14, float fps = 16f)
+    {
+        Vector3 d = to - from;
+        float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        FxAnim a = Play(name, (from + to) * 0.5f, width, color, fps, angle, order, true, life);
+        if (a != null)
+        {
+            float unit = a.sr.sprite.bounds.size.x;
+            Vector3 s = a.transform.localScale;
+            if (unit > 0f) a.transform.localScale = new Vector3(d.magnitude / unit, s.y, 1f);
+        }
+        return a;
+    }
+
+    // 두 점 사이에 사슬 고리를 줄지어 놓음 (fx_surveylink · fx_soullink: 고리 한 마디 = 그림 가로 길이, 늘이지 않아 고리 모양 그대로)
+    public static void Links(string name, Vector3 from, Vector3 to, float height, Color color, float life, int order = 14)
+    {
+        Sprite[] f = Frames(name);
+        if (f == null || f.Length == 0) return;
+        Vector3 d = to - from;
+        float len = d.magnitude;
+        if (len < 0.01f) return;
+        float step = height * f[0].bounds.size.x / Mathf.Max(0.001f, f[0].bounds.size.y) * 0.95f;
+        int n = Mathf.Clamp(Mathf.CeilToInt(len / Mathf.Max(0.05f, step)), 1, 40);      // 아주 먼 줄은 고리를 띄엄띄엄 (상한 40)
+        float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        for (int i = 0; i < n; i++) Spawn(name, from + d * ((i + 0.5f) / n), height, color, 8f, angle, order, true, life);
     }
 
     // 두 점 사이에 번개 (fx_bolt를 세로로 늘려 회전)
