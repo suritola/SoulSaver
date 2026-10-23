@@ -214,6 +214,16 @@ public static class Fx
                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
         => SpawnGet(name, pos, size, color, fps, rotation, order, loop, life, layer);
 
+    // 2026-10-23~ 오른쪽을 보고 그린 그림(뻐꾸기 · 비둘기 등)을 왼쪽으로 가는 자리에선 좌우를 뒤집어서
+    //   flipX 대신 가로 크기를 음수로 (다시 쓰는 이펙트는 Setup 이 크기를 새로 정해 뒤집기가 남지 않음)
+    public static void SpawnFacing(string name, Vector3 pos, float size, bool faceLeft, Color? color = null, float fps = 16f, int order = 12)
+    {
+        FxAnim a = SpawnGet(name, pos, size, color, fps, 0f, order, false, -1f, "Effect");
+        if (a == null || !faceLeft) return;
+        Vector3 s = a.transform.localScale;
+        a.transform.localScale = new Vector3(-Mathf.Abs(s.x), s.y, s.z);
+    }
+
     // 1.2.5~ 결계 예고 느낌표: 튀어나왔다가 두근거림 (예전 WarnPop 컴포넌트를 새 오브젝트마다 붙이던 것 → 풀 이펙트의 pop 표시)
     // 반복 재생 · life 동안 (Play 와 같은 모습 · 다시 쓸 때 Setup 이 pop 을 끔)
     public static void SpawnPop(string name, Vector3 pos, float size, Color color, float fps, int order, float life)

@@ -107,6 +107,8 @@ public partial class SpecialAbilities
                         Bullet b;
                         using (WeakHit.AimScope(1.75f)) b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_pigeon", 1.1f, Color.white, false);     // 빈틈: 커서 쪽으로 곧게 (±25° 라 CreateBullet 의 25° 규칙 안 · yield 앞에서 닫힘)
                         if (b != null) b.lifetime = (evo ? 20f : 16f) / 26f;
+                        // 탄은 나는 쪽으로 돌아가 왼쪽이면 뒤집혀 보임 → 위아래를 뒤집어 왼쪽을 보고 바로 섬 (다시 쓰는 탄은 Bullet 이 flip 을 되돌림)
+                        if (b != null && d.x < 0f && b.TryGetComponent(out SpriteRenderer psr)) psr.flipY = true;
                         if (i % 4 == 0) fx.Play("pop", 0.3f, 1.8f);
                         yield return new WaitForSeconds(0.05f);
                     }
@@ -205,7 +207,7 @@ public partial class SpecialAbilities
                     {
                         Transform t = targets.Count > 0 ? targets[i % targets.Count] : null;
                         if (t == null) break;
-                        Fx.Spawn("fx_cuckoo", t.position, 2.2f, Color.white, 16f);     // 뻐꾸기 (예전 매 fx_falcon)
+                        Fx.SpawnFacing("fx_cuckoo", t.position, 2.2f, t.position.x < player.transform.position.x, Color.white, 16f);     // 뻐꾸기 (예전 매 fx_falcon) · 왼쪽 적에겐 왼쪽을 봄
                         Specials.Damage(t.gameObject, D * 1.5f, (t.position - player.transform.position).normalized, 1f);
                         fx.Play("pop", 0.4f, 1.6f + 0.05f * i);
                         yield return new WaitForSeconds(0.08f);

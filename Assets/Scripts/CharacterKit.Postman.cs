@@ -140,6 +140,14 @@ public partial class CharacterKit
             {
                 a.transform.position = p;
                 if (heavy) a.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 9f) * 18f);      // 소포: 무겁게 흔들림
+                else if (pigeon)
+                {
+                    // 옆모습 비둘기: 왼쪽으로 날면 좌우를 뒤집고, 오르내리는 만큼만 기울임 (예전엔 봉투처럼 −90° 돌려 세로로 섰음)
+                    bool left = v.x < 0f;
+                    a.sr.flipX = left;
+                    float tilt = Mathf.Atan2(v.y, Mathf.Abs(v.x)) * Mathf.Rad2Deg;
+                    a.transform.rotation = Quaternion.Euler(0f, 0f, (left ? -tilt : tilt) + Mathf.Sin(t * 30f) * 6f);
+                }
                 else a.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - (art ? 0f : 90f) + Mathf.Sin(t * 30f) * 12f);      // 새 편지 그림은 가로로 누운 봉투
             }
             if (Hostile.IsWall(p)) break;
