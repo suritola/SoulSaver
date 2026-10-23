@@ -36,6 +36,10 @@ public static partial class LocTable
         PA("일필", "Single Stroke", "一筆", "一笔");
         PA("도형 대신 굵은 한 획", "One bold stroke instead of shapes", "図形の代わりに太い一画", "以粗重一笔代替图形");
         PA("일필휘지", "Bold Flourish", "一筆揮毫", "一笔挥就");
+        PA("도형이 닫히지 않는 판이라 지금은 효과가 없습니다. (행군 측량 · 대형 도면이면 켜짐)",
+           "No effect right now: shapes never close this run. (Turns on with Marching Survey or Grand Blueprint)",
+           "このプレイでは図形が閉じないため、今は効果がありません。(行軍測量・大型図面で有効)",
+           "本局图形不会闭合，目前没有效果。(行军测量 · 大型图纸时生效)");
         PK("도형이 닫히지 않는 대신 모든 획의 길이 ×1.4 · 굵기 ×1.5 · 피해 ×1.7.",
            "도형이 닫히지 않는 대신 모든 획이 강해집니다. (길이 ×1.4 · 굵기 ×1.5 · 피해 ×1.7)",
            "Shapes no longer close, but every stroke grows stronger. (Length ×1.4 · Width ×1.5 · Damage ×1.7)",

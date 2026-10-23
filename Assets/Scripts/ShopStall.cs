@@ -209,6 +209,8 @@ public class ShopStall : MonoBehaviour
             t.transform.localPosition = new Vector3(0f, 0.25f, 0f);
             promptText.rectTransform.sizeDelta = new Vector2(6f, 1.2f);
             promptText.text = "[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("상점 열기");
+            // 1.5.6~ 언어를 바꾸면 다시 (이어 붙인 글이라 이전 언어로 남았음)
+            promptText.gameObject.AddComponent<LocRefresh>().refresh = () => promptText.text = "[" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("상점 열기");
         }
 
         nearRing = Hostile.NewLine("StallNearRing", new Color(1f, 0.85f, 0.4f, 0f), 0.16f, 2);

@@ -231,6 +231,7 @@ public partial class LevelShop
             int left = PathStepsToNext(path);
             if (left >= 1 && left <= 2) w *= PathNearBoost;
         }
+        if (MapShapeOnly(id)) w *= 0.35f;          // 1.5.6~ 도형이 닫히지 않는 판(일필)의 도형 전용 카드는 덜 나옴 (빼지는 않음 · LevelShop.MapShapeOnly)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         int luck = sp != null ? sp.Luck : 0;
         if (luck > 0 && (path >= 0 || LevelOf(id) > 0)) w *= 1f + LuckDrawBoost * luck;

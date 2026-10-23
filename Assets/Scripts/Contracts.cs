@@ -534,11 +534,12 @@ public static class Contracts
     {
         public static bool Dirty;
         GameObject panel;
+        int builtLoc = -1;          // 1.5.6~ 만든 때의 Loc.Version (ESC 설정에서 언어를 바꾸면 다시 만듦)
 
         void Update()
         {
             bool want = ESCmenu.IsOpen && run.Count > 0;
-            if (want && (panel == null || Dirty)) Build();
+            if (want && (panel == null || Dirty || builtLoc != Loc.Version)) Build();
             else if (!want && panel != null) { Destroy(panel); panel = null; }
         }
 
@@ -547,6 +548,7 @@ public static class Contracts
         void Build()
         {
             Dirty = false;
+            builtLoc = Loc.Version;
             if (panel != null) Destroy(panel);
             Canvas canvas = UIKit.HudCanvas();
             if (canvas == null) return;

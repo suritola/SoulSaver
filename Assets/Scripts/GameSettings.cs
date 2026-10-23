@@ -71,9 +71,10 @@ public static class GameSettings
             Prefs.SetInt(LangKey, (int)value);          // 1.0.4~: 감지한 언어와 같은 언어를 골라도 「골랐음」을 남김
             Prefs.Save();
             if (language == value) return;
+            Loc.Lang from = language;
             language = value;
             Loc.ApplyFonts();
-            SceneLocalizer.RefreshAll();
+            SceneLocalizer.RefreshAll(from);
             Loc.RaiseChanged();
         }
     }
@@ -545,17 +546,20 @@ public static class SceneLocalizer
 
     public static void Clear() => original.Clear();
 
-    public static void RefreshAll()
+    public static void RefreshAll() => RefreshAll(Loc.Current);
+
+    // from: 지금 화면 글이 쓰인 언어 (언어를 바꿀 때는 바꾸기 전 언어)
+    // 1.5.6~ 한국어 키일 때만 원문을 기억해, 다른 언어일 때 생긴 글(코드가 Loc.T 로 한 번 넣은 글)은 영영 그 언어로 남았음
+    //   (일본어 → 한국어로 돌아와도 「레벨업 카드…」 버튼이 일본어) → 지금 글을 이전 언어 번역표로 거꾸로 찾아 키를 얻음
+    //   번역표에 없는 글(코드가 이어 붙인 글 등)은 건드리지 않음 — 예전처럼 기억한 원문으로 덮어쓰면 그 뒤 코드가 바꾼 글이 되돌아갔음
+    public static void RefreshAll(Loc.Lang from)
     {
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             int id = t.GetInstanceID();
-            if (!original.TryGetValue(id, out string ko))
-            {
-                if (!Loc.Has(t.text)) continue;
-                ko = t.text;
-                original[id] = ko;
-            }
+            string ko = Loc.KeyOf(t.text, from);
+            if (ko == null) continue;
+            original[id] = ko;
             t.text = Loc.T(ko);
         }
     }

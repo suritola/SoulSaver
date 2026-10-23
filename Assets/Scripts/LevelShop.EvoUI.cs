@@ -33,6 +33,7 @@ public partial class LevelShop
 
     void ShowEvoHints()
     {
+        cardsLoc = Loc.Version;
         int[] ids = { first, second, third };
         bool anyEvo = false;
         for (int slot = 0; slot < 3; slot++)
@@ -356,8 +357,26 @@ public partial class LevelShop
         if (skipText != null) skipText.text = Loc.T("이번 레벨업 포기") + "  ▶▶";
     }
 
+    // 1.5.6~ 언어를 바꾸면 펼친 카드 글도 다시 (일시정지가 레벨업 창 위에서 열려 설정에서 바꾸면 카드 이름 · 본문 · 진화 띠 · 리본이 이전 언어로 남았음)
+    int cardsLoc = -1;
+    void RewriteCardsForLang()
+    {
+        cardsLoc = Loc.Version;
+        if (FirstTitle != null) FirstTitle.text = CardTitleOf(first);
+        if (FirstAbility != null) FirstAbility.text = CardBodyOf(first);
+        if (SecondTitle != null) SecondTitle.text = CardTitleOf(second);
+        if (SecondAbility != null) SecondAbility.text = CardBodyOf(second);
+        if (ThirdTitle != null) ThirdTitle.text = CardTitleOf(third);
+        if (ThirdAbility != null) ThirdAbility.text = CardBodyOf(third);
+        ShowEvoHints();
+        ShowPathHeader();
+        if (!SkipArmed) DisarmSkip();
+        RefreshCards();
+    }
+
     void UpdateSkipButton()
     {
+        if (IsOpen && cardsLoc != Loc.Version) RewriteCardsForLang();
         if (IsOpen) EvoRowPulse();
         if (skipButton == null) return;
         bool show = IsOpen && !freePick && !PathWindowShown;        // 1.0.4~: 판 시작 무료 카드 창에는 없음 (레벨이 오르지 않는 공짜 카드) · 입문 · 갈림길 창에도 없음 (건너뛰면 갈래가 비어 버림)

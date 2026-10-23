@@ -695,6 +695,8 @@ public static class Hints
     static float left;                  // 지금 도움말이 남은 시간 (시간이 흐를 때만 줄어듦)
     static float shown;                 // 지금 도움말을 보여 준 시간 (나타나는 움직임)
     static string current;              // 지금 띄운 도움말 키 (null = 없음)
+    static string currentKo;            // 1.5.6~ 지금 띄운 도움말 원문 · 채운 때의 Loc.Version (일시정지 설정에서 언어를 바꾸면 다시 채움 — 이전 언어로 남았음)
+    static int currentLoc;
     static HintRunner runner;
     static int sceneHandle = -1;
     static readonly List<(string key, string ko)> queue = new List<(string key, string ko)>();
@@ -768,11 +770,14 @@ public static class Hints
             queue.RemoveAt(0);
             if (Prefs.GetInt("hint." + next.key, 0) == 1) return;
             current = next.key;
+            currentKo = next.ko;
+            currentLoc = Loc.Version;
             Notice.FillTip(box, Loc.T("도움말"), Loc.T(next.ko), CloseText);
             left = Duration;
             shown = 0f;
         }
         if (box == null || box.r == null) { current = null; return; }
+        if (currentLoc != Loc.Version) { currentLoc = Loc.Version; Notice.FillTip(box, Loc.T("도움말"), Loc.T(currentKo), CloseText); }
         // 시간이 멈춘 동안 · 창이 열린 동안은 숨기고 남은 시간도 그대로 (창 뒤에서 흘러가 버리지 않게)
         if (box.r.gameObject.activeSelf == paused) box.r.gameObject.SetActive(!paused);
         if (paused) return;

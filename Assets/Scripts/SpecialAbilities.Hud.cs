@@ -20,7 +20,8 @@ public partial class SpecialAbilities
 
     class HudGroup
     {
-        public string title, prefKey;
+        public string prefKey;
+        public System.Func<string> title;      // 1.5.6~ 쓸 때 번역 (예전엔 만들 때 번역한 글을 저장해 언어를 바꿔도 「무기 · 스킬」이 이전 언어로 남았음)
         public RectTransform root, tiles;
         public TextMeshProUGUI header;
         public bool collapsed;
@@ -39,13 +40,13 @@ public partial class SpecialAbilities
     {
         Canvas canvas = UIKit.HudCanvas();
         if (canvas == null) return;
-        weaponGroup = NewGroup(canvas, "WeaponSlot", UsesEvolution ? Loc.T("무기") : Loc.T("무기") + " [" + KeyBindings.Name(GameAction.Swap) + "]", "hud.fold.weapon");
-        skillGroup = NewGroup(canvas, "SkillSlot", Loc.T("스킬"), "hud.fold.skill");
-        passiveGroup = NewGroup(canvas, "PassiveSlot", Loc.T("패시브"), "hud.fold.passive");
-        relicGroup = NewGroup(canvas, "RelicSlot", Loc.T("유물"), "hud.fold.relic");
+        weaponGroup = NewGroup(canvas, "WeaponSlot", () => UsesEvolution ? Loc.T("무기") : Loc.T("무기") + " [" + KeyBindings.Name(GameAction.Swap) + "]", "hud.fold.weapon");
+        skillGroup = NewGroup(canvas, "SkillSlot", () => Loc.T("스킬"), "hud.fold.skill");
+        passiveGroup = NewGroup(canvas, "PassiveSlot", () => Loc.T("패시브"), "hud.fold.passive");
+        relicGroup = NewGroup(canvas, "RelicSlot", () => Loc.T("유물"), "hud.fold.relic");
     }
 
-    HudGroup NewGroup(Canvas canvas, string name, string title, string prefKey)
+    HudGroup NewGroup(Canvas canvas, string name, System.Func<string> title, string prefKey)
     {
         HudGroup g = new HudGroup { title = title, prefKey = prefKey };
         GameObject go = new GameObject(name, typeof(RectTransform));
@@ -252,7 +253,7 @@ public partial class SpecialAbilities
             g.tiles.anchoredPosition = new Vector2(0f, keyRow);
             Transform head = g.header.transform.parent;
             ((RectTransform)head).anchoredPosition = new Vector2(0f, keyRow + tilesH + (g.collapsed ? 0f : 4f));
-            g.header.text = (g.collapsed ? "+ " : "- ") + g.title + (g.collapsed ? "  (" + g.list.Count + ")" : "");
+            g.header.text = (g.collapsed ? "+ " : "- ") + g.title() + (g.collapsed ? "  (" + g.list.Count + ")" : "");
             g.root.anchoredPosition = new Vector2(24f, y);
             y += keyRow + tilesH + (g.collapsed ? 0f : 4f) + HeaderHeight + GroupGap;
         }
@@ -265,9 +266,11 @@ public partial class SpecialAbilities
     // 1.1.9: 쿨타임 원은 1/120 단위로만 고침 (매 프레임 조금씩 바뀌면 HUD 캔버스를 매 프레임 다시 빌드함 · 눈에는 같음)
     static float CoolStep(float v) => v <= 0f ? 0f : v >= 1f ? 1f : Mathf.Ceil(v * 120f) / 120f;
 
+    int hudGroupsLoc = -1;
     void UpdateHud()
     {
         if (weaponGroup == null) return;
+        if (hudGroupsLoc != Loc.Version) { hudGroupsLoc = Loc.Version; LayoutGroups(); }      // 1.5.6~ 언어를 바꾸면 묶음 이름표 다시
         if (hudGroups == null) hudGroups = relicGroup != null ? new[] { weaponGroup, skillGroup, relicGroup, passiveGroup } : new[] { weaponGroup, skillGroup, passiveGroup };
         bool full = Time.unscaledTime >= nextHudText;
         if (full) nextHudText = Time.unscaledTime + 0.1f;

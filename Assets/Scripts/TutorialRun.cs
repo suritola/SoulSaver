@@ -363,6 +363,8 @@ public class TutorialRun : MonoBehaviour
             skipLabelLang = Loc.Current;
             skipLabel.text = Loc.T("이 단계 건너뛰기") + (skipLabelPad ? " [R3]" : "");
         }
+        // 1.5.6~ 언어를 바꾸면 단계 번호 줄도 다시 (「튜토리얼 1 / 9」가 이어 붙인 글이라 이전 언어로 남았음)
+        if (counter != null && counterLoc != Loc.Version && step >= 0 && step < Steps.Length) ShowCounter();
     }
 
     TMP_Text skipLabel;             // 1.0.5~ 「이 단계 건너뛰기」 글자 (패드면 [R3] 를 붙임, UIKit.Remember 대신 직접 갱신)
@@ -544,9 +546,16 @@ public class TutorialRun : MonoBehaviour
         BuildPointer(canvas.transform);
     }
 
+    int counterLoc = -1;
+    void ShowCounter()
+    {
+        counterLoc = Loc.Version;
+        counter.text = Loc.T("튜토리얼") + "  " + (step + 1) + " / " + Steps.Length;
+    }
+
     void ShowStep()
     {
-        counter.text = Loc.T("튜토리얼") + "  " + (step + 1) + " / " + Steps.Length;
+        ShowCounter();
         title.text = Loc.T(Steps[step].title);
         body.text = Loc.T(Steps[step].body);
         check.text = "";

@@ -260,8 +260,10 @@ public static class MenuExtras
             TMP_Text streak = UIKit.Text(daily.transform, "", 20f, new Color(0.79f, 0.63f, 1f), new Vector2(0f, -TileH * 0.5f - 16f), new Vector2(TileW + Gap, 26f));     // 1.4.8~ 16 → 20
             streak.fontSizeMin = 20f;
             streak.name = "StreakLabel";        // UI 개편 배치(LayoutMainV2)가 이름으로 찾아 버튼 바로 아래로
-            streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
+            System.Action writeStreak = () => streak.text = Loc.T("daily.streak.label").Replace("{0}", DailyRewards.Streak.ToString());
+            writeStreak();
             UIKit.Forget(streak);
+            streak.gameObject.AddComponent<LocRefresh>().refresh = writeStreak;        // 1.5.6~ 언어를 바꾸면 다시 (「연속 n일」이 이전 언어로 남았음)
         }
         // 1.1.9~ 순위표 아래 「기록」 (지난 판 · 영웅별 통계 — 체험판은 숨김: 체험판 기록은 정식판으로 이어지지 않음)
         if (!Demo.On)
@@ -2699,9 +2701,11 @@ public class ModalEsc : MonoBehaviour
 public class LocRefresh : MonoBehaviour
 {
     public System.Action refresh;
-    void OnEnable() => Loc.Changed += Run;
+    // 1.5.6~ 꺼져 있는 동안 언어가 바뀌면 (일시정지 동안 숨긴 HUD 등) 다시 켜질 때 한 번 (예전엔 이벤트를 놓쳐 이전 언어 글이 남았음)
+    int seen = Loc.Version;
+    void OnEnable() { Loc.Changed += Run; if (seen != Loc.Version) Run(); }
     void OnDisable() => Loc.Changed -= Run;
-    void Run() => refresh?.Invoke();
+    void Run() { seen = Loc.Version; refresh?.Invoke(); }
 }
 // 1.2.4~ UIKit.MakeDropdown 이 드롭다운 루트에 붙임 (템플릿 밖이라 펼칠 때 복제되지 않음)
 //   옵션 글자 번역 · 언어가 바뀌면 다시 · 값 다시 읽기(Sync) · 흐리게(SetUsable)

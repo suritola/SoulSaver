@@ -245,7 +245,7 @@ public static class SoulBrand
             // 1.4.1~ ESC 「지금 가진 스킬」(PauseBuild)이 같은 왼쪽 자리에 영혼 각인 칸 · 설명을 이미 보여 주므로, 그 창이 있으면 그리지 않음
             //   (예전엔 이 판이 그 창 위에 겹쳐 고정되고 마우스 입력까지 막아 다른 아이콘 설명을 볼 수 없었음)
             bool want = ESCmenu.IsOpen && run.Count > 0 && Object.FindFirstObjectByType<PauseBuild>() == null;
-            if (want && (panel == null || Dirty)) Build();
+            if (want && (panel == null || Dirty || builtLoc != Loc.Version)) Build();      // 1.5.6~ 언어를 바꾸면 다시 (각인 설명 · 「합계」 줄이 이전 언어로 남았음)
             else if (!want && panel != null) { Destroy(panel); panel = null; }
         }
 
@@ -254,9 +254,11 @@ public static class SoulBrand
             if (panel != null) Destroy(panel);
         }
 
+        int builtLoc = -1;
         void Build()
         {
             Dirty = false;
+            builtLoc = Loc.Version;
             if (panel != null) Destroy(panel);
             Canvas canvas = UIKit.HudCanvas();
             if (canvas == null) return;

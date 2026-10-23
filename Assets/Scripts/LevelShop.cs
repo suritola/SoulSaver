@@ -68,6 +68,7 @@ public partial class LevelShop : MonoBehaviour
         SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
+        abilitysLoc = Loc.Version;
         StartCoroutine(OpenFreeWhenReady());
     }
 
@@ -121,6 +122,7 @@ public partial class LevelShop : MonoBehaviour
 
     // Update is called once per frame
 
+    int abilitysLoc = -1;
     void setAbilitys()
     {
         // 공용 카드 (0 ~ 11) · 비상 보급: 모두 같은 모양 (한 문장 + 수치 지금 → 다음 + Lv)
@@ -136,11 +138,25 @@ public partial class LevelShop : MonoBehaviour
         KitSetAbilitys();
         SigSetAbilitys();
         PathSetAbilitys();          // 입문 · 외길 · 31 새 카드 (LevelShop.Paths)
+        for (int i = 0; i < ability_content.Length; i++)
+            if (MapShapeOnly(i)) ability_content[i] += "\n<color=#FF9F9F>" + Loc.T("도형이 닫히지 않는 판이라 지금은 효과가 없습니다. (행군 측량 · 대형 도면이면 켜짐)") + "</color>";
+    }
+
+    // 1.5.6~ 사용자 「일필휘지는 도형을 닫지 않는데 도형 카드를 먹으면?」: 도형이 닫혀야만 효과가 나는 지도 제작자 카드
+    //   (측량 표식 · 끊기지 않는 선 · 범례 · 등고선 · 나침도 · 보물 지도) — 도형이 하나도 닫히지 않는 판(CharacterKit.MapNoClosures)이면
+    //   카드에 「지금은 효과 없음」 · 덜 나옴 (PathDrawWeight). 빼지는 않음: 정밀 측량을 둘째 갈래로 골라 대형 도면을 열 재료라서
+    public static bool MapShapeOnly(int id)
+    {
+        if (CharacterData.Selected != CharacterId.Cartographer || !Paths.Safe(() => CharacterKit.MapNoClosures, false)) return false;
+        if (id == ExtraAId || id == ExtraBId) return true;
+        string k = SigKey(CharacterId.Cartographer, id);
+        return k == "c.legend" || k == "c.contour" || k == "c.rose" || k == "c.treasure";
     }
     void Update()
     {
         // 카드 글(15장)은 창이 열려 있을 때만 새로 만듦 (닫혀 있을 때 매 프레임 만들던 문자열 쓰레기 제거)
-        if (IsOpen) setAbilitys();
+        // 1.5.6~ 언어를 바꾸면 닫혀 있어도 한 번 (HUD · 빌드 보기 · 일시정지 칸이 쓰는 카드 이름이 이전 언어로 남았음 — 예: 「일필휘지」)
+        if (IsOpen || abilitysLoc != Loc.Version) { setAbilitys(); abilitysLoc = Loc.Version; }
         UpdateSelectLock();
 
         UpdateReroll();
@@ -188,6 +204,7 @@ public partial class LevelShop : MonoBehaviour
     TMP_Text rerollText;
     int shownRerolls = -1;
     bool shownRerollPad, shownPendingPad;      // 1.0.5~ 안내를 만들 때 패드였는지 (바뀌면 [R] ↔ [X])
+    int shownRerollLoc = -1, shownPendingLoc = -1;      // 1.5.6~ 만들 때의 Loc.Version (언어를 바꿔도 이전 언어 글이 남았음)
 
     // 카드 아래 안내 두 줄 (카드 아래끝 -360, 고른 카드는 1.08배라 -384까지): 확정 안내 → 다시 뽑기 순서로 겹치지 않게
     // 그 아래 가운데는 건너뛰기 버튼 (LevelShop.EvoUI), 다시 뽑기 안내는 그 왼쪽
@@ -217,10 +234,11 @@ public partial class LevelShop : MonoBehaviour
         }
         GameObject badge = rerollText.transform.parent.gameObject;
         if (badge.activeSelf != open) badge.SetActive(open);
-        if (open && (shownRerolls != n || shownRerollPad != GamePad.Active))
+        if (open && (shownRerolls != n || shownRerollPad != GamePad.Active || shownRerollLoc != Loc.Version))
         {
             shownRerolls = n;
             shownRerollPad = GamePad.Active;
+            shownRerollLoc = Loc.Version;
             rerollText.text = "<color=#FFE066>[" + KeyBindings.Name(GameAction.Reroll) + "]</color> " + Loc.T("카드 다시 뽑기") + "  <color=#FFE066>(" + n + ")</color>";
         }
     }
@@ -347,11 +365,12 @@ public partial class LevelShop : MonoBehaviour
                     : Color.Lerp(new Color(0.35f, 0.22f, 0.02f, 0.85f), new Color(0.75f, 0.5f, 0.08f, 0.95f), pulse);     // 배경도 금빛으로 숨 쉼
         pendingBadge.transform.localScale = Vector3.one * (hover ? 1f + 0.06f * GameSettings.Motion : 1f + 0.04f * pulse);
         bool tree = StageManager.Instance != null && StageManager.Instance.TreeAffordable;
-        if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active)
+        if (shownPending != PendingLevels || shownTree != tree || shownPendingPad != GamePad.Active || shownPendingLoc != Loc.Version)
         {
             shownPending = PendingLevels;
             shownTree = tree;
             shownPendingPad = GamePad.Active;
+            shownPendingLoc = Loc.Version;
             pendingText.text = Loc.T("레벨업!") + "  [" + KeyBindings.Name(GameAction.Interact) + "] " + Loc.T("카드 고르기") + (PendingLevels > 1 ? "  x" + PendingLevels : "")
                              + (tree ? "   \u00B7   [" + KeyBindings.Name(GameAction.Upgrade) + "] " + Loc.T("배울 칸 있음") : "");
         }

@@ -13,7 +13,34 @@ public static class Loc
     public static Lang Current => GameSettings.Language;
 
     public static event System.Action Changed;
-    internal static void RaiseChanged() => Changed?.Invoke();
+    // 1.5.6~ 언어 · 키 이름이 바뀔 때마다 +1 — 「바뀔 때만 글을 다시 쓰는」 곳은 이 값도 비교 (예전엔 언어를 바꿔도 이전 언어 글이 남았음)
+    public static int Version { get; private set; }
+    internal static void RaiseChanged() { Version++; reverse = null; Changed?.Invoke(); }
+
+    // 1.5.6~ 화면에 보이는 번역 글 → 한국어 키 (언어 lang 기준 · 키 이름까지 바꾼 그대로). 한 번 번역해 넣고 잊은 글을 새 언어로 되돌릴 때 (SceneLocalizer)
+    //   같은 번역이 여러 키에 있으면 먼저 찾은 키 (그 언어에서는 어느 쪽이든 같은 글)
+    static Dictionary<string, string>[] reverse;
+    public static string KeyOf(string shown, Lang lang)
+    {
+        if (string.IsNullOrEmpty(shown)) return null;
+        if (LocTable.Entries.ContainsKey(shown)) return shown;
+        reverse ??= new Dictionary<string, string>[4];
+        int li = (int)lang;
+        if (reverse[li] == null)
+        {
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            foreach (KeyValuePair<string, string[]> kv in LocTable.Entries)
+            {
+                string tr = li == 0 ? (!string.IsNullOrEmpty(kv.Value[0]) ? kv.Value[0] : kv.Key)
+                          : li < kv.Value.Length && !string.IsNullOrEmpty(kv.Value[li]) ? kv.Value[li] : null;
+                if (tr == null) continue;
+                string applied = KeyBindings.Apply(tr);
+                if (!map.ContainsKey(applied)) map[applied] = kv.Key;
+            }
+            reverse[li] = map;
+        }
+        return reverse[li].TryGetValue(shown, out string key) ? key : null;
+    }
 
     // 번역한 뒤 {SKILL1} 같은 키 표시를 지금 설정된 키 이름으로 바꿈 (KeyBindings)
     public static string T(string ko) => KeyBindings.Apply(Translate(ko));

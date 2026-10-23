@@ -79,8 +79,8 @@ public class AbilityHUD : MonoBehaviour
         Button b = go.GetComponent<Button>();
         b.onClick.AddListener(Toggle);
         TooltipTrigger tip = go.AddComponent<TooltipTrigger>();
-        tip.title = Loc.T("레벨업 스킬");
-        tip.body = Loc.T("눌러서 레벨업 스킬 아이콘을 접고 펼칩니다.");
+        tip.titleProvider = () => Loc.T("레벨업 스킬");          // 1.5.6~ 언어를 바꾸면 다시 (보여 줄 때 번역)
+        tip.bodyProvider = () => Loc.T("눌러서 레벨업 스킬 아이콘을 접고 펼칩니다.");
 
         GameObject tg = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform tr = tg.GetComponent<RectTransform>();
@@ -99,6 +99,7 @@ public class AbilityHUD : MonoBehaviour
         toggleText.fontSizeMax = 28f;
         toggleText.enableWordWrapping = false;
         toggleText.raycastTarget = false;
+        tg.AddComponent<LocRefresh>().refresh = ApplyOpen;     // 1.5.6~ 언어를 바꾸면 다시 (접힌 단추 「▶ 레벨업 스킬  n」)
         ApplyOpen();
     }
 

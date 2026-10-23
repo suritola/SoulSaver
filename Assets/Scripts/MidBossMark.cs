@@ -49,7 +49,11 @@ public class MidBossMark : MonoBehaviour
         UIKit.EnsureStyle();
         if (UIKit.Font != null) tag.font = UIKit.Font;
         if (UIKit.FontMaterial != null) tag.fontSharedMaterial = UIKit.FontMaterial;
-        tag.text = !prefix && !string.IsNullOrEmpty(name) ? name : Loc.T("중간 보스 이름표") + (string.IsNullOrEmpty(name) ? "" : " · " + name);
+        tagName = name;
+        tagPrefix = prefix;
+        tagLang = Loc.Current;
+        tagLoc = Loc.Version;
+        tag.text = TagText();
         tag.fontSize = 9f;          // 3.6 은 화면(세로 40칸)에서 10픽셀 남짓이라 안 보였음
         tag.fontStyle = FontStyles.Bold;
         tag.color = new Color(1f, 0.86f, 0.35f);
@@ -65,6 +69,26 @@ public class MidBossMark : MonoBehaviour
         tag.rectTransform.sizeDelta = size;
         border = Plate("Border", size + new Vector2(0.9f, 0.5f), new Color(1f, 0.78f, 0.3f, 0.95f), layer, 36);
         plate = Plate("Plate", size + new Vector2(0.65f, 0.3f), new Color(0.22f, 0.03f, 0.05f, 0.88f), layer, 37);
+    }
+
+    // 1.5.6~ 언어를 바꾸면 이름표도 다시 (받은 이름은 이미 번역된 글이라 만들 때 언어로 키를 되찾아 새 언어로)
+    string tagName;
+    bool tagPrefix;
+    Loc.Lang tagLang;
+    int tagLoc;
+    string TagText() => !tagPrefix && !string.IsNullOrEmpty(tagName) ? tagName : Loc.T("중간 보스 이름표") + (string.IsNullOrEmpty(tagName) ? "" : " · " + tagName);
+
+    void Relocalize()
+    {
+        tagLoc = Loc.Version;
+        string key = Loc.KeyOf(tagName, tagLang);
+        if (key != null) tagName = Loc.T(key);
+        tagLang = Loc.Current;
+        tag.text = TagText();
+        Vector2 size = tag.GetPreferredValues(tag.text);
+        tag.rectTransform.sizeDelta = size;
+        if (border != null) border.transform.localScale = new Vector3(size.x + 0.9f, size.y + 0.5f, 1f);
+        if (plate != null) plate.transform.localScale = new Vector3(size.x + 0.65f, size.y + 0.3f, 1f);
     }
 
     SpriteRenderer Plate(string name, Vector2 size, Color color, int layer, int order)
@@ -83,6 +107,7 @@ public class MidBossMark : MonoBehaviour
     {
         if (enemy != null && enemy.IsDead) { Cleanup(); return; }
         if (root == null) return;
+        if (tag != null && tagLoc != Loc.Version) Relocalize();
         float top = body != null ? body.bounds.max.y : transform.position.y + 1.5f;
         // 체력바(머리 위) 바로 위
         root.position = new Vector3(transform.position.x, top + 1.7f, 0f);

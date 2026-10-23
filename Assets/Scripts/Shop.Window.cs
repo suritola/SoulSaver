@@ -160,6 +160,7 @@ public partial class Shop
     {
         TMP_Text t = UIKit.Text(parent, "", 30f, Gold, pos + new Vector2(60f, 0f), new Vector2(240f, 44f), TextAlignmentOptions.Left);
         t.text = "◆ " + Loc.T(ko);
+        t.gameObject.AddComponent<LocRefresh>().refresh = () => t.text = "◆ " + Loc.T(ko);     // 1.5.6~ 언어를 바꾸면 다시 (창을 한 번만 만들어 「◆ 강화」 · 「◆ 물약」이 이전 언어로 남았음)
         // 1.1~ 구분선을 제목 아래(카드 밑에 깔려 토막난 금색 점처럼 보였음) → 제목 오른쪽 같은 줄, 창 안쪽 끝 30 앞까지
         float lineL = pos.x + 190f, lineR = -pos.x + 52f;
         // 1.4.8~ 새 도트 스타일: 금 장식선 그림(ui_divider · 양 끝이 빠지고 가운데 마름모) · 못 찾으면 예전 옅은 금 선
