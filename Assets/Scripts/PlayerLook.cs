@@ -20,6 +20,95 @@ public class PlayerLook : MonoBehaviour
     float swingT = 99f;
     float swingSign = 1f;
 
+    // 1.5.6~ 사용자 「무기별 동작도 각각」: 영웅 전용 무기로 진화하면 평타 때 손에 든 무기가 그 무기답게 움직임 (판정 · 시간은 그대로, 그림만)
+    //   Smash 내려찍기 · Lash 채찍질 · Thrust 찌르기 · Flick 손목 튕기기 · Toss 던지기 · Spin 돌리기 · Shake 흔들기 · Release 날려 보내기 · Whirl 크게 돌리기 · Pulse 부풀기
+    enum KitMove { None, Smash, Lash, Thrust, Flick, Toss, Spin, Shake, Release, Whirl, Pulse }
+    static KitMove MoveOf(int form) => form switch
+    {
+        SpecialAbilities.KitHammer => KitMove.Smash, SpecialAbilities.KitWhip => KitMove.Lash, SpecialAbilities.KitLance => KitMove.Thrust,
+        SpecialAbilities.KitBlowgun => KitMove.Thrust, SpecialAbilities.KitCards => KitMove.Flick, SpecialAbilities.KitWire => KitMove.Lash,
+        SpecialAbilities.KitJavelin => KitMove.Toss,          // 그물 활 · 연사 활은 궁수 시위 당기기(Draw)를 그대로
+        SpecialAbilities.KitQuicksilver => KitMove.Toss, SpecialAbilities.KitMagnet => KitMove.Pulse, SpecialAbilities.KitFirework => KitMove.Toss,
+        SpecialAbilities.KitSurveyChain => KitMove.Whirl, SpecialAbilities.KitInkpot => KitMove.Toss, SpecialAbilities.KitGlobe => KitMove.Spin,
+        SpecialAbilities.KitCuckoo => KitMove.Shake, SpecialAbilities.KitHourglass => KitMove.Spin, SpecialAbilities.KitGrandfather => KitMove.Shake,
+        SpecialAbilities.KitPigeon => KitMove.Release, SpecialAbilities.KitParcel => KitMove.Toss, SpecialAbilities.KitPostbox => KitMove.Smash,
+        SpecialAbilities.KitSoulChain => KitMove.Whirl, SpecialAbilities.KitIceGhost => KitMove.Pulse, SpecialAbilities.KitShadowGhost => KitMove.Pulse,
+        _ => KitMove.None,
+    };
+    static float MoveTime(KitMove m) => m switch
+    {
+        KitMove.Smash => 0.4f, KitMove.Lash => 0.34f, KitMove.Thrust => 0.26f, KitMove.Flick => 0.22f, KitMove.Toss => 0.34f,
+        KitMove.Spin => 0.36f, KitMove.Shake => 0.4f, KitMove.Release => 0.3f, KitMove.Whirl => 0.42f, _ => 0.32f,
+    };
+    int kitForm = -1;           // 지금 손에 든 전용 무기 (-1 = 기본 무기)
+    KitMove kitMove;            // 진행 중인 동작
+    float kitT = 99f;
+
+    // 동작 k(0~1) 에서 겨눈 방향 기준 각도 · 앞으로 내미는 거리 · 크기 배율
+    static void MovePose(KitMove m, float k, out float angle, out float push, out float scale)
+    {
+        angle = 0f; push = 0f; scale = 1f;
+        float back = 1f - k;
+        switch (m)
+        {
+            case KitMove.Smash:         // 뒤로 크게 들어 올렸다가(0~35%) 단숨에 내리찍고(35~50%) 잠깐 멈춘 뒤 돌아옴
+                if (k < 0.35f) angle = 110f * Mathf.SmoothStep(0f, 1f, k / 0.35f);
+                else if (k < 0.5f) angle = Mathf.Lerp(110f, -55f, (k - 0.35f) / 0.15f);
+                else if (k < 0.7f) angle = -55f;
+                else angle = Mathf.Lerp(-55f, 0f, Mathf.SmoothStep(0f, 1f, (k - 0.7f) / 0.3f));
+                scale = k >= 0.35f && k < 0.7f ? 1.25f : 1f + 0.15f * Mathf.Clamp01(k / 0.35f);
+                break;
+            case KitMove.Lash:          // 앞으로 쭉 뻗으며 물결치듯 꺾임
+                angle = 65f * Mathf.Sin(k * Mathf.PI * 3f) * back;
+                push = 0.35f * Mathf.Sin(k * Mathf.PI);
+                scale = 1f + 0.35f * Mathf.Sin(k * Mathf.PI);
+                break;
+            case KitMove.Thrust:        // 빠르게 찌르고(0~30%) 천천히 거둠
+                push = k < 0.3f ? 0.9f * (k / 0.3f) : 0.9f * (1f - Mathf.SmoothStep(0f, 1f, (k - 0.3f) / 0.7f));
+                break;
+            case KitMove.Flick:         // 손목을 위로 꺾었다가 아래로 튕김
+                angle = k < 0.3f ? 60f * (k / 0.3f) : Mathf.Lerp(60f, -35f, Mathf.Clamp01((k - 0.3f) / 0.25f)) * (k < 0.55f ? 1f : back / 0.45f);
+                break;
+            case KitMove.Toss:          // 뒤로 젖혔다가 앞으로 던지는 손짓
+                angle = k < 0.4f ? 100f * Mathf.SmoothStep(0f, 1f, k / 0.4f)
+                      : k < 0.6f ? Mathf.Lerp(100f, -30f, (k - 0.4f) / 0.2f)
+                      : Mathf.Lerp(-30f, 0f, (k - 0.6f) / 0.4f);
+                push = k >= 0.4f && k < 0.7f ? 0.3f : 0f;
+                break;
+            case KitMove.Spin:          // 손 안에서 한 바퀴
+                angle = 360f * Mathf.SmoothStep(0f, 1f, k);
+                scale = 1f + 0.2f * Mathf.Sin(k * Mathf.PI);
+                break;
+            case KitMove.Shake:         // 종 · 시계처럼 좌우로 흔듦
+                angle = 22f * Mathf.Sin(k * Mathf.PI * 8f) * back;
+                scale = 1f + 0.18f * back;
+                break;
+            case KitMove.Release:       // 위로 들어 날려 보냄
+                angle = 55f * Mathf.Sin(k * Mathf.PI);
+                push = 0.35f * Mathf.Sin(k * Mathf.PI);
+                break;
+            case KitMove.Whirl:         // 머리 위로 크게 한 바퀴 돌려 내던짐
+                angle = 360f * Mathf.SmoothStep(0f, 1f, k);
+                push = 0.45f * Mathf.Sin(k * Mathf.PI);
+                scale = 1f + 0.25f * Mathf.Sin(k * Mathf.PI);
+                break;
+            case KitMove.Pulse:         // 부풀었다 가라앉음
+                scale = 1f + 0.45f * Mathf.Sin(k * Mathf.PI);
+                push = 0.2f * Mathf.Sin(k * Mathf.PI);
+                break;
+        }
+    }
+
+    // 전용 무기 동작을 시작 (있으면 true — 기본 휘두르기 · 반동은 하지 않음)
+    bool StartKitMove()
+    {
+        KitMove m = kitForm >= 0 ? MoveOf(kitForm) : KitMove.None;
+        if (m == KitMove.None) return false;
+        kitMove = m;
+        kitT = 0f;
+        return true;
+    }
+
     // 무기마다: 반동 거리, 들리는 각도, 손에서 총구까지 길이
     float Recoil(int id) => id == -1 ? baseRecoil : id switch
     {
@@ -124,12 +213,18 @@ public class PlayerLook : MonoBehaviour
         }
 
         int id = CurrentWeapon;
-        if (id != shownWeapon)
+        // 1.5.6~ 사용자 「평타 메커니즘이 바뀌는 무기 진화(검사 - 망치)는 들고 있는 무기도 바뀌게」: 영웅 전용 무기로 진화하면(CharacterKit.form)
+        //   기본 무기 대신 그 무기 그림 (Weapons/weapon_kit_<번호>, 없으면 기본 무기 그대로)
+        CharacterKit kit = CharacterKit.Instance;
+        kitForm = id == -1 && kit != null && kit.form >= 0 && SpecialAbilities.IsKitWeapon(kit.form) ? kit.form : -1;
+        int shownKey = kitForm >= 0 ? 10000 + kitForm : id;
+        if (shownKey != shownWeapon)
         {
-            shownWeapon = id;
+            shownWeapon = shownKey;
             // 무기 스킨이 있으면 스킨 그림 (없으면 원래 그림)
             Sprite baseHeld = Resources.Load<Sprite>(SkinData.HeldSprite(CharacterData.Current.held ?? "pistol"))
                               ?? Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
+            if (kitForm >= 0) baseHeld = Resources.Load<Sprite>("Weapons/weapon_kit_" + kitForm) ?? baseHeld;
             // 다른 캐릭터의 특수 무기는 그림이 따로 없으면 기본 무기를 그대로 듦
             held.sprite = id >= 0 ? (Resources.Load<Sprite>("Weapons/weapon_" + id) ?? baseHeld)
                         : id == -1 ? baseHeld : null;
@@ -152,11 +247,19 @@ public class PlayerLook : MonoBehaviour
 
         bool left = aim.x < 0f;
         float swing = SwingOffset(dt, out float grow);
+        float movePush = 0f;
+        if (kitT < 1f)
+        {
+            kitT += dt / MoveTime(kitMove);
+            MovePose(kitMove, Mathf.Clamp01(kitT), out float ma, out movePush, out float ms);
+            swing += ma;
+            grow *= ms;
+        }
         float angle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg + (left ? -(kickAngle + swing) : kickAngle + swing);
         Vector3 hand = new Vector3(left ? -0.35f : 0.35f, -0.55f, 0f);
         // 최적화 29: 값이 바뀌었을 때만 씀 (가만히 겨누고 있으면 쓰지 않음)
         Transform ht = held.transform;
-        Vector3 pos = hand - (Vector3)(aim * (kick + 0.25f * drawAmount));
+        Vector3 pos = hand - (Vector3)(aim * (kick + 0.25f * drawAmount - movePush));
         Vector3 scale = Vector3.one * (grow * HeldScale(id) * (1f + 0.25f * drawAmount));
         if (pos != shownPos || angle != shownAngle || scale != shownScale)
         {
@@ -209,6 +312,7 @@ public class PlayerLook : MonoBehaviour
     public static void Swing(bool alt)
     {
         if (Instance == null) return;
+        if (Instance.StartKitMove()) { Instance.swingT = 99f; return; }      // 1.5.6~ 전용 무기는 그 무기 동작
         Instance.swingT = 0f;
         Instance.swingSign = alt ? 1f : -1f;
     }
@@ -232,6 +336,7 @@ public class PlayerLook : MonoBehaviour
 
     void OnFired(int id)
     {
+        if (id == -1 && StartKitMove()) { kick = 0f; kickAngle = 0f; return; }      // 1.5.6~ 전용 무기는 반동 대신 그 무기 동작
         kick = Recoil(id);
         kickAngle = Lift(id);
         Vector3 tip = Tip();
