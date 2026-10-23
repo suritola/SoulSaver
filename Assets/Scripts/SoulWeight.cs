@@ -205,7 +205,7 @@ public static class SoulWeight
             label.text = Loc.T("weight.title") + " <color=#F5D478>" + w + "</color>"
                        + (w > 0 ? "  <size=85%>" + PointText(w) + "</size>" : "")
                        + "  <size=85%><color=#A89C86>(" + Loc.T("weight.change") + ")</color></size>";
-            image.color = w > 0 ? new Color(0.62f, 0.45f, 0.85f) : new Color(0.45f, 0.42f, 0.52f);
+            if (UiRules.Legacy) image.color = w > 0 ? new Color(0.62f, 0.45f, 0.85f) : new Color(0.45f, 0.42f, 0.52f);     // 새 UI 는 석판 그림 그대로 (곱하면 탁해짐 · 무게는 금색 숫자로)
         }
     }
 

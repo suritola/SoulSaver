@@ -722,14 +722,15 @@ public static class MenuExtras
         // 영혼의 무게 (어려움일 때만 시작 바로 아래)
         RectTransform wr = parent.Find("SoulWeightButton") as RectTransform;
         bool weightOn = wr != null && SoulWeight.Unlocked && GameMode.Current == Difficulty.Hard;
+        // 1.5.6~ 옛 모습(가운데 글 · 보라 칠 · 높이 32)으로 메뉴 열 사이에 끼어 보였음 → 다른 메뉴 줄과 같은 석판 · 왼쪽 정렬 · 같은 간격
+        const float WeightH = 44f;
         if (wr != null)
         {
-            wr.anchorMin = wr.anchorMax = new Vector2(0f, 0.5f);
-            wr.pivot = new Vector2(0f, 0.5f);
-            wr.anchoredPosition = new Vector2(MainX, y - UiTokens.S1 - 16f);
-            wr.sizeDelta = new Vector2(MainW, 32f);
+            if (wr.GetComponent<UiFocusMark>() == null) UiV2.Restyle(wr.GetComponent<Button>(), UiV2.Kind.Secondary, UiTokens.Small);
+            LeftPlace(parent, "SoulWeightButton", y - MainRowGap - WeightH * 0.5f, WeightH, MainW, UiTokens.Small);
+            if (wr.GetComponentInChildren<TMP_Text>(true) is TMP_Text wt) { wt.enableWordWrapping = false; wt.overflowMode = TextOverflowModes.Ellipsis; }
         }
-        if (weightOn) y -= UiTokens.S1 + 32f;
+        if (weightOn) y -= MainRowGap + WeightH;
         y -= MainRowGap + MainRowH * 0.5f;
         foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
