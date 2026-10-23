@@ -277,7 +277,8 @@ public partial class CharacterKit
                 break;
             case SpecialAbilities.KitCards:
                 bool joker = Random.value < 0.12f;
-                if (sr != null) sr.color = joker ? new Color(1f, 0.85f, 0.3f, alpha) : new Color(1f, 0.55f, 0.6f, alpha);
+                // 2026-10-23~ 표창 대신 트럼프 카드 (조커는 광대 카드) — 그림만, 판정은 표창 원 그대로 (FormLook)
+                FormLook(b, joker ? "atk_jokercard" : "atk_card", new Color(1f, 1f, 1f, alpha));
                 if (joker)
                     b.onHitEnemy += (s, c) =>
                     {
@@ -300,6 +301,27 @@ public partial class CharacterKit
         return b;
     }
 
+    // 진화 형태 투사체의 그림만 바꿈 (도박 카드 · 투창)
+    //   판정(상자 · 원)은 Projectile 이 예전 그림(atk_shuriken 16x16 · atk_arrow 20x8)의 몸통으로 이미 맞췄고,
+    //   새 그림은 같은 칸 크기라 보이는 크기도 그대로 · 색까지 그린 그림이라 빛 무리 · 잔상만 영웅색 (keepColor)
+    static readonly List<FrameLoop> formLoops = new List<FrameLoop>(2);
+    static void FormLook(Bullet b, string look, Color color)
+    {
+        Sprite[] f = Fx.Frames(look);
+        if (b == null || f == null || f.Length == 0 || !b.TryGetComponent(out SpriteRenderer sr)) return;
+        sr.sprite = f[0];
+        sr.color = color;
+        b.GetComponents(formLoops);         // 다시 쓰는 탄은 지난 삶의 FrameLoop 가 프레임 끝까지 남아 있을 수 있음 → 모두
+        foreach (FrameLoop loop in formLoops) loop.frames = f;
+        formLoops.Clear();
+        if (b.TryGetComponent(out BulletGlow glow) && glow.styled)
+        {
+            glow.frames = f;
+            glow.coreFrames = null;
+            glow.keepColor = true;
+        }
+    }
+
     // ================================================================= 궁수
     // 화살 하나에 형태 · 강화 (UpdateBow 가 쏠 때마다)
     void ArrowForm(Bullet b, float draw, Vector3 start)
@@ -320,6 +342,8 @@ public partial class CharacterKit
                 if (draw >= 0.5f) b.pene += 1;
                 break;
             case SpecialAbilities.KitJavelin:
+                // 2026-10-23~ 화살 대신 투창 (그림만, 판정은 화살 상자 그대로 · 완벽 · 가득 당김 색은 살짝만 비침)
+                if (b.TryGetComponent(out SpriteRenderer jsr)) FormLook(b, "atk_javelin", Color.Lerp(Color.white, jsr.color, 0.35f));
                 if (draw < 1f) break;
                 b.pene = 9999;
                 b.hitOnce = new HashSet<int>();

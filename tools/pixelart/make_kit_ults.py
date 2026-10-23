@@ -1128,7 +1128,72 @@ def rail_ring():
     return out
 
 
+# ------------------------------------------------------------------ 평타 투사체: 도박 카드 형태 (예전 표창 atk_shuriken 과 같은 16x16 칸 · 판정은 표창 몸통 그대로)
+#   코드가 빙글 돌려서(spin) 그림은 카드 앞면 한 장 + 테가 반짝이는 장. 색까지 그린 그림이라 코드는 색을 곱하지 않음(keepColor)
+def card_face(joker):
+    W, EDGE, RED, RED2 = (250, 248, 240), (128, 104, 150), (220, 36, 60), (150, 20, 44)
+    GD, GD2, PUR, GRN = (252, 206, 70), (176, 120, 30), (140, 64, 190), (70, 186, 104)
+    out = []
+    for f in range(2):
+        img = blank(16, 16)
+        img.rect(3, 1, 10, 14, W)
+        rim = (GD2 if joker else EDGE) if f == 0 else (GD if joker else (236, 120, 200))
+        for x in range(4, 12):
+            img.set(x, 1, rim); img.set(x, 14, rim)
+        for y in range(2, 14):
+            img.set(3, y, rim); img.set(12, y, rim)
+        for x, y in ((3, 1), (12, 1), (3, 14), (12, 14)):
+            img.set(x, y, (0, 0, 0, 0))                      # 둥근 모서리
+        if not joker:
+            poly(img, [(5, 7), (11, 7), (8, 11.5)], RED)     # 하트
+            disc(img, 6.6, 6.6, 1.6, RED); disc(img, 9.4, 6.6, 1.6, RED)
+            img.set(8, 5, W)                                 # 하트 위 오목한 곳
+            img.set(6, 6, (255, 170, 180))                   # 하트 윤기
+            img.set(8, 11, RED2)
+            for x, y in ((4, 2), (4, 3), (5, 3), (11, 13), (11, 12), (10, 12)):
+                img.set(x, y, RED)                           # 모서리 표시
+        else:
+            # 조커: 세 갈래 광대 모자(보라 · 빨강 · 초록) + 금 방울 + 웃는 얼굴
+            poly(img, [(5, 8), (3.6, 2.6), (7.5, 7.5)], PUR)
+            poly(img, [(6.5, 7.5), (8, 2), (9.5, 7.5)], RED)
+            poly(img, [(8.5, 7.5), (12.4, 2.6), (11, 8)], GRN)
+            img.set(4, 2, GD); img.set(8, 2, GD); img.set(11, 2, GD)
+            img.rect(5, 7, 6, 1, GD2)
+            disc(img, 8, 10.4, 2.2, (255, 222, 196))
+            img.set(7, 9, RED2); img.set(9, 9, RED2)
+            img.set(6, 11, RED); img.set(7, 12, RED); img.set(8, 12, RED); img.set(9, 11, RED)
+        if f == 1:
+            img.set(10, 3, (255, 255, 255)); img.set(11, 2, (255, 255, 255))
+        out.append(img)
+    return out
+
+
+# ------------------------------------------------------------------ 평타 투사체: 투창 형태 (예전 화살 atk_arrow 와 같은 20x8 칸 · 판정은 화살 몸통 그대로, 오른쪽으로)
+def javelin_shot():
+    WD, WL, WK, GR, GR2, GD, ST, SL, SD = (164, 112, 62), (214, 166, 104), (96, 60, 32), (120, 58, 40), (82, 38, 26), (234, 188, 76), (206, 216, 232), (250, 252, 255), (98, 108, 132)
+    out = []
+    for f in range(2):
+        img = blank(20, 8)
+        line(img, 0, 3, 13, 3, WL)                       # 나무 자루 (윗줄 밝게)
+        line(img, 0, 4, 13, 4, WD)
+        img.set(0, 3, WK); img.set(0, 4, WK)
+        img.rect(5, 2, 3, 4, GR)                          # 가죽 손잡이
+        img.set(6, 2, GR2); img.set(6, 5, GR2)
+        img.rect(13, 2, 2, 4, GD)                         # 놋쇠 고리
+        poly(img, [(15, 1.2), (19.8, 3.5), (19.8, 4.5), (15, 6.8)], ST)    # 나뭇잎 모양 쇠 촉
+        line(img, 15, 4, 19, 4, SD)
+        line(img, 15, 3, 18, 3, SL)
+        if f == 1:
+            img.set(16, 2, (255, 255, 255)); img.set(17, 3, (255, 255, 255))
+        outline(img, (70, 44, 28))
+        out.append(img)
+    return out
+
+
 SHEETS = {
+    'atk_card': lambda: card_face(False),
+    'atk_jokercard': lambda: card_face(True),
+    'atk_javelin': javelin_shot,
     'fx_quake': quake,
     'fx_whipblade': whip_blade,
     'fx_lanceghost': lance_ghost,
