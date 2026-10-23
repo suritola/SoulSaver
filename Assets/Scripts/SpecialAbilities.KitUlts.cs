@@ -278,7 +278,7 @@ public partial class SpecialAbilities
                 for (int i = 0; i < 16; i++)
                 {
                     Vector2 d = Quaternion.Euler(0f, 0f, i * 22.5f) * dir;
-                    Bullet b = KitProjectile(player.transform.position, d, D, 9999, 24f, "fx_orb", 0.7f, new Color(0.85f, 0.9f, 1f), false);
+                    Bullet b = KitProjectile(player.transform.position, d, D, 9999, 24f, "fx_mercury", 0.7f, Color.white, false);     // 출렁이는 수은 방울 (예전 흰 구슬 fx_orb · 같은 16칸)
                     if (b != null) Quicksilver(b, evo ? 6 : 4, D);
                 }
                 fx.Play("glassclink", 0.8f, 0.8f);

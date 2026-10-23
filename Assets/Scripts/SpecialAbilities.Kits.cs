@@ -587,7 +587,7 @@ public partial class SpecialAbilities
     // 연금술사 자석: 한 점으로 적을 끌어당긴 뒤 터짐
     IEnumerator MagnetPull(Vector3 p, float r, float time, float dmg, int blasts, float blastR)
     {
-        Fx.Spawn("fx_vortex", p, r * 2f, new Color(0.7f, 0.6f, 1f, 0.8f), 16f, 0f, 12, true, time);
+        Fx.Spawn("fx_blackhole", p, r * 2f, Color.white, 12f, 0f, 12, true, time);       // 검은 핵 · 빨려 드는 나선 · 깨진 병 조각 (예전 보스 소용돌이 fx_vortex)
         fx.Play("hum", 0.5f, 1.4f);
         for (float t = 0f; t < time; t += Time.deltaTime)
         {
@@ -637,7 +637,7 @@ public partial class SpecialAbilities
             Vector3 q = at + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 1.8f;
             Color c = FireworkColors[i % FireworkColors.Length];
             DamageCircle(q, 1.4f, dmg, 0.8f);
-            Fx.Spawn("fx_explosion", q, 2.2f, c, 20f);
+            Fx.Spawn("fx_fwstar", q, 2.8f, c, 16f);         // 국화 모양 불꽃 (예전 폭발 fx_explosion)
         }
         Fx.Spawn("fx_sparkle", at, 3f, Color.white, 16f);
         fx.Play("boom", 0.4f, 1.5f);

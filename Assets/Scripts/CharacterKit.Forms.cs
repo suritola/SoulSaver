@@ -378,7 +378,7 @@ public partial class CharacterKit
         {
             using (var ovl = PhysHits.Circle(p, r * 2.2f)) foreach (Collider2D c in ovl)
                 if (c.CompareTag("enermy")) c.transform.position = Vector3.Lerp(c.transform.position, p, 0.7f);
-            Fx.Spawn("fx_shock", p, r * 4.4f, new Color(0.6f, 0.7f, 1f, 0.6f), 22f);
+            Fx.Spawn("fx_magfield", p, r * 4.4f, Color.white, 16f);      // 안으로 조여 드는 자기력선 · 말굽자석 (예전 충격파 고리 fx_shock)
         }
         if (form == SpecialAbilities.KitQuicksilver && depth < 1)
         {
@@ -393,7 +393,7 @@ public partial class CharacterKit
                 float a = i * 120f * Mathf.Deg2Rad + Random.Range(-0.3f, 0.3f);
                 Vector3 q = p + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * r * 1.5f;
                 DamageCircle(q, r * 0.5f, hit * 0.45f, 0.8f);
-                Fx.Spawn("fx_sparkle", q, r * 1.2f, Color.HSVToRGB(i / 5f, 0.6f, 1f), 20f);
+                Fx.Spawn("fx_fwstar", q, r * 1.2f, Color.HSVToRGB(i / 5f, 0.6f, 1f), 18f);       // 국화 모양 불꽃 (예전 반짝임 fx_sparkle)
             }
         }
         if (augment == AugDouble) StartCoroutine(SecondBlast(p, r * 0.8f, hit * 0.6f));
