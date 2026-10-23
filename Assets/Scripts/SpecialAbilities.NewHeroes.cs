@@ -144,7 +144,8 @@ public partial class SpecialAbilities
                         foreach (Transform t in bound)
                         {
                             if (t == null) continue;
-                            if (k == 0) Fx.Bolt(c, t.position, 0.5f, new Color(0.75f, 0.95f, 1f), 0.3f);
+                            if (k == 0) Fx.Links("fx_soullink", c, t.position, 0.45f, Color.white, 0.4f, 22);     // 영혼 사슬 고리 (예전 번개 Fx.Bolt)
+                            Fx.Spawn("fx_soulshackle", t.position, 1.6f, Color.white, 12f);                         // 조여 드는 족쇄
                             Specials.Damage(t.gameObject, D * 0.7f, Vector3.zero, 0f);
                             if (t != null && t.TryGetComponent(out EnermyController e)) e.Slow(0.5f, 0.6f);
                         }
@@ -164,8 +165,7 @@ public partial class SpecialAbilities
                         Specials.Damage(col.gameObject, D * 3f, (col.transform.position - c).normalized, 0f);
                         if (col != null && col.TryGetComponent(out EnermyController e)) e.Slow(0f, 2f);
                     }
-                    Fx.Spawn("fx_shock", c, r * 2.2f, new Color(0.7f, 0.95f, 1f, 0.85f), 16f);
-                    Fx.Spawn("fx_cloud", c, r * 2f, new Color(0.85f, 0.97f, 1f, 0.6f), 10f);
+                    Fx.Spawn("fx_icenova", c, r * 2.2f, Color.white, 14f);      // 땅에서 솟는 얼음 가시 테 · 눈 결정 (예전 충격파 고리 + 화면을 덮던 구름)
                     fx.Play("shatter", 0.9f, 0.6f);
                     Hostile.Shake(0.25f);
                     break;
@@ -174,7 +174,7 @@ public partial class SpecialAbilities
                 {
                     // 그림자 군단: 그림자 넷이 둘레에서 손길
                     List<FxAnim> shades = new List<FxAnim>();
-                    for (int i = 0; i < 4; i++) shades.Add(Fx.Play("fx_stealth", player.transform.position, 2.4f, new Color(0.4f, 0.5f, 0.8f, 0.8f), 10f, 0f, 18, true, 3f));
+                    for (int i = 0; i < 4; i++) shades.Add(Fx.Play("fx_shade", player.transform.position, 2.4f, Color.white, 8f, 0f, 18, true, 3f));        // 두건 쓴 그림자 (예전 보라 연기 fx_stealth)
                     for (float t = 0f; t < 3f; t += 0.4f)
                     {
                         Vector3 c = player.transform.position;
@@ -185,7 +185,7 @@ public partial class SpecialAbilities
                             if (shades[i] != null) shades[i].transform.position = sp;
                             Transform target = Specials.NearestEnemy(sp, 6f);
                             if (target == null) continue;
-                            Fx.Beam(sp, target.position, 0.6f, new Color(0.5f, 0.6f, 0.95f, 0.8f), 0.15f);
+                            Fx.Stretch("fx_tendril", sp, target.position, 0.6f, Color.white, 0.2f, 14, 24f);      // 꿈틀대는 그림자 손길 (예전 단색 선 Fx.Beam)
                             Specials.Damage(target.gameObject, D * 0.8f, (target.position - sp).normalized, 0.5f);
                         }
                         fx.Play("whoosh", 0.3f, 0.8f);

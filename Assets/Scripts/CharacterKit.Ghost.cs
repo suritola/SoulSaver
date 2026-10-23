@@ -89,7 +89,7 @@ public partial class CharacterKit
                 Transform other = NearestOther(c.transform.position, 6f, c.transform, dir, 360f);
                 if (other != null)
                 {
-                    Fx.Bolt(c.transform.position, other.position, 0.5f, Wraith);
+                    Fx.Links("fx_soullink", c.transform.position, other.position, 0.4f, Color.white, 0.25f, 22);      // 영혼 사슬 고리 (예전 번개 Fx.Bolt)
                     Specials.Damage(other.gameObject, dmg * 0.4f * formPower, Vector3.zero, 0f);
                 }
             }
