@@ -480,7 +480,12 @@ public partial class SpecialAbilities : MonoBehaviour
                             Vector2 d = Quaternion.Euler(0, 0, i * half / 2.2f) * dir;
                             Fx.Spawn("fx_explosion", start + (Vector3)(d * range * k / 3.4f), 2.2f + k * 0.9f, Color.white, 14f + Random.Range(0f, 6f));
                         }
-                    Fx.Spawn("fx_shock", start, 7f, c, 20f);
+                    float fan = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                    for (int i = -1; i <= 1; i++)           // 총구에서 뿜는 지옥불 혀 셋 (예전 충격파 고리 fx_shock)
+                    {
+                        Vector2 fd = Quaternion.Euler(0, 0, i * 22f) * dir;
+                        Fx.Spawn("fx_flametongue", start + (Vector3)(fd * 2.2f), 3.6f, Color.white, 18f, fan + i * 22f - 90f, 15);
+                    }
                     Fx.Spawn("fx_explosion", start + (Vector3)(dir * 2f), 5f, Color.white, 18f);
                     Fx.Spawn("fx_muzzle", start + (Vector3)(dir * 0.8f), 4f, c, 20f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg, 16);
                     fx.Play("shotgun", 1f, 0.9f - blast * 0.05f);
@@ -525,9 +530,11 @@ public partial class SpecialAbilities : MonoBehaviour
                         WeakHit.Damage(col.gameObject, WeakShape.Segment(from, to, 0.6f * wide, 1.75f), dmg * power, (to - from).normalized, 2f);
                         Fx.Spawn("fx_spark", col.transform.position, 2f, c, 20f);
                     }
-                    Fx.Spawn("fx_shock", from, 6f, c, 22f);
+                    // 광선을 감는 전자기 고리 (옆에서 본 끊긴 고리 · 예전 위에서 본 충격파 고리 fx_shock)
+                    float railRot = Mathf.Atan2(to.y - from.y, to.x - from.x) * Mathf.Rad2Deg;
+                    Fx.Spawn("fx_railring", from, 6f, c, 16f, railRot, 17);
                     for (float k = 4f; k < 45f; k += 5f)
-                        Fx.Spawn("fx_shock", from + (to - from).normalized * k, 3.5f * wide, c, 18f + k * 0.3f);
+                        Fx.Spawn("fx_railring", from + (to - from).normalized * k, 3.5f * wide, c, 12f + k * 0.2f, railRot, 17);
                     Fx.Spawn("fx_explosion", to - (to - from).normalized * 2f, 4f, Color.white, 16f);
                     fx.Play("railgun", 1f, 1f);
                     fx.Play("crack", 0.8f, 0.6f);
@@ -583,7 +590,8 @@ public partial class SpecialAbilities : MonoBehaviour
                     fx.Play("bigboom", 0.7f, 0.8f);
                     fx.Play("roar", 1f, 0.9f);
                     Fx.Spawn("fx_explosion", go.transform.position, 6f, Color.white, 14f);
-                    Fx.Spawn("fx_shock", go.transform.position, 9f, new Color(1f, 0.5f, 0.15f), 16f);
+                    for (int i = 0; i < 6; i++)             // 둘레에서 솟는 불길 여섯 (예전 충격파 고리 fx_shock)
+                        Fx.Spawn("fx_flametongue", go.transform.position + Quaternion.Euler(0f, 0f, i * 60f) * Vector3.right * 3f, 3f, Color.white, 16f);
                     fx.Shake(0.4f, 0.2f);
                 }
                 break;
