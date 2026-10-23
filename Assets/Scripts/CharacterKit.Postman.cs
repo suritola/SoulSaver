@@ -100,8 +100,8 @@ public partial class CharacterKit
         bool art = !pigeon && Fx.Frames("atk_letter").Length > 0;
         float mul = AttackLook.BigMul(AttackLook.Tier);
         FxAnim a = heavy ? PostParcelFx(from, (route.big ? 1.9f : 1.4f) * mul, 8f)
-                 : Fx.Play(pigeon ? "fx_falcon" : art ? "atk_letter" : "fx_card", from, (pigeon ? 1.4f : (parcel ? 1.1f : 0.9f)) * mul,
-                           pigeon ? new Color(0.9f, 0.9f, 1f) : (parcel ? new Color(0.85f, 0.65f, 0.45f) : SkinFx.Tint(Letter)), 16f, 0f, AttackLook.Order, true, 3f);
+                 : Fx.Play(pigeon ? "fx_pigeon" : art ? "atk_letter" : "fx_card", from, (pigeon ? 1.4f : (parcel ? 1.1f : 0.9f)) * mul,
+                           pigeon ? Color.white : (parcel ? new Color(0.85f, 0.65f, 0.45f) : SkinFx.Tint(Letter)), 16f, 0f, AttackLook.Order, true, 3f);
         if (a != null && !heavy)
         {
             BulletGlow glow = a.gameObject.AddComponent<BulletGlow>();
@@ -211,7 +211,8 @@ public partial class CharacterKit
             bool box = form == SpecialAbilities.KitParcel;
             float r = (card[1] > 0 ? 0.8f + 0.4f * card[1] : 1.2f) * (box && card[1] > 0 ? 1.15f : 1f) * SignatureSkills.ParcelMul();
             DamageCircle(at, r, dmg * (box ? 0.6f + 0.1f * card[1] : 0.5f), 1f);
-            Fx.Spawn("fx_explosion", at, r * 2f, new Color(0.9f, 0.7f, 0.45f), 20f);
+            if (box) Fx.Spawn("fx_parcelburst", at, r * 2f, Color.white, 18f);      // 소포 상자: 터지는 상자 · 완충재 (예전 폭발)
+            else Fx.Spawn("fx_explosion", at, r * 2f, new Color(0.9f, 0.7f, 0.45f), 20f);
         }
         bool killed = wasAlive && g != null && g.TryGetComponent(out EnermyController e2) && e2.IsDead;
         // 순회 배달: 다음 받는 이로 이어 감 (이어 가면 등기 · 반송은 순회가 끝난 마지막 받는 이에서만)
@@ -288,7 +289,7 @@ public partial class CharacterKit
 
     IEnumerator Postbox(Vector3 at, float life)
     {
-        FxAnim box = Fx.Play("fx_keycap", at, 1.4f, PostRed, 8f, 0f, 8, true, life);
+        FxAnim box = Fx.Play("fx_postbox", at, 1.8f, Color.white, 6f, 0f, 8, true, life);       // 빨간 우체통 (예전 「SPACE」 키캡 fx_keycap 을 빨갛게 칠해 썼음)
         for (float t = 0f; t < life; t += 0.6f)
         {
             Transform target = Specials.NearestEnemy(at, 10f);

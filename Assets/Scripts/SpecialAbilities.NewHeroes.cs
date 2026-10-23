@@ -105,7 +105,7 @@ public partial class SpecialAbilities
                     {
                         Vector2 d = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f)) * dir;
                         Bullet b;
-                        using (WeakHit.AimScope(1.75f)) b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_falcon", 1.1f, new Color(0.92f, 0.92f, 1f), false);     // 빈틈: 커서 쪽으로 곧게 (±25° 라 CreateBullet 의 25° 규칙 안 · yield 앞에서 닫힘)
+                        using (WeakHit.AimScope(1.75f)) b = KitProjectile(player.MuzzlePosition, d, D * 0.9f, 2, 26f, "fx_pigeon", 1.1f, Color.white, false);     // 빈틈: 커서 쪽으로 곧게 (±25° 라 CreateBullet 의 25° 규칙 안 · yield 앞에서 닫힘)
                         if (b != null) b.lifetime = (evo ? 20f : 16f) / 26f;
                         if (i % 4 == 0) fx.Play("pop", 0.3f, 1.8f);
                         yield return new WaitForSeconds(0.05f);
@@ -122,6 +122,7 @@ public partial class SpecialAbilities
                         Vector3 p = KitClamp(at + (Vector3)(Random.insideUnitCircle * r));
                         Friendly.Circle(p, 1.8f, 0.35f, new Color(0.9f, 0.7f, 0.45f, 0.8f));
                         StartCoroutine(ParcelDrop(p, D * 1.8f));
+                        StartCoroutine(ParcelFall(p));          // 그림만: 떨어지는 상자 (터지는 시각 · 피해는 ParcelDrop 그대로)
                         yield return new WaitForSeconds(0.1f);
                     }
                     break;
@@ -254,8 +255,20 @@ public partial class SpecialAbilities
     {
         yield return new WaitForSeconds(0.35f);
         DamageCircle(p, 1.8f, dmg, 2f);
-        Fx.Spawn("fx_explosion", p, 4f, new Color(0.95f, 0.7f, 0.4f), 18f);
+        Fx.Spawn("fx_parcelburst", p, 4f, Color.white, 16f);      // 터지는 상자 · 완충재 · 골판지 조각 (예전 폭발 fx_explosion)
         fx.Play("boom", 0.35f, 1.4f);
+    }
+
+    // 택배 폭격 그림: 0.35초 동안 하늘에서 상자가 떨어짐 (ParcelDrop 이 같은 0.35초 뒤 터뜨림)
+    IEnumerator ParcelFall(Vector3 p)
+    {
+        FxAnim box = Fx.Play("fx_parcelbox", p + Vector3.up * 7f, 1.6f, Color.white, 10f, 0f, 20, true, 0.4f);
+        for (float t = 0f; t < 0.33f && box != null; t += Time.deltaTime)
+        {
+            box.transform.position = Vector3.Lerp(p + Vector3.up * 7f, p, t / 0.33f);
+            yield return null;
+        }
+        if (box != null) Destroy(box.gameObject);
     }
 
     static bool InTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
