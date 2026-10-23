@@ -169,7 +169,7 @@ public partial class CharacterKit
         foreach (Transform t in SignatureSkills.Nearest(from, 10f, n))
         {
             if (t == null) continue;
-            Fx.Spawn("fx_falcon", t.position, 2f, new Color(0.9f, 0.7f, 0.45f), 20f);
+            Fx.Spawn("fx_cuckoo", t.position, 2f, Color.white, 16f);        // 뻐꾸기 (예전 매 fx_falcon)
             Specials.Damage(t.gameObject, Damage * formPower, Vector3.zero, 0.5f);
             Play("pop", 0.4f, 1.8f);
             yield return new WaitForSeconds(0.1f);

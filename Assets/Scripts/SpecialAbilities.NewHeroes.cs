@@ -204,7 +204,7 @@ public partial class SpecialAbilities
                     {
                         Transform t = targets.Count > 0 ? targets[i % targets.Count] : null;
                         if (t == null) break;
-                        Fx.Spawn("fx_falcon", t.position, 2.2f, new Color(0.9f, 0.7f, 0.45f), 20f);
+                        Fx.Spawn("fx_cuckoo", t.position, 2.2f, Color.white, 16f);     // 뻐꾸기 (예전 매 fx_falcon)
                         Specials.Damage(t.gameObject, D * 1.5f, (t.position - player.transform.position).normalized, 1f);
                         fx.Play("pop", 0.4f, 1.6f + 0.05f * i);
                         yield return new WaitForSeconds(0.08f);
@@ -216,7 +216,7 @@ public partial class SpecialAbilities
                     // 모래 폭풍: 마우스 자리에 4초 회오리 (끌어당기며 벰)
                     Vector3 at = KitClamp(mouse);
                     float r = evo ? 7f : 6f;
-                    FxAnim storm = Fx.Play("fx_tornado", at, r * 1.8f, new Color(1f, 0.85f, 0.55f, 0.85f), 14f, 0f, 14, true, 4f);
+                    FxAnim storm = Fx.Play("fx_sandstorm", at, r * 2.1f, Color.white, 10f, 0f, 14, true, 4f);       // 모래 알갱이 회오리 · 가운데 모래시계 (테 = 범위, 예전 회오리 기둥 fx_tornado)
                     for (float t = 0f; t < 4f; t += 0.3f)
                     {
                         using (var ovl = PhysHits.Circle(at, r)) foreach (Collider2D col in ovl)
@@ -240,7 +240,7 @@ public partial class SpecialAbilities
                     {
                         Vector3 c = player.transform.position;
                         DamageCircle(c, r, D * 0.8f, 1.5f);
-                        ShockRing.Spawn(c, 0.5f, r, 0.35f, new Color(1f, 0.8f, 0.4f, 0.85f), 0.22f);
+                        Fx.Spawn("fx_chimering", c, r * 2.1f, Color.white, 17f);       // 열두 눈금 시계판이 퍼짐 · 흔들리는 종 (예전 고리 ShockRing)
                         fx.Play("chime", 0.45f, 0.5f + 0.04f * i);
                         yield return new WaitForSeconds(0.13f);
                     }
