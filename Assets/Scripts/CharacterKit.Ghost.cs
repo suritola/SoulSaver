@@ -25,6 +25,10 @@ public partial class CharacterKit
     // 갈래 혹한: 손길 +1칸
     float HandReach => 4.5f + card[0] + (Paths.Has(GhostPaths.Frost) ? GhostPaths.FrostReach : 0f);
     public bool IsFrozen(GameObject g) => g != null && frozenUntil.TryGetValue(g, out float t) && t > Time.time;
+    // 1.5.8~ 산산조각: 얼음이 녹고 나서도 잠깐은 부서짐 — 대가(얼어붙는 시간 절반 = 0.5초)로 얼음이 다음 손길 전에 녹아 버려,
+    //   얼린 손길 바로 다음 손길조차 거의 닿지 못해 잡몹 즉사가 안 되는 것처럼 보였음 (사용자 「산산조각 갈래도 잡몹 즉사가 적용이 안되는거같애」)
+    public const float BrittleGrace = 0.8f;
+    public bool IsBrittle(GameObject g) => g != null && frozenUntil.TryGetValue(g, out float t) && t + BrittleGrace > Time.time;
     public int ChillOf(GameObject g) => g != null && chill.TryGetValue(g, out int n) ? n : 0;
 
     // 영혼 (도깨비불)
@@ -78,7 +82,7 @@ public partial class CharacterKit
             GameObject g = c.gameObject;
             if (!ghostOnce.Add(g)) continue;        // 콜라이더가 여럿인 적도 손 하나에 한 번만
             // 갈래 산산조각: 얼어붙은 적을 손길로 치면 부서짐 (잡몹 즉사 · 큰 적 체력 비례 · 보스는 균열로 따로)
-            if (IsFrozen(g)) GhostPaths.TryShatter(this, g, dir);
+            if (IsBrittle(g)) GhostPaths.TryShatter(this, g, dir);
             // 빈틈: 커서 쪽으로 뻗은 주 손길만 (그림자 손 · 영혼 사슬 번개는 제외)
             if (main) WeakHit.Damage(g, WeakShape.Segment(start, end, halfW, 1.75f), dmg * formPower, dir, 0.6f);
             else Specials.Damage(g, dmg * formPower, dir, 0.6f);

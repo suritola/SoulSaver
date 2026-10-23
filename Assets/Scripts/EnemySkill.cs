@@ -36,8 +36,16 @@ public class EnemySkill : MonoBehaviour
     readonly List<GameObject> owned = new List<GameObject>();
     GameObject Own(GameObject g) { if (g != null) owned.Add(g); return g; }
 
+    void ReleaseAbyss()
+    {
+        if (!abyssCounted) return;
+        abyssCounted = false;
+        abyssCasting = Mathf.Max(0, abyssCasting - 1);
+    }
+
     void OnDisable()
     {
+        ReleaseAbyss();
         foreach (GameObject g in owned) if (g != null) Destroy(g);
         owned.Clear();
     }
@@ -95,12 +103,19 @@ public class EnemySkill : MonoBehaviour
         _ => false,
     };
 
+    // 1.5.8~ 4장 잡몹 넷은 사거리가 길고 예고가 커서 무리가 한꺼번에 쓰면 화면이 예고로 덮였음 → 동시에 3마리까지 (중간 보스는 빼고)
+    const int MaxAbyssCasting = 3;
+    static int abyssCasting;
+    bool abyssCounted;
+    bool IsAbyssSkill => type >= EnemySkillType.ChainPull && type <= EnemySkillType.Fissure && !enemy.IsMidBoss;
+
     void Update()
     {
         if (busy || !Alive || type == EnemySkillType.None) return;
         PlayerController p = Hostile.Player;
         if (p == null || Time.time < next) return;
         if (!InRange(Vector2.Distance(transform.position, p.transform.position))) return;
+        if (IsAbyssSkill && abyssCasting >= MaxAbyssCasting) { next = Time.time + Random.Range(0.3f, 0.8f); return; }
 
         next = Time.time + cooldown * Random.Range(0.85f, 1.2f) * (enemy.survivesContact ? 0.7f : 1f);
         StartCoroutine(Run(p));
@@ -130,6 +145,7 @@ public class EnemySkill : MonoBehaviour
     {
         busy = true;
         enemy.casting = true;
+        if (IsAbyssSkill) { abyssCasting++; abyssCounted = true; }
         // 1단계-12~ 스킬 이름표: 모든 적이 쓸 때마다 뜨던 것 → 중간 보스이거나, 그 스킬을 처음 3번 볼 때만 (무리 위 빨간 글자 잡음)
         GameObject tag = VisualRules.Legacy || enemy.IsMidBoss || NameSeen(type) ? Own(SkillTag.Show(transform, Loc.T(SkillName(type)) + "!", 1.6f * Size + 1.5f)) : null;
         IEnumerator routine = type switch
@@ -154,6 +170,7 @@ public class EnemySkill : MonoBehaviour
             _ => null,
         };
         if (routine != null) yield return StartCoroutine(routine);
+        ReleaseAbyss();
         if (tag != null) Destroy(tag);
         if (enemy != null) enemy.casting = false;
         if (sr != null && Alive) sr.color = enemy.baseColor;
@@ -503,6 +520,9 @@ public class EnemySkill : MonoBehaviour
     // ================================================================= 4장 심연 (2.1.1)
     static readonly Color Soul = new Color(0.55f, 0.92f, 1f, 0.9f);
     static readonly Color Void = new Color(0.72f, 0.4f, 1f, 0.9f);
+    // 1.5.8~ 예고 색도 스킬마다 다르게 (사슬 = 쇳빛 · 시선 = 보라 · 베기 = 하늘 · 균열 = 청록 · AbyssWarn)
+    static readonly Color Steel = new Color(0.85f, 0.88f, 1f, 0.9f);
+    static readonly Color Rift = new Color(0.35f, 1f, 0.75f, 0.9f);
 
     // 사슬 망령: 경로를 보여 준 뒤 사슬을 던져, 맞으면 끌어당김 (적 앞 2.5칸까지만 · 끌린 뒤 피할 틈이 있게)
     IEnumerator ChainPull(PlayerController p)
@@ -511,8 +531,8 @@ public class EnemySkill : MonoBehaviour
         const float length = 11f;
         Vector3 start = transform.position;
         Vector3 end = start + (Vector3)(dir * length);
-        Hostile.Line(start, end, 1.3f, Tw(0.7f), Void);
-        yield return Windup(Void, 0.7f);
+        Own(AbyssWarn.Chain(start, end, 1.5f, Tw(0.7f), Steel, enemy));
+        yield return Windup(Steel, 0.7f);
         if (!Alive) yield break;
 
         Hostile.Play("clank", 0.5f, 0.8f);
@@ -550,11 +570,7 @@ public class EnemySkill : MonoBehaviour
         const float length = 13f;
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         float sweep = Random.value < 0.5f ? 40f : -40f;
-        for (int i = -1; i <= 1; i += 2)
-        {
-            float a = (baseAngle + sweep * 0.5f * i) * Mathf.Deg2Rad;
-            Hostile.Line(transform.position, transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length, 0.8f, Tw(0.85f), Void);
-        }
+        Own(AbyssWarn.Fan(transform.position, length, baseAngle - sweep * 0.5f, sweep, Tw(0.85f), Void, enemy));
         yield return Windup(Void, 0.85f, 10f);
         if (!Alive) yield break;
 
@@ -576,14 +592,13 @@ public class EnemySkill : MonoBehaviour
     {
         float r1 = 3.2f * Size, r2 = 5f * Size;
         Vector3 c = transform.position;
-        Hostile.Circle(c, r1, Tw(0.6f), Soul);
+        Own(AbyssWarn.Reap(c, r1, r2, Tw(0.6f), 0.45f, Soul, enemy));
         yield return Windup(Soul, 0.6f);
         if (!Alive) yield break;
         Fx.Spawn("fx_slash", c, r1 * 2.2f, new Color(0.7f, 0.95f, 1f), 30f, Random.Range(0f, 360f), 14);
         Hostile.HitCircle(c, r1, Dmg);
         Hostile.Play("whoosh", 0.6f, 0.8f);
 
-        Hostile.Circle(c, r2, 0.45f, Soul);
         yield return new WaitForSeconds(0.45f);
         if (!Alive) yield break;
         Fx.Spawn("fx_slash", c, r2 * 2.2f, new Color(0.7f, 0.95f, 1f), 30f, Random.Range(0f, 360f), 14);
@@ -610,9 +625,9 @@ public class EnemySkill : MonoBehaviour
         {
             float a = (baseAngle + (k - 1) * 22f) * Mathf.Deg2Rad;
             dirs[k] = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-            Hostile.Line(c + (Vector3)(dirs[k] * 1.5f), c + (Vector3)(dirs[k] * (1.5f + spacing * count)), 1.4f, Tw(0.8f), Soul);
         }
-        yield return Windup(Soul, 0.8f, 5f);
+        Own(AbyssWarn.Crack(c, dirs, 0.5f, 1.5f + spacing * (count - 1) + 1f, 2f, Tw(0.8f), Rift, enemy));
+        yield return Windup(Rift, 0.8f, 5f);
         if (!Alive) yield break;
         Hostile.Shake(0.15f);
         bool hit = false;
