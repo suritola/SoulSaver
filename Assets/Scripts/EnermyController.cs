@@ -491,7 +491,9 @@ public class EnermyController : MonoBehaviour
     public void Purge()
     {
         if (isDead) return;
-        Fx.Spawn("fx_soulburst", transform.position, 2.6f * Mathf.Max(1f, transform.localScale.x / 3f), new Color(0.75f, 0.95f, 1f), 18f);
+        // 1.6.0~ 보스를 쓰러뜨린 피해 호출 안이라 「내 것」으로 잡혔음 → 처치 연출(Juice)처럼 출처 「기타」 (적 위 · 불투명도 그대로)
+        using (DamageSource.As(DamageSource.Other))
+            Fx.Spawn("fx_soulburst", transform.position, 2.6f * Mathf.Max(1f, transform.localScale.x / 3f), new Color(0.75f, 0.95f, 1f), 18f);
         SoulWisp.Spawn(transform.position, transform.position + Vector3.up * 3f + (Vector3)(Random.insideUnitCircle * 1.5f), new Color(0.7f, 0.95f, 1f), true);
         Die(0);
     }
@@ -515,7 +517,9 @@ public class EnermyController : MonoBehaviour
     }
 
     // 그래픽 개편 1단계-10 (2026-10-22~): 피격 빨강 → 몸을 어둡게 물들임 (계속 맞는 무리가 시뻘건 덩어리가 되어 적 시전 깜빡임 · 위험색과 섞였음)
-    Color HitTint => VisualRules.Legacy ? Color.red : new Color(baseColor.r * 0.55f, baseColor.g * 0.4f, baseColor.b * 0.42f, baseColor.a);
+    // 1.6.0~ 어둡게(밝기 약 45%)가 초원 잡몹을 바닥 명도까지 떨어뜨려 붙는 무리가 바닥에 묻혔음 → 밝기만 ×0.78 (rgb 같은 배율 · 색상 · 알파 그대로)
+    //   늘 baseColor 에서 새로 곱하므로 쌓이지 않음 · 코루틴 끝 · 꺼짐 · 사망 때 baseColor 로 되돌림
+    Color HitTint => VisualRules.Legacy ? Color.red : new Color(baseColor.r * VisualRules.HitDim, baseColor.g * VisualRules.HitDim, baseColor.b * VisualRules.HitDim, baseColor.a);
 
     IEnumerator HitEffect()
     {
@@ -564,6 +568,7 @@ public class EnermyController : MonoBehaviour
         if (!hitFxRunning) return;
         hitFxRunning = false;
         Juice.SetFlash(spriteRenderer, false);
+        if (!isDead && spriteRenderer != null) spriteRenderer.color = baseColor;     // 1.6.0~ 피격 꼬리 색이 남은 채 꺼지면 다시 켜질 때 어두운 채로 남지 않게
     }
 
     void LateUpdate()

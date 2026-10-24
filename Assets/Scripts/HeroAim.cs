@@ -31,8 +31,11 @@ public static class HeroAim
     }
 
     // 영웅 범위표시 대표색 (예전엔 여러 영웅이 하늘 · 초록 계열로 겹쳐 비슷해 보였음) · 판정 · 효과 색은 그대로
+    //   1.6.0~ 가독성 개편 1-D: CharacterData 의 영웅색 한 벌 + 색각 모드 보정(VisualRules.AllyCb) — 예전 도적 보라 · 연금술사 자홍 · 우체부 빨강은
+    //     적대 대역(265°~25°)이라 적 예고와 헷갈렸음. VisualRules.Legacy 면 아래 예전 값
     public static Color ColorOf(HeroAimKind k)
     {
+        if (!VisualRules.Legacy && k != HeroAimKind.None) return VisualRules.AllyCb(CharacterData.Ally((CharacterId)((int)k - 1)));
         switch (k)
         {
             case HeroAimKind.Gunner: return new Color(1f, 0.62f, 0.25f);

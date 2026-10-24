@@ -23,7 +23,10 @@ public class CharacterDef
     public int price;               // 0 = 처음부터, -1 = 준비 중
     public CharUnlock condition;     // 살 수 있게 되는 조건 (None = 바로 살 수 있음)
     public int[] pool;              // 지옥의 문에서 고를 수 있는 특수 능력 (무기 · 스킬 · 패시브)
-    public Color color = Color.white;
+    public Color legacyColor = Color.white;   // 개편 전 대표색 (VisualRules.Legacy) — 목록의 color = … 가 여기에 들어감
+    public Color ally;                        // 1.6.0~ 가독성 개편 1-D: 영웅색 한 벌 (CharacterData.Ally · AttackLook · HeroAim 이 같은 표) · 알파 0 = 없음
+    // 영웅 고르기 · 도감 · 발 고리 · 필살기 연출이 읽는 대표색. 색각 모드에서도 그대로 (전투색만 VisualRules.AllyCb)
+    public Color color { get => VisualRules.Legacy || ally.a <= 0f ? legacyColor : ally; set => legacyColor = value; }
 }
 
 public static class CharacterData
@@ -35,7 +38,7 @@ public static class CharacterData
             description = "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "일제 사격", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
-            damage = 3.5f, attackSpeed = 1.25f, gauge = 0.8f, sig = 2.6f, special = 2.6f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f) },     // 1.4.2~ ×1.3: 공격력 2.7 → 3.5 · 고유 2 → 2.6 · 특수 2 → 2.6 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 공격력 1.15 → 1.7 (사용자 「유령에 맞춰 버프 · 다른 애들 딜이 너무 약함」)
+            damage = 3.5f, attackSpeed = 1.25f, gauge = 0.8f, sig = 2.6f, special = 2.6f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f), ally = new Color(1f, 0.79f, 0.3f) },     // 1.6.0~ 금 #FFC94D     // 1.4.2~ ×1.3: 공격력 2.7 → 3.5 · 고유 2 → 2.6 · 특수 2 → 2.6 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 공격력 1.15 → 1.7 (사용자 「유령에 맞춰 버프 · 다른 애들 딜이 너무 약함」)
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",
             description = "무겁고 느리지만 한 번에 여럿을 베는 장검의 달인.",
@@ -45,28 +48,28 @@ public static class CharacterData
                  // 1.0.1: 체력 200 → 130 (혈갑과 함께 절대 안 죽던 것), 공격력 4 → 3.4 (딜 상승폭 하향)
                                                                  // 1.1.3: 3.4 → 3.1 — 근접이라 다른 영웅보다 +30~50% 빠른 처치는 정상으로 보되, 보스 처치가 원거리 중앙값의 2배 · 사망률은 가장 낮아 그 넘는 몫만 (SigPower 2 → 1.7 · 회전 베기 · 휘두름 보호 · 회복과 함께)
             gauge = 0.75f, range = 5.5f, price = 0, pool = Pool(20, 52, 53),
-            color = new Color(0.45f, 0.6f, 1f) },
+            color = new Color(0.45f, 0.6f, 1f), ally = new Color(0.4f, 0.78f, 1f) },     // 1.6.0~ 하늘 #66C7FF
         new CharacterDef {
             name = "도적", title = "그림자 칼날", body = "rogue", held = "shuriken",
             description = "약하지만 빠른 표창 세례와 그림자 돌진으로 싸우는 암살자.",
             weapon = "표창", attack = "끝없이 날아가는 표창",
             skill = "출혈 돌진", skillDesc = "무적 상태로 마우스 방향으로 돌진해, 지나간 적에게 출혈 피해를 입힙니다 (누르고 있으면 경로가 보이고, 떼면 돌진). 영혼 트리에서 그림자 숙련을 배우면 돌진에 이동 속도 · 둔화 · 연속 돌진 등이 붙습니다",
             hp = 0.85f, damage = 2.0f, attackSpeed = 1.4f, gauge = 1.2f, sig = 1.1f, special = 1.4f,     /* 1.4.1~ 사용자 「도적 너무 세요」 · 「도적 개발자 엄마를 21분에 잡았다」(목표 30분): 공격력 2.9 → 2.0 · 공속 1.5 → 1.4 · 고유 스킬 1.6 → 1.1 · 특수 능력 1.9 → 1.4 (질주 암살 극의 무한 돌진 버그 수정과 함께) */ range = 0f, mag = 6, price = 0, pool = Pool(28, 54, 55),     // 1.3.6: 공격력 1.0 → 1.6/1.5 (유령에 맞춰 크게 버프 · 체력 · 생존은 그대로)
-            color = new Color(0.7f, 0.45f, 0.9f) },
+            color = new Color(0.7f, 0.45f, 0.9f), ally = new Color(0.76f, 0.95f, 0.35f) },     // 1.6.0~ 독 연두 #C2F25A (예전 보라는 적대 대역)
         new CharacterDef {
             name = "궁수", title = "숲의 사냥꾼", body = "archer", held = "bow",
             description = "적을 꿰뚫는 화살과 하늘을 덮는 화살비의 명사수.",
             weapon = "사냥 활", attack = "누르고 있으면 시위를 당기고, 떼면 발사. 가득 찬 순간(딩!) 놓으면 「완벽!」 화살, 너무 오래 쥐면 약해집니다. 당기는 동안은 느려집니다. 숨 고르기: 당기는 동안 숨이 닳고, 바닥나면 활이 떨려 절반 위력 · 「완벽!」은 숨을 되돌려 줍니다",
             skill = "화살비", skillDesc = "누르고 있는 동안 화살이 쏟아질 위치를 조정하고, 떼면 쏟아붓습니다",
             hp = 0.95f, damage = 2.0f, attackSpeed = 1.18f, gauge = 0.98f, sig = 1.3f, special = 1.3f, move = 1.05f, range = 0f, price = 1500, pool = Pool(36, 56, 57),     // 1.4.2~ ×0.72: 공격력 2.75 → 2.0 · 고유 1.8 → 1.3 · 특수 1.8 → 1.3 (바람 공명 I 판정 폭 2배와 함께) (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 공격력 1.25 → 1.8 (유령에 맞춰 버프)
-            color = new Color(0.45f, 0.8f, 0.4f) },
+            color = new Color(0.45f, 0.8f, 0.4f), ally = new Color(0.5f, 1f, 0.66f) },     // 1.6.0~ 민트 #80FFA8
         new CharacterDef {
             name = "연금술사", title = "미친 학자", body = "alchemist", held = "flask",
             description = "터지는 플라스크로 적 무리를 한꺼번에 녹이는 괴짜 학자.",
             weapon = "플라스크", attack = "화염 · 빙결 · 산성 시약을 번갈아 채운 플라스크. 가끔 불안정한 플라스크가 크게 폭발. 불안정도: 던질수록 올라 폭발이 커지지만, 가득 차면 발밑에서 자폭합니다 (대폭발 플라스크가 모두 쏟아 냄)",
             skill = "대폭발 플라스크", skillDesc = "누를수록 커지는 플라스크를 던져 크게 폭발하고 산성 웅덩이를 남깁니다",
             hp = 1f, damage = 2.05f, attackSpeed = 0.96f, gauge = 0.93f, sig = 2.05f, special = 2.05f, range = 10f, price = 2500, pool = Pool(44, 58, 59),     // 1.4.2~ ×1.09: 공격력 · 고유 · 특수 1.9 → 2.05 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 공격력 0.8 → 1.2 (유령에 맞춰 버프) · 1.3.5: 필살기 충전 1.2 → 1.1     // 1.1.3: 공격 속도 0.75 → 0.8 (클리어가 9영웅 중 가장 느림 · 화력 중앙값 −7~12%)
-            color = new Color(0.65f, 0.4f, 0.95f) },
+            color = new Color(0.65f, 0.4f, 0.95f), ally = new Color(0.25f, 0.85f, 0.76f) },     // 1.6.0~ 청록 #3FD9C2 (예전 보라는 적대 대역)
         // ---------------- 1.0.2 새 캐릭터: 해제 조건 달성 뒤 포인트로
         new CharacterDef {
             name = "지도 제작자", title = "길 잃은 측량사", body = "cartographer", held = "quill",
@@ -74,28 +77,28 @@ public static class CharacterData
             weapon = "깃펜", attack = "마우스 쪽으로 잉크 획을 그어 닿은 적을 벱니다. 세 번째 획마다 획 끝을 감싸는 삼각형이 저절로 닫혀 안쪽의 적이 크게 다칩니다",
             skill = "지도 접기", skillDesc = "누르고 있으면 접히는 선이 보이고, 떼면 선 양쪽의 적을 선 위로 끌어당겨 짓이깁니다. 오래 누를수록 넓게 접힙니다",
             hp = 0.95f, damage = 1.0f, attackSpeed = 0.85f, gauge = 1.1f, range = 9f, price = 5000, condition = CharUnlock.Endless10,     // 1.3.6: 1.0 → 1.15 (유령에 맞춰 버프 · 원래 강해서 조금만) · 1.3.3: 1.1 → 1.0
-            pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f) },
+            pool = new[] { 60, 61, 62, 63, 64, 65, 66 }, color = new Color(0.35f, 0.55f, 0.95f), ally = new Color(0.4f, 0.6f, 1f) },     // 1.6.0~ 남청 #6699FF
         new CharacterDef {
             name = "시계공", title = "멈춘 시간의 장인", body = "clockmaker", held = "gear",
             description = "톱니바퀴와 태엽으로 시간을 다루는 장인. 맞힐수록 시계 눈금이 차 정각의 큰 톱니를 던지고, 위기에는 3초 전으로 되돌아갑니다.",
             weapon = "톱니바퀴", attack = "회전하는 톱니를 던집니다. 맞힐 때마다 발밑 시계 눈금이 차고, 다 차면 다음 톱니가 모든 적을 꿰뚫고 터지는 「정각」 톱니가 됩니다",
             skill = "되감기", skillDesc = "누르고 있으면 3초 전의 내 모습이 보이고, 떼면 그 자리로 돌아갑니다. 지나온 길의 적을 베고, 그동안 잃은 체력의 절반을 되찾으며, 잃은 체력의 세 배를 둘레 적에게 되갚습니다",
             hp = 1f, damage = 2.65f, attackSpeed = 0.92f, gauge = 1f, sig = 1.9f, special = 1.9f, range = 16f, price = 8000, condition = CharUnlock.EndlessBosses5,     // 1.3.6: 공격력 1.0 → 1.6/1.5 (유령에 맞춰 크게 버프 · 체력 · 생존은 그대로)
-            pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f) },
+            pool = new[] { 67, 68, 69, 70, 71, 72, 73 }, color = new Color(1f, 0.78f, 0.35f), ally = new Color(1f, 0.72f, 0.28f) },     // 1.6.0~ 황동 #FFB847
         new CharacterDef {
             name = "우체부", title = "저승 배달부", body = "postman", held = "letter",
             description = "살아 있는 자에게도 죽은 자에게도 편지를 전하는 배달부. 편지는 가장 먼 적부터 찾아가고, 속달 한 번이면 둘레의 적 여럿에게 편지가 한꺼번에 터집니다.",
             weapon = "편지", attack = "마우스 쪽에서 가장 먼 적을 받는 이로 정해 편지를 날립니다. 편지는 다른 적을 지나쳐 받는 이를 쫓아가고, 직접 보낸 편지를 열 번 배달할 때마다 코인과 필살기 게이지를 받습니다",
             skill = "속달", skillDesc = "누르고 있는 동안 둘레의 적에게 편지 표식이 차례로 붙고 (오래 누를수록 많이), 떼면 1초 뒤 표식이 모두 한꺼번에 터집니다",
             hp = 0.9f, damage = 1.8f, attackSpeed = 1.22f, gauge = 0.95f, sig = 1.85f, special = 1.85f, move = 1.08f, range = 12f, price = 12000, condition = CharUnlock.EasyFast,     /* 1.4.2~ ×0.92: 공격력 1.95 → 1.8 · 고유 2 → 1.85 · 특수 2 → 1.85 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림) */     /* 1.3.6: 공격력 0.8 → 1.2 (유령에 맞춰 버프) */       // 1.0.6~ 하향: 공격력 0.9 → 0.8, 게이지 1.05 → 1.15 (필살기 충전 95% → 87%), 사거리 14 → 12
-            pool = new[] { 74, 75, 76, 77, 78, 79, 80 }, color = new Color(0.95f, 0.45f, 0.4f) },
+            pool = new[] { 74, 75, 76, 77, 78, 79, 80 }, color = new Color(0.95f, 0.45f, 0.4f), ally = new Color(1f, 0.78f, 0.35f) },     // 1.6.0~ 금 #FFC759 = 평타색 PostGold (예전 빨강은 적대 대역)
         new CharacterDef {
             name = "유령", title = "죽지 못한 영혼", body = "ghost", held = "lantern",
             description = "세상을 떠나지 못한 영혼. 차가운 손길로 적을 얼리고, 쓰러뜨린 적의 영혼을 몸 둘레에 거느려 피해를 대신 받게 하며, 적의 몸에 빙의해 안에서 터뜨립니다.",
             weapon = "차가운 손길", attack = "앞으로 짧게 뻗는 손이 한 줄의 적을 모두 꿰뚫고 냉기를 쌓습니다 (다섯 번 쌓이면 얼어붙음). 적을 쓰러뜨리면 확률로 영혼이 생겨 몸 둘레를 돌다가, 맞을 때 체력 대신 영혼이 사라지며 피해를 막습니다",
             skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",     // 1.0.4~: 1초 → 3초 · 조종
             hp = 0.9f, damage = 0.9f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,     // 1.1.3: 체력 0.8 → 0.9 (사거리 4.5 근접인데 화력은 중앙값 · 받는 피해의 70~77% 가 접촉 · 사망률 가장 높음)
-            pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f) },
+            pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f), ally = new Color(0.66f, 0.91f, 1f) },     // 1.6.0~ 서리 #A9E9FF
         Coming(),
     };
 
@@ -126,6 +129,15 @@ public static class CharacterData
     public static CharacterId? Override;
 
     public static CharacterDef Def(CharacterId id) => All[(int)id];
+
+    // 1.6.0~ 가독성 개편 1-D: 아군 영웅색 한 벌 (색상 35°~250° · 적대 대역 265°~25° 밖) — AttackLook.HeroColor · HeroAim.ColorOf 가 Legacy 아닐 때 읽음
+    //   색각 모드 보정(VisualRules.AllyCb)은 전투색을 그리는 쪽에서만 — 여기 값은 UI 와 같은 원래 색
+    public static Color Ally(CharacterId id)
+    {
+        int i = (int)id;
+        Color c = i >= 0 && i < All.Length ? All[i].ally : default;
+        return c.a > 0f ? c : All[0].ally;
+    }
 
     public static bool IsDeveloped(CharacterId id) => Def(id).price >= 0;
 

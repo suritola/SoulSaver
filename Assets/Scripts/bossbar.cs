@@ -303,6 +303,8 @@ public class bossbar : MonoBehaviour
             return r != null && r.gameObject.activeInHierarchy && (instance.backBar == null || r.gameObject != instance.backBar) ? r : null;
         }
     }
+    // 1.6.0~ 주 보스 체력바가 지금 보임 — 큰 알림 띠가 보스 막대 없을 때만 위로 올라갈 때 (LowestShown 은 주 체력바만 있으면 null 이라 따로)
+    public static bool MainShown => instance != null && instance.isActiveAndEnabled && instance.backBar != null && instance.backBar.activeInHierarchy;
 
     void FlashTick()
     {

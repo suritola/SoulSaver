@@ -26,6 +26,28 @@ public class ChoiceUI : MonoBehaviour
     // 1.1~ 보상마다 다른 그림을 쓰려고 영혼 트리 그림(tree_*)도 받음 (영혼 트리의 축복이 영혼 조각 그림을 같이 쓰던 문제)
     public static string IconPath(string icon) => icon.StartsWith("tree_") ? "Icons/" + icon : "Icons/choice_" + icon;
 
+    // 1.6.0~ v2 설명이 하한 22 로도 칸을 넘칠 때만 (전설 상자 「모두 받기」 6줄 · 긴 영어 등): 문단 간격 10 → 0,
+    // 그래도 넘치면 위끝은 그대로 두고 카드 아래 여백 10 까지 늘리며 열쇠 글 [n] 을 숨김 (숫자 키 고르기는 그대로) — 글자는 22 밑으로 줄이지 않음
+    static void FitDesc(TMP_Text desc, TMP_Text key, float cardH)
+    {
+        RectTransform r = desc.rectTransform;
+        if (!Overflows(desc)) return;
+        desc.paragraphSpacing = 0f;
+        if (!Overflows(desc)) return;
+        float top = r.anchoredPosition.y + r.sizeDelta.y * 0.5f;
+        float bottom = -cardH * 0.5f + 10f;
+        r.sizeDelta = new Vector2(r.sizeDelta.x, top - bottom);
+        r.anchoredPosition = new Vector2(r.anchoredPosition.x, (top + bottom) * 0.5f);
+        if (key != null) key.gameObject.SetActive(false);
+        desc.ForceMeshUpdate();
+    }
+
+    static bool Overflows(TMP_Text t)
+    {
+        t.ForceMeshUpdate();
+        return t.textInfo.characterCount > 0 && t.textBounds.size.y > t.rectTransform.rect.height + 1f;
+    }
+
     public static bool Open { get; internal set; }      // 1.1~ internal: 전설 상자 룰렛(ChestRewards)도 켬
 
     // 1.1~ 안전장치: 창이 열린 채 씬이 바뀌면 코루틴이 사라져 Open 이 true 로 남음 → 다음 판의 고르기 창 · ESC 메뉴가 모두 막힘
@@ -203,18 +225,24 @@ public class ChoiceUI : MonoBehaviour
                 ii.raycastTarget = false;
             }
             // 1.4.8~ 이름은 한 줄 (길면 두 줄로 꺾여 그림을 덮지 않고 줄어듦) · 설명 글씨 26 → 하한 20 (예전 UIKit.Text 하한 12) · 줄마다 문단 간격 (레벨업 카드 TidyCards 와 같은 규칙)
-            TMP_Text nameText = UIKit.Text(face, o.name, v2 ? UiTokens.Heading : 38f, v2 ? UiTokens.Text1 : o.color, new Vector2(0f, 10f), new Vector2(w - 40f, 60f));
+            // 1.6.0~ v2: 좌우 여백 20 → 24 (이름 · 설명 같은 폭)
+            TMP_Text nameText = UIKit.Text(face, o.name, v2 ? UiTokens.Heading : 38f, v2 ? UiTokens.Text1 : o.color, new Vector2(0f, 10f), new Vector2(w - (v2 ? 48f : 40f), 60f));
             nameText.enableWordWrapping = false;
             nameText.fontSizeMin = v2 ? UiTokens.MinSize(UiTokens.Heading) : 24f;
             // 1.1.2~ 단계 칸이 있으면 이름 바로 아래에 두고 설명을 그만큼 내림 (설명은 UIKit.Text 의 자동 크기라 칸 안에서 줄어듦)
             bool pips = o.pipMax > 0;
             if (pips) LevelPips.Create(face, new Vector2(0f, -32f), new Vector2(w - 120f, 16f)).Set(o.pipLevel, o.pipMax, o.pipAdd);
-            TMP_Text descText = UIKit.Text(face, o.desc, LevelShop.CardBodyMax, v2 ? UiTokens.Text2 : Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
+            // 1.6.0~ v2: 설명은 이름 바로 아래에서 위 정렬로 시작 (짧은 글이 칸 가운데 떠서 이름과 멀어지지 않게)
+            //   단계 칸 없음 −38 ~ −192 (이름 아래끝 −20 에서 18 띄움 · 열쇠 글 위끝 −198 위 6) / 있음 −52 ~ −192 (단계 칸 아래끝 −40 에서 12)
+            TMP_Text descText = v2
+                ? UIKit.Text(face, o.desc, LevelShop.CardBodyMax, UiTokens.Text2, new Vector2(0f, pips ? -122f : -115f), new Vector2(w - 48f, pips ? 140f : 154f), TextAlignmentOptions.Top)
+                : UIKit.Text(face, o.desc, LevelShop.CardBodyMax, Parch, new Vector2(0f, pips ? -120f : -108f), new Vector2(w - 50f, pips ? 138f : 166f));
             descText.fontSizeMin = v2 ? UiTokens.Small : LevelShop.CardBodyMin;
             descText.paragraphSpacing = 10f;
             TermLinks.Apply(descText);      // 1.4.8~ 글 속 용어 툴팁 (Glossary)
             TMP_Text key = UIKit.Text(face, "", 22f, v2 ? UiTokens.Text3 : new Color(0.66f, 0.61f, 0.53f), new Vector2(0f, -215f), new Vector2(w, 34f));
             key.text = "[" + (i + 1) + "]";
+            if (v2) FitDesc(descText, key, h);
         }
         Hostile.Play("chime", 0.7f, 1.1f);
 

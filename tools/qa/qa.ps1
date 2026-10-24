@@ -2,6 +2,7 @@
 # 복사본에만: QaFlags.cs 를 넣고 RunSave(저장) · StageManager(보스 보상 창)의 배치 모드 생략을 QaFlags 로 풀 수 있게 고침
 # 사용법: pwsh tools/qa/qa.ps1                       (모든 장면)
 #         pwsh tools/qa/qa.ps1 -Only mom_domain,ui_menu
+#         pwsh tools/qa/qa.ps1 -Only readability       (가독성 명도 · 밀도 → py -3.14 -X utf8 tools/qa/luma_ab.py "%LOCALAPPDATA%\SoulSaverBuild\Qa")
 # 결과:   %LOCALAPPDATA%\SoulSaverBuild\Qa\qa_log.txt · *.png
 param(
     [string]$Only = "",

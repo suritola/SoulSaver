@@ -5,11 +5,25 @@ using UnityEngine;
 public static class SpriteOutline
 {
     static readonly Color Dark = new Color(0.06f, 0.04f, 0.09f, 0.9f);
-    static readonly Color Light = new Color(1f, 0.95f, 0.8f, 0.85f);
-    static Material dark, light;
+    static Material dark, darkBright, light;
     static bool failed;
 
-    public static void Enemy(GameObject go) => Apply(go, ref dark, Dark);
+    // 1.6.0~ 적 재질: 그림에 이미 어두운 외곽이 있는 가장자리는 셰이더 외곽 생략(_SkipDark · 이중 외곽 → 어디서나 1칸)
+    //   너무 어두운 잡몹 2종(Enemy3 · 사신)은 밝기 ×1.15 재질 따로 — 몸 그림의 텍스처 이름으로 가름 (VisualRules.EnemyBrightness) · 보스는 늘 1
+    //   재질은 두 개뿐(텍스처마다 그리기 묶음이 이미 갈려 그리기 호출 변화 없음) · 피격 흰 번쩍임은 Juice.SetFlash 가 재질마다 복제하므로 그대로
+    public static void Enemy(GameObject go, bool boss = false)
+    {
+        if (go == null || failed) return;
+        float bright = 1f;
+        if (!boss)
+        {
+            SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
+            Sprite sp = sr != null ? sr.sprite : null;
+            if (sp != null && sp.texture != null) bright = VisualRules.EnemyBrightness(sp.texture.name);
+        }
+        if (bright != 1f) Apply(go, ref darkBright, Dark, VisualRules.EnemySkipDark, bright);
+        else Apply(go, ref dark, Dark, VisualRules.EnemySkipDark, 1f);
+    }
 
     // 이펙트용 (Fx): 얇고 짙은 윤곽선 + 채도 1.3배 · 밝기 1.08배 (1.8.7~)
     static Material effect;
@@ -47,9 +61,10 @@ public static class SpriteOutline
             return myEffect;
         }
     }
-    public static void Player(GameObject go) => Apply(go, ref light, Light);
+    // 1.6.0~ 플레이어 외곽은 흰색 불투명 (VisualRules.PlayerOutline · 예전 (1, 0.95, 0.8, 0.85)) · 외곽 생략 없음 · 밝기 1
+    public static void Player(GameObject go) => Apply(go, ref light, VisualRules.PlayerOutline, 0f, 1f);
 
-    static void Apply(GameObject go, ref Material mat, Color color)
+    static void Apply(GameObject go, ref Material mat, Color color, float skipDark, float brightness)
     {
         if (go == null || failed) return;
         if (mat == null)
@@ -58,6 +73,8 @@ public static class SpriteOutline
             if (s == null || !s.isSupported) { failed = true; return; }
             mat = new Material(s) { name = "SpriteOutline" };
             mat.SetColor("_OutlineColor", color);
+            mat.SetFloat("_SkipDark", skipDark);         // 1.6.0~ 0 = 예전 그대로 (키워드 없이 재질 값으로만 갈라 빌드에서 빠질 조합이 없음)
+            mat.SetFloat("_Brightness", brightness);
         }
         if (effectLayer == int.MinValue)
         {

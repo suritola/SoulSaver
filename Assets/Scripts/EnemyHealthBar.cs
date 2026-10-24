@@ -38,6 +38,11 @@ public class EnemyHealthBar : MonoBehaviour
     Color shownFill = FullColor;     // 지금 칠해 둔 색 (바뀔 때만 다시 씀)
     SpriteRenderer body;             // 1단계-10~ 체력바를 숨긴 채 맞아도 화면 안이면 첫 피격 연출이 나오게 (보임 판단을 몸으로)
     float shownIgnite = -1f;
+    // 1.6.0~ 「적 체력바」 설정 (GameSettings.EnemyBars): 정예만이면 정예 무리 · 중간 보스 · 황금 고블린만 막대를 그림
+    //   숨겨도 맞는 연출(feel)은 그대로 돌리고 렌더러만 끔 — OnDamaged 의 visible 이 피해 숫자 등급에 쓰여서 (HealthBarFeel)
+    int shownVersion = -1;           // 막대를 보일지 마지막으로 정한 설정 버전 (설정이 바뀌면 다음 프레임에 다시 봄)
+    sbyte special = -1;              // -1 아직 안 봄 · 0 일반 적 · 1 정예/중간 보스/황금 고블린 (GetComponent 는 처음 한 번)
+    bool barShown;                   // 지금 막대 렌더러를 켜 두었는지
 
     public HealthBarFeel.Tier OnDamaged(float amount, float before)
     {
@@ -60,10 +65,19 @@ public class EnemyHealthBar : MonoBehaviour
         shownBack = BackColor;
         if (backRenderer != null) backRenderer.color = BackColor;
         if (ghostRenderer != null) ghostRenderer.enabled = false;
+        special = -1; shownVersion = -1;      // 1.6.0~ 표식은 풀에서 다시 꺼낼 때 다시 봄
         transform.localPosition = rest;
         transform.localScale = baseScale;
     }
     void OnDisable() => feel.Cancel();
+
+    // 1.6.0~ 「정예만」에서도 막대를 보일 적 (중간 보스 — 정예 이벤트도 SpawnMidBoss 라 포함 · 황금 고블린 · 정예 무리 표식)
+    bool Special()
+    {
+        if (special < 0)
+            special = (sbyte)(enemy != null && (enemy.IsMidBoss || enemy.TryGetComponent(out GoldenGoblin _) || enemy.TryGetComponent(out EliteMark _)) ? 1 : 0);
+        return special == 1;
+    }
 
     public static EnemyHealthBar Attach(EnermyController enemy, SpriteRenderer body)
     {
@@ -141,18 +155,24 @@ public class EnemyHealthBar : MonoBehaviour
 
         float hp = enemy.EnemyHealth, max = enemy.setEnemyHP;
         float ratio = max > 0 ? Mathf.Clamp01(hp / max) : 0f;
-        // 체력이 그대로고 효과도 없으면 다시 그리지 않음 (수백 마리 대부분이 여기서 끝)
-        if (ratio == shownRatio && !feel.Active) return;
+        // 체력이 그대로고 효과도 없으면 다시 그리지 않음 (수백 마리 대부분이 여기서 끝) · 1.6.0~ 설정이 바뀌었으면 다시 봄
+        int version = GameSettings.EnemyBarsVersion;
+        if (ratio == shownRatio && !feel.Active && shownVersion == version) return;
         feel.Tick(hp, max, HealthBarFeel.Dt, out HealthBarFeel.Frame f);
 
         bool alive = ratio > 0f;
-        if (ratio != shownRatio)
+        if (ratio != shownRatio || shownVersion != version)
         {
             shownRatio = ratio;
+            shownVersion = version;
             // 죽으면 숨김 · 1단계-10~ 가득 찬 적도 숨김 (한 번 맞으면 그 뒤로 보임 — 시간 상태 없이 체력 비율만으로)
-            bool show = alive && (VisualRules.Legacy || ratio < 0.999f);
+            // 1.6.0~ 「정예만」(기본)이면 일반 잡몹은 맞아도 숨김 (Legacy 는 예전처럼 모두)
+            bool show = alive && (VisualRules.Legacy || ratio < 0.999f)
+                && (VisualRules.Legacy || GameSettings.EnemyBars == 1 || Special());
+            barShown = show;
             backRenderer.enabled = show;
             fillRenderer.enabled = show;
+            if (!show && ghostRenderer != null && ghostRenderer.enabled) { ghostRenderer.enabled = false; shownIgnite = -1f; }
             if (alive)
             {
                 fill.localScale = new Vector3(Width * ratio, Height, 1f);
@@ -173,10 +193,11 @@ public class EnemyHealthBar : MonoBehaviour
             return;
         }
 
-        if (f.ghost != shownGhost || (ghostRenderer == null ? f.ghostShown : ghostRenderer.enabled != f.ghostShown))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
+        bool ghostOn = f.ghostShown && barShown;      // 1.6.0~ 숨긴 막대는 흰 게이지도 끈 채로
+        if (f.ghost != shownGhost || (ghostRenderer == null ? ghostOn : ghostRenderer.enabled != ghostOn))     // 맞는 순간엔 흰 게이지 값(맞기 전 체력)이 그대로라 켜짐 여부도 같이 봄
         {
             // 화면 밖 적은 흰 게이지 렌더러를 만들지 않음 (보일 때 다시 시도)
-            if (f.ghostShown && ghostRenderer == null && fillRenderer.isVisible)
+            if (ghostOn && ghostRenderer == null && fillRenderer.isVisible)
             {
                 ghostRenderer = MakePart("Ghost", HealthBarFeel.GhostColor(0f), 1, -Width / 2f, Width, Height);
                 ghost = ghostRenderer.transform;
@@ -184,8 +205,8 @@ public class EnemyHealthBar : MonoBehaviour
             if (ghostRenderer != null)
             {
                 shownGhost = f.ghost;
-                if (ghostRenderer.enabled != f.ghostShown) { ghostRenderer.enabled = f.ghostShown; shownIgnite = -1f; }
-                if (f.ghostShown) ghost.localScale = new Vector3(Width * f.ghost, Height, 1f);
+                if (ghostRenderer.enabled != ghostOn) { ghostRenderer.enabled = ghostOn; shownIgnite = -1f; }
+                if (ghostOn) ghost.localScale = new Vector3(Width * f.ghost, Height, 1f);
             }
         }
         // 흔들림: Big 0.144 · Deadly 0.256 (월드 단위 ≈ 5 / 9px @줌 15)

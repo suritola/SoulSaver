@@ -36,6 +36,12 @@ public static partial class LocTable
         S("화면 밖 표시", "Off-Screen Markers", "画面外マーカー", "屏幕外标记");
         S("보물 상자 · 떠돌이 상점 · 황금 고블린 · 중간 보스가 화면 밖에 있으면 화면 가장자리에 방향과 남은 시간을 보여 줍니다. 석관 · 영혼 제단 화살표와 포털 안내선은 늘 보입니다.", "When a treasure chest, wandering shop, golden goblin or mid-boss is off screen, shows its direction and remaining time at the screen edge. Sarcophagus and soul altar arrows and the portal guide line are always shown.", "宝箱・さすらいの商店・黄金ゴブリン・中ボスが画面外にあるとき、画面端に方向と残り時間を表示します。石棺・魂の祭壇の矢印とポータルの案内線は常に表示されます。", "当宝箱、流浪商店、黄金哥布林、中头目在屏幕外时，在屏幕边缘显示方向与剩余时间。石棺与灵魂祭坛的箭头和传送门指引线始终显示。");
 
+        // ================================================================= 1.6.0~ 적 체력바 (그래픽 가독성 개편 1-F · HUD 탭, 용어는 위 화면 밖 표시와 같게)
+        S("적 체력바", "Enemy HP Bars", "敵の体力バー", "敌人血条");
+        S("정예만", "Elites Only", "精鋭のみ", "仅精英");
+        S("맞은 적 모두", "All Damaged", "被弾した敵すべて", "所有受伤敌人");
+        S("정예 · 중간 보스 · 황금 고블린만 머리 위 체력바를 보여 줍니다. 「맞은 적 모두」면 한 번이라도 맞은 적에게 모두 보입니다. 보스 체력은 화면 위 막대로 늘 보입니다.", "Shows overhead HP bars only on elites, mid-bosses and the golden goblin. Set to All Damaged to show a bar on every enemy you have hit. Boss HP is always shown at the top of the screen.", "精鋭・中ボス・黄金ゴブリンだけ頭上に体力バーを表示します。「被弾した敵すべて」にすると、一度でも攻撃した敵すべてに表示されます。ボスの体力は画面上部のバーに常に表示されます。", "仅在精英、中头目和黄金哥布林头顶显示血条。选择「所有受伤敌人」时，被击中过的敌人都会显示血条。头目血量始终显示在屏幕上方。");
+
         // ================================================================= 9. 빌드 보기 — 피해 · 진화 진행
         S("진화 진행", "Evolution Progress", "進化の進み", "进化进度");
         S("분당 처치", "Kills / min", "毎分撃破", "每分钟击杀");

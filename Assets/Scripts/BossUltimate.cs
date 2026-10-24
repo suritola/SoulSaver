@@ -360,13 +360,17 @@ public partial class BossUltimate : MonoBehaviour
         ring2 = Hostile.NewLine("DomainRing2", Color.white, 0.25f, 41);
         ring2.loop = true;
         ring2.transform.SetParent(domainRoot.transform, true);
-        rune = Fx.Play("fx_rune", center, Radius * 2f, new Color(color.r, color.g, color.b, 0.3f), 1f, 0f, 41, true, -1f, "Background");
+        // 1.6.0~ 결계 바닥 거대 룬(지름 70)은 Legacy 일 때만 — 아군 마법진과 같은 모양 · 그림 1칸이 화면 수십 화소로 커져 뭉개졌음
+        //   (장식뿐: 결계 시작 · 끝 신호와 대기는 고리 · 어둠 · 코루틴 시간이 맡고 rune 은 어디서도 기다리지 않음)
+        rune = VisualRules.HostileRune ? Fx.Play("fx_rune", center, Radius * 2f, new Color(color.r, color.g, color.b, 0.3f), 1f, 0f, 41, true, -1f, "Background") : null;
         if (rune != null) { rune.spin = 12f; rune.transform.SetParent(domainRoot.transform, true); }
         if (Hostile.Glow != null)
         {
             aura = SpecialAbilities.MakeSprite("BossDomainAura", Hostile.Glow, boss.transform.position, 1.2f, new Color(color.r, color.g, color.b, 0.5f), "Effect", 1);
         }
-        Fx.Spawn("fx_shock", center, Radius * 2.6f, color, 14f);
+        // 1.6.0~ 펼침 충격파: fx_shock 을 지름 91 로 키운 그림(도트가 뭉개짐) → 도트 선 고리가 반지름 × 0.3 → 반지름으로 퍼짐 (Legacy 면 예전 그림)
+        if (VisualRules.Legacy) Fx.Spawn("fx_shock", center, Radius * 2.6f, color, 14f);
+        else ShockRing.Spawn(center, Radius * 0.3f, Radius, 0.45f, color, 0.6f);
         Fx.Spawn("fx_soulburst", center, 12f, Color.white, 14f);
         // 플레이어 발밑의 밝은 빛 + 고리: 어두운 결계 안에서도 내 위치가 바로 보이게
         if (Hostile.Glow != null)
@@ -606,7 +610,9 @@ public partial class BossUltimate : MonoBehaviour
             Color sc = kind == DevSlot ? (i % 2 == 0 ? DevTerminal : Color.white) : Color.Lerp(color, Color.white, 0.5f);
             Fx.Spawn("fx_spark", at, 2.6f, sc, 16f);
         }
-        Fx.Spawn("fx_shock", center, Radius * 2.4f, Color.white, 14f);
+        // 1.6.0~ 붕괴 충격파도 거대 그림(지름 84) → 도트 선 고리 (색은 예전처럼 흰색 · Legacy 면 예전 그림)
+        if (VisualRules.Legacy) Fx.Spawn("fx_shock", center, Radius * 2.4f, Color.white, 14f);
+        else ShockRing.Spawn(center, Radius * 0.3f, Radius, 0.45f, Color.white, 0.6f);
         MeshRenderer dark = domainRoot != null ? domainRoot.GetComponentInChildren<MeshRenderer>() : null;
         for (float t = 0f; t < 0.6f; t += Time.deltaTime)
         {

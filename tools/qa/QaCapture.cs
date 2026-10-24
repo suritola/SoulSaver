@@ -110,6 +110,9 @@ public class QaCapture
                 if (!origOrder.ContainsKey(id)) continue;           // 원래 카메라 · 월드 캔버스는 그대로
                 c.worldCamera = cam;
                 c.planeDistance = 5f;
+                // 코드로 만든 캔버스는 Default 층인 것이 많음 → UI 전용 카메라만 그리게 UI 층으로 (본 카메라는 UI 층을 빼고 그림)
+                //   (나중에 붙은 자식도 있어 촬영마다 다시)
+                foreach (Transform t in c.GetComponentsInChildren<Transform>(true)) if (t.gameObject.layer != UiLayer) t.gameObject.layer = UiLayer;
                 list.Add((c, origOrder[id]));
             }
             else if (c.overrideSorting)
@@ -129,6 +132,27 @@ public class QaCapture
         }
     }
 
+    // 2026-10-24 가독성 1-K: 예전엔 화면 캔버스를 본 카메라에 붙여 한 번에 그려서, 정렬 32000 · 그리기 순서 4000 인 범위표시가 UI 를 덮음 (03 「글자 잘림」)
+    //   → 본 카메라는 UI 층(5)을 빼고 그린 뒤, UI 전용 카메라(같은 자리 · 직교 크기 · 같은 RT · 깊이만 지움 · UI 층만)로 화면 캔버스를 그 위에 = 실제 게임(Overlay)과 같은 순서
+    static Camera uiCam;
+    const int UiLayer = 5;
+    static Camera UiCam(Camera main)
+    {
+        if (uiCam == null)
+        {
+            GameObject go = new GameObject("QaUiCamera");
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            uiCam = go.AddComponent<Camera>();
+        }
+        uiCam.CopyFrom(main);                      // 자리 · 직교 크기 · 깊이 범위까지 같게 (그리기 전에 다시 맞춤)
+        uiCam.clearFlags = CameraClearFlags.Depth; // 색은 지우지 않음 (본 카메라 그림 위에) · 깊이만 지워 UI 가 월드 깊이에 가리지 않게
+        uiCam.cullingMask = 1 << UiLayer;
+        uiCam.depth = main.depth + 50f;
+        uiCam.targetTexture = main.targetTexture;
+        uiCam.enabled = true;                      // 꺼진 카메라에 붙은 화면 캔버스는 Overlay 로 되돌아갈 수 있어 켜 둠 (같은 RT 에만 그림)
+        return uiCam;
+    }
+
     static float shotZoom = 1f;
     static IEnumerator Shot(string name, int w = 1920, int h = 1080, bool settle = true)
     {
@@ -136,21 +160,30 @@ public class QaCapture
         if (cam == null) { Log("카메라 없음 " + name); yield break; }
         if (rt == null || rt.width != w || rt.height != h)
         {
-            if (rt != null) { cam.targetTexture = null; rt.Release(); UnityEngine.Object.Destroy(rt); }
+            if (rt != null) { cam.targetTexture = null; if (uiCam != null) uiCam.targetTexture = null; rt.Release(); UnityEngine.Object.Destroy(rt); }
             rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
             if (frame != null) UnityEngine.Object.Destroy(frame);
             frame = new Texture2D(w, h, TextureFormat.RGBA32, false);
             settle = true;
         }
         cam.targetTexture = rt;
-        cam.cullingMask |= 1 << 5;
-        PrepCanvases(cam);
+        Camera ui = UiCam(cam);
+        PrepCanvases(ui);
         if (settle) { yield return null; yield return null; }
-        PrepCanvases(cam);
+        cam = Camera.main;
+        if (cam == null) { Log("카메라 없음 " + name); yield break; }
+        cam.targetTexture = rt;
+        ui = UiCam(cam);
+        PrepCanvases(ui);
         Canvas.ForceUpdateCanvases();
         float size0 = cam.orthographicSize;
+        int mask0 = cam.cullingMask;
         if (shotZoom != 1f) cam.orthographicSize = size0 * shotZoom;
+        cam.cullingMask = mask0 & ~(1 << UiLayer);
+        ui.orthographicSize = cam.orthographicSize;
         cam.Render();
+        ui.Render();
+        cam.cullingMask = mask0;
         cam.orthographicSize = size0;
         RenderTexture.active = rt;
         frame.ReadPixels(new Rect(0, 0, w, h), 0, 0);
@@ -477,6 +510,7 @@ public class QaCapture
             yield return cur;
         }
         Time.timeScale = 1f;
+        try { SSet("EnermyController", "GlobalSpeedMultiplier", 1f); SSet("DamageSource", "Current", null); } catch { }      // readability 가 멈춰 둔 적 · 피해 출처 (예외로 끊겨도)
         if (pilot != null) pilot.on = false;
         In("AutoMove", Vector2.zero); In("AutoFire", false);
         Log("==== 끝 (" + (Time.realtimeSinceStartup - start).ToString("0") + "초 · 오류 " + (errCount.TryGetValue(name, out int ec) ? ec : 0) + " · 경고 " + (warnCount.TryGetValue(name, out int wc) ? wc : 0) + ")");
@@ -507,6 +541,7 @@ public class QaCapture
         }
 
         yield return Safe("map_overview", MapOverview, 300);
+        yield return Safe("readability", Readability, 240);
         yield return Safe("memory_bar", MemoryBar, 240);
         yield return Safe("terrain", TerrainAndErosion, 420);
         yield return Safe("erosion_pending", ErosionPending, 180);
@@ -535,6 +570,287 @@ public class QaCapture
         logFile.Close();
         logFile = null;
         yield return null;
+    }
+
+    // ================================================================= 0) 가독성 (2026-10-24 그래픽 가독성 개편 1-K · tools/qa/luma_ab.py 가 qa_log 의 「명도 · 밀도 · 내이펙트」 줄을 읽어 6-3 기준 판정)
+    // 거너 · 시드 고정 · 무한 사막 / 초원 영토 / 이야기 묘역 / 심연 — 적 24마리를 플레이어 오른쪽 3칸에 멈춰 세움
+    //   read_<곳>_clean: 내 이펙트 없이 · read_<곳>: 화염 지대(무리를 계속 때림) · 적 원형 예고 3 · 결계 땅 타격 1 · 큰 알림 1 + (0.85초에) 내 폭발 2 → 1.0초 뒤 멈춰 찍음
+    const int ReadSeed = 20261024;
+    static readonly Dictionary<string, float> readClean = new Dictionary<string, float>();
+
+    static IEnumerator Readability()
+    {
+        foreach (string place in new[] { "desert", "meadow", "cave", "abyss" })
+        {
+            UnityEngine.Random.InitState(ReadSeed);
+            yield return LoadGame("Gunner", place == "desert" || place == "meadow" ? "Endless" : "Normal");
+            UnityEngine.Random.InitState(ReadSeed);
+            pilot.on = false;
+            In("AutoMove", Vector2.zero); In("AutoFire", false);
+            object sp = Find("EnemySpawner");
+            if (sp != null) Set(sp, "spawningEnabled", false);
+            if (place == "abyss")
+            {
+                Call(SGet("StageManager", "Instance"), "JumpToStage", 3);
+                yield return Frames(6);
+            }
+            else if (place == "meadow")
+            {
+                // 킹 슬라임(종류 2) 처치 = 초원 영토 (보스를 실제로 부르지 않고 지형 쪽에 처치만 알림)
+                object et = SGet("EndlessTerrain", "Instance");
+                if (et == null) { Log("XX EndlessTerrain 없음 · 초원 건너뜀"); continue; }
+                SCall("EndlessTerrain", "NoteBossDown", 2, PPos());
+                Call(et, "OnBossDefeated", 1, 0);
+                yield return Frames(3);
+                for (int i = 0; i < 80 && ((bool)Get(et, "busy") || ((ICollection)Get(et, "pendings")).Count > 0); i++) yield return Secs(0.25f);
+                yield return Secs(1f);
+                Vector3 bc = (Vector3)Get(et, "blobC");
+                ((Component)Player()).transform.position = bc + new Vector3(-1.5f, 0f, 0f);
+                Log("초원 영토 중심 " + bc + " · 내 자리 영토 " + Call(et, "RealmAt", PPos()) + " · 무리 자리 영토 " + Call(et, "RealmAt", PPos() + new Vector3(3f, 0f, 0f)) + " (3 = 초원)");
+            }
+            foreach (Component e in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None).Cast<Component>()) e.gameObject.SetActive(false);
+            yield return Frames(2);
+
+            // ---- 적 24마리 (지금 장의 적 목록에서 차례대로) · 멈춤 · 접촉 피해 0 · 죽지 않게
+            Vector3 me = PPos();
+            Vector3 pack = me + new Vector3(3f, 0f, 0f);
+            GameObject[] pool = sp != null && Get(Get(sp, "Stage"), "enemies") is GameObject[] st ? st.Where(g => g != null).ToArray() : new GameObject[0];
+            if (pool.Length == 0) pool = ((GameObject[])Get(Resources.Load("CodexData"), "enemies")).Where(g => g != null).Take(8).ToArray();
+            SSet("EnermyController", "GlobalSpeedMultiplier", 0f);
+            var pack24 = new List<Component>();
+            for (int i = 0; i < 24; i++)
+            {
+                float a = i * 2.39996f, r = 0.35f * Mathf.Sqrt(i + 0.5f);        // 해바라기 배치 (반지름 약 1.7 · 겹침 적게)
+                GameObject go = UnityEngine.Object.Instantiate(pool[i % pool.Length], pack + new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f), Quaternion.identity);
+                Component ec = go.GetComponent(T("EnermyController"));
+                if (ec == null) continue;
+                Set(ec, "dashInterval", 0f);
+                Set(ec, "separationSpeed", 0f);
+                Set(ec, "contactDamage", 0f);
+                pack24.Add(ec);
+            }
+            yield return Frames(3);
+            foreach (Component ec in pack24)
+            {
+                if (ec == null) continue;
+                Set(ec, "EnemyHealth", 1e7f);
+                if (T("EnemySkill") != null && ec.GetComponent(T("EnemySkill")) is Behaviour skb) skb.enabled = false;
+            }
+            Log("무리 " + pack24.Count + "마리 (" + string.Join(",", pool.Select(g => g.name).Distinct().Take(8)) + ") · 플레이어 " + me);
+            yield return Secs(1.5f);         // 등장 고리가 사라질 때까지
+
+            // ---- 내 이펙트 없이
+            Time.timeScale = 0f;
+            yield return Shot("read_" + place + "_clean");
+            ReadMeasure("read_" + place + "_clean", place, null, Vector3.zero, 0f, null);
+            Time.timeScale = 1f;
+
+            // ---- 이펙트 · 경고 · 알림
+            Color danger = new Color(1f, 0.25f, 0.2f, 0.9f);
+            Vector3[] warnAt = { me + new Vector3(-4f, 2.5f, 0f), me + new Vector3(-3.5f, -3f, 0f), me + new Vector3(0.5f, 4.5f, 0f) };
+            float[] warnR = { 1.6f, 2.0f, 1.4f };
+            for (int i = 0; i < 3; i++) Call(T("Hostile"), "Circle", warnAt[i], warnR[i], 2.6f, danger);
+            Vector3 strikeAt = me + new Vector3(-1f, -5.5f, 0f);
+            object ctx = Activator.CreateInstance(T("DomainCtx"));
+            Set(ctx, "center", me);
+            Set(ctx, "radius", 35f);
+            Set(ctx, "color", new Color(1f, 0.45f, 0.15f));
+            Call(ctx, "Strike", strikeAt, 2.6f, 2.6f, new Color(1f, 0.45f, 0.15f), 0f, "fx_meteor", false);
+            SCall("Notice", "Big", L("분노!"), Enm("NoticeIcon", "Boss"), 2.5f, Enm("NoticeLevel", "Urgent"), null, null);
+            object zoneSrc = SGet("DamageSource", "Current");
+            SSet("DamageSource", "Current", (string)SGet("DamageSource", "Special"));      // 내 것 (Fx.Mine · 화염 지대의 피해 출처)
+            object sa = T("SpecialAbilities").GetProperty("SharedInstance").GetValue(null);
+            Component zone = sa != null ? Call(sa, "SpawnZone", pack, 2.2f, 8f, 1f, new Color(1f, 0.45f, 0.1f, 0.8f)) as Component : null;
+            SSet("DamageSource", "Current", zoneSrc);
+            yield return Secs(0.85f);
+            SSet("DamageSource", "Current", (string)SGet("DamageSource", "Special"));
+            Vector3[] boomAt = { pack + new Vector3(-0.9f, 0.7f, 0f), pack + new Vector3(1.1f, -0.6f, 0f) };
+            foreach (Vector3 b in boomAt)
+            {
+                SCall("Fx", "Spawn", "fx_explosion", b, 3.2f, (Color?)new Color(1f, 0.75f, 0.35f), 18f, 0f, 12, false, -1f, "Effect");
+                SCall("CharacterKit", "DamageCircle", b, 1.6f, 1f, 0f, 0f);
+            }
+            SSet("DamageSource", "Current", zoneSrc);
+            yield return Secs(0.15f);
+            Time.timeScale = 0f;
+            yield return Shot("read_" + place);
+            ReadMeasure("read_" + place, place, zone, pack, 2.2f, warnAt.Select((p, i) => (p, warnR[i])).Append((strikeAt, 2.6f)).ToArray());
+            Time.timeScale = 1f;
+            SSet("EnermyController", "GlobalSpeedMultiplier", 1f);
+        }
+    }
+
+    static float Y601(Color32 c) => 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+    static string F1(float v) => v.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
+    // 마지막 촬영(frame)에서 명도 숫자 → qa_log 「명도 <촬영> 키=값 …」 (luma_ab.py 가 읽음 · 값 목록은 쉼표, 없으면 -)
+    static void ReadMeasure(string shot, string place, Component zone, Vector3 zoneC, float zoneR, (Vector3 p, float r)[] warns)
+    {
+        Camera cam = Camera.main;
+        if (cam == null || frame == null) return;
+        int w = frame.width, h = frame.height;
+        Color32[] px = frame.GetPixels32();
+        float Yat(int x, int y) => Y601(px[Mathf.Clamp(y, 0, h - 1) * w + Mathf.Clamp(x, 0, w - 1)]);
+        Vector2 Scr(Vector3 wp) => cam.WorldToScreenPoint(wp);
+        float pxPerUnit = h / (2f * cam.orthographicSize);
+        var sb = new StringBuilder("명도 " + shot);
+
+        // 화면에 보이는 렌더러 (타일맵 · 화면을 거의 덮는 큰 바탕은 빼고) · 화면 UI 그림
+        var rends = new List<Renderer>();
+        foreach (Renderer r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            if (!r.enabled || !r.gameObject.activeInHierarchy || r is UnityEngine.Tilemaps.TilemapRenderer) continue;
+            if (r.gameObject.layer == UiLayer) continue;
+            Vector3 s = r.bounds.size;
+            if (s.x > 30f || s.y > 30f) continue;
+            if (r is SpriteRenderer sr0 && (sr0.sprite == null || sr0.color.a < 0.02f)) continue;
+            rends.Add(r);
+        }
+        var uiRects = new List<Rect>();
+        foreach (UnityEngine.UI.Graphic g in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Graphic>(FindObjectsSortMode.None))
+        {
+            if (!g.isActiveAndEnabled || g.color.a < 0.02f || g.canvas == null || g.canvas.renderMode == RenderMode.WorldSpace) continue;
+            Vector3[] c4 = new Vector3[4];
+            g.rectTransform.GetWorldCorners(c4);
+            Camera gc = g.canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : g.canvas.worldCamera;
+            Vector2 a = RectTransformUtility.WorldToScreenPoint(gc, c4[0]), b = RectTransformUtility.WorldToScreenPoint(gc, c4[2]);
+            Rect rc = Rect.MinMaxRect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
+            if (rc.width * rc.height > w * h * 0.5f) continue;          // 화면을 덮는 투명 판 · 비네트
+            uiRects.Add(rc);
+        }
+
+        // 1) 바닥: 렌더러 · UI 가 없는 점 64곳 (화면 가운데 70% · 8×8 상자 평균 · 표준편차)
+        var floorMeans = new List<float>(); var floorStd = new List<float>();
+        for (int gy = 0; gy < 12 && floorMeans.Count < 64; gy++)
+            for (int gx = 0; gx < 16 && floorMeans.Count < 64; gx++)
+            {
+                int sx = Mathf.RoundToInt(w * (0.15f + 0.7f * (gx + 0.5f) / 16f)), sy = Mathf.RoundToInt(h * (0.15f + 0.7f * ((gy * 7 + gx) % 12 + 0.5f) / 12f));
+                Vector3 wp = cam.ScreenToWorldPoint(new Vector3(sx, sy, -cam.transform.position.z));
+                bool hit = false;
+                foreach (Renderer r in rends) { Bounds bb = r.bounds; bb.Expand(0.5f); wp.z = bb.center.z; if (bb.Contains(wp)) { hit = true; break; } }
+                if (!hit) foreach (Rect rc in uiRects) if (rc.Overlaps(new Rect(sx - 6, sy - 6, 12, 12))) { hit = true; break; }
+                if (hit) continue;
+                float sum = 0f, sq = 0f;
+                for (int dy = -4; dy < 4; dy++) for (int dx = -4; dx < 4; dx++) { float y = Yat(sx + dx, sy + dy); sum += y; sq += y * y; }
+                float m = sum / 64f;
+                floorMeans.Add(m); floorStd.Add(Mathf.Sqrt(Mathf.Max(0f, sq / 64f - m * m)));
+            }
+        float floor = floorMeans.Count > 0 ? floorMeans.Average() : -1f;
+        sb.Append(" 바닥=" + F1(floor) + " 바닥편차=" + F1(floorStd.Count > 0 ? floorStd.Average() : -1f) + " 바닥점=" + floorMeans.Count);
+
+        // 2) 적 몸: 렌더러 화면 상자 가운데 50% 평균 (화염 지대 안 = 맞는 중)
+        float BoxMean(Bounds bb, float frac)
+        {
+            Vector2 a = Scr(bb.min), b = Scr(bb.max);
+            float cx = (a.x + b.x) * 0.5f, cy = (a.y + b.y) * 0.5f, hw = Mathf.Abs(b.x - a.x) * frac * 0.5f, hh = Mathf.Abs(b.y - a.y) * frac * 0.5f;
+            int x0 = Mathf.Max(0, Mathf.RoundToInt(cx - hw)), x1 = Mathf.Min(w - 1, Mathf.RoundToInt(cx + hw)), y0 = Mathf.Max(0, Mathf.RoundToInt(cy - hh)), y1 = Mathf.Min(h - 1, Mathf.RoundToInt(cy + hh));
+            if (x1 < x0 || y1 < y0) return -1f;
+            float s = 0f; int n = 0;
+            for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) { s += Y601(px[y * w + x]); n++; }
+            return n > 0 ? s / n : -1f;
+        }
+        var body = new List<float>(); var bodyHit = new List<float>();
+        foreach (object o in (IEnumerable)SGet("EnermyController", "Live"))
+        {
+            if (!(o is Component ec) || ec == null || !ec.gameObject.activeInHierarchy) continue;
+            SpriteRenderer sr = ec.GetComponent<SpriteRenderer>();
+            if (sr == null || !sr.enabled) continue;
+            float m = BoxMean(sr.bounds, 0.5f);
+            if (m < 0f) continue;
+            body.Add(m);
+            if (zoneR > 0f && Vector2.Distance(ec.transform.position, zoneC) <= zoneR + 0.3f) bodyHit.Add(m);
+        }
+        float bodyMean = body.Count > 0 ? body.Average() : -1f;
+        sb.Append(" 적=" + F1(bodyMean) + " 적수=" + body.Count + " 맞는적=" + (bodyHit.Count > 0 ? F1(bodyHit.Average()) : "-") + " 맞는수=" + bodyHit.Count);
+
+        // 3) 플레이어: 그림 상자 + 4화소 안의 밝은 쪽 10% (= 밝은 외곽 띠) · 화면 전체 상위 1% · 2%
+        var all = new float[px.Length];
+        for (int i = 0; i < px.Length; i++) all[i] = Y601(px[i]);
+        float[] sorted = (float[])all.Clone();
+        Array.Sort(sorted);
+        float p99 = sorted[(int)(sorted.Length * 0.99f)], p98 = sorted[(int)(sorted.Length * 0.98f)];
+        Component pc = (Component)Player();
+        SpriteRenderer psr = pc != null ? pc.GetComponent<SpriteRenderer>() : null;
+        float band = -1f;
+        if (psr != null)
+        {
+            Vector2 a = Scr(psr.bounds.min), b = Scr(psr.bounds.max);
+            var ys = new List<float>();
+            for (int y = Mathf.Max(0, (int)Mathf.Min(a.y, b.y) - 4); y <= Mathf.Min(h - 1, (int)Mathf.Max(a.y, b.y) + 4); y++)
+                for (int x = Mathf.Max(0, (int)Mathf.Min(a.x, b.x) - 4); x <= Mathf.Min(w - 1, (int)Mathf.Max(a.x, b.x) + 4); x++) ys.Add(all[y * w + x]);
+            ys.Sort();
+            if (ys.Count > 10) band = ys.Skip((int)(ys.Count * 0.9f)).Average();
+        }
+        sb.Append(" 띠=" + F1(band) + " 화면p99=" + F1(p99) + " 화면p98=" + F1(p98));
+
+        // 4) 적 경고: 테(반지름 0.9 ~ 1.1 중 채도가 가장 높은 둘레의 점 24곳 평균색) 색상 · Y, 안쪽 닫히는 흰 고리(둘레 평균 Y 최댓값)
+        if (warns != null && warns.Length > 0)
+        {
+            var hues = new List<string>(); var rimY = new List<string>(); var ringY = new List<string>();
+            foreach (var (wpos, wr) in warns)
+            {
+                float bestS = -1f, bestH = 0f, bestY = 0f, ring = 0f;
+                for (int k = 0; k <= 40; k++)
+                {
+                    float rr = wr * (0.05f + k * 0.0275f);         // 0.05 ~ 1.15
+                    float sr = 0f, sg = 0f, sbb = 0f, sy = 0f;
+                    for (int j = 0; j < 24; j++)
+                    {
+                        float an = j * Mathf.PI * 2f / 24f;
+                        Vector2 s = Scr(wpos + new Vector3(Mathf.Cos(an), Mathf.Sin(an), 0f) * rr);
+                        Color32 c = px[Mathf.Clamp((int)s.y, 0, h - 1) * w + Mathf.Clamp((int)s.x, 0, w - 1)];
+                        sr += c.r; sg += c.g; sbb += c.b; sy += Y601(c);
+                    }
+                    Color mc = new Color(sr / 24f / 255f, sg / 24f / 255f, sbb / 24f / 255f);
+                    Color.RGBToHSV(mc, out float hh, out float ss, out float vv);
+                    if (rr >= wr * 0.88f && rr <= wr * 1.12f && ss * vv > bestS) { bestS = ss * vv; bestH = hh * 360f; bestY = sy / 24f; }
+                    if (rr < wr * 0.85f) ring = Mathf.Max(ring, sy / 24f);
+                }
+                hues.Add(F1(bestH)); rimY.Add(F1(bestY)); ringY.Add(F1(ring));
+            }
+            sb.Append(" 테색상=" + string.Join(",", hues) + " 테Y=" + string.Join(",", rimY) + " 흰고리Y=" + string.Join(",", ringY));
+        }
+        else sb.Append(" 테색상=- 테Y=- 흰고리Y=-");
+
+        // 7) 룬 · 큰 충격파 (결계 · 침식 거대 룬 제거 확인)
+        int rune = UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Count(r => r.enabled && r.gameObject.activeInHierarchy && r.gameObject.layer != UiLayer && r.name.IndexOf("rune", StringComparison.OrdinalIgnoreCase) >= 0);
+        int bigShock = UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).Count(r => r.enabled && r.gameObject.activeInHierarchy && r.name.StartsWith("fx_shock") && r.bounds.size.x * pxPerUnit > h * 0.33f);
+        sb.Append(" 룬=" + rune + " 큰충격파=" + bigShock);
+        Log(sb.ToString());
+
+        // 5) 내 이펙트: 깨끗한 판과 적 몸 평균 차이 · 적 위(Effect 층) fx_ 렌더러 알파 상위 · 화염 지대 층
+        if (shot.EndsWith("_clean")) readClean[place] = bodyMean;
+        else
+        {
+            var sb5 = new StringBuilder("내이펙트 " + shot);
+            float c0 = readClean.TryGetValue(place, out float cv) ? cv : -1f;
+            sb5.Append(" 적차이=" + (c0 > 0f && bodyMean >= 0f ? F1(Mathf.Abs(bodyMean - c0) / c0 * 100f) : "-"));
+            var fxTop = UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None)
+                .Where(r => r.enabled && r.gameObject.activeInHierarchy && r.sortingLayerName == "Effect" && r.name.StartsWith("fx_") && r.name != "fx_warn" && r.name != "fx_shock")
+                .OrderByDescending(r => r.color.a).Take(4).ToList();
+            sb5.Append(" 효과층알파=" + (fxTop.Count > 0 ? string.Join(",", fxTop.Select(r => r.name + ":" + r.color.a.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))) : "-"));
+            SpriteRenderer zsr = zone != null ? zone.GetComponent<SpriteRenderer>() : null;
+            SpriteRenderer esr = UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).FirstOrDefault(r => r.enabled && r.GetComponent(T("EnermyController")) != null);
+            sb5.Append(" 화염층=" + (zsr != null ? zsr.sortingLayerName + "/" + zsr.sortingOrder + "#" + SortingLayer.GetLayerValueFromID(zsr.sortingLayerID) : "-"));
+            sb5.Append(" 적층=" + (esr != null ? esr.sortingLayerName + "/" + esr.sortingOrder + "#" + SortingLayer.GetLayerValueFromID(esr.sortingLayerID) : "-"));
+            var booms = UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).Where(r => r.enabled && r.gameObject.activeInHierarchy && r.name == "fx_explosion").ToList();
+            sb5.Append(" 폭발층=" + (booms.Count > 0 ? string.Join(",", booms.Select(r => r.sortingLayerName + "/" + r.sortingOrder + "#" + SortingLayer.GetLayerValueFromID(r.sortingLayerID)).Distinct()) : "-"));
+            Log(sb5.ToString());
+        }
+
+        // 6) 화소 밀도: 그림 1칸이 화면 몇 화소인지 (|배율| ÷ PPU × 화면 화소/월드) — 12 넘는 것만
+        var dense = new Dictionary<string, float>();
+        foreach (Renderer r in rends)
+        {
+            if (!(r is SpriteRenderer sr) || sr.sprite == null || !r.isVisible) continue;
+            Vector2 a = Scr(r.bounds.min), b = Scr(r.bounds.max);
+            if (b.x < 0 || a.x > w || b.y < 0 || a.y > h) continue;
+            float d = Mathf.Abs(sr.transform.lossyScale.y) / Mathf.Max(0.0001f, sr.sprite.pixelsPerUnit) * pxPerUnit;
+            if (d <= 12f) continue;
+            string key = r.gameObject.name.Replace("(Clone)", "").Trim() + "[" + sr.sprite.texture.name + "]";
+            dense[key] = Mathf.Max(dense.TryGetValue(key, out float old) ? old : 0f, d);
+        }
+        Log("밀도 " + shot + " 개수=" + dense.Count + " " + (dense.Count > 0 ? string.Join(" ", dense.OrderByDescending(x => x.Value).Select(x => x.Key.Replace(" ", "_") + "=" + F1(x.Value))) : "-"));
     }
 
     // ================================================================= 1) graphics-1: 「기억: … n초」 줄 · 결계 게이지 겹침 (무한 · 이야기 · 영어)

@@ -98,9 +98,11 @@ public class SkinFx : MonoBehaviour
         Sprite glow = SpecialAbilities.GlowSprite;
         if (glow == null) return;
         Color c = CharSkin.color;
+        // 1.6.0~ 가독성 개편 1-D: 전설 오라 구슬 알파 1 → 0.7 (적 위 Effect 층이라 붙은 적을 가렸음) · 스킨 색은 그대로 (구매한 꾸미기)
+        float orbAlpha = VisualRules.Legacy ? 1f : 0.7f;
         for (int i = 0; i < 3; i++)
         {
-            GameObject o = SpecialAbilities.MakeSprite("SkinAura", glow, transform.position, 0.13f, new Color(c.r, c.g, c.b, 1f), "Effect", 2);
+            GameObject o = SpecialAbilities.MakeSprite("SkinAura", glow, transform.position, 0.13f, new Color(c.r, c.g, c.b, orbAlpha), "Effect", 2);
             orbs.Add(o.transform);
         }
         groundGlow = SpecialAbilities.MakeSprite("SkinGround", glow, transform.position, 0.5f, new Color(c.r, c.g, c.b, 0.42f), "Background", 50);

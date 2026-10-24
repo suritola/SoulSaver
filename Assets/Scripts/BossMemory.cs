@@ -278,8 +278,11 @@ public class BossMemory : MonoBehaviour
 
         // 연출: 흰빛(보스 몸 0.6초 + 이펙트) · 약한 흔들림 · 소리 · 큰 알림 (게임을 멈추지 않음)
         boss.MemoryWhite(0.6f, 0f);
-        Fx.Spawn("fx_soulburst", bp, bodyR * 2.6f, Color.white, 16f);
-        Fx.Spawn("fx_shock", bp, bodyR * 3f, color, 18f);
+        using (DamageSource.As(DamageSource.Other))     // 1.6.0~ 적 연출 (지금은 Update 에서만 불리지만 피해 호출 안에서 불려도 「내 것」이 되지 않게)
+        {
+            Fx.Spawn("fx_soulburst", bp, bodyR * 2.6f, Color.white, 16f);
+            Fx.Spawn("fx_shock", bp, bodyR * 3f, color, 18f);
+        }
         Hostile.Shake(0.25f);
         Hostile.Play("shimmer", 0.7f, 0.55f);
 
@@ -364,11 +367,15 @@ public class BossMemory : MonoBehaviour
         boss.MemoryWhite(1.5f, 0.25f);      // 휘청: 몸이 하얗게 깜빡 (「지금 더 아프다」를 몸으로)
         staggerFxAt = 0f;
         RunCounters.Add("bossmem.break");
-        Fx.Spawn("fx_shock", bp, bodyR * 3.4f, Color.white, 16f);
-        for (int i = 0; i < 10; i++)
+        // 1.6.0~ 깨짐은 플레이어 피해 호출(OnHealth) 안이라 「내 것」으로 잡혀 적 아래 층 · 내 이펙트 불투명도 · 장식 수명이 걸렸음 → 적 쪽 연출로
+        using (DamageSource.As(DamageSource.Other))
         {
-            float a = i * 36f * Mathf.Deg2Rad;
-            Fx.Spawn("fx_spark", bp + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * bodyR * 1.35f, 2.2f, Color.Lerp(color, Color.white, 0.5f), 18f);
+            Fx.Spawn("fx_shock", bp, bodyR * 3.4f, Color.white, 16f);
+            for (int i = 0; i < 10; i++)
+            {
+                float a = i * 36f * Mathf.Deg2Rad;
+                Fx.Spawn("fx_spark", bp + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * bodyR * 1.35f, 2.2f, Color.Lerp(color, Color.white, 0.5f), 18f);
+            }
         }
         Hostile.Play("shatter", 0.8f, 0.8f);
         Hostile.Shake(0.3f);

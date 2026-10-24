@@ -2435,6 +2435,9 @@ public static class SettingsUI
                   "코인을 끌어오는 범위를 캐릭터 둘레에 연한 고리로 늘 보여 줍니다. 꺼도 코인 자석 카드를 고른 직후에는 잠깐 보입니다.");
         ToggleRow("화면 밖 표시", y[4], () => GameSettings.EdgeMarkers, v => GameSettings.EdgeMarkers = v,
                   "보물 상자 · 떠돌이 상점 · 황금 고블린 · 중간 보스가 화면 밖에 있으면 화면 가장자리에 방향과 남은 시간을 보여 줍니다. 석관 · 영혼 제단 화살표와 포털 안내선은 늘 보입니다.");
+        // 1.6.0~ 적 체력바 (그래픽 가독성 개편 1-F · 기본 「정예만」)
+        CycleRow("적 체력바", y[5], GameSettings.EnemyBarNames, () => GameSettings.EnemyBars, v => GameSettings.EnemyBars = v,
+                 "정예 · 중간 보스 · 황금 고블린만 머리 위 체력바를 보여 줍니다. 「맞은 적 모두」면 한 번이라도 맞은 적에게 모두 보입니다. 보스 체력은 화면 위 막대로 늘 보입니다.");
     }
 
     // 1.0.4~ 설정 줄 이름에 마우스를 올리면 한 줄 설명 (글자는 TooltipUI.Show 가 Loc.T 로 번역)

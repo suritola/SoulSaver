@@ -200,7 +200,8 @@ public static class DomainStrikes
             }
         }
         Hostile.Circle(at, r, warn, BossUltimate.Bright(color));
-        Hostile.Circle(at, r * 0.55f, warn, new Color(1f, 1f, 1f, 0.75f));
+        // 1.6.0~ 안쪽 흰 원(장식 · 판정은 바깥 원 r)은 Legacy 일 때만 — 흰 원 + 흰 닫히는 고리가 겹쳐 어지러웠고, 침식에선 타격마다 경고 2개씩이라 렌더러도 많았음
+        if (VisualRules.Legacy) Hostile.Circle(at, r * 0.55f, warn, new Color(1f, 1f, 1f, 0.75f));
         BossUltimate.Warn(at, warn, r);
         for (int i = 0; i < Capacity; i++)
         {

@@ -10,6 +10,7 @@ Shader "SoulSaver/SpriteOutline"
         _Saturation ("Saturation", Float) = 1
         _Brightness ("Brightness", Float) = 1
         _EmptyAlpha ("Empty below alpha", Float) = 0.5
+        _SkipDark ("Skip outline beside dark", Float) = 0         // 1.6.0~ 붙은 그림 칸이 이미 이보다 어두우면 외곽 생략 (0 = 예전 그대로)
         [PerRendererData] _Flash ("Hit flash", Float) = 0       // 1.1~ 피격 흰 번쩍임 (Juice.SetFlash 가 렌더러마다)
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
@@ -38,7 +39,7 @@ Shader "SoulSaver/SpriteOutline"
 
             float4 _MainTex_TexelSize;
             fixed4 _OutlineColor;
-            float _Saturation, _Brightness, _EmptyAlpha;
+            float _Saturation, _Brightness, _EmptyAlpha, _SkipDark;
             float _Flash;
 
             // 1.2.4: 옆 칸 4개의 좌표를 정점에서 미리 계산 (픽셀마다 좌표 계산 뒤 읽던 종속 텍스처 읽기 → 바로 읽기 · 같은 칸을 읽으므로 결과 같음)
@@ -74,9 +75,16 @@ Shader "SoulSaver/SpriteOutline"
                 // 빈칸 판정: 캐릭터는 0.5, 이펙트는 0.05 (반투명한 빛 번짐이 검은 테두리로 바뀌지 않게)
                 if (tex.a < _EmptyAlpha)
                 {
-                    float a = max(max(SampleSpriteTexture(IN.nearX.xy).a, SampleSpriteTexture(IN.nearX.zw).a),
-                                  max(SampleSpriteTexture(IN.nearY.xy).a, SampleSpriteTexture(IN.nearY.zw).a));
-                    if (a > 0.5)
+                    fixed4 nr = SampleSpriteTexture(IN.nearX.xy), nl = SampleSpriteTexture(IN.nearX.zw);
+                    fixed4 nu = SampleSpriteTexture(IN.nearY.xy), nd = SampleSpriteTexture(IN.nearY.zw);
+                    float a = max(max(nr.a, nl.a), max(nu.a, nd.a));
+                    // 1.6.0~ 붙은 불투명 칸(a > 0.5) 중 가장 밝은 흑백 값 — 그림에 이미 어두운 외곽이 있으면 그 자리는 셰이더 외곽을 생략(이중 외곽 → 1칸)
+                    //   같은 4칸을 다시 쓰므로 텍스처 읽기 추가 없음 · 키워드 없이 재질 값으로만 (_SkipDark 0 이면 늘 그림 = 예전 그대로)
+                    //   피격 흰 번쩍임(_Flash) 동안은 그림의 어두운 외곽도 하얘지므로 생략하지 않음 (흰 몸 둘레에 외곽이 남게)
+                    const float3 lw = float3(0.299, 0.587, 0.114);
+                    float lit = max(max(nr.a > 0.5 ? dot(nr.rgb, lw) : 0, nl.a > 0.5 ? dot(nl.rgb, lw) : 0),
+                                    max(nu.a > 0.5 ? dot(nu.rgb, lw) : 0, nd.a > 0.5 ? dot(nd.rgb, lw) : 0));
+                    if (a > 0.5 && lit >= _SkipDark * (1 - _Flash))
                     {
                         fixed4 o = _OutlineColor;
                         o.a *= IN.color.a;

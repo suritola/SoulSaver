@@ -578,9 +578,14 @@ public partial class CharacterKit
         if (expressRing == null) { expressRing = Hostile.NewLine("ExpressRing", PostRed, 0.16f, 55); expressRing.loop = true; }
         expressRing.enabled = true;
         Hostile.SetArc(expressRing, me, ExpressRange, 0f, 360f);
-        Color post = HeroAim.ColorOf(HeroAimKind.Postman);         // 1.5.0~ 범위표시 색: 우편 빨강 (다 차면 금빛은 그대로)
-        Color rc = expressCharge >= 1f ? Color.Lerp(post, new Color(1f, 0.85f, 0.4f), 0.6f) : post;
-        expressRing.startColor = expressRing.endColor = new Color(rc.r, rc.g, rc.b, 0.5f + 0.3f * Mathf.Sin(Time.time * 12f));
+        // 1.5.0~ 범위표시 색 (HeroAim) · 1.6.0~ 우편 빨강 → 우체부 금(색각 모드는 하늘) — 예전처럼 다 차면 금으로 섞으면 기본색과 구분이 안 돼서
+        //   다 차면 흰빛 쪽으로 밝게 + 더 진하게 (Legacy 면 예전: 빨강 → 금빛)
+        Color post = HeroAim.ColorOf(HeroAimKind.Postman);
+        bool chargedFull = expressCharge >= 1f;
+        Color rc = !chargedFull ? post : VisualRules.Legacy ? Color.Lerp(post, new Color(1f, 0.85f, 0.4f), 0.6f) : Color.Lerp(post, Color.white, 0.6f);
+        float wave = Mathf.Sin(Time.time * 12f);
+        float ra = chargedFull && !VisualRules.Legacy ? 0.8f + 0.2f * wave : 0.5f + 0.3f * wave;
+        expressRing.startColor = expressRing.endColor = new Color(rc.r, rc.g, rc.b, ra);
         expressRing.startWidth = expressRing.endWidth = 0.16f + 0.08f * expressCharge;
         // 우표 문양 고리 · 표식 붙은 적 → 내 쪽으로 편지가 날아옴 (HeroAimDecor · 목록은 참조만)
         HeroAim.Mark(expressRing, HeroAimKind.Postman);

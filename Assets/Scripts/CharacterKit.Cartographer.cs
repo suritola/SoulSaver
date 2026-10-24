@@ -424,9 +424,12 @@ public partial class CharacterKit
         if (foldCompass == null) { foldCompass = Hostile.NewLine("FoldCompass", Ink, 0.1f, 57); foldCompass.loop = true; }
         float pulse = 0.55f + 0.35f * Mathf.Sin(Time.time * 14f);
         // 1.5.0~ 범위표시 색: 양피지 · 잉크 갈색 (예전 파랑은 시계공 · 유령 하늘색과 겹쳤음) · 다 모이면 금빛 깜빡은 그대로
+        //   1.6.0~ 범위표시 색이 영웅색 남청(HeroAim · 색각 모드 포함)으로 바뀜 → 접힘선은 양피지를 잉크 갈색으로 누르던 곱 대신
+        //   남청 그대로 두고 흑백 밝기 하한 0.55 (어두운 바닥 Y 28~55 에서도 보이게 · Legacy 면 예전 곱)
         Color map = HeroAim.ColorOf(HeroAimKind.Cartographer);
         float gold = foldCharge >= 1f ? 0.5f + 0.5f * Mathf.Sin(Time.time * 14f) : 0f;
-        SetSeg(foldLine, a, b, new Color(map.r * 0.75f, map.g * 0.7f, map.b * 0.6f, pulse), 0.12f + 0.12f * foldCharge);
+        Color ink = VisualRules.Legacy ? new Color(map.r * 0.75f, map.g * 0.7f, map.b * 0.6f) : LumaFloor(map, 0.55f);
+        SetSeg(foldLine, a, b, new Color(ink.r, ink.g, ink.b, pulse), 0.12f + 0.12f * foldCharge);
         Vector3 off = (Vector3)(n * half);
         Color side = Color.Lerp(map, InkGold, gold);
         side.a = 0.5f + 0.35f * foldCharge;
@@ -459,6 +462,16 @@ public partial class CharacterKit
         if (foldLine != null) foldLine.enabled = foldSideA.enabled = foldSideB.enabled = false;
         if (foldCompass != null) foldCompass.enabled = false;
         CancelUltAim();
+    }
+
+    // 1.6.0~ 흑백 밝기(Rec.601)가 min 보다 어두우면 흰색 쪽으로 그만큼만 끌어올림 (색상은 거의 그대로 · 알파 유지)
+    static Color LumaFloor(Color c, float min)
+    {
+        float l = c.r * 0.299f + c.g * 0.587f + c.b * 0.114f;
+        if (l >= min || l >= 1f) return c;
+        Color o = Color.Lerp(c, Color.white, (min - l) / (1f - l));
+        o.a = c.a;
+        return o;
     }
 
     static void SetSeg(LineRenderer lr, Vector3 a, Vector3 b, Color c, float w)

@@ -102,16 +102,27 @@ public static class AttackLook
 
     // ---------------------------------------------------------------- 색
     // 영웅 고유색 (테두리 · 빛 무리 · 잔상): 붉은 적 위험색(1, 0.25, 0.2)과 겹치지 않게, 명도는 모두 높게
-    public static readonly Color Gold = new Color(1f, 0.8f, 0.22f);         // 거너
-    public static readonly Color Azure = new Color(0.4f, 0.78f, 1f);        // 검사
-    public static readonly Color Magenta = new Color(1f, 0.36f, 0.86f);     // 도적
-    public static readonly Color Mint = new Color(0.5f, 1f, 0.66f);         // 궁수
-    public static readonly Color Brass = new Color(1f, 0.72f, 0.28f);       // 시계공
-    public static readonly Color InkBlue = new Color(0.4f, 0.6f, 1f);       // 지도 제작자
-    public static readonly Color PostGold = new Color(1f, 0.78f, 0.35f);    // 우체부
-    public static readonly Color Frost = new Color(0.55f, 0.92f, 1f);       // 유령
+    //   1.6.0~ 가독성 개편 1-D: 이름은 그대로 두고 값은 CharacterData 의 영웅색 한 벌 (예전엔 CharacterData · AttackLook · HeroAim 이 세 벌로 서로 달랐고
+    //     도적 자홍 · 연금술사 주황이 적대 대역이었음) · VisualRules.Legacy 면 예전 값. 이름이 색과 안 맞는 것: Magenta = 도적 독 연두
+    static readonly Color LegacyGold = new Color(1f, 0.8f, 0.22f), LegacyMagenta = new Color(1f, 0.36f, 0.86f), LegacyFrost = new Color(0.55f, 0.92f, 1f);
+    static readonly Color LegacyAlchemy = new Color(1f, 0.55f, 0.25f);
+    static Color Pick(Color legacy, CharacterId id) => VisualRules.Legacy ? legacy : CharacterData.Ally(id);
+    public static Color Gold => Pick(LegacyGold, CharacterId.Gunner);                               // 거너
+    public static Color Azure => Pick(new Color(0.4f, 0.78f, 1f), CharacterId.Swordsman);          // 검사
+    public static Color Magenta => Pick(LegacyMagenta, CharacterId.Rogue);                          // 도적
+    public static Color Mint => Pick(new Color(0.5f, 1f, 0.66f), CharacterId.Archer);              // 궁수
+    public static Color Alchemy => Pick(LegacyAlchemy, CharacterId.Alchemist);                      // 연금술사 (예전 HeroColor 안의 주황)
+    public static Color Brass => Pick(new Color(1f, 0.72f, 0.28f), CharacterId.Clockmaker);        // 시계공
+    public static Color InkBlue => Pick(new Color(0.4f, 0.6f, 1f), CharacterId.Cartographer);      // 지도 제작자
+    public static Color PostGold => Pick(new Color(1f, 0.78f, 0.35f), CharacterId.Postman);        // 우체부
+    public static Color Frost => Pick(LegacyFrost, CharacterId.Ghost);                              // 유령
 
-    public static Color HeroColor()
+    // 1.6.0~ 전투색(테두리 · 빛 무리 · 잔상 · Vivid 의 대체색)이라 색각 모드 보정을 여기서 — 거너 · 시계공 · 우체부의 금 · 황동이 적 테 주황과 겹쳐서
+    public static Color HeroColor() => VisualRules.AllyCb(HeroColorRaw());
+    // 1.6.0~ UI 글자 · 판에 쓰는 영웅색 — 색각 모드 보정 없음 (기획 「색각 모드에서 UI 색은 그대로」 · Herald 답장 글씨 등)
+    public static Color HeroColorUi() => HeroColorRaw();
+
+    static Color HeroColorRaw()
     {
         CharacterKit k = CharacterKit.Instance;
         if (k == null) return Gold;
@@ -120,7 +131,7 @@ public static class AttackLook
             case CharacterId.Swordsman: return Azure;
             case CharacterId.Rogue: return Magenta;
             case CharacterId.Archer: return Mint;
-            case CharacterId.Alchemist: return new Color(1f, 0.55f, 0.25f);
+            case CharacterId.Alchemist: return Alchemy;
             case CharacterId.Cartographer: return InkBlue;
             case CharacterId.Clockmaker: return Brass;
             case CharacterId.Postman: return PostGold;

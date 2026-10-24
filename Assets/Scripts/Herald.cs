@@ -325,7 +325,8 @@ public static partial class Herald
             Anchor(b.nameTag.rectTransform, new Vector2(230f, 172f));
             b.line = UIKit.Text(b.bar, "", 30f, new Color(0.93f, 0.91f, 0.86f), Vector2.zero, new Vector2(1320f, 92f), TextAlignmentOptions.TopLeft);
             Anchor(b.line.rectTransform, new Vector2(230f, 104f));
-            b.reply = UIKit.Text(b.bar, "", 27f, Color.Lerp(AttackLook.HeroColor(), Color.white, 0.35f), Vector2.zero, new Vector2(1320f, 44f), TextAlignmentOptions.TopLeft);
+            // 1.6.0~ 답장 글씨는 UI 색 = 색각 보정 없는 영웅색 (HeroColorUi)
+            b.reply = UIKit.Text(b.bar, "", 27f, Color.Lerp(AttackLook.HeroColorUi(), Color.white, 0.35f), Vector2.zero, new Vector2(1320f, 44f), TextAlignmentOptions.TopLeft);
             Anchor(b.reply.rectTransform, new Vector2(230f, 40f));
             foreach (TMP_Text t in new[] { b.line, b.reply }) { t.enableAutoSizing = true; t.fontSizeMin = 18f; t.fontSizeMax = t.fontSize; t.enableWordWrapping = true; UIKit.Forget(t); }
             b.hint = UIKit.Text(go.transform, "", 20f, new Color(0.7f, 0.66f, 0.6f), Vector2.zero, new Vector2(520f, 30f), TextAlignmentOptions.Right);

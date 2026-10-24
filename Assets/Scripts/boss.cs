@@ -148,7 +148,7 @@ public class bosss : MonoBehaviour
 
     void Start()
     {
-        SpriteOutline.Enemy(gameObject);
+        SpriteOutline.Enemy(gameObject, true);      // 1.6.0~ 보스는 밝기 재질 없이 (외곽 생략만)
         if (!difficultyApplied)
         {
             difficultyApplied = true;
@@ -292,8 +292,12 @@ public class bosss : MonoBehaviour
             // 킹 슬라임은 같은 순간 자기 2페 연출(부풀기 · 머리 위 「분열!」 · 초록 충격파)이 있어 몸 위 「분노!」 · 붉은 충격파는 생략 (겹쳐서 안 읽힘)
             if (!IsSlime)
             {
-                Fx.Spawn("fx_shock", transform.position, 9f, rage, 18f);
-                SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 2.6f, Loc.T("분노!"), rage, 6.5f, 0f, 1.2f);
+                // 1.6.0~ 플레이어 피해 호출 안이라 「내 것」(DamageSource.Current)으로 잡혀 내 이펙트 불투명도 · 분류가 적 경고에 걸렸음 → 적 쪽으로 (Juice 처치 연출과 같은 방식)
+                using (DamageSource.As(DamageSource.Other))
+                {
+                    Fx.Spawn("fx_shock", transform.position, 9f, rage, 18f);
+                    SpecialAbilities.SharedFx?.FloatText(transform.position + Vector3.up * 2.6f, Loc.T("분노!"), rage, 6.5f, 0f, 1.2f);
+                }
             }
             Hostile.Play("roar", 0.6f, 1.2f);
             bossbar.FlashName();
@@ -338,7 +342,10 @@ public class bosss : MonoBehaviour
         if (isDead) { flashing = false; return; }
         if (Time.time < flashUntil)
         {
-            spriteRenderer.color = Color.red;
+            // 1.6.0~ 순빨강 → 몸 색 밝기 ×0.85 (빨강은 적대 경고색 · 흰빛은 기억 「휘청」 신호(BossMemory · _Flash)라 둘 다 안 씀)
+            //   늘 baseTint 에서 새로 곱해 쌓이지 않음 · 0.1초 뒤 · 꺼졌다 켜진 뒤 첫 LateUpdate 에 baseTint 로, 쓰러지면 Die 가 흰색으로
+            spriteRenderer.color = VisualRules.Legacy ? Color.red
+                : new Color(baseTint.r * VisualRules.BossHitDim, baseTint.g * VisualRules.BossHitDim, baseTint.b * VisualRules.BossHitDim, baseTint.a);
             flashing = true;
         }
         else if (flashing)

@@ -33,17 +33,22 @@ public class PickupGlow : MonoBehaviour
 
     void Start()
     {
-        SpriteOutline.Player(gameObject);       // 층을 옮기기 전에 (Effect 층 그림에는 윤곽선을 안 붙임)
+        // 1.6.0~ 코인은 적 아래 층(VisualRules.PickupLayer = GroundFx · 내 바닥 이펙트 위)으로 — 무한 모드에서 쌓인 코인이 적 무리를 덮었음
+        //   코인은 윤곽 재질도 안 씀 (그림 1칸 = 1080p 0.11화소라 테가 안 보이고 재질 비용만 · 흰 테는 플레이어만). 회복 물약은 예전처럼 Effect · 흰 테
+        //   HPpack 은 물약 몸(pack) 또는 그 부모에 붙음 → 둘 다 봄
+        bool heal = GetComponentInChildren<HPpack>(true) != null || GetComponentInParent<HPpack>(true) != null;
+        string layer = heal ? "Effect" : VisualRules.PickupLayer;
+        if (heal || VisualRules.Legacy) SpriteOutline.Player(gameObject);       // 층을 옮기기 전에 (Effect 층 그림에는 윤곽선을 안 붙임)
         foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
         {
-            sr.sortingLayerName = "Effect";
+            sr.sortingLayerName = layer;
             sr.sortingOrder = Order + 1;
         }
         phase = Random.value * 6f;
         if (SpecialAbilities.GlowSprite != null)
         {
             halo = SpecialAbilities.MakeSprite("PickupHalo", SpecialAbilities.GlowSprite, transform.position, size / 8f,
-                                               new Color(color.r, color.g, color.b, 0.6f), "Effect", Order);
+                                               new Color(color.r, color.g, color.b, 0.6f), layer, Order);
             // 최적화: 빛 무리를 코인의 자식으로 — 매 프레임 위치를 따라 쓰지 않음 (그리는 층 · 순서는 그대로 지정돼 있음)
             //   크기는 부모(코인 단계별 크기) 를 나눠 월드 크기가 예전과 같게
             haloTr = halo.transform;

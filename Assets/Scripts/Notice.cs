@@ -38,8 +38,12 @@ public static class Notice
     //   떠돌이 상점 알림 · 보스 대사(거울의 군주 흉내 · 분노 · 결계 등)가 뜨는 동안 캐릭터 주변 탄막이 가려졌음 (플레이테스트 피드백)
     //   → 위끝을 화면 위에서 BigTop(보스 이름 · 체력바 · 진행 줄 -200 아래)에 고정 · 폭은 글 길이만큼(양 끝은 투명하게 빠짐) · 바탕 반투명 · 글자 한 단계 작게
     const float BigTop = -212f;
-    const float BigIcon = 88f;                 // 1.4.4~ 큰 알림 아이콘 (104 → 88)
-    const float BigBgA = 0.6f;                // 큰 알림 바탕 불투명도 (예전 0.88) — 띠 뒤의 탄 · 적이 비쳐 보이게, 글자는 외곽선 · 그림자로 읽힘
+    // 1.6.0~ 그래픽 가독성 개편 (UiRules.Legacy 끔): 주 보스 막대 · 진행 줄이 없고 띠가 오른쪽 위 열(코인 · 포인트 · 키 안내)에 닿지 않으면 위끝을 -150 으로 올림
+    //   (그동안 진행 줄은 잠깐 숨김 — 정예 무리 · 습격 시작 알림과 진행 줄이 같은 순간 뜸) · 제목 46 → 34 · 꼬리표 24 → 22 · 아이콘 88 → 72 · 키캡 104 → 88 · 위아래 여백 32 → 24 · 글 폭 최대 1300 → 1100 · 옛 띠 바탕 0.6 → 0.8
+    const float BigTopHigh = -150f;
+    static float BigIcon => UiRules.Legacy ? 88f : 72f;       // 1.4.4~ 큰 알림 아이콘 (104 → 88) · 1.6.0~ 72
+    static float BigBgA => UiRules.Legacy ? 0.6f : 0.8f;      // 큰 알림 바탕 불투명도 (예전 0.88) — 띠 뒤의 탄 · 적이 비쳐 보이게, 글자는 외곽선 · 그림자로 읽힘 · 1.6.0~ 0.8 (리본 그림이 없을 때만 쓰는 띠)
+    static bool bigHigh;                      // 1.6.0~ 지금 띠의 위끝이 BigTopHigh 인지 (ShowBig 마다 다시 정함 · 실제로 보이는지는 BigHighShowing 이 띠 상태로 판단)
     const float BigRibbonA = 0.86f;           // 1.4.8~ 리본 그림 띠의 불투명도 (그림 자체가 어두운 돌판이라 조금만 비침)
     static bool bigRibbon;                    // 큰 알림 띠가 리본 그림인지 (못 찾으면 예전 그라데이션 띠)
     const float ToastTop = -214f, ToastRight = -24f, ToastW = 470f, ToastGap = 8f;      // 오른쪽 위 코인(96) · 포인트 · 키 안내(-193까지) 아래
@@ -145,7 +149,7 @@ public static class Notice
             objective.localScale = Vector3.one * S;
             objectiveBar.color = a;
         }
-        bool show = !Held;
+        bool show = !Held && !BigHighShowing;
         if (objective.gameObject.activeSelf != show) objective.gameObject.SetActive(show);
     }
 
@@ -154,6 +158,9 @@ public static class Notice
 
     // 1.4.8~ 큰 알림 띠가 지금 화면 위 가운데에 떠 있음 (레벨업 리본이 그동안 비킴 — 위 가운데는 한 번에 하나)
     public static bool BigShowing => bigNow != null && bigView != null && bigView.band != null && bigView.band.gameObject.activeInHierarchy;
+    // 1.6.0~ 띠가 위끝 -150(진행 줄 자리)에 떠 있음 — 그동안 진행 줄을 숨김. 저장한 숨김 상태 없이 띠 상태로만 판단하므로
+    //   띠가 끝나거나(bigNow = null) · 장면이 바뀌어 띠가 파괴되면(band == null) 저절로 거짓 → 진행 줄이 다음 프레임에 다시 보임
+    static bool BigHighShowing => bigHigh && BigShowing;
 
     // 옛 알림판 (StageManager.ShowBanner) — 짧은 한 줄은 토스트, 나머지는 큰 알림
     public static void Legacy(string text, float seconds, bool keep)
@@ -503,8 +510,9 @@ public static class Notice
         Stretch(v.capText.rectTransform, new Vector2(10f, 22f), new Vector2(-10f, -8f));
 
         // 1.4.4~ 글자 한 단계 작게 (제목 56 → 46 · 설명 30 → 26 · 꼬리표 26 → 24): 위쪽 배너라 시선이 덜 가려지게, 최소 글자 크기는 그대로
-        v.tag = NewText(v.content, "Tag", 24f, Gold, TextAlignmentOptions.Center);
-        v.title = NewText(v.content, "Title", 46f, new Color(1f, 0.97f, 0.9f), TextAlignmentOptions.Center);
+        // 1.6.0~ UI 개편(Legacy 끔): 제목 46 → 34 · 꼬리표 24 → 22 (설명 26 그대로)
+        v.tag = NewText(v.content, "Tag", UiRules.Legacy ? 24f : 22f, Gold, TextAlignmentOptions.Center);
+        v.title = NewText(v.content, "Title", UiRules.Legacy ? 46f : 34f, new Color(1f, 0.97f, 0.9f), TextAlignmentOptions.Center);
         v.sub = NewText(v.content, "Sub", 26f, Parch, TextAlignmentOptions.Center);
         go.SetActive(false);
         return v;
@@ -532,7 +540,7 @@ public static class Notice
         bool hasIcon = !hasCap && it.icon != null;
         bool hasTag = !string.IsNullOrEmpty(it.tag);
         bool hasSub = !string.IsNullOrEmpty(it.sub);
-        v.band.anchoredPosition = new Vector2(0f, BigTopNow());
+        bool legacy = UiRules.Legacy;
 
         // 키캡 폭은 글자 길이에 맞춰 (한글 · 가나는 글자당 넓게)
         float capW = 0f;
@@ -540,12 +548,12 @@ public static class Notice
         {
             float est = 0f;
             foreach (char ch in it.key) est += ch >= 0x2E80 ? 46f : 30f;
-            capW = Mathf.Clamp(44f + est, 104f, 240f);
+            capW = Mathf.Clamp(44f + est, legacy ? 104f : 88f, 240f);       // 1.6.0~ UI 개편: 키캡 104 → 88
         }
         float iconW = hasCap ? capW : hasIcon ? BigIcon : 0f;
         float gap = iconW > 0f ? 30f : 0f;
         float screenW = root.rect.width > 10f ? root.rect.width : 1920f;
-        float textMax = Mathf.Clamp((screenW - 160f) / S - iconW - gap, 360f, 1300f);
+        float textMax = Mathf.Clamp((screenW - 160f) / S - iconW - gap, 360f, legacy ? 1300f : 1100f);       // 1.6.0~ UI 개편: 글 폭 최대 1100 (설명은 줄바꿈)
         TextAlignmentOptions align = iconW > 0f ? TextAlignmentOptions.Left : TextAlignmentOptions.Center;
 
         // 글자 크기 · 상자: 원래 크기로 재고(줄바꿈 포함), 설명이 3줄을 넘으면 그 높이 안에서 줄임
@@ -561,7 +569,7 @@ public static class Notice
             t.fontSize = t.fontSizeMax;
             t.alignment = align;
         }
-        v.title.fontSizeMin = Min(38f);
+        v.title.fontSizeMin = Min(legacy ? 38f : 30f);
         v.sub.fontSizeMin = Min(24f);
         v.tag.fontSizeMin = Min(22f);
         // 1.4.4~ 높이 상한도 글자 크기만큼 줄임 (제목 150 → 124 · 설명 128 → 110)
@@ -586,11 +594,15 @@ public static class Notice
         float blockW = Mathf.Max(titleW, Mathf.Max(subW, tagW)) + 8f;
         float blockH = tagH + titleH + (hasSub ? 6f + subH : 0f);
         float contentW = iconW + gap + blockW;
-        float contentH = Mathf.Max(blockH, hasCap ? 108f : hasIcon ? BigIcon + 4f : 0f);
+        float contentH = Mathf.Max(blockH, hasCap ? (legacy ? 108f : 92f) : hasIcon ? BigIcon + 4f : 0f);
         // 1.4.4~ 띠 폭 = 글 폭 + 양 끝 투명하게 빠지는 몫 (화면 폭까지) · 위아래 여백 44 → 32
         // 1.4.8~ 리본 그림은 양 끝이 빠지지 않으므로 빈 몫을 줄임 (글 폭 + 양 깃 · 테두리 몫) — 보이는 폭은 예전과 비슷
         float bandW = Mathf.Min(screenW, bigRibbon ? contentW * S + 160f : contentW * S / 0.6f + 80f);
-        v.band.sizeDelta = new Vector2(bandW, (contentH + 32f) * S);
+        v.band.sizeDelta = new Vector2(bandW, (contentH + (legacy ? 32f : 24f)) * S);
+        // 1.6.0~ 위끝: 주 보스 막대 · 진행 줄이 없고 띠 반폭이 오른쪽 위 열(토스트 줄 왼끝 = 화면 반폭 - 24 - 470 - 16, 1920 에서 450)에 닿지 않으면 -150, 아니면 예전 규칙
+        float rightCol = screenW * 0.5f + ToastRight - ToastW - 16f;
+        bigHigh = !legacy && !bossbar.MainShown && bossbar.LowestShown == null && !(objective != null && objectiveText != null) && bandW * 0.5f <= rightCol;
+        v.band.anchoredPosition = new Vector2(0f, bigHigh ? BigTopHigh : BigTopNow());
         v.content.sizeDelta = new Vector2(contentW, contentH);
         v.content.localScale = Vector3.one * S;
 
@@ -609,7 +621,7 @@ public static class Notice
         }
         if (hasCap)
         {
-            v.cap.sizeDelta = new Vector2(capW, 104f);
+            v.cap.sizeDelta = new Vector2(capW, legacy ? 104f : 88f);
             v.cap.anchoredPosition = new Vector2(left + capW * 0.5f, 2f);
             v.capText.text = it.key;
             capRest = v.cap.anchoredPosition;
@@ -665,6 +677,12 @@ public static class Notice
         BigView v = bigView;
         if (v == null || v.band == null) { bigNow = null; return; }
         if (held) { v.cg.alpha = 0f; return; }       // 숨기고 시간을 멈춤 (창을 닫으면 이어서)
+        // 1.6.0~ 띠가 -150 에 떠 있는데 보스 막대가 나타나면 바로 예전 자리(-212 · 다중 보스 막대 아래)로 내림 (보스 막대를 덮지 않게)
+        if (bigHigh && (bossbar.MainShown || bossbar.LowestShown != null))
+        {
+            bigHigh = false;
+            v.band.anchoredPosition = new Vector2(0f, BigTopNow());
+        }
         bigT += dt;
 
         // 기다리는 알림이 있으면 짧게 끊음: 보통 1.5초 · 급한 것이 오면 0.8초 · 중요(해금 · 클리어)는 급한 것이 올 때만 1.2초 · 급한 것은 끝까지
@@ -974,7 +992,8 @@ public static class Notice
     internal static void TickObjective(bool held)
     {
         if (objective == null || objectiveText == null) return;
-        if (objective.gameObject.activeSelf == held) objective.gameObject.SetActive(!held);
+        bool show = !held && !BigHighShowing;        // 1.6.0~ 띠가 -150 에 떠 있는 동안 잠깐 숨김 (띠가 사라지면 저절로 다시 보임)
+        if (objective.gameObject.activeSelf != show) objective.gameObject.SetActive(show);
     }
 
     // ================================================================= ③ 도움말 패널 (Hints 가 내용 · 줄 · 저장을 맡음)

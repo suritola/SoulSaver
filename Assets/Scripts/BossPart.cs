@@ -44,7 +44,8 @@ public class BossPart : MonoBehaviour
     void Break()
     {
         Broken = true;
-        Fx.Spawn("fx_soulburst", transform.position, 3.5f, baseColor, 18f);
+        // 1.6.0~ 부위 파괴는 적 쪽 연출 (플레이어 피해 호출 안이라 「내 것」으로 잡혀 적 아래 층 · 내 이펙트 불투명도가 걸렸음)
+        using (DamageSource.As(DamageSource.Other)) Fx.Spawn("fx_soulburst", transform.position, 3.5f, baseColor, 18f);
         Hostile.Play("shatter", 0.6f, 1.3f);
         Destroy(gameObject);
     }

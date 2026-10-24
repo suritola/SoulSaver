@@ -506,7 +506,12 @@ public class ChapterEvents : MonoBehaviour
         e.baseColor = tint;
         e.chanceofHP = 50;
         go.transform.localScale *= scale;
-        if (!string.IsNullOrEmpty(tag)) SkillTag.Show(go.transform, tag, 1.8f * scale);
+        if (!string.IsNullOrEmpty(tag))
+        {
+            SkillTag.Show(go.transform, tag, 1.8f * scale);
+            // 1.6.0~ 꼬리표가 있는 적 = 정예 무리 (저주 무리는 꼬리표 없음) → 표식 · 「적 체력바: 정예만」에서도 막대가 보이게 (IsMidBoss 가 아님)
+            if (!go.TryGetComponent(out EliteMark _)) go.AddComponent<EliteMark>();
+        }
     }
 
     void TickRaid(Vector3 me, StageManager sm)
@@ -716,6 +721,10 @@ public class ChapterEvents : MonoBehaviour
 }
 
 // 황금 고블린 (1.1~): 맵 밖으로 나가지 않고, 달아나는 쪽을 바라보며 금빛을 흘림
+// 1.6.0~ 정예 무리 표식 (ChapterEvents.Buff 가 붙임 · 내용 없음) — EnemyHealthBar 가 「정예만」 설정에서 막대를 보일지 가름
+//   일반 적은 죽으면 Destroy 라 다른 적에게 남지 않음
+public class EliteMark : MonoBehaviour { }
+
 public class GoldenGoblin : MonoBehaviour
 {
     SpriteRenderer sr;

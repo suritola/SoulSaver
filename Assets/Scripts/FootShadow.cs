@@ -53,9 +53,14 @@ public static class FootShadow
         go.transform.localScale = new Vector3(r * 2f / sx, r * 2f / sy, 1f);
         SpriteRenderer disc = go.AddComponent<SpriteRenderer>();
         disc.sprite = Ellipse;
-        disc.color = new Color(0f, 0f, 0f, 0.3f);
-        disc.sortingLayerID = body != null ? body.sortingLayerID : PlayerLook.TopLayer;
-        disc.sortingOrder = (body != null ? body.sortingOrder : 0) - 20;
+        // 1.6.0~ 원판은 적 아래 GroundFx 층(순서 100 · 내 바닥 이펙트 12 · 코인 70 위) · 알파 0.5 — Player 층(맨 위)이면 진하게 할수록 발밑으로 들어오는 적 탄을 가림
+        //   고리는 1칸 선이라 Player 층 그대로 · 알파 0.75 (VisualRules.PlayerDiscAlpha · PlayerDiscOrder · PlayerRingAlpha)
+        int bodyLayer = body != null ? body.sortingLayerID : PlayerLook.TopLayer;
+        int bodyOrder = body != null ? body.sortingOrder : 0;
+        disc.color = new Color(0f, 0f, 0f, VisualRules.PlayerDiscAlpha);
+        //   1.6.0~ Legacy 면 예전 자리 (몸 층 · 몸 순서 −20) 그대로
+        if (VisualRules.Legacy) { disc.sortingLayerID = bodyLayer; disc.sortingOrder = bodyOrder - 20; }
+        else { disc.sortingLayerName = VisualRules.GroundFx; disc.sortingOrder = VisualRules.PlayerDiscOrder; }
         Sprite ring = PixelRingArt.Get(r, -1f, true, 0, true);      // 1.5.9~ 고정 (판 시작 때 한 번만 받아 끝까지 씀 — 캐시가 차면 먼저 지워져 고리가 사라졌음)
         if (ring == null) return;
         GameObject rg = new GameObject("ContactRing");
@@ -64,9 +69,9 @@ public static class FootShadow
         rg.transform.localScale = new Vector3(1f / sx, 1f / sy, 1f);
         SpriteRenderer rs = rg.AddComponent<SpriteRenderer>();
         rs.sprite = ring;
-        rs.color = new Color(hero.r, hero.g, hero.b, 0.5f);
-        rs.sortingLayerID = disc.sortingLayerID;
-        rs.sortingOrder = disc.sortingOrder + 1;
+        rs.color = new Color(hero.r, hero.g, hero.b, VisualRules.PlayerRingAlpha);
+        rs.sortingLayerID = bodyLayer;
+        rs.sortingOrder = bodyOrder - 19;       // 예전 원판(−20) 바로 위 자리 그대로 · 몸 뒤
     }
 
     // 1유닛 지름 꽉 찬 원 (32칸 · 점 필터 · 가장자리 2칸만 옅게)

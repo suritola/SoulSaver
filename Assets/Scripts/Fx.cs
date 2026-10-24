@@ -107,7 +107,26 @@ public static class Fx
     // 1.0.2: 플레이어가 낸 이펙트(평타 포함)는 설정의 「내 이펙트 투명도」를 따름 — 적 공격 · 처치 연출은 그대로
     static bool Mine => DamageSource.Current != null && DamageSource.Current != DamageSource.Other;
     static readonly HashSet<string> Markers = new HashSet<string> { "fx_warn", "fx_reticle", "fx_target_rune", "fx_ind_disc", "fx_ind_floor", "fx_ind_band", "fx_ind_cone" };     // 조준 · 경고 표시는 흐리게 하지 않음
-    static Color MyAlpha(Color c, string name = null) { if (Mine && (name == null || !Markers.Contains(name))) c.a *= GameSettings.MyFxAlpha; return c; }
+    // 1.6.0~ 적 위 층에 남는 내 몸(표 B) · 장식(표 C) 이펙트만 상한 × 설정, 하한까지 (VisualRules.MyAlphaCap · MyAlphaFloor)
+    //   바닥(표 A) · 표에 없는 이름 · Legacy 는 예전처럼 설정만 곱함. 색은 바꾸지 않음. 적 이펙트(Mine 아님) · 경고 표시는 그대로
+    static Color MyAlpha(Color c, string name = null)
+    {
+        if (!Mine || (name != null && Markers.Contains(name))) return c;
+        float cap = VisualRules.MyAlphaCap(name);
+        if (cap >= 1f) c.a *= GameSettings.MyFxAlpha;
+        else c.a *= Mathf.Max(cap * GameSettings.MyFxAlpha, VisualRules.MyAlphaFloor(name));
+        return c;
+    }
+
+    // 1.6.0~ 층을 넘기지 않으면(null): 내 바닥 이펙트(표 A)는 적 몸 아래 GroundFx, 그 밖은 예전처럼 "Effect"
+    //   명시해서 넘긴 층(경고 층 · 배경 · 처치 퍼프 · 등장 고리 · 지형 웅덩이 등)은 그대로. 적 이펙트 · Legacy 는 늘 "Effect"
+    //   하늘에 띄우는 먹구름(fx_cloud 순서 20 이상 · 폭풍 필살기 등)은 바닥이 아니라서 뺌
+    static string LayerFor(string layer, string name, int order)
+    {
+        if (layer != null) return layer;
+        if (Mine && VisualRules.IsGround(name) && !(order >= 20 && name == "fx_cloud")) return VisualRules.GroundFx;
+        return "Effect";
+    }
 
     static Color Brighten(Color c) => new Color(Mathf.Lerp(c.r, 1f, 0.35f), Mathf.Lerp(c.g, 1f, 0.35f), Mathf.Lerp(c.b, 1f, 0.35f), Mathf.Max(c.a, 0.97f));     // 1.0.2: 0.25 → 0.35
 
@@ -171,11 +190,12 @@ public static class Fx
 
     // size: 스프라이트 높이를 이 월드 크기로 맞춤
     public static FxAnim Play(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
-                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
+                              float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = null)
     {
         Sprite[] frames = TieredFrames(name);
         if (frames == null || frames.Length == 0) return null;
 
+        layer = LayerFor(layer, name, order);        // 1.6.0~ 기본값 "Effect" → null (내 바닥 이펙트는 적 아래)
         size = Visible(name, size);
         bool skill = SkillFx(name);
         if (skill)
@@ -211,7 +231,7 @@ public static class Fx
     internal static readonly Stack<FxAnim> pool = new Stack<FxAnim>();
 
     public static void Spawn(string name, Vector3 pos, float size, Color? color = null, float fps = 16f,
-                             float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = "Effect")
+                             float rotation = 0f, int order = 12, bool loop = false, float life = -1f, string layer = null)
         => SpawnGet(name, pos, size, color, fps, rotation, order, loop, life, layer);
 
     // 2026-10-23~ 오른쪽을 보고 그린 그림(뻐꾸기 · 비둘기 등)을 왼쪽으로 가는 자리에선 좌우를 뒤집어서
@@ -240,6 +260,15 @@ public static class Fx
         if (DecorBudgetFull(name)) return null;
         Sprite[] frames = TieredFrames(name);
         if (frames == null || frames.Length == 0) return null;
+
+        layer = LayerFor(layer, name, order);
+        // 1.6.0~ 내 장식(불꽃 튐 · 반짝임 · 핏방울 · 연기)은 0.25초 안에 끝나게 빨리 돌림 — 반복 · 수명 지정 · 적 것 · Legacy 는 그대로
+        //   Setup 이 fps 를 매번 새로 넣어 풀에서 다시 쓸 때 남지 않음. Play 경로는 손대지 않음 (돌려받은 FxAnim 을 붙잡는 호출부가 있음)
+        if (!loop && life <= 0f && Mine)
+        {
+            float maxLife = VisualRules.DecorLifeMax(name);
+            if (maxLife > 0f) fps = Mathf.Max(fps, frames.Length / maxLife);
+        }
 
         FxAnim a = null;
         while (pool.Count > 0 && a == null) a = pool.Pop();     // 장면이 바뀌어 지워진 것은 건너뜀
@@ -271,7 +300,7 @@ public static class Fx
     {
         Sprite[] frames = Frames(name);
         if (a == null || frames == null || frames.Length == 0) return false;
-        Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer);
+        Setup(a, name, frames, pos, size, color, fps, rotation, order, loop, life, layer ?? "Effect");      // 조준 표시는 층 고르기 없이 그대로
         if (!a.gameObject.activeSelf) a.gameObject.SetActive(true);
         return true;
     }

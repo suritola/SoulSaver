@@ -39,9 +39,25 @@ public class AbyssWarn : MonoBehaviour
         AbyssWarn w = go.AddComponent<AbyssWarn>();
         w.kind = kind;
         w.duration = Mathf.Max(0.05f, duration);
-        w.color = Hostile.Accessible(color);
+        w.color = Hostile.Accessible(KindColor(kind, color));
         w.owner = owner;
         return w;
+    }
+
+    // 1.6.0~ 가독성 개편 C6: 적 공격 색을 적대 대역(빨강 · 보라 쪽)으로 — 단 1.5.8 「스킬마다 다른 모양 · 색」이라 종류마다 다른 색
+    //   (VisualRules.HostileColor 를 그대로 걸면 영혼 194° · 균열 157° 가 보라 285° 로 모여 공허와 같은 색이 됨)
+    //   사슬 강철 흰(채도 0.15 = 닫히는 고리 흰색) · 시선 공허 보라 272°(이미 적대 대역)는 그대로,
+    //   베기 영혼 하늘 194° → 자홍 323° · 균열 민트 157° → 주홍 14°. 알파는 받은 색 그대로 · Legacy 면 예전 색
+    //   색각 모드는 Make 가 Hostile.Accessible 을 덧씌움 → 보라 · 자홍은 둘 다 자홍(모양으로 구분) · 주홍은 주황 · 강철 그대로
+    static Color KindColor(Kind kind, Color c)
+    {
+        if (VisualRules.Legacy) return c;
+        switch (kind)
+        {
+            case Kind.Reap: return new Color(1f, 0.42f, 0.8f, c.a);
+            case Kind.Crack: return new Color(1f, 0.45f, 0.25f, c.a);
+            default: return c;
+        }
     }
 
     LineRenderer Line(string name, Color c, float width, int order, bool dashed = false)
@@ -66,6 +82,7 @@ public class AbyssWarn : MonoBehaviour
     public static GameObject Chain(Vector3 from, Vector3 to, float width, float duration, Color color, EnermyController owner)
     {
         AbyssWarn w = Make("WarnChain", from, Kind.Chain, duration, color, owner);
+        color = w.color;        // 1.6.0~ 종류별 적대 색 · 색각 모드 색으로 처음부터 그림 (예전엔 첫 프레임만 받은 색 그대로였음)
         w.a = from;
         w.b = to;
         Vector3 side = Vector3.Cross(to - from, Vector3.forward).normalized * width * 0.5f;
@@ -86,6 +103,7 @@ public class AbyssWarn : MonoBehaviour
     public static GameObject Fan(Vector3 center, float radius, float fromDeg, float sweepDeg, float duration, Color color, EnermyController owner, float hitWidth = 0f)
     {
         AbyssWarn w = Make("WarnFan", center, Kind.Fan, duration, color, owner);
+        color = w.color;        // 1.6.0~ 종류별 적대 색 · 색각 모드 색으로 처음부터 그림 (예전엔 첫 프레임만 받은 색 그대로였음)
         w.radius = radius;
         w.fromDeg = fromDeg;
         w.sweepDeg = sweepDeg;
@@ -170,6 +188,7 @@ public class AbyssWarn : MonoBehaviour
     public static GameObject Reap(Vector3 center, float r1, float r2, float first, float second, Color color, EnermyController owner)
     {
         AbyssWarn w = Make("WarnReap", center, Kind.Reap, first, color, owner);
+        color = w.color;        // 1.6.0~ 종류별 적대 색 · 색각 모드 색으로 처음부터 그림 (예전엔 첫 프레임만 받은 색 그대로였음)
         w.duration2 = Mathf.Max(0.05f, second);
         w.r1 = r1;
         w.r2 = r2;
@@ -196,6 +215,7 @@ public class AbyssWarn : MonoBehaviour
     public static GameObject Crack(Vector3 center, Vector2[] dirs, float from, float to, float width, float duration, Color color, EnermyController owner)
     {
         AbyssWarn w = Make("WarnCrack", center, Kind.Crack, duration, color, owner);
+        color = w.color;        // 1.6.0~ 종류별 적대 색 · 색각 모드 색으로 처음부터 그림 (예전엔 첫 프레임만 받은 색 그대로였음)
         int n = dirs.Length;
         w.cracks = new Vector3[n][];
         w.crackLines = new LineRenderer[n];

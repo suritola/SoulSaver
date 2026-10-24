@@ -85,4 +85,124 @@ public static class VisualRules
     public static int MyDecorCap => Legacy ? int.MaxValue : 6;
 
     public static float DecorKeep(bool mine, bool skill) => LegacyDecor / DecorScaleFor(mine) * (skill ? LegacySkillDecor / SkillDecor : 1f);
+
+    // ───── 1.6.0~ 가독성 개편 1단계 (외부 평가 「가독성이 현저히 낮다」 · Gemini 개선안 검증판) — 값만 여기, 그리는 쪽은 각 파일 ─────
+
+    // C1 바닥 재질 (Resources/Shaders/FloorFlat.shader · StageManager): 곱(FloorTone)은 대비 「비율」을 못 줄여서 바닥만 따로 누름
+    //   밝은 쪽 무릎 = 흑백 Y 46(0.18) 을 넘는 몫 × 0.2 (색상 유지) · 국소 대비 = 타일 1장 평균(밉 5)과 lerp 0.65
+    //   밉 5 = 32칸 타일 1장 상자 평균 — 밉 3(8×8)은 상자마다 평균이 달라 경계에 3~4 Y 계단이 생겼음. 타일셋 5장 모두 160×64 라 이웃 타일로 안 번짐
+    public static bool FloorFlat => !Legacy;
+    public const float FloorKnee = 0.18f, FloorKneeRatio = 0.2f, FloorContrast = 0.65f, FloorMeanMip = 5f;
+
+    // C6 적대 문법: 적 공격의 「테」(경고 원 테 · 직선 예고 가장자리)는 적대색 하나 — 채움 · 바닥 원판은 보스 테마색 그대로(정체성)
+    //   #FF4033 = 흑백 Y 120. 색각 모드 주황은 그리는 쪽에서 Hostile.Accessible 로 (여기서 바꾸지 않음)
+    public static readonly Color HostileRim = new Color(1f, 0.25f, 0.2f, 1f);
+
+    // 적 탄 고리 색을 적대 대역으로: 색상이 35°~250°(아군 영웅색 대역)이면 142.5° 기준으로 주홍 15° 또는 보라 285°
+    //   채도 0.15 미만(흰 · 회색 · 강철)은 그대로 — 흰 = 적 문법의 닫히는 고리 · 탄 흰 심 색. 채도 · 밝기 · 알파 유지
+    public static Color HostileColor(Color c)
+    {
+        if (Legacy) return c;
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if (s < 0.15f || h < 0.0972f || h > 0.6944f) return c;
+        Color o = Color.HSVToRGB(h < 0.3958f ? 0.0417f : 0.7917f, s, v);
+        o.a = c.a;
+        return o;
+    }
+
+    // 적 예고 · 결계 · 공간 침식의 도는 바닥 룬 — 아군 마법진과 같은 모양이라 「적 예고 = 내 마법진」으로 오인됐음(스크린샷 03) → 끔
+    public static bool HostileRune => Legacy;
+
+    // 색각 모드에선 적 테가 주황 41°(Hostile.Accessible)가 되어 거너 금 · 시계공 황동 · 우체부 금(37°~42°)과 같은 색상 →
+    //   그때만 아군 영웅 전투색 20°~65° 를 하늘 195° 로 (채도 · 밝기 · 알파 유지). 평소 · Legacy 는 그대로
+    public static Color AllyCb(Color c)
+    {
+        if (Legacy || !GameSettings.ColorBlind) return c;
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if (s < 0.15f || h < 20f / 360f || h > 65f / 360f) return c;
+        Color o = Color.HSVToRGB(195f / 360f, s, v);
+        o.a = c.a;
+        return o;
+    }
+
+    // C2 내 이펙트 분류 (Fx) — 표에 없는 이름은 지금과 같음 (층 Effect · 알파 = 설정만 · 수명 그대로)
+    //   표 A 바닥: 적 몸 아래 GroundFx 로 — 적 위치가 내 폭발 · 장판에 묻혔음(스크린샷 02). 알파 상한 없음(이미 적을 안 덮음 · 상한은 「내 스킬이 안 보임」만 악화)
+    //     적을 묶는 그림(fx_net · fx_webring · fx_soulshackle · fx_silk · fx_tendril)은 적 위에 보여야 해서 뺌. fx_rune 은 내 것일 때만(Fx 가 Mine 을 봄)
+    static readonly System.Collections.Generic.HashSet<string> GroundSet = new System.Collections.Generic.HashSet<string>
+    {
+        "fx_explosion", "fx_shock", "fx_puddle", "fx_vortex", "fx_alchemyblast", "fx_fissure", "fx_geyser", "fx_quake",
+        "fx_poisonfog", "fx_jokerburst", "fx_blackhole", "fx_magfield", "fx_fwstar", "fx_inkwave", "fx_inkshatter", "fx_inkspatter",
+        "fx_chimering", "fx_parcelburst", "fx_icenova", "fx_soulburst", "fx_cloud", "fx_firefloor", "fx_poisonbubble", "fx_rune",
+    };
+    //   표 B 몸(베기 · 빔 · 번개 · 구체 · 낙하물 · 소환체 · 사슬): 적 위 Effect 그대로 · 알파 상한 0.8 (하한 0.5)
+    static readonly System.Collections.Generic.HashSet<string> BodySet = new System.Collections.Generic.HashSet<string>
+    {
+        "fx_slash", "fx_swordswing", "fx_spinslash", "fx_bigsword", "fx_swordwave", "fx_whipblade", "fx_beam", "fx_bolt",
+        "fx_orb", "fx_meteor", "fx_firepillar", "fx_tornado", "fx_arrowrain", "fx_globe", "fx_sandstorm", "fx_lanceghost",
+        "fx_shadowdash", "fx_scythe_ghost", "fx_cuckoo", "fx_pigeon", "fx_falcon", "fx_card", "fx_playcard", "fx_flametongue",
+        "fx_soulchain", "fx_soullink",
+    };
+    //   표 C 장식: 적 위 Effect 그대로 · 알파 상한 0.7 (하한 0.35). fx_soulstep(사용자 승인 영혼불 발자국) · fx_trail_dot(잔상)은 넣지 않음
+    static readonly System.Collections.Generic.HashSet<string> DecorSet = new System.Collections.Generic.HashSet<string>
+    {
+        "fx_spark", "fx_sparkle", "fx_bleed", "fx_smoke", "fx_muzzle",
+    };
+
+    public static bool IsGround(string name) => !Legacy && name != null && GroundSet.Contains(name);
+    public static float MyAlphaCap(string name)
+    {
+        if (Legacy || name == null) return 1f;
+        if (BodySet.Contains(name)) return 0.8f;
+        if (DecorSet.Contains(name)) return 0.7f;
+        return 1f;
+    }
+    // 「내 이펙트 불투명도」 설정을 곱한 뒤의 하한 (50% 설정에서도 몸 · 장식이 사라지지 않게)
+    public static float MyAlphaFloor(string name)
+    {
+        if (Legacy || name == null) return 0f;
+        if (BodySet.Contains(name)) return 0.5f;
+        if (DecorSet.Contains(name)) return 0.35f;
+        return 0f;
+    }
+    // 장식 수명 상한 (풀 Spawn 경로 · loop 아님 · 수명 지정 없음일 때만 Fx 가 씀) — 불꽃 튐 · 반짝임 · 핏방울 · 연기만 0.25초
+    //   fx_muzzle 은 3프레임이라 이미 짧아 뺌. 터짐 0.4초 상한은 안 함 (표 C 밖 6프레임 시트는 16fps 에서 이미 0.375초)
+    public static float DecorLifeMax(string name)
+    {
+        if (Legacy || name == null) return 0f;
+        switch (name)
+        {
+            case "fx_spark": case "fx_sparkle": case "fx_bleed": case "fx_smoke": return 0.25f;
+            default: return 0f;
+        }
+    }
+
+    // C4 플레이어 외곽 · 발밑 (SpriteOutline.Light · FootShadow.Player)
+    //   외곽 흰색 불투명 — 예전 (1, 0.95, 0.8, 0.85). 원판은 Player 층이면 발밑으로 들어오는 적 탄을 가려서 GroundFx 층 순서 100(내 바닥 이펙트 12 · 코인 70 위)
+    public static Color PlayerOutline => Legacy ? new Color(1f, 0.95f, 0.8f, 0.85f) : Color.white;
+    public static float PlayerDiscAlpha => Legacy ? 0.3f : 0.5f;
+    public const int PlayerDiscOrder = 100;
+    public static float PlayerRingAlpha => Legacy ? 0.5f : 0.75f;
+
+    // C7 적 외곽 (SpriteOutline.shader _SkipDark): 붙은 불투명 그림 칸 중 가장 밝은 흑백 값이 이보다 작으면 그 자리 셰이더 외곽 생략
+    //   그림에 이미 #1A112C 외곽이 있는 가장자리(41~98%)는 이중 외곽(보스는 화면 30~40화소 검은 띠)이었음 → 어디서나 정확히 1칸. 0 = 예전 그대로
+    public static float EnemySkipDark => Legacy ? 0f : 0.16f;
+
+    // 너무 어두운 잡몹 2종(Enemy3 Y 63 · 사신 66)만 ×1.15 — 밝은 적은 어둡게 하지 않음 (문제는 「적 위치가 안 보임」)
+    //   심연 그림은 프레임마다 텍스처라 이름 앞부분으로 가름
+    public static float EnemyBrightness(string textureName)
+    {
+        if (Legacy || string.IsNullOrEmpty(textureName)) return 1f;
+        if (textureName.StartsWith("eneymy3", System.StringComparison.OrdinalIgnoreCase)
+         || textureName.StartsWith("reaper_", System.StringComparison.OrdinalIgnoreCase)) return 1.15f;
+        return 1f;
+    }
+
+    // C10 피격: 잡몹 꼬리 「어둡게」(×0.55 · 0.4 · 0.42 = 밝기 약 45%)가 초원 잡몹 Y 125 → 56 으로 바닥(58 · 눌린 뒤 48)에 묻혔음 →
+    //   밝기만 ×0.78 (rgb 같은 배율 · 알파 유지). 흰 번쩍임 0.05초 · 간격 0.25초는 그대로. Legacy 꼬리(Color.red)는 그리는 쪽(EnermyController.HitTint)이 가름
+    public const float HitDim = 0.78f;
+    //   보스는 맞을 때마다 0.1초 순빨강 → 밝기 ×0.85 (흰빛은 기억 「휘청」 신호 · 큰 몸이 초당 3번 넘게 번쩍이면 광과민 기준 초과라 안 씀)
+    public const float BossHitDim = 0.85f;
+
+    // 줍는 것(코인만 · 회복 물약은 그대로): 적 위 Effect 층 70 이라 무한 모드에서 쌓인 코인이 적 무리를 덮었음 → 적 아래 · 내 바닥 이펙트 위
+    public static string PickupLayer => Legacy ? "Effect" : GroundFx;
 }

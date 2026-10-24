@@ -34,6 +34,7 @@ public static class GameSettings
     const string ReduceMotionKey = "settings.reduceMotion", FastFxKey = "settings.fastFx";
     const string CombatStatsKey = "settings.combatStats", PickupRangeKey = "settings.showPickupRange", EdgeMarkersKey = "settings.edgeMarkers";
     const string DisplayKey = "settings.display";
+    const string EnemyBarsKey = "settings.enemyBars";      // 1.6.0~ 적 머리 위 체력바 (옛 저장엔 키가 없어 기본 「정예만」)
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     // 1.1.9~ 기본값 (처음 불러올 때 · 설정 「이 탭 기본값으로」가 같이 써서 어긋나지 않게)
@@ -44,6 +45,7 @@ public static class GameSettings
     const bool DefBossIntroAlways = false, DefAttackLock = false, DefUltToggle = false, DefReduceMotion = false, DefFastFx = false;
     const int DefDialogueSpeed = 0, DefCombatStats = 0, DefDisplay = 0;
     const bool DefShowPickupRange = false, DefEdgeMarkers = true;
+    const int DefEnemyBars = 0;
 
     static bool loaded;
     static float mouseSens = 1f;
@@ -61,6 +63,7 @@ public static class GameSettings
     static bool showFps;
     static bool bossIntroAlways, attackLock, ultToggle, reduceMotion, fastFx, showPickupRange, edgeMarkers = DefEdgeMarkers;
     static int dialogueSpeed, combatStats, displayIndex;
+    static int enemyBars = DefEnemyBars;
 
     public static Loc.Lang Language
     {
@@ -155,6 +158,7 @@ public static class GameSettings
         combatStats = Mathf.Clamp(Prefs.GetInt(CombatStatsKey, DefCombatStats), 0, 2);
         showPickupRange = Prefs.GetInt(PickupRangeKey, B(DefShowPickupRange)) == 1;
         edgeMarkers = Prefs.GetInt(EdgeMarkersKey, B(DefEdgeMarkers)) == 1;
+        enemyBars = Mathf.Clamp(Prefs.GetInt(EnemyBarsKey, DefEnemyBars), 0, 1);
         displayIndex = Mathf.Max(0, Prefs.GetInt(DisplayKey, DefDisplay));
     }
 
@@ -235,9 +239,27 @@ public static class GameSettings
         set { Load(); edgeMarkers = value; Prefs.SetInt(EdgeMarkersKey, B(value)); }
     }
 
+    // 1.6.0~ 적 머리 위 체력바: 0 정예만(정예 무리 · 중간 보스 · 황금 고블린) · 1 맞은 적 모두 (1.5.9 까지 방식)
+    //   「끔」은 두지 않음 (중간 보스 체력은 공략 정보) · 보스는 원래 화면 위 막대 (bossbar)
+    //   바뀌면 EnemyBarsVersion 이 올라 체력바가 다음 프레임에 다시 봄 (일시정지 중에 바꿔도)
+    public static readonly string[] EnemyBarNames = { "정예만", "맞은 적 모두" };
+    public static int EnemyBarsVersion { get; private set; }
+    public static int EnemyBars
+    {
+        get { Load(); return enemyBars; }
+        set
+        {
+            Load();
+            int v = Mathf.Clamp(value, 0, 1);
+            Prefs.SetInt(EnemyBarsKey, v);
+            if (v != enemyBars) { enemyBars = v; EnemyBarsVersion++; }
+        }
+    }
+
     public static void ResetHud()
     {
         DamageNumbers = DefDamageNumbers; MyFxAlphaIndex = DefMyFxAlpha; CombatStats = DefCombatStats; ShowPickupRange = DefShowPickupRange; EdgeMarkers = DefEdgeMarkers;
+        EnemyBars = DefEnemyBars;
         Save();
     }
 

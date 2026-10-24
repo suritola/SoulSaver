@@ -87,8 +87,8 @@ public class MidBossMark : MonoBehaviour
         tag.text = TagText();
         Vector2 size = tag.GetPreferredValues(tag.text);
         tag.rectTransform.sizeDelta = size;
-        if (border != null) border.transform.localScale = new Vector3(size.x + 0.9f, size.y + 0.5f, 1f);
-        if (plate != null) plate.transform.localScale = new Vector3(size.x + 0.65f, size.y + 0.3f, 1f);
+        if (border != null) border.transform.localScale = new Vector3(size.x + 0.9f, size.y + 0.5f, 1f);     // lint-ok 1.6.0~ 이름표 테를 번역된 글 크기에 맞추는 배치 (상태 강조 확대가 아님)
+        if (plate != null) plate.transform.localScale = new Vector3(size.x + 0.65f, size.y + 0.3f, 1f);      // lint-ok 1.6.0~ 같은 이유 (바탕 판 크기 맞춤)
     }
 
     SpriteRenderer Plate(string name, Vector2 size, Color color, int layer, int order)

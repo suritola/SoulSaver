@@ -419,7 +419,8 @@ public class SpaceErosion : MonoBehaviour
         ring2 = Hostile.NewLine("ErosionRing2", Color.white, 0.25f, 41);
         ring2.loop = true;
         ring2.transform.SetParent(root.transform, true);
-        FxAnim rune = Fx.Play("fx_rune", center, Radius * 2f, new Color(avg.r, avg.g, avg.b, 0.25f), 1f, 0f, 41, true, -1f, "Background");
+        // 1.6.0~ 침식 바닥 거대 룬(지름 96)은 Legacy 일 때만 — 아군 마법진과 같은 모양 (장식뿐 · root 와 함께 지워지고 기다리는 곳 없음)
+        FxAnim rune = VisualRules.HostileRune ? Fx.Play("fx_rune", center, Radius * 2f, new Color(avg.r, avg.g, avg.b, 0.25f), 1f, 0f, 41, true, -1f, "Background") : null;
         if (rune != null) { rune.spin = 9f; rune.transform.SetParent(root.transform, true); }
 
         // 보스마다 고리 · 후광 (root 아래 · 끝날 때 함께 지워짐)

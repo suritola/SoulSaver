@@ -299,7 +299,8 @@ public class EnemySkill : MonoBehaviour
             ends[i * 2 + 1] = c + d;
             Hostile.Line(c - d, c + d, 1.3f, Tw(0.9f), new Color(1f, 0.45f, 0.15f, 0.9f));
         }
-        FxAnim rune = Fx.Play("fx_rune", c, 3f, new Color(1f, 0.5f, 0.2f, 0.8f), 1f, 0f, 1, true, Tw(0.9f) + 0.2f);
+        // 1.6.0~ 교차점의 도는 룬도 적 예고 룬 → Legacy 일 때만 (판정은 위 두 직선 예고 그대로)
+        FxAnim rune = VisualRules.HostileRune ? Fx.Play("fx_rune", c, 3f, new Color(1f, 0.5f, 0.2f, 0.8f), 1f, 0f, 1, true, Tw(0.9f) + 0.2f) : null;
         if (rune != null) rune.spin = 120f;
         yield return Windup(new Color(1f, 0.6f, 0.2f), 0.9f, 12f);
         if (!Alive) yield break;
@@ -994,6 +995,7 @@ public class Telegraph : MonoBehaviour
     float t;
     float blinkPhase;       // 1.1~: 깜빡임 위상을 누적 (Time.time × 배수는 판 후반에 프레임마다 지글거렸음)
     Color color;
+    Color rim;              // 1.6.0~ 테(원 테 · 직선 가장자리) 색 = 적대색 하나 (채움 · 바닥 원판은 color = 보스색 그대로) · Legacy 면 color
     bool circle;
     float radius;
     Vector3 a, b;
@@ -1049,9 +1051,13 @@ public class Telegraph : MonoBehaviour
         gameObject.SetActive(true);
     }
 
+    // 1.6.0~ 가독성 개편 C6: 테는 적대색 #FF4033 하나 (알파는 받은 색 그대로 · 색각 모드는 Accessible 이 주황으로) — 보스색 테가 하늘 · 흰색이면 아군 공격과 헷갈렸음
+    static Color RimOf(Color c) => Hostile.Accessible(VisualRules.Legacy ? c : new Color(VisualRules.HostileRim.r, VisualRules.HostileRim.g, VisualRules.HostileRim.b, c.a));
+
     public void InitCircle(float radius, float duration, Color color)
     {
         useId++;
+        rim = RimOf(color);
         color = Hostile.Accessible(color);
         circle = true;
         this.radius = radius;
@@ -1067,10 +1073,10 @@ public class Telegraph : MonoBehaviour
         Hostile.SetArc(under, transform.position, radius, 0f, 354f);
         if (!reuse)
         {
-            outline = Child(Hostile.NewLine("Outline", color, 0.24f, 18, VisualRules.WarnLayer));
+            outline = Child(Hostile.NewLine("Outline", rim, 0.24f, 18, VisualRules.WarnLayer));
             outline.loop = true;
         }
-        else outline.startColor = outline.endColor = color;
+        else outline.startColor = outline.endColor = rim;
         Hostile.SetArc(outline, transform.position, radius, 0f, 354f);
         if (!reuse)
         {
@@ -1084,8 +1090,10 @@ public class Telegraph : MonoBehaviour
             closing.startColor = closing.endColor = Color.white;
         }
         // 바닥에 도는 도트 룬 마법진 (이펙트 단계 · 스킬 강조가 Play 에서 정해지므로 다시 쓸 때도 새로 만듦)
+        // 1.6.0~ 아군 마법진과 같은 모양이라 「적 예고 = 내 마법진」으로 오인됨 → Legacy 일 때만 (다시 쓸 때 남은 룬은 그대로 지움)
         if (rune != null) Destroy(rune.gameObject);
-        rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration, VisualRules.WarnLayer);
+        rune = null;
+        if (VisualRules.HostileRune) rune = Fx.Play("fx_rune", transform.position, radius * 2f, new Color(color.r, color.g, color.b, 0.55f), 1f, 0f, 1, true, duration, VisualRules.WarnLayer);
         if (rune != null)
         {
             rune.spin = 70f;
@@ -1130,6 +1138,7 @@ public class Telegraph : MonoBehaviour
     public void InitLine(Vector3 a, Vector3 b, float width, float duration, Color color)
     {
         useId++;
+        rim = RimOf(color);     // 1.6.0~ 가장자리 선만 적대색 · 줄무늬 띠 · 차오름은 보스색
         color = Hostile.Accessible(color);
         this.a = a;
         this.b = b;
@@ -1147,7 +1156,7 @@ public class Telegraph : MonoBehaviour
             outline.SetPosition(1, b);
             underL.SetPosition(0, a + side); underL.SetPosition(1, b + side);
             underR.SetPosition(0, a - side); underR.SetPosition(1, b - side);
-            edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = color;
+            edgeL.startColor = edgeL.endColor = edgeR.startColor = edgeR.endColor = rim;
             edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
             edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
             fillLine.startColor = fillLine.endColor = new Color(color.r, color.g, color.b, 0.7f);
@@ -1168,8 +1177,8 @@ public class Telegraph : MonoBehaviour
         underL.positionCount = underR.positionCount = 2;
         underL.SetPosition(0, a + side); underL.SetPosition(1, b + side);
         underR.SetPosition(0, a - side); underR.SetPosition(1, b - side);
-        edgeL = Child(Hostile.NewLine("Edge", color, 0.14f, 18, VisualRules.WarnLayer));
-        edgeR = Child(Hostile.NewLine("Edge", color, 0.14f, 18, VisualRules.WarnLayer));
+        edgeL = Child(Hostile.NewLine("Edge", rim, 0.14f, 18, VisualRules.WarnLayer));
+        edgeR = Child(Hostile.NewLine("Edge", rim, 0.14f, 18, VisualRules.WarnLayer));
         edgeL.positionCount = edgeR.positionCount = 2;
         edgeL.SetPosition(0, a + side); edgeL.SetPosition(1, b + side);
         edgeR.SetPosition(0, a - side); edgeR.SetPosition(1, b - side);
@@ -1219,7 +1228,7 @@ public class Telegraph : MonoBehaviour
         float k = Mathf.Clamp01(t / duration);
         blinkPhase += Time.deltaTime * (4f + k * 14f);
         float blink = 0.65f + 0.35f * Mathf.PingPong(blinkPhase, 1f);
-        Color c = new Color(color.r, color.g, color.b, color.a * blink);
+        Color c = new Color(rim.r, rim.g, rim.b, rim.a * blink);     // 1.6.0~ 깜빡이는 건 테뿐 → 테 색으로 (Legacy 면 rim = color 라 예전과 같음)
 
         if (circle)
         {
@@ -1421,7 +1430,7 @@ public class HostileProjectile : MonoBehaviour
     internal void Flash(Color? c)
     {
         if (orbSr == null) return;
-        orbSr.color = c ?? Vivid(body != null ? body.color : Color.red);
+        orbSr.color = c ?? ShotColor(body != null ? body.color : Color.red);
     }
 
     // 1.2.4: 사라진 탄은 꺼 두었다가 Hostile.Shoot 가 다시 씀 (밖에서 Destroy 한 탄은 그냥 지워짐 · 동작 같음)
@@ -1471,7 +1480,7 @@ public class HostileProjectile : MonoBehaviour
     public static Transform Dress(GameObject go, Color color, float diameter)
     {
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
-        Color v = Vivid(color);
+        Color v = ShotColor(color);
         float s = diameter * 2.3f / 8f;
         go.transform.localScale = Vector3.one * s;      // 빛 그림은 8칸 크기
         if (sr != null) sr.color = new Color(v.r, v.g, v.b, 0.8f);
@@ -1500,6 +1509,10 @@ public class HostileProjectile : MonoBehaviour
         core.transform.SetParent(ball.transform, true);
         return ball.transform;
     }
+
+    // 1.6.0~ 가독성 개편 C6: 적 탄 빛 · 구슬 색을 적대 대역으로 (색상 35°~250° → 주홍 15° · 보라 285°, 흰 심 · 검은 그림자 그대로)
+    //   색각 모드는 Accessible 로 주홍 → 주황 · 보라 → 자홍. Legacy 면 예전 Vivid 그대로 (Flash 가 원래 색으로 돌릴 때도 같은 색)
+    static Color ShotColor(Color c) => VisualRules.Legacy ? Vivid(c) : Hostile.Accessible(VisualRules.HostileColor(Vivid(c)));
 
     // 원래 색의 색상은 그대로, 채도 · 밝기를 끌어올림 (반투명 · 탁한 색이 섞여도 선명하게)
     public static Color Vivid(Color c)

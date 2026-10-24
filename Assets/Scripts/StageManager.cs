@@ -129,6 +129,54 @@ public class StageManager : MonoBehaviour
         return d;
     }
 
+    // 1.6.0~ 가독성 개편 C1: 바닥 타일맵에만 FloorFlat 재질 (밝은 쪽 무릎 + 타일 평균 쪽 대비 ×0.65) — 벽은 밉 0 고정 재질(모습 그대로) · 장식 층은 그대로
+    //   바닥 = ArenaLayout 과 같은 규칙: 묘역은 Grid(hellMap 의 부모) 바로 아래 "Floor", 지옥 · 초원은 이름이 "Floor" 로 끝나는 타일맵
+    //   셰이더를 못 읽거나 지원 안 되면 예전 재질 그대로 (Shader.Find 는 빌드에서 빠질 수 있어 Resources 로) · Legacy 면 바꾸지 않음
+    static Material floorFlatMat;
+    static bool floorFlatFailed;
+
+    static Material FloorFlatMaterial()
+    {
+        if (floorFlatMat != null || floorFlatFailed) return floorFlatMat;
+        Shader s = Resources.Load<Shader>("Shaders/FloorFlat");
+        if (s == null || !s.isSupported) { floorFlatFailed = true; return null; }
+        floorFlatMat = new Material(s) { name = "FloorFlat (runtime)" };
+        floorFlatMat.SetFloat("_Knee", VisualRules.FloorKnee);
+        floorFlatMat.SetFloat("_KneeRatio", VisualRules.FloorKneeRatio);
+        floorFlatMat.SetFloat("_Contrast", VisualRules.FloorContrast);
+        floorFlatMat.SetFloat("_MeanMip", VisualRules.FloorMeanMip);
+        // 1.6.0~ 벽 타일맵용: 같은 셰이더에 무릎 · 대비 없이 밉 0 만 읽음 (= 기본 스프라이트와 같은 모습)
+        //   벽 줄(타일셋 6 · 7 · 8번 칸)도 밉맵을 켠 타일셋 그림이라 기본 재질이면 768p · 스팀 덱 800p · 조준 줌에서 밉 1(반 해상도)로 흐려짐
+        floorSharpMat = new Material(s) { name = "FloorSharp (runtime)" };
+        floorSharpMat.SetFloat("_Knee", 10f);
+        floorSharpMat.SetFloat("_KneeRatio", 1f);
+        floorSharpMat.SetFloat("_Contrast", 1f);
+        floorSharpMat.SetFloat("_MeanMip", 0f);
+        return floorFlatMat;
+    }
+    static Material floorSharpMat;
+
+    void ApplyFloorFlat()
+    {
+        if (!VisualRules.FloorFlat) return;
+        Material mat = FloorFlatMaterial();
+        if (mat == null) return;
+        Transform grid = hellMap != null ? hellMap.transform.parent : null;
+        Transform cave = grid != null ? grid.Find("Floor") : null;
+        if (cave != null && cave.TryGetComponent(out UnityEngine.Tilemaps.TilemapRenderer cr)) cr.sharedMaterial = mat;
+        Transform caveWall = grid != null ? grid.Find("Wall") : null;
+        if (caveWall != null && floorSharpMat != null && caveWall.TryGetComponent(out UnityEngine.Tilemaps.TilemapRenderer cw)) cw.sharedMaterial = floorSharpMat;
+        foreach (GameObject root in new[] { hellMap, meadowMap })
+        {
+            if (root == null) continue;
+            foreach (UnityEngine.Tilemaps.TilemapRenderer tr in root.GetComponentsInChildren<UnityEngine.Tilemaps.TilemapRenderer>(true))
+            {
+                if (tr.name.EndsWith("Floor")) tr.sharedMaterial = mat;
+                else if (tr.name.EndsWith("Wall") && floorSharpMat != null) tr.sharedMaterial = floorSharpMat;      // 1.6.0~ 밉 0 고정 (모습 그대로)
+            }
+        }
+    }
+
     void Start()
     {
         LastStand.ResetRun();
@@ -146,6 +194,7 @@ public class StageManager : MonoBehaviour
 
         if (player != null) caveStart = player.position;
         if (Camera.main != null) caveBackground = Camera.main.backgroundColor;
+        ApplyFloorFlat();               // 1.6.0~ 바닥 재질 — 지도를 끄기 전 · 사막 · 심연 복제(ReskinHellMap)보다 먼저라 복제가 물려받음
         if (hellMap != null) hellMap.SetActive(false);
         if (meadowMap != null) meadowMap.SetActive(false);
         DimMeadow();
