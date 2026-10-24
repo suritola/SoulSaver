@@ -388,6 +388,7 @@ public static class CodexUI
                     bosss bb = p != null ? p.GetComponent<bosss>() : null;
                     if (bb != null && bb.bossKind == kind) { icon = SpriteOf(p); break; }
                 }
+            icon = BossIcon(kind, icon);
             bool seen = all || Prefs.GetInt(StoryDirector.BossSeenKey(kind), 0) == 1;
             StoryCard(icon, Loc.T(b.name), sec + "  ·  " + Loc.T(b.title), seen, b.lines,
                       Loc.T("{0}에서 만나면 볼 수 있습니다.").Replace("{0}", Loc.T(StageNames[Mathf.Clamp(kind, 0, StageNames.Length - 1)])));
@@ -550,14 +551,14 @@ public static class CodexUI
             int kind = b != null ? b.bossKind : i;
             string tag = Loc.T(StageNames[Mathf.Clamp(i, 0, 2)]);
             if (b != null) tag += "  ·  " + Stats(b.setEnemyHP, b.speed, b.contactDamage);
-            Card(SpriteOf(p), Color.white, bossbar.BossName(kind), tag, BossDescOf(Mathf.Clamp(kind, 0, 2)) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
+            Card(BossIcon(kind, SpriteOf(p)), Color.white, bossbar.BossName(kind), tag, BossDescOf(Mathf.Clamp(kind, 0, 2)) + "\n" + Accent.Tag(Loc.T(BarrierDesc[Mathf.Clamp(kind, 0, 2)])));
         }
         int mk = AbyssStage.MirrorKind;
-        Card(AbyssStage.Frames("mirrorlord")[0], Color.white, bossbar.BossName(mk), Loc.T(StageNames[3]) + "  ·  " + Stats(AbyssStage.MirrorHp, 7.5f, 48f),
+        Card(BossIcon(mk, AbyssStage.Frames("mirrorlord")[0]), Color.white, bossbar.BossName(mk), Loc.T(StageNames[3]) + "  ·  " + Stats(AbyssStage.MirrorHp, 7.5f, 48f),
              BossDescOf(mk) + "\n" + Accent.Tag(Loc.T(BarrierDesc[mk])));
         // 1.0.4~ 무한 모드 최종 보스 「개발자」 · 「개발자 엄마」 (무한 모드가 열린 뒤에만 · 거울의 군주 몸 기준 속도 7.5 · 접촉 피해 48)
         if (!GameMode.IsUnlocked(Difficulty.Endless)) return;
-        Sprite dev = AbyssStage.Frames("developer")[0];
+        Sprite dev = BossIcon("developer", AbyssStage.Frames("developer")[0]);
         Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
              Loc.T("codex.dev.desc2") + DevExtra("bossmem.codex.dev") + "\n" + Accent.Tag(Loc.T(DevBarrierDesc)));
         Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 1000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
@@ -764,7 +765,7 @@ public static class CodexUI
                         + (CharacterData.IsUnlocked(c) ? "" : "\n" + Loc.T("codex.sec.hero.buy").Replace("{0}", d.price.ToString("N0")));
             Card(portrait, Color.white, Loc.T(d.name) + "  <size=70%>" + Loc.T(d.title) + "</size>", Loc.T("codex.sec.hero"), body, Fresh(key));
         }
-        Sprite dev = AbyssStage.Frames("developer")[0];
+        Sprite dev = BossIcon("developer", AbyssStage.Frames("developer")[0]);
         if (!CodexSeen.Shown("sec.dev")) Hidden("sec.dev", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.dev"));
         else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
                   Loc.T("codex.dev.secret"), Fresh("sec.dev"));      // 1.2.6: 결계 설명은 보스 탭 카드(높이 400)에만 (비밀 탭 카드 240 에서는 「…」로 잘렸음)
@@ -1034,7 +1035,11 @@ public static class CodexUI
         frame.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.17f, 0.26f, 1f);
         if (icon != null)
         {
-            RectTransform ir = UIKit.Rect("Icon", frame, Vector2.zero, new Vector2(140f, 140f));
+            // 1.6.0~ 그림 칸은 정수 배 (32칸 → 128 · 그래픽 개편 2단계 — ChoiceUI 와 같은 식) · 140칸보다 큰 그림 · VisualRules.Legacy 는 예전처럼 140
+            float side = 140f;
+            float px = Mathf.Max(icon.rect.width, icon.rect.height);
+            if (!VisualRules.Legacy && px >= 1f && px <= 140f) side = px * Mathf.Floor(140f / px);
+            RectTransform ir = UIKit.Rect("Icon", frame, Vector2.zero, new Vector2(side, side));
             Image img = ir.gameObject.AddComponent<Image>();
             img.sprite = icon;
             img.preserveAspect = true;
@@ -1059,6 +1064,17 @@ public static class CodexUI
         Loc.T("체력") + " " + Mathf.RoundToInt(hp * GameMode.GlobalEnemyHpMul).ToString("0") + "  ·  " + Loc.T("속도") + " " + speed.ToString("0.#") + "  ·  " + Loc.T("접촉 피해") + " " + damage.ToString("0");
 
     static string Tag(this Color c, string s) => "<color=#" + ColorUtility.ToHtmlStringRGB(c) + ">" + s + "</color>";
+
+    // 1.6.0~ 도감 보스 아이콘 (그래픽 개편 2단계): 보스 그림이 고해상도(그림 1칸 = 월드 1/6칸)로 바뀌어 카드에 넣으면 ×1 로 작아짐
+    //   → 32칸 원래 그림을 Resources/Bosses/icon_<이름> 으로 따로 두고 카드가 정수 배(×4)로 그림. 없으면 넘겨준 그림 (예전 그대로)
+    static readonly string[] BossIconNames = { "lich", "hell", "slimeking", "mirror" };
+    static Sprite BossIcon(int kind, Sprite fallback) =>
+        kind >= 0 && kind < BossIconNames.Length ? BossIcon(BossIconNames[kind], fallback) : fallback;
+    static Sprite BossIcon(string name, Sprite fallback)
+    {
+        Sprite s = Resources.Load<Sprite>("Bosses/icon_" + name);
+        return s != null ? s : fallback;
+    }
 
     static Sprite SpriteOf(GameObject prefab)
     {

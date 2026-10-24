@@ -1207,7 +1207,11 @@ public class QaCapture
             Animator an = b.GetComponent<Animator>();
             if (i < 4 && an != null && an.runtimeAnimatorController != null && an.parameters.Any(p => p.name == "death"))
             {
+                int idleHash = an.GetCurrentAnimatorStateInfo(0).fullPathHash;
                 an.SetTrigger("death");          // 처치 처리 없이 애니메이터만 (보상 · 분열 · 슬로모션 · 영토 번짐 없음)
+                // 대기 → 죽음 전이는 종료 시간 0.75 + 섞임 0.25 라 바로 안 넘어감 → 죽음 상태가 될 때까지 기다린 뒤 (최대 3초) 0.4초 지점
+                float waitFrom = Time.time;
+                while (Time.time - waitFrom < 3f && (an.IsInTransition(0) || an.GetCurrentAnimatorStateInfo(0).fullPathHash == idleHash)) yield return null;
                 yield return Secs(0.4f);
                 Time.timeScale = 0f;
                 yield return Shot("bg_" + nm + "_death");
@@ -1363,10 +1367,14 @@ public class QaCapture
         yield return Frames(30);
         object prevOverride = SGet("CharacterData", "Override");
         // 묶음 3 시안 2: 기본 도적 = 128칸 메뉴 초상 (× 4 / × 3) · 거너 · 도적 공허 = 아직 초상이 없어 32칸으로 돌아가는 경우
-        var cases = new[] { ("gunner", "Gunner", (string)null), ("rogue", "Rogue", (string)null), ("rogue_void", "Rogue", "rogue__void") };
+        //   영웅 8 더함: 나머지 7명(검사 · 궁수 · 연금술사 · 지도 제작자 · 시계공 · 우체부 · 유령)은 1920×1080 한 장씩 (both = false)
+        var cases = new[] { ("gunner", "Gunner", (string)null, true), ("rogue", "Rogue", (string)null, true), ("rogue_void", "Rogue", "rogue__void", true),
+                            ("swordsman", "Swordsman", (string)null, false), ("archer", "Archer", (string)null, false), ("alchemist", "Alchemist", (string)null, false),
+                            ("cartographer", "Cartographer", (string)null, false), ("clockmaker", "Clockmaker", (string)null, false),
+                            ("postman", "Postman", (string)null, false), ("ghost", "Ghost", (string)null, false) };
         try
         {
-            foreach (var (tag, hero, skin) in cases)
+            foreach (var (tag, hero, skin, both) in cases)
             {
                 SSet("CharacterData", "Override", Nullable("CharacterId", hero));
                 int who = Convert.ToInt32(Enm("CharacterId", hero));
@@ -1386,7 +1394,7 @@ public class QaCapture
                 }
                 try
                 {
-                    foreach (int[] sz in new[] { new[] { 1920, 1080 }, new[] { 1600, 900 } })
+                    foreach (int[] sz in both ? new[] { new[] { 1920, 1080 }, new[] { 1600, 900 } } : new[] { new[] { 1920, 1080 } })
                     {
                         yield return UseSize(sz[0], sz[1]);
                         MenuRelayout();

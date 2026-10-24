@@ -81,7 +81,10 @@ def read(path):
             elif kind == "물건":
                 g["props"][name] = toks(rest)
             elif kind == "도감카드":
-                g["cards"].append(toks(name + " " + rest))
+                c = toks(name + " " + rest)
+                if "정수" in (name + " " + rest).split():         # 「정수」는 = 없는 낱말이라 toks 가 버림 → 표시로 남김
+                    c["정수"] = "1"
+                g["cards"].append(c)
     return g
 
 

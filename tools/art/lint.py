@@ -19,6 +19,7 @@
   --ui       UI 칸 크기(초상) — 칸 ÷ 그림 화소 × --ui-scale(캔버스 배율, 기본 1) = 화면 배율이 정수인지
   --bg-mul   배경 도트 1칸의 화면 화소 (메인 메뉴 배경 = 1080p 에서 4 · 초상은 기본 4) — 화면 배율이 이것과 같아야 통과
   --design 에 여러 칸 시트를 주면 (가로 > 세로 · --design-cell 없음) 맨 왼쪽 정사각 칸을 설계도로 자름
+             (--kind portrait 이고 시트가 32의 배수면 칸 = 32 — 세로로 긴 시트도 맨 위 왼쪽 32칸)
 끝 코드: 0 = 모두 통과 · 1 = 하나라도 실패 · 2 = 사용 오류
 필요: numpy · Pillow · scipy (py -3.14 에 있음)
 """
@@ -475,7 +476,10 @@ def main():
         k = a.k
         if a.design:
             dim = load(a.design, dcell, fi if dcell else 0)
-            if dcell is None and dim.shape[1] > dim.shape[0]:
+            if dcell is None and a.kind == "portrait" and dim.shape[0] != dim.shape[1] \
+                    and dim.shape[0] % 32 == 0 and dim.shape[1] % 32 == 0:
+                dim = dim[:32, :32]                  # 초상: 영웅 시트의 칸 = 32칸 → 맨 위 왼쪽 칸 (세로로 긴 거너 시트 256×416 에서 k 0.50 으로 빗나갔음)
+            elif dcell is None and dim.shape[1] > dim.shape[0]:
                 dim = dim[:, :dim.shape[0]]          # 시트를 주면 맨 왼쪽 정사각 칸 (k 를 시트 폭으로 잘못 잡던 것)
             dm = measure(dim)
             if k is None:
