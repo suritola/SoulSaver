@@ -89,10 +89,12 @@ public static class VisualRules
     // ───── 1.6.0~ 가독성 개편 1단계 (외부 평가 「가독성이 현저히 낮다」 · Gemini 개선안 검증판) — 값만 여기, 그리는 쪽은 각 파일 ─────
 
     // C1 바닥 재질 (Resources/Shaders/FloorFlat.shader · StageManager): 곱(FloorTone)은 대비 「비율」을 못 줄여서 바닥만 따로 누름
-    //   밝은 쪽 무릎 = 흑백 Y 46(0.18) 을 넘는 몫 × 0.2 (색상 유지) · 국소 대비 = 타일 1장 평균(밉 5)과 lerp 0.65
+    //   밝은 쪽 무릎 = 흑백 Y 41(0.16, 화면 감마 값) 을 넘는 몫 × 0.2 (색상 유지) · 국소 대비 = 타일 1장 평균(밉 5)과 lerp 0.65
     //   밉 5 = 32칸 타일 1장 상자 평균 — 밉 3(8×8)은 상자마다 평균이 달라 경계에 3~4 Y 계단이 생겼음. 타일셋 5장 모두 160×64 라 이웃 타일로 안 번짐
+    //   2026-10-25~ 무릎 0.18 → 0.16 (Y 41): 셰이더를 화면(감마) 기준으로 고친 뒤 사막 바닥 56.1 — 기준 28~55 를 넘어서 (기획 예상도 「약 55」 경계)
+    //     → 사막 약 52 · 다른 바닥(묘역 46 · 심연 42 · 초원 36)은 무릎 위 밝은 점만 조금 더 눌림
     public static bool FloorFlat => !Legacy;
-    public const float FloorKnee = 0.18f, FloorKneeRatio = 0.2f, FloorContrast = 0.65f, FloorMeanMip = 5f;
+    public const float FloorKnee = 0.16f, FloorKneeRatio = 0.2f, FloorContrast = 0.65f, FloorMeanMip = 5f;
 
     // C6 적대 문법: 적 공격의 「테」(경고 원 테 · 직선 예고 가장자리)는 적대색 하나 — 채움 · 바닥 원판은 보스 테마색 그대로(정체성)
     //   #FF4033 = 흑백 Y 120. 색각 모드 주황은 그리는 쪽에서 Hostile.Accessible 로 (여기서 바꾸지 않음)

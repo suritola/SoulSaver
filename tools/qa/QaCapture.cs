@@ -575,13 +575,57 @@ public class QaCapture
     // ================================================================= 0) 가독성 (2026-10-24 그래픽 가독성 개편 1-K · tools/qa/luma_ab.py 가 qa_log 의 「명도 · 밀도 · 내이펙트」 줄을 읽어 6-3 기준 판정)
     // 거너 · 시드 고정 · 무한 사막 / 초원 영토 / 이야기 묘역 / 심연 — 적 24마리를 플레이어 오른쪽 3칸에 멈춰 세움
     //   read_<곳>_clean: 내 이펙트 없이 · read_<곳>: 화염 지대(무리를 계속 때림) · 적 원형 예고 3 · 결계 땅 타격 1 · 큰 알림 1 + (0.85초에) 내 폭발 2 → 1.0초 뒤 멈춰 찍음
+    //   read_<곳>_nofx: 바로 그 순간 내 이펙트만 끈 판 (5번 기준 「이펙트가 적을 덮는지」 비교용 · 명도 줄 없음)
     const int ReadSeed = 20261024;
+    const float ReadFreeze = 1e-4f;
     static readonly Dictionary<string, float> readClean = new Dictionary<string, float>();
+    static readonly Dictionary<string, float> readNoFx = new Dictionary<string, float>();
+
+    // 내 이펙트 렌더러: 화염 지대 + 바닥 · 효과 층의 fx_ 그림 (적 경고는 Warning 층이라 빠짐 · 피해 숫자 · 적 · 플레이어는 그대로)
+    static List<Renderer> MyFxRenderers(Component zone)
+    {
+        var list = new List<Renderer>();
+        if (zone != null) list.AddRange(zone.GetComponentsInChildren<Renderer>());
+        foreach (Renderer r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            if (!r.enabled || !r.gameObject.activeInHierarchy || list.Contains(r) || !r.name.StartsWith("fx_")) continue;
+            string layer = r.sortingLayerName;
+            if (layer == "GroundFx" || layer == "Effect") list.Add(r);
+        }
+        return list.Where(r => r.enabled).ToList();
+    }
+
+    // 적 몸 흑백 Y: 렌더러 화면 상자 가운데 50% 평균 — all = 전체 평균 · hit = (zoneR > 0) 화염 지대 안 평균 · n · nHit
+    static (float all, float hit, int n, int nHit) EnemyBodyY(Camera cam, Texture2D tex, Vector3 zoneC, float zoneR)
+    {
+        if (cam == null || tex == null) return (-1f, -1f, 0, 0);
+        int w = tex.width, h = tex.height;
+        Color32[] px = tex.GetPixels32();
+        var body = new List<float>(); var bodyHit = new List<float>();
+        foreach (object o in (IEnumerable)SGet("EnermyController", "Live"))
+        {
+            if (!(o is Component ec) || ec == null || !ec.gameObject.activeInHierarchy) continue;
+            SpriteRenderer sr = ec.GetComponent<SpriteRenderer>();
+            if (sr == null || !sr.enabled) continue;
+            Bounds bb = sr.bounds;
+            Vector2 a = cam.WorldToScreenPoint(bb.min), b = cam.WorldToScreenPoint(bb.max);
+            float cx = (a.x + b.x) * 0.5f, cy = (a.y + b.y) * 0.5f, hw = Mathf.Abs(b.x - a.x) * 0.25f, hh = Mathf.Abs(b.y - a.y) * 0.25f;
+            int x0 = Mathf.Max(0, Mathf.RoundToInt(cx - hw)), x1 = Mathf.Min(w - 1, Mathf.RoundToInt(cx + hw)), y0 = Mathf.Max(0, Mathf.RoundToInt(cy - hh)), y1 = Mathf.Min(h - 1, Mathf.RoundToInt(cy + hh));
+            if (x1 < x0 || y1 < y0) continue;
+            float s = 0f; int n = 0;
+            for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) { s += Y601(px[y * w + x]); n++; }
+            if (n == 0) continue;
+            body.Add(s / n);
+            if (zoneR > 0f && Vector2.Distance(ec.transform.position, zoneC) <= zoneR + 0.3f) bodyHit.Add(s / n);
+        }
+        return (body.Count > 0 ? body.Average() : -1f, bodyHit.Count > 0 ? bodyHit.Average() : -1f, body.Count, bodyHit.Count);
+    }
 
     static IEnumerator Readability()
     {
         foreach (string place in new[] { "desert", "meadow", "cave", "abyss" })
         {
+            readClean.Remove(place); readNoFx.Remove(place);
             UnityEngine.Random.InitState(ReadSeed);
             yield return LoadGame("Gunner", place == "desert" || place == "meadow" ? "Endless" : "Normal");
             UnityEngine.Random.InitState(ReadSeed);
@@ -672,7 +716,15 @@ public class QaCapture
             }
             SSet("DamageSource", "Current", zoneSrc);
             yield return Secs(0.15f);
-            Time.timeScale = 0f;
+            // 2026-10-25~ 0 이 아닌 아주 작은 배속으로 멈춤 — timeScale 0 이면 Notice.Held 가 큰 알림 띠를 숨겨(알파 0) 「분노!」 띠가 사진에 없었음
+            Time.timeScale = ReadFreeze;
+            // 같은 순간에 내 이펙트(화염 지대 · fx_ 그림)만 끈 판 → 적 몸 평균 (5번 기준의 비교 대상)
+            //   예전엔 맞기 전의 깨끗한 판과 비교해 피격 꼬리 어둡게(HitDim 0.78 · 의도된 연출)가 「이펙트가 적을 덮음」으로 섞였음 (18~25%)
+            var mine = MyFxRenderers(zone);
+            foreach (Renderer r in mine) r.enabled = false;
+            yield return Shot("read_" + place + "_nofx", 1920, 1080, false);
+            readNoFx[place] = EnemyBodyY(Camera.main, frame, Vector3.zero, 0f).all;
+            foreach (Renderer r in mine) if (r != null) r.enabled = true;
             yield return Shot("read_" + place);
             ReadMeasure("read_" + place, place, zone, pack, 2.2f, warnAt.Select((p, i) => (p, warnR[i])).Append((strikeAt, 2.6f)).ToArray());
             Time.timeScale = 1f;
@@ -739,29 +791,9 @@ public class QaCapture
         sb.Append(" 바닥=" + F1(floor) + " 바닥편차=" + F1(floorStd.Count > 0 ? floorStd.Average() : -1f) + " 바닥점=" + floorMeans.Count);
 
         // 2) 적 몸: 렌더러 화면 상자 가운데 50% 평균 (화염 지대 안 = 맞는 중)
-        float BoxMean(Bounds bb, float frac)
-        {
-            Vector2 a = Scr(bb.min), b = Scr(bb.max);
-            float cx = (a.x + b.x) * 0.5f, cy = (a.y + b.y) * 0.5f, hw = Mathf.Abs(b.x - a.x) * frac * 0.5f, hh = Mathf.Abs(b.y - a.y) * frac * 0.5f;
-            int x0 = Mathf.Max(0, Mathf.RoundToInt(cx - hw)), x1 = Mathf.Min(w - 1, Mathf.RoundToInt(cx + hw)), y0 = Mathf.Max(0, Mathf.RoundToInt(cy - hh)), y1 = Mathf.Min(h - 1, Mathf.RoundToInt(cy + hh));
-            if (x1 < x0 || y1 < y0) return -1f;
-            float s = 0f; int n = 0;
-            for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) { s += Y601(px[y * w + x]); n++; }
-            return n > 0 ? s / n : -1f;
-        }
-        var body = new List<float>(); var bodyHit = new List<float>();
-        foreach (object o in (IEnumerable)SGet("EnermyController", "Live"))
-        {
-            if (!(o is Component ec) || ec == null || !ec.gameObject.activeInHierarchy) continue;
-            SpriteRenderer sr = ec.GetComponent<SpriteRenderer>();
-            if (sr == null || !sr.enabled) continue;
-            float m = BoxMean(sr.bounds, 0.5f);
-            if (m < 0f) continue;
-            body.Add(m);
-            if (zoneR > 0f && Vector2.Distance(ec.transform.position, zoneC) <= zoneR + 0.3f) bodyHit.Add(m);
-        }
-        float bodyMean = body.Count > 0 ? body.Average() : -1f;
-        sb.Append(" 적=" + F1(bodyMean) + " 적수=" + body.Count + " 맞는적=" + (bodyHit.Count > 0 ? F1(bodyHit.Average()) : "-") + " 맞는수=" + bodyHit.Count);
+        var bodyY = EnemyBodyY(cam, frame, zoneC, zoneR);
+        float bodyMean = bodyY.all;
+        sb.Append(" 적=" + F1(bodyMean) + " 적수=" + bodyY.n + " 맞는적=" + (bodyY.nHit > 0 ? F1(bodyY.hit) : "-") + " 맞는수=" + bodyY.nHit);
 
         // 3) 플레이어: 그림 상자 + 4화소 안의 밝은 쪽 10% (= 밝은 외곽 띠) · 화면 전체 상위 1% · 2%
         var all = new float[px.Length];
@@ -783,10 +815,13 @@ public class QaCapture
         }
         sb.Append(" 띠=" + F1(band) + " 화면p99=" + F1(p99) + " 화면p98=" + F1(p98));
 
-        // 4) 적 경고: 테(반지름 0.9 ~ 1.1 중 채도가 가장 높은 둘레의 점 24곳 평균색) 색상 · Y, 안쪽 닫히는 흰 고리(둘레 평균 Y 최댓값)
+        // 4) 적 경고: 테(반지름 0.9 ~ 1.1 중 채도가 가장 높은 둘레의 점 24곳 평균색) 색상 · Y, 닫히는 흰 고리(둘레 Y 중앙값의 최댓값)
+        //   2026-10-25~ 닫히는 고리는 반지름 1.8 → 1.0 으로 「바깥에서」 좁혀 옴 (Telegraph.Update) — 예전엔 0.85 안쪽만 훑어 고리 대신 채움 원판을 쟀음(Y 100~147)
+        //   → 1.12 ~ 1.85 를 0.005 간격 · 둘레 48곳 중앙값으로 (고리 끝 6° 틈 · 겹친 다른 경고 · 피해 숫자 몇 점에 흔들리지 않게)
         if (warns != null && warns.Length > 0)
         {
             var hues = new List<string>(); var rimY = new List<string>(); var ringY = new List<string>();
+            var ys48 = new float[48];
             foreach (var (wpos, wr) in warns)
             {
                 float bestS = -1f, bestH = 0f, bestY = 0f, ring = 0f;
@@ -804,7 +839,17 @@ public class QaCapture
                     Color mc = new Color(sr / 24f / 255f, sg / 24f / 255f, sbb / 24f / 255f);
                     Color.RGBToHSV(mc, out float hh, out float ss, out float vv);
                     if (rr >= wr * 0.88f && rr <= wr * 1.12f && ss * vv > bestS) { bestS = ss * vv; bestH = hh * 360f; bestY = sy / 24f; }
-                    if (rr < wr * 0.85f) ring = Mathf.Max(ring, sy / 24f);
+                }
+                for (float f = 1.12f; f <= 1.85f; f += 0.005f)
+                {
+                    for (int j = 0; j < 48; j++)
+                    {
+                        float an = (j + 0.5f) * Mathf.PI * 2f / 48f;
+                        Vector2 s = Scr(wpos + new Vector3(Mathf.Cos(an), Mathf.Sin(an), 0f) * (wr * f));
+                        ys48[j] = Yat((int)s.x, (int)s.y);
+                    }
+                    Array.Sort(ys48);
+                    ring = Mathf.Max(ring, (ys48[23] + ys48[24]) * 0.5f);
                 }
                 hues.Add(F1(bestH)); rimY.Add(F1(bestY)); ringY.Add(F1(ring));
             }
@@ -823,8 +868,11 @@ public class QaCapture
         else
         {
             var sb5 = new StringBuilder("내이펙트 " + shot);
+            // 적차이 = 같은 순간 내 이펙트만 끈 판(_nofx) 대비 (피격 꼬리 어둡게는 양쪽에 같이 있음) · 깨끗한판차이 = 맞기 전 판 대비 (참고 · 피격 연출 포함)
+            float n0 = readNoFx.TryGetValue(place, out float nv) ? nv : -1f;
             float c0 = readClean.TryGetValue(place, out float cv) ? cv : -1f;
-            sb5.Append(" 적차이=" + (c0 > 0f && bodyMean >= 0f ? F1(Mathf.Abs(bodyMean - c0) / c0 * 100f) : "-"));
+            sb5.Append(" 적차이=" + (n0 > 0f && bodyMean >= 0f ? F1(Mathf.Abs(bodyMean - n0) / n0 * 100f) : "-"));
+            sb5.Append(" 깨끗한판차이=" + (c0 > 0f && bodyMean >= 0f ? F1(Mathf.Abs(bodyMean - c0) / c0 * 100f) : "-"));
             var fxTop = UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None)
                 .Where(r => r.enabled && r.gameObject.activeInHierarchy && r.sortingLayerName == "Effect" && r.name.StartsWith("fx_") && r.name != "fx_warn" && r.name != "fx_shock")
                 .OrderByDescending(r => r.color.a).Take(4).ToList();

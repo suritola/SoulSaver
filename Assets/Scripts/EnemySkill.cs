@@ -1235,7 +1235,9 @@ public class Telegraph : MonoBehaviour
             outline.startColor = outline.endColor = c;
             // 발동 순간에 테두리와 겹치도록 바깥에서 좁혀 들어오는 고리
             Hostile.SetArc(closing, transform.position, radius * Mathf.Lerp(1.8f, 1f, k), 0f, 354f);
-            closing.startColor = closing.endColor = new Color(1f, 1f, 1f, 0.25f + 0.55f * k);
+            // 1.6.0~ 가독성 개편 C6: 닫히는 흰 고리 = 적 위험 100% (화면에서 가장 밝은 요소) — 예전 알파 0.25 → 0.8 은 경고 앞 절반 동안
+            //   흑백 Y 140~180 으로 플레이어 흰 띠(250)보다 어두웠음 (QA read_* 흰고리). Legacy 면 예전 그대로
+            closing.startColor = closing.endColor = new Color(1f, 1f, 1f, VisualRules.Legacy ? 0.25f + 0.55f * k : 1f);
             if (fillDisc != null) fillDisc.transform.localScale = Vector3.one * fillScale * k;
             if (glow != null) glow.color = new Color(color.r, color.g, color.b, Mathf.Min(1f, (0.12f + 0.2f * k * blink) * groundBoost));
         }

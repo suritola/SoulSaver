@@ -109,7 +109,13 @@ public class PixelStrokeMin : MonoBehaviour
         plain = Plain.Contains(gameObject.name);
         under = gameObject.name == "Under";     // 예고 원 밑 검은 바탕 고리: 문양 고리에 어두운 외곽이 있어 원이면 그리지 않음
         heroTop = HeroTop.Contains(gameObject.name);
+        closingLine = gameObject.name == "Closing";
     }
+
+    // 1.6.0~ 가독성 개편 C6: 적 예고의 닫히는 흰 고리(Telegraph 「Closing」)는 도트 고리 그림으로 바꾸지 않고 획 그대로 —
+    //   고리 그림의 테는 0.82 회색(흑백 Y 209)이라 흰색을 곱해도 플레이어 흰 띠(Y 250)보다 어두웠음. 획은 가운데 4줄이 흰 심(255)
+    //   (「적 위험 흰 요소가 화면에서 가장 밝다」 · QA read_* 흰고리 210 고정) · Legacy 면 예전처럼 고리 그림
+    bool closingLine;
 
     // 우클릭이 아닌 영웅 표시(궁수 시위 · 유령 냉기 표식 · 시계공 발밑 문자판 · 지도 제작자 도형 미리보기 · 행군 경로)도 맨 위 (ff03c4d 때처럼 바닥 · 적에 가리지 않게)
     //   장식 · 영웅 문양은 붙이지 않음 (HeroAim.Mark 로 지정된 우클릭 범위표시만)
@@ -145,7 +151,8 @@ public class PixelStrokeMin : MonoBehaviour
         if (marked || heroTop) GoTop();
         else if (onTop) LeaveTop();
 
-        bool circle = TryCircle(out Vector3 center, out float radius);
+        Vector3 center = Vector3.zero; float radius = 0f;
+        bool circle = !(closingLine && !VisualRules.Legacy) && TryCircle(out center, out radius);
         if (circle)
         {
             if (under) { if (ring != null && ring.enabled) ring.enabled = false; lr.forceRenderingOff = true; }
