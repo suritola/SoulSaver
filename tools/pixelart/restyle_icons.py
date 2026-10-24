@@ -294,7 +294,160 @@ def fit_bg(img, cells, cx, cy):
 
 # 손질 목록: 그림문자가 테 안쪽 띠를 거의 덮어 바탕 색상을 그림문자 색으로 잘못 고르는 그림 → 바탕 색상을 직접 (보라 0.75)
 HUE_FIX = {n: 0.75 for n in ('ability_101', 'ability_900', 'ability_197', 'ability_921', 'ability_923', 'ability_183', 'ability_187', 'ability_193', 'ability_194', 'ability_198', 'ability_199',
-                             'ability_201', 'ability_702', 'ability_814', 'ability_930', 'ability_931')}
+                             'ability_201', 'ability_702', 'ability_814', 'ability_930')}
+# 손질 2 (2026-10-25): 바탕 색상을 그림문자 색(빨강 조준선 · 하늘 십자)으로 잘못 고르던 것 · 하늘 유리인데 보라로 적어 둔 것
+HUE_FIX.update({'ability_31': 0.708, 'ability_603': 0.708, 'ability_931': 0.583})
+# 그림문자가 원판 85% 넘게 잡혀 유리 그라데이션이 남던 11장 → 남은 바탕 색상 덩어리를 바탕으로 되돌림 (색상 목록)
+PEEL = {'ability_31': (0.708,), 'ability_199': (0.67, 0.708, 0.75), 'ability_603': (0.708, 0.625), 'ability_702': (0.708, 0.75),
+        'ability_807': (0.708, 0.75), 'ability_814': (0.708, 0.75), 'ability_82': (0.708, 0.382), 'ability_921': (0.625, 0.67, 0.708, 0.75),
+        'ability_931': (0.583, 0.625, 0.708), 'ability_935': (0.708, 0.75), 'ability_146': (0.708, 0.75)}
+STATS = {}               # 이름 → (뺀 줄 · 열 수, 밝힌 바닥 L)
+GLYPH_FIT = 12.3          # 그림문자 칸 중심이 이 반지름 안 (원판 12.4 — 끝을 자르지 않고 옮기거나 줄임)
+# 그림문자 몸이 유리 바탕과 같은 색 · 밝기라 바탕으로 먹힌 그림 → 원본 칸 상자 (x0, y0, x1, y1 포함) 안의 바탕 칸은 그림문자
+#   478 총잡이: 모자(11~19, 4~9) · 외투(7~22, 18~26) — 외곽선 안쪽 칸만 (원본 32칸 좌표)
+#   477 다리: 회보라 바지(채도 < 0.42)만 — 상자 끝 값 = 채도 상한 (1 = 모두)
+KEEP_BOX = {'ability_478': ((11, 4, 19, 9, 1), (7, 18, 22, 26, 1)), 'ability_477': ((8, 3, 24, 24, 0.42),)}
+NEAR_MAX = 0.5            # 흑백으로 원판과 명도 차 < 60 인 칸이 이 비율을 넘으면 그림문자를 밝힘 (그림문자가 바탕에 묻힘)
+
+
+def peel_bg(img, glyph, bg, cx, cy, inner_r, hues):
+    # 그림문자로 잡힌 유리 바탕 덩어리: 색상이 목록과 가깝고(±0.06) 채도 있는 칸의 4-연결 덩어리가
+    #   4칸 이상이거나 원판 가장자리(테 안쪽 1.5칸)에 닿으면 바탕으로 (흰 물건의 푸른 그늘 · 외곽은 남김)
+    def like(c):
+        h, s, v = hsv(c)
+        if s < 0.25 or v < 0.16 or (s < 0.3 and v > 0.8): return False
+        return min(hue_dist(h, hh) for hh in hues) < 0.06
+    cand = {p for p in glyph if like(img.px[p[1]][p[0]])}
+    while cand:
+        q = cand.pop(); comp = [q]; st = [q]
+        while st:
+            x, y = st.pop()
+            for dx, dy in N4:
+                n = (x + dx, y + dy)
+                if n in cand: cand.remove(n); comp.append(n); st.append(n)
+        touch = any(math.hypot(x + 0.5 - cx, y + 0.5 - cy) > inner_r - 1.5 for x, y in comp)
+        if len(comp) >= 4 or touch:          # 목록에 적은 그림만 부르므로 작은 틈(눈꽃 가지 사이 · 상자 틈)도 바탕
+            for p in comp: glyph.discard(p); bg.add(p)
+
+
+def find_tips(img, glyph, cx, cy, R, hue):
+    # 손질 3: 원판(12.4) 밖으로 나간 그림문자 칸 중 「진짜 끝」(활 · 창 · 조준선 끝)만 골라 냄 — 나머지는 예전처럼 버림(테 안쪽 장식 고리 · 광택)
+    #   ① 테 쪽으로 이어진 끝: 원판 안 칸에서 바깥으로, 바로 앞 칸과 색이 가깝고(< 30) 출발 칸 방향 ±15° 안인 칸만 (테 바깥 1칸 전까지)
+    #   ② 원판 밖 칸 + ① 의 8-연결 덩어리가 25칸 이하 · 각도 폭 ≤ 35° · 원판 안 그림문자 칸과 색이 가깝게(< 35) 붙어 있으면 끝
+    ox, oy = round(CX - cx), round(CY - cy)
+    dout = lambda x, y: math.hypot(x + ox + 0.5 - CX, y + oy + 0.5 - CY)
+    ang = lambda x, y: math.atan2(y + 0.5 - cy, x + 0.5 - cx)
+    core = {p for p in glyph if dout(*p) < 12.4}
+    beyond = {p for p in glyph if p not in core}
+    ext = set(); st = []
+    for x, y in core:
+        if dout(x, y) >= 10.5: st.append(((x, y), ang(x, y)))
+    while st:
+        (x, y), a0 = st.pop()
+        for dx, dy in N8:
+            xx, yy = x + dx, y + dy
+            q = (xx, yy)
+            if q in glyph or q in ext or not opaque(img, xx, yy): continue
+            if math.hypot(xx + 0.5 - cx, yy + 0.5 - cy) > R - 1.0 or dout(xx, yy) < 12.4: continue
+            da = abs((ang(xx, yy) - a0 + math.pi) % (2 * math.pi) - math.pi)
+            if da > math.radians(15) or cdist(img.px[yy][xx], img.px[y][x]) >= 30 ** 2: continue
+            ext.add(q); st.append((q, a0))
+    tips = set()
+    for comp in components(img, beyond | ext):
+        if len(comp) > 25: continue
+        angs = sorted(ang(x, y) for x, y in comp)
+        span = min(angs[-1] - angs[0], 2 * math.pi - max(b - a for a, b in zip(angs, angs[1:] + [angs[0] + 2 * math.pi])))
+        if span > math.radians(35): continue
+        # 어두운 칸만인 덩어리는 그림문자 외곽이 구슬 외곽에 붙은 것 → 끝 아님. 밝은 칸(Y ≥ 50) 4칸 이상이 (반짝이 · 가장자리 1~3칸은 예전처럼 자름) 원판 안 밝은 칸에 이어져야 끝
+        #   유리 바탕 색상(±0.08) 칸 · 왼쪽 위 흰 광택 칸은 끝으로 치지 않음
+        def glass(x, y):
+            h, sv, v = hsv(img.px[y][x])
+            if sv >= 0.2 and hue_dist(h, hue) < 0.08: return True
+            return sv < 0.25 and v > 0.7 and x + 0.5 < cx and y + 0.5 < cy
+        bright = [(x, y) for x, y in comp if Y(img.px[y][x]) >= 50 and not glass(x, y)]
+        if len(bright) >= 4 and any((x + dx, y + dy) in core and Y(img.px[y + dy][x + dx]) >= 50
+                                    and cdist(img.px[y][x], img.px[y + dy][x + dx]) < 35 ** 2 for x, y in bright for dx, dy in N8):
+            tips |= set(comp)
+    return core, tips
+
+
+def place_glyph(src, glyph, cx, cy, R, hue):
+    # 그림문자를 원판에 놓기: 원래 자리를 가운데로 옮김. 원판 밖으로 나간 「진짜 끝」(find_tips)이 있으면 자르지 않고
+    #   ① 자리를 ±3칸 옮겨 보고(재배치) ② 그래도 GLYPH_FIT 밖이면 줄 · 열 빼기로 줄임 — 가장 먼 칸 쪽에서, 이웃 줄과 가장 닮은
+    #   (빼도 그림이 가장 덜 바뀌는) 한 줄/열을 지우고 바깥 칸을 안으로 당김 (최대 8번). 쌍선형 · 다수결 축소와 달리 칸 색 · 굵기가 그대로
+    #   끝이 없으면 예전 그대로 (원판 밖 칸 = 테 장식 · 광택 → 버림). 돌려줌: (그림, 뺀 줄 · 열 수)
+    core, tips = find_tips(src, glyph, cx, cy, R, hue)
+    glyph = core | tips
+    def far_of(cells):
+        return max(((math.hypot(x + 0.5 - CX, y + 0.5 - CY), (x, y)) for x, y in cells), default=(0, None))
+    ox, oy = round(CX - cx), round(CY - cy)
+    if tips:
+        def over(i, j): return far_of([(x + ox + i, y + oy + j) for x, y in glyph])[0]
+        _, i, j = min(((over(i, j), i, j) for i in range(-3, 4) for j in range(-3, 4)), key=lambda t: (t[0], abs(t[1]) + abs(t[2])))
+        ox, oy = ox + i, oy + j
+    G = {(x + ox, y + oy): src.px[y][x][:3] + (255,) for x, y in glyph}
+    drops = 0
+    while tips and drops < 8:
+        d, (fx, fy) = far_of(G)
+        if d <= GLYPH_FIT: break
+        vert = abs(fx + 0.5 - CX) >= abs(fy + 0.5 - CY)          # 가로로 멀면 열을, 세로로 멀면 줄을 뺌
+        k = fx if vert else fy
+        side = 1 if k + 0.5 > CX else -1
+        # 가운데(16)와 먼 칸 사이의 줄 · 열 중 바깥 이웃과 가장 닮은 것 (다른 칸 수 최소, 같으면 바깥 쪽)
+        #   가운데 ±5칸(얼굴 · 몸통 같은 주요 부분)과 먼 칸 자체의 줄은 빼지 않음 (먼 칸 줄을 빼면 자르는 것과 같음)
+        lines = range(21, k) if side > 0 else range(k + 1, 11)
+        if not lines: break
+        def at(c, t): return G.get((c, t) if vert else (t, c))
+        def cost(c):
+            return sum(1 for t in range(32) if at(c, t) != at(c + side, t))
+        c0 = min(lines, key=lambda c: (cost(c), -abs(c - 16)))
+        NG = {}
+        for (x, y), col in G.items():
+            u = x if vert else y
+            if u == c0: continue
+            if (u - c0) * side > 0: u -= side
+            NG[(u, y) if vert else (x, u)] = col
+        G = NG; drops += 1
+    gimg = Img(32, 32)
+    for (x, y), col in G.items():
+        if 0 <= x < 32 and 0 <= y < 32 and math.hypot(x + 0.5 - CX, y + 0.5 - CY) < 12.4:
+            gimg.px[y][x] = col
+    return gimg, drops
+
+
+def lift_glyph(gimg, disc_y):
+    # 손질 1: 그림문자 몸(외곽 · 가는 어두운 선을 뺀 칸)을 흑백으로 봐서 원판과 명도 차가 60 안쪽인 칸이 NEAR_MAX 를 넘으면
+    #   (어두운 그림문자가 어두운 원판에 묻힘) 밝기 바닥 L 을 올림: y' = L + y × (255 - L) / 255 (순서 · 색상 유지)
+    #   L 은 그 비율이 0.35 이하가 되는 가장 작은 값(5 단위 · ≤ 100). 둘레의 어두운 칸(외곽) · 가는 어두운 선(이웃 어두운 칸 < 3)은 그대로
+    cells = [(x, y) for y in range(32) for x in range(32) if gimg.px[y][x][3] > 0]
+    if not cells: return 0
+    def keep(x, y):
+        if Y(gimg.px[y][x]) >= 41: return False
+        if any(not opaque(gimg, x + dx, y + dy) for dx, dy in N4): return True
+        return sum(1 for dx, dy in N4 if Y(gimg.px[y + dy][x + dx]) < 41) < 3
+    move = [p for p in cells if not keep(*p)]
+    if not move: return 0
+    near = lambda ys: sum(1 for v in ys if v < disc_y + 60) / len(ys)
+    if near([Y(gimg.px[y][x]) for x, y in move]) > NEAR_MAX:
+        for L in range(5, 105, 5):
+            if near([L + Y(gimg.px[y][x]) * (255 - L) / 255 for x, y in move]) <= 0.35: break
+    else:
+        # 전체는 밝아도 넓은 어두운 덩어리(모자 · 망토 그늘 등 외곽색과 같은 칸)가 그림문자의 10% 넘으면 그 덩어리만 원판보다 한 단 밝게
+        move = [(x, y) for x, y in move if Y(gimg.px[y][x]) < 41]
+        if len(move) < 0.1 * len(cells): return 0
+        L = 60
+    new = {}
+    for x, y in move:
+        c = gimg.px[y][x]; y0 = Y(c); y1 = L + y0 * (255 - L) / 255
+        k = y1 / max(1.0, y0)
+        c1 = [min(255.0, ch * k) for ch in c[:3]]
+        yc = Y(c1)
+        if yc < y1:                       # 채널이 255 에 막히면 흰색 쪽으로 섞어 목표 밝기
+            t = (y1 - yc) / max(1.0, 255 - yc)
+            c1 = [ch + (255 - ch) * t for ch in c1]
+        new[(x, y)] = tuple(int(round(ch)) for ch in c1) + (255,)
+    for (x, y), c in new.items(): gimg.px[y][x] = c
+    return L
 
 
 def split_glyph(img, cx, cy, R, name=None):
@@ -412,6 +565,10 @@ def split_glyph(img, cx, cy, R, name=None):
         dark = sum(1 for x, y in ring_n if opaque(img, x, y) and Y(img.px[y][x]) < 50)
         if dark <= 0.15 * max(1, len(ring_n)):
             for p in comp: glyph.discard(p); bg.add(p)
+    if name in PEEL: peel_bg(img, glyph, bg, cx, cy, inner_r, PEEL[name])
+    for x0, y0, x1, y1, smax in KEEP_BOX.get(name, ()):
+        for p in [p for p in bg if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and hsv(img.px[p[1]][p[0]])[1] < smax]:
+            bg.discard(p); glyph.add(p)
     return glyph, bg, hue
 
 
@@ -461,13 +618,11 @@ def make_medal(src, name=None):
             else:
                 k = (dy + d * 0.3) / 12.4
                 out.px[y][x] = (inn[0] if k < -0.1 else inn[1]) + (255,)
-    # 그림문자: 원래 자리를 원판 가운데로 옮겨 붙임 (구슬 중심이 칸 가운데가 아니어도)
-    ox, oy = round(CX - cx), round(CY - cy)
-    gimg = Img(32, 32)
-    for x, y in glyph:
-        xx, yy = x + ox, y + oy
-        if 0 <= xx < 32 and 0 <= yy < 32 and math.hypot(xx + 0.5 - CX, yy + 0.5 - CY) < 12.4:
-            gimg.px[yy][xx] = src.px[y][x][:3] + (255,)
+    # 그림문자: 원래 자리를 원판 가운데로 옮겨 붙임 (구슬 중심이 칸 가운데가 아니어도 · 끝이 원판 밖이면 옮기거나 줄임)
+    gimg, drops = place_glyph(src, glyph, cx, cy, R, hue)
+    # 원판과 명도가 붙은 어두운 그림문자는 밝힘 (원판 두 단의 평균 흑백 값 기준)
+    lifted = lift_glyph(gimg, (Y(inn[0]) + Y(inn[1])) / 2)
+    STATS[name] = (drops, lifted)
     gcells = [(x, y) for y in range(32) for x in range(32) if gimg.px[y][x][3] > 0]
     # 그림문자 안의 어두운 칸은 외곽색으로, 원판 쪽 빈 가장자리에는 외곽 1칸
     for x, y in gcells:

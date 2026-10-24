@@ -70,3 +70,4 @@ __pycache__/
 /tools/gemini/.cf_token
 /_check.csproj
 tools/pixelart/out/glyph/
+tools/pixelart/out/
