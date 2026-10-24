@@ -17,8 +17,17 @@ SKINS = [
 ALL = HEROES + SKINS
 
 # 시트 이름 → 모듈 이름 (그린 것만). 시안 2 = 도적 1장 — 독립 검토 판정을 넘은 뒤 나머지 28장을 더함
+#   영웅 8 — 도적 규칙(README.md) 그대로 더함 (스킨 20 은 다음 단계)
 MODULES = {
     'rogue': 'rogue',
+    'gunner_nogun': 'gunner_nogun',
+    'swordsman': 'swordsman',
+    'archer': 'archer',
+    'alchemist': 'alchemist',
+    'ghost': 'ghost',
+    'postman': 'postman',
+    'clockmaker': 'clockmaker',
+    'cartographer': 'cartographer',
 }
 
 
