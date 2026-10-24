@@ -22,6 +22,18 @@ public class DamagePopup : MonoBehaviour
     const int MaxActive = 80;
     // 그래픽 개편 1단계-10 (2026-10-22~): 적이 받은 피해 숫자는 동시에 32개까지 (80개가 적 무리 위를 덮었음 · 설정 「피해 숫자」와 별개) — 내가 받은 피해 숫자는 그대로 80
     static int EnemyCap => VisualRules.Legacy ? MaxActive : 32;
+    // 그래픽 개편 1단계 (2026-10-25~): 적 무리를 한꺼번에 때리면 적마다 작은 숫자(「3」)가 하나씩 떠 무리 위쪽을 덮었음 (QA 24마리)
+    //   작은 피해 = 치명타 · 빈틈 · 보스 · 받은 피해가 아니고 (합친 값이) 기본 공격력 SmallMul 배 미만
+    //     등급(적 최대 체력 대비)은 보지 않음 — 잡몹을 범위기로 때리면 평범한 한 대도 Medium 이상이라 더미가 그대로였음
+    //   ① 작은 숫자는 반지름 CrowdR 안에 LocalCap 개 · 화면 전체 SmallCap 개까지 — 넘치면 가장 오래된 것부터 QuickFade 초에 흐려 없앰
+    //      단 가장 오래된 것도 MinShow 초 전에 떴으면 밀어내지 않고 새 작은 숫자를 띄우지 않음 (피해는 체력바에 그대로)
+    //      — 한 프레임에 24마리가 맞으면 새 숫자마다 앞 숫자를 밀어내 흐려지는 숫자가 한꺼번에 쌓였음
+    //   ② 뜰 때 반지름 CrowdR 안의 작은 숫자 수로 밀집도(CrowdFull 개 = 1)를 매겨 크기 · 알파 · 떠오름을 줄임
+    //   치명타 · 큰 피해 · 보스 · 받은 피해는 그대로 · Legacy 면 모두 끔
+    const int SmallCap = 12, LocalCap = 4;
+    const float SmallMul = 2f, QuickFade = 0.12f, MinShow = 0.25f, CrowdR = 1.5f, CrowdFull = 3f;
+    const float CrowdSize = 0.78f, CrowdAlpha = 0.65f, CrowdRise = 0.55f;     // 밀집도 1 일 때 배율
+    static readonly List<DamagePopup> smalls = new List<DamagePopup>(64);    // 떠 있는 작은 숫자 (뜬 순서 · 앞이 가장 오래됨)
 
     static TMP_FontAsset font;
     static Material material, bossMaterial;
@@ -55,6 +67,9 @@ public class DamagePopup : MonoBehaviour
     // 1.5.5~: 숫자가 맞은 자리에 멈춰 있어 움직이는 적과 떨어졌음 → 맞은 대상을 따라감 (대상이 죽어 꺼지면 그 자리에서 마저 떠오름)
     Transform follow;
     Vector3 followOffset;
+    // 작은 숫자 줄이기 (2026-10-25~): inSmall = smalls 에 들어 있음 · crowd = 뜰 때 밀집도 0~1 · dieT ≥ 0 이면 상한에 밀려 빠르게 흐려지는 중
+    bool inSmall;
+    float crowd, riseMul = 1f, alphaMul = 1f, dieT = -1f;
 
     public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false, HealthBarFeel.Tier tier = HealthBarFeel.Tier.Small)
     {
@@ -67,13 +82,13 @@ public class DamagePopup : MonoBehaviour
         bool isBoss = fromBoss;      // 보스 본체만 (같은 "boss" 태그인 등불 · 묘비는 일반 숫자)
         // 치명타 · 빈틈은 다른 숫자와 합치지 않고 따로 크게
         float window = isBoss ? HealthBarFeel.WindowBoss : HealthBarFeel.WindowEnemy;
-        if (!isCrit && !isWeak && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && !p.weak && !p.hurt && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
+        if (!isCrit && !isWeak && byTarget.TryGetValue(k, out DamagePopup p) && p != null && !p.crit && !p.weak && !p.hurt && p.dieT < 0f && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
         {
             p.Add(damage, tier);
             return;
         }
         // 빈틈 (치명타 아님): 같은 대상의 열린 빈틈 숫자에 합침 · 「완벽한 빈틈!」이 끼면 머리 글자만 올림
-        if (!isCrit && isWeak && byWeak.TryGetValue(k, out p) && p != null && p.live && p.weak && !p.crit && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
+        if (!isCrit && isWeak && byWeak.TryGetValue(k, out p) && p != null && p.live && p.weak && !p.crit && p.dieT < 0f && Time.time - p.lastAdd < window && Time.time - p.firstAdd < HealthBarFeel.WindowMax)
         {
             if (weakPerf) p.weakPerfect = true;
             p.Add(damage, tier);
@@ -99,6 +114,14 @@ public class DamagePopup : MonoBehaviour
             }
         }
 
+        // 작은 피해: 둘레 · 화면에 자리가 없으면 띄우지 않음 (합치다 커지면 Add 가 smalls 에서 뺌)
+        int crowdN = -1;
+        if (!VisualRules.Legacy && !isCrit && !isWeak && !isBoss && damage < BaseDamage * SmallMul)
+        {
+            crowdN = MakeRoom(at);
+            if (crowdN < 0) return;
+        }
+
         // 다 떠오른 숫자를 버리지 않고 다시 씀 (맞을 때마다 글자 오브젝트를 새로 만들고 지우지 않게)
         if (isCrit)
         {
@@ -114,7 +137,70 @@ public class DamagePopup : MonoBehaviour
         p.weakPerfect = weakPerf;
         if (!isCrit && !isWeak) byTarget[k] = p;
         else if (!isCrit) byWeak[k] = p;
+        if (crowdN >= 0) p.JoinSmalls(crowdN);
         p.Add(damage, tier);
+    }
+
+    static float BaseDamage
+    {
+        get { PlayerController pl = Hostile.Player; return pl != null ? Mathf.Max(0.1f, pl.damage) : 1f; }
+    }
+
+    // 작은 숫자 자리 만들기: 화면 · 둘레(반지름 CrowdR)가 차 있으면 가장 오래된 것부터 빠르게 흐림
+    //   그것도 MinShow 초 안에 떴으면 -1 (새 숫자 안 띄움) · 아니면 남은 둘레 수
+    static int MakeRoom(Vector3 at)
+    {
+        if (smalls.Count >= SmallCap && Time.time - smalls[0].firstAdd < MinShow) return -1;
+        int n = 0;
+        float r2 = CrowdR * CrowdR;
+        for (int i = 0; i < smalls.Count; i++)
+            if (Near(smalls[i], at, r2)) n++;
+        for (int i = 0; n >= LocalCap && i < smalls.Count;)
+        {
+            DamagePopup q = smalls[i];
+            if (!Near(q, at, r2)) { i++; continue; }
+            if (Time.time - q.firstAdd < MinShow) return -1;
+            q.BeginQuickFade();      // smalls 에서 빠지므로 i 그대로
+            n--;
+        }
+        while (smalls.Count >= SmallCap)
+        {
+            if (Time.time - smalls[0].firstAdd < MinShow) return -1;
+            smalls[0].BeginQuickFade();
+        }
+        return n;
+    }
+
+    // 작은 숫자 목록에 넣음: 둘레 수로 밀집도를 매겨 크기 · 알파 · 떠오름 배율을 정함 (Add 가 크기 · 알파에 씀)
+    void JoinSmalls(int neighbors)
+    {
+        crowd = Mathf.Clamp01(neighbors / CrowdFull);
+        riseMul = Mathf.Lerp(1f, CrowdRise, crowd);
+        alphaMul = Mathf.Lerp(1f, CrowdAlpha, crowd);
+        smalls.Add(this);
+        inSmall = true;
+    }
+
+    static bool Near(DamagePopup q, Vector3 at, float r2)
+    {
+        Vector3 d = q.transform.position - at;
+        return d.x * d.x + d.y * d.y < r2;
+    }
+
+    void LeaveSmalls()
+    {
+        if (!inSmall) return;
+        inSmall = false;
+        smalls.Remove(this);
+    }
+
+    // 상한에 밀려남: 목록 · 합산 대상에서 빼고 QuickFade 초 동안 지금 알파에서 0 으로 (그 사이 들어온 피해는 새 숫자로)
+    void BeginQuickFade()
+    {
+        LeaveSmalls();
+        if (dieT >= 0f) return;
+        dieT = 0f;
+        if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
     }
 
     // 플레이어가 받은 피해: 짧은 사이 피해를 한 숫자로 합침 (WindowPlayer) · 빨강 · "-N" · 등급별 크기
@@ -173,6 +259,10 @@ public class DamagePopup : MonoBehaviour
         p.boss = false;
         p.hurt = false;
         p.weak = p.weakPerfect = false;
+        p.inSmall = false;
+        p.crowd = 0f;
+        p.riseMul = p.alphaMul = 1f;
+        p.dieT = -1f;
         p.live = true;
         p.gameObject.SetActive(true);
         active++;
@@ -189,6 +279,8 @@ public class DamagePopup : MonoBehaviour
         live = false;
         active--;
         follow = null;
+        LeaveSmalls();
+        dieT = -1f;
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
         if (byWeak.TryGetValue(key, out p) && p == this) byWeak.Remove(key);
         gameObject.SetActive(false);
@@ -283,9 +375,11 @@ public class DamagePopup : MonoBehaviour
     void Add(float damage, HealthBarFeel.Tier tier)
     {
         bool first = amount <= 0f;
-        SetMeshAlpha(1f);      // 사라지던 숫자에 합치거나 다시 쓸 때 정점 알파를 되돌림
         amount += damage;
         if ((int)tier > tierMax) tierMax = (int)tier;
+        // 합치다 작은 피해를 넘으면 (SmallMul 배) 작은 숫자 목록에서 빼고 알파 · 크기를 되돌림 (떠오름은 이어서 · 자리가 튀지 않게)
+        if (inSmall && amount >= BaseDamage * SmallMul) { LeaveSmalls(); crowd = 0f; alphaMul = 1f; }
+        SetMeshAlpha(alphaMul);      // 사라지던 숫자에 합치거나 다시 쓸 때 정점 알파를 되돌림 (밀집한 작은 숫자는 그 알파로)
         lastAdd = Time.time;
         if (first) firstAdd = lastAdd;
         t = 0f;
@@ -333,6 +427,14 @@ public class DamagePopup : MonoBehaviour
             if (!crit) text.color = new Color(0.62f, 1f, 0.95f);
             size *= 1.15f;
         }
+        // 밀집한 작은 숫자: 작게 · 옅게 (글자 메시를 다시 만들 때도 같은 알파가 되게 색 알파에도 넣음)
+        if (crowd > 0f)
+        {
+            size *= Mathf.Lerp(1f, CrowdSize, crowd);
+            Color c = text.color;
+            c.a = alphaMul;
+            text.color = c;
+        }
     }
 
     // 「빈틈!」 머리 글자: 언어가 바뀔 때만 다시 만듦
@@ -357,6 +459,13 @@ public class DamagePopup : MonoBehaviour
         float life = hurt ? HurtLife : boss ? BossLife : Life;
         float k = t / life;
         if (k >= 1f) { Release(); return; }
+        float quick = 1f;
+        if (dieT >= 0f)
+        {
+            dieT += Time.deltaTime;
+            if (dieT >= QuickFade) { Release(); return; }
+            quick = 1f - dieT / QuickFade;
+        }
         float kr = Mathf.Clamp01(riseT / life);
         float up = 1f - (1f - kr) * (1f - kr);
         float pop = popT < 0.08f ? 1f + popAmp * (1f - popT / 0.08f) : 1f;
@@ -366,13 +475,13 @@ public class DamagePopup : MonoBehaviour
             if (follow.gameObject.activeInHierarchy) start = follow.position + followOffset;
             else follow = null;
         }
-        transform.position = start + new Vector3(0f, (boss ? BossRise : Rise) * up, 0f);
+        transform.position = start + new Vector3(0f, (boss ? BossRise : Rise * riseMul) * up, 0f);
         transform.localScale = Vector3.one * (size * pop);
         // 1.1.9: 사라지는 알파를 text.color 로 바꾸면 TMP 가 매 프레임 글자 메시를 통째로 다시 만들었음 (최대 80개)
         //   → 이미 만든 메시의 정점 알파만 바꿈 (같은 모습 · 메시 재생성 없음)
         // 1.6.0~: 준 피해는 0.35 부터 흐려짐 (받은 피해는 그대로 0.6)
         float fade = hurt ? 0.6f : FadeFrom;
-        SetMeshAlpha(k < fade ? 1f : 1f - (k - fade) / (1f - fade));
+        SetMeshAlpha((k < fade ? 1f : 1f - (k - fade) / (1f - fade)) * alphaMul * quick);
     }
 
     byte meshAlpha = 255;
@@ -399,6 +508,7 @@ public class DamagePopup : MonoBehaviour
         if (!live) return;
         live = false;
         active--;
+        LeaveSmalls();
         if (byTarget.TryGetValue(key, out DamagePopup p) && p == this) byTarget.Remove(key);
         if (byWeak.TryGetValue(key, out p) && p == this) byWeak.Remove(key);
     }
