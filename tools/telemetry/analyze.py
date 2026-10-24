@@ -5,6 +5,9 @@
     python tools/telemetry/analyze.py --version 1.4.3 --build full
     python tools/telemetry/analyze.py --version 1.4 --since 2026-10-01 > docs/balance/telemetry/report.md
 --version 은 앞부분 일치 (1.4 → 1.4.x 전부). 승리 = result "clear". 표준 라이브러리만 씀.
+result: clear · death · quit(다시 시작 · 포기) · 1.5.9~ saved(저장하고 메인 메뉴로) · closed(판 중에 게임을 끔).
+1.5.9~ 이어한 판(retry_kind=continue)의 seconds · kills 는 판 전체 누적 → 같은 판의 앞 구간 줄(saved · closed)은
+resumed_secs 로 짝을 지어 뺌 (짝 없는 앞 구간 줄은 이어하지 않은 판으로 남김). 같은 run_id 줄(중복 전송)은 하나만.
 """
 import argparse
 import collections
@@ -61,7 +64,10 @@ def load(db_path, version, build, since, skip=frozenset()):
     if build:
         q += " AND build = ?"
         args.append(build)
+    q += " ORDER BY id"
     rows, tut = [], []
+    seen_ids = set()
+    dup = 0
     for ver, bld, data in db.execute(q, args):
         try:
             d = json.loads(data)
@@ -71,10 +77,48 @@ def load(db_path, version, build, since, skip=frozenset()):
             continue
         if s(d.get("anon_id")) in skip:
             continue
+        # 1.5.9~ 같은 줄을 두 번 받음 (보내는 도중 · 응답 전에 꺼서 다음 실행에 다시 보냄) — 예전 줄은 run_id 가 없어 그대로
+        rid = s(d.get("run_id"))
+        if rid:
+            if rid in seen_ids:
+                dup += 1
+                continue
+            seen_ids.add(rid)
         d["version"], d["build"] = ver, bld
         # 튜토리얼 판은 밸런싱에서 빼고 따로 셈 (1.4.7~ 게임도 보내지 않음)
         (tut if s(d.get("retry_kind")) == "tutorial" else rows).append(d)
-    return rows, tut
+    rows, paired = drop_resumed_segments(rows)
+    return rows, tut, dup, paired
+
+
+SEGMENT_RESULTS = ("saved", "closed")     # 1.5.9~ 판이 끝나지 않은 채 나간 줄 (이어할 수 있음)
+
+
+def drop_resumed_segments(rows):
+    """이어한 판(resumed_secs > 0)의 누적 줄과 겹치는 앞 구간 줄(saved · closed)을 뺌.
+    짝 = 같은 익명 ID · 앞 구간의 seconds 와 이어한 줄의 resumed_secs 가 2초 안 · 처치 수 같음 · 앞 구간이 먼저 받은 줄.
+    여러 번 저장하고 이어하면 사슬로 이어지므로 줄마다 짝을 하나씩 지움. 돌려줌: (남은 줄, 뺀 줄 수)"""
+    segs = collections.defaultdict(list)          # anon_id → [(순서, 줄)]
+    for i, d in enumerate(rows):
+        if s(d.get("result")) in SEGMENT_RESULTS:
+            segs[s(d.get("anon_id"))].append((i, d))
+    drop = set()
+    for i, d in enumerate(rows):
+        rs = num(d.get("resumed_secs"))
+        if rs <= 0:
+            continue
+        rk = num(d.get("resumed_kills"), -1)
+        best = None
+        for j, sd in segs.get(s(d.get("anon_id")), []):
+            if j >= i or j in drop:
+                continue
+            if abs(num(sd.get("seconds")) - rs) > 2 or (rk >= 0 and num(sd.get("kills"), -1) != rk):
+                continue
+            if best is None or j > best:
+                best = j                           # 가장 가까운 앞 줄
+        if best is not None:
+            drop.add(best)
+    return [d for i, d in enumerate(rows) if i not in drop], len(drop)
 
 
 def is_win(d):
@@ -134,7 +178,7 @@ def main():
     a = ap.parse_args()
 
     skip = frozenset() if a.include_dev else frozenset(dev_ids())
-    rows, tut = load(a.db, a.version, a.build, a.since, skip)
+    rows, tut, dup, paired = load(a.db, a.version, a.build, a.since, skip)
     if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
@@ -146,6 +190,8 @@ def main():
     if a.build: filt.append({"full": "정식판", "demo": "체험판"}[a.build])
     if a.since: filt.append(a.since + " 부터")
     if skip: filt.append("개발 기기 %d개 뺌" % len(skip))
+    if dup: filt.append("중복 전송 %d줄 뺌" % dup)
+    if paired: filt.append("이어한 판의 앞 구간 %d줄 뺌" % paired)
     players = len(set(s(d.get("anon_id")) for d in rows))
     wins = sum(1 for d in rows if is_win(d))
     out = ["# Soul Saver 플레이 데이터 분석",
@@ -171,7 +217,8 @@ def main():
 
     # 결과 분포
     res = collections.Counter(s(d.get("result")) or "?" for d in rows)
-    out.append(table("판 결과", ["결과", "판", "비율"], [[k, n, pct(n, len(rows))] for k, n in res.most_common()]))
+    out.append(table("판 결과", ["결과", "판", "비율"], [[k, n, pct(n, len(rows))] for k, n in res.most_common()],
+                     "1.5.9~ saved = 저장하고 메인 메뉴로 · closed = 판 중에 게임을 끔 (둘 다 이어하지 않은 판만 남음 · 예전 판본은 저장하고 나가도 quit, 끈 판은 기록 없음)"))
 
     # 갈래 (판 안의 갈래 path1 · path2)
     out.append(table("갈래별 (첫 갈래)", head, group_stats(rows, lambda d: "%s · %s" % (s(d.get("character")), s(d.get("path1"))) if s(d.get("path1")) else None)))

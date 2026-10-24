@@ -72,7 +72,9 @@ public class ESCmenu : MonoBehaviour
         // 1.1.9~ 일시정지 위에 연 도감 · 스킬 진화 · 빌드 자세히 보기 · 영웅 안내: 그 창이 ESC 로 닫힘 (같은 프레임에 일시정지까지 풀리지 않게)
         if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || MemoryShards.ReaderOpen || BuildView.IsOpen || HeroGuide.IsOpen) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
-        if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open) return;     // 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
+        if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open || Demo.EndOpen) return;     // 1.5.9~ 체험판 끝 창도 (닫으면 끝 창 뒤에서 게임이 흘렀음) · 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
+        // 1.5.9~ 장 전환 중(페이드 · 로딩 · 첫 문 특수 능력 창)엔 받지 않음 — 전환이 끝나며 timeScale 1 이 되어 메뉴 뒤에서 적이 때렸음 (전환은 실제 시간으로 끝남 · 특수 능력은 고르면 끝)
+        if (StageManager.Instance != null && StageManager.Instance.Transitioning) return;
         // 메인 메뉴 확인 창이 떠 있으면 ESC 는 그 창만 닫음
         if (confirm != null) { CloseConfirm(); return; }
         // 1.0.1: 상점을 닫은 뒤 1초 카운트다운 동안은 ESC 를 받지 않음
@@ -188,6 +190,9 @@ public class ESCmenu : MonoBehaviour
     static string SaveNote()
     {
         if (RunSave.CanSaveNow) return "지금 판은 저장되어 메인 메뉴의 「이어하기」로 계속할 수 있습니다.";
+        // 1.5.9~ 이어하기 직후 남은 창을 고르는 중(Started 전이라 CanSaveNow false): 저장은 지워지지 않으므로 「판이 끝납니다」가 아님
+        StageManager sm = StageManager.Instance;
+        if (RunSave.Continuing && RunSave.Has && !RunSave.Disabled && sm != null && !sm.Started) return "이어하기 저장은 그대로 남아 있습니다. 다음에 이어하면 남은 보상부터 다시 고릅니다.";
         if (RunSave.FinalBossDown) return "클리어 기록은 이미 저장되었습니다.";
         return "지금 진행 중인 판이 끝납니다.";
     }
@@ -258,6 +263,11 @@ public class ESCmenu : MonoBehaviour
     void GoMainMenu()
     {
         CloseConfirm();
+        // 1.5.9~ 플레이 데이터: 저장하고 나간 판은 "saved" (저장 안 되는 판 · 일일 도전은 그대로 "quit") — 씬을 바꾸기 전에 판정
+        //   이어하기 직후 남은 창을 고르는 중(Started 전)도 저장이 그대로 남아 다시 이어하므로 "saved" (SaveNote 와 같은 조건 · 아니면 앞 구간 짝 짓기에서 빠져 두 번 셈)
+        StageManager smNow = StageManager.Instance;
+        RunStats.SavedExit = RunSave.CanSaveNow
+                             || (RunSave.Continuing && RunSave.Has && !RunSave.Disabled && smNow != null && !smNow.Started);
         RunSave.Save();             // 판 중간 저장 (2.1.9)
         SceneFlow.Go("MainMenu");
     }
@@ -353,6 +363,7 @@ public class ESCmenu : MonoBehaviour
     {
         LevelShop ls = FindFirstObjectByType<LevelShop>();
         return (ls != null && ls.IsOpen) || (shop != null && (shop.isShopOpen || shop.isPause)) || ChoiceUI.Open || SoulTreeUI.IsOpen
-               || WeaponEvolutionUI.Open || SkillEvolutionUI.Open || StoryDirector.Playing || BossUltimate.CutscenePlaying;
+               || WeaponEvolutionUI.Open || SkillEvolutionUI.Open || StoryDirector.Playing || BossUltimate.CutscenePlaying
+               || Demo.EndOpen;        // 1.5.9~ 체험판 끝 창
     }
 }

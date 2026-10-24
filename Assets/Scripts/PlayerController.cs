@@ -368,6 +368,8 @@ public class PlayerController : MonoBehaviour
         if (IsPaused || StoryDirector.Playing || IsDying || Cinematic)
         {
             move = Vector3.zero;
+            // 1.5.9~ 영웅 필살기 조준도 거둠 (게이지는 그대로) — 풀린 첫 프레임에 커서 자리로 저절로 발동하던 것 (CharacterKit.CancelUltForPause)
+            if (CharacterKit.Instance != null && CharacterKit.Instance.UltEngaged) CharacterKit.Instance.CancelUltForPause();
             return;
         }
 
@@ -1403,6 +1405,7 @@ void Shoot()
             if (collision.TryGetComponent(out EnemyHitbox hitbox) && !hitbox.Touching(ContactCenter, ContactR)) return;     // 1.4.4~ 몸 콜라이더 → 몸 아래쪽 접촉 원
             bosss boss = collision.GetComponent<bosss>();
             if (boss != null && boss.IsDead) return;     // 1.0.4~ 쓰러져 사라지는 중인 보스 몸에 닿아도 피해 없음
+            if (boss != null && Time.time < boss.noContactUntil) return;     // 1.5.9~ 곁으로 순간이동 · 돌진 흉내 직후 잠깐은 몸통 피해 없음 (경고된 판정만 맞음)
             TryHit(boss != null ? boss.contactDamage : bossContactDamage);
         }
     }

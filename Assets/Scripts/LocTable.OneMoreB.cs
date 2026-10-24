@@ -55,11 +55,11 @@ public static partial class LocTable
         A("daily.rule.dance.desc", "공격력 +30% · 경험치 · 코인 +30%. 대신 받는 피해 +50%", "Attack +30% · EXP · coins +30%. But damage taken +50%", "攻撃力 +30%・経験値・コイン +30%。代わりに受けるダメージ +50%", "攻击力 +30% · 经验 · 金币 +30%。但受到伤害 +50%");
         A("daily.rule.taste", "영혼 각인의 규칙을 하루 빌려 씁니다. 각인을 아직 열지 않았어도 됩니다.", "A Soul Brand's rule, borrowed for a day. You need not have unlocked the brand.", "魂の刻印のルールを一日借りて使います。刻印をまだ解放していなくても構いません。", "借用灵魂烙印的规则一天。即使尚未解锁该烙印也可以。");
         A("brand.same", "지난 판 각인 그대로", "Same Brand as Last Run", "前回の刻印をそのまま", "沿用上局烙印");
-        A("brand.same.tip", "지난 판에 처음 고른 각인을 이번 판에도 씁니다.", "Uses the brand you picked at the start of your last run.", "前回のラン開始時に選んだ刻印を今回も使います。", "使用上一局开始时选择的烙印。");
+        A("brand.same.tip", "지난 판에 처음 고른 각인을 이번 판에도 씁니다.", "Uses the brand you picked at the start of your last run.", "前回のプレイ開始時に選んだ刻印を今回も使います。", "使用上一局开始时选择的烙印。");
         A("recommend.hero", "숙련 0인 {0}로 해 보는 건 어떨까요? 난이도를 내려도 계약 · 숙련 · 기억은 그대로 오릅니다.", "How about trying {0}, who has no mastery yet? Lowering the difficulty still advances contracts, mastery and memories.", "熟練0の{0}で試してみませんか？難易度を下げても契約・熟練・記憶はそのまま進みます。", "要不要试试熟练度为0的{0}？降低难度后契约、熟练与记忆照样会提升。");
         A("recommend.hero.noname", "아직 숙련이 없는 영웅으로 해 보는 건 어떨까요? 난이도를 내려도 계약 · 숙련 · 기억은 그대로 오릅니다.", "How about a hero with no mastery yet? Lowering the difficulty still advances contracts, mastery and memories.", "まだ熟練のない英雄で試してみませんか？難易度を下げても契約・熟練・記憶はそのまま進みます。", "要不要试试还没有熟练度的英雄？降低难度后契约、熟练与记忆照样会提升。");
         A("recommend.diff", "한 단계 낮은 난이도로 해 보는 건 어떨까요? 계약 · 숙련 · 기억은 어느 난이도에서도 오릅니다.", "How about one difficulty lower? Contracts, mastery and memories advance at any difficulty.", "一段低い難易度で試してみませんか？契約・熟練・記憶はどの難易度でも進みます。", "要不要试试低一档的难度？契约、熟练与记忆在任何难度都会提升。");
-        A("recommend.hint", "세 번 모두 같은 곳에서 쓰러졌습니다. 결과 화면의 「쓰러진 곳」을 한 번 읽어 보세요.", "You fell to the same thing all three times. Take a look at where you fell on the result screen.", "3回とも同じ原因で倒れました。結果画面の「倒れた原因」を一度読んでみてください。", "三次都倒在同一处。看一眼结果画面上的「倒下于」吧。");
+        A("recommend.hint", "세 번 모두 같은 곳에서 쓰러졌습니다. 결과 화면의 「쓰러진 곳」을 한 번 읽어 보세요.", "You fell to the same thing all three times. Check the \"Fell to\" line on the result screen.", "3回とも同じ原因で倒れました。結果画面の「倒れた原因」を一度読んでみてください。", "三次都倒在同一处。看一眼结果画面上的「倒下于」吧。");
         A("transcend.pips", "초월 카드까지 막대 {0}/3", "{0}/3 bars to the next Transcendence card", "超越のカードまでバー {0}/3", "距下一张超越卡 {0}/3 条");
         A("transcend.pips.endless", "초월 카드까지 막대 {0}/3 (무한 모드)", "{0}/3 bars to the next Transcendence card (Endless)", "超越のカードまでバー {0}/3（エンドレス）", "距下一张超越卡 {0}/3 条（无尽模式）");
     }

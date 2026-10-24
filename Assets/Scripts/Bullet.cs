@@ -40,6 +40,8 @@ public class Bullet : MonoBehaviour
     public Vector2 Direction => dir;
     // 적을 맞혔을 때 추가 효과 (연쇄 번개, 폭발 등)
     public System.Action<Bullet, Collider2D> onHitEnemy;
+    // 1.5.9~ 보스(몸)를 맞혔을 때 — onHitEnemy 는 일반 적만 불려서, 보스에게도 걸어야 하는 것(천공 명중 게이지)만 따로 닮 (카드 효과 전부를 보스에 걸면 보스 화력이 바뀜)
+    public System.Action<Bullet, Collider2D> onHitBoss;
     // 채워 두면 같은 적은 한 번만 맞힘 (부메랑 낫: 돌아올 때 비워서 한 번 더)
     public System.Collections.Generic.HashSet<int> hitOnce;
     // 채워 두면 벽에 닿아도 사라지지 않고 이걸 부름 (부메랑 낫: 벽에서 되돌아옴)
@@ -204,7 +206,7 @@ public class Bullet : MonoBehaviour
         aimMul = aimUntil = 0f;
         perfect = false;
         dir = Vector2.zero;
-        onHitEnemy = null; onHitWall = null; onSpent = null; hitOnce = null;
+        onHitEnemy = null; onHitBoss = null; onHitWall = null; onSpent = null; hitOnce = null;
         touchCount = 0;
         sweepCol = null;
         lifeLeft = pLifetime;
@@ -261,7 +263,7 @@ public class Bullet : MonoBehaviour
             if (ownGlow != null && ownGlow.Owns(ch)) continue;
             Destroy(ch.gameObject);
         }
-        onHitEnemy = null; onHitWall = null; onSpent = null; hitOnce = null;     // 붙잡은 클로저 · 대상 놓기
+        onHitEnemy = null; onHitBoss = null; onHitWall = null; onSpent = null; hitOnce = null;     // 붙잡은 클로저 · 대상 놓기
         sweepCol = null;
         gameObject.SetActive(false);
         pool.Enqueue(this);
@@ -534,6 +536,7 @@ public class Bullet : MonoBehaviour
                 remainPene--;
                 Fx.Spawn("fx_spark", transform.position, 1.2f, SkinFx.HitColor(Color.white), 26f);
                 Juice.BulletHit();          // 1.1~ 명중음 (간격 0.03초 · 동시 최대 4개)
+                onHitBoss?.Invoke(this, collision);         // 1.5.9~ 피해 처리 뒤 (일반 적 쪽과 같은 순서 · 등불 같은 BossPart 에는 안 부름)
 
 
                 // =========================

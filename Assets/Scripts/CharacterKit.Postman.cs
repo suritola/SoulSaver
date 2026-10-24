@@ -627,6 +627,8 @@ public partial class CharacterKit
         expressing = false;
         expressRing.enabled = false;
         CancelUltAim();
+        // 1.5.9~ 둘레에 표식이 하나도 없으면 게이지를 쓰지 않음 (빙의와 같게 · 예전엔 빈손으로 터지며 게이지만 0) — 덧붙는 진화 궁극기가 있으면 그것은 효과가 있으니 예전대로 씀
+        if (expressMarks.Count == 0 && !AddedUltShown) { ClearExpressIcons(expressIcons); Play("buzz", 0.4f); return; }
         float dmg = Damage * (1.8f + 1.4f * expressCharge) * UltMul;       // 1.0.6~ 공격력 200 ~ 400% → 180 ~ 320%
         RunCounters.Max("express.marks", expressMarks.Count);      // 1.2~ 영혼 계약 「여덟 장의 표식」
         if (expressMarks.Count > 0)

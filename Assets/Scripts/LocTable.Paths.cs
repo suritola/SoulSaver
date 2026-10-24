@@ -11,12 +11,13 @@ public static partial class LocTable
     static void AddPaths()
     {
         // ================================================================= 이름 · 단계
-        PA("갈래", "Path", "流派", "流派");
+        // 1.5.9~ 이름표 「갈래」는 따로 키 — 「갈래」 키는 본표에서 분열 화살 단위(영어 빈칸 · 本 · 支)라 이름표가 단위 글자로 나왔음
+        PK("paths.label", "갈래", "Path", "流派", "流派");
         PA("입문", "Path Seed", "入門", "入门");
         PA("외길", "Single Path", "一筋", "专精");
         PA("공명 I", "Resonance I", "共鳴 I", "共鸣 I");
         PA("공명 II", "Resonance II", "共鳴 II", "共鸣 II");
-        PA("극의", "Mastery", "極意", "极意");
+        PA("극의", "Pinnacle", "極意", "极意");      // 1.5.9~ 영어 「Mastery」는 영웅 숙련과 같은 말이라 Pinnacle 로
         PA("교차", "Crossover", "交差", "交汇");
         PA("완성", "Completion", "完成", "完成");
         PA("갈림길", "Crossroads", "分かれ道", "岔路");
@@ -43,7 +44,7 @@ public static partial class LocTable
            "最初の流派だけをさらに深く極めます。二つ目の流派は選びません。",
            "只深入钻研第一个流派，不再选择第二个流派。");
         PA("갈래 카드 최대 단계 +1", "Path cards: max rank +1", "流派カードの最大段階+1", "流派卡最高等级+1");
-        PA("늘어난 단계까지 모두 채우면 극의", "Fill the extra ranks to reach Mastery", "増えた段階まですべて満たすと極意", "填满增加的等级即可达成极意");
+        PA("늘어난 단계까지 모두 채우면 극의", "Fill the extra ranks to reach Pinnacle", "増えた段階まですべて満たすと極意", "填满增加的等级即可达成极意");
 
         // ================================================================= 배지 툴팁 · 도움말
         PA("갈래 단계(입문 1 + 갈래 카드 단계)가 4에 닿으면 공명 I, 8에 닿으면 공명 II가 열립니다. 두 갈래가 모두 공명 I에 닿으면 교차가 열립니다.",
@@ -51,7 +52,7 @@ public static partial class LocTable
            "流派段階（入門1＋流派カードの段階）が4で共鳴I、8で共鳴IIが開きます。二つの流派がどちらも共鳴Iに達すると交差が開きます。",
            "流派阶段（入门1＋流派卡等级）达到4时开启共鸣I，达到8时开启共鸣II。两个流派都达到共鸣I时开启交汇。");
         PA("이번 판의 갈래를 고르세요. 입문 카드는 평타 · 움직임을 바꾸고 대가가 붙습니다. 레벨업에는 모든 카드가 나오고, 고른 갈래에 맞는 카드를 모으면 공명 · 극의가 열립니다.",
-           "Choose this run's path. A Path Seed changes your basic attack or movement, and comes with a cost. Level-ups offer every card, and collecting cards that match your path unlocks its Resonance and Mastery.",
+           "Choose this run's path. A Path Seed changes your basic attack or movement, and comes with a cost. Level-ups offer every card, and collecting cards that match your path unlocks its Resonance and Pinnacle.",
            "このプレイの流派を選んでください。入門カードは通常攻撃や動きを変え、代償が付きます。レベルアップにはすべてのカードが出て、選んだ流派に合うカードを集めると共鳴・極意が開きます。",
            "选择本局的流派。入门卡会改变普通攻击或移动方式，并附带代价。升级时会出现所有卡，收集与所选流派相符的卡即可开启共鸣与极意。");
         PA("갈림길: 두 번째 갈래를 고르거나 「외길」로 첫 갈래만 더 깊게 팝니다.",

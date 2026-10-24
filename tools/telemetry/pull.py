@@ -32,6 +32,7 @@ FLAT_COLUMNS = [
     "retry_kind", "menu_gap_secs", "contracts_done", "herald_shown", "milestones", "points_run",
     "weak_hits", "weak_share", "memory_trig", "memory_break",
     "path1", "path2", "path_tiers", "cross", "cards_seq",
+    "resumed_secs", "resumed_kills", "run_id",     # 1.5.9~ 이어한 판의 되살린 시간 · 처치 · 줄마다 고유 ID (중복 전송 걸러 내기)
 ]
 
 

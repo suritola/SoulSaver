@@ -324,7 +324,22 @@ public class EnemySpawner : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             float a = off + i * Mathf.PI * 2f / count;
-            Vector3 at = Hostile.ClampArena(center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (radius + Random.Range(-1f, 1f)));
+            Vector3 raw = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * (radius + Random.Range(-1f, 1f));
+            Vector3 at = Hostile.ClampArena(raw);
+            // 1.5.9~ 플레이어가 벽에 붙어 있으면 벽 쪽 점이 가장자리로 당겨져 플레이어 바로 옆(1.5칸)에서 튀어나와 몸통을 때렸음 · 구조물 안에도 생겼음
+            //   → 둘레가 넓은 호출(습격 30 · 저주 상자 9 · 제단 13)만, 플레이어에게 가깝거나 벽 안이면 반대편 점 → 그것도 안 되면 일반 생성 자리
+            //   (고블린 0.5 · 무리 2.5 는 가리킨 자리에 그대로 나와야 해서 지금처럼)
+            if (radius >= 5f)
+            {
+                PlayerController pl = Hostile.Player;
+                Vector3 pp = pl != null ? pl.transform.position : center;
+                float keep = Mathf.Min(8f, radius * 0.6f);              // 습격 8칸 · 저주 상자 5.4칸
+                if (Vector2.Distance(at, pp) < keep || Hostile.WallNear(at, 1.5f))
+                {
+                    Vector3 flip = Hostile.ClampArena(center - (raw - center));
+                    at = Vector2.Distance(flip, pp) >= keep && !Hostile.WallNear(flip, 1.5f) ? flip : GetSpawnPosition(pp);
+                }
+            }
             GameObject go = Instantiate(Pick(Phase.weights), at, Quaternion.identity);
             if (go.TryGetComponent(out EnermyController ec)) ec.countsTowardBoss = true;
             Fx.Spawn("fx_smoke", at, 2f, new Color(0.8f, 0.7f, 0.9f), 18f);
@@ -401,6 +416,7 @@ public class EnemySpawner : MonoBehaviour
 
         // 연출 동안은 조작하지 않고 감상만 (이동 · 공격 · 스킬 · 영혼 트리 입력을 막음)
         PlayerController.Cinematic = true;
+        HazardZone.ClearAll();          // 1.5.9~ 남은 적 장판이 연출 · 무적이 끝난 뒤까지 남지 않게
         playerC.CancelSkill();
         playerC.GrantInvincibility(FinaleTime + 1f);              // 무적은 「빠른 연출」이어도 그대로
         float finale = FinaleTime * GameSettings.FxTime;           // 1.1.9~ 「빠른 연출」: 소용돌이도 절반 시간에 (편의성 3차 7)

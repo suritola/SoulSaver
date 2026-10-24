@@ -96,7 +96,7 @@ public static partial class LocTable
            "攻击速度降低25%，对5格内敌人的伤害降低40%。");
         PA("보스 · 원거리", "Bosses · Long range", "ボス · 遠距離", "首领 · 远程");
         PA("근접 포위", "Being surrounded", "近接での包囲", "近身包围");
-        PA("20칸 넘게 날아간 편지는 치명타가 됩니다. (피해 ×1.5)", "Letters that fly over 20 tiles become critical hits. (×1.5 damage)", "20マス以上飛んだ手紙は会心になります。（ダメージ×1.5）", "飞行超过20格的信件成为暴击。（伤害×1.5）");
+        PA("20칸 넘게 날아간 편지는 치명타가 됩니다. (피해 ×1.5)", "Letters that fly over 20 tiles become critical hits. (×1.5 damage)", "20マス以上飛んだ手紙はクリティカルになります。（ダメージ×1.5）", "飞行超过20格的信件成为暴击。（伤害×1.5）");
         PA("보스에게 배달하면 우표가 2중첩 쌓입니다.", "Deliveries to bosses add 2 stamp stacks.", "ボスに配達すると切手が2枚たまります。", "向首领投递时累积2层邮票。");
         PA("사거리가 40칸이 됩니다.", "Range becomes 40 tiles.", "射程が40マスになります。", "射程变为40格。");
 

@@ -94,6 +94,7 @@ public static partial class LocTable
         A("전부, 녹아내려라.", "Melt. All of it.", "すべて、溶け落ちろ。", "全部，融化吧。");
         A("정말로 메인 메뉴로 가시겠습니까?", "Really return to the main menu?", "本当にメインメニューに戻りますか？", "确定要返回主菜单吗？");
         A("지금 진행 중인 판이 끝납니다.", "Your current run will end.", "今のプレイは終了します。", "当前这一局将会结束。");
+        A("이어하기 저장은 그대로 남아 있습니다. 다음에 이어하면 남은 보상부터 다시 고릅니다.", "Your saved run is kept. Next time you continue, you'll pick the remaining rewards again.", "中断セーブはそのまま残っています。次に続きから遊ぶと、残りの報酬から選び直します。", "中断存档仍然保留。下次继续游戏时，将从剩余的奖励开始重新选择。");      // 1.5.9~ ESCmenu.SaveNote
         A("스킬 진화", "Skill Evolution", "スキル進化", "技能进化");
         A("스킬 진화 도감", "Skill Evolution Codex", "スキル進化図鑑", "技能进化图鉴");
         A("클릭하거나 [", "Click or press [", "クリックするか [", "点击或按 [");
@@ -106,7 +107,7 @@ public static partial class LocTable
         A("필살기의 ", "Ultimate ", "必殺技の", "必杀技的");
         A("남은 출혈의 ", "Remaining bleed ", "残り出血の", "剩余流血的");
         A("필살기 충전", "Ultimate charge", "必殺技チャージ", "必杀技充能");
-        A("호문쿨루스 필요", "Requires Homunculus", "ホムンクルスが必要", "需要侏儒助手");
+        A("호문쿨루스 필요", "Requires Homunculus", "ホムンクルスが必要", "需要人造小人");
         A("필요", "Requires", "必要", "需要");
         A("진화 조합", "Evolution recipes", "進化の組み合わせ", "进化组合");
         K("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지라 모두 올릴 수는 없습니다.", "레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 됩니다. 최대 레벨이 있어 모두 올릴 수는 없습니다.", "Max out two or three level-up cards and they merge into a new ability. Levels are capped, so you can't max everything.", "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力になります。最大レベルがあるので全部は上げられません。", "将两到三张升级卡全部升到最高级后合而为一，成为新能力。等级有上限，无法全部升满。");
@@ -250,7 +251,7 @@ public static partial class LocTable
         A("증폭 용액", "Amplifying Solution", "増幅溶液", "增幅溶液");
         A("적 하나당", "Per enemy", "敵1体ごと", "每名敌人");
         A("조수 개조", "Assistant Upgrade", "助手改造", "助手改造");
-        K("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "호문쿨루스의 플라스크에 화염 · 빙결 · 산성이 번갈아 담겨 더 세게 터집니다. (호문쿨루스 필요)", "Your Homunculus's flasks cycle fire, frost and acid and hit harder. (Requires Homunculus)", "ホムンクルスのフラスコに火炎・氷結・酸が交互に入り、より強く爆発します。（ホムンクルスが必要）", "侏儒助手的烧瓶轮流装入火焰、冰冻、酸性，爆炸更强。（需要侏儒助手）");
+        K("호문쿨루스가 던지는 플라스크에 화염 · 빙결 · 산성 시약을 번갈아 채우고 더 세게 터뜨립니다. (호문쿨루스 필요)", "호문쿨루스의 플라스크에 화염 · 빙결 · 산성이 번갈아 담겨 더 세게 터집니다. (호문쿨루스 필요)", "Your Homunculus's flasks cycle fire, frost and acid and hit harder. (Requires Homunculus)", "ホムンクルスのフラスコに火炎・氷結・酸が交互に入り、より強く爆発します。（ホムンクルスが必要）", "人造小人的烧瓶轮流装入火焰、冰冻、酸性，爆炸更强。（需要人造小人）");
         A("조수 플라스크 피해", "Assistant flask damage", "助手フラスコのダメージ", "助手烧瓶伤害");
         A("유리 비", "Glass Rain", "ガラスの雨", "玻璃雨");
         A("떨어지는 간격", "Drop interval", "落ちる間隔", "落下间隔");

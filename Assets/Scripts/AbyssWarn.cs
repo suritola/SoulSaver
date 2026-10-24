@@ -21,7 +21,7 @@ public class AbyssWarn : MonoBehaviour
     float radius, fromDeg, sweepDeg;
     Mesh bgMesh, fillMesh;
     MeshRenderer bgRenderer, fillRenderer;
-    LineRenderer fanEdge, startEdge;
+    LineRenderer fanEdge, startEdge, fanBand;
     // 베기
     float r1, r2;
     LineRenderer innerRing, outerRing, ringBand;
@@ -82,7 +82,8 @@ public class AbyssWarn : MonoBehaviour
     }
 
     // 공허 눈알: 부채꼴 전체는 옅게, 광선이 시작하는 변은 밝게, 채움은 시작 변 → 끝 변으로 (훑는 방향이 보이게)
-    public static GameObject Fan(Vector3 center, float radius, float fromDeg, float sweepDeg, float duration, Color color, EnermyController owner)
+    // 1.5.9~ hitWidth > 0 이면 테두리를 따라 판정 폭 옅은 띠를 깔아 변 · 호 바깥으로 판정만큼 덮음 (예고 = 판정)
+    public static GameObject Fan(Vector3 center, float radius, float fromDeg, float sweepDeg, float duration, Color color, EnermyController owner, float hitWidth = 0f)
     {
         AbyssWarn w = Make("WarnFan", center, Kind.Fan, duration, color, owner);
         w.radius = radius;
@@ -108,6 +109,12 @@ public class AbyssWarn : MonoBehaviour
         buf[seg + 2] = center;
         w.fanEdge.positionCount = seg + 3;
         w.fanEdge.SetPositions(buf);
+        if (hitWidth > 0f)
+        {
+            w.fanBand = w.Line("Band", new Color(color.r, color.g, color.b, 0.1f), hitWidth, 0);
+            w.fanBand.positionCount = seg + 3;
+            w.fanBand.SetPositions(buf);
+        }
 
         float s = fromDeg * Mathf.Deg2Rad;
         w.startEdge = w.Line("Start", Color.white, 0.3f, 19);
@@ -241,6 +248,7 @@ public class AbyssWarn : MonoBehaviour
             {
                 BuildFan(fillMesh, radius, fromDeg, fromDeg + sweepDeg * k, new Color(color.r, color.g, color.b, 0.22f + 0.2f * k * blink));
                 fanEdge.startColor = fanEdge.endColor = c;
+                if (fanBand != null) fanBand.startColor = fanBand.endColor = new Color(color.r, color.g, color.b, 0.08f + 0.12f * k);
                 startEdge.startColor = startEdge.endColor = new Color(1f, 1f, 1f, 0.45f + 0.5f * blink * k);
                 break;
             }

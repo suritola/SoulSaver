@@ -85,7 +85,7 @@ public static partial class LocTable
           "15分までにボスを1体でも倒していれば、15分から順に目覚める王たちを全て倒した後に降臨します。英雄たちの最終進化必殺技を10秒に1回使い、体力が減るほど速まり、最後は1秒に1回になります。合間に「ライブコーディング」・「範囲選択」・「ビルド失敗」を使い、体力66%未満で「エラーダイアログ」・「読み込み中…」、33%未満で「スタックオーバーフロー」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。",
           "若在15分钟前至少击败过一名首领，击败从15分钟起依次苏醒的所有王者后便会降临。每10秒使用一次英雄们的最终进化必杀技，生命越低越快，最终每1秒一次。其间使出「现场编程」、「框选删除」、「构建失败」，生命低于66%时加入「错误弹窗」和「加载中…」，低于33%时加入「栈溢出」。战斗期间只出现弱小敌人，每秒4名（最多30名）。");
         C("codex.mom.desc2", "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면 강림합니다. 체력 · 피해 · 이동 속도가 개발자의 2배입니다. 영웅들의 필살기를 5초에 한 번, 체력이 닳을수록 1초에 한 번까지 쓰고, 사이사이 「슬리퍼 투척」 · 「효자손」 · 「타임 세일!」을 씁니다. 체력 75% 아래에서 「빗자루질」, 50% 아래에서 「엄친아」, 25% 아래에서 「불 끄고 자!」가 더해집니다. 싸우는 동안 약한 적만 1초에 4마리씩(최대 30) 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
-          "Descends once you gather 500 souls after defeating the Developer. Its health, damage and movement speed are twice the Developer's. It uses the heroes' Ultimates every 5s, speeding up to once per second as its health drops, with Slipper Toss, Back Scratcher and Time Sale! in between. Below 75% health she adds Broom Sweep, below 50% Mom's Friend's Son, and below 25% Lights Out!. During the fight only weak enemies appear, 4 per second (up to 30). Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
+          "Descends once you gather 500 souls after defeating the Developer. Her health, damage and movement speed are twice the Developer's. She uses the heroes' Ultimates every 5s, speeding up to once per second as her health drops, with Slipper Toss, Back Scratcher and Time Sale! in between. Below 75% health she adds Broom Sweep, below 50% Mom's Friend's Son, and below 25% Lights Out!. During the fight only weak enemies appear, 4 per second (up to 30). Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
           "開発者を倒した後、魂を500個集めると降臨します。体力・ダメージ・移動速度は開発者の2倍です。英雄たちの必殺技を5秒に1回、体力が減るほど速く最後は1秒に1回使い、合間に「スリッパ投げ」・「孫の手」・「タイムセール！」を使います。体力75%未満で「ほうき掃き」、50%未満で「ママ友の息子」、25%未満で「電気消して寝なさい！」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。開発者とママを両方倒すと、エンドレスをクリアします。",
           "击败开发者后收集500个灵魂即会降临。生命、伤害和移动速度都是开发者的2倍。每5秒使用一次英雄们的必杀技，生命越低越快，最终每1秒一次，其间使出「拖鞋飞袭」、「痒痒挠」、「限时抢购！」。生命低于75%时加入「扫帚横扫」，低于50%加入「别人家的孩子」，低于25%加入「关灯睡觉！」。战斗期间只出现弱小敌人，每秒4名（最多30名）。击败开发者和妈妈即可通关无尽模式。");
         C("codex.dev.secret", "15분까지 보스를 하나라도 쓰러뜨렸으면, 15분부터 깨어나는 왕들을 모두 쓰러뜨린 뒤 강림합니다. 영웅들의 최종 진화 필살기에 「라이브 코딩」 같은 자기 기술을 섞어 씁니다.",
@@ -93,7 +93,7 @@ public static partial class LocTable
           "15分までにボスを1体でも倒していれば、15分から目覚める王たちを全て倒した後に降臨します。英雄たちの最終進化必殺技に「ライブコーディング」などの自分の技を織り交ぜます。",
           "若在15分钟前至少击败过一名首领，击败从15分钟起苏醒的所有王者后便会降临。会把英雄们的最终进化必杀技与「现场编程」等自己的招式混合使用。");
         C("codex.mom.secret", "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면 강림합니다. 체력 · 피해 · 이동 속도가 개발자의 2배입니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
-          "Descends once you gather 500 souls after defeating the Developer. Its health, damage and movement speed are twice the Developer's. Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
+          "Descends once you gather 500 souls after defeating the Developer. Her health, damage and movement speed are twice the Developer's. Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
           "開発者を倒した後、魂を500個集めると降臨します。体力・ダメージ・移動速度は開発者の2倍です。開発者とママを両方倒すと、エンドレスをクリアします。",
           "击败开发者后收集500个灵魂即会降临。生命、伤害和移动速度都是开发者的2倍。击败开发者和妈妈即可通关无尽模式。");
         C("codex.dev.tip",

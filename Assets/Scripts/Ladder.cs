@@ -328,7 +328,7 @@ public static class ClaimRewards
     class Runner : MonoBehaviour
     {
         public Transform root;
-        static readonly string[] Blockers = { "SaveNotice", "LanguagePicker", "PatchNotes", "PatchNotesHistory", "CharacterPanel" };
+        static readonly string[] Blockers = { "SaveNotice", "LanguagePicker", "PatchNotes", "PatchNotesHistory", "CharacterPanel", "TitleIntro" };     // 1.5.9~ 시작 연출(최대 6초) 뒤에 숨어 열리지 않게
 
         IEnumerator Start()
         {

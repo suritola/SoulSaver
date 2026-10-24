@@ -18,7 +18,7 @@ public static partial class LocTable
         A("bossmem.noun.cartographer", "잉크", "ink", "インク", "墨迹");
         A("bossmem.noun.clockmaker", "톱니", "gears", "歯車", "齿轮");
         A("bossmem.noun.postman", "편지", "letters", "手紙", "信件");
-        A("bossmem.noun.ghost", "손길", "cold touch", "冷たい手", "寒冷之触");
+        A("bossmem.noun.ghost", "손길", "cold touch", "冷たい手", "冰冷之手");
         A("bossmem.noun.ult", "일격", "ultimate", "一撃", "必杀一击");
         A("bossmem.noun.other", "힘", "power", "力", "力量");
 

@@ -48,6 +48,16 @@ public static class DailyRewards
         string last = Prefs.GetString(LastKey, "");
         if (string.IsNullOrEmpty(last) || Prefs.GetInt(StreakKey, 0) <= 0 || Streak > 0) return;
         if (string.Compare(last, DailyChallenge.Key(DailyChallenge.Today), StringComparison.Ordinal) >= 0) return;     // 미래 날짜 (시계를 되돌림): 그대로
+        MenuToast.RunLater(() => StreakBrokenLater(0));
+    }
+
+    // 1.5.9~ 끊김 알림이 게임을 켠 직후 시작 연출(TitleIntro)에 덮여 끝난 뒤 1초쯤만 보였음 → 연출이 걷힌 뒤 띄움
+    //   0.25초마다 확인 · 30번(7.5초, 연출 상한 6초보다 김)이면 그냥 띄움 · 그 사이 판에 들어갔으면 저장도 하지 않음 (다음 메뉴에서 다시 알림)
+    static void StreakBrokenLater(int tries)
+    {
+        if (SceneManager.GetActiveScene().name != "MainMenu") return;
+        if (TitleIntro.Showing && tries < 30) { MenuToast.RunLater(() => StreakBrokenLater(tries + 1), 0.25f); return; }
+        if (Prefs.GetInt(StreakKey, 0) <= 0 || Streak > 0) return;      // 이미 알렸음 (메뉴를 두 번 열어 둘이 기다린 경우)
         Prefs.SetInt(StreakKey, 0);
         Prefs.Save();
         Notice.Toast(NoticeIcon.Info, Loc.T("daily.streak.broken"), 4f);

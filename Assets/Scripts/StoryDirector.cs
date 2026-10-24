@@ -365,8 +365,13 @@ public class StoryDirector : MonoBehaviour
         yield return d.RunEnding(cleared, opened, lines);
     }
 
+    // 1.5.9~ 엔딩을 켠 연출: 도중에 파괴되면(쓰러지는 중 마지막 보스 처치 → 결과 화면으로 씬이 바뀜) OnDestroy 에서 두 플래그를 직접 되돌림
+    //   예전엔 EndingPlaying · Playing 이 남아 그 실행 내내 초월 카드가 막히고 메뉴 음악 · 튜토리얼 · 이어하기 판은 조작이 잠겼음
+    bool ownsEnding;
+
     IEnumerator RunEnding(Difficulty cleared, string opened, bool lines)
     {
+        ownsEnding = true;
         Playing = true;
         EndingPlaying = true;
         Time.timeScale = 0f;
@@ -395,6 +400,7 @@ public class StoryDirector : MonoBehaviour
 
         Playing = false;                // timeScale 은 SceneFlow 가 막을 내린 뒤 새 씬에서 1 로 (막이 내리는 동안 게임이 풀리지 않게)
         EndingPlaying = false;
+        ownsEnding = false;
         // 1.0.4~: 엔딩 뒤 바로 메인 메뉴가 아니라 결과 화면(기록 · 획득 포인트 · 다음 해금)을 「클리어!」로 보여 줌
         RunStats.MarkCleared();
         RunStats.CaptureForResult();        // 1.1.9~ 결과 화면 「빌드 자세히 보기」 스냅샷 (떠나는 순간의 빌드)
@@ -635,7 +641,8 @@ public class StoryDirector : MonoBehaviour
 
     void OnDestroy()
     {
-        if (!EndingPlaying) Playing = false;
+        if (ownsEnding) { EndingPlaying = false; Playing = false; }
+        else if (!EndingPlaying) Playing = false;
     }
 
     static StoryDirector Create()

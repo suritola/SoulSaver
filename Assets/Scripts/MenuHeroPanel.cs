@@ -92,7 +92,7 @@ public static class MenuHeroPanel
         TMP_Text name = UIKit.Text(panel, d.name, UiRules.Legacy ? 36f : UiTokens.Heading, UiRules.Legacy ? Gold : UiTokens.Text1, new Vector2(0f, y - 22f), new Vector2(W - 48f, 44f));
         name.fontSizeMin = 20f;
         name.raycastTarget = true;
-        string sub = d.title + "\n" + Mastery.Label(id);
+        string sub = Loc.T(d.title) + "\n" + Mastery.Label(id);     // 1.5.9~ 칭호도 번역 (툴팁은 이어 붙인 글 전체로 찾아서 칭호가 한국어로 나왔음)
         string weight = SoulWeight.CardTag(id);
         if (weight.Length > 0) sub += "  ·  " + weight;
         TooltipTrigger nameTip = name.gameObject.AddComponent<TooltipTrigger>();

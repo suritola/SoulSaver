@@ -47,6 +47,9 @@ public class bosss : MonoBehaviour
     [HideInInspector] public bool casting;
     // 1.2.5~ 공간 침식 동안 제자리에 섬 (casting 과 따로 · 개발자 필살기가 casting 을 꺼도 걷지 않게, SpaceErosion)
     [System.NonSerialized] public bool domainHold;
+    // 1.5.9~ 이 시각까지 몸통 피해 없음 — 빙의 · 회전 베기 · 돌진 흉내로 플레이어 곁에 순간이동한 직후 (몸통 접촉 원이 약 5.5칸이라 경고 밖으로 피해도 48 을 맞던 것)
+    //   시각 값이라 스킬이 끊겨도 저절로 풀림
+    [System.NonSerialized] public float noContactUntil;
 
     float summonTimer;
     EnemySpawner spawner;

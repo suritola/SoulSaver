@@ -729,14 +729,15 @@ public partial class LevelShop : MonoBehaviour
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
         p.nowEXP += amount;
         // 1.0.6~: 최대 레벨(50 · 무한 모드도 50)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
-        int room = LevelCap - (p.level + PendingLevels);
+        // 1.5.9~ 연출 중인 레벨업(levelUpQueued)도 셈 — 빼고 세면 1초 안에 여러 번 받을 때 상한을 넘게 쌓였다가 말없이 버려지고 요구량만 올랐음 (ExpLevel 주석과 같은 기준)
+        int room = LevelCap - (p.level + PendingLevels + levelUpQueued);
         if (room <= 0)
         {
             p.nowEXP = Mathf.Min(p.nowEXP, p.needEXP);
             return;
         }
         int gained = 0;
-        int startLv = p.level + PendingLevels;
+        int startLv = p.level + PendingLevels + levelUpQueued;
         while (p.nowEXP >= p.needEXP && p.needEXP > 0f && gained < room)
         {
             p.nowEXP -= p.needEXP;
@@ -782,6 +783,17 @@ public partial class LevelShop : MonoBehaviour
         AddPending();                       // 바로 창을 띄우지 않고 쌓아 둠 ([Space]로 고름)
     }
 
+    // 1.5.9~ 창이 꺼지면 연출 코루틴이 멈춰 levelUpQueued 가 남음 → 위 room 계산이 영영 줄어 레벨업을 잃고 초월 창(Transcend)도 막힘
+    //   멈춘 연출 몫은 바로 쌓인 레벨업으로 (코루틴 끝의 AddPending 을 대신 · 씬이 내려가는 중이면 다른 오브젝트를 건드리지 않게 숫자만)
+    void OnDisable()
+    {
+        if (levelUpQueued <= 0) return;
+        int n = levelUpQueued;
+        levelUpQueued = 0;
+        if (gameObject.scene.isLoaded) AddPending(n);
+        else PendingLevels += n;
+    }
+
     Shop shopRef;
     bool ShopOpen
     {
@@ -801,6 +813,9 @@ public partial class LevelShop : MonoBehaviour
         if (LvUpPanel != null && LvUpPanel.activeSelf != on) LvUpPanel.SetActive(on);
     }
     public bool IsOpen => LvshopPanel != null && LvshopPanel.activeSelf;
+    // 1.5.9~ 저장용: ESC · 영웅 안내가 패널만 숨긴 동안도 카드 창이 떠 있는 것으로 셈 (OpenPending 이 이미 PendingLevels 를 뺐으므로
+    //   숨긴 채 ESC → 메인 메뉴 · 게임 종료로 나가면 그 1장이 이어하기에서 사라졌음) · 켜는 곳 openLevelShop, 끄는 곳 closeLevelShop · CancelOpening
+    bool cardWindowUp;
 
     // 지금 고를 수 있는 레벨업 카드가 하나도 없음 = 만렙 (무기가 바뀌어 맞는 카드가 생기면 다시 오름)
     public bool NothingToLearn
@@ -827,6 +842,7 @@ public partial class LevelShop : MonoBehaviour
         setAbilitys();                      // 창을 열 때 최신 수치로
         
         LvshopPanel.SetActive(true);
+        cardWindowUp = true;
         EnsureSkipButton();
         DisarmSkip();                       // 1.0.4~: 건너뛰기 두 번 누르기를 처음 상태로
         evoIntroShowing = false;            // 1.0.4~: 스킬 진화 첫 안내는 처음 본 창에서만
@@ -841,6 +857,7 @@ public partial class LevelShop : MonoBehaviour
     }
     void closeLevelShop()
     {
+        cardWindowUp = false;
         if (LvshopPanel != null) LvshopPanel.SetActive(false);
         HidePathWindow();           // 입문 · 갈림길 머리말 (LevelShop.Paths)
         Time.timeScale = 1f;
@@ -1108,6 +1125,7 @@ public partial class LevelShop : MonoBehaviour
     public void CancelOpening()
     {
         if (IsOpen) closeLevelShop();
+        cardWindowUp = false;           // 1.5.9~ 숨겨진 채(IsOpen false)여도
         freePick = false;
         pendingSlot = -1;
         Time.timeScale = 1f;
@@ -1117,7 +1135,7 @@ public partial class LevelShop : MonoBehaviour
     public void SaveLevels(out int earnedLevels, out int pending)
     {
         earnedLevels = earned;
-        pending = PendingLevels + levelUpQueued + (IsOpen && !freePick ? 1 : 0);
+        pending = PendingLevels + levelUpQueued + ((IsOpen || cardWindowUp) && !freePick ? 1 : 0);     // 1.5.9~ 숨겨진 창도
     }
 
     public void RestoreLevels(int earnedLevels, int pending, float nowExp, float needExp)

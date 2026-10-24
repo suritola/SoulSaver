@@ -67,6 +67,8 @@ public class EnermyController : MonoBehaviour
         slowMul = Time.time < slowUntil ? Mathf.Min(slowMul, mul) : mul;
         slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
     }
+    // 1.5.9~ 빙결 · 덫 묶임(Slow(0, …)) 중인지 — 걷기만 멈추고 스킬은 그대로 써서 얼어 있는 지옥견이 덮쳤음 (EnemySkill 이 봄)
+    public bool Held => Time.time < slowUntil && slowMul <= 0.05f;
 
     // 시간 왜곡 (적 전체 감속)
     public static float GlobalSpeedMultiplier = 1f;

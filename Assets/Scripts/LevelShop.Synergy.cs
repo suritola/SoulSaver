@@ -79,7 +79,7 @@ public partial class LevelShop
                 int idx = slot;
                 TooltipTrigger tip = r.gameObject.AddComponent<TooltipTrigger>();
                 // 2026-10-19~ 갈래 규칙 판: 「공명 I까지 N」 · 갈림길 「교차 ○○」 배지 (LevelShop.Paths) — 자리 · 툴팁 코드는 그대로
-                tip.titleProvider = () => Paths.Active ? Loc.T("갈래") : Loc.T("시너지");
+                tip.titleProvider = () => Paths.Active ? Loc.T("paths.label") : Loc.T("시너지");
                 tip.bodyProvider = () => Paths.Active
                     ? Loc.T("갈래 단계(입문 1 + 갈래 카드 단계)가 4에 닿으면 공명 I, 8에 닿으면 공명 II가 열립니다. 두 갈래가 모두 공명 I에 닿으면 교차가 열립니다.")
                     : Loc.T("이미 가진 카드와 잘 어울리는 카드입니다. 함께 키우면 서로의 효과를 살려 줍니다.")

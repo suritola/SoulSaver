@@ -58,6 +58,6 @@ public static partial class LocTable
           "",
           "Left stick Move · Right stick Aim (tilt to auto-attack) · RT Attack · LT Ultimate · A Interact · Confirm · B Cancel · X Reload · Y Relic\nRB · LB · L3 Skill 1 · 2 · 3 · View Soul Tree · Menu Pause · In menus: left stick · D-pad move the cursor, A click, right stick scroll",
           "左スティック 移動・右スティック 照準（倒すと自動攻撃）・RT 攻撃・LT 必殺技・A 調べる・決定・B キャンセル・X リロード・Y 遺物\nRB・LB・L3 スキル 1・2・3・View 魂のツリー・Menu 一時停止・メニューでは左スティック・十字キーでカーソル、A クリック、右スティック スクロール",
-          "左摇杆 移动 · 右摇杆 瞄准（推动即自动攻击） · RT 攻击 · LT 必杀技 · A 互动 · 确认 · B 取消 · X 换弹 · Y 遗物\nRB · LB · L3 技能 1 · 2 · 3 · View 灵魂树 · Menu 暂停 · 菜单中用左摇杆 · 十字键移动光标，A 点击，右摇杆滚动");
+          "左摇杆 移动 · 右摇杆 瞄准（推动即自动攻击） · RT 攻击 · LT 必杀技 · A 互动 · 确认 · B 取消 · X 装填 · Y 遗物\nRB · LB · L3 技能 1 · 2 · 3 · View 灵魂树 · Menu 暂停 · 菜单中用左摇杆 · 十字键移动光标，A 点击，右摇杆滚动");
     }
 }

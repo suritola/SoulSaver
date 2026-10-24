@@ -353,7 +353,8 @@ public partial class SpecialAbilities
             EvoGlow(t, k);
             t.cooldown.fillAmount = 0f;
             // 1.0.4~: 「I · II」만으로는 뜻을 몰랐음 → 「진화 I」처럼 낱말을 붙임
-            string tierText = Loc.T("진화") + (EvolutionTier >= 2 ? " II" : " I");
+            // 1.5.9~ 각성(3번째)을 고르면 「각성」 (예전엔 「진화 II」로 남았음 · 「진화 III」보다 짧아 칸 폭 안)
+            string tierText = EvolutionTier >= 3 ? Loc.T("각성") : Loc.T("진화") + (EvolutionTier >= 2 ? " II" : " I");
             if (t.label.text != tierText) t.label.text = tierText;
             if (t.keyCap.gameObject.activeSelf) t.keyCap.gameObject.SetActive(false);
             if (t.key.text != "") t.key.text = "";
@@ -478,7 +479,8 @@ public partial class SpecialAbilities
     // ================================================================= 툴팁
     string TileTitle(int id)
     {
-        if (id == EvoRow) return Loc.T("무기 진화") + "  · " + EvolutionName(EvoStep(EvolutionTier), EvolutionTier);
+        if (id == EvoRow) return Loc.T("무기 진화") + "  · " + EvolutionName(EvoStep(EvolutionTier), EvolutionTier)
+            + (awakenId >= 0 ? " · " + EvolutionName(awakenId, 3) : "");     // 1.5.9~ 각성 이름도
         if (id == PistolRow) return Loc.T(CharacterData.IsGunner ? "기본 권총" : CharacterData.Current.weapon) + "  · " + Loc.T("기본 무기");
         SpecialDef def = abilities[id];
         string kind = def.kind == SpecialKind.Weapon ? Loc.T("무기") : def.kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브");
@@ -497,6 +499,8 @@ public partial class SpecialAbilities
                 if (step < 0) continue;
                 all += (all.Length > 0 ? "\n\n" : "") + "<color=#F5D478>" + EvolutionName(step, tier) + "</color>\n" + EvolutionDesc(step, tier);
             }
+            // 1.5.9~ 고른 각성도 (빌드 보기도 이 본문을 씀 — 예전엔 시각은 셋인데 본문은 둘뿐이었음)
+            if (awakenId >= 0) all += (all.Length > 0 ? "\n\n" : "") + "<color=#F5D478>" + EvolutionName(awakenId, 3) + "</color>\n" + EvolutionDesc(awakenId, 3);
             return all;
         }
         string state;

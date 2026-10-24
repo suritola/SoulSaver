@@ -154,36 +154,44 @@ public class AbilityHUD : MonoBehaviour
         slot.rect.localScale = Vector3.one * 1.25f;
     }
 
+    float badgeAt;          // 1.5.9~ 스택 글은 0.1초마다 (매 프레임 · 일시정지 중에도 칸마다 문자열을 새로 만들었음 · 남은 시간 표시가 0.1초 단위라 늦어 보이지 않음)
+
     void Update()
     {
+        bool badge = Time.unscaledTime >= badgeAt;
+        if (badge) badgeAt = Time.unscaledTime + 0.1f;
         foreach (Slot slot in slots.Values)
         {
             // 1.1.9: 이미 1이면 쓰지 않음 (Transform 쓰기만 해도 캔버스를 다시 묶음)
             if (slot.rect.localScale != Vector3.one)
                 slot.rect.localScale = Vector3.MoveTowards(slot.rect.localScale, Vector3.one, Time.unscaledDeltaTime * 2f);
-            UpdateBadge(slot);
+            if (badge) UpdateBadge(slot);
         }
     }
 
     // 쌓이는 고유 스킬은 칸 오른쪽 위에 지금 스택 (진화한 칸은 그 진화의 고유 스킬 재료를 따름)
     void UpdateBadge(Slot slot)
     {
-        string key = null;
+        string text = null;
         // 2026-10-19~ 입문 칸 = 갈래 칸: 갈래 효과의 숫자(열 게이지 · 중첩 …)가 없으면 공명 단계 I · II · 극의
         if (Paths.IsSeed(slot.id))
         {
             SetBadge(slot, Paths.HudBadge(slot.id - Paths.SeedFirstId));
             return;
         }
-        if (LevelShop.IsSig(slot.id)) key = LevelShop.SigKey(slot.id);
+        if (LevelShop.IsSig(slot.id)) text = SignatureSkills.StackText(LevelShop.SigKey(slot.id));
         else if (slot.id >= 1000 && Shop != null)
         {
             LevelShop.SkillEvo e = Shop.EvoById(slot.id);
             if (e != null)
                 foreach (int p in e.parts)
-                    if (LevelShop.IsSig(p) && SignatureSkills.StackText(LevelShop.SigKey(p)) != null) { key = LevelShop.SigKey(p); break; }
+                {
+                    if (!LevelShop.IsSig(p)) continue;
+                    string t = SignatureSkills.StackText(LevelShop.SigKey(p));      // 1.5.9~ 한 번만 (확인용 · 표시용으로 두 번 만들었음)
+                    if (t != null) { text = t; break; }
+                }
         }
-        SetBadge(slot, key != null ? SignatureSkills.StackText(key) : null);
+        SetBadge(slot, text);
     }
 
     void SetBadge(Slot slot, string text)

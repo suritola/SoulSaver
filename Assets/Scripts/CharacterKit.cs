@@ -738,6 +738,20 @@ public partial class CharacterKit : MonoBehaviour
         if (ultAimRing != null) ultAimRing.enabled = false;
     }
 
+    // 1.5.9~ 멈춤(ESC · 레벨업 · 영혼 트리) · 연출 · 쓰러짐으로 UpdateUlt 가 불리지 않는 동안: 조준을 모두 거둠 (게이지는 그대로)
+    //   예전엔 UpdateUlt 안의 timeScale == 0 확인이 멈춘 동안 아예 불리지 않아, 풀린 첫 프레임에 「뗐음」으로 보고 메뉴 버튼 · 카드를 누른 커서 자리로 발동하며 게이지를 썼음
+    //   PlayerController.UpdateInput 의 멈춤 return 에서 부름 · 시계공은 ClockLate 도 같은 일을 함 (두 번 불려도 괜찮음)
+    public void CancelUltForPause()
+    {
+        if (charging) { charging = false; if (ring != null) ring.enabled = false; }
+        if (aiming) { aiming = false; if (aimRing != null) aimRing.enabled = false; }
+        if (possessAiming) HidePossessAim();
+        if (folding) CancelFold();
+        if (expressing) { expressing = false; if (expressRing != null) expressRing.enabled = false; ClearExpressIcons(expressIcons); expressMarks.Clear(); }
+        if (rewinding) CancelRewind();
+        CancelUltAim();
+    }
+
     // 무기 진화 뒤 덧붙는 궁극기가 있으면 그 범위도 조준 중에 보여 줌 (1.0.1)
     bool AddedUltShown => Special != null && Special.KitWeaponUltActive;
 

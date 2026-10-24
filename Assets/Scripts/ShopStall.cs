@@ -9,7 +9,10 @@ public class ShopStall : MonoBehaviour
     public float openDistance = 6f;
 
     // 플레이어가 제단 앞에 있으면 상호작용 키는 상점 열기 (스킬 대신)
-    public static bool PlayerNear;
+    // 1.5.9~ 제단이 둘 이상이면 제단마다 덮어써 마지막(멀리 있는) 제단의 false 가 남았음 → 「어느 제단이든 가까우면 그 프레임에 표시」
+    //   1프레임까지 봐 줌 (LevelShop · SpecialAbilities 가 제단보다 먼저 도는 프레임엔 지난 프레임 표시를 읽음) · 제단이 없어지면 저절로 false
+    static int nearFrame = -10;
+    public static bool PlayerNear => Time.frameCount - nearFrame <= 1;
 
     Shop shop;
     float age;
@@ -130,7 +133,7 @@ public class ShopStall : MonoBehaviour
         // 가까이 오면 안내가 나타나고, 상호작용 키로 상점 열기
         PlayerController p = Hostile.Player;
         bool near = p != null && Vector2.Distance(p.transform.position, transform.position) < openDistance;
-        PlayerNear = near;
+        if (near) nearFrame = Time.frameCount;
         UpdatePrompt(near);
         bool canPress = Time.timeScale > 0f && Time.unscaledTime - lastPausedAt > ResumeGuard;
         if (near && canPress && !PlayerController.Cinematic && KeyBindings.Down(GameAction.Interact) && pendingOwner == null && Nearest(p.transform.position) == this)
@@ -145,7 +148,7 @@ public class ShopStall : MonoBehaviour
             {
                 pendingOpen = false;
                 pendingOwner = null;
-                PlayerNear = false;
+                nearFrame = -10;            // 다른 제단이 아직 가까우면 그 제단의 다음 Update 가 다시 표시
                 Destroy(gameObject);
                 return;
             }
@@ -154,7 +157,6 @@ public class ShopStall : MonoBehaviour
         {
             if (shop != null) shop.StallMissed();      // 1.0.4~ 놓쳤으면 다음 상점을 앞당김
             ShockRing.Spawn(transform.position, 1.5f, 0.2f, 0.3f, new Color(1f, 0.85f, 0.4f, 0.8f), 0.2f);
-            PlayerNear = false;
             Destroy(gameObject);
         }
     }
@@ -163,7 +165,7 @@ public class ShopStall : MonoBehaviour
     {
         if (pointer != null) pointer.Remove();
         if (pendingOwner == this) pendingOwner = null;
-        PlayerNear = false;
+        // 1.5.9~ PlayerNear 는 1프레임 뒤 저절로 풀림 (여기서 지우면 가까운 다른 제단의 표시까지 지워짐)
     }
 
     // 화면 밖이면 가장자리에 제단 그림 + 남은 초 (마지막 3초는 몸통과 같은 깜빡임)

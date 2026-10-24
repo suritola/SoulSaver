@@ -16,6 +16,14 @@ public class TitleIntro : MonoBehaviour
     TMP_Text title;
     float t, outAt = -1f;
 
+    // 1.5.9~ 연출을 넘긴 ESC · Enter · Space · 패드 B 가 뒤에 이미 떠 있는 언어 고르기 · 저장 알림 · 패치노트 창까지 누르던 것:
+    //   떠 있는 동안 Showing → ModalEsc · 패치노트 EscCloser 가 ESC 를 넘김, EventSystem 의 Submit · 방향키도 꺼 둠
+    //   (MaxLife 6초로 반드시 지워지고 OnDestroy 에서 되돌리므로 남는 상태 없음)
+    static TitleIntro live;
+    public static bool Showing => live != null;
+    UnityEngine.EventSystems.EventSystem navEs;
+    bool navWas = true;
+
     public static void PlayOnce()
     {
         if (played) return;
@@ -59,7 +67,16 @@ public class TitleIntro : MonoBehaviour
         Image li = line.gameObject.AddComponent<Image>();
         li.color = UiTokens.Accent;
         li.raycastTarget = false;
+        live = this;
+        navEs = UnityEngine.EventSystems.EventSystem.current;
+        if (navEs != null) { navWas = navEs.sendNavigationEvents; navEs.sendNavigationEvents = false; }
         Apply();
+    }
+
+    void OnDestroy()
+    {
+        if (live == this) live = null;
+        if (navEs != null) navEs.sendNavigationEvents = navWas;
     }
 
     void Update()

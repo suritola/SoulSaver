@@ -24,7 +24,11 @@ public class EnemySkill : MonoBehaviour
     float next;
     bool busy;
 
-    bool Alive => enemy != null && !enemy.IsDead;
+    // 1.5.9~ 보스 처치 연출(EnemySpawner.BossFinale)은 EnermyController 만 꺼서, 끌려가는 적이 스킬 · 장판을 그대로 썼음 → 꺼지면 시전도 끊음
+    bool Alive => enemy != null && !enemy.IsDead && enemy.enabled;
+    // 1.5.9~ 얼거나 묶였거나 시간 정지(0.05) · 시간의 틈(0.12) 중 — 걷기만 멈추고 스킬은 그대로 써서 멈춘 적이 덮치거나 순간이동해 때렸음.
+    //   시간 왜곡(0.5 · 진화 0.25) 같은 감속은 그대로 씀
+    bool Held => enemy.Held || EnermyController.GlobalSpeedMultiplier <= 0.15f;
     // 중간 보스는 범위가 크고 더 자주 씀
     float Size => enemy.survivesContact ? 1.5f : 1f;
     // 1.1.3 밸런스 점검: 몸통 접촉은 contactDamage × 0.6 (EnermyController.ContactScale) 인데 스킬은 × 1 이라 스킬 한 방이 접촉의 1.7~2.7배,
@@ -114,6 +118,7 @@ public class EnemySkill : MonoBehaviour
         if (busy || !Alive || type == EnemySkillType.None) return;
         PlayerController p = Hostile.Player;
         if (p == null || Time.time < next) return;
+        if (Held) return;       // 1.5.9~ next 는 그대로 → 풀리면 곧 씀
         if (!InRange(Vector2.Distance(transform.position, p.transform.position))) return;
         if (IsAbyssSkill && abyssCasting >= MaxAbyssCasting) { next = Time.time + Random.Range(0.3f, 0.8f); return; }
 
@@ -173,7 +178,8 @@ public class EnemySkill : MonoBehaviour
         ReleaseAbyss();
         if (tag != null) Destroy(tag);
         if (enemy != null) enemy.casting = false;
-        if (sr != null && Alive) sr.color = enemy.baseColor;
+        // 1.5.9~ Alive 는 꺼진 적(보스 처치 연출)도 거짓이라, 끌려가는 적이 기 모으던 색 · 순간이동 반투명으로 남지 않게 죽지 않았으면 되돌림
+        if (sr != null && enemy != null && !enemy.IsDead) sr.color = enemy.baseColor;
         owned.RemoveAll(g => g == null);
         busy = false;
     }
@@ -230,7 +236,7 @@ public class EnemySkill : MonoBehaviour
         if (Hostile.IsWall(target)) yield break;
         Hostile.Circle(target, r, Tw(0.7f) + 0.35f, Danger);   // 1.0.4~ 착지할 때까지 원을 남김
         yield return Windup(Danger, 0.7f);
-        if (!Alive) yield break;
+        if (!Alive || Held) yield break;      // 1.5.9~ 기 모으는 중 얼었으면 취소 (비행 중엔 끊지 않음 — 공중 높이가 섞인 자리에 남음)
 
         Vector3 start = transform.position;
         Fx.Spawn("fx_smoke", start, 1.8f, new Color(0.8f, 0.7f, 0.6f), 14f);
@@ -269,6 +275,7 @@ public class EnemySkill : MonoBehaviour
             yield return null;
         }
         if (!Alive) yield break;
+        if (Held) { sr.color = enemy.baseColor; yield break; }     // 1.5.9~ 사라지는 중 얼었으면 순간이동 취소 (투명하게 남지 않게 색 되돌림)
         transform.position = dest;
         sr.color = enemy.baseColor;
         Hostile.HitCircle(dest, r, Dmg);
@@ -345,14 +352,14 @@ public class EnemySkill : MonoBehaviour
         Vector3 end = Hostile.ClampArena(start + (Vector3)(dir * length));
         Hostile.Line(start, end, 2.6f * Size, Tw(0.55f), Danger);   // 1.0.4~ 띠 너비 = 판정 지름 (1.3 x 2), 띠 밖에서 맞지 않게
         yield return Windup(Danger, 0.55f);
-        if (!Alive) yield break;
+        if (!Alive || Held) yield break;      // 1.5.9~ 얼었으면 덮치지 않음
 
         bool hit = false;
         float dust = 0f;
         Hostile.Play("whoosh", 0.4f, 0.9f);
         for (float t = 0f; t < 0.28f; t += Time.deltaTime)
         {
-            if (!Alive) yield break;
+            if (!Alive || Held) yield break;
             Vector3 nextPos = Vector3.Lerp(start, end, t / 0.28f);
             if (Hostile.IsWall(nextPos)) break;
             transform.position = nextPos;
@@ -401,16 +408,17 @@ public class EnemySkill : MonoBehaviour
         FxAnim ring = Fx.Play("fx_rune", transform.position, r * 2f, new Color(1f, 0.3f, 0.3f, 0.7f), 1f, 0f, 1, true, Tw(0.7f));
         if (ring != null) { ring.follow = transform; ring.spin = -200f; }
         yield return Windup(Danger, 0.7f);
-        if (!Alive) yield break;
+        if (!Alive || Held) yield break;
 
         Hostile.Play("whoosh", 0.6f, 0.7f);
         float slash = 0f;
         float lastHit = -1f;
-        for (float t = 0f; t < 1.4f && Alive; t += Time.deltaTime)
+        for (float t = 0f; t < 1.4f && Alive && !Held; t += Time.deltaTime)
         {
             PlayerController pl = Hostile.Player;
             if (pl == null) break;
-            Vector3 step = (Vector3)(DirTo(pl) * enemy.speed * 0.9f * Time.deltaTime);
+            // 1.5.9~ 미끄러지는 속도도 시간 왜곡을 따름 (걷기 · 적 탄과 같게)
+            Vector3 step = (Vector3)(DirTo(pl) * enemy.speed * 0.9f * EnermyController.GlobalSpeedMultiplier * Time.deltaTime);
             if (!Hostile.IsWall(transform.position + step)) transform.position += step;
             slash += Time.deltaTime;
             if (slash > 0.12f)
@@ -533,7 +541,7 @@ public class EnemySkill : MonoBehaviour
         Vector3 end = start + (Vector3)(dir * length);
         Own(AbyssWarn.Chain(start, end, 1.5f, Tw(0.7f), Steel, enemy));
         yield return Windup(Steel, 0.7f);
-        if (!Alive) yield break;
+        if (!Alive || Held) yield break;
 
         Hostile.Play("clank", 0.5f, 0.8f);
         bool caught = false;
@@ -570,19 +578,24 @@ public class EnemySkill : MonoBehaviour
         const float length = 13f;
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         float sweep = Random.value < 0.5f ? 40f : -40f;
-        Own(AbyssWarn.Fan(transform.position, length, baseAngle - sweep * 0.5f, sweep, Tw(0.85f), Void, enemy));
+        // 1.5.9~ 광선 원점을 시전 순간 자리에 고정 — 예고 부채꼴은 그 자리에 굳는데 광선은 매 프레임 지금 자리를 읽어,
+        //   시전 중 넉백으로 눈알이 밀리면 회전 중심이 따라 움직여 예고 밖에서 맞았음 (사슬 start · 베기 c 와 같은 방식)
+        Vector3 origin = transform.position;
+        // 1.5.9~ 판정(광선에서 0.7 - HurtShrink = 0.6칸)만큼 변 바깥을 옅은 띠로 덮음 — 정확한 부채꼴만 그려서 변 밖 0.3칸에서도 맞았음
+        const float hitWidth = 0.7f;
+        Own(AbyssWarn.Fan(origin, length, baseAngle - sweep * 0.5f, sweep, Tw(0.85f), Void, enemy, 2f * (hitWidth - PlayerController.HurtShrink)));
         yield return Windup(Void, 0.85f, 10f);
-        if (!Alive) yield break;
+        if (!Alive || Held) yield break;
 
         Hostile.Play("zap", 0.6f, 0.5f);
         bool hit = false;
         for (float t = 0f; t < 1.1f && Alive; t += Time.deltaTime)
         {
             float a = (baseAngle - sweep * 0.5f + sweep * t / 1.1f) * Mathf.Deg2Rad;
-            Vector3 end = transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length;
-            Fx.Beam(transform.position, end, 0.9f, new Color(0.8f, 0.45f, 1f), 0.05f);
+            Vector3 end = origin + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * length;
+            Fx.Beam(origin, end, 0.9f, new Color(0.8f, 0.45f, 1f), 0.05f);
             PlayerController pl = Hostile.Player;
-            if (!hit && pl != null && Hostile.HurtToSegment(pl, transform.position, end) < 0.7f) hit = pl.TryHit(Dmg);
+            if (!hit && pl != null && Hostile.HurtToSegment(pl, origin, end) < hitWidth) hit = pl.TryHit(Dmg);
             yield return null;
         }
     }
@@ -695,6 +708,17 @@ public class HazardZone : MonoBehaviour
             }
         }
         return z;
+    }
+
+    // 1.5.9~ 보스 처치 연출 시작 때 깔린 장판을 모두 거둠 — 연출 중 · 직전에 생긴 4초 장판이 무적(3.2초)이 끝난 뒤까지 남아 감속 · 틱 피해를 줬음
+    //   그림(visual)은 장판의 자식이 아니라 따로 지움
+    public static void ClearAll()
+    {
+        foreach (HazardZone z in Object.FindObjectsByType<HazardZone>(FindObjectsSortMode.None))
+        {
+            if (z.visual != null) Destroy(z.visual.gameObject);
+            Destroy(z.gameObject);
+        }
     }
 
     void Update()

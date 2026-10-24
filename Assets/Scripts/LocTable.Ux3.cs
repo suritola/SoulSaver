@@ -22,7 +22,7 @@ public static partial class LocTable
 
         // ================================================================= 3. 획득 범위
         S("획득 범위 표시", "Show Pickup Range", "取得範囲を表示", "显示拾取范围");
-        S("코인을 끌어오는 범위를 캐릭터 둘레에 연한 고리로 늘 보여 줍니다. 꺼도 코인 자석 카드를 고른 직후에는 잠깐 보입니다.", "Always shows the coin pickup range as a faint ring around your character. Even when off, the ring appears briefly right after you pick a Coin Magnet card.", "コインを引き寄せる範囲をキャラクターの周りに薄い輪で常に表示します。オフでもコイン磁石カードを取った直後は少しの間表示されます。", "以淡色圆环始终显示吸取金币的范围。关闭时，选取金币磁铁卡牌后仍会短暂显示。");
+        S("코인을 끌어오는 범위를 캐릭터 둘레에 연한 고리로 늘 보여 줍니다. 꺼도 코인 자석 카드를 고른 직후에는 잠깐 보입니다.", "Always shows the coin pickup range as a faint ring around your character. Even when off, the ring appears briefly right after you pick a Coin Magnet card.", "コインを引き寄せる範囲をキャラクターの周りに薄い輪で常に表示します。オフでもコインマグネットカードを取った直後は少しの間表示されます。", "以淡色圆环始终显示吸取金币的范围。关闭时，选取金币磁铁卡牌后仍会短暂显示。");
 
         // ================================================================= 6. 움직임 줄이기
         S("움직임 줄이기", "Reduce Motion", "動きを減らす", "减少动态效果");

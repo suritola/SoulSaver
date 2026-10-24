@@ -120,8 +120,9 @@ public partial class SpecialAbilities
                 fx.Play("shimmer", 0.8f, 1.6f);
                 break;
             case HookId: Hook(); StartCooldown(id, evo ? 2f : 4f); fx.Play("clank", 0.8f); break;
-            default: KitUseSkill(id); break;
+            default: KitUseSkill(id); return;     // 캐릭터 스킬은 KitUseSkill 안에서 연금 순환 (두 번 터지지 않게)
         }
+        CycleOnSkill(id, player.transform.position);     // 1.5.9~ 거너 계열 스킬도 연금 순환 (영혼 부족으로 빠진 영혼 폭발은 위에서 return)
     }
 
     float CooldownUntil(int id) => cooldownUntil.TryGetValue(id, out float t) ? t : 0f;
@@ -246,7 +247,8 @@ public partial class SpecialAbilities
     {
         bool evo = IsEvolved(TimeWarpId);
         float duration = evo ? 7f : 5f;
-        EnermyController.GlobalSpeedMultiplier = evo ? 0.25f : 0.5f;
+        float warpMul = evo ? 0.25f : 0.5f;
+        EnermyController.GlobalSpeedMultiplier = warpMul;
         timeWarpUntil = Time.time + duration;
         Flash(player.transform.position, 12f, new Color(0.5f, 0.8f, 1f, 0.5f), 0.5f);
         ShockRing.Spawn(player.transform.position, 1f, 14f, 0.7f, new Color(0.55f, 0.85f, 1f, 0.9f), 0.5f);
@@ -255,15 +257,17 @@ public partial class SpecialAbilities
         Fx.Spawn("fx_shock", player.transform.position, 14f, new Color(0.6f, 0.9f, 1f), 12f);
         ShockRing.Spawn(player.transform.position, 0.5f, 9f, 0.5f, Color.white, 0.2f);
         yield return new WaitForSeconds(duration);
-        EnermyController.GlobalSpeedMultiplier = 1f;
+        // 1.5.9~ 자기 값일 때만 되돌림 — 그 사이 시간의 틈 · 시간 정지가 켜졌으면 그쪽이 끝날 때 스스로 되돌림 (판 시작 · 끝에도 1 로 리셋)
+        if (Mathf.Approximately(EnermyController.GlobalSpeedMultiplier, warpMul)) EnermyController.GlobalSpeedMultiplier = 1f;
     }
 
     IEnumerator Pact()
     {
         bool evo = IsEvolved(PactId);
         if (!evo) player.PlayerHealth = Mathf.Max(1f, player.PlayerHealth - player.PlayerMaxHealth * 0.2f);
-        player.damageMultiplier = 2f;
-        player.fireRateMultiplier = 1.5f;
+        // 1.5.9~ 값을 덮어쓰지 않고 곱했다 나눔 (예전엔 = 2 · = 1 이라 신속 물약 · 전투 열기가 끝나며 나눌 때 1 아래로 굳었음)
+        if (!pactOn) { player.damageMultiplier *= 2f; player.fireRateMultiplier *= 1.5f; pactOn = true; }
+        pactUntil = Mathf.Max(pactUntil, Time.time + (evo ? 12f : 8f));     // 다시 쓰면 시간만 늘림 (먼저 쓴 쪽이 끝나며 끊지 않게)
         if (pactAura != null) Destroy(pactAura);
         pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, new Color(1f, 0.15f, 0.2f, 0.45f), "Background", 8);
         Flash(player.transform.position, 5f, new Color(1f, 0.15f, 0.2f, 0.7f), 0.4f);
@@ -272,9 +276,11 @@ public partial class SpecialAbilities
         ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.3f);
         Fx.Spawn("fx_shock", player.transform.position, 7f, new Color(1f, 0.25f, 0.3f), 16f);
         Fx.Spawn("fx_spark", player.transform.position, 3f, new Color(1f, 0.3f, 0.3f), 14f);
-        yield return new WaitForSeconds(evo ? 12f : 8f);
-        player.damageMultiplier = 1f;
-        player.fireRateMultiplier = 1f;
+        while (pactOn && Time.time < pactUntil) yield return null;     // pactUntil 은 정해진 시각이라 저절로 끝남
+        if (!pactOn) yield break;       // 겹쳐 쓴 다른 코루틴이 이미 되돌림
+        pactOn = false;
+        player.damageMultiplier /= 2f;
+        player.fireRateMultiplier /= 1.5f;
         if (pactAura != null) Destroy(pactAura);
         fx.FloatText(player.transform.position, Loc.T("계약 종료"), new Color(0.7f, 0.66f, 0.72f), 4f, 0f);
     }

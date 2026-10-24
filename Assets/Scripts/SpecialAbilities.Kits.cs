@@ -46,7 +46,7 @@ public partial class SpecialAbilities
         ("도박 카드", SpecialKind.Weapon, "카드 세 장을 던집니다. 카드마다 피해가 제각각이고, 가끔 조커가 터집니다.\n진화: 다섯 장, 조커 확률 두 배"),
         ("살상 와이어", SpecialKind.Weapon, "클릭한 곳에 와이어 고리를 박습니다. 고리를 잇는 줄에 닿은 적은 계속 베입니다. (고리 3개)\n진화: 고리 5개"),
         ("죽음의 표식", SpecialKind.Skill, "마우스 근처의 적에게 표식. 3초 뒤 큰 피해로 터집니다. 그 전에 쓰러지면 쿨타임 초기화. (공격력 800%)\n진화: 표식 세 개"),
-        ("마름쇠", SpecialKind.Skill, "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 두 배"),
+        ("마름쇠", SpecialKind.Skill, "주변에 마름쇠를 흩뿌립니다. 밟은 적은 피해를 입고 느려집니다.\n진화: 마름쇠 12개 → 20개"),     // 1.5.9~ 실제 개수대로 (예전 「두 배」는 24개로 읽혔음)
         ("소매치기", SpecialKind.Skill, "순식간에 주변 적 6명 사이를 누비며 벱니다. 털린 적은 쓰러질 때 코인을 1개 더 떨어뜨립니다.\n진화: 8명"),
         ("회피 본능", SpecialKind.Passive, "받는 공격을 15% 확률로 피합니다.\n진화: 25%"),
         ("연쇄 처치", SpecialKind.Passive, "적을 처치하면 2초 동안 이동 속도 +15%, 모든 스킬 쿨타임 0.3초 감소.\n진화: 쿨타임 0.6초 감소"),
@@ -760,15 +760,19 @@ public partial class SpecialAbilities
             default:
                 return false;
         }
-        // 연금 순환: 스킬을 쓸 때마다 회복 · 다른 스킬 쿨타임 감소
-        if (Has(KitCycle))
-        {
-            bool e = IsEvolved(KitCycle);
-            player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.06f : 0.04f));
-            ReduceCooldowns(e ? 2f : 1f, id);
-            Fx.Spawn("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
-        }
+        CycleOnSkill(id, pos);
         return true;
+    }
+
+    // 연금 순환: 스킬을 쓸 때마다 회복 · 다른 스킬 쿨타임 감소
+    // 1.5.9~ 함수로 뺌 — 유물로 얻은 거너 계열 스킬(해골 · 대시 · 화염 장판 …)도 UseSkill 에서 부름 (예전엔 캐릭터 스킬만 터졌음)
+    void CycleOnSkill(int id, Vector3 pos)
+    {
+        if (!Has(KitCycle)) return;
+        bool e = IsEvolved(KitCycle);
+        player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, player.PlayerHealth + player.PlayerMaxHealth * (e ? 0.06f : 0.04f));
+        ReduceCooldowns(e ? 2f : 1f, id);
+        Fx.Spawn("fx_sparkle", pos, 1.6f, new Color(0.6f, 1f, 0.6f), 18f);
     }
 
     void NoTarget(Vector3 pos)
@@ -925,6 +929,7 @@ public partial class SpecialAbilities
     float rewindRecord;
     // 매 프레임 곱해 둔 값 (다음 프레임에 되돌리고 다시 곱함)
     float appliedDmg = 1f, appliedRate = 1f, appliedSpeed = 1f;
+    public float KitDamageMul => appliedDmg;     // 1.5.9~ 상점 공격력 강화가 더할 때 곱함 (배율이 풀리며 나뉘어 줄지 않게)
     float giantTick;
 
     // 1.0.1: 영웅 특수 능력 전체 하향 — 피해를 주는 무기 · 스킬 · 궁극기는 0.8배 (설명의 공격력 %도 0.8배)
@@ -1157,11 +1162,12 @@ public partial class SpecialAbilities
                 {
                     bool e = IsEvolved(id);
                     float lost = 1f - Mathf.Clamp01(player.PlayerHealth / Mathf.Max(1f, player.PlayerMaxHealth));
-                    int pct = Mathf.RoundToInt(Mathf.Min(e ? 0.8f : 0.5f, lost * (e ? 1f : 0.6f)) * 100f);
+                    int pct = Mathf.RoundToInt(Mathf.Min(e ? 0.6f : 0.4f, lost * (e ? 0.8f : 0.5f)) * 100f);     // 1.5.9~ KitTick 실제 값과 같게 (예전엔 옛 수치 0.5/0.8 이 남아 있었음)
                     return detail ? Loc.T("지금 공격력 +") + pct + "%" : "+" + pct + "%";
                 }
-            case KitFervor: return detail ? Loc.T("중첩 ") + fervor + Loc.T(" · 공격 속도 +") + Mathf.RoundToInt(fervor * (IsEvolved(id) ? 8f : 6f)) + "%" : Loc.T("중첩 ") + fervor;     // 1.0.4~: 칸 글자 「x3」 → 「중첩 3」
-            case KitEvasion: return (IsEvolved(id) ? "30" : "20") + "%";
+            case KitFervor: return detail ? Loc.T("중첩 ") + fervor + Loc.T(" · 공격 속도 +") + Mathf.RoundToInt(fervor * (IsEvolved(id) ? 6f : 5f)) + "%" : Loc.T("중첩 ") + fervor;     // 1.0.4~: 칸 글자 「x3」 → 「중첩 3」 · 1.5.9~ 중첩당 5%/6% (KitTick 과 같게)
+            // 1.5.9~ 아래 수치는 실제 효과(KitDodge · KitOnEquip · KitDamageHook · KitOnKill) · 카드 설명과 같게 (예전엔 옛 수치가 남아 더 크게 보였음)
+            case KitEvasion: return (IsEvolved(id) ? "25" : "15") + "%";
             case KitSpree: return Time.time < spreeUntil ? (detail ? Loc.T("질주 중") : "ON") : "";
             case KitTrophy: return detail ? Loc.T("최대 체력 +") + trophyHp.ToString("0.#") : "+" + trophyHp.ToString("0");
             case KitKeepDistance:
@@ -1176,14 +1182,14 @@ public partial class SpecialAbilities
                     bool on = player.PlayerHealth >= player.PlayerMaxHealth * 0.99f;
                     return detail ? (on ? Loc.T("발동 중 (체력 가득)") : Loc.T("꺼짐 (체력이 가득해야 함)")) : on ? "ON" : "OFF";
                 }
-            case KitPlate: return "-" + (IsEvolved(id) ? "25" : "15") + "%";
+            case KitPlate: return "-" + (IsEvolved(id) ? "20" : "12") + "%";
             case KitVeil:
                 {
                     float wait = (IsEvolved(id) ? 2f : 3f) - (Time.time - lastHurt);
                     return wait <= 0f ? (detail ? Loc.T("준비됨 · 다음 평타 강화") : Loc.T("준비")) : wait.ToString("0.0");
                 }
             case KitFugitive: return Time.time < fugitiveUntil ? (detail ? Loc.T("빨라짐") : "ON") : "";
-            case KitWeakspot: return "+" + (IsEvolved(id) ? "70" : "35") + "%";
+            case KitWeakspot: return "+" + (IsEvolved(id) ? "50" : "25") + "%";
             case KitInstinct:
                 {
                     int need = IsEvolved(id) ? 12 : 20;
@@ -1194,7 +1200,7 @@ public partial class SpecialAbilities
                     float left = emergencyReady - Time.time;
                     return left > 0f ? left.ToString("0") + (detail ? Loc.T("초 뒤 준비") : "") : (detail ? Loc.T("준비됨") : Loc.T("준비"));
                 }
-            case KitGoldConvert: return (IsEvolved(id) ? "20" : "10") + "%";
+            case KitGoldConvert: return (IsEvolved(id) ? "15" : "8") + "%";
         }
         return "";
     }

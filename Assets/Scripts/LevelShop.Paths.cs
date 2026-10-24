@@ -392,7 +392,7 @@ public partial class LevelShop
     {
         PathDef d = Paths.DefOf(who, path);
         if (d == null) return "";
-        string s = "<color=" + Hex(d.color) + ">" + Loc.T("갈래") + " · " + Loc.T(d.name) + "</color>"
+        string s = "<color=" + Hex(d.color) + ">" + Loc.T("paths.label") + " · " + Loc.T(d.name) + "</color>"
                  + (status && !string.IsNullOrEmpty(d.tagline) ? "  <color=#A89C86>" + Loc.T(d.tagline) + "</color>" : "")
                  + "\n" + Loc.T(d.seedDesc)
                  + "\n<color=#FF9C86>" + Loc.T("대가") + "</color>  " + Loc.T(d.cost)

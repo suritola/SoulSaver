@@ -80,6 +80,7 @@ public static class Telemetry
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void OnLaunch()
     {
+        Quitting = false;
         if (Configured && !Blocked && Consent == 1) Flush();
     }
 
@@ -99,10 +100,13 @@ public static class Telemetry
             j.Append("\"schema\":1");
             Str(j, "build", Demo.On ? "demo" : "full");
             Str(j, "anon_id", AnonId);
+            // 1.5.9~ 줄마다 고유 ID — 서버는 응답 전에 꺼진 줄을 다시 받으면 같은 행을 또 넣으므로 분석(tools/telemetry/analyze.py)이 이 값으로 중복을 뺌
+            //   (서버 스키마는 그대로 · data JSON 안의 한 칸 · 예전 줄은 이 칸이 없음)
+            Str(j, "run_id", System.Guid.NewGuid().ToString("N"));
             j.Append(",\"consent_ver\":").Append(ConsentVersion);
             Str(j, "platform", Application.platform.ToString());
             Str(j, "lang", LangCode);
-            HashSet<string> seen = new HashSet<string> { "schema", "build", "anon_id", "consent_ver", "platform", "lang" };
+            HashSet<string> seen = new HashSet<string> { "schema", "build", "anon_id", "run_id", "consent_ver", "platform", "lang" };
             int n = Mathf.Min(keys.Length, vals.Length);
             for (int i = 0; i < n; i++)
             {
@@ -240,9 +244,12 @@ public static class Telemetry
 
     class Runner : MonoBehaviour { }
 
+    // 1.5.9~ 게임을 끄는 중 (RunStats 가 끌 때 쓰는 줄): 큐에만 쌓고 보내지 않음 — 끄는 중에 새 GameObject · 요청을 만들지 않게, 다음 실행 OnLaunch 가 보냄
+    public static bool Quitting;
+
     static void Flush()
     {
-        if (!Configured || Blocked || Consent != 1 || deleting) return;
+        if (!Configured || Blocked || Consent != 1 || deleting || Quitting) return;
         if (sending) { again = true; return; }
         try { Host().StartCoroutine(FlushLoop()); }
         catch (System.Exception ex) { sending = false; Debug.LogWarning("telemetry flush: " + ex.Message); }
@@ -255,7 +262,6 @@ public static class Telemetry
         {
             again = false;
             List<string> q = ReadQueue();          // 큐는 한 번만 읽음 (줄마다 파일 전체를 읽고 쓰지 않게)
-            List<string> sent = new List<string>();
             for (int n = 0; n < MaxFlushPerCall && n < q.Count; n++)
             {
                 if (!Configured || Blocked || Consent != 1 || deleting) break;
@@ -274,12 +280,16 @@ public static class Telemetry
                 }
                 catch { ok = false; }
                 finally { req.Dispose(); }
-                if (ok) { sent.Add(line); continue; }
+                // 1.5.9~ 보낸(버린) 줄은 그 자리에서 큐에서 지움 — 예전엔 루프가 끝난 뒤 한 번에 지워, 보내는 도중에 끄면 이미 서버에 들어간 줄이
+                //   다음 실행에 또 올라가 중복 행이 됐음 (많아야 50번 · 몇 KB 파일 쓰기) · 삭제 요청 중이면 큐는 이미 비웠으므로 다시 쓰지 않음
                 // 줄 자체가 잘못된 400 · 413 · 422 만 버림 (403 키 · 404 주소 · 415 등 설정 오류 · 408 · 429 는 다음 기회에 다시)
-                if (code == 400 || code == 413 || code == 422) { sent.Add(line); continue; }
+                if (ok || code == 400 || code == 413 || code == 422)
+                {
+                    if (!deleting) RemoveMany(new List<string> { line });
+                    continue;
+                }
                 break;          // 네트워크 · 서버 오류: 다음 판 끝 · 다음 실행에
             }
-            if (!deleting) RemoveMany(sent);        // 삭제 요청 중이면 큐는 이미 비움
         } while (again);
         sending = false;
     }

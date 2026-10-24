@@ -10,23 +10,23 @@ public static partial class LocTable
         void A(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
 
         A("contract.title", "영혼 계약", "Soul Contracts", "魂の契約", "灵魂契约");
-        A("contract.run.title", "이번 판 계약", "This Run's Contracts", "このランの契約", "本局契约");
-        A("contract.run.how", "판마다 세 가지를 제안합니다. 이루면 그 자리에서 포인트를 받고, 쓰러져도 이룬 것은 남습니다.", "Three proposals every run. Fulfill one and the points are yours on the spot; what you fulfill stays even if you fall.", "ランごとに3つを提案します。果たすとその場でポイントを受け取り、倒れても果たしたものは残ります。", "每局提出三项。完成即当场获得点数，倒下后已完成的也会保留。");
+        A("contract.run.title", "이번 판 계약", "This Run's Contracts", "今回のプレイの契約", "本局契约");
+        A("contract.run.how", "판마다 세 가지를 제안합니다. 이루면 그 자리에서 포인트를 받고, 쓰러져도 이룬 것은 남습니다.", "Three proposals every run. Fulfill one and the points are yours on the spot; what you fulfill stays even if you fall.", "プレイごとに3つを提案します。果たすとその場でポイントを受け取り、倒れても果たしたものは残ります。", "每局提出三项。完成即当场获得点数，倒下后已完成的也会保留。");
         A("contract.reroll", "다시 뽑기 (오늘 {0}/3)", "Redraw (today {0}/3)", "引き直し（今日 {0}/3）", "重抽（今日 {0}/3）");
         A("contract.reroll.none", "오늘은 더 뽑을 수 없습니다. 내일 다시 세 번 뽑을 수 있습니다.", "No more redraws today. You get three again tomorrow.", "今日はもう引き直せません。明日また3回引き直せます。", "今天不能再重抽了。明天可以再抽三次。");
         A("contract.kind.easy", "쉬움 · 300 P", "Easy · 300 P", "イージー・300 P", "简单 · 300 P");
         A("contract.kind.normal", "보통 · 800 P", "Normal · 800 P", "ノーマル・800 P", "普通 · 800 P");
         A("contract.kind.hero", "영웅 · 600 P", "Hero · 600 P", "英雄・600 P", "英雄 · 600 P");
         A("contract.done.toast", "계약 달성 · {0}  +{1}P", "Contract fulfilled · {0}  +{1}P", "契約達成・{0}  +{1}P", "契约达成 · {0}  +{1}P");
-        A("contract.carry", "이 계약은 다음 판에도 이어집니다. (진행 {0}/{1})", "This contract carries over to your next run. (Progress {0}/{1})", "この契約は次のランにも引き継がれます。（進行 {0}/{1}）", "此契约将延续到下一局。（进度 {0}/{1}）");
+        A("contract.carry", "이 계약은 다음 판에도 이어집니다. (진행 {0}/{1})", "This contract carries over to your next run. (Progress {0}/{1})", "この契約は次のプレイにも引き継がれます。（進行 {0}/{1}）", "此契约将延续到下一局。（进度 {0}/{1}）");
         A("contract.carried.tag", "이어진 계약", "Carried Over", "引き継ぎ", "延续");
         A("contract.dropped", "이 계약은 여기서 접습니다. 새 계약을 뽑았습니다.", "This contract is set aside. A new one has been drawn.", "この契約はここで畳みます。新しい契約を引きました。", "此契约就此搁置。已抽取新契约。");
-        A("contract.result.title", "이번 판 계약", "This Run's Contracts", "このランの契約", "本局契约");
+        A("contract.result.title", "이번 판 계약", "This Run's Contracts", "今回のプレイの契約", "本局契约");
         A("contract.result.done", "달성  +{0}P", "Fulfilled  +{0}P", "達成  +{0}P", "达成  +{0}P");
         A("contract.result.goals", "영구 목표", "Lasting Goals", "長期目標", "长期目标");
-        A("contract.result.left", "이번 판이 남긴 것: {0}P · 계약 {1} · 도감 +{2} · 기억 +{3}", "This run left behind: {0}P · {1} contracts · codex +{2} · memories +{3}", "このランが残したもの: {0}P・契約 {1}・図鑑 +{2}・記憶 +{3}", "本局收获：{0}P · 契约 {1} · 图鉴 +{2} · 记忆 +{3}");
+        A("contract.result.left", "이번 판이 남긴 것: {0}P · 계약 {1} · 도감 +{2} · 기억 +{3}", "This run left behind: {0}P · {1} contracts · codex +{2} · memories +{3}", "今回のプレイが残したもの: {0}P・契約 {1}・図鑑 +{2}・記憶 +{3}", "本局收获：{0}P · 契约 {1} · 图鉴 +{2} · 记忆 +{3}");
         A("contract.demo", "계약 보드는 정식판에서 열립니다.", "The contract board opens in the full game.", "契約ボードは製品版で開きます。", "契约板将在正式版中开放。");
-        A("contract.none.tutorial", "이 판에는 계약이 없습니다.", "There are no contracts in this run.", "このランには契約がありません。", "本局没有契约。");
+        A("contract.none.tutorial", "이 판에는 계약이 없습니다.", "There are no contracts in this run.", "このプレイには契約がありません。", "本局没有契约。");
         A("contract.e.chest2.name", "상자 사냥", "Chest Hunt", "宝箱狩り", "寻宝");
         A("contract.e.chest2.cond", "보물 상자 2개 열기", "Open 2 treasure chests", "宝箱を2個開ける", "打开2个宝箱");
         A("contract.e.shop2.name", "단골", "Regular Customer", "常連", "老主顾");
@@ -43,7 +43,7 @@ public static partial class LocTable
         A("contract.e.kills250.cond", "적 250마리 쓰러뜨리기", "Defeat 250 enemies", "敵を250体倒す", "击败250名敌人");
         A("contract.e.curse.name", "제단의 값", "The Altar's Price", "祭壇の代価", "祭坛的代价");
         A("contract.e.curse.cond", "저주 제단 받기", "Accept the Cursed Altar", "呪いの祭壇を受ける", "接受诅咒祭坛");
-        A("contract.e.meat5.name", "든든한 한 끼", "A Hearty Meal", "腹ごなし", "饱餐一顿");
+        A("contract.e.meat5.name", "든든한 한 끼", "A Hearty Meal", "腹いっぱいのごちそう", "饱餐一顿");
         A("contract.e.meat5.cond", "고기 5개 먹기", "Eat 5 pieces of meat", "肉を5個食べる", "吃5块肉");
         A("contract.e.coins300.name", "주머니", "The Pouch", "小袋", "钱袋");
         A("contract.e.coins300.cond", "코인 300개 모으기", "Collect 300 coins", "コインを300枚集める", "收集300枚金币");
@@ -86,7 +86,7 @@ public static partial class LocTable
         A("contract.n.legend.name", "룰렛", "The Wheel", "ルーレット", "轮盘");
         A("contract.n.legend.cond", "전설 상자 열기", "Open a Legendary Chest", "伝説の宝箱を開ける", "打开传说宝箱");
         A("contract.n.brands2.name", "두 개의 저울", "Two Scales", "二つの天秤", "两把秤");
-        A("contract.n.brands2.cond", "한 판에 각인 2장 새기기", "Carve 2 brands in one run", "1回のランで刻印を2つ刻む", "一局内刻下2枚烙印");
+        A("contract.n.brands2.cond", "한 판에 각인 2장 새기기", "Carve 2 brands in one run", "1回のプレイで刻印を2つ刻む", "一局内刻下2枚烙印");
         A("contract.n.ch3.name", "세 번째 문", "The Third Gate", "三つ目の門", "第三道门");
         A("contract.n.ch3.cond", "3장에 도달하기", "Reach Chapter 3", "3章に到達する", "到达第3章");
         A("contract.n.tree30.name", "서른 칸", "Thirty Nodes", "三十マス", "三十格");
@@ -128,7 +128,7 @@ public static partial class LocTable
         A("contract.h.gunner.2.name", "열 번의 느린 시간", "Ten Slow Moments", "十度の遅い時間", "十次慢时");
         A("contract.h.gunner.2.cond", "일제 사격 10번 쓰기", "Use Volley 10 times", "一斉射撃を10回使う", "使用齐射10次");
         A("contract.h.gunner.3.name", "하나, 둘", "One, Two", "ひとつ、ふたつ", "一，二");
-        A("contract.h.gunner.3.cond", "재장전 40번 하기", "Reload 40 times", "リロードを40回する", "装弹40次");
+        A("contract.h.gunner.3.cond", "재장전 40번 하기", "Reload 40 times", "リロードを40回する", "装填40次");
         A("contract.h.gunner.4.name", "여섯 개의 표적", "Six Targets", "六つの標的", "六个目标");
         A("contract.h.gunner.4.cond", "일제 사격 한 번에 적 6마리 조준하기", "Mark 6 enemies with a single Volley", "一斉射撃1回で敵6体を照準する", "一次齐射瞄准6名敌人");
         A("contract.h.gunner.5.name", "특수 총기", "Special Arms", "特殊銃", "特殊枪械");
@@ -155,8 +155,8 @@ public static partial class LocTable
         A("contract.h.rogue.3.cond", "출혈로 적 100마리 쓰러뜨리기", "Defeat 100 enemies with bleeding", "出血で敵を100体倒す", "用出血击败100名敌人");
         A("contract.h.rogue.4.name", "한 번의 돌진, 여덟", "One Dash, Eight", "一度の突進で八体", "一次突进，八人");
         A("contract.h.rogue.4.cond", "한 번의 돌진으로 적 8마리 베기", "Cut 8 enemies in a single dash", "一度の突進で敵8体を斬る", "一次突进斩击8名敌人");
-        A("contract.h.rogue.5.name", "그림자 숙련", "Shadow Mastery", "影の熟練", "暗影熟练");
-        A("contract.h.rogue.5.cond", "영혼 트리에서 그림자 숙련 1단계 배우기", "Learn Shadow Mastery rank 1 in the Soul Tree", "魂のツリーで影の熟練1段階を習得する", "在灵魂树中学习暗影熟练1级");
+        A("contract.h.rogue.5.name", "그림자 숙련", "Shadow Mastery", "影の熟練", "暗影精通");
+        A("contract.h.rogue.5.cond", "영혼 트리에서 그림자 숙련 1단계 배우기", "Learn Shadow Mastery rank 1 in the Soul Tree", "魂のツリーで影の熟練1段階を習得する", "在灵魂树中学习暗影精通1级");
         A("contract.h.rogue.6.name", "오백 개의 표창", "Five Hundred Stars", "五百の手裏剣", "五百飞镖");
         A("contract.h.rogue.6.cond", "표창으로 적 500마리 쓰러뜨리기", "Defeat 500 enemies with throwing stars", "手裏剣で敵を500体倒す", "用飞镖击败500名敌人");
         A("contract.h.archer.1.name", "서른 번의 딩", "Thirty Dings", "三十度のチン", "三十声叮");
@@ -258,7 +258,7 @@ public static partial class LocTable
         A("board.cell.hidden", "???", "???", "???", "???");
         A("board.cell.hidden.how", "위나 왼쪽의 칸을 채우면 드러납니다.", "Revealed when you fill the cell above or to the left.", "上か左のマスを埋めると現れます。", "填满上方或左侧的格子后显现。");
         A("board.cell.progress", "{0} / {1}", "{0} / {1}", "{0} / {1}", "{0} / {1}");
-        A("board.cell.onerun", "한 판 안에", "In one run", "1回のランで", "一局之内");
+        A("board.cell.onerun", "한 판 안에", "In one run", "1回のプレイで", "一局之内");
         A("board.cell.done", "이룸", "Done", "達成", "已达成");
         A("board.cell.new", "NEW", "NEW", "NEW", "NEW");
         A("board.reward.points", "+{0} P", "+{0} P", "+{0} P", "+{0} P");
@@ -436,10 +436,10 @@ public static partial class LocTable
         A("board.c.brands12.name", "열두 저울", "Twelve Scales", "十二の天秤", "十二把秤");
         A("board.c.brands12.desc", "열두 각인을 모두 한 번씩 저울에 올렸습니다.", "All twelve brands weighed once each.", "十二の刻印をすべて一度ずつ天秤に載せました。", "十二枚烙印各上秤一次。");
         A("board.c.brands12.cond", "각인 12장 모두 한 번씩 새기기", "Carve all 12 brands at least once", "刻印12種をすべて一度ずつ刻む", "刻下全部12枚烙印各一次");
-        A("board.c.events6.name", "여섯 가지 셈 (한 판 안에)", "Six Trades (in one run)", "六つの勘定（1回のランで）", "六场交易（一局之内）");
-        A("board.c.events6.desc", "한 판에 여섯 거래를 모두 보았습니다.", "All six trades seen in a single run.", "1回のランで六つの取引をすべて見ました。", "一局之内见过全部六场交易。");
-        A("board.c.events6.cond", "한 판에 이벤트 6종 모두 보기", "See all 6 events in one run", "1回のランでイベント6種をすべて見る", "一局内见到全部6种事件");
-        A("board.c.lanterns.name", "등불 셋, 열다섯 초 (한 판 안에)", "Three Lanterns, Fifteen Seconds (in one run)", "灯籠三つ、十五秒（1回のランで）", "三盏灯，十五秒（一局之内）");
+        A("board.c.events6.name", "여섯 가지 셈 (한 판 안에)", "Six Trades (in one run)", "六つの勘定（1回のプレイで）", "六场交易（一局之内）");
+        A("board.c.events6.desc", "한 판에 여섯 거래를 모두 보았습니다.", "All six trades seen in a single run.", "1回のプレイで六つの取引をすべて見ました。", "一局之内见过全部六场交易。");
+        A("board.c.events6.cond", "한 판에 이벤트 6종 모두 보기", "See all 6 events in one run", "1回のプレイでイベント6種をすべて見る", "一局内见到全部6种事件");
+        A("board.c.lanterns.name", "등불 셋, 열다섯 초 (한 판 안에)", "Three Lanterns, Fifteen Seconds (in one run)", "灯籠三つ、十五秒（1回のプレイで）", "三盏灯，十五秒（一局之内）");
         A("board.c.lanterns.desc", "스물두 초 중 일곱 초를 남겼습니다.", "Seven of twenty-two seconds to spare.", "二十二秒の内七秒を残しました。", "二十二秒中余下七秒。");
         A("board.c.lanterns.cond", "리치 왕의 등불 셋을 15초 안에 부수기", "Break the Lich King's three lanterns within 15 seconds", "リッチ王の灯籠三つを15秒以内に壊す", "15秒内击毁巫妖王的三盏灯");
         A("board.c.roll10.name", "굴러오는 길", "The Rolling Path", "転がる道", "翻滚之路");
@@ -467,7 +467,7 @@ public static partial class LocTable
         A("board.c.endless5.desc", "붉은 사막에서 다섯 왕을 눕혔습니다.", "Five kings laid down in the red desert.", "赤い砂漠で五人の王を寝かせました。", "在红色沙漠中放倒五位王。");
         A("board.c.endless5.cond", "무한 모드 한 판에서 보스 5마리 쓰러뜨리기", "Defeat 5 bosses in one Endless run", "エンドレス1回でボスを5体倒す", "一局无尽模式中击败5个首领");
         A("board.c.codex50.name", "절반의 도감", "Half the Codex", "図鑑の半分", "半本图鉴");
-        A("board.c.codex50.desc", "심연이 기억하는 것의 절반을 너도 기억합니다.", "Half of what the abyss remembers, you remember too.", "深淵が覚えていることの半分を、お前も覚えています。", "深渊记得的东西，你也记得一半。");
+        A("board.c.codex50.desc", "심연이 기억하는 것의 절반을 너도 기억합니다.", "Half of what the abyss remembers, you remember too.", "深淵が覚えていることの半分を、あなたも覚えています。", "深渊记得的东西，你也记得一半。");
         A("board.c.codex50.cond", "도감 수집률 50%", "Reach 50% Codex completion", "図鑑収集率50%", "图鉴收集率达到50%");
         A("board.c.codex100.name", "온전한 도감", "The Whole Codex", "完全な図鑑", "完整图鉴");
         A("board.c.codex100.desc", "심연이 기억하는 것을 모두 기억합니다.", "Everything the abyss remembers, you remember.", "深淵が覚えていることをすべて覚えています。", "深渊记得的，你全都记得。");

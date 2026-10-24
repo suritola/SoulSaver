@@ -93,7 +93,8 @@ public partial class SpecialAbilities
     void FateOnLevelUp(int levels)
     {
         using var source = DamageSource.As(DamageSource.Tree);
-        if (rerollMax > 0) rerolls = Mathf.Min(rerollMax, rerolls + levels);
+        // 1.5.9~ 상한 아래일 때만 채움 — 운명 바꾸기(+3) · 상자 보상(+1)으로 상한을 넘은 횟수는 깎지 않음 (예전엔 다음 레벨업에 상한으로 잘렸음)
+        if (rerollMax > 0 && rerolls < rerollMax) rerolls = Mathf.Min(rerollMax, rerolls + levels);
         if (novaRadius > 0f && player != null)
         {
             Explode(player.transform.position, novaRadius, Damage * novaMul, 3f, new Color(0.75f, 0.9f, 1f, 0.85f));

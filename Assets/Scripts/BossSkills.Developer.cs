@@ -183,6 +183,7 @@ public partial class BossSkills
             Vector3 at = Hostile.ClampArena(pl.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 1.5f));
             if (Hostile.IsWall(at)) at = transform.position;
             Fx.Spawn("fx_stealth", transform.position, 4f, col, 16f);
+            if (boss != null) boss.noContactUntil = Time.time + 1f + 0.35f + 0.6f;     // 1.5.9~ 머묾 1초 + 터진 뒤 0.35초 + 빠져나갈 0.6초 동안 몸통 피해 없음 (곁 1.5칸에 내려앉자마자 몸통에 맞던 것)
             transform.position = at;
             Hostile.Circle(at, 3.4f, 1f, col);
             yield return Windup(col, 1f);

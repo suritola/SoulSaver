@@ -95,6 +95,8 @@ public class StageManager : MonoBehaviour
     public int CurrentStage { get; private set; }
 
     bool transitioning;
+    // 1.5.9~ 장 전환(페이드 · 로딩 · 첫 문 특수 능력 창) 중에는 ESC 일시정지를 받지 않음 (ESCmenu) — 열어 두면 전환 끝에 timeScale 1 로 메뉴 뒤에서 적이 때렸음
+    public bool Transitioning => transitioning;
     int[] pendingPicks;
 
     void Awake()
@@ -444,6 +446,9 @@ public class StageManager : MonoBehaviour
     {
         // 상점, 레벨업, 일시정지 중에는 열지 않음
         if (upgradeOpen || evolving || Time.timeScale == 0f || specials == null || SoulTreeUI.IsOpen) return;
+        // 1.5.9~ 거너 일제 사격 조준(시간 0.5)도 ESC 처럼 쏘지 않고 거둠 (게이지는 그대로) — 트리 안에서 우클릭을 떼면 닫은 뒤 조준 상태에 갇혀 움직이지도 쏘지도 못했음
+        PlayerController pc = Hostile.Player;
+        if (pc != null) pc.CancelSkill();
         upgradeOpen = true;
         Time.timeScale = 0f;
         SoulTreeUI.Open(specials, () =>
@@ -465,7 +470,13 @@ public class StageManager : MonoBehaviour
         {
             yield return new WaitForSecondsRealtime(0.8f * GameSettings.FxTime);        // 1.1.9~ 「빠른 연출」이면 절반
             while (Time.timeScale == 0f || upgradeOpen || transitioning) yield return null;
+            // 1.5.9~ 쓰러지는 중(timeScale 0.25→0.05 라 위 대기를 지나감)에는 진화 창을 띄우지 않음 — 창이 열린 채 결과 화면으로 넘어갔음
+            PlayerController pl = Hostile.Player;
+            if (pl != null && pl.IsDying) { evolving = false; yield break; }
         }
+        // 1.5.9~ 조준 중(시간 0.5)에 열려도 조준을 거둔 뒤 시간을 잡음 — 창 안에서 우클릭을 떼면 닫은 뒤 느린 시간 · 조준 상태에 갇혔음
+        PlayerController aimer = Hostile.Player;
+        if (aimer != null) aimer.CancelSkill();
         float before = Time.timeScale;
         Time.timeScale = 0f;
         int picked = options[0];
@@ -486,8 +497,8 @@ public class StageManager : MonoBehaviour
     {
         int fromStage = CurrentStage;
         if (evolve) yield return Evolution(true);
-        // 진화 창이 뜨기 전에 이미 문으로 들어갔으면 안내 · 카운트다운은 생략
-        if (CurrentStage != fromStage) yield break;
+        // 1.5.9~ 진화 창이 뜨기 전에 이미 문으로 들어갔어도 보스 보상은 줌 (보스가 죽을 때 문 판정 자리에 서 있으면 보상 3택이 말없이 사라졌음)
+        //   BossReward 는 timeScale · transitioning 이 풀릴 때까지 기다렸다가 새 장에서 뜸 (진화 캐릭터가 아닐 때 이미 지나는 길과 같음) · 문은 지금처럼 일찍 켜 둠 (늦게 켜면 창이 안 끝날 때 판이 막힘)
         yield return BossReward();
         if (CurrentStage != fromStage) yield break;
         yield return SoulBrand.CatchUp(Chapters.Next(fromStage));      // 1.2~ 2장 · 3장 보스: 영혼 각인 한 장 더
@@ -834,6 +845,14 @@ public class StageManager : MonoBehaviour
     IEnumerator EndingAfter(Difficulty cleared, string opened)
     {
         yield return new WaitForSecondsRealtime(4f * GameSettings.FxTime);
+        // 1.5.9~ 쓰러지는 중(IsDying 은 되돌아가지 않음 → 반드시 결과 화면으로)이면 엔딩을 열지 않음 — 엔딩 도중 씬이 바뀌어 겹쳐 보였음
+        //   클리어 기록 · 해금은 이미 저장됐으므로 최종 클리어 보너스만 (RunEnding 과 같은 조건)
+        PlayerController pl = Hostile.Player;
+        if (pl != null && pl.IsDying)
+        {
+            if (!DailyChallenge.Active) Point.Bonus(Point.FinalBonus);
+            yield break;
+        }
         if (StoryDirector.ShouldSkipAll) yield break;
         yield return StoryDirector.Ending(cleared, opened);
     }
@@ -938,7 +957,7 @@ public class StageManager : MonoBehaviour
         bool points = !Evo && !firstGate;
         if (points) specialPoints += 2;
 
-        Time.timeScale = 1f;
+        Time.timeScale = ESCmenu.IsOpen ? 0f : 1f;      // 1.5.9~ 안전장치: 일시정지 메뉴가 떠 있으면 멈춘 채로 (닫으면 ESCmenu 가 1 로 되돌림 · SkillEvolutionUI 와 같음)
         yield return Fade(1f, 0f, 0.8f * GameSettings.FxTime);
         Notice.Big(Chapters.Title(stage) + (points ? "\n" + Loc.T("특수 능력 포인트 +2") : ""), NoticeIcon.Star, 3f);
         transitioning = false;

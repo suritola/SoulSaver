@@ -195,6 +195,7 @@ public partial class BossSkills : MonoBehaviour
                         Hostile.Circle(at, 3.6f, 0.6f, Mirror);
                         yield return new WaitForSeconds(0.6f);
                         if (!Alive) yield break;
+                        if (boss != null) boss.noContactUntil = Time.time + 0.5f;     // 1.5.9~ 내려선 직후 몸통 피해 없음 (경고 원 밖으로 피해도 몸통 접촉 원에 맞던 것)
                         transform.position = at;
                         Fx.Spawn("fx_slash", at, 8f, new Color(0.85f, 0.95f, 1f), 30f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg, 14);
                         Hostile.HitCircle(at, 3.6f, Capped(22f * Power));
@@ -459,6 +460,7 @@ public partial class BossSkills : MonoBehaviour
             Hostile.Circle(at, r, 1f, Mirror);
             yield return new WaitForSeconds(1f);
             if (!Alive) yield break;
+            if (boss != null) boss.noContactUntil = Time.time + 0.5f;     // 1.5.9~ 내려선 직후 몸통 피해 없음 (경고 원 밖으로 피해도 몸통 접촉 원에 맞던 것)
             transform.position = at;
             Fx.Spawn("fx_slash", at, 10f, new Color(0.85f, 0.95f, 1f), 30f, 0f, 14);
             Fx.Spawn("fx_slash", at, 10f, new Color(0.85f, 0.95f, 1f), 30f, 180f, 14);
@@ -487,6 +489,7 @@ public partial class BossSkills : MonoBehaviour
             Hostile.Line(from, to, 2f, 0.75f, Mirror);
             yield return Windup(Mirror, 0.75f);
             if (!Alive) yield break;
+            if (boss != null) boss.noContactUntil = Time.time + 0.15f + 0.45f;     // 1.5.9~ 돌진 0.15초 + 내려선 뒤 0.45초 동안 몸통 피해 없음 (띠 옆으로 비켜서도 지나가는 몸통에 맞던 것)
             for (float t = 0f; t < 0.15f && Alive; t += Time.deltaTime)
             {
                 transform.position = Vector3.Lerp(from, to, t / 0.15f);

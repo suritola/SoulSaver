@@ -8,7 +8,7 @@ using System.Text;
 // 표기 규칙 (언어별 '|' 로 나눔): '=' 앞붙임 = 영어 대소문자 그대로만 (없으면 첫 글자 대 · 소문자 둘 다)
 //                               '^' 앞붙임 = 앞뒤가 다른 낱말에 붙어 있으면 안 됨 (한국어는 뒤에 조사만 허용) — 「숨」「대가」처럼 짧은 말
 //   첫 표기가 툴팁 제목 · 덧붙임 이름 · 가장 긴 표기부터 찾음 · 막음 목록(Stop)은 다른 뜻의 이름(「연쇄 광풍」 등)을 건너뛰게 함
-//   영어 「Mastery」 는 극의 · 숙련이 같은 말 → 극의만 대문자 그대로(=) · 숙련 쪽 이름(Shadow Mastery 등)은 막음
+//   1.5.9~ 극의 영어는 「Pinnacle」 (예전엔 숙련과 같은 「Mastery」라 극의만 대문자 그대로(=) · 숙련 쪽 이름(Shadow Mastery 등)은 막았음 — 막음 목록은 남겨 둠)
 // 정의 속 {ULT} 같은 키 표시는 KeyBindings.Apply 로 지금 키 이름 · 수치가 자주 바뀌는 것은 개념만 (바뀌지 않는 문턱만 숫자)
 public static class Glossary
 {
@@ -103,7 +103,7 @@ public static class Glossary
             "Set on fire, the enemy keeps taking damage over time.",
             "火が付き、時間とともにダメージを受け続ける状態異常です。",
             "被点燃后持续受到伤害的异常状态。");
-        Add("frost", "빙결", "=Frost|frost", "氷結", "冰结|冰冻",
+        Add("frost", "빙결", "=Frost|frost", "氷結", "冰冻|冰结",
             "냉기로 적을 느리게 하거나 얼려 움직임을 막습니다.",
             "Cold that slows enemies or freezes them in place.",
             "冷気で敵を遅くしたり凍らせたりして動きを止めます。",
@@ -197,7 +197,7 @@ public static class Glossary
             "Path effects unlocked when Path rank (Seed 1 + path card ranks) reaches 4 and 8.",
             "流派段階（入門1＋流派カードの段階）が4・8に達すると開く流派の効果です。",
             "流派阶段（入门1＋流派卡等级）达到4和8时开启的流派效果。");
-        Add("mastery", "극의", "=Mastery", "極意", "极意",
+        Add("mastery", "극의", "=Pinnacle", "極意", "极意",
             "「외길」을 고르고 늘어난 단계까지 갈래 카드를 모두 채우면 열리는 마지막 효과입니다.",
             "The final effect, unlocked by choosing Single Path and filling your path cards' extra ranks.",
             "「一筋」を選び、増えた段階まで流派カードをすべて満たすと開く最後の効果です。",

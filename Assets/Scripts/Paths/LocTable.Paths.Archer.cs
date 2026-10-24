@@ -48,7 +48,7 @@ public static partial class LocTable
            "箭矢不穿透，满弓效果与回响之箭每5发触发一次。");
         PA("기동 · 무리", "Mobility · Crowds", "機動 · 群れ", "机动 · 群敌");
         PK("보스 한 발", "보스 한 발", "Big hits on bosses", "ボスへの一撃", "对首领的重击");
-        PA("메아리 화살이 세 발마다 나갑니다.", "Echo Arrow triggers every 3 shots.", "こだまの矢が3発ごとに出ます。", "回响之箭每3发触发一次。");
+        PA("메아리 화살 카드가 다섯 발 대신 세 발마다 나갑니다.", "Echo Arrow (card) triggers every 3 shots instead of 5.", "こだまの矢（カード）が5発ではなく3発ごとに出ます。", "回响之箭（卡牌）改为每3发触发一次（原为5发）。");
         PA("같은 적에 열 발을 맞히면 울림 화살촉의 범위가 2배가 됩니다.",
            "After 10 hits on the same enemy, Resonant Tip's radius doubles on it.",
            "同じ敵に10発当てると、共鳴の矢じりの範囲が2倍になります。",
@@ -76,7 +76,7 @@ public static partial class LocTable
            "덫이 10개까지 놓이고 중간 보스도 0.5초 묶으며, 보스는 2초 동안 피해를 10% 더 받습니다.",
            "Up to 10 traps; mid-bosses are rooted 0.5s, and bosses take 10% more damage for 2s.",
            "罠が10個まで置け、中ボスも0.5秒拘束し、ボスは2秒間ダメージを10%多く受けます。",
-           "最多10个陷阱，中首领也会被定身0.5秒，首领2秒内多受10%伤害。");
+           "最多10个陷阱，中头目也会被定身0.5秒，首领2秒内多受10%伤害。");
 
         // ================================================================= 바람
         PA("바람", "Wind", "風", "风");

@@ -403,6 +403,12 @@ public static class SoulBrand
         }
         MarkSeen();
         GameObject button = GameObject.Find("SoulBrandButton");
+        if (button == null)         // 1.5.9~ 메뉴의 영혼 각인 버튼은 꺼 둔 채라(「더 보기」에서 누름) GameObject.Find 로는 못 찾아 반짝임이 안 꺼졌음
+        {
+            GameObject start = GameObject.Find("GameStartButton");
+            Transform bt = start != null && start.transform.parent != null ? start.transform.parent.Find("SoulBrandButton") : null;
+            if (bt != null) button = bt.gameObject;
+        }
         NewGlow glow = button != null ? button.GetComponent<NewGlow>() : null;
         if (glow != null) glow.enabled = false;         // 다음에 메뉴를 열 때는 반짝이지 않음 (NEW 배지는 메뉴를 다시 그릴 때 사라짐)
     }

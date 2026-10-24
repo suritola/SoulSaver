@@ -42,6 +42,8 @@ public static class Demo
 
     // ================================================================= 체험판 끝 화면
     static GameObject endPanel;
+    // 1.5.9~ 끝 창이 떠 있는지 (ESCmenu: 이때 ESC 메뉴를 열었다 닫으면 timeScale 1 로 끝 창 뒤에서 게임이 흘렀음) · 씬이 바뀌면 창이 파괴되어 저절로 false
+    public static bool EndOpen => endPanel != null;
 
     public static void ShowEnd()
     {

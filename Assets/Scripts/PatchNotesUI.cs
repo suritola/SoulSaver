@@ -245,6 +245,7 @@ public static class PatchNotesUI
         void Update()
         {
             // 1.0.4~: 바로 앞 창(언어 고르기 등)을 닫은 그 ESC 로 같이 닫히지 않게
+            if (TitleIntro.Showing) return;      // 1.5.9~ 시작 연출을 넘긴 ESC 로 못 본 채 닫히지 않게
             if (!GameInput.EscDown || SettingsUI.EscHandledFrame == Time.frameCount) return;
             SettingsUI.EscHandledFrame = Time.frameCount;
             Close();

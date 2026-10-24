@@ -63,6 +63,14 @@ public static class Prefs
             }
             dirty = true;                                                   // 되살린 내용을 본 파일에 다시 씀
             Debug.LogWarning("[Prefs] 저장 파일을 백업에서 되살림: " + backup);
+            // 1.5.9~ 다음 Save() 까지 미루지 않고 바로 씀 — 그 전에 튕기면 다음 실행에서 본 파일이 없어 「처음 켬」으로 빈 저장이 시작되고,
+            //   두 번째 저장이 .bak 마저 빈 내용으로 덮었음. 본 파일이 옮겨진 뒤에만 (File.Move 를 타서 .bak 을 건드리지 않음 ·
+            //   옮기기에 실패해 깨진 본 파일이 남아 있으면 File.Replace 가 깨진 내용을 .bak 으로 보내므로 쓰지 않음 — 예전처럼 다음 Save 때)
+            if (!File.Exists(main))
+            {
+                Store s = Snapshot(out string folder, out string file, out int seq);
+                if (s != null) Write(s, folder, file, seq);
+            }
             return;
         }
         if (!mainExists) return;                                            // 처음 켬 (저장 없음)

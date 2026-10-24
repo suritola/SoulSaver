@@ -118,11 +118,11 @@ public static partial class LocTable
            "Your glide path leaves blade afterimages for 1s. (20% of slash damage every 0.25s)",
            "滑った道に刃の残像が1秒間残ります。（0.25秒ごとに斬撃ダメージの20%）",
            "滑行路径上留下持续1秒的刀刃残影。（每0.25秒造成斩击伤害的20%）");
-        PK("검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 저절로 나갑니다. (30% 세기)",
-           "검무가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 나갑니다. (30% 세기)",
-           "At max Sword Dance stacks, every 5th swing adds a Spin Slash. (30% strength)",
-           "剣舞が最大スタックなら、5回目の振りごとに回転斬りが出ます。（30%の威力）",
-           "剑舞叠满时，每第五次挥砍释放回旋斩。（30%威力）");
+        PK("고유 스킬 「검무」가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 저절로 나갑니다. (30% 세기)",
+           "고유 스킬 「검무」가 최대 중첩이면 다섯 번째 휘두르기마다 회전 베기가 나갑니다. (30% 세기)",
+           "At max stacks of the Sword Dance skill, every 5th swing adds a Spin Slash. (30% strength)",
+           "固有スキル「剣舞」が最大スタックなら、5回目の振りごとに回転斬りが出ます。（30%の威力）",
+           "专属技能「剑舞」叠满时，每第五次挥砍释放回旋斩。（30%威力）");
         PA("미끄러질 때 0.1초 무적이 되고(0.6초에 한 번), 2.5칸을 미끄러집니다.",
            "Gliding grants 0.1s of invincibility (once per 0.6s), and you glide 2.5 tiles.",
            "滑る時に0.1秒無敵になり（0.6秒に1回）、2.5マス滑ります。",

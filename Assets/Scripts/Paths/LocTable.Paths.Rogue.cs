@@ -48,7 +48,7 @@ public static partial class LocTable
         PA("분신이 사라질 때 연막이 퍼집니다.", "Clones release a Smoke Screen when they vanish.", "分身が消えるとき煙幕が広がります。", "分身消失时会散开烟幕。");
         PA("분신 연막 안에서 던진 표창은 치명타(×2)가 됩니다.",          // 1.4.2~ 분신 연막만
            "Throwing Stars thrown inside a clone's Smoke Screen become critical hits (×2).",
-           "分身の煙幕の中で投げた手裏剣は会心(×2)になります。",
+           "分身の煙幕の中で投げた手裏剣はクリティカル(×2)になります。",
            "在分身烟幕中投出的飞镖必定暴击（×2）。");
         PA("돌진을 3번 모아 두고, 분신도 표창을 함께 던집니다.",
            "Store up to 3 Dashes, and clones throw Throwing Stars with you.",
@@ -117,7 +117,7 @@ public static partial class LocTable
            "受到的伤害增加15%，飞镖伤害降低20%。");
         PA("무리", "Crowds", "群れ", "敌群");
         PA("피격 위험", "Risk of getting hit", "被弾の危険", "受击风险");
-        PA("10중첩이면 표창을 두 개씩 던집니다.", "At 10 stacks, you throw two Throwing Stars at a time.", "10重ねなら手裏剣を2つずつ投げます。", "叠满10层时，每次投出两倍飞镖。");
+        PA("10중첩이면 표창을 두 개씩 던집니다.", "At 10 stacks, you throw two Throwing Stars at a time.", "10重ねなら手裏剣を2つずつ投げます。", "叠满10层时，每次投出两枚飞镖。");
         PA("빈 주머니의 비가 10처치마다도 내립니다.", "Empty-Pouch Rain also falls every 10 kills.", "10体倒すごとにも空の袋の雨が降ります。", "每击杀10个敌人也会降下空囊之雨。");
         PA("맞아도 중첩이 떨어지지 않습니다.", "Getting hit no longer removes your stacks.", "被弾しても重ねが消えません。", "受击时层数不再消失。");
 

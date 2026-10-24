@@ -218,7 +218,9 @@ public partial class Shop : MonoBehaviour
         if (!TryPay(damagePrice)) return;
 
         // 캐릭터 공격력 배율을 지키도록 플레이어 값에 바로 더함 (검사 150% · 도적 70% …)
-        playerControllerd.damage += KitDamageStep;
+        // 1.5.9~ 지금 걸린 패시브 배율(불굴 · 맹세 …)을 곱해 더함 — 배율이 풀리며 나눌 때 산 몫이 줄지 않게
+        SpecialAbilities spMul = SpecialAbilities.SharedInstance;
+        playerControllerd.damage += KitDamageStep * (spMul != null ? spMul.KitDamageMul : 1f);
         damageBuys++;                           // 다음 강화는 덜 오름 (Shop.Kits KitDamageStep)
         damage = playerControllerd.damage;
         damagePrice = Mathf.CeilToInt(damagePrice * GrowthOf(damagePriceGrowth));

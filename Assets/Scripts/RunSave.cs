@@ -59,6 +59,8 @@ public static class RunSave
         // 옛 저장에는 없어 0 → 기록을 다시 적용하기 전(시작 공격력일 때) 기준을 정함
         public float baseAttack;
         public int baseMag;
+        // 1.5.9~ 이번 판에 쓴 부활 (「되살아난 영혼」 · 「불사의 맹세」) — 옛 저장은 0 (예전처럼)
+        public int treeRevivesUsed, undyingUsed;
         // 1.2~ 영혼 계약 (Contracts): 이번 판 계약 열쇠 · 뒤에 * 이어진 계약 · ! 이룸 (옛 저장은 빈 글 = 계약 없는 판)
         public string contracts = "";
         // 1.2~ 판 안 수 (RunCounters: 상자 · 상점 · 처치 출처 · 영웅 고유 동작 · 본 것) — 이어해도 계약 진행이 남게 (옛 저장은 빈 글 = 0부터)
@@ -301,6 +303,7 @@ public static class RunSave
         SpecialAbilities specials = SpecialAbilities.SharedInstance;
         d.rerolls = specials != null ? specials.Rerolls : 0;
         if (specials != null) specials.GetBase(out d.baseAttack, out d.baseMag);
+        if (specials != null) specials.GetRevivesUsed(out d.treeRevivesUsed, out d.undyingUsed);     // 1.5.9~ 판 전체에 한 번이라 장과 상관없이 늘 저장
         foreach (KeyValuePair<string, float> kv in RunStats.DamageDealt) { d.dealtKeys.Add(kv.Key); d.dealtValues.Add(kv.Value); }
         foreach (KeyValuePair<string, float> kv in RunStats.DamageTaken) { d.takenKeys.Add(kv.Key); d.takenValues.Add(kv.Value); }
 
@@ -364,6 +367,7 @@ public static class RunSave
     // 1.0.4~: 메뉴에서 고른 난이도 · 캐릭터(저장값)를 덮어쓰지 않게 Override 로 잠시만 (메인 메뉴로 돌아오면 EndContinue)
     //   결과 화면 [R] 다시 시작도 이 판과 같은 캐릭터 · 난이도로
     static bool continuing;
+    public static bool Continuing => continuing;        // 1.5.9~ ESCmenu.SaveNote: 이어하기로 남은 창(진화 · 보스 보상 · 문)을 고르는 중엔 저장이 그대로 남는다고 안내
 
     public static bool Continue()
     {
@@ -484,9 +488,12 @@ public static class RunSave
         if (g != null) { g.SkillPoint = 0f; g.AddSkillPoint(d.gauge); }
         if (Paths.Active && Paths.Hero != null) Paths.Safe(() => Paths.Hero.LoadState(d.pathsState));     // 1.4.1~ 기록을 다시 적용한 뒤 (극의 등이 켜진 다음)
         if (specials != null) specials.SetRerolls(d.rerolls);
+        if (specials != null) specials.RestoreRevivesUsed(d.treeRevivesUsed, d.undyingUsed);     // 1.5.9~ 기록 재생 뒤 (재생이 다시 채운 부활에서 쓴 만큼 뺌 · gatePending 과 상관없음)
         sm.specialPoints = d.specialPoints;
         RunStats.Seconds = d.seconds;
         RunStats.Kills = d.runKills;
+        RunStats.ResumedSecs = Mathf.RoundToInt(d.seconds);         // 1.5.9~ 플레이 데이터: 앞 구간(저장하고 나간 줄)과 짝을 짓게
+        RunStats.ResumedKills = d.runKills;
         RunStats.Level = d.level;
         RunStats.RestoreChapterLog(d.chapterLog);                   // 1.1~
         RunStats.DamageDealt.Clear();
@@ -502,7 +509,20 @@ public static class RunSave
         // 1.2.5~ 이번 판 포인트 표시 · 기록 (보유 포인트는 이미 저장돼 있으므로 더하지 않음) — 못 받은 장 보너스는 그 위에 더함
         CharacterData.RestoreRunPoints(d.runPoints);
         Point.RestoreRun(d.runBonus, d.pointsShown);
-        if (d.chapterBonus > 0) Point.Bonus(d.chapterBonus);       // 1.1~ 보스가 쓰러지는 연출 중에 나가서 못 받은 장 클리어 보너스
+        if (d.chapterBonus > 0)                                     // 1.1~ 보스가 쓰러지는 연출 중에 나가서 못 받은 장 클리어 보너스
+        {
+            Point.Bonus(d.chapterBonus);
+            // 1.5.9~ 보너스 지급과 「받음」 표시를 같은 파일 쓰기에 — 아래 고르기 창(진화 · 보스 보상 · 첫 문)은 sm.Started 전이라 Stage() 가 저장을 건너뜀
+            //   그 창에서 게임을 끄면 올라간 보유 포인트와 chapterBonus 가 남은 옛 판 저장이 함께 쓰여, 이어할 때마다 또 받았음
+            //   d 는 이어하기로 읽은 그 저장값이라 다른 칸(고르기 창 대기 등)은 그대로 · 일일 도전 · 데모처럼 저장 안 하는 판은 판 저장을 되살리지 않음
+            d.chapterBonus = 0;
+            d.runPoints = CharacterData.RunPoints;
+            d.runBonus = Point.RunBonus;
+            Point ptNow = Cache<Point>.Get;
+            if (ptNow != null) d.pointsShown = ptNow.points;
+            if (Savable) Prefs.SetString(Key, JsonUtility.ToJson(d));
+            Prefs.Save();
+        }
         if (!d.gatePending) LastStand.Used = d.lastStandUsed;
         if (d.hasPos) p.transform.position = new Vector3(d.px, d.py, p.transform.position.z);
         NeedEvolution = d.needEvolution;

@@ -282,6 +282,7 @@ public static class MenuExtras
             if (t.GetComponent<NewGlow>() != null && more.GetComponent<NewGlow>() == null) more.AddComponent<NewGlow>();      // 안에 새 것이 있으면 「더 보기」가 반짝임
             t.gameObject.SetActive(false);
         }
+        if (ContractBoard.Claimable > 0 && more.GetComponent<NewGlow>() == null) more.AddComponent<NewGlow>();      // 1.5.9~ 받을 계약 보상도 (메뉴의 계약 배지가 빠진 뒤 알릴 곳이 없었음)
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
@@ -585,10 +586,26 @@ public static class MenuExtras
         foreach (var it in items)
         {
             UnityAction act = it.act;
-            UIKit.MakeButton(win, it.ko, new Vector2(0f, y), new Vector2(BtnW, BtnH), () => { CloseMore(); act(); }, 26f);
+            Button mb = UIKit.MakeButton(win, it.ko, new Vector2(0f, y), new Vector2(BtnW, BtnH), () => { CloseMore(); act(); }, 26f);
+            if (MoreItemIsNew(parent, it.ko)) mb.gameObject.AddComponent<NewGlow>();      // 1.5.9~ 「더 보기」가 반짝이는 까닭을 창 안 칸에도
             y -= BtnH + BtnGap;
         }
         UIKit.EscCancel(moreOpen, CloseMore);
+    }
+
+    // 1.5.9~ 「더 보기」를 반짝이게 한 것(튜토리얼 미완료 · 새 영혼 각인 · 받을 계약 보상)을 창 안에서도 NEW 로 — 열어 봐도 무엇이 새것인지 몰랐음
+    //   영혼 각인은 숨긴 버튼의 NewGlow 를 따름 (각인 창을 보면 enabled 만 꺼지므로 enabled 까지 봄)
+    static bool MoreItemIsNew(Transform parent, string key)
+    {
+        if (key == "튜토리얼") return !TutorialRun.Done;
+        if (key == "board.open") return ContractBoard.Claimable > 0;
+        if (key == "brand.title")
+        {
+            Transform t = parent != null ? parent.Find("SoulBrandButton") : null;
+            NewGlow g = t != null ? t.GetComponent<NewGlow>() : null;
+            return g != null && g.enabled;
+        }
+        return false;
     }
 
     static void CloseMore()
@@ -767,6 +784,7 @@ public static class MenuExtras
         }
         InstallNewsCard(parent);
         InstallGoalsCard(parent);
+        MenuAmbience.Rebase();           // 1.5.9~ 나타나기 연출이 옛 자리로 되돌리지 않게
     }
 
     // 오른쪽 열 「다음 목표」 카드 (사용자 「아직 허전」) — 새 소식 아래 · 아래끝은 왼쪽 「종료」와 맞춤, 결과 화면과 같은 목표 셋 (이름 · 막대 · 수치)
@@ -2691,6 +2709,7 @@ public class ModalEsc : MonoBehaviour
 
     void Update()
     {
+        if (TitleIntro.Showing) return;          // 1.5.9~ 시작 연출을 넘긴 ESC 로 뒤에 숨은 창(언어 고르기 · 저장 알림)이 닫히지 않게
         if (!GameInput.EscDown || SettingsUI.EscHandledFrame == Time.frameCount) return;
         SettingsUI.EscHandledFrame = Time.frameCount;
         cancel?.Invoke();
@@ -3138,6 +3157,17 @@ public class MenuAmbience : MonoBehaviour
     float nextEmber, t;
     Vector2[] itemBase;
     CanvasGroup[] groups;
+    bool settled;                    // 1.5.9~ 차례로 나타나기가 끝남 (그 뒤로는 메뉴 자리를 건드리지 않음)
+    static MenuAmbience inst;
+
+    // 1.5.9~ 메뉴 열을 다시 배치한 뒤(LayoutMainV2 · 난이도 바꿈) 지금 자리를 나타나기 연출의 기준으로 다시 잡음
+    //   LeftPlace 가 막 새 자리를 넣은 직후라 오프셋이 끼지 않음 · 꺼진 줄은 자리를 안 바꾸므로 그대로 둠
+    public static void Rebase()
+    {
+        if (inst == null || inst.items == null || inst.itemBase == null) return;
+        for (int i = 0; i < inst.items.Length && i < inst.itemBase.Length; i++)
+            if (inst.items[i] != null && inst.items[i].gameObject.activeSelf) inst.itemBase[i] = inst.items[i].anchoredPosition;
+    }
 
     public static void Install(Transform canvasRoot, Transform behind, TMP_Text title, RectTransform[] items)
     {
@@ -3163,6 +3193,7 @@ public class MenuAmbience : MonoBehaviour
             v.raycastTarget = false;
         }
         MenuAmbience a = go.AddComponent<MenuAmbience>();
+        inst = a;
         a.title = title;
         a.items = items;
         GameObject e = new GameObject("Embers", typeof(RectTransform));
@@ -3200,13 +3231,20 @@ public class MenuAmbience : MonoBehaviour
         t += dt;
         bool motion = GameSettings.Motion > 0.01f;
         // 메뉴가 0.25초부터 0.07초 간격으로 아래에서 살짝 올라오며 나타남 (끝나면 제자리 · 움직임 줄이기면 바로)
-        for (int i = 0; i < items.Length; i++)
+        // 1.5.9~ 끝난 뒤에도 매 프레임 처음 자리로 덮어써서, 난이도를 바꿔 다시 배치한 메뉴 열(영혼의 무게 줄)이 되돌아가 겹쳤음
+        //   → 다 나타난 프레임에 제자리로 한 번 맞춘 뒤로는 자리를 건드리지 않음 (연출 중 다시 배치는 Rebase 가 기준을 새로 잡음)
+        if (!settled)
         {
-            if (items[i] == null || groups[i] == null) continue;
-            float k = motion ? Mathf.Clamp01((t - 0.25f - 0.07f * i) / 0.35f) : 1f;
-            float e = 1f - (1f - k) * (1f - k) * (1f - k);
-            groups[i].alpha = e;
-            items[i].anchoredPosition = itemBase[i] + new Vector2(0f, -14f * (1f - e));
+            bool done = !motion || t > 0.25f + 0.07f * items.Length + 0.35f;
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (items[i] == null || groups[i] == null) continue;
+                float k = done ? 1f : Mathf.Clamp01((t - 0.25f - 0.07f * i) / 0.35f);
+                float e = 1f - (1f - k) * (1f - k) * (1f - k);
+                groups[i].alpha = e;
+                items[i].anchoredPosition = itemBase[i] + new Vector2(0f, -14f * (1f - e));
+            }
+            if (done) settled = true;
         }
         if (!UiRules.Legacy) return;           // 제목 숨쉬기 · 불티 없음
         // 제목: 밝기가 아주 천천히 오르내림

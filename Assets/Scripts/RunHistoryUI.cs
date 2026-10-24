@@ -187,8 +187,8 @@ public static class RunHistoryUI
         string gold = "<color=#F5D478>", end = "</color>";
         List<string> lines = new List<string>();
         string evo = Loc.T("기본 무기");
-        if (r["evo1"].Length > 0) evo += "  →  " + r["evo1"] + Sec(r["evo1_sec"]);
-        if (r["evo2"].Length > 0) evo += "  →  " + r["evo2"] + Sec(r["evo2_sec"]);
+        if (r["evo1"].Length > 0) evo += "  →  " + EvoName(r["evo1"]) + Sec(r["evo1_sec"]);
+        if (r["evo2"].Length > 0) evo += "  →  " + EvoName(r["evo2"]) + Sec(r["evo2_sec"]);
         lines.Add(gold + Loc.T("무기 진화") + end + "  " + evo);
         string skill = SkillEvoNames(r);
         if (skill.Length > 0) lines.Add(gold + Loc.T("스킬 진화") + end + "  " + skill);
@@ -203,6 +203,17 @@ public static class RunHistoryUI
         string taken = TopParts(r["taken_by"], 3);
         if (taken.Length > 0) lines.Add(gold + Loc.T("받은 피해") + end + "  " + taken);
         return string.Join("\n", lines);
+    }
+
+    // 1.5.9~ 진화 이름을 지금 언어로: 새 기록은 한국어 원문 키 · 1.5.8 까지의 기록은 그 판 언어로 번역된 이름이라 언어마다 거꾸로 찾아 키로 되돌림 (못 찾으면 적힌 그대로)
+    static string EvoName(string s)
+    {
+        foreach (Loc.Lang l in System.Enum.GetValues(typeof(Loc.Lang)))
+        {
+            string k = Loc.KeyOf(s, l);
+            if (k != null) return Loc.T(k);
+        }
+        return s;
     }
 
     static string Sec(string s) => float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v) ? " <color=#A89C86>(" + EndlessMode.Clock(v) + ")</color>" : "";

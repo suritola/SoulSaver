@@ -80,6 +80,16 @@ public partial class SpecialAbilities
     // 영혼 트리 생존 끝 칸 「되살아난 영혼」: 판마다 한 번 체력 40%로 (1.0.1)
     public int TreeRevives;
     bool revivedByTree;
+    int treeRevivesUsed;        // 1.5.9~ 이번 판에 쓴 「되살아난 영혼」 횟수 (판 중간 저장 — 이어하기에서 기록을 다시 적용해도 다시 채워지지 않게)
+
+    // 1.5.9~ 판 중간 저장 (RunSave): 쓴 부활 횟수 — 복원은 기록을 다시 적용한 뒤 (ReplayNode 가 채운 TreeRevives 에서 뺌)
+    public void GetRevivesUsed(out int tree, out int undying) { tree = treeRevivesUsed; undying = undyingUses; }
+    public void RestoreRevivesUsed(int tree, int undying)
+    {
+        treeRevivesUsed = Mathf.Max(0, tree);
+        TreeRevives = Mathf.Max(0, TreeRevives - treeRevivesUsed);
+        undyingUses = Mathf.Max(0, undying);
+    }
 
     // 불사의 맹세: 판마다 한 번
     public bool TryUndying()
@@ -89,6 +99,7 @@ public partial class SpecialAbilities
         {
             if (TreeRevives <= 0) return false;
             TreeRevives--;
+            treeRevivesUsed++;
             revivedByTree = true;
             fx.Play("pulse", 1f, 0.6f);
             fx.Play("chime", 1f, 0.9f);

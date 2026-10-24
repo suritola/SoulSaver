@@ -141,7 +141,9 @@ public partial class CharacterKit
         if (Paths.Has(ArcherPaths.Sky))
         {
             float atk = Mathf.Max(0.01f, Damage);
-            b.onHitEnemy += (arrow, c) => ArcherPaths.AddGauge(Mathf.Min(0.03f, arrow.damage / atk * ArcherPaths.SkyHitGauge));
+            System.Action<Bullet, Collider2D> sky = (arrow, c) => ArcherPaths.AddGauge(Mathf.Min(0.03f, arrow.damage / atk * ArcherPaths.SkyHitGauge));
+            b.onHitEnemy += sky;
+            b.onHitBoss += sky;         // 1.5.9~ 보스를 맞혀도 같은 기준으로 참 (onHitEnemy 는 일반 적만 불려 보스전에서는 명중 게이지가 0 이었음 · 같은 갈래 광선은 보스에도 채움)
         }
 
         if (perfect && Paths.Has(ArcherPaths.Long))

@@ -14,6 +14,13 @@ public class WeaponEvolutionUI : MonoBehaviour
     static readonly Color Soul = new Color(0.72f, 0.58f, 1f);
 
     public static bool Open { get; private set; }
+    // 1.5.9~ 안전장치 (ChoiceUI 와 같음): 창이 열린 채 씬이 바뀌면(쓰러지는 중 보스 처치 → 결과 화면) Run 코루틴이 사라져 Open 이 true 로 남음
+    //   → 그 실행 내내 ESC · 알림 · 보스 결계 · 공간 침식이 막혔음
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Boot()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => Open = false;
+    }
     // 1.0.4~ 설정 「번쩍임」을 끄면 화면 섬광을 1/4 로 (알파 1 → 0.25 · 0.6 → 0.15), 「화면 흔들림」을 끄면 무기 떨림 없음
     static float FlashMul => GameSettings.Flashes ? 1f : 0.25f;
     static float ShakeMul => GameSettings.ScreenShake ? 1f : 0f;

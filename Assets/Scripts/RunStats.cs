@@ -36,6 +36,10 @@ public class RunStats : MonoBehaviour
     public static void MarkCleared() => cleared = true;
     // 1.1.9~ 무한 모드 · 일일 도전에서 「포기하고 결과 보기」로 끝냄 (결과 화면이 「여기까지!」, 쓰러진 곳 줄 없음)
     public static bool GaveUp;
+    // 1.5.9~ 플레이 데이터: ESC 「메인 메뉴로」에서 이 판을 저장하고 나감 (result "saved" · 예전엔 「다시 시작」 · 포기와 같은 "quit" 이라 중도 종료가 부풀었음)
+    public static bool SavedExit;
+    // 1.5.9~ 이어한 판: 되살린 시간 · 처치 (seconds · kills 는 판 전체 누적이라 앞 구간 "saved" · "closed" 줄과 겹침 → 분석이 이 값으로 짝을 지어 앞 줄을 뺌)
+    public static int ResumedSecs, ResumedKills;
 
     float refresh;
 
@@ -43,6 +47,16 @@ public class RunStats : MonoBehaviour
     static void Boot()
     {
         StageManager.Cleared += d => cleared = true;
+        // 1.5.9~ 판 중에 게임을 끔 (창 닫기 · Alt+F4 · ESC 「게임 종료」): 씬이 바뀌지 않아 기록에 한 줄도 남지 않았음 → "closed" 한 줄
+        //   (무한 모드 EndlessQuit 은 GaveUp 이라 "quit") · 끌 때는 보내지 않고 큐에만 쌓음 (다음 실행 OnLaunch 가 보냄)
+        Application.quitting += () =>
+        {
+            if (!runActive) return;
+            runActive = false;
+            Telemetry.Quitting = true;
+            try { Capture(); } catch (System.Exception ex) { Debug.LogWarning("run stats quit: " + ex.Message); }
+            WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : "closed");
+        };
         SceneManager.sceneLoaded += (s, m) =>
         {
             // 게임 씬을 떠날 때 (게임 오버 · 메인 메뉴 · 다시 시작) 이번 판을 밸런스 기록에 한 줄
@@ -51,7 +65,7 @@ public class RunStats : MonoBehaviour
             {
                 runActive = false;
                 if (s.name == "GameOver") RunRecords.CommitBest();       // 1.1.9~ 내 최고 기록 (결과 화면 쪽에서도 부르지만 한 번만)
-                WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : s.name == "GameOver" ? "death" : "quit");
+                WriteBalanceLog(cleared ? "clear" : GaveUp ? "quit" : s.name == "GameOver" ? "death" : SavedExit ? "saved" : "quit");
             }
             // 1.1.9~ 무한 모드를 메인 메뉴 · 다시 시작으로 나가면 지난 기록이 남아 다음 이야기 모드 결과 화면에 섞여 나왔음
             if (s.name != "GameOver") EndlessMode.LastSeconds = -1f;
@@ -60,6 +74,8 @@ public class RunStats : MonoBehaviour
             runActive = true;
             cleared = false;
             GaveUp = false;
+            SavedExit = false;
+            ResumedSecs = ResumedKills = 0;         // 이어하기면 RunSave.Restore 가 이 뒤에 채움
             Evolutions.Clear();
             SkillEvos.Clear();
             LogSkillEvos = "";
@@ -297,7 +313,7 @@ public class RunStats : MonoBehaviour
         }
         // 무기 진화: 기본 무기 → 1차 (시각) → 2차 (시각)
         string evo = Loc.T("기본 무기");
-        foreach (KeyValuePair<string, float> e in Evolutions) evo += "  \u2192  " + e.Key + " <color=#A89C86>(" + EndlessMode.Clock(e.Value) + ")</color>";
+        foreach (KeyValuePair<string, float> e in Evolutions) evo += "  \u2192  " + Loc.T(e.Key) + " <color=#A89C86>(" + EndlessMode.Clock(e.Value) + ")</color>";
         s += "\n\n" + gold + Loc.T("무기 진화") + end + "\n" + evo;
         // 영혼 트리: 많이 배운 가지 순서 · 조각
         List<int> order = new List<int> { 0, 1, 2, 3, 4, 5 };
@@ -521,7 +537,8 @@ public class RunStats : MonoBehaviour
         {
             string path = BalanceLogPath;
             // 1.2~ 끝에 판 사이 기록 여섯 칸 (RunLog.Columns) · 1.2~ 무게 · 각인 · 유물 세 칸 · 1.1.2~ 스킬 진화 한 칸
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos," + RunLog.Columns;
+            // 1.5.9~ 맨 끝에 이어한 판의 되살린 시간 · 처치 두 칸 (UpgradeHeader 는 끝에 더한 칸만 이어 쓰므로 새 칸은 늘 이 뒤에)
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos," + RunLog.Columns + ",resumed_secs,resumed_kills";
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
             // 1.2~ 끝에 칸만 더해진 머리줄이면 따로 떼지 않고 머리줄만 바꿔 한 파일로 이어 씀 (옛 줄은 뒤 칸이 비어 있음 · 합쳐 읽기는 tools/balance/merge_logs.py)
             if (System.IO.File.Exists(path))
@@ -565,7 +582,8 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(ChapterDurations())       // 1.1~ 장별 소요 시간
              .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics)     // 1.2~ 무게 · 각인 · 유물
              .Append(',').Append(LogSkillEvos)        // 1.1.2~ 스킬 진화 "키@초|…"
-             .Append(',').Append(RunLog.Row()).AppendLine();       // 1.2~ 판 사이 기록 (retry_kind … points_run)
+             .Append(',').Append(RunLog.Row())       // 1.2~ 판 사이 기록 (retry_kind … points_run)
+             .Append(',').Append(ResumedSecs).Append(',').Append(ResumedKills).AppendLine();      // 1.5.9~
             Telemetry.RecordRun(Header, b.ToString(rowStart, b.Length - rowStart).TrimEnd('\r', '\n'));     // 1.4.4~ 동의한 이용자만 (안에서 확인)
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
             RunLog.OnRunLogged(result, Seconds);      // 1.2~ 세션 기록(sessions.csv)의 판 수

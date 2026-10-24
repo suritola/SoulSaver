@@ -24,10 +24,12 @@ public static partial class LocTable
            "移动中射出的子弹伤害降低25%，弹匣8发 → 6发。");
         PA("보스 · 일렬", "Bosses · Lines", "ボス・一列の敵", "首领・成排敌人");
         PA("기동 · 포위", "Mobility · Being surrounded", "機動・包囲", "机动・被包围");
-        PA("저격탄이 약점에 맞으면 피해 ×1.5와 함께 작은 폭발이 일어납니다.",
-           "Sniper rounds that hit a weak spot deal ×1.5 damage and set off a small explosion.",
-           "狙撃弾が弱点に当たると、ダメージ×1.5とともに小さな爆発が起きます。",
-           "狙击弹命中弱点时伤害×1.5，并引发小型爆炸。");
+        // 1.5.9~ 실제로는 보스 · 중간 보스의 빈틈(WeakSpot)에 맞을 때만 걸림 — 「약점」(약점 간파 · 입문 카드 약점 줄)과 헷갈리지 않게 빈틈 용어로 (키는 그대로)
+        PK("저격탄이 약점에 맞으면 피해 ×1.5와 함께 작은 폭발이 일어납니다.",
+           "저격탄이 빈틈에 맞으면 피해 ×1.5와 함께 작은 폭발이 일어납니다.",
+           "Sniper rounds that hit a weak point deal ×1.5 damage and set off a small explosion.",
+           "狙撃弾が隙に当たると、ダメージ×1.5とともに小さな爆発が起きます。",
+           "狙击弹命中破绽时伤害×1.5，并引发小型爆炸。");
         PA("저격탄이 꿰뚫은 적 수만큼 다음 조준이 빨라집니다. (5마리면 즉시)",
            "Each enemy a sniper round pierces speeds up your next aim. (5 enemies = instant)",
            "狙撃弾が貫いた敵の数だけ、次の照準が速くなります。(5体で即座に)",

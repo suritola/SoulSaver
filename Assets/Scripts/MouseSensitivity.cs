@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
 using System.Runtime.InteropServices;
 #endif
@@ -62,7 +61,7 @@ public class MouseSensitivity : MonoBehaviour
     // 전투 중(게임 씬에서 시간이 흐르고 연출이 아닐 때)이고 감도가 100%가 아닐 때만
     static bool Active =>
         Mathf.Abs(GameSettings.MouseSensitivity - 1f) > 0.01f && Application.isFocused && !GameInput.Auto
-        && Time.timeScale > 0f && !StoryDirector.Playing && SceneManager.GetActiveScene().name == "GameScene";
+        && Time.timeScale > 0f && !StoryDirector.Playing && CursorSkin.InGameScene();      // 1.5.9~ 씬 이름 글자를 매 프레임 새로 만들지 않게 (씬이 바뀔 때만 읽음)
 
     void Update()
     {

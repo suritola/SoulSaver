@@ -22,9 +22,9 @@ public static partial class LocTable
         PA("웅덩이가 2배 오래 남습니다.", "Puddles last twice as long.", "水たまりが2倍長く残ります。", "水洼持续时间翻倍。");
 
         // ================================================================= 빙결
-        PA("빙결", "Frost", "氷結", "冰结");
+        PA("빙결", "Frost", "氷結", "冰冻");
         PA("얼리고 산산조각 · 제어", "Freeze and shatter · Control", "凍らせて粉砕・制御", "冰冻并粉碎 · 控制");
-        PA("빙결 전문", "Frost Specialist", "氷結の専門家", "冰结专家");
+        PA("빙결 전문", "Frost Specialist", "氷結の専門家", "冰冻专家");
         PK("빙결 시약이 두 번에 한 번 나와 적을 얼리고, 얼어붙은 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 체력 2%까지)",
            "두 번에 한 번 빙결 시약이 나옵니다. 언 적을 플라스크로 맞히면 산산조각 납니다. (체력 8% · 보스는 2%까지)",
            "Every other reagent is Frost. Flasks shatter frozen enemies. (8% max HP · bosses up to 2%)",

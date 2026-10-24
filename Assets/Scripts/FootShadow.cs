@@ -56,7 +56,7 @@ public static class FootShadow
         disc.color = new Color(0f, 0f, 0f, 0.3f);
         disc.sortingLayerID = body != null ? body.sortingLayerID : PlayerLook.TopLayer;
         disc.sortingOrder = (body != null ? body.sortingOrder : 0) - 20;
-        Sprite ring = PixelRingArt.Get(r, -1f, true);
+        Sprite ring = PixelRingArt.Get(r, -1f, true, 0, true);      // 1.5.9~ 고정 (판 시작 때 한 번만 받아 끝까지 씀 — 캐시가 차면 먼저 지워져 고리가 사라졌음)
         if (ring == null) return;
         GameObject rg = new GameObject("ContactRing");
         rg.transform.SetParent(p.transform, false);

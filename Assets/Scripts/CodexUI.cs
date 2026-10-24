@@ -259,6 +259,7 @@ public static class CodexUI
         //   위에 스킬 진화 도감이 열려 있으면 그것부터 (두 창의 ESC 처리 순서가 정해져 있지 않아도 위 창이 먼저 닫히게)
         UIKit.EscCancel(open, () =>
         {
+            if (rewardsOpen != null) { CloseRewards(); return; }        // 1.5.9~ 수집 보상 창도 위 창이 먼저 (빠져서 도감이 통째로 닫히던 것)
             if (SkillEvoCodexUI.IsOpen) { SkillEvoCodexUI.Close(); return; }
             if (MemoryShards.ReaderOpen) { MemoryShards.CloseReader(); return; }      // 기억 읽기 창도 위 창이 먼저
             if (search != null && search.text.Length > 0) { ClearSearch(); Show(tab); }
@@ -830,11 +831,13 @@ public static class CodexUI
     }
 
     static GameObject rewardsOpen;
+    static RectTransform rewardsWin;        // 1.5.9~ 보상 창 내용 칸 (막의 첫 자식의 첫 자식은 새 UI 에선 룬 그림 · 옛 UI 에선 그림자 판이라 「받았습니다」 글이 창 밖 · 보상 줄 뒤에 그려졌음)
 
     static void OpenRewards()
     {
         if (rewardsOpen != null || openRoot == null) return;
         RectTransform win = UIKit.Modal(openRoot, "CodexRewards", new Vector2(980f, 660f), out rewardsOpen);
+        rewardsWin = win;
         UIKit.EscCancel(rewardsOpen, CloseRewards);
         UIKit.Text(win, "codex.rewards.title", 42f, Gold, new Vector2(0f, 270f), new Vector2(800f, 60f));
         TMP_Text how = UIKit.Text(win, "codex.rewards.how", 20f, Dim, new Vector2(0f, 212f), new Vector2(880f, 56f));
@@ -867,9 +870,9 @@ public static class CodexUI
                 CloseRewards();
                 OpenRewards();
                 RefreshHeader();
-                if (rewardsOpen != null)
+                if (rewardsOpen != null && rewardsWin != null)
                 {
-                    TMP_Text msg = UIKit.Text(rewardsOpen.transform.GetChild(0).GetChild(0), "", 24f, new Color(0.6f, 1f, 0.6f), new Vector2(0f, -298f), new Vector2(900f, 34f));
+                    TMP_Text msg = UIKit.Text(rewardsWin, "", 24f, new Color(0.6f, 1f, 0.6f), new Vector2(0f, -298f), new Vector2(900f, 34f));
                     msg.text = Loc.T("codex.got").Replace("{0}", got);
                 }
             }, 24f);
@@ -889,6 +892,7 @@ public static class CodexUI
     {
         if (rewardsOpen != null) Object.Destroy(rewardsOpen);
         rewardsOpen = null;
+        rewardsWin = null;
     }
 
     // 운명 가지 (예전 액티브 스킬 자리): 트리와 같은 목록

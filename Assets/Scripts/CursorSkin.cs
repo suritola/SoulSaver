@@ -129,7 +129,7 @@ public class CursorSkin : MonoBehaviour
     // 최적화: 씬 이름 글자(매 호출 새 문자열)를 씬이 바뀔 때만 읽음 (1.2.5~ UpdateConfine 도 같이 쓰도록 static)
     static int sceneHandle = -1;
     static bool sceneIsGame;
-    static bool InGameScene()
+    internal static bool InGameScene()      // 1.5.9~ MouseSensitivity 도 씀
     {
         Scene s = SceneManager.GetActiveScene();
         if (s.handle != sceneHandle) { sceneHandle = s.handle; sceneIsGame = s.name == "GameScene"; }

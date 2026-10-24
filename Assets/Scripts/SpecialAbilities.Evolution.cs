@@ -16,7 +16,8 @@ public partial class SpecialAbilities
     static CharacterKit Kit => CharacterKit.Instance;
 
     // ================================================================= 무기 진화
-    public int EvolutionTier { get; private set; }         // 0 = 권총, 1 = 1차, 2 = 2차
+    public int EvolutionTier { get; private set; }         // 0 = 권총, 1 = 1차, 2 = 2차, 3 = 각성
+    int awakenId = -1;          // 1.5.9~ 고른 각성 (HUD 툴팁 · 빌드 보기에 보여 줌, 이어하기는 기록 재생이 EvolveWeapon 을 다시 불러 같이 채움)
 
     public static readonly int[] Tier1Options = { FlameId, SniperId, DualId };
 
@@ -94,15 +95,18 @@ public partial class SpecialAbilities
     // 2차에서 같은 무기를 다시 고른 강화판 이름 (도감)
     public static string MaxedName(int id) => Loc.T(GunAugName(id, true));
 
-    public string EvolutionName(int id, int tier)
+    public string EvolutionName(int id, int tier) => Loc.T(EvolutionKey(id, tier));
+
+    // 1.5.9~ 번역 전 한국어 원문 (EvolutionLog · 기록 csv 용) — 예전엔 번역된 이름을 적어서 언어를 바꾸면 옛 판 진화 이름만 그 판 언어로 남았음
+    public string EvolutionKey(int id, int tier)
     {
-        if (IsAwaken(id)) return Loc.T(AwakenNames[id - AwakenFirst]);
-        if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentName(id));
-        if (id < 0) return Gunner ? Loc.T("기본 권총") : Loc.T(CharacterData.Current.weapon);
+        if (IsAwaken(id)) return AwakenNames[id - AwakenFirst];
+        if (id >= CharacterKit.AugFirst) return CharacterKit.AugmentName(id);
+        if (id < 0) return Gunner ? "기본 권총" : CharacterData.Current.weapon;
         // 무기가 아니라 기본 공격에 붙는 능력 이름 (2차에서 같은 계열이면 극대화 이름)
-        if (IsKit(id)) return Loc.T(CharacterKit.FormAugName(id));
-        if (GunAugName(id, false).Length > 0) return Loc.T(GunAugName(id, tier >= 2 && (id == FlameId || id == SniperId || id == DualId)));
-        return Loc.T(abilities[id].name);
+        if (IsKit(id)) return CharacterKit.FormAugName(id);
+        if (GunAugName(id, false).Length > 0) return GunAugName(id, tier >= 2 && (id == FlameId || id == SniperId || id == DualId));
+        return abilities[id].name;
     }
 
     public string MainWeaponName
@@ -165,8 +169,8 @@ public partial class SpecialAbilities
     // 진화: 지금 무기를 새 무기로 바꿈. 무기 가지(공통 강화)와 필살기 특성은 그대로 이어짐
     public void EvolveWeapon(int id)
     {
-        EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionName(id, EvolutionTier + 1), RunStats.Seconds));
-        if (IsAwaken(id)) { ApplyAwaken(id); EvolutionTier = 3; return; }
+        EvolutionLog.Add(new KeyValuePair<string, float>(EvolutionKey(id, EvolutionTier + 1), RunStats.Seconds));     // 1.5.9~ 원문 키 (보여 줄 때 Loc.T)
+        if (IsAwaken(id)) { awakenId = id; ApplyAwaken(id); EvolutionTier = 3; return; }
         int tier = EvolutionTier + 1;
         // 1.4.1~ 필살기 특성 단계를 새 무기로 복사하지 않음 (예전엔 이전 무기 단계가 새 무기에 공짜로 붙고 이전 무기 단계도 그대로 남았음)
         //   원래 우클릭 · 이전 궁극기는 진화 뒤에도 나가므로 각자의 특성 줄(u.t<무기>.N)에 그대로 남음 — 옮길 것도 사라질 것도 없음
@@ -251,12 +255,12 @@ public partial class SpecialAbilities
 
     float baseAttack = -1f;
     int basePistolMag;
-    float BaseAttack => baseAttack > 0f ? baseAttack : player.damage;
+    float BaseAttack => baseAttack > 0f ? baseAttack : player.damage / appliedDmg;     // 1.5.9~ 패시브 배율(불굴 · 맹세 …)은 빼고
 
     // 트리 전체 (숨김 칸 포함). 칸 위치는 이 목록으로 정해져서, 새 칸이 열려도 배치가 흔들리지 않음
     public List<SoulNode> BuildSoulTree()
     {
-        if (baseAttack < 0f && player != null) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }
+        if (baseAttack < 0f && player != null) { baseAttack = player.damage / appliedDmg; basePistolMag = player.MaxBullet; }     // 1.5.9~ 배율이 걸린 순간이어도 맨 공격력으로
         List<SoulNode> t = new List<SoulNode>();
         PlayerController p = player;
         Sprite atk = StatIcon(0), def = StatIcon(1), spd = StatIcon(2), rel = StatIcon(3), mov = StatIcon(4);
@@ -391,6 +395,14 @@ public partial class SpecialAbilities
         t.Add(Node("g.interest2", "g.interest1", 5, "이자 II", "이자 +5%", 56, LvIcon(1), () => interestRate += 0.05f));
         DecorateTreeIcons(t);                           // 칸마다 전용 그림 · 표식 (1.0.6~)
         ApplyFit(t);                                    // 지금 무기에 쓸모없는 칸은 숨김 (SpecialAbilities.Fit)
+        // 1.5.9~ 영혼의 무게로 막힌 효과의 칸도 숨김 — 5+ 다시 뽑기 없음 · 6+ 최후의 보루 없음 (예전엔 효과 없는 칸을 사야 정련 조건 TreeComplete 를 채웠음)
+        // 무게는 판 안에서 바뀌지 않음 · f.thread 는 운명 가지의 뿌리라 그대로 · ReplayNode 는 hidden 을 보지 않음
+        if (SoulWeight.NoReroll || SoulWeight.NoLastStand)
+            foreach (SoulNode n in t)
+            {
+                if (SoulWeight.NoReroll && (n.key == "g.fate" || n.key == "f.thread2" || n.key == "f.thread3")) n.hidden = true;
+                if (SoulWeight.NoLastStand && n.key == "s.laststand") n.hidden = true;
+            }
         string[] rec = RecommendedPrefixes();
         foreach (SoulNode n in t)
             foreach (string r in rec)
@@ -642,7 +654,8 @@ public partial class SpecialAbilities
 
     // ---------------- 트리 효과를 실제 수치에 반영
     // 공격력: 처음 공격력 기준으로 더함 (상점 강화 · 희생의 계약과 겹쳐도 안전)
-    void AddAttack(float pct) => player.damage += BaseAttack * pct;
+    // 1.5.9~ 지금 걸린 패시브 배율(ApplyDynamic: 불굴 · 함성 · 맹세 · 거리 유지)을 곱해 더함 — 배율이 풀리며 나눌 때 더한 몫이 줄지 않게 (예전엔 a·(1-1/m) 만큼 영구히 사라졌음)
+    void AddAttack(float pct) => player.damage += BaseAttack * pct * appliedDmg;
 
     void AddRate(float mul)
     {
@@ -898,7 +911,7 @@ public partial class SpecialAbilities
     public void GrowAttack(float pct)
     {
         if (player == null) return;
-        if (baseAttack < 0f) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }     // 트리를 아직 안 열었어도 처음 공격력 기준
+        if (baseAttack < 0f) { baseAttack = player.damage / appliedDmg; basePistolMag = player.MaxBullet; }     // 트리를 아직 안 열었어도 처음 공격력 기준
         AddAttack(pct);
     }
 
@@ -914,7 +927,7 @@ public partial class SpecialAbilities
     {
         if (player == null) player = FindFirstObjectByType<PlayerController>();
         if (attack > 0f) { baseAttack = attack; basePistolMag = mag; }
-        else if (baseAttack < 0f && player != null) { baseAttack = player.damage; basePistolMag = player.MaxBullet; }
+        else if (baseAttack < 0f && player != null) { baseAttack = player.damage / appliedDmg; basePistolMag = player.MaxBullet; }
     }
 
     public void GrowRate(float mul)

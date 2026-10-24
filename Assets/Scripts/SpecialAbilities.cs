@@ -95,6 +95,8 @@ public partial class SpecialAbilities : MonoBehaviour
     LineRenderer auraRing;      // 시간 왜곡 범위
     GameObject chargeGlow;      // 저격 충전 빛
     GameObject pactAura;        // 희생의 계약 붉은 기운
+    bool pactOn;                // 1.5.9~ 계약 배율이 걸려 있는지 (곱했다 나누기 — 물약 · 전투 열기와 겹쳐도 남지 않게)
+    float pactUntil;            // 1.5.9~ 계약이 끝나는 시각 (다시 쓰면 늘어남)
     GameObject curseGlow;       // 저주탄 장전 표시
     bool chargeFullPlayed;
     bool flameWasFiring;

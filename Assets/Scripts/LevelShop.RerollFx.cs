@@ -18,6 +18,9 @@ public partial class LevelShop
     IEnumerator RerollFx()
     {
         selectReady = false;
+        // 1.5.9~ 잠금은 시각으로 — selectReady 만 끄면 다음 프레임 UpdateSelectLock 이 바로 풀어 [R] 연타 · 배지 두 번에 다시 뽑기가 2회 빠졌음
+        //   (풀기는 UpdateSelectLock 에 맡김 · 연출이 끊겨도 시각이 지나면 저절로 풀림 · 다음 창은 openLevelShop 이 introEnd 를 새로 씀)
+        introEnd = Mathf.Max(introEnd, Time.unscaledTime + 0.45f);
         Hostile.Play("shimmer", 0.8f, 1.4f);
         Hostile.Play("pop", 0.7f, 1.1f);
         for (int slot = 0; slot < 3; slot++)
@@ -26,7 +29,6 @@ public partial class LevelShop
             if (card != null) StartCoroutine(CardBurst(card, slot * 0.06f));
         }
         yield return new WaitForSecondsRealtime(0.45f);
-        if (IsOpen) selectReady = true;
         rerollFx = null;
     }
 

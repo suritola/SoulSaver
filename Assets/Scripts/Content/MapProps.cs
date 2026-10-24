@@ -43,6 +43,7 @@ public class MapProps : MonoBehaviour
         brokenStage = -1;
         brokenHere = 0;
         sarcoOpened = "";
+        timeStopUntil = 0f;
         new GameObject("MapProps").AddComponent<MapProps>();
     }
 
@@ -451,8 +452,13 @@ public class MapProps : MonoBehaviour
         c.host.StartCoroutine(TimeStop(c.player));
     }
 
+    // 1.5.9~ 마지막으로 주운 시간 정지가 끝나는 시각 — 둘을 잇달아 주우면 앞 것이 끝날 때 뒤 것까지 같이 풀렸음 (시계 그림은 남은 채)
+    //   개수를 세지 않고 시각만 봄: 코루틴이 중간에 끊겨도 남는 값이 없음 (Begin 에서 판마다 0)
+    static float timeStopUntil;
+
     static IEnumerator TimeStop(PlayerController p)
     {
+        timeStopUntil = Time.time + TimeStopSeconds;
         EnermyController.GlobalSpeedMultiplier = TimeStopMul;
         Vector3 at = p.transform.position;
         Color blue = new Color(0.6f, 0.85f, 1f);
@@ -463,7 +469,7 @@ public class MapProps : MonoBehaviour
         Float(at + Vector3.up * 1.5f, Loc.T("drop.timestop.text"), blue, NoticeIcon.Hourglass);
         Hostile.Play("shimmer", 0.9f, 0.5f);
         yield return new WaitForSeconds(TimeStopSeconds);
-        if (Mathf.Approximately(EnermyController.GlobalSpeedMultiplier, TimeStopMul)) EnermyController.GlobalSpeedMultiplier = 1f;     // 그 사이 다른 효과가 바꿨으면 그대로
+        if (Time.time >= timeStopUntil - 0.01f && Mathf.Approximately(EnermyController.GlobalSpeedMultiplier, TimeStopMul)) EnermyController.GlobalSpeedMultiplier = 1f;     // 그 사이 다른 효과가 바꿨으면 그대로
     }
 
     // 정화: 둘레 잡몹을 모두 처치 (중간 보스 · 엘리트 · 황금 고블린 · 부스러기 · 보스는 빼고)

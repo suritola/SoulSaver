@@ -120,7 +120,7 @@ public static class RunRecords
          .Append(" · ").Append(result).Append(" · ").Append(EndlessMode.Clock(RunStats.Seconds))
          .Append(" · Lv ").Append(RunStats.Level).Append(" · ").Append(Loc.T("처치 ")).Append(RunStats.Kills.ToString("N0"));
         string evo = Loc.T("기본 무기");
-        foreach (KeyValuePair<string, float> e in RunStats.Evolutions) evo += " → " + e.Key + " (" + EndlessMode.Clock(e.Value) + ")";
+        foreach (KeyValuePair<string, float> e in RunStats.Evolutions) evo += " → " + Loc.T(e.Key) + " (" + EndlessMode.Clock(e.Value) + ")";
         b.Append('\n').Append(Loc.T("무기 진화")).Append(": ").Append(evo);
         if (RunStats.Cards.Count > 0) b.Append('\n').Append(Loc.T("레벨업 카드")).Append(": ").Append(Plain(string.Join(", ", RunStats.Cards)));
         if (RunStats.Abilities.Count > 0) b.Append('\n').Append(Loc.T("특수 능력")).Append(": ").Append(Plain(string.Join(", ", RunStats.Abilities)));

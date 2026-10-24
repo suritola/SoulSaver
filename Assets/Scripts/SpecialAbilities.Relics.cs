@@ -13,6 +13,7 @@ public partial class SpecialAbilities
     readonly List<int> relics = new List<int>();
     public IReadOnlyList<int> Relics => relics;
     public bool IsRelic(int id) => relics.Contains(id);
+    int relicAimId = -1;        // 1.5.9~ 유물 키로 조준 중인 스킬 (떼면 사용 · aimingSkill 과 같을 때만)
 
     // silent: 이어하기로 되살릴 때 (알림 · 소리 없음)
     public bool EquipRelic(int id, bool silent)
@@ -43,6 +44,19 @@ public partial class SpecialAbilities
     void HandleRelicKey()
     {
         if (relics.Count == 0) return;
+        // 1.5.9~ 조준형(그림자 대시 · 화염 장판)은 스킬 칸처럼 누르고 있는 동안 미리보기 · 떼면 사용 (예전엔 누르는 즉시 나가 착지점 · 범위를 못 봤음)
+        //   떼기를 놓쳐도(창 포커스 등) 키가 안 눌려 있으면 뗀 것으로 봐서 조준이 남지 않음 · 그사이 다른 스킬 키나 일시정지가 조준을 가져갔으면 쓰지 않음
+        if (relicAimId >= 0 && (KeyBindings.Up(GameAction.Relic) || !KeyBindings.Held(GameAction.Relic)))
+        {
+            int a = relicAimId;
+            relicAimId = -1;
+            if (aimingSkill == a)
+            {
+                aimingSkill = -1;
+                if (Time.time >= CooldownUntil(a) && !player.IsSkillUsing) UseSkill(a);
+            }
+            return;
+        }
         // 상점 제단 앞에서는 상호작용 키가 상점 열기 (유물 키를 같은 키로 바꿨을 때)
         if (KeyBindings.Get(GameAction.Relic) == KeyBindings.Get(GameAction.Interact) && ShopStall.PlayerNear) return;
         if (!KeyBindings.Down(GameAction.Relic)) return;
@@ -53,7 +67,12 @@ public partial class SpecialAbilities
         foreach (int id in relics)
         {
             float left = CooldownUntil(id) - Time.time;
-            if (left <= 0f) { UseSkill(id); return; }
+            if (left <= 0f)
+            {
+                if (IsAimedSkill(id)) { aimingSkill = id; relicAimId = id; }     // 1.5.9~ 떼면 사용 (위)
+                else UseSkill(id);
+                return;
+            }
             if (left < soonest) { soonest = left; wait = id; }
         }
         if (wait < 0) return;

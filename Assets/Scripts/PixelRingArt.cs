@@ -21,24 +21,26 @@ public static class PixelRingArt
     static readonly Color Inner = new Color(0.82f, 0.82f, 0.86f, 0.8f);      // 안쪽 가는 테
     static readonly Color Dither = new Color(1f, 1f, 1f, 0.16f);             // 안쪽 가장자리 디더
 
-    class Entry { public Sprite sprite; public int used; }
+    class Entry { public Sprite sprite; public int used; public bool pinned; }       // 1.5.9~ pinned: 한 번 받아 판 내내 쥐는 그림 (지우지 않음)
     static readonly Dictionary<long, Entry> cache = new Dictionary<long, Entry>();
     static int tick;
 
     // 반지름(유닛) · 차오름(0~1, 음수 = 다 찬 모습)으로 고리 그림
     //   plain: 여러 개가 늘 떠 있거나 퍼져 나가는 고리(줍기 범위 · 충격파 등)는 외곽 + 테만 (룬 · 마름모 · 디더 없이 단정하게)
     //   style: 1.5.0~ 영웅 문양 (HeroAimKind 값, 0 = 기본 — 적 · 공용 고리는 지금 그대로)
-    public static Sprite Get(float radius, float charge, bool plain = false, int style = 0)
+    //   pin: 1.5.9~ 한 번만 받아 SpriteRenderer 에 넣고 다시 안 부르는 쪽(플레이어 접촉 고리)은 오래 안 쓴 것으로 보여 먼저 지워져
+    //        그 판 끝까지 고리가 사라졌음 → 고정해 두고 버리지 않음 (판 내내 쓰는 것만 · 고정 키가 쌓이지 않게)
+    public static Sprite Get(float radius, float charge, bool plain = false, int style = 0, bool pin = false)
     {
         int r = Mathf.Clamp(Mathf.RoundToInt(radius * ArtPPU), 2, 256);     // 상한: 그림 한 장 최대 ~530² (거대 반지름이 와도 멈추지 않게)
         if (r > 12) r = (r + 1) & ~1;               // 큰 고리는 반지름 2칸 단위 (퍼지거나 좁혀지는 고리가 프레임마다 새 그림을 덜 만들게 · 어긋남 최대 1칸)
         int step = charge < 0f ? ChargeSteps : Mathf.Clamp(Mathf.FloorToInt(charge * ChargeSteps + 0.0001f), 0, ChargeSteps);
         long key = ((long)style << 40) | ((long)r << 9) | ((long)(plain ? 1 : 0) << 8) | (uint)step;
         tick++;
-        if (cache.TryGetValue(key, out Entry e) && e.sprite != null) { e.used = tick; return e.sprite; }
+        if (cache.TryGetValue(key, out Entry e) && e.sprite != null) { e.used = tick; if (pin) e.pinned = true; return e.sprite; }
         if (cache.Count >= CacheMax) Evict();
         Sprite s = Make(r, step, plain, style);
-        cache[key] = new Entry { sprite = s, used = tick };
+        cache[key] = new Entry { sprite = s, used = tick, pinned = pin };
         return s;
     }
 
@@ -46,7 +48,8 @@ public static class PixelRingArt
     {
         long oldest = 0; int min = int.MaxValue;
         foreach (KeyValuePair<long, Entry> kv in cache)
-            if (kv.Value.used < min) { min = kv.Value.used; oldest = kv.Key; }
+            if (!kv.Value.pinned && kv.Value.used < min) { min = kv.Value.used; oldest = kv.Key; }
+        if (min == int.MaxValue) return;        // 1.5.9~ 모두 고정이면 지우지 않음 (상한을 잠깐 넘김)
         if (cache.TryGetValue(oldest, out Entry e) && e.sprite != null)
         {
             Object.Destroy(e.sprite.texture);

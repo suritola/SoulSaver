@@ -433,6 +433,7 @@ public partial class BossSkills
             Hostile.Circle(at, R, slide + inside, Dev);
             Hostile.Play("possess", 0.9f, 1f);
             Hostile.Play("whoosh", 0.7f, 0.5f);
+            if (boss != null) boss.noContactUntil = Time.time + slide + inside + 0.35f + 0.6f;     // 1.5.9~ 곁으로 스며드는 동안 · 머무는 동안 · 빠져나갈 틈까지 몸통 피해 없음 (UltPossess 와 같게)
             Vector3 from = transform.position;
             for (float t = 0f; t < slide; t += Time.deltaTime)
             {
