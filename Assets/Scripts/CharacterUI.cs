@@ -86,12 +86,38 @@ public static class CharacterUI
         }
     }
 
-    public static Sprite Portrait(CharacterId id)
+    // 그 영웅이 지금 쓰는 그림 시트 이름 (끼운 스킨이 있으면 스킨 시트)
+    static string SheetName(CharacterId id)
     {
         CharacterDef d = CharacterData.Def(id);
         string sheet = d.body ?? "gunner_nogun";
         SkinDef skin = SkinData.Equipped(SkinKind.Character, (int)id);
         if (skin != null && Resources.LoadAll<Sprite>("Characters/" + skin.id).Length > 0) sheet = skin.id;
+        return sheet;
+    }
+
+    // 그래픽 개편 2단계 묶음 3: 메인 메뉴 · 자세히 창의 큰 초상 = 128칸 메뉴 초상 (Resources/Characters/Menu/<시트 이름>, 32칸 그림을 설계도로 다시 그림)
+    //   32칸을 ×16 / ×12 로 키우면 그림 1칸이 메뉴 배경 도트(4 화소)의 4배라 다른 게임처럼 보였음 → 128칸 ×4 / ×3
+    //   그 시트(스킨 포함)의 메뉴 초상이 아직 없으면 예전 32칸 초상 + 경고 한 번 (다른 영웅 · 스킨의 초상을 대신 쓰지 않음)
+    //   VisualRules.Legacy 면 예전 32칸 초상
+    static readonly HashSet<string> menuMissing = new HashSet<string>();
+    public static Sprite MenuPortrait(CharacterId id)
+    {
+        if (VisualRules.Legacy) return Portrait(id);
+        string sheet = SheetName(id);
+        Sprite s = Resources.Load<Sprite>("Characters/Menu/" + sheet);
+        if (s != null) return s;
+        if (menuMissing.Add(sheet)) Debug.LogWarning("[CharacterUI] 메뉴 초상 없음: Characters/Menu/" + sheet + " — 예전 32칸 초상으로");
+        return Portrait(id);
+    }
+
+    // 메뉴 초상(128칸)인지 — 거너 권총 덧그림은 32칸 초상에만 (메뉴 초상은 권총을 그림 안에 그림)
+    public static bool IsMenuPortrait(Sprite s) => s != null && s.rect.width > 64f;
+
+    public static Sprite Portrait(CharacterId id)
+    {
+        CharacterDef d = CharacterData.Def(id);
+        string sheet = SheetName(id);
         Sprite best = null;
         foreach (Sprite s in Resources.LoadAll<Sprite>("Characters/" + sheet))
             if (best == null || string.CompareOrdinal(s.name, best.name) < 0) best = s;
@@ -119,7 +145,9 @@ public static class CharacterUI
         Transform t = b.transform;
 
         // 그림 (잠겼으면 검은 실루엣)
-        RectTransform pr = UIKit.Rect("Portrait", t, new Vector2(0f, 38f), new Vector2(200f, 200f));
+        // 그래픽 개편 2단계: 200 (32칸 × 6.25 — 비정수 배라 도트가 고르지 않았음) → 192 (× 6) · Legacy 면 200
+        float cp = VisualRules.Legacy ? 200f : 192f;
+        RectTransform pr = UIKit.Rect("Portrait", t, new Vector2(0f, 38f), new Vector2(cp, cp));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = Portrait(id);
         img.preserveAspect = true;
@@ -129,7 +157,7 @@ public static class CharacterUI
         if (d.body == null && unlocked)
         {
             // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음)
-            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(48f, -18f), new Vector2(56f, 28f));
+            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(48f, -18f) * (cp / 200f), new Vector2(56f, 28f) * (cp / 200f));
             Image gi = gr.gameObject.AddComponent<Image>();
             gi.sprite = Resources.Load<Sprite>("Weapons/weapon_pistol");
             gi.preserveAspect = true;
@@ -185,15 +213,17 @@ public static class CharacterUI
         dr.offsetMin = dr.offsetMax = Vector2.zero;
         detail.GetComponent<Image>().color = new Color(0.06f, 0.05f, 0.09f, 0.98f);
 
-        RectTransform pr = UIKit.Rect("Portrait", dr, new Vector2(-470f, 60f), new Vector2(360f, 360f));
+        // 그래픽 개편 2단계: 360 (32칸 × 11.25 · 비정수) → 384 (128칸 메뉴 초상 × 3 · 없으면 32칸 × 12) · Legacy 면 360 · 32칸
+        float dp = VisualRules.Legacy ? 360f : 384f;
+        RectTransform pr = UIKit.Rect("Portrait", dr, new Vector2(-470f, 60f), new Vector2(dp, dp));
         Image img = pr.gameObject.AddComponent<Image>();
-        img.sprite = Portrait(id);
+        img.sprite = MenuPortrait(id);
         img.preserveAspect = true;
         if (unlocked) img.color = Color.white;
         else Silhouette(img, 3f);
-        if (d.body == null && unlocked)
+        if (d.body == null && unlocked && !IsMenuPortrait(img.sprite))
         {
-            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(88f, -32f), new Vector2(100f, 50f));
+            RectTransform gr = UIKit.Rect("Gun", pr, new Vector2(88f, -32f) * (dp / 360f), new Vector2(100f, 50f) * (dp / 360f));
             Image gi = gr.gameObject.AddComponent<Image>();
             gi.sprite = Resources.Load<Sprite>("Weapons/weapon_pistol");
             gi.preserveAspect = true;

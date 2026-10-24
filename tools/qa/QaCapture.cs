@@ -1362,7 +1362,8 @@ public class QaCapture
         SceneManager.LoadScene("MainMenu");
         yield return Frames(30);
         object prevOverride = SGet("CharacterData", "Override");
-        var cases = new[] { ("gunner", "Gunner", (string)null), ("rogue_void", "Rogue", "rogue__void") };
+        // 묶음 3 시안 2: 기본 도적 = 128칸 메뉴 초상 (× 4 / × 3) · 거너 · 도적 공허 = 아직 초상이 없어 32칸으로 돌아가는 경우
+        var cases = new[] { ("gunner", "Gunner", (string)null), ("rogue", "Rogue", (string)null), ("rogue_void", "Rogue", "rogue__void") };
         try
         {
             foreach (var (tag, hero, skin) in cases)
@@ -1372,10 +1373,11 @@ public class QaCapture
                 object kindChar = Enm("SkinKind", "Character");
                 string eqKey = null, prevEq = null;
                 int prevOwn = 0;
+                eqKey = (string)SCall("SkinData", "EquipKey", kindChar, who);
+                prevEq = (string)SCall("Prefs", "GetString", eqKey, "");
+                if (skin == null) SCall("Prefs", "SetString", eqKey, "");     // 기본 모습 경우는 끼운 스킨을 잠시 뺌 (QA 복사본 저장값에 스킨이 남아 있었음)
                 if (skin != null)
                 {
-                    eqKey = (string)SCall("SkinData", "EquipKey", kindChar, who);
-                    prevEq = (string)SCall("Prefs", "GetString", eqKey, "");
                     prevOwn = Convert.ToInt32(SCall("Prefs", "GetInt", "skin.own." + skin, 0));
                     SCall("Prefs", "SetInt", "skin.own." + skin, 1);
                     object def = SCall("SkinData", "Get", skin);
@@ -1395,11 +1397,8 @@ public class QaCapture
                 }
                 finally
                 {
-                    if (skin != null)
-                    {
-                        SCall("Prefs", "SetString", eqKey, prevEq ?? "");
-                        SCall("Prefs", "SetInt", "skin.own." + skin, prevOwn);
-                    }
+                    SCall("Prefs", "SetString", eqKey, prevEq ?? "");
+                    if (skin != null) SCall("Prefs", "SetInt", "skin.own." + skin, prevOwn);
                 }
             }
         }

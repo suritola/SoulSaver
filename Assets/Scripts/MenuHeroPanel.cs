@@ -13,7 +13,7 @@ public static class MenuHeroPanel
 {
     static RectTransform panel;
     const float W = 440f;
-    public static float PortraitV2 = 512f;        // UI 개편: 영웅 그림 크기 (32 × 16 · 화면이 좁으면 메인 배치가 384 로)
+    public static float PortraitV2 = 512f;        // UI 개편: 영웅 그림 크기 (32 × 16 · 화면이 좁으면 메인 배치가 384 로) · 2단계: 128칸 메뉴 초상이면 × 4 / × 3
     static Transform rootRef;
 
     static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
@@ -72,13 +72,18 @@ public static class MenuHeroPanel
         // 1.4.8~ 위에서부터: 「지금 영웅」 · 초상 · 이름 · 칭호 · 숙련 · 「영웅 바꾸기」 (높이 430 · 위아래 여백 24)
         float top = panel.sizeDelta.y * 0.5f - 24f, bottom = -panel.sizeDelta.y * 0.5f + 24f;
         // 1.4.8~ 사용자 「너무 많다」: 「지금 영웅」 · 칭호 · 숙련 줄을 빼고 초상 · 이름 · 「영웅 바꾸기」만 (칭호 · 숙련은 이름에 마우스를 올리면)
+        // 그래픽 개편 2단계 묶음 3: UI 개편이면 128칸 메뉴 초상 (1080p 에서 화면 × 4 = 메뉴 배경 도트 4 화소와 같은 밀도 — HiresSize)
+        //   그 영웅 · 스킨의 메뉴 초상이 아직 없거나 VisualRules.Legacy 면 예전 32칸 (× 16 / × 12)
+        Sprite face = UiRules.Legacy ? CharacterUI.Portrait(id) : CharacterUI.MenuPortrait(id);
+        bool hires = CharacterUI.IsMenuPortrait(face);
         float P = UiRules.Legacy ? 420f : PortraitV2;          // 1.4.8~ 도트 그림 둘레 여백이 커서 실제 몸이 작게 보였음 → 칸을 키움 · UI 개편: 32px × 16 정수 배 (가운데 무대에 서서 더 크게 — 캡처 확인)
+        if (hires) P = HiresSize(face.rect.width);
         RectTransform pr = UIKit.Rect("Portrait", panel, new Vector2(0f, top - P * 0.5f), new Vector2(P, P));
         Image img = pr.gameObject.AddComponent<Image>();
-        img.sprite = CharacterUI.Portrait(id);
+        img.sprite = face;
         img.preserveAspect = true;
         img.raycastTarget = false;
-        if (d.body == null)
+        if (d.body == null && !hires)       // 메뉴 초상은 권총을 그림 안에 그림 (덧그림 권총은 10.3 화소/칸 — 세 번째 밀도였음)
         {
             // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음 · 캐릭터 창과 같게) — 1.4.8~ 초상 크기(320 → 190)에 비례
             float k = P / 320f;
@@ -102,6 +107,23 @@ public static class MenuHeroPanel
         change.name = "ChangeHeroButton";
         if (!UiRules.Legacy) { UiV2.Restyle(change, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(change, "result.retry.hero"); }      // UI 개편 P0-4b: 석판 보조 버튼 · P0-6 「영웅 변경」 (결과 화면과 같은 이름)
         else MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
+    }
+
+    // 메뉴 초상 칸 크기 (캔버스 단위) — 그림 1칸 = 메뉴 배경 도트 1칸과 같은 화면 화소 (정수)
+    //   메뉴 배경 menu_bg 는 480×270 도트를 화면 전체에 늘려 깖 (MainMenu 씬 · UI 크기 설정과 무관) → 도트 1칸 = 화면 높이 ÷ 270 (1080p = 4)
+    //   그래서 배수 = round(화면 높이 ÷ 270) (1080p ×4 · 900p ×3 · 1440p ×5 · 2160p ×8), 칸 = 128 × 배수 ÷ 캔버스 배율
+    //   캔버스 배율이 1 이 아닐 때 (UI 크기 80~120% · 1080p 가 아닌 해상도): 캔버스 단위 크기를 배율로 나눠 화면에서 정확히 배수가 되게 —
+    //     예) UI 80% · 1080p: 배율 0.8 → 칸 640 (화면 512 = ×4). 캔버스 단위로만 512 를 두면 화면 ×3.2 (도트 굵기 들쭉날쭉 · 배경의 0.8배) 였음
+    //   영웅은 메뉴 배경(무대) 위에 선 그림이라 UI 크기를 따르지 않고 배경 도트를 따름 — 이름 · 버튼은 칸 아래로 밀림 (QA menu_hero 로 겹침 확인)
+    const float MenuBgRows = 270f;
+    static float HiresSize(float px)
+    {
+        Canvas cv = panel != null ? panel.GetComponentInParent<Canvas>() : null;
+        float sf = cv != null && cv.rootCanvas.scaleFactor > 0.01f ? cv.rootCanvas.scaleFactor : 1f;
+        // 화면 높이 = 캔버스가 실제로 그리는 높이 (캔버스 높이 × 배율 — 배경도 이 캔버스를 채움 · 창 크기 · QA 의 화면 크기 바꾸기와 같음)
+        float screenH = cv != null ? ((RectTransform)cv.rootCanvas.transform).rect.height * sf : Screen.height;
+        float m = Mathf.Max(1f, Mathf.Round(screenH / MenuBgRows));
+        return px * m / sf;
     }
 
     // 스킨 상점이 닫힌 다음 프레임에 (닫는 중에는 끼운 스킨이 아직 저장 중일 수 있음)

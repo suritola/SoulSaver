@@ -16,7 +16,9 @@
   --glow     발광 칸 목록 JSON [[x, y], ...] (칸 안 좌표 · 위가 y=0) — 2 · 3 항목에서 뺌
   --dots     의도한 1칸 점(눈 · 반짝) 목록 JSON — 8 항목에서 뺌
   --scale/--ppu/--ortho   1 항목(1080p 화소/칸) = 배율 ÷ PPU × 1080 ÷ (2 × ortho). PPU 를 안 주면 그림 옆 .meta 에서 읽음
-  --ui       UI 칸 크기(초상) — 칸 ÷ 그림 화소가 정수인지
+  --ui       UI 칸 크기(초상) — 칸 ÷ 그림 화소 × --ui-scale(캔버스 배율, 기본 1) = 화면 배율이 정수인지
+  --bg-mul   배경 도트 1칸의 화면 화소 (메인 메뉴 배경 = 1080p 에서 4 · 초상은 기본 4) — 화면 배율이 이것과 같아야 통과
+  --design 에 여러 칸 시트를 주면 (가로 > 세로 · --design-cell 없음) 맨 왼쪽 정사각 칸을 설계도로 자름
 끝 코드: 0 = 모두 통과 · 1 = 하나라도 실패 · 2 = 사용 오류
 필요: numpy · Pillow · scipy (py -3.14 에 있음)
 """
@@ -52,6 +54,7 @@ SINGLE_MAX = 1.0           # 8 1칸 섬 (불투명 칸의 %)
 BIGGEST_MUL = 0.8          # 9 가장 큰 한 색 덩어리 몫 ≤ 설계도 × 0.8
 UP = (0.15, 0.65)          # 10 위 광원
 PILLOW_FLOOR = 0.40        # 12 베개 ≤ max(0.40, 설계도 + 0.05)
+BODY_Y_TOL = 15            # 13 설계도가 있으면 몸 평균 Y = 설계도 ± 15
 
 NAMES = {1: "1080p 화소/칸", 2: "가장자리 Y<41", 3: "가장자리 한 색 몫", 4: "외곽 두께", 5: "색 수", 6: "반투명 칸",
          7: "덩어리/100칸", 8: "1칸 섬(8-연결)", 9: "가장 큰 한 색 덩어리", 10: "위 광원", 11: "왼 광원", 12: "베개 지수",
@@ -141,14 +144,14 @@ def measure(im, glow=None, dots=None):
     body = inner & ~edge
     return dict(
         opaque=op, edge_dark=edge_dark, edge_one=edge_one, thick=thick, colors=int(len(np.unique(key[a]))), semi=semi,
-        per100=len(sizes) / op * 100, single=singles / op * 100, biggest=float(sizes.max()) / op,
+        per100=len(sizes) / op * 100, per100_3=int((sizes >= 3).sum()) / op * 100, single=singles / op * 100, biggest=float(sizes.max()) / op,
         up=lu / wsum if wsum else 0.0, left=ll / wsum if wsum else 0.0, pillow=pil / wsum if wsum else 0.0,
         body_y=float(Y[body].mean()) if body.any() else float(Y[a].mean()),
         bbox=(int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1), size=(W, H))
 
 
 # ================================================================= 판정
-def judge(m, kind="boss", design=None, k=None, density=None, ui=None):
+def judge(m, kind="boss", design=None, k=None, density=None, ui=None, ui_scale=1.0, bg_mul=None):
     """[(번호, 이름, 통과 True/False/None, 값 글, 기준 글)]"""
     K = KINDS[kind]
     hi_res = k is not None and k >= 2
@@ -161,8 +164,11 @@ def judge(m, kind="boss", design=None, k=None, density=None, ui=None):
         lo, hi = K["density"]
         add(1, lo <= density <= hi, f"{density:.2f}", f"{lo}~{hi}")
     elif ui is not None:
-        r = ui / m["size"][0]
-        add(1, abs(r - round(r)) < 1e-6, f"{ui}÷{m['size'][0]} = ×{r:.3f}", "정수 배")
+        # 화면 배율 = 칸 ÷ 그림 화소 × 캔버스 배율 — 정수여야 하고, 배경 도트 배율이 있으면 그것과 같아야 (밀도 섞임 방지)
+        r = ui / m["size"][0] * ui_scale
+        ok = abs(r - round(r)) < 1e-6 and (bg_mul is None or abs(r - bg_mul) < 1e-6)
+        add(1, ok, f"{ui}÷{m['size'][0]}" + (f"×{ui_scale:g}" if ui_scale != 1.0 else "") + f" = 화면 ×{r:.3f}",
+            "정수 배" + (f" · 배경 도트 ×{bg_mul:g} 와 같음" if bg_mul is not None else ""))
     else:
         add(1, None, "—", "배율 · PPU (또는 --ui) 를 주면 잼")
     add(2, m["edge_dark"] >= EDGE_DARK_MIN, f"{m['edge_dark'] * 100:.1f}%", f"≥ {EDGE_DARK_MIN * 100:.0f}% (발광 칸 제외)")
@@ -172,8 +178,10 @@ def judge(m, kind="boss", design=None, k=None, density=None, ui=None):
     add(5, m["colors"] <= K["colors"], f"{m['colors']}", f"≤ {K['colors']}")
     add(6, m["semi"] == 0, f"{m['semi']}", "0")
     if design is not None and k:
-        lo7, hi7 = design["per100"] / k, design["per100"]
-        add(7, lo7 - 1e-9 <= m["per100"] <= hi7 + 1e-9, f"{m['per100']:.1f}", f"{lo7:.1f}~{hi7:.1f} (설계도 ÷ k ~ 설계도)")
+        # 하한은 3칸 이상 덩어리만 셈 (1~2칸 잔점으로 디테일 수를 채우는 것 방지) · 상한(잡음)은 모든 덩어리
+        lo7, hi7 = design["per100_3"] / k, design["per100"]
+        add(7, m["per100_3"] >= lo7 - 1e-9 and m["per100"] <= hi7 + 1e-9, f"3칸↑ {m['per100_3']:.1f} · 전체 {m['per100']:.1f}",
+            f"3칸↑ ≥ {lo7:.1f} (설계도 3칸↑ ÷ k) · 전체 ≤ {hi7:.1f} (설계도)")
     else:
         add(7, None, f"{m['per100']:.1f}", "설계도가 있어야 잼")
     if hi_res:
@@ -190,7 +198,11 @@ def judge(m, kind="boss", design=None, k=None, density=None, ui=None):
     add(11, lo <= m["left"] <= hi, f"{m['left']:+.2f}", f"{lo:+.2f}~{hi:+.2f}")
     lim = max(PILLOW_FLOOR, design["pillow"] + 0.05) if design is not None else PILLOW_FLOOR
     add(12, m["pillow"] <= lim + 1e-9, f"{m['pillow']:.2f}", f"≤ {lim:.2f}")
-    if K["body_y"]:
+    if K["body_y"] and design is not None and hi_res:
+        # 설계도가 있으면 설계도 몸 밝기 ± 15 (어두운 옷 캐릭터를 밝게 만들라고 강요하지 않음 — 도적 시안 1회차 판정)
+        lo, hi = design["body_y"] - BODY_Y_TOL, design["body_y"] + BODY_Y_TOL
+        add(13, lo <= m["body_y"] <= hi, f"{m['body_y']:.1f}", f"{lo:.0f}~{hi:.0f} (설계도 {design['body_y']:.0f} ± {BODY_Y_TOL})")
+    elif K["body_y"]:
         lo, hi = K["body_y"]
         add(13, lo <= m["body_y"] <= hi, f"{m['body_y']:.1f}", f"{lo}~{hi}")
     else:
@@ -300,8 +312,9 @@ def thin_outline(X):
     return X
 
 
+# 고해상도로 바꾼 보스는 32칸 원본이 설계도 파일에만 남음 (tools/pixelart/hires/bosses/blueprints/<보스>_32.png 첫 칸 = 살아 있는 그림)
 CAL_SRC = [("리치 왕", "Assets/Sprites/enemy/boss.png", 3.75, "boss"), ("지옥의 군주", "Assets/Sprites/enemy/hell/hell_lord.png", 4.5, "boss"),
-           ("킹 슬라임", "Assets/Sprites/enemy/meadow/meadow_slimeking.png", 5.06, "boss"), ("개발자", "Assets/Resources/Abyss/developer_0.png", 3.8, "boss"),
+           ("킹 슬라임", "tools/pixelart/hires/bosses/blueprints/slimeking_32.png", 5.06, "boss"), ("개발자", "Assets/Resources/Abyss/developer_0.png", 3.8, "boss"),
            ("거너", "Assets/Resources/Characters/gunner_nogun.png", 4.0, "portrait")]
 
 
@@ -320,7 +333,7 @@ def hand_set():
             items.append(("잡몹", os.path.basename(f)[:-4], f, "sprite"))
     for n in ["wisp_0", "chainwraith_0", "voideye_0", "reaper_0", "colossus_0"]:
         items.append(("심연잡몹", n, os.path.join(A, "Resources/Abyss/%s.png" % n), "sprite"))
-    for n, p in [("boss", "Sprites/enemy/boss.png"), ("hell_lord", "Sprites/enemy/hell/hell_lord.png"), ("meadow_slimeking", "Sprites/enemy/meadow/meadow_slimeking.png"),
+    for n, p in [("boss", "Sprites/enemy/boss.png"), ("hell_lord", "Sprites/enemy/hell/hell_lord.png"), ("meadow_slimeking", "../tools/pixelart/hires/bosses/blueprints/slimeking_32.png"),
                  ("mirrorlord_0", "Resources/Abyss/mirrorlord_0.png"), ("developer_0", "Resources/Abyss/developer_0.png")]:
         items.append(("보스", n, os.path.join(A, p), "boss"))
     return [(g, n, p, k) for g, n, p, k in items if os.path.exists(p)]
@@ -411,7 +424,7 @@ def calibrate():
 
 def fmt_val(no, m):
     v = {2: f"{m['edge_dark'] * 100:.0f}%", 3: f"{m['edge_one'] * 100:.0f}%", 4: f"{m['thick'] * 100:.0f}%", 5: f"{m['colors']}색", 6: f"{m['semi']}",
-         7: f"{m['per100']:.1f}", 8: f"{m['single']:.1f}%", 9: f"{m['biggest']:.2f}", 10: f"{m['up']:+.2f}", 11: f"{m['left']:+.2f}",
+         7: f"{m['per100_3']:.1f}", 8: f"{m['single']:.1f}%", 9: f"{m['biggest']:.2f}", 10: f"{m['up']:+.2f}", 11: f"{m['left']:+.2f}",
          12: f"{m['pillow']:.2f}", 13: f"{m['body_y']:.0f}", 14: "상자"}
     return v.get(no, "")
 
@@ -434,6 +447,8 @@ def main():
     ap.add_argument("--ppu", type=float)
     ap.add_argument("--ortho", type=float, default=ORTHO)
     ap.add_argument("--ui", type=float)
+    ap.add_argument("--ui-scale", type=float, default=1.0)
+    ap.add_argument("--bg-mul", type=float)
     ap.add_argument("--out")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
@@ -460,10 +475,13 @@ def main():
         k = a.k
         if a.design:
             dim = load(a.design, dcell, fi if dcell else 0)
+            if dcell is None and dim.shape[1] > dim.shape[0]:
+                dim = dim[:, :dim.shape[0]]          # 시트를 주면 맨 왼쪽 정사각 칸 (k 를 시트 폭으로 잘못 잡던 것)
             dm = measure(dim)
             if k is None:
                 k = im.shape[1] / dim.shape[1]
-        rows = judge(m, a.kind, dm, k, density, a.ui)
+        bg_mul = a.bg_mul if a.bg_mul is not None else (4.0 if (a.kind == "portrait" and a.ui) else None)
+        rows = judge(m, a.kind, dm, k, density, a.ui, a.ui_scale, bg_mul)
         nfail += sum(1 for r in rows if r[2] is False)
         title = f"{os.path.basename(a.image)}" + (f" 칸 {fi}" if cell else "") + f" ({a.kind}" + (f" · k {k:.2f}" if k else "") + ")"
         texts.append(report(title, rows))
