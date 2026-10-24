@@ -533,7 +533,8 @@ public partial class BossSkills
     GameObject ownTag;
     SpriteRenderer ownAura;
 
-    float OwnHeadY => sr != null ? sr.bounds.extents.y + 1f : 3f;
+    // 1.6.0~ 보스 몸 틀은 EnemyHitbox 고정 표 (그림을 바꿔도 글자 · 후광 자리 그대로)
+    float OwnHeadY => sr != null ? EnemyHitbox.FrameOf(sr).extents.y + 1f : 3f;
 
     void ShowOwnTag(OwnAtk a)
     {
@@ -551,14 +552,14 @@ public partial class BossSkills
 
     void ShowOwnAura(Color c)
     {
-        ownAura = OwnIcon(Hostile.Glow, transform.position, sr != null ? sr.bounds.size.x * 1.2f : 6f, new Color(c.r, c.g, c.b, 0.35f), 2);
+        ownAura = OwnIcon(Hostile.Glow, transform.position, sr != null ? EnemyHitbox.FrameOf(sr).size.x * 1.2f : 6f, new Color(c.r, c.g, c.b, 0.35f), 2);
     }
 
     // 공격 루프가 매 프레임 부름: 후광이 보스 발밑을 따라가며 맥동
     void TickAura()
     {
         if (ownAura == null || !ownAura.gameObject.activeSelf) return;
-        Vector3 at = transform.position + Vector3.down * (sr != null ? sr.bounds.extents.y * 0.6f : 1f);
+        Vector3 at = transform.position + Vector3.down * (sr != null ? EnemyHitbox.FrameOf(sr).extents.y * 0.6f : 1f);
         ownAura.transform.position = at;
         Color c = ownAura.color;
         c.a = 0.25f + 0.15f * Mathf.Sin(Time.time * 8f);

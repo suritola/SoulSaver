@@ -473,8 +473,8 @@ public sealed class AlchemistPaths : HeroPaths
             if (aideFlasks == 0)
             {
                 Paths.Circle(q, 2.4f, dmg * 0.6f, 2f, "폭탄 조수");
-                Fx.Spawn("fx_alchemyblast", q, 5.6f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f);
-                Fx.Spawn("fx_shock", q, 5f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
+                Fx.Spawn("fx_alchemyblast", q, 5.6f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 16f);
+                Fx.Spawn("fx_shock", q, 5f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.8f), new Color(0.5f, 1f, 0.92f, 0.8f)), 20f);
                 Hostile.Play("boom", 0.45f, 1.25f);
             }
         }

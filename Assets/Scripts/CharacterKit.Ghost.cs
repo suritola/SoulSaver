@@ -454,7 +454,7 @@ public partial class CharacterKit
         if (possessHostRing == null) { possessHostRing = Hostile.NewLine("PossessHost", Color.white, 0.14f, 25); possessHostRing.loop = true; }
         possessHostRing.enabled = true;
         Hostile.SetArc(possessHostRing, host.position, possessHostR, 0f, 360f);
-        Color col = exposed ? new Color(1f, 0.35f, 0.3f) : HeroAim.ColorOf(HeroAimKind.Ghost);
+        Color col = exposed ? VisualRules.Kit(new Color(1f, 0.35f, 0.3f), new Color(1f, 0.77f, 0.3f)) : HeroAim.ColorOf(HeroAimKind.Ghost);
         possessHostRing.startColor = possessHostRing.endColor = new Color(col.r, col.g, col.b, 0.9f);
         possessHostRing.startWidth = possessHostRing.endWidth = 0.14f;
         PixelStrokeMin.SetCharge(possessHostRing, Mathf.Clamp01(left));

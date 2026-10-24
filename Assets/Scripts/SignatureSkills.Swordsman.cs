@@ -248,9 +248,9 @@ public partial class SignatureSkills
                 Vector3 p = transform.position;
                 using var tier = Fx.Tier(3);
                 Circle(p, 4.5f, Atk * 2.5f, 2.5f);      // 1.1.2~ 200 → 250%
-                Fx.Spawn("fx_shock", p, 15f, Blood, 20f);
+                Fx.Spawn("fx_shock", p, 15f, VisualRules.Kit(Blood, new Color(0.3f, 0.56f, 1f)), 20f);
                 Fx.Spawn("fx_bleed", p, 7f, Color.white, 16f);
-                Flair(null, p, 6f, Blood);
+                Flair(null, p, 6f, VisualRules.Kit(Blood, new Color(0.3f, 0.56f, 1f)));
                 Hostile.Play("boom", 0.5f, 1.3f);
             }
         }
@@ -287,7 +287,7 @@ public partial class SignatureSkills
         // 혈갑 보호막이 있으면 몸에 붉은 빛
         bool show = shield > 0.5f;
         if (show && shieldGlow == null && SpecialAbilities.GlowSprite != null)
-            shieldGlow = SpecialAbilities.MakeSprite("BloodGuard", SpecialAbilities.GlowSprite, transform.position, 0.3f, new Color(1f, 0.25f, 0.3f, 0.35f), "Effect", 1);
+            shieldGlow = SpecialAbilities.MakeSprite("BloodGuard", SpecialAbilities.GlowSprite, transform.position, 0.3f, VisualRules.Kit(new Color(1f, 0.25f, 0.3f, 0.35f), new Color(0.25f, 0.53f, 1f, 0.35f)), "Effect", 1);
         if (!show && shieldGlow != null) Destroy(shieldGlow);
         if (shieldGlow != null)
         {

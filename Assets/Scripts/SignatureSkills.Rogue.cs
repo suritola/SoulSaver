@@ -68,10 +68,10 @@ public partial class SignatureSkills
                     shotAt = zone.age + 0.3f;
                     Vector3 at = Vector3.Lerp(zone.a, zone.b, Random.value);
                     List<Transform> near = Nearest(at, 10f, 1);
-                    if (near.Count > 0) Shot(at, ((Vector2)(near[0].position - at)).normalized, Atk * 0.8f, 1, 30f, 12f, "fx_shuriken", 0.9f, Vivid(new Color(0.75f, 0.45f, 1f)), true);
+                    if (near.Count > 0) Shot(at, ((Vector2)(near[0].position - at)).normalized, Atk * 0.8f, 1, 30f, 12f, "fx_shuriken", 0.9f, Vivid(VisualRules.Kit(new Color(0.75f, 0.45f, 1f), new Color(0.83f, 1f, 0.45f))), true);
                 }
             };
-            LineRenderer lr = Hostile.NewLine("BladePath", Big("r.path") ? new Color(1f, 0.75f, 1f, 0.85f) : new Color(0.75f, 0.45f, 1f, 0.6f), 0.5f * Fs("r.path"), 3);
+            LineRenderer lr = Hostile.NewLine("BladePath", Big("r.path") ? VisualRules.Kit(new Color(1f, 0.75f, 1f, 0.85f), new Color(0.92f, 1f, 0.75f, 0.85f)) : VisualRules.Kit(new Color(0.75f, 0.45f, 1f, 0.6f), new Color(0.83f, 1f, 0.45f, 0.6f)), 0.5f * Fs("r.path"), 3);
             lr.positionCount = 2;
             lr.SetPosition(0, from);
             lr.SetPosition(1, to);
@@ -94,7 +94,7 @@ public partial class SignatureSkills
         foreach (Collider2D c in cut)
         {
             if (c == null) continue;
-            if (prev != null) Fx.Beam(prev.transform.position, c.transform.position, 0.25f * Fs("r.knot"), new Color(0.55f, 0.3f, 0.9f, 0.8f), 0.6f, 12);
+            if (prev != null) Fx.Beam(prev.transform.position, c.transform.position, 0.25f * Fs("r.knot"), VisualRules.Kit(new Color(0.55f, 0.3f, 0.9f, 0.8f), new Color(0.71f, 0.9f, 0.3f, 0.8f)), 0.6f, 12);
             prev = c;
         }
     }
@@ -179,8 +179,8 @@ public partial class SignatureSkills
                     Deal(target, burst, Vector3.zero, 0f);
                     if (E("re.sea")) { Circle(p, 3f, 0f, 0.5f, c => { if (c.gameObject != target) Deal(c.gameObject, burst, Vector3.zero, 0.5f); }); Heal(3f); }   // 1.4.2~ 피바다: 터진 적 자신은 빼고 둘레만 (보스가 두 번 맞던 문제)
                     Fx.Spawn("fx_bleed", p, 3.4f * Fs("r.burst"), Color.white, 16f);
-                    Fx.Spawn("fx_shock", p, 4f * Fs("r.burst"), Blood, 22f);
-                    Flair("r.burst", p, 3f, Blood);
+                    Fx.Spawn("fx_shock", p, 4f * Fs("r.burst"), VisualRules.Kit(Blood, new Color(0.78f, 1f, 0.3f)), 22f);
+                    Flair("r.burst", p, 3f, VisualRules.Kit(Blood, new Color(0.78f, 1f, 0.3f)));
                     Hostile.Play("crack", 0.5f, 0.9f);
                 }
             }

@@ -109,7 +109,7 @@ public sealed partial class GunnerPaths : HeroPaths
     static readonly Color SnipeColor = new Color(0.55f, 0.9f, 1f);
     static readonly Color BounceColor = new Color(1f, 0.9f, 0.4f);
     static readonly Color FireColor = new Color(1f, 0.55f, 0.2f);
-    static readonly Color SlugColor = new Color(1f, 0.45f, 0.3f);
+    static Color SlugColor => VisualRules.Kit(new Color(1f, 0.45f, 0.3f), new Color(1f, 0.65f, 0.3f));     // 2단계 키트 색: 주홍 → 거너 금 쪽 30° (튕김탄 금색과 구분)
     internal static readonly Color TurretColor = new Color(0.55f, 1f, 0.55f);
 
     // 이번 판이 거너 갈래 규칙이면 효과 인스턴스 (아니면 null → 부르는 쪽은 예전 그대로)

@@ -19,6 +19,29 @@ public partial class BossSkills
     static Sprite GlowSprite => Hostile.Glow;
     static Sprite SwirlSprite => SpecialAbilities.SwirlSprite != null ? SpecialAbilities.SwirlSprite : Hostile.Glow;
 
+    // 2단계 묶음 6~ 리치 왕 의식의 부술 것 (영혼구 · 저주 묘비 · 영혼 등불): 쌍선형 빛 덩어리 → 「부술 수 있는 물건」으로 읽히는 도트 그림
+    //   Resources/Bosses/ritual_* (PPU 6 — 그림 1칸 = 월드 1/6칸), BossPart 가 곱하는 보스 색은 불투명으로 (반투명 금지)
+    //   판정(worldRadius)은 그대로, 그림이 없거나 VisualRules.Legacy 면 예전 빛 덩어리 · 배율 · 색
+    static readonly Dictionary<string, Sprite> ritualArt = new Dictionary<string, Sprite>();
+    static Sprite RitualArt(string name)
+    {
+        if (VisualRules.Legacy) return null;
+        if (!ritualArt.TryGetValue(name, out Sprite s))
+        {
+            s = Resources.Load<Sprite>("Bosses/" + name);
+            if (s == null) Debug.LogWarning("[BossSkills] 의식 물건 그림 없음: Resources/Bosses/" + name + " — 예전 빛 덩어리로");
+            ritualArt[name] = s;
+        }
+        return s;
+    }
+    // 의식 물건 만들기: 새 그림이면 배율 = 원하는 월드 높이 ÷ 그림 높이 · 색 불투명, 아니면 예전 그림 · 배율 · 색
+    static BossPart RitualPart(string name, string art, float worldHeight, Sprite legacySprite, float legacyScale, Vector3 at, Color color, float hp, float worldRadius)
+    {
+        Sprite s = RitualArt(art);
+        if (s == null) return BossPart.Make(name, legacySprite, at, legacyScale, color, hp, worldRadius);
+        return BossPart.Make(name, s, at, worldHeight / Mathf.Max(0.01f, s.bounds.size.y), new Color(color.r, color.g, color.b, 1f), hp, worldRadius);
+    }
+
     static void Banner(string ko)
     {
         Notice.Big(Loc.T(ko), NoticeIcon.Boss, 2.2f, NoticeLevel.Urgent);
@@ -157,7 +180,7 @@ public partial class BossSkills
         {
             float a = (off + i * 360f / n) * Mathf.Deg2Rad;
             Vector3 at = transform.position + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 2.2f;
-            BossPart orb = Own(BossPart.Make("SoulOrb", GlowSprite, at, 0.5f, Soul, PartHp(0.015f), 0.7f));
+            BossPart orb = Own(RitualPart("SoulOrb", "ritual_orb", 2f, GlowSprite, 0.5f, at, Soul, PartHp(0.015f), 0.7f));
             StartCoroutine(OrbChase(orb));
         }
         Hostile.Play("chime", 0.6f, 0.8f);
@@ -244,9 +267,13 @@ public partial class BossSkills
         for (int i = 0; i < n && Alive; i++)
         {
             Vector3 at = Hostile.ClampArena(p.transform.position + (Vector3)(Random.insideUnitCircle.normalized * Random.Range(4f, 7f)));
-            BossPart tomb = Own(BossPart.Make("CursedTomb", GlowSprite, at, 0.9f, Curse, PartHp(0.03f), 0.9f));
-            FxAnim rune = Fx.Play("fx_rune", at, 2.6f, new Color(0.75f, 0.4f, 1f, 0.8f), 1f, 0f, 11, true, 14f);
-            if (rune != null) { rune.spin = 60f; rune.transform.SetParent(tomb.transform, true); }
+            BossPart tomb = Own(RitualPart("CursedTomb", "ritual_tomb", 3f, GlowSprite, 0.9f, at, Curse, PartHp(0.03f), 0.9f));
+            // 묘비 밑 도는 룬은 Legacy 전용 (1단계 「적 쪽 도는 룬 없음」 — 묘비 그림이 저주 문양을 직접 가짐)
+            if (VisualRules.Legacy)
+            {
+                FxAnim rune = Fx.Play("fx_rune", at, 2.6f, new Color(0.75f, 0.4f, 1f, 0.8f), 1f, 0f, 11, true, 14f);
+                if (rune != null) { rune.spin = 60f; rune.transform.SetParent(tomb.transform, true); }
+            }
             tombs.Add(tomb);
             Fx.Spawn("fx_spike", at + Vector3.up * 0.5f, 2.4f, Curse, 18f);
             StartCoroutine(TombPulse(tomb));
@@ -334,7 +361,7 @@ public partial class BossSkills
         {
             float a = (a0 + i * 120f) * Mathf.Deg2Rad;
             Vector3 at = Hostile.ClampArena(home + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * 7f);
-            lanterns.Add(Own(BossPart.Make("SoulLantern", SwirlSprite, at, 0.6f, i % 2 == 0 ? Soul : Curse, PartHp(0.05f), 0.9f)));
+            lanterns.Add(Own(RitualPart("SoulLantern", "ritual_lantern", 3f, SwirlSprite, 0.6f, at, i % 2 == 0 ? Soul : Curse, PartHp(0.05f), 0.9f)));
             tethers.Add(Own(Hostile.NewLine("LanternTether", new Color(0.7f, 0.6f, 1f, 0.5f), 0.12f, 3)));
             Fx.Spawn("fx_soulburst", at, 3f, Soul, 18f);
         }

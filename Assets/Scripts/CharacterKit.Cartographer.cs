@@ -344,7 +344,7 @@ public partial class CharacterKit
         foreach (Transform t in targets)
         {
             Vector2 d = ((Vector2)(t.position - from)).normalized;
-            Projectile(from, d, Damage * 1.2f, 1, 30f, 14f, "fx_markbolt", 0.6f, new Color(1f, 0.4f, 0.35f), false);
+            Projectile(from, d, Damage * 1.2f, 1, 30f, 14f, "fx_markbolt", 0.6f, VisualRules.Kit(new Color(1f, 0.4f, 0.35f), new Color(0.35f, 0.57f, 1f)), false);
         }
         if (targets.Count > 0) Play("pew", 0.4f, 1.5f);
     }

@@ -127,6 +127,12 @@ public static class VisualRules
         return o;
     }
 
+    // 2단계 묶음 8 키트 색 (2026-10-25~): 내 이펙트 색 중 적 경고와 같은 「적 신호 색」(색상 345°~25° · 265°~320°, 채도 ≥ 0.5 · 밝기 ≥ 0.6)만
+    //   그 영웅 전투색(CharacterData.Ally) ±15° 나 원소색(불 28° · 비전/어둠 248° · 물리 45°)으로. 채도 · 밝기 · 알파는 그대로
+    //   바꾼 자리 · 예전 색 · 이유는 tools/art/kit_colors.csv · 구매 꾸미기 색(SkinData · SkinFx 스킨 색)은 손대지 않음
+    //   부를 때마다 고름 (static readonly 에 담으면 Legacy 를 켜도 안 돌아가서 속성으로)
+    public static Color Kit(Color legacy, Color now) => Legacy ? legacy : now;
+
     // C2 내 이펙트 분류 (Fx) — 표에 없는 이름은 지금과 같음 (층 Effect · 알파 = 설정만 · 수명 그대로)
     //   표 A 바닥: 적 몸 아래 GroundFx 로 — 적 위치가 내 폭발 · 장판에 묻혔음(스크린샷 02). 알파 상한 없음(이미 적을 안 덮음 · 상한은 「내 스킬이 안 보임」만 악화)
     //     적을 묶는 그림(fx_net · fx_webring · fx_soulshackle · fx_silk · fx_tendril)은 적 위에 보여야 해서 뺌. fx_rune 은 내 것일 때만(Fx 가 Mine 을 봄)
@@ -187,7 +193,7 @@ public static class VisualRules
 
     // C7 적 외곽 (SpriteOutline.shader _SkipDark): 붙은 불투명 그림 칸 중 가장 밝은 흑백 값이 이보다 작으면 그 자리 셰이더 외곽 생략
     //   그림에 이미 #1A112C 외곽이 있는 가장자리(41~98%)는 이중 외곽(보스는 화면 30~40화소 검은 띠)이었음 → 어디서나 정확히 1칸. 0 = 예전 그대로
-    public static float EnemySkipDark => Legacy ? 0f : 0.16f;
+    public static float EnemySkipDark => Legacy ? 0f : 41f / 255f;     // 1.6.0~ 0.16(40.8) 이면 hell_imp 손 외곽(Y 40.9)에 셰이더 외곽이 한 겹 더 붙음 → 41/255
 
     // 너무 어두운 잡몹 2종(Enemy3 Y 63 · 사신 66)만 ×1.15 — 밝은 적은 어둡게 하지 않음 (문제는 「적 위치가 안 보임」)
     //   심연 그림은 프레임마다 텍스처라 이름 앞부분으로 가름

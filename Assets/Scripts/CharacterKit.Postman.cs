@@ -175,7 +175,7 @@ public partial class CharacterKit
     // 받는 이 표시: 편지를 보낼 때 받는 이에게 붉은 조준 표식이 잠깐 (누구에게 가는지 보이게)
     void MarkAddressee(Transform to)
     {
-        FxAnim r = Fx.Play("fx_reticle", to.position, 1.3f, new Color(1f, 0.45f, 0.4f, 0.95f), 12f, 0f, 50, true, 0.45f);
+        FxAnim r = Fx.Play("fx_reticle", to.position, 1.3f, VisualRules.Kit(new Color(1f, 0.45f, 0.4f, 0.95f), new Color(1f, 0.81f, 0.4f, 0.95f)), 12f, 0f, 50, true, 0.45f);
         if (r != null) { r.follow = to; r.spin = 220f; }
     }
 
@@ -424,7 +424,7 @@ public partial class CharacterKit
             {
                 if (c.gameObject != skip && !(skipBoss && Paths.IsBoss(c.gameObject))) Paths.Deal(c.gameObject, dmg, (c.transform.position - p).normalized, 0.8f, PostmanPaths.ShardSource);
             });
-            Fx.Spawn("fx_explosion", p, 2.2f, new Color(1f, 0.6f, 0.5f), 22f);
+            Fx.Spawn("fx_explosion", p, 2.2f, VisualRules.Kit(new Color(1f, 0.6f, 0.5f), new Color(1f, 0.73f, 0.5f)), 22f);
         }
         Play("pop", 0.35f, 1.6f);
     }
@@ -449,7 +449,7 @@ public partial class CharacterKit
         if (r.hop + 1 >= r.max && Paths.Res(PostmanPaths.Round) >= 2 && target != null && Alive(target))
         {
             PostmanPaths.MarkRound(target.gameObject);
-            Fx.Spawn("fx_target_rune", target.position, 1.6f, new Color(0.95f, 0.45f, 0.4f), 14f);
+            Fx.Spawn("fx_target_rune", target.position, 1.6f, VisualRules.Kit(new Color(0.95f, 0.45f, 0.4f), new Color(0.95f, 0.78f, 0.4f)), 14f);
         }
         // 공명 I: 마지막 받는 이가 쓰러지면 처음 적에게 한 번 돌아감
         if (killed && !r.returned && Paths.Res(PostmanPaths.Round) >= 1 && r.first != null && r.first != target && Alive(r.first))
@@ -685,7 +685,7 @@ public partial class CharacterKit
             Specials.Damage(t.gameObject, dmg, Vector3.zero, 1f);
             if (Paths.Res(PostmanPaths.Express) >= 1 && t != null) PostmanPaths.MarkExpress(t.gameObject, 4f);      // 공명 I: 터진 뒤 4초까지
             // 표식 하나만 맞음 → 판정 범위처럼 보이는 폭발은 적 몸 크기로, 화려함은 장식 불꽃으로 (오래 눌러 셀수록 더 크게)
-            Fx.Spawn("fx_explosion", p, 2f, new Color(1f, 0.55f, 0.4f), 20f);
+            Fx.Spawn("fx_explosion", p, 2f, VisualRules.Kit(new Color(1f, 0.55f, 0.4f), new Color(1f, 0.68f, 0.4f)), 20f);
             Fx.Spawn("fx_sparkle", p, 1.6f + 1.2f * charge, new Color(1f, 0.85f, 0.6f), 22f);
             // 답장 (카드): 터진 자리에서 작은 편지가 가까운 적에게
             for (int k = 0; k < card[3] && replies < ReplyCap; k++)

@@ -518,7 +518,9 @@ public class SpaceErosion : MonoBehaviour
             if (members[i] != null) members[i].transform.position = to[i];
             if (bossRings[i] != null) { Destroy(bossRings[i].gameObject); bossRings[i] = null; }
         }
-        Fx.Spawn("fx_shock", center, Radius * 2.4f, avg, 14f);
+        // 1.6.0~ 펼침 충격파: fx_shock 을 지름 115 로 키운 그림(도트 1칸 = 44 화소) → 도트 선 고리 (결계와 같은 모양 · Legacy 면 예전 그림)
+        if (VisualRules.Legacy) Fx.Spawn("fx_shock", center, Radius * 2.4f, avg, 14f);
+        else ShockRing.Spawn(center, Radius * 0.3f, Radius, 0.45f, avg, 0.6f);
     }
 
     void Animate()
@@ -671,11 +673,18 @@ public class SpaceErosion : MonoBehaviour
             Color c = count > 0 ? colors[i % count] : Color.white;
             Fx.Spawn("fx_spark", at, 2.8f, Color.Lerp(c, Color.white, 0.4f), 16f);
         }
-        Fx.Spawn("fx_shock", center, Radius * 2.4f, Color.white, 14f);
+        // 1.6.0~ 붕괴 충격파 두 겹(흰색 → 0.2초 뒤 평균 색)도 거대 그림 → 도트 선 고리 (Legacy 면 예전 그림)
+        if (VisualRules.Legacy) Fx.Spawn("fx_shock", center, Radius * 2.4f, Color.white, 14f);
+        else ShockRing.Spawn(center, Radius * 0.3f, Radius, 0.45f, Color.white, 0.6f);
         bool second = false;
         for (float t = 0f; t < 0.8f; t += Time.deltaTime)
         {
-            if (!second && t >= 0.2f) { second = true; Fx.Spawn("fx_shock", center, Radius * 2.0f, avg, 14f); }
+            if (!second && t >= 0.2f)
+            {
+                second = true;
+                if (VisualRules.Legacy) Fx.Spawn("fx_shock", center, Radius * 2.0f, avg, 14f);
+                else ShockRing.Spawn(center, Radius * 0.2f, Radius * 0.85f, 0.45f, avg, 0.6f);
+            }
             float k = 1f - t / 0.8f;
             BossUltimate.PaintDark(dark, avg, k);
             Color c = Cycle(Time.time);

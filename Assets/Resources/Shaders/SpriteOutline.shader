@@ -67,6 +67,25 @@ Shader "SoulSaver/SpriteOutline"
                 return o;
             }
 
+            // 1.6.0~ 외곽 생략 문턱(_SkipDark)은 화면(감마) 밝기 기준 — 이 프로젝트는 Linear 색 공간이라 셰이더 안 값이 선형
+            //   (선형 그대로면 0.16 이 화면 Y 약 111 에 걸려 외곽 후보 칸 중앙 12% · 최대 38% 가 그림 외곽도 셰이더 외곽도 없었음)
+            //   바닥 셰이더(FloorFlat)의 ToGamma 와 같은 sRGB 정확한 식
+            float3 ToGamma (float3 x)
+            {
+                x = max(x, 0);
+                return x <= 0.0031308 ? x * 12.92 : 1.055 * pow(x, 1.0 / 2.4) - 0.055;
+            }
+            // 불투명(a > 0.5) 옆 칸의 화면 흑백 값 (빈칸이면 0)
+            float LitOf (fixed4 n)
+            {
+                if (n.a <= 0.5) return 0;
+                float3 g = n.rgb;
+            #if !defined(UNITY_COLORSPACE_GAMMA)
+                g = ToGamma(g);
+            #endif
+                return dot(g, float3(0.299, 0.587, 0.114));
+            }
+
             fixed4 Frag (v2fOutline IN) : SV_Target
             {
                 // 판정은 그림 자체의 알파로 (무적 깜빡임처럼 반투명해져도 몸이 윤곽선 색으로 바뀌지 않게)
@@ -81,9 +100,10 @@ Shader "SoulSaver/SpriteOutline"
                     // 1.6.0~ 붙은 불투명 칸(a > 0.5) 중 가장 밝은 흑백 값 — 그림에 이미 어두운 외곽이 있으면 그 자리는 셰이더 외곽을 생략(이중 외곽 → 1칸)
                     //   같은 4칸을 다시 쓰므로 텍스처 읽기 추가 없음 · 키워드 없이 재질 값으로만 (_SkipDark 0 이면 늘 그림 = 예전 그대로)
                     //   피격 흰 번쩍임(_Flash) 동안은 그림의 어두운 외곽도 하얘지므로 생략하지 않음 (흰 몸 둘레에 외곽이 남게)
-                    const float3 lw = float3(0.299, 0.587, 0.114);
-                    float lit = max(max(nr.a > 0.5 ? dot(nr.rgb, lw) : 0, nl.a > 0.5 ? dot(nl.rgb, lw) : 0),
-                                    max(nu.a > 0.5 ? dot(nu.rgb, lw) : 0, nd.a > 0.5 ? dot(nd.rgb, lw) : 0));
+                    //   감마 변환은 외곽 후보 칸(a > 0.5) · 생략을 쓰는 재질(_SkipDark > 0 = 적)에서만 (플레이어 · 이펙트는 계산 없이 늘 그림)
+                    float lit = 1;
+                    if (a > 0.5 && _SkipDark > 0)
+                        lit = max(max(LitOf(nr), LitOf(nl)), max(LitOf(nu), LitOf(nd)));
                     if (a > 0.5 && lit >= _SkipDark * (1 - _Flash))
                     {
                         fixed4 o = _OutlineColor;

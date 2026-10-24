@@ -247,7 +247,7 @@ public partial class SignatureSkills
             else if (k == 1) { EnermyController e = c.GetComponent<EnermyController>(); if (e != null) e.Slow(0.5f, 1.2f); }
         }
         if (k == 2 && SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.SpawnZone(q, 1.2f, 2.5f, dmg * 0.2f, new Color(0.45f, 1f, 0.3f, 0.6f));
-        Color[] tint = { new Color(1f, 0.55f, 0.25f), Ice, AcidGreen };
+        Color[] tint = { VisualRules.Kit(new Color(1f, 0.55f, 0.25f), new Color(1f, 0.6f, 0.25f)), Ice, AcidGreen };
         Fx.Spawn("fx_alchemyblast", q, 3.4f, tint[k], 20f);
     }
 

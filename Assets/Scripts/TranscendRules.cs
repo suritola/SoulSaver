@@ -14,7 +14,7 @@ public class TranscendRules : MonoBehaviour
     public static TranscendRules Instance { get; private set; }
 
     static readonly Color Gold = new Color(1f, 0.84f, 0.32f);
-    static readonly Color SoulPurple = new Color(0.72f, 0.5f, 1f);
+    static Color SoulPurple => VisualRules.Kit(new Color(0.72f, 0.5f, 1f), new Color(0.57f, 0.5f, 1f));     // 2단계 키트 색: 보라 266° → 비전 248°
     static readonly Color TimeBlue = new Color(0.6f, 0.85f, 1f);
     static readonly Color AlchemyGreen = new Color(0.6f, 1f, 0.55f);
     static readonly Color ShadowTint = new Color(0.32f, 0.18f, 0.5f, 0.62f);
@@ -350,7 +350,7 @@ public class TranscendRules : MonoBehaviour
             Transform t = Specials.NearestEnemy(at, ShadowRange);
             if (t == null) continue;
             Vector3 from = at + Vector3.up * 0.4f;
-            Fx.Bolt(from, t.position, 0.45f, new Color(0.65f, 0.4f, 1f, 0.9f), 0.14f);
+            Fx.Bolt(from, t.position, 0.45f, VisualRules.Kit(new Color(0.65f, 0.4f, 1f, 0.9f), new Color(0.48f, 0.4f, 1f, 0.9f)), 0.14f);
             Fx.Spawn("fx_spark", t.position, 1.1f, SoulPurple, 22f);
             Vector3 d = t.position - from;
             d.z = 0f;
@@ -392,14 +392,14 @@ public class TranscendRules : MonoBehaviour
         if (!gravityOn)
         {
             SetGravity(true);
-            gravityFx = Fx.Play("fx_vortex", pos, r * 1.6f, new Color(0.72f, 0.5f, 1f, 0.28f), 10f, 0f, 1, true);
+            gravityFx = Fx.Play("fx_vortex", pos, r * 1.6f, VisualRules.Kit(new Color(0.72f, 0.5f, 1f, 0.28f), new Color(0.57f, 0.5f, 1f, 0.28f)), 10f, 0f, 1, true);
             if (gravityFx != null) { gravityFx.follow = p.transform; gravityFx.spin = -60f; }
             Hostile.Play("rl_magnet", 0.45f, 0.6f);
         }
         if (Time.time >= gravityRingAt)
         {
             gravityRingAt = Time.time + 0.9f;
-            ShockRing.Spawn(pos, r, 0.8f, 0.8f, new Color(0.72f, 0.5f, 1f, 0.55f), 0.18f);
+            ShockRing.Spawn(pos, r, 0.8f, 0.8f, VisualRules.Kit(new Color(0.72f, 0.5f, 1f, 0.55f), new Color(0.57f, 0.5f, 1f, 0.55f)), 0.18f);
         }
         if (Time.time < gravityTick) return;
         gravityTick = Time.time + 0.1f;

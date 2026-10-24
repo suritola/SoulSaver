@@ -72,9 +72,9 @@ public partial class CharacterKit
         }
         Vector3 p = transform.position;
         DamageCircle(p, 6f, Damage * 5f, 4f);
-        Fx.Spawn("fx_alchemyblast", p, 14f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 14f);
-        Fx.Spawn("fx_shock", p, 13f, new Color(0.85f, 0.5f, 1f, 0.85f), 18f);
-        ShockRing.Spawn(p, 0.5f, 6f, 0.45f, new Color(0.9f, 0.55f, 1f, 0.9f), 0.3f);
+        Fx.Spawn("fx_alchemyblast", p, 14f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 14f);
+        Fx.Spawn("fx_shock", p, 13f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.85f), new Color(0.5f, 1f, 0.92f, 0.85f)), 18f);
+        ShockRing.Spawn(p, 0.5f, 6f, 0.45f, VisualRules.Kit(new Color(0.9f, 0.55f, 1f, 0.9f), new Color(0.55f, 1f, 0.93f, 0.9f)), 0.3f);
         Hostile.Shake(0.35f);
         Play("bigboom", 0.9f, 1f);
         if (!player.IsInvincible)

@@ -74,7 +74,7 @@ public partial class SpecialAbilities
         fx.Play("boom", 0.6f, 1.4f);
         fx.FloatText(player.transform.position, Loc.T("가시 반격!"), new Color(1f, 0.35f, 0.4f), 4.5f, 0.3f);
         bool evo = IsEvolved(ThornsId);
-        Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, new Color(0.9f, 0.2f, 0.3f, 0.85f));
+        Explode(player.transform.position, evo ? 6f : 4f, Damage * (evo ? 5f : 3f), 2f, VisualRules.Kit(new Color(0.9f, 0.2f, 0.3f, 0.85f), new Color(0.9f, 0.73f, 0.2f, 0.85f)));
     }
 
     // 영혼 트리 생존 끝 칸 「되살아난 영혼」: 판마다 한 번 체력 40%로 (1.0.1)
@@ -128,10 +128,10 @@ public partial class SpecialAbilities
     public void CurseBullet(Bullet b, bool cursed)
     {
         if (b == null || !cursed) return;
-        if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(1f, 0.3f, 0.3f);
+        if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = VisualRules.Kit(new Color(1f, 0.3f, 0.3f), new Color(0.39f, 0.3f, 1f));
         b.transform.localScale *= 1.5f;
         float dmg = Damage * 1.5f;
-        b.onHitEnemy += (bullet, col) => Explode(col.transform.position, 2.5f, dmg, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
+        b.onHitEnemy += (bullet, col) => Explode(col.transform.position, 2.5f, dmg, 1.5f, VisualRules.Kit(new Color(1f, 0.3f, 0.2f, 0.85f), new Color(0.31f, 0.2f, 1f, 0.85f)));
     }
 
     void OnEnemyKilled(Vector3 pos)

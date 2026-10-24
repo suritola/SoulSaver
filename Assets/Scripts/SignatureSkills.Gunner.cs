@@ -132,7 +132,7 @@ public partial class SignatureSkills
         if (h > 0 && heat > 0)
         {
             b.damage *= 1f + V(h, 0.2f, 0.1f) * heat / (float)HeatMax;
-            if (heat >= HeatMax && b.TryGetComponent(out SpriteRenderer hs)) hs.color = Color.Lerp(hs.color, new Color(1f, 0.45f, 0.2f), 0.6f);
+            if (heat >= HeatMax && b.TryGetComponent(out SpriteRenderer hs)) hs.color = Color.Lerp(hs.color, VisualRules.Kit(new Color(1f, 0.45f, 0.2f), new Color(1f, 0.57f, 0.2f)), 0.6f);
         }
         if (E("ge.furnace") && heat >= HeatMax && !pellet)
         {
@@ -273,7 +273,7 @@ public partial class SignatureSkills
             EnermyController e = t.GetComponent<EnermyController>();
             if (e != null) e.Slow(0.5f, 4f);
         }
-        Fx.Spawn("fx_shock", target.transform.position, 6f, new Color(1f, 0.4f, 0.3f, 0.8f), 22f);
+        Fx.Spawn("fx_shock", target.transform.position, 6f, VisualRules.Kit(new Color(1f, 0.4f, 0.3f, 0.8f), new Color(1f, 0.78f, 0.3f, 0.8f)), 22f);
     }
 
     void GunnerUlt()
@@ -288,8 +288,8 @@ public partial class SignatureSkills
             EnermyController e = c.GetComponent<EnermyController>();
             if (e != null) e.Slow(0.5f, 4f);
         });
-        ShockRing.Spawn(p, 0.5f, 12f, 0.5f, new Color(1f, 0.35f, 0.3f, 0.8f), 0.3f * Fs("g.threat"));
-        Flair("g.threat", p, 9f, new Color(1f, 0.35f, 0.3f));
+        ShockRing.Spawn(p, 0.5f, 12f, 0.5f, VisualRules.Kit(new Color(1f, 0.35f, 0.3f, 0.8f), new Color(1f, 0.78f, 0.3f, 0.8f)), 0.3f * Fs("g.threat"));
+        Flair("g.threat", p, 9f, VisualRules.Kit(new Color(1f, 0.35f, 0.3f), new Color(1f, 0.78f, 0.3f)));
     }
 
     float GunnerOutgoing(GameObject target) => MarkMul(target);

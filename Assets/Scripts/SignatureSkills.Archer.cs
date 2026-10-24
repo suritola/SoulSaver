@@ -84,7 +84,7 @@ public partial class SignatureSkills
                 foreach (Transform t in Nearest(col.transform.position, 7f, L("a.spread"), col.gameObject))
                 {
                     Mark(t.gameObject, 4f, mul);
-                    Fx.Spawn("fx_reticle", t.position, 1.6f, new Color(1f, 0.45f, 0.4f), 16f);
+                    Fx.Spawn("fx_reticle", t.position, 1.6f, VisualRules.Kit(new Color(1f, 0.45f, 0.4f), new Color(0.4f, 1f, 0.59f)), 16f);
                 }
             };
     }
@@ -260,8 +260,8 @@ public partial class SignatureSkills
             marks.Remove(target);
             using var tier = Fx.Tier(3);
             Circle(p, 2.6f, Atk * 2f, 1f);          // 1.1.2~ 120 → 200%
-            Fx.Spawn("fx_explosion", p, 7f, new Color(1f, 0.6f, 0.5f), 18f);
-            Flair(null, p, 3.5f, new Color(1f, 0.5f, 0.45f));
+            Fx.Spawn("fx_explosion", p, 7f, VisualRules.Kit(new Color(1f, 0.6f, 0.5f), new Color(1f, 0.73f, 0.5f)), 18f);
+            Flair(null, p, 3.5f, VisualRules.Kit(new Color(1f, 0.5f, 0.45f), new Color(0.45f, 1f, 0.62f)));
         }
     }
 

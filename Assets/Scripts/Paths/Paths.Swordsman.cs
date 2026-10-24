@@ -120,6 +120,7 @@ public sealed class SwordsmanPaths : HeroPaths
 
     static readonly Color WaveTint = new Color(0.7f, 0.9f, 1f, 0.9f);
     static readonly Color BloodTint = new Color(1f, 0.35f, 0.4f, 0.95f);
+    static Color BloodFx => VisualRules.Kit(BloodTint, new Color(0.35f, 0.59f, 1f, 0.95f));     // 2단계 키트 색: 피의 검기 · 충격파만 빨강 → 검사 하늘 쪽 218° (검기 WaveTint 와 채도로 구분 · 글자는 BloodTint 그대로)
     static readonly Color Gold = new Color(1f, 0.9f, 0.5f);
     static readonly Color DanceTint = new Color(0.55f, 1f, 0.75f);
     static readonly Color WhirlTint = new Color(0.8f, 0.7f, 1f);
@@ -255,7 +256,7 @@ public sealed class SwordsmanPaths : HeroPaths
             // 공명 II: 혈갑 보호막이 가득이면 피의 파동
             if (Paths.Res(Blood) >= 2 && SignatureSkills.BloodShieldFull)
             {
-                kit.SwordWave(origin + (Vector3)(dir * 1f), dir, dmg * BloodWaveMul * Paths.Power(Blood) * bloodMul, WaveRange, BloodTint, SrcBlood);
+                kit.SwordWave(origin + (Vector3)(dir * 1f), dir, dmg * BloodWaveMul * Paths.Power(Blood) * bloodMul, WaveRange, BloodFx, SrcBlood);
                 Hostile.Play("whoosh", 0.45f, 0.7f);
             }
         }
@@ -672,7 +673,7 @@ public sealed class SwordsmanPaths : HeroPaths
             rageUntil = Time.time + RageTime;
             Vector3 at = p.transform.position;
             Fx.Spawn("fx_bleed", at, 5f, Color.white, 16f);
-            Fx.Spawn("fx_shock", at, 8f, new Color(BloodTint.r, BloodTint.g, BloodTint.b, 0.85f), 20f);
+            Fx.Spawn("fx_shock", at, 8f, new Color(BloodFx.r, BloodFx.g, BloodFx.b, 0.85f), 20f);
             Hostile.Play("thump", 0.8f, 0.7f);
             SpecialAbilities.SharedFx?.FloatText(at + Vector3.up * 1.6f, Loc.T("피의 맹세"), BloodTint, 5f, 0f);
             return Mathf.Max(0f, p.PlayerHealth - 1f);

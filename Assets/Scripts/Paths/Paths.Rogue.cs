@@ -277,7 +277,7 @@ public sealed class RoguePaths : HeroPaths
         {
             if (t == null) continue;
             RogueBleed.Infect(t.gameObject, from, 2, BleedCapFor(t.gameObject), BleedMul());
-            Fx.Beam(at, t.position, 0.2f, new Color(0.9f, 0.15f, 0.25f, 0.8f), 0.3f, 12);
+            Fx.Beam(at, t.position, 0.2f, VisualRules.Kit(new Color(0.9f, 0.15f, 0.25f, 0.8f), new Color(0.66f, 0.9f, 0.15f, 0.8f)), 0.3f, 12);
             Fx.Spawn("fx_bleed", t.position, 1.4f, Color.white, 16f);
         }
     }
@@ -303,7 +303,7 @@ public sealed class RoguePaths : HeroPaths
             Vector3 p = g.transform.position;
             Paths.Deal(g, burst, Vector3.zero, 0f, "출혈 터짐");
             Fx.Spawn("fx_bleed", p, 3f, Color.white, 16f);
-            Fx.Spawn("fx_shock", p, 3.6f, new Color(0.9f, 0.15f, 0.25f, 0.85f), 22f);
+            Fx.Spawn("fx_shock", p, 3.6f, VisualRules.Kit(new Color(0.9f, 0.15f, 0.25f, 0.85f), new Color(0.66f, 0.9f, 0.15f, 0.85f)), 22f);
             sound = true;
         }
         if (sound) Hostile.Play("crack", 0.5f, 0.9f);

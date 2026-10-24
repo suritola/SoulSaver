@@ -509,7 +509,7 @@ public partial class BossSkills
     IEnumerator BuildOnce(int e, Vector3 anchor, float build, float r, int shards, bool second, string label)
     {
         build = OwnTele(build);
-        float headY = sr != null ? sr.bounds.extents.y + 1.6f : 4f;
+        float headY = sr != null ? EnemyHitbox.FrameOf(sr).extents.y + 1.6f : 4f;
         Vector3 barC = anchor + Vector3.up * headY;
         const float len = 5.5f;
         Vector3 L = barC + Vector3.left * len * 0.5f;
@@ -820,7 +820,7 @@ public partial class BossSkills
         float now0 = Time.time;
         for (int k = 0; k < towers; k++)
         {
-            baseAt[k] = transform.position + Vector3.right * (k == 0 ? side0 : -side0) * 2.5f + Vector3.down * (sr != null ? sr.bounds.extents.y * 0.6f : 1f);
+            baseAt[k] = transform.position + Vector3.right * (k == 0 ? side0 : -side0) * 2.5f + Vector3.down * (sr != null ? EnemyHitbox.FrameOf(sr).extents.y * 0.6f : 1f);     // 1.6.0~ 고정 틀 (탑 자리 = 판정)
             t0[k] = now0 + k * 0.45f;
             placed[k] = 0;
             stage[k] = 0;

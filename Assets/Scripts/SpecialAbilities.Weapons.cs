@@ -35,7 +35,7 @@ public partial class SpecialAbilities
                 {
                     // 유도탄이 쫓아갈 적 표시
                     Transform target = Specials.NearestEnemy(MouseWorld(), 20f) ?? Specials.NearestEnemy(player.transform.position, 20f);
-                    if (target != null) PreviewRing(targetRing, target.position, 1.6f + Mathf.Sin(Time.time * 8f) * 0.15f, new Color(0.75f, 0.5f, 1f, 0.85f), 0.12f);
+                    if (target != null) PreviewRing(targetRing, target.position, 1.6f + Mathf.Sin(Time.time * 8f) * 0.15f, VisualRules.Kit(new Color(0.75f, 0.5f, 1f, 0.85f), new Color(0.57f, 0.5f, 1f, 0.85f)), 0.12f);
                     if (held && Ready()) FireSeeker();
                 }
                 break;
@@ -44,7 +44,7 @@ public partial class SpecialAbilities
                 break;
             case ScytheId:
                 if (activeScythe == null)
-                    PreviewLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), new Color(0.75f, 0.45f, 1f, 0.5f), 0.1f);
+                    PreviewLine(aimLine, player.MuzzlePosition, player.MuzzlePosition + (Vector3)(AimDir() * 12f), VisualRules.Kit(new Color(0.75f, 0.45f, 1f, 0.5f), new Color(0.52f, 0.45f, 1f, 0.5f)), 0.1f);
                 if (held && activeScythe == null && !player.IsSkillUsing && Time.time >= nextScytheAt) FireScythe();
                 player.ammoTextOverride = activeScythe == null ? Loc.T("낫 준비") : Loc.T("낫 회수 중");
                 break;
@@ -52,8 +52,8 @@ public partial class SpecialAbilities
                 {
                     // 떨어질 지점과 폭발 범위
                     Vector3 land = GrenadeLanding();
-                    PreviewLine(aimLine, player.MuzzlePosition, land, new Color(1f, 0.5f, 0.15f, 0.4f), 0.08f);
-                    PreviewRing(previewRing, land, GrenadeRadius, new Color(1f, 0.45f, 0.1f, Ready() ? 0.75f : 0.3f), 0.1f);
+                    PreviewLine(aimLine, player.MuzzlePosition, land, VisualRules.Kit(new Color(1f, 0.5f, 0.15f, 0.4f), new Color(1f, 0.55f, 0.15f, 0.4f)), 0.08f);
+                    PreviewRing(previewRing, land, GrenadeRadius, VisualRules.Kit(new Color(1f, 0.45f, 0.1f), new Color(1f, 0.52f, 0.1f)) * new Color(1f, 1f, 1f, Ready() ? 0.75f : 0.3f), 0.1f);
                     if (held && Ready()) FireGrenade();
                 }
                 break;
@@ -224,7 +224,7 @@ public partial class SpecialAbilities
             if (evo) Burn.Apply(c.gameObject, WDamage * 0.5f, 2f);
             GunCardHit(c, dmg, to.normalized, false, boom && !hitAny);
             hitAny = true;
-            if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, new Color(1f, 0.3f, 0.2f, 0.85f));
+            if (cursed) Explode(c.transform.position, 2.5f, Damage * 1.5f, 1.5f, VisualRules.Kit(new Color(1f, 0.3f, 0.2f, 0.85f), new Color(0.31f, 0.2f, 1f, 0.85f)));
         }
 
         fx.Play("shotgun", 0.9f, 1.05f);
@@ -401,7 +401,7 @@ public partial class SpecialAbilities
         bool evo = IsEvolved(ScytheId);
         float grow = 1f + 0.15f * Trait(ScytheId);
         Bullet b = Shot(player.MuzzlePosition, ((Vector2)(target - player.MuzzlePosition)).normalized, WDamage * (evo ? 1.75f : 1.2f), 9999, 1.2f, false,
-                        new Color(0.75f, 0.45f, 1f), 0f, (evo ? 3.5f : 2.5f) * grow, 0.3f);
+                        VisualRules.Kit(new Color(0.75f, 0.45f, 1f), new Color(0.52f, 0.45f, 1f)), 0f, (evo ? 3.5f : 2.5f) * grow, 0.3f);
         if (b == null) return;
         b.lifetime = 5f;
         b.hitOnce = new HashSet<int>();         // 적마다 갈 때 한 번, 돌아올 때 한 번 (Scythe가 비움)
@@ -423,7 +423,7 @@ public partial class SpecialAbilities
         Vector3 target = GrenadeLanding();
         BeginShot(2, out Vector3 start, out bool cursed);
         fx.Play("thump", 0.8f);
-        GameObject g = MakeSprite("LavaGrenade", glowSprite, start, 1.2f, new Color(1f, 0.45f, 0.1f), "Effect", 5);
+        GameObject g = MakeSprite("LavaGrenade", glowSprite, start, 1.2f, VisualRules.Kit(new Color(1f, 0.45f, 0.1f), new Color(1f, 0.52f, 0.1f)), "Effect", 5);
         Grenade gr = g.AddComponent<Grenade>();
         gr.owner = this;
         gr.target = target;

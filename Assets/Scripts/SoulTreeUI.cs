@@ -60,6 +60,7 @@ public class SoulTreeUI : MonoBehaviour
         public SpecialAbilities.SoulNode node;
         public RectTransform rect;
         public Image frame, icon, glow, line, badge;
+        public Image rim;                   // 1.6.0~ 칸 안쪽 가지 색 테 (아이콘의 가지 색 빛 번짐을 없앤 대신 — 가지 구분)
         public Image mark;                  // 무기 숙련 · 패시브 진화 칸의 작은 표식 (없으면 null)
         public TMP_Text cost;
     }
@@ -437,6 +438,8 @@ public class SoulTreeUI : MonoBehaviour
         v.frame = Img("Frame", v.rect, Vector2.zero, new Vector2(78f, 78f), UIKit.ButtonSprite, Color.white);
         v.frame.type = Image.Type.Sliced;
         v.frame.raycastTarget = true;
+        // 그래픽 개편 2단계: 가지 표시는 아이콘 둘레 반투명 번짐 대신 칸 안쪽 가지 색 테(Back 밖으로 4칸)로 — 색은 Refresh
+        v.rim = Img("Rim", v.rect, Vector2.zero, new Vector2(72f, 72f), null, BranchColor[n.branch]);
         Img("Back", v.rect, Vector2.zero, new Vector2(64f, 64f), null, new Color(0.08f, 0.06f, 0.12f, 1f));
         v.icon = Img("Icon", v.rect, Vector2.zero, new Vector2(56f, 56f), n.icon, Color.white);
         v.icon.preserveAspect = true;
@@ -511,6 +514,8 @@ public class SoulTreeUI : MonoBehaviour
             // 배운 칸 = 금색, 살 수 있는 칸 = 맥박치는 흰 금빛 (Update), 조각이 모자란 칸 = 흐리게
             v.frame.color = owned ? Gold : blocked ? new Color(0.35f, 0.32f, 0.38f) : can ? Color.white : new Color(bc.r * 0.55f, bc.g * 0.55f, bc.b * 0.55f);
             v.icon.color = owned || can ? Color.white : new Color(0.55f, 0.53f, 0.58f, 0.85f);
+            // 가지 색 테: 배운 칸 · 살 수 있는 칸은 또렷하게, 조각이 모자란 칸은 옅게, 막힌 칸은 더 옅게 (어느 칸이든 가지는 구분됨)
+            if (v.rim != null) v.rim.color = owned || can ? bc : blocked ? new Color(bc.r * 0.4f, bc.g * 0.4f, bc.b * 0.4f) : new Color(bc.r * 0.62f, bc.g * 0.62f, bc.b * 0.62f);
             if (v.mark != null) v.mark.color = v.icon.color;
             if (!can && !hovered.Contains(v)) v.rect.localScale = Vector3.one;
             v.cost.text = owned ? "" : n.cost.ToString();           // 배운 칸은 금색 테두리로 충분 (글자는 지저분해서 뺌)

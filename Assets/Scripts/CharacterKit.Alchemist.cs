@@ -16,7 +16,7 @@ public partial class CharacterKit
     float alchBlastBusyUntil;       // 갈래 자폭이 터지는 중 (끝나는 시각 — 끊겨도 저절로 풀림)
     float alchBlastInvulnAt;        // 자폭 무적(공명 II)을 다시 줄 수 있는 시각
     float alchHomunculusRetryAt;    // 조수 공방: 호문쿨루스를 다시 부를 수 있는 시각
-    static readonly Color AlchUnstableTint = new Color(0.85f, 0.4f, 1f);
+    static Color AlchUnstableTint => VisualRules.Kit(new Color(0.85f, 0.4f, 1f), new Color(0.4f, 1f, 0.91f));     // 2단계 키트 색: 보라 → 연금술사 청록 (Legacy 면 예전)
 
     public int AlchLastKind => alchLastKind;
     public float AlchDamage => Damage;
@@ -106,8 +106,8 @@ public partial class CharacterKit
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
                     else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
-                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f, 0f, AttackLook.AreaOrder - 2);
-                Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
+                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 16f, 0f, AttackLook.AreaOrder - 2);
+                Fx.Spawn("fx_shock", p, r * 2.2f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.8f), new Color(0.5f, 1f, 0.92f, 0.8f)), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
                 int dead = DeadCount(caught);
@@ -216,9 +216,9 @@ public partial class CharacterKit
         float d = Damage * AlchemistPaths.SelfBlastMul;
         if (big) d += Damage * AlchemistPaths.BigBlastBonus * Paths.Power(AlchemistPaths.Chain);
         DamageCircle(p, r, d, big ? 5f : 4f);
-        Fx.Spawn("fx_alchemyblast", p, r * 2.35f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 14f);
-        Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.85f), 18f);
-        ShockRing.Spawn(p, 0.5f, r, 0.45f, new Color(0.9f, 0.55f, 1f, 0.9f), 0.3f);
+        Fx.Spawn("fx_alchemyblast", p, r * 2.35f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 14f);
+        Fx.Spawn("fx_shock", p, r * 2.2f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.85f), new Color(0.5f, 1f, 0.92f, 0.85f)), 18f);
+        ShockRing.Spawn(p, 0.5f, r, 0.45f, VisualRules.Kit(new Color(0.9f, 0.55f, 1f, 0.9f), new Color(0.55f, 1f, 0.93f, 0.9f)), 0.3f);
         if (big) ShockRing.Spawn(p, 0.3f, r * 0.6f, 0.35f, new Color(1f, 0.85f, 1f, 0.8f), 0.22f);
         Hostile.Shake(big ? 0.45f : 0.35f);
         Play("bigboom", 0.9f, big ? 0.85f : 1f);

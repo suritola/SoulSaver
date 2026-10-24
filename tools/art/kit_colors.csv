@@ -1,0 +1,165 @@
+﻿파일:줄,예전 색 (rgb[a]),새 색 (rgb[a]),16진,결정,옮긴 곳,쓰임 · 이유
+Assets/Scripts/CharacterKit.Alchemist.cs:109,"0.9, 0.55, 1","0.55, 1, 0.93",#E68CFF → #8CFFED,옮김,연금술사 청록 171°,짝 — 폭주 폭발 장판 SkinFx.Tint 기본색 (채도 0.45 · 같은 효과 충격파와 맞춤)
+Assets/Scripts/CharacterKit.Alchemist.cs:110,"0.85, 0.5, 1, 0.8","0.5, 1, 0.92, 0.8",#D980FF a0.8 → #80FFEB a0.8,옮김,연금술사 청록 171°,바닥 충격파 고리 (보라)
+Assets/Scripts/CharacterKit.Alchemist.cs:219,"0.9, 0.55, 1","0.55, 1, 0.93",#E68CFF → #8CFFED,옮김,연금술사 청록 171°,짝 — 자폭 장판 SkinFx.Tint 기본색
+Assets/Scripts/CharacterKit.Alchemist.cs:220,"0.85, 0.5, 1, 0.85","0.5, 1, 0.92, 0.85",#D980FF a0.85 → #80FFEB a0.85,옮김,연금술사 청록 171°,자폭 바닥 충격파 고리
+Assets/Scripts/CharacterKit.Alchemist.cs:221,"0.9, 0.55, 1, 0.9","0.55, 1, 0.93, 0.9",#E68CFF a0.9 → #8CFFED a0.9,옮김,연금술사 청록 171°,짝 — 자폭 ShockRing 고리 (채도 0.45)
+Assets/Scripts/CharacterKit.cs:176,"0.85, 0.4, 1","0.4, 1, 0.91",#D966FF → #66FFE8,옮김,연금술사 청록 171°,HUD 시약 아이콘 — 불안정 플라스크 색과 맞춤 (UI 지만 투척물과 같은 색이어야 읽힘)
+Assets/Scripts/CharacterKit.cs:479,"1, 0.5, 0.35, 0.55","1, 0.69, 0.35, 0.55",#FF8059 a0.55 → #FFB059 a0.55,옮김,궁수 — 떨림 상태는 영웅색이면 구분이 안 돼 호박 31°,궁수 겨누는 점선 (떨림 상태) — 내 예고선
+Assets/Scripts/CharacterKit.cs:569,"0.85, 0.4, 1","0.4, 1, 0.91",#D966FF → #66FFE8,옮김,연금술사 청록 171°,불안정 플라스크 투척물 색
+Assets/Scripts/CharacterKit.cs:593,"0.9, 0.55, 1","0.55, 1, 0.93",#E68CFF → #8CFFED,옮김,연금술사 청록 171°,짝 — 불안정 폭발 장판 SkinFx.Tint 기본색
+Assets/Scripts/CharacterKit.cs:594,"0.85, 0.5, 1, 0.8","0.5, 1, 0.92, 0.8",#D980FF a0.8 → #80FFEB a0.8,옮김,연금술사 청록 171°,불안정 폭발 바닥 충격파 고리
+Assets/Scripts/CharacterKit.cs:984,"0.6, 0.35, 0.9, 0.55","0.42, 0.35, 0.9, 0.55",#9959E6 a0.55 → #6B59E6 a0.55,옮김,비전/어둠 248°,도적 돌진 잔상 (0.3초 넘게 보임) — 어둠 원소
+Assets/Scripts/CharacterKit.cs:1298,"0.55, 0.3, 0.85, 0.7","0.37, 0.3, 0.85, 0.7",#8C4CD9 a0.7 → #5E4CD9 a0.7,옮김,비전/어둠 248°,도적 그림자 분신 몸 — 어둠 원소
+Assets/Scripts/CharacterKit.cs:1496,"1, 0.4, 0.35, 0.9","0.35, 1, 0.56, 0.9",#FF6659 a0.9 → #59FF8F a0.9,옮김,궁수 민트 139°,사냥감 표식 과녁 (적 머리 위 고리 모양)
+Assets/Scripts/CharacterKit.Cartographer.cs:347,"1, 0.4, 0.35","0.35, 0.57, 1",#FF6659 → #5991FF,옮김,지도 제작자 남청 220°,표식 화살 투사체
+Assets/Scripts/CharacterKit.Ghost.cs:457,"1, 0.35, 0.3","1, 0.77, 0.3",#FF594C → #FFC44C,옮김,금 40°,빙의 대상 고리 (들킴 상태) — 영웅 서리색과 구분해야 해서 금 40°
+Assets/Scripts/CharacterKit.Postman.cs:178,"1, 0.45, 0.4, 0.95","1, 0.81, 0.4, 0.95",#FF7366 a0.95 → #FFCF66 a0.95,옮김,거너 · 우체부 금 41°,받는 이 조준 표식 (고리 모양)
+Assets/Scripts/CharacterKit.Postman.cs:427,"1, 0.6, 0.5","1, 0.73, 0.5",#FF9980 → #FFBA80,옮김,불 원소 28°,소포 파편 폭발 물들이기 (아군 폭발 시트와 함께)
+Assets/Scripts/CharacterKit.Postman.cs:452,"0.95, 0.45, 0.4","0.95, 0.78, 0.4",#F27366 → #F2C766,옮김,거너 · 우체부 금 41°,소인 룬 (적 발밑 원)
+Assets/Scripts/CharacterKit.Postman.cs:688,"1, 0.55, 0.4","1, 0.68, 0.4",#FF8C66 → #FFAD66,옮김,불 원소 28°,속달 폭발 물들이기
+Assets/Scripts/CharacterKit.Rules.cs:75,"0.9, 0.55, 1","0.55, 1, 0.93",#E68CFF → #8CFFED,옮김,연금술사 청록 171°,짝 — 불안정 자폭 장판 SkinFx.Tint 기본색
+Assets/Scripts/CharacterKit.Rules.cs:76,"0.85, 0.5, 1, 0.85","0.5, 1, 0.92, 0.85",#D980FF a0.85 → #80FFEB a0.85,옮김,연금술사 청록 171°,불안정 자폭 바닥 충격파 (지름 13칸)
+Assets/Scripts/CharacterKit.Rules.cs:77,"0.9, 0.55, 1, 0.9","0.55, 1, 0.93, 0.9",#E68CFF a0.9 → #8CFFED a0.9,옮김,연금술사 청록 171°,짝 — 자폭 ShockRing 고리
+Assets/Scripts/Paths/Paths.Alchemist.cs:476,"0.9, 0.55, 1","0.55, 1, 0.93",#E68CFF → #8CFFED,옮김,연금술사 청록 171°,짝 — 폭탄 조수 장판 SkinFx.Tint 기본색
+Assets/Scripts/Paths/Paths.Alchemist.cs:477,"0.85, 0.5, 1, 0.8","0.5, 1, 0.92, 0.8",#D980FF a0.8 → #80FFEB a0.8,옮김,연금술사 청록 171°,폭탄 조수 바닥 충격파
+Assets/Scripts/Paths/Paths.Gunner.Effects.cs:106,"1, 0.3, 0.3","0.39, 0.3, 1",#FF4C4C → #634CFF,옮김,비전/어둠 248°,저주 산탄 펠릿 몸 — CurseBullet 과 같은 색
+Assets/Scripts/Paths/Paths.Gunner.Effects.cs:356,"1, 0.7, 0.5, 0.7","1, 0.84, 0.5, 0.7",#FFB280 a0.7 → #FFD680 a0.7,옮김,거너 · 우체부 금 41°,산탄 돌격 돌진 충격파
+Assets/Scripts/Paths/Paths.Gunner.Effects.cs:417,"1, 0.5, 0.4, 0.9","1, 0.81, 0.4, 0.9",#FF8066 a0.9 → #FFCF66 a0.9,옮김,거너 · 우체부 금 41°,산탄 돌격 극의 ShockRing 고리
+Assets/Scripts/Paths/Paths.Gunner.Effects.cs:418,"1, 0.6, 0.45, 0.85","1, 0.83, 0.45, 0.85",#FF9973 a0.85 → #FFD473 a0.85,옮김,거너 · 우체부 금 41°,산탄 돌격 극의 충격파 (지름 8칸)
+Assets/Scripts/Paths/Paths.Rogue.cs:280,"0.9, 0.15, 0.25, 0.8","0.66, 0.9, 0.15, 0.8",#E62640 a0.8 → #A8E626 a0.8,옮김,도적 독 연두 79°,출혈 전염 빔
+Assets/Scripts/Paths/Paths.Rogue.cs:306,"0.9, 0.15, 0.25, 0.85","0.66, 0.9, 0.15, 0.85",#E62640 a0.85 → #A8E626 a0.85,옮김,도적 독 연두 79°,출혈 터짐 충격파 고리
+Assets/Scripts/SignatureSkills.Alchemist.cs:250,"1, 0.55, 0.25","1, 0.6, 0.25",#FF8C40 → #FF9940,옮김,불 원소 28°,화염 시약 폭발 물들이기 (24° → 불 원소)
+Assets/Scripts/SignatureSkills.Archer.cs:87,"1, 0.45, 0.4","0.4, 1, 0.59",#FF7366 → #66FF96,옮김,궁수 민트 139°,표식 퍼뜨리기 과녁 (고리 모양)
+Assets/Scripts/SignatureSkills.Archer.cs:263,"1, 0.6, 0.5","1, 0.73, 0.5",#FF9980 → #FFBA80,옮김,불 원소 28°,표식 폭발 물들이기 (아군 폭발 시트와 함께)
+Assets/Scripts/SignatureSkills.Archer.cs:264,"1, 0.5, 0.45","0.45, 1, 0.62",#FF8073 → #73FF9E,옮김,궁수 민트 139°,진화 장식 Flair 입력색 (고리 세 겹)
+Assets/Scripts/SignatureSkills.Gunner.cs:135,"1, 0.45, 0.2","1, 0.57, 0.2",#FF7333 → #FF9133,옮김,불 원소 28°,과열 탄 몸 (19° → 불 원소)
+Assets/Scripts/SignatureSkills.Gunner.cs:276,"1, 0.4, 0.3, 0.8","1, 0.78, 0.3, 0.8",#FF664C a0.8 → #FFC74C a0.8,옮김,거너 · 우체부 금 41°,위협 사격 충격파 고리
+Assets/Scripts/SignatureSkills.Gunner.cs:291,"1, 0.35, 0.3, 0.8","1, 0.78, 0.3, 0.8",#FF594C a0.8 → #FFC74C a0.8,옮김,거너 · 우체부 금 41°,위협 ShockRing (반지름 12칸)
+Assets/Scripts/SignatureSkills.Gunner.cs:292,"1, 0.35, 0.3","1, 0.78, 0.3",#FF594C → #FFC74C,옮김,거너 · 우체부 금 41°,진화 장식 Flair 입력색
+Assets/Scripts/SignatureSkills.Postman.cs:106,"1, 0.6, 0.45","1, 0.71, 0.45",#FF9973 → #FFB573,옮김,불 원소 28°,밤샘 배송 폭발 물들이기
+Assets/Scripts/SignatureSkills.Rogue.cs:71,"0.75, 0.45, 1","0.83, 1, 0.45",#BF73FF → #D4FF73,옮김,도적 독 연두 79°,칼날 길 표창 투사체
+Assets/Scripts/SignatureSkills.Rogue.cs:74,"1, 0.75, 1, 0.85","0.92, 1, 0.75, 0.85",#FFBFFF a0.85 → #EBFFBF a0.85,옮김,도적 독 연두 79°,칼날 길 선 (바닥 직선 — 적 돌진 예고선과 같은 모양) · 진화 쪽 옅은 분홍도 짝으로
+Assets/Scripts/SignatureSkills.Rogue.cs:74,"0.75, 0.45, 1, 0.6","0.83, 1, 0.45, 0.6",#BF73FF a0.6 → #D4FF73 a0.6,옮김,도적 독 연두 79°,칼날 길 선 (바닥 직선 — 적 돌진 예고선과 같은 모양) · 진화 쪽 옅은 분홍도 짝으로
+Assets/Scripts/SignatureSkills.Rogue.cs:97,"0.55, 0.3, 0.9, 0.8","0.71, 0.9, 0.3, 0.8",#8C4CE6 a0.8 → #B5E64C a0.8,옮김,도적 독 연두 79°,매듭 빔
+Assets/Scripts/SignatureSkills.Swordsman.cs:290,"1, 0.25, 0.3, 0.35","0.25, 0.53, 1, 0.35",#FF404C a0.35 → #4087FF a0.35,옮김,검사 하늘 쪽 218°,혈갑 보호막 몸 빛 (계속 보임)
+Assets/Scripts/SignatureSkills.cs:388,"1, 0.35, 0.4, 0.9","0.35, 1, 0.57, 0.9",#FF5966 a0.9 → #59FF91 a0.9,옮김,회복 초록 140°,공용 진화 「몸」 회복 고동 ShockRing — 공용이라 원소색 대신 회복 문법 초록
+Assets/Scripts/SignatureSkills.cs:389,"1, 0.4, 0.45, 0.8","0.4, 1, 0.6, 0.8",#FF6673 a0.8 → #66FF99 a0.8,옮김,회복 초록 140°,회복 고동 충격파 (지름 16칸)
+Assets/Scripts/SignatureSkills.cs:390,"1, 0.4, 0.45","0.4, 1, 0.6",#FF6673 → #66FF99,옮김,회복 초록 140°,회복 고동 진화 장식 입력색
+Assets/Scripts/SpecialAbilities.EvoAugments.cs:285,"0.75, 0.5, 1","0.57, 0.5, 1",#BF80FF → #9180FF,옮김,비전/어둠 248°,추적 증강 탄 몸 (유도탄 = 비전)
+Assets/Scripts/SpecialAbilities.EvoAugments.cs:290,"0.8, 0.55, 1","0.61, 0.55, 1",#CC8CFF → #9C8CFF,옮김,비전/어둠 248°,짝 — 낫 증강 베기 (채도 0.45 · 낫 색과 맞춤)
+Assets/Scripts/SpecialAbilities.Kits.cs:158,"0.8, 0.55, 1","0.86, 1, 0.55",#CC8CFF → #DBFF8C,옮김,도적 독 연두 79°,짝 — 도적 키트 무기색 KitColor (281° 채도 0.45 · 적 탄 보라 285° 와 같은 색상)
+Assets/Scripts/SpecialAbilities.Kits.cs:163,"0.95, 0.45, 0.4","0.95, 0.78, 0.4",#F27366 → #F2C766,옮김,거너 · 우체부 금 41°,우체부 키트 무기색 KitColor (비둘기 · 소포 · 우체통)
+Assets/Scripts/SpecialAbilities.Kits.cs:489,"1, 0.35, 0.4","0.79, 1, 0.35",#FF5966 → #C9FF59,옮김,도적 독 연두 79°,조커 카드 투사체 물들이기
+Assets/Scripts/SpecialAbilities.Kits.cs:493,"1, 0.3, 0.4, 0.85","0.78, 1, 0.3, 0.85",#FF4C66 a0.85 → #C7FF4C a0.85,옮김,도적 독 연두 79°,조커 카드 폭발 (Explode: 충격파 · 고리 · 영혼 불빛)
+Assets/Scripts/SpecialAbilities.Kits.cs:738,"0.9, 0.5, 1","0.5, 1, 0.92",#E680FF → #80FFEB,옮김,연금술사 청록 171°,현자의 돌 바닥 룬 (원)
+Assets/Scripts/SpecialAbilities.Kits.cs:865,"1, 0.35, 0.4","0.79, 1, 0.35",#FF5966 → #C9FF59,옮김,도적 독 연두 79°,죽음의 표식 처형 터짐 (지름 3칸)
+Assets/Scripts/SpecialAbilities.Passives.cs:77,"0.9, 0.2, 0.3, 0.85","0.9, 0.73, 0.2, 0.85",#E6334C a0.85 → #E6BA33 a0.85,옮김,물리 원소 45°,복수의 가시 폭발 (Explode) — 공용이라 물리 원소
+Assets/Scripts/SpecialAbilities.Passives.cs:131,"1, 0.3, 0.3","0.39, 0.3, 1",#FF4C4C → #634CFF,옮김,비전/어둠 248°,저주탄 몸 — 저주 = 어둠 원소
+Assets/Scripts/SpecialAbilities.Passives.cs:134,"1, 0.3, 0.2, 0.85","0.31, 0.2, 1, 0.85",#FF4C33 a0.85 → #4F33FF a0.85,옮김,비전/어둠 248°,저주탄 폭발 (Explode) — 차가운 색이 되어 폭발 그림이 fx_soulburst 로 바뀜
+Assets/Scripts/SpecialAbilities.Relics.cs:39,"0.75, 0.5, 1","0.57, 0.5, 1",#BF80FF → #9180FF,옮김,비전/어둠 248°,유물 장착 영혼 터짐 (지름 4칸)
+Assets/Scripts/SpecialAbilities.Skills.cs:54,"1, 0.45, 0.1, 0.8","1, 0.52, 0.1, 0.8",#FF731A a0.8 → #FF851A a0.8,옮김,불 원소 28°,불 장판 예고 고리 (23° → 불 원소)
+Assets/Scripts/SpecialAbilities.Skills.cs:60,"0.85, 0.15, 0.2, 0.8","0.85, 0.68, 0.15, 0.8",#D92633 a0.8 → #D9AD26 a0.8,옮김,물리 원소 45°,갈고리 예고선 — 적 돌진 예고선과 같은 모양
+Assets/Scripts/SpecialAbilities.Skills.cs:61,"1, 0.2, 0.25, 0.9","1, 0.8, 0.2, 0.9",#FF3340 a0.9 → #FFCC33 a0.9,옮김,물리 원소 45°,갈고리 대상 고리
+Assets/Scripts/SpecialAbilities.Skills.cs:62,"0.85, 0.15, 0.2, 0.6","0.85, 0.68, 0.15, 0.6",#D92633 a0.6 → #D9AD26 a0.6,옮김,물리 원소 45°,갈고리 끝 고리
+Assets/Scripts/SpecialAbilities.Skills.cs:79,"1, 0.4, 0.1, 0.8","1, 0.52, 0.1, 0.8",#FF661A a0.8 → #FF851A a0.8,옮김,불 원소 28°,불 장판 (20° → 불 원소)
+Assets/Scripts/SpecialAbilities.Skills.cs:173,"1, 0.2, 0.2, 0.8","0.31, 0.2, 1, 0.8",#FF3333 a0.8 → #4F33FF a0.8,옮김,비전/어둠 248°,저주탄 총구 빛 (계속 보임)
+Assets/Scripts/SpecialAbilities.Skills.cs:272,"1, 0.15, 0.2, 0.45","0.26, 0.15, 1, 0.45",#FF2633 a0.45 → #4226FF a0.45,옮김,비전/어둠 248°,희생의 계약 오라 (8초 · 발밑)
+Assets/Scripts/SpecialAbilities.Skills.cs:273,"1, 0.15, 0.2, 0.7","0.26, 0.15, 1, 0.7",#FF2633 a0.7 → #4226FF a0.7,옮김,비전/어둠 248°,계약 번쩍임 (지름 5칸)
+Assets/Scripts/SpecialAbilities.Skills.cs:275,"1, 0.2, 0.25","0.31, 0.2, 1",#FF3340 → #4F33FF,옮김,비전/어둠 248°,계약 영혼 불빛 (빨려 듦)
+Assets/Scripts/SpecialAbilities.Skills.cs:276,"1, 0.2, 0.25, 0.9","0.31, 0.2, 1, 0.9",#FF3340 a0.9 → #4F33FF a0.9,옮김,비전/어둠 248°,계약 ShockRing 고리
+Assets/Scripts/SpecialAbilities.Skills.cs:277,"1, 0.25, 0.3","0.35, 0.25, 1",#FF404C → #5940FF,옮김,비전/어둠 248°,계약 충격파 (지름 7칸)
+Assets/Scripts/SpecialAbilities.Skills.cs:316,"0.9, 0.15, 0.2","0.9, 0.71, 0.15",#E62633 → #E6B526,옮김,물리 원소 45°,갈고리 사슬 번개
+Assets/Scripts/SpecialAbilities.Skills.cs:317,"1, 0.2, 0.25, 0.8","1, 0.8, 0.2, 0.8",#FF3340 a0.8 → #FFCC33 a0.8,옮김,물리 원소 45°,갈고리 명중 번쩍임
+Assets/Scripts/SpecialAbilities.Skills.cs:324,"0.8, 0.1, 0.15","0.8, 0.62, 0.1",#CC1A26 → #CC9E1A,옮김,물리 원소 45°,갈고리 벽 선
+Assets/Scripts/SpecialAbilities.Weapons.cs:38,"0.75, 0.5, 1, 0.85","0.57, 0.5, 1, 0.85",#BF80FF a0.85 → #9180FF a0.85,옮김,비전/어둠 248°,유도탄 대상 고리 (예고)
+Assets/Scripts/SpecialAbilities.Weapons.cs:47,"0.75, 0.45, 1, 0.5","0.52, 0.45, 1, 0.5",#BF73FF a0.5 → #8573FF a0.5,옮김,비전/어둠 248°,낫 조준선
+Assets/Scripts/SpecialAbilities.Weapons.cs:55,"1, 0.5, 0.15, 0.4","1, 0.55, 0.15, 0.4",#FF8026 a0.4 → #FF8C26 a0.4,옮김,불 원소 28°,유탄 궤적 예고선 (24° → 불 원소)
+Assets/Scripts/SpecialAbilities.Weapons.cs:227,"1, 0.3, 0.2, 0.85","0.31, 0.2, 1, 0.85",#FF4C33 a0.85 → #4F33FF a0.85,옮김,비전/어둠 248°,저주 산탄 폭발 (Explode) — 폭발 그림 fx_soulburst 로
+Assets/Scripts/SpecialAbilities.Weapons.cs:404,"0.75, 0.45, 1","0.52, 0.45, 1",#BF73FF → #8573FF,옮김,비전/어둠 248°,낫 투사체 물들이기
+Assets/Scripts/SpecialAbilities.Weapons.cs:426,"1, 0.45, 0.1","1, 0.52, 0.1",#FF731A → #FF851A,옮김,불 원소 28°,용암 유탄 몸 (23° → 불 원소)
+Assets/Scripts/SpecialAbilities.cs:398,"1, 0.5, 0.15","1, 0.55, 0.15",#FF8026 → #FF8C26,옮김,불 원소 28°,화염 방사기 무기색 WeaponColor (조준 표시 WeaponAim · 총구 · 필살기 글자)
+Assets/Scripts/SpecialAbilities.cs:399,"0.75, 0.5, 1","0.57, 0.5, 1",#BF80FF → #9180FF,옮김,비전/어둠 248°,유도탄 무기색 WeaponColor (조준 표시)
+Assets/Scripts/SpecialAbilities.cs:401,"0.8, 0.55, 1","0.61, 0.55, 1",#CC8CFF → #9C8CFF,옮김,비전/어둠 248°,짝 — 낫 무기색 WeaponColor (채도 0.45 · 조준 표시)
+Assets/Scripts/SpecialAbilities.cs:402,"1, 0.45, 0.1","1, 0.52, 0.1",#FF731A → #FF851A,옮김,불 원소 28°,유탄 무기색 WeaponColor (조준 표시)
+Assets/Scripts/SpecialAbilities.cs:718,"1, 0.45, 0.1, 0.9","1, 0.52, 0.1, 0.9",#FF731A a0.9 → #FF851A a0.9,옮김,불 원소 28°,운석 폭발 (Explode · 23° → 불 원소)
+Assets/Scripts/SpecialAbilities.cs:760,"0.7, 0.4, 1, 0.5","0.48, 0.4, 1, 0.5",#B266FF a0.5 → #7A66FF a0.5,옮김,비전/어둠 248°,낫 둘레 빛 (계속 보임)
+Assets/Scripts/TranscendRules.cs:353,"0.65, 0.4, 1, 0.9","0.48, 0.4, 1, 0.9",#A666FF a0.9 → #7A66FF a0.9,옮김,비전/어둠 248°,초월 그림자 번개
+Assets/Scripts/TranscendRules.cs:395,"0.72, 0.5, 1, 0.28","0.57, 0.5, 1, 0.28",#B880FF a0.28 → #9180FF a0.28,옮김,비전/어둠 248°,초월 중력장 소용돌이 (계속 보임)
+Assets/Scripts/TranscendRules.cs:402,"0.72, 0.5, 1, 0.55","0.57, 0.5, 1, 0.55",#B880FF a0.55 → #9180FF a0.55,옮김,비전/어둠 248°,초월 중력장 고리
+Assets/Scripts/WeaponAim.cs:73,"1, 0.5, 0.15, 0.7","1, 0.55, 0.15, 0.7",#FF8026 a0.7 → #FF8C26 a0.7,옮김,불 원소 28°,화염 방사기 조준 룬 (마우스 자리 원)
+Assets/Scripts/WeaponAim.cs:247,"0.8, 0.55, 1","0.61, 0.55, 1",#CC8CFF → #9C8CFF,옮김,비전/어둠 248°,짝 — 낫 필살기 조준 경로 (채도 0.45)
+Assets/Scripts/CharacterKit.Alchemist.cs:19,"0.85, 0.4, 1","0.4, 1, 0.91",#D966FF → #66FFE8,옮김,연금술사 청록 171°,불안정 플라스크 색 상수 → 속성 (Legacy 면 예전)
+Assets/Scripts/CharacterKit.cs:554,"1, 0.55, 0.25","1, 0.6, 0.25",#FF8C40 → #FF9940,옮김,불 원소 28°,화염 시약 색 (24° → 불 원소 · 플라스크 · 장판 SkinFx.Tint 기본색) — 배열 두 벌 + 속성
+Assets/Scripts/SpecialAbilities.Kits.cs:618,"1, 0.4, 0.4","0.4, 1, 0.91",#FF6666 → #66FFE8,옮김,연금술사 청록 171°,연금술사 폭죽 국화 불꽃 (지름 2.8칸) 빨강
+Assets/Scripts/SpecialAbilities.Kits.cs:618,"0.9, 0.5, 1","0.57, 0.5, 1",#E680FF → #9180FF,옮김,비전/어둠 248°,폭죽 국화 불꽃 보라
+Assets/Scripts/SpecialAbilities.Weapons.cs:56,"1, 0.45, 0.1","1, 0.52, 0.1",#FF731A → #FF851A,옮김,불 원소 28°,유탄 착탄 범위 고리 (알파가 식이라 곱으로)
+Assets/Scripts/Paths/Paths.Gunner.cs:112,"1, 0.45, 0.3","1, 0.65, 0.3",#FF734C → #FFA64C,옮김,40° 금 · 248° 비전,슬러그 탄 몸 · 궤적 — 거너 금 쪽 30° (튕김탄 금색과 구분)
+Assets/Scripts/Paths/Paths.Swordsman.cs:123,"1, 0.35, 0.4, 0.95","0.35, 0.59, 1, 0.95",#FF5966 a0.95 → #5996FF a0.95,옮김,검사 하늘 쪽 218°,피의 맹세 검기 · 충격파 (BloodFx 새 속성 — 글자는 BloodTint 그대로)
+Assets/Scripts/SignatureSkills.Postman.cs:113,"0.95, 0.35, 0.3","0.95, 0.74, 0.3",#F2594C → #F2BD4C,옮김,거너 · 우체부 금 41°,밤샘 배송 진화 장식 입력색 (PostRedC 상수는 그대로 감쌈)
+Assets/Scripts/SignatureSkills.Rogue.cs:182,"1, 0.3, 0.35","0.78, 1, 0.3",#FF4C59 → #C7FF4C,옮김,도적 독 연두 79°,연쇄 출혈 충격파 (Blood 상수는 검사와 같이 써서 자리마다 감쌈)
+Assets/Scripts/SignatureSkills.Rogue.cs:183,"1, 0.3, 0.35","0.78, 1, 0.3",#FF4C59 → #C7FF4C,옮김,도적 독 연두 79°,연쇄 출혈 진화 장식 입력색
+Assets/Scripts/SignatureSkills.Swordsman.cs:251,"1, 0.3, 0.35","0.3, 0.56, 1",#FF4C59 → #4C8FFF,옮김,검사 하늘 쪽 218°,검사 피 충격파 (지름 15칸)
+Assets/Scripts/SignatureSkills.Swordsman.cs:253,"1, 0.3, 0.35","0.3, 0.56, 1",#FF4C59 → #4C8FFF,옮김,검사 하늘 쪽 218°,검사 피 진화 장식 입력색
+Assets/Scripts/TranscendRules.cs:17,"0.72, 0.5, 1","0.57, 0.5, 1",#B880FF → #9180FF,옮김,비전/어둠 248°,초월 영혼색 (영혼 수확 터짐 9칸 · 그림자 돌진 · 불티 · 글자 함께)
+Assets/Scripts/SignatureSkills.cs:110,보색 (색상 +180°),적 신호 색이면 40° 금 / 248° 비전,,옮김,40° 금 · 248° 비전,"(검토) 진화 장식 보색 고리 — 청록 · 하늘 스킬이면 빨간 고리였음, 함수 1곳으로 진화 장식 전부"
+Assets/Resources/FX/fx_blackhole_ally.png (새 · 원본 fx_blackhole.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 청록 171° · 나머지 남색 228°,연금술사 블랙홀 (플레이어만 · 늘 아군 시트)
+Assets/Resources/FX/fx_blackhole_ally_t2.png (새 · 원본 fx_blackhole_t2.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 청록 171° · 나머지 남색 228°,연금술사 블랙홀 (플레이어만 · 늘 아군 시트)
+Assets/Resources/FX/fx_blackhole_ally_t3.png (새 · 원본 fx_blackhole_t3.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 청록 171° · 나머지 남색 228°,연금술사 블랙홀 (플레이어만 · 늘 아군 시트)
+Assets/Resources/FX/fx_tendril_ally.png (새 · 원본 fx_tendril.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 서리 195° · 나머지 남색 222° (기본 단계는 보라가 없어 그대로 복사),그림자 손길 (플레이어만)
+Assets/Resources/FX/fx_tendril_ally_t2.png (새 · 원본 fx_tendril_t2.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 서리 195° · 나머지 남색 222° (기본 단계는 보라가 없어 그대로 복사),그림자 손길 (플레이어만)
+Assets/Resources/FX/fx_tendril_ally_t3.png (새 · 원본 fx_tendril_t3.png 그대로),시트,시트,,옮김,보라 250°~340° → 밝은 칸 서리 195° · 나머지 남색 222° (기본 단계는 보라가 없어 그대로 복사),그림자 손길 (플레이어만)
+Assets/Resources/FX/fx_jokerburst_ally.png (새 · 원본 fx_jokerburst.png 그대로),시트,시트,,옮김,분홍 · 보라 250°~340° → 도적 독 연두 79° · 빨강 점(340° 이상 · 25° 이하)은 그대로,도적 조커 카드 터짐 (플레이어만)
+Assets/Resources/FX/fx_jokerburst_ally_t2.png (새 · 원본 fx_jokerburst_t2.png 그대로),시트,시트,,옮김,분홍 · 보라 250°~340° → 도적 독 연두 79° · 빨강 점(340° 이상 · 25° 이하)은 그대로,도적 조커 카드 터짐 (플레이어만)
+Assets/Resources/FX/fx_jokerburst_ally_t3.png (새 · 원본 fx_jokerburst_t3.png 그대로),시트,시트,,옮김,분홍 · 보라 250°~340° → 도적 독 연두 79° · 빨강 점(340° 이상 · 25° 이하)은 그대로,도적 조커 카드 터짐 (플레이어만)
+Assets/Resources/FX/fx_firepillar_ally.png (새 · 원본 fx_firepillar.png 그대로),시트,시트,,옮김,"진한 불 칸(채도 ≥ 0.45 · 밝기 ≥ 0.6, −15°~41°)을 순서대로 위로: 14° → 28° · 24° → 32° · 35° → 37° · 41° 그대로 · 어두운 테는 그대로",불기둥 (플레이어만)
+Assets/Resources/FX/fx_firepillar_ally_t2.png (새 · 원본 fx_firepillar_t2.png 그대로),시트,시트,,옮김,"진한 불 칸(채도 ≥ 0.45 · 밝기 ≥ 0.6, −15°~41°)을 순서대로 위로: 14° → 28° · 24° → 32° · 35° → 37° · 41° 그대로 · 어두운 테는 그대로",불기둥 (플레이어만)
+Assets/Resources/FX/fx_firepillar_ally_t3.png (새 · 원본 fx_firepillar_t3.png 그대로),시트,시트,,옮김,"진한 불 칸(채도 ≥ 0.45 · 밝기 ≥ 0.6, −15°~41°)을 순서대로 위로: 14° → 28° · 24° → 32° · 35° → 37° · 41° 그대로 · 어두운 테는 그대로",불기둥 (플레이어만)
+Assets/Resources/FX/fx_explosion_ally.png (새 · 원본 fx_explosion.png 그대로),시트,시트,,옮김,불기둥과 같은 램프,폭발 — 적도 같이 써서 내 것(Fx.Mine)일 때만 아군 시트 · 적 폭발은 예전 그대로
+Assets/Resources/FX/fx_explosion_ally_t2.png (새 · 원본 fx_explosion_t2.png 그대로),시트,시트,,옮김,불기둥과 같은 램프,폭발 — 적도 같이 써서 내 것(Fx.Mine)일 때만 아군 시트 · 적 폭발은 예전 그대로
+Assets/Resources/FX/fx_explosion_ally_t3.png (새 · 원본 fx_explosion_t3.png 그대로),시트,시트,,옮김,불기둥과 같은 램프,폭발 — 적도 같이 써서 내 것(Fx.Mine)일 때만 아군 시트 · 적 폭발은 예전 그대로
+Assets/Scripts/Fx.cs (SheetFor),,,,옮김,이름 고르기,_ally 시트가 있으면 고름 · Legacy 면 예전 시트 · _ally 가 비면 예전 시트
+Assets/Scripts/AttackLook.cs:107,"1, 0.36, 0.86",,,유지,,Legacy 전용 값
+Assets/Scripts/AttackLook.cs:108,"1, 0.55, 0.25",,,유지,,Legacy 전용 값
+Assets/Scripts/CharacterData.cs:58,"0.7, 0.45, 0.9",,,유지,,메뉴 · UI 영웅색 (전투색 ally 는 1.6.0 에 이미 옮김)
+Assets/Scripts/CharacterData.cs:72,"0.65, 0.4, 0.95",,,유지,,메뉴 · UI 영웅색
+Assets/Scripts/CharacterData.cs:94,"0.95, 0.45, 0.4",,,유지,,메뉴 · UI 영웅색
+Assets/Scripts/HeroAim.cs:43,"0.75, 0.45, 1",,,유지,,Legacy 분기
+Assets/Scripts/HeroAim.cs:45,"0.95, 0.4, 0.85",,,유지,,Legacy 분기
+Assets/Scripts/HeroAim.cs:48,"0.98, 0.38, 0.32",,,유지,,Legacy 분기
+Assets/Scripts/FireGround.cs:19,"1, 0.25, 0.2",,,유지,,적 불 장판 경고 테 (적 쪽 — 바꾸면 안 됨)
+Assets/Scripts/Juice.cs:14,"1, 0.58, 0.28",,,유지,,처치 연출 영혼색 (적 · 처치 출처 Other)
+Assets/Scripts/PlayerController.cs:1528,"1, 0.35, 0.3",,,유지,,내가 쓰러질 때 연출 (전투 끝 · 헷갈릴 일 없음)
+Assets/Scripts/PlayerLook.cs:356,"0.85, 0.25, 0.15",,,유지,,탄피 (짧은 입자)
+Assets/Scripts/CharacterKit.Alchemist.cs:204,"0.9, 0.45, 1",,,유지,,글자
+Assets/Scripts/CharacterKit.Alchemist.cs:208,"0.9, 0.5, 1",,,유지,,짧은 입자 (반짝)
+Assets/Scripts/CharacterKit.Rules.cs:27,"1, 0.55, 0.4",,,유지,,글자
+Assets/Scripts/CharacterKit.Rules.cs:66,"0.9, 0.45, 1",,,유지,,글자
+Assets/Scripts/CharacterKit.Rules.cs:70,"0.9, 0.5, 1",,,유지,,짧은 입자
+Assets/Scripts/CharacterKit.Rules.cs:97,"1, 0.45, 0.35",,,유지,,HUD 규칙 막대
+Assets/Scripts/CharacterKit.Rules.cs:103,"0.9, 0.4, 1",,,유지,,HUD 규칙 막대
+Assets/Scripts/CharacterKit.Rules.cs:130,"1, 0.3, 0.25",,,유지,,HUD 규칙 막대
+Assets/Scripts/CharacterKit.Rules.cs:136,"1, 0.4, 0.35",,,유지,,HUD 규칙 막대
+Assets/Scripts/CharacterKit.Postman.cs:18,"0.95, 0.35, 0.3",,,유지,,글자 · 짧은 반짝 · 속달 고리(고리는 그리기 전 HeroAim 영웅색으로 덮음)
+Assets/Scripts/CharacterKit.cs:1224,"1, 0.4, 0.45",,,유지,,짧은 입자 (흡혈 반짝)
+Assets/Scripts/Paths/Paths.Alchemist.cs:99,"1, 0.55, 0.25",,,유지,,갈래 정체성 색 (알림 띠 · 상점 UI)
+Assets/Scripts/Paths/Paths.Clockmaker.cs:102,"1, 0.5, 0.4",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Gunner.cs:52,"1, 0.5, 0.2",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Gunner.cs:61,"1, 0.4, 0.35",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Postman.cs:67,"0.95, 0.55, 0.45",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Rogue.cs:70,"0.9, 0.2, 0.3",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Rogue.cs:106,"1, 0.45, 0.2",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Swordsman.cs:66,"0.95, 0.25, 0.3",,,유지,,갈래 정체성 색
+Assets/Scripts/Paths/Paths.Clockmaker.cs:357,"0.85, 0.45, 0.2",,,유지,,짧은 불티
+Assets/Scripts/SpecialAbilities.KitUlts.cs:228,"1, 0.5, 0.6",,,유지,,짧은 불티
+Assets/Scripts/SpecialAbilities.Kits.cs:526,"1, 0.5, 0.6",,,유지,,짧은 불티
+Assets/Scripts/SpecialAbilities.Kits.cs:843,"1, 0.35, 0.4",,,유지,,적 몸 위 상태 표식 (해골 모양으로 구분)
+Assets/Scripts/SpecialAbilities.Kits.cs:854,"1, 0.45, 0.5",,,유지,,글자
+Assets/Scripts/SpecialAbilities.Passives.cs:75,"1, 0.35, 0.4",,,유지,,글자
+Assets/Scripts/SpecialAbilities.Skills.cs:98,"1, 0.3, 0.3",,,유지,,글자
+Assets/Scripts/SpecialAbilities.Skills.cs:168,"1, 0.3, 0.3",,,유지,,글자
+Assets/Scripts/SpecialAbilities.Skills.cs:278,"1, 0.3, 0.3",,,유지,,짧은 입자
+Assets/Scripts/SpecialAbilities.Weapons.cs:353,"1, 0.35, 0.25",,,유지,,글자
+Assets/Scripts/SpecialAbilities.cs:365,"0.42, 0.2, 0.62",,,유지,,낫 날 그림 (한 번 만들어 캐시 — Legacy 전환을 못 따라감 · 덧씌운 빛 · 탄 색은 옮김)
+Assets/Scripts/TranscendRules.cs:21,"1, 0.55, 0.25, 0.85",,,유지,,안 쓰이는 상수
+Assets/Scripts/SoulBrand.cs:365,"1, 0.6, 0.5",,,유지,,UI 글자

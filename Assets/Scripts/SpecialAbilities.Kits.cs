@@ -155,12 +155,12 @@ public partial class SpecialAbilities
     static Color KitColor(int id) => id switch
     {
         >= 20 and < 28 => new Color(0.6f, 0.8f, 1f),
-        >= 28 and < 36 => new Color(0.8f, 0.55f, 1f),
+        >= 28 and < 36 => VisualRules.Kit(new Color(0.8f, 0.55f, 1f), new Color(0.86f, 1f, 0.55f)),
         >= 36 and < 44 => new Color(0.6f, 1f, 0.5f),
         >= 44 and < 52 => new Color(0.7f, 1f, 0.5f),
         >= 60 and < 67 => new Color(0.45f, 0.6f, 1f),
         >= 67 and < 74 => new Color(1f, 0.78f, 0.35f),
-        >= 74 and < 81 => new Color(0.95f, 0.45f, 0.4f),
+        >= 74 and < 81 => VisualRules.Kit(new Color(0.95f, 0.45f, 0.4f), new Color(0.95f, 0.78f, 0.4f)),
         >= 81 and < 88 => new Color(0.65f, 0.92f, 1f),
         _ => new Color(1f, 0.9f, 0.6f),
     };
@@ -486,11 +486,11 @@ public partial class SpecialAbilities
     {
         bool joker = Random.value < jokerChance;
         float mul = joker ? 1f : Random.Range(0.3f, 2.5f);
-        Color tint = joker ? new Color(1f, 0.35f, 0.4f) : mul > 1.8f ? new Color(1f, 0.85f, 0.35f) : Color.white;
+        Color tint = joker ? VisualRules.Kit(new Color(1f, 0.35f, 0.4f), new Color(0.79f, 1f, 0.35f)) : mul > 1.8f ? new Color(1f, 0.85f, 0.35f) : Color.white;
         Bullet b = KitProjectile(s, d, baseDmg * mul, player.pene, 42f, "fx_playcard", 0.8f, tint, true);     // 트럼프 카드 (예전 편지 봉투 fx_card · 같은 16칸 높이라 크기 그대로)
         if (b == null || !joker) return;
         float boom = baseDmg * 2f;
-        b.onHitEnemy += (bb, c) => Explode(c.transform.position, 2.2f, boom, 1.5f, new Color(1f, 0.3f, 0.4f, 0.85f));
+        b.onHitEnemy += (bb, c) => Explode(c.transform.position, 2.2f, boom, 1.5f, VisualRules.Kit(new Color(1f, 0.3f, 0.4f, 0.85f), new Color(0.78f, 1f, 0.3f, 0.85f)));
     }
 
     // 도적 살상 와이어: 고리(끝나는 시각)들을 잇는 줄에 닿은 적을 계속 벰
@@ -614,7 +614,9 @@ public partial class SpecialAbilities
     }
 
     // 연금술사 폭죽: 솟아올라 색색으로 터짐
-    static readonly Color[] FireworkColors = { new Color(1f, 0.4f, 0.4f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 1f, 0.5f), new Color(0.4f, 0.7f, 1f), new Color(0.9f, 0.5f, 1f) };
+    static readonly Color[] FireworkColorsLegacy = { new Color(1f, 0.4f, 0.4f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 1f, 0.5f), new Color(0.4f, 0.7f, 1f), new Color(0.9f, 0.5f, 1f) };
+    static readonly Color[] FireworkColorsNow = { new Color(0.4f, 1f, 0.91f), new Color(1f, 0.85f, 0.3f), new Color(0.4f, 1f, 0.5f), new Color(0.4f, 0.7f, 1f), new Color(0.57f, 0.5f, 1f) };     // 2단계 키트 색: 빨강 → 연금술사 청록 · 보라 → 비전 248°
+    static Color[] FireworkColors => VisualRules.Legacy ? FireworkColorsLegacy : FireworkColorsNow;
 
     IEnumerator FireworkRoutine(Vector3 from, Vector3 to, int sparks, float dmg)
     {
@@ -733,7 +735,7 @@ public partial class SpecialAbilities
                 break;
             case KitStone:
                 stoneUntil = Time.time + (evo ? 9f : 6f);
-                Fx.Spawn("fx_rune", pos, 4f, new Color(0.9f, 0.5f, 1f), 14f, 0f, 3);
+                Fx.Spawn("fx_rune", pos, 4f, VisualRules.Kit(new Color(0.9f, 0.5f, 1f), new Color(0.5f, 1f, 0.92f)), 14f, 0f, 3);
                 fx.FloatText(pos, Loc.T("현자의 돌!"), new Color(0.9f, 0.55f, 1f), 5f, 0f);
                 fx.Play("shimmer", 0.8f, 0.9f);
                 StartCooldown(id, 18f);
@@ -860,7 +862,7 @@ public partial class SpecialAbilities
         }
         if (mark != null) Destroy(mark.gameObject);
         Specials.Damage(t.gameObject, KitD * 10f, Vector3.zero, 1f);
-        Fx.Spawn("fx_deathburst", t.position, 3f, new Color(1f, 0.35f, 0.4f), 18f);
+        Fx.Spawn("fx_deathburst", t.position, 3f, VisualRules.Kit(new Color(1f, 0.35f, 0.4f), new Color(0.79f, 1f, 0.35f)), 18f);
         fx.Play("crack", 0.9f, 0.8f);
         Hostile.Shake(0.15f);
     }

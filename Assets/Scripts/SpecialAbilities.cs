@@ -395,11 +395,11 @@ public partial class SpecialAbilities : MonoBehaviour
         ShotgunId => new Color(1f, 0.55f, 0.2f),
         SniperId => new Color(0.5f, 0.95f, 1f),
         DualId => new Color(1f, 0.85f, 0.5f),
-        FlameId => new Color(1f, 0.5f, 0.15f),
-        SeekerId => new Color(0.75f, 0.5f, 1f),
+        FlameId => VisualRules.Kit(new Color(1f, 0.5f, 0.15f), new Color(1f, 0.55f, 0.15f)),
+        SeekerId => VisualRules.Kit(new Color(0.75f, 0.5f, 1f), new Color(0.57f, 0.5f, 1f)),
         ChainId => new Color(0.6f, 0.9f, 1f),
-        ScytheId => new Color(0.8f, 0.55f, 1f),
-        GrenadeId => new Color(1f, 0.45f, 0.1f),
+        ScytheId => VisualRules.Kit(new Color(0.8f, 0.55f, 1f), new Color(0.61f, 0.55f, 1f)),
+        GrenadeId => VisualRules.Kit(new Color(1f, 0.45f, 0.1f), new Color(1f, 0.52f, 0.1f)),
         _ => KitColor(id),
     };
 
@@ -715,7 +715,7 @@ public partial class SpecialAbilities : MonoBehaviour
             yield return null;
         }
         if (rock != null) Destroy(rock.gameObject);
-        Explode(at, 2f, damage, 1.2f, new Color(1f, 0.45f, 0.1f, 0.9f));
+        Explode(at, 2f, damage, 1.2f, VisualRules.Kit(new Color(1f, 0.45f, 0.1f, 0.9f), new Color(1f, 0.52f, 0.1f, 0.9f)));
         Fx.Spawn("fx_explosion", at, 5f, Color.white, 16f);
         if (Random.value < 0.4f) fx.Play("bigboom", 0.5f, Random.Range(0.9f, 1.2f));
     }
@@ -757,7 +757,7 @@ public partial class SpecialAbilities : MonoBehaviour
         blade.transform.SetParent(b.transform, true);
         blade.transform.localRotation = Quaternion.identity;
         blade.transform.localScale = new Vector3(worldSize / sx, worldSize / sy, 1f);
-        GameObject aura = MakeSprite("ScytheGlow", glowSprite, b.transform.position, 1f, new Color(0.7f, 0.4f, 1f, 0.5f), "Effect", 11);
+        GameObject aura = MakeSprite("ScytheGlow", glowSprite, b.transform.position, 1f, VisualRules.Kit(new Color(0.7f, 0.4f, 1f, 0.5f), new Color(0.48f, 0.4f, 1f, 0.5f)), "Effect", 11);
         aura.transform.SetParent(b.transform, true);
         aura.transform.localRotation = Quaternion.identity;
         aura.transform.localScale = new Vector3(worldSize * 0.35f / sx, worldSize * 0.35f / sy, 1f);

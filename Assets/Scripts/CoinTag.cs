@@ -27,6 +27,7 @@ public class CoinTag : MonoBehaviour
     GameObject prefab;
     Vector3 baseScale;
     SpriteRenderer sr;
+    Sprite baseSprite;                         // 프리팹 그림 (0단계 · Legacy 면 모든 단계)
     Color baseColor = Color.white;
     PickupGlow glow;
     float pickRadius = 0.5f;                   // 원래 트리거 콜라이더의 월드 반지름
@@ -37,6 +38,22 @@ public class CoinTag : MonoBehaviour
     static readonly Color[] TierTint = { Color.white, Color.white, new Color(1f, 0.9f, 0.72f), Color.white };
     static readonly Color[] TierGlow = { new Color(1f, 0.82f, 0.3f), new Color(1f, 0.82f, 0.3f), new Color(1f, 0.66f, 0.22f), new Color(1f, 0.95f, 0.7f) };
     static readonly float[] TierHalo = { 1.1f, 1.35f, 1.7f, 2.1f };
+    // 2단계 묶음 6~: 단계마다 따로 찍은 도트 그림 (캔버스 9 · 11 · 13 · 15 — 로컬 크기는 모두 3.2 라 배율 · 줍기 판정 그대로)
+    //   같은 그림을 키우면 한 화면에 굵기가 다른 도트가 섞여서 · 0단계는 프리팹 그림(coin_01) 그대로, VisualRules.Legacy 면 예전처럼 한 그림을 키움
+    static Sprite[] tierSprites;
+    static Sprite TierSprite(int tier)
+    {
+        if (tierSprites == null)
+        {
+            tierSprites = new Sprite[TierScale.Length];
+            for (int i = 1; i < tierSprites.Length; i++)
+            {
+                tierSprites[i] = Resources.Load<Sprite>("Coins/coin_t" + i);
+                if (tierSprites[i] == null) Debug.LogWarning("[CoinTag] 코인 단계 그림 없음: Resources/Coins/coin_t" + i + " — 0단계 그림을 키워 씀");
+            }
+        }
+        return tierSprites[tier];
+    }
 
     // 예전 방식 (이미 만든 코인을 등록) — 값 1, 풀에는 돌려놓지 않음
     public static void Register(GameObject coin)
@@ -90,7 +107,7 @@ public class CoinTag : MonoBehaviour
             t.prefab = prefab;
             t.baseScale = g.transform.localScale;
             t.sr = g.GetComponent<SpriteRenderer>();
-            if (t.sr != null) t.baseColor = t.sr.color;
+            if (t.sr != null) { t.baseColor = t.sr.color; t.baseSprite = t.sr.sprite; }
             // 줍는 거리는 원래 트리거 콜라이더 그대로 (끄기 전에 잼)
             Vector3 s = g.transform.lossyScale;
             if (g.TryGetComponent(out CircleCollider2D circle))
@@ -119,7 +136,12 @@ public class CoinTag : MonoBehaviour
         value = Mathf.Max(1, v);
         int tier = value >= 15 ? 3 : value >= 5 ? 2 : value >= 2 ? 1 : 0;
         transform.localScale = baseScale * TierScale[tier];
-        if (sr != null) sr.color = baseColor * TierTint[tier];
+        if (sr != null)
+        {
+            sr.color = baseColor * TierTint[tier];
+            Sprite s = VisualRules.Legacy || tier == 0 ? null : TierSprite(tier);
+            sr.sprite = s != null ? s : baseSprite;
+        }
         if (glow != null) glow.SetLook(TierGlow[tier], TierHalo[tier]);
     }
 

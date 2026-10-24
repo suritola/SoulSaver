@@ -70,7 +70,7 @@ public class WeaponAim
                 for (int i = 0; i < 8; i++) orbs.Add(Keep(Fx.Play("fx_muzzle", Player.position, 1.6f, C, 10f, 0f, 20, true)));
                 break;
             case SpecialAbilities.FlameId:
-                rune = Keep(Fx.Play("fx_rune", owner.MouseWorldPos, 6f, new Color(1f, 0.5f, 0.15f, 0.7f), 1f, 0f, 2, true));
+                rune = Keep(Fx.Play("fx_rune", owner.MouseWorldPos, 6f, VisualRules.Kit(new Color(1f, 0.5f, 0.15f, 0.7f), new Color(1f, 0.55f, 0.15f, 0.7f)), 1f, 0f, 2, true));
                 if (rune != null) rune.spin = 140f;
                 ghost = Keep(Fx.Play("fx_tornado", owner.MouseWorldPos, 5f, new Color(1f, 1f, 1f, 0.35f), 10f, 0f, 14, true));
                 break;
@@ -244,7 +244,7 @@ public class WeaponAim
             case SpecialAbilities.ScytheId:
             {
                 // 베어 나갈 순서대로 이어지는 경로
-                Color soul = new Color(0.8f, 0.55f, 1f);
+                Color soul = VisualRules.Kit(new Color(0.8f, 0.55f, 1f), new Color(0.61f, 0.55f, 1f));
                 pts.Clear();
                 pts.Add(p);
                 foreach (EnermyController t in targets) if (t != null && !t.IsDead) pts.Add(t.transform.position);

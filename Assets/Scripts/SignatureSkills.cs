@@ -111,7 +111,17 @@ public partial class SignatureSkills : MonoBehaviour
     {
         Color.RGBToHSV(c, out float h, out float s, out float v);
         if (s < 0.12f) return new Color(EvoGold.r, EvoGold.g, EvoGold.b, a);
-        Color o = Color.HSVToRGB(Mathf.Repeat(h + 0.5f, 1f), Mathf.Min(1f, s + 0.2f), 1f);
+        float ch = Mathf.Repeat(h + 0.5f, 1f), cs = Mathf.Min(1f, s + 0.2f);
+        // 2단계 키트 색 (2026-10-25~): 보색이 「적 신호 색」(345°~25° · 265°~320°, 채도 ≥ 0.5)이면 가까운 허용 색상으로 밂
+        //   청록 171° → 351° 빨강 · 하늘 203° → 23° 주홍 고리가 적 경고처럼 보였음 → 빨강 쪽은 금 40° · 보라 쪽은 비전 248° (적대 대역 경계 250° 안쪽)
+        //   밝기는 늘 1 이라 채도만 봄. Legacy 면 예전 그대로
+        if (!VisualRules.Legacy && cs >= 0.5f)
+        {
+            float deg = ch * 360f;
+            if (deg >= 345f || deg <= 25f) ch = 40f / 360f;
+            else if (deg >= 265f && deg <= 320f) ch = 248f / 360f;
+        }
+        Color o = Color.HSVToRGB(ch, cs, 1f);
         o.a = a;
         return o;
     }
@@ -375,9 +385,9 @@ public partial class SignatureSkills : MonoBehaviour
         Vector3 p = transform.position;
         using var tier = Fx.Tier(3);
         Circle(p, 5f, player.PlayerMaxHealth * 0.25f, 3f);
-        ShockRing.Spawn(p, 0.4f, 6f, 0.4f, new Color(1f, 0.35f, 0.4f, 0.9f), 0.3f);
-        Fx.Spawn("fx_shock", p, 16f, new Color(1f, 0.4f, 0.45f, 0.8f), 20f);
-        Flair(null, p, 6f, new Color(1f, 0.4f, 0.45f));
+        ShockRing.Spawn(p, 0.4f, 6f, 0.4f, VisualRules.Kit(new Color(1f, 0.35f, 0.4f, 0.9f), new Color(0.35f, 1f, 0.57f, 0.9f)), 0.3f);
+        Fx.Spawn("fx_shock", p, 16f, VisualRules.Kit(new Color(1f, 0.4f, 0.45f, 0.8f), new Color(0.4f, 1f, 0.6f, 0.8f)), 20f);
+        Flair(null, p, 6f, VisualRules.Kit(new Color(1f, 0.4f, 0.45f), new Color(0.4f, 1f, 0.6f)));
         Hostile.Play("thump", 0.6f, 0.8f);
     }
 

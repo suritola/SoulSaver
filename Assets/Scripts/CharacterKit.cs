@@ -173,7 +173,7 @@ public partial class CharacterKit : MonoBehaviour
         {
             shownReagent = show;
             shownReagentLang = Loc.Current;
-            Color c = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[reagent];
+            Color c = unstable ? VisualRules.Kit(new Color(0.85f, 0.4f, 1f), new Color(0.4f, 1f, 0.91f)) : ReagentColors[reagent];
             reagentIcon.color = c;
             reagentText.text = Loc.T(unstable ? "불안정 시약" : NextReagentName);
             reagentText.color = Color.Lerp(c, Color.white, 0.35f);
@@ -476,7 +476,7 @@ public partial class CharacterKit : MonoBehaviour
         bool inWindow = draw >= 1f && heldFull <= PerfectWindow && !Breathless;
         Color c = draw < 1f ? new Color(0.7f, 1f, 0.6f, 0.3f + 0.5f * draw)
                 : inWindow ? new Color(1f, 0.95f, 0.55f, 1f)                                   // 지금 놓으면 완벽
-                : heldFull > TrembleAfter && !autoRelease ? new Color(1f, 0.5f, 0.35f, 0.55f)   // 떨림: 약해지는 중
+                : heldFull > TrembleAfter && !autoRelease ? VisualRules.Kit(new Color(1f, 0.5f, 0.35f, 0.55f), new Color(1f, 0.69f, 0.35f, 0.55f))   // 떨림: 약해지는 중
                 : new Color(1f, 0.85f, 0.3f, 0.6f + 0.3f * Mathf.Sin(Time.time * 20f));
         SpecialFeedback sfx = SpecialAbilities.SharedFx;
         if (sfx != null && Special != null)
@@ -550,7 +550,9 @@ public partial class CharacterKit : MonoBehaviour
     // ================================================================= 연금술사: 시약 실험
     // 화염 → 빙결 → 산성 시약을 번갈아 채워 던지고, 가끔(15%) 불안정한 플라스크가 크게 터짐
     int reagent;
-    static readonly Color[] ReagentColors = { new Color(1f, 0.55f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };
+    static readonly Color[] ReagentColorsLegacy = { new Color(1f, 0.55f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };
+    static readonly Color[] ReagentColorsNow = { new Color(1f, 0.6f, 0.25f), new Color(0.55f, 0.85f, 1f), new Color(0.55f, 1f, 0.35f) };     // 2단계 키트 색: 화염 24° → 불 원소 28°
+    static Color[] ReagentColors => VisualRules.Legacy ? ReagentColorsLegacy : ReagentColorsNow;
     public string NextReagentName => reagent switch { 0 => "화염 시약", 1 => "빙결 시약", _ => "산성 시약" };
 
     //   weakMul > 0: 떨어진 점이 빈틈 위면 그 보스 · 중간 보스만 배율 (평타 첫 병 · 장판 · 덤 폭발은 제외)
@@ -564,7 +566,7 @@ public partial class CharacterKit : MonoBehaviour
         // 불안정도 (1.0.2): 던질 때마다 오르고, 높을수록 크고 아프게 터짐
         float instR = InstRadiusMul, instD = InstDamageMul;
         if (depth == 0) AddInstability(unstable ? 12f : 5f);
-        Color tint = unstable ? new Color(0.85f, 0.4f, 1f) : ReagentColors[kind];
+        Color tint = unstable ? VisualRules.Kit(new Color(0.85f, 0.4f, 1f), new Color(0.4f, 1f, 0.91f)) : ReagentColors[kind];
         // 시약 농축: 한 바퀴 던질 때마다 다음 플라스크가 더 크고 아프게 (고유 스킬)
         float conc = depth == 0 ? SignatureSkills.FlaskThrow() : 1f;
         FlaskLob.Throw(from, land, 0.4f, (unstable ? 1.05f : 0.8f) * (conc > 1f ? 1.35f : 1f), tint, (p) =>
@@ -588,8 +590,8 @@ public partial class CharacterKit : MonoBehaviour
                     if (e != null && e.IsDead) ChainPop(c.transform.position, hit);
                     else if (Special != null && Special.KitUnstableBurns) Burn.Apply(c.gameObject, hit * 0.3f, 3f);
                 }
-                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(new Color(0.9f, 0.55f, 1f)), 16f, 0f, AttackLook.AreaOrder - 2);
-                Fx.Spawn("fx_shock", p, r * 2.2f, new Color(0.85f, 0.5f, 1f, 0.8f), 20f);
+                Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 16f, 0f, AttackLook.AreaOrder - 2);
+                Fx.Spawn("fx_shock", p, r * 2.2f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.8f), new Color(0.5f, 1f, 0.92f, 0.8f)), 20f);
                 Hostile.Shake(0.18f);
                 Play("boom", 0.7f, 1.1f);
                 SignatureSkills.Flask(p, r, kind, true, new List<Collider2D>(caught), DeadCount(caught), conc > 1f);
@@ -979,7 +981,7 @@ public partial class CharacterKit : MonoBehaviour
             if (t >= ghosts * 0.03f)
             {
                 ghosts++;
-                GameObject g = SpecialAbilities.MakeSprite("DashGhost", body.sprite, p, 1f, new Color(0.6f, 0.35f, 0.9f, 0.55f), "Character", -1);
+                GameObject g = SpecialAbilities.MakeSprite("DashGhost", body.sprite, p, 1f, VisualRules.Kit(new Color(0.6f, 0.35f, 0.9f, 0.55f), new Color(0.42f, 0.35f, 0.9f, 0.55f)), "Character", -1);
                 g.transform.localScale = transform.lossyScale;
                 g.GetComponent<SpriteRenderer>().flipX = body.flipX;
                 g.AddComponent<FadeOut>().duration = 0.3f;
@@ -1293,7 +1295,7 @@ public partial class CharacterKit : MonoBehaviour
     // 도적 그림자 분신: 돌진을 시작한 자리에 분신이 남아 가까운 적에게 표창을 던짐
     IEnumerator ShadowClone(Vector3 at, float duration)
     {
-        GameObject g = SpecialAbilities.MakeSprite("ShadowClone", body.sprite, at, 1f, new Color(0.55f, 0.3f, 0.85f, 0.7f), "Character", -1);
+        GameObject g = SpecialAbilities.MakeSprite("ShadowClone", body.sprite, at, 1f, VisualRules.Kit(new Color(0.55f, 0.3f, 0.85f, 0.7f), new Color(0.37f, 0.3f, 0.85f, 0.7f)), "Character", -1);
         g.transform.localScale = transform.lossyScale;
         SpriteRenderer sr = g.GetComponent<SpriteRenderer>();
         sr.flipX = body.flipX;
@@ -1491,7 +1493,7 @@ public class HuntMark : MonoBehaviour
             Destroy(this);
             return;
         }
-        if (icon == null) icon = Fx.Play("fx_reticle", transform.position, 1.2f, new Color(1f, 0.4f, 0.35f, 0.9f), 8f, 0f, 19, true, 99f);
+        if (icon == null) icon = Fx.Play("fx_reticle", transform.position, 1.2f, VisualRules.Kit(new Color(1f, 0.4f, 0.35f, 0.9f), new Color(0.35f, 1f, 0.56f, 0.9f)), 8f, 0f, 19, true, 99f);
         if (icon != null) icon.transform.position = transform.position + Vector3.up * 1.2f;
     }
 

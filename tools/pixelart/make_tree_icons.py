@@ -1,4 +1,6 @@
-# 영혼 트리 칸 아이콘 (1.0.6~): 칸마다 다른 그림, 32x32, 배경 없이 남보라 외곽선 + 5단 명암 + 가지 색 빛 테두리
+# 영혼 트리 칸 아이콘 (1.0.6~): 칸마다 다른 그림, 32x32, 배경 없이 남보라 외곽선 + 5단 명암
+#   (그래픽 개편 2단계 · 2026-10-25) 가지 색 반투명 빛 테두리(halo)를 없애고 가지 표시는 영혼 트리 칸 테(SoulTreeUI)로 옮김,
+#   반짝임은 본체에 붙은 불투명 1개만, 마무리는 restyle_icons.finish (알파 0/255 · 떠 있는 섬 · 외곽 · 색 ≤ 16) — 아이콘 화소 규칙 통일
 #   → Assets/Resources/Icons/tree_<칸 키>.png   (칸 키의 '.' 은 '_' 로: w.dmg1 → tree_w_dmg1)
 #   여러 단계 칸(무기 화력 I~V 등)은 같은 그림에 아래쪽 단계 구슬(1~5개)로 칸마다 다르게
 #   tree_mark_<이름>.png: 무기 숙련 · 패시브 진화 칸에 무기 · 능력 그림 위로 겹쳐 그리는 작은 표식
@@ -7,6 +9,7 @@
 import math, os, re, sys, uuid, time
 sys.path.insert(0, os.path.dirname(__file__))
 from png import Img, write
+from restyle_icons import finish
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'Assets', 'Resources', 'Icons')
@@ -32,7 +35,7 @@ BLUE = (84, 132, 236); VIOLET = (160, 104, 238); LILAC = (206, 172, 255); BONE =
 PAPER = (238, 224, 190); DARK = (58, 46, 84); VOID = (30, 18, 50); WHITE = (250, 248, 255)
 SHIELD = (120, 150, 196); TEAL = (70, 190, 170)
 
-BRANCH = {      # 가지 색 (빛 테두리 · 반짝임 · 단계 구슬)
+BRANCH = {      # 가지 색 (반짝임 · 단계 구슬)
     'w': (255, 158, 76), 'u': (128, 230, 255), 'f': (115, 190, 255),
     's': (140, 242, 128), 'o': (184, 148, 255), 'g': (255, 216, 90), 'm': (255, 214, 120),
 }
@@ -146,6 +149,7 @@ def dilate(s, diag=False):
 class Canvas:
     def __init__(self):
         self.img = Img(N, N)
+        self.sparks = []
 
     def paint(self, m, base, outline=True, light=0.0):
         # 왼쪽 위에서 빛: 위 · 왼쪽 가장자리는 한 단 밝게, 아래 · 오른쪽 가장자리는 한 단 어둡게, 안쪽은 위치에 따라
@@ -174,19 +178,16 @@ class Canvas:
         self.img.set(x, y, c if len(c) == 4 else c + (255,))
 
     def sparkle(self, x, y, c, big=False):
-        # 반짝임: 흰 심 + 가지 색 십자
-        self.px(x, y, WHITE)
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)): self.img.blend(x + dx, y + dy, c + (230,))
-        if big:
-            for dx, dy in ((2, 0), (-2, 0), (0, 2), (0, -2)): self.img.blend(x + dx, y + dy, c + (140,))
+        # 반짝임: 흰 심 + 가지 색 십자 — 바로 칠하지 않고 모아 뒀다가 finish_sparkles 에서 본체 위에 있는 것 하나만 (떠 있는 반짝이 금지)
+        self.sparks.append((x, y, c))
 
-    def halo(self, c):
-        # 가지 색 빛 테두리: 외곽선 바깥 두 칸에 옅게 (어두운 칸 바탕에서 가지가 바로 보이게)
-        solid = {(x, y) for y in range(N) for x in range(N) if self.img.px[y][x][3] > 0}
-        r1 = dilate(solid, True) - solid
-        r2 = dilate(r1 | solid) - solid - r1
-        for x, y in r1: self.img.px[y][x] = c + (120,)
-        for x, y in r2: self.img.px[y][x] = c + (46,)
+    def finish_sparkles(self):
+        for x, y, c in self.sparks:
+            if self.img.get(x, y)[3] == 0: continue
+            self.px(x, y, WHITE)
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if self.img.get(x + dx, y + dy)[3] > 0: self.px(x + dx, y + dy, c)
+            break
 
     def pips(self, n, c):
         # 단계 구슬: 아래 가운데 마름모 n 개
@@ -843,8 +844,8 @@ def render(fn, branch, tier):
     cv = Canvas()
     fn(cv)
     cv.pips(tier, BRANCH[branch])
-    cv.halo(BRANCH[branch])
-    return cv.img
+    cv.finish_sparkles()
+    return finish(cv.img, 16, keep_outlined=True)
 
 
 def all_icons():
@@ -853,8 +854,8 @@ def all_icons():
         for i, k in enumerate(ks):
             out.append(('tree_' + k.replace('.', '_'), render(fn, br, i + 1 if len(ks) > 1 else 0), fn.__name__))
     for name, fn in MARKS.items():
-        cv = Canvas(); fn(cv)
-        out.append(('tree_mark_' + name, cv.img, name))
+        cv = Canvas(); fn(cv); cv.finish_sparkles()
+        out.append(('tree_mark_' + name, finish(cv.img, 16, keep_outlined=True), name))
     return out
 
 

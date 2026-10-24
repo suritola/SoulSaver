@@ -44,8 +44,34 @@ public static class Fx
     static Sprite[] TieredFrames(string name)
     {
         int tier = Mathf.Clamp(TierOf(DamageSource.Current), 1, 3);
+        string sheet = SheetFor(name);
+        if (!tiered.TryGetValue(sheet, out Sprite[][] byTier)) tiered[sheet] = byTier = new Sprite[4][];
+        Sprite[] f = TierSheet(sheet, byTier, tier);
+        if ((f == null || f.Length == 0) && !ReferenceEquals(sheet, name)) return TieredFrames(name, tier);     // 아군 시트가 빠졌으면 예전 시트
+        return f;
+    }
+
+    static Sprite[] TieredFrames(string name, int tier)
+    {
         if (!tiered.TryGetValue(name, out Sprite[][] byTier)) tiered[name] = byTier = new Sprite[4][];
         return TierSheet(name, byTier, tier);
+    }
+
+    // 2단계 묶음 8 키트 색 (2026-10-25~): 적 신호 색(빨강 · 보라) 칸이 20% 넘던 내 이펙트 시트는 색을 옮긴 <이름>_ally 시트로
+    //   (_ally · _ally_t2 · _ally_t3 — 예전 시트 · .meta 는 그대로). 고르는 이름만 바뀌고 크기 · 층 · 알파 표는 원래 이름으로 봄
+    //   AllyAlways: 플레이어만 쓰는 시트 (출처가 비어 있어도 아군) · AllyMine: 적도 같이 쓰는 폭발 → 내 것(Mine)일 때만. Legacy 면 늘 예전 시트
+    static readonly Dictionary<string, string> AllyAlways = new Dictionary<string, string>
+    {
+        { "fx_blackhole", "fx_blackhole_ally" }, { "fx_tendril", "fx_tendril_ally" },
+        { "fx_jokerburst", "fx_jokerburst_ally" }, { "fx_firepillar", "fx_firepillar_ally" },
+    };
+    static readonly Dictionary<string, string> AllyMine = new Dictionary<string, string> { { "fx_explosion", "fx_explosion_ally" } };
+    static string SheetFor(string name)
+    {
+        if (VisualRules.Legacy || name == null) return name;
+        if (AllyAlways.TryGetValue(name, out string a)) return a;
+        if (Mine && AllyMine.TryGetValue(name, out a)) return a;
+        return name;
     }
 
     static Sprite[] TierSheet(string name, Sprite[][] byTier, int tier)

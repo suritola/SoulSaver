@@ -437,8 +437,12 @@ public class BossMemory : MonoBehaviour
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 5f);
             veil.transform.position = bp;
             float unit = veilSr != null && veilSr.sprite != null ? Mathf.Max(0.01f, veilSr.sprite.bounds.size.x) : 1f;
-            float size = bodyR * 2.6f / unit * (1f + 0.06f * pulse);      // 몸 지름보다 조금 크게
-            veil.transform.localScale = new Vector3(size, size, 1f);
+            float size = bodyR * 2.6f / unit * (1f + 0.06f * pulse);      // 몸 지름보다 조금 크게 (월드 배율)
+            // 결의 막은 보스 자식이라 localScale 에 보스 배율이 곱해짐 → 부모 배율로 나눠 월드 크기를 맞춤
+            //   (1.6.0 전엔 그대로 넣어 지름 300~540칸 = 화면 전체가 물듦 · 킹 슬라임이 줄어드는 동안도 맞도록 매 프레임)
+            Vector3 ps = transform.lossyScale;
+            float sx = size / Mathf.Max(0.01f, Mathf.Abs(ps.x)), sy = size / Mathf.Max(0.01f, Mathf.Abs(ps.y));
+            veil.transform.localScale = new Vector3(sx, sy, 1f);
             if (veilSr != null) veilSr.color = new Color(color.r, color.g, color.b, 0.22f + 0.12f * pulse);
         }
     }

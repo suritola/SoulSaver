@@ -103,7 +103,7 @@ public sealed partial class GunnerPaths
             // 1.4.1~ 저주 폭발 · 공격력 기준 명중 효과(전기탄 · 용광로 · 추적 구슬)는 첫 펠릿만 (펠릿마다 붙어 공격력 150% 폭발이 6번 터지던 것)
             //   나머지 펠릿은 저주탄 색만 (피해 ×3 은 each 에 이미 들어 있음)
             if (i == 0) sp?.CurseBullet(b, cursed);
-            else if (cursed && b.TryGetComponent(out SpriteRenderer csr)) csr.color = new Color(1f, 0.3f, 0.3f);
+            else if (cursed && b.TryGetComponent(out SpriteRenderer csr)) csr.color = VisualRules.Kit(new Color(1f, 0.3f, 0.3f), new Color(0.39f, 0.3f, 1f));
             sp?.ApplyGunCards(b, false, i == 0, i > 0);
             b.speed *= Random.Range(1.05f, 1.2f);
             b.lifetime = PelletRange / Mathf.Max(1f, b.speed);       // 사거리 6칸 (가까울수록 많이 맞음)
@@ -353,7 +353,7 @@ public sealed partial class GunnerPaths
         if (chain == 0) { dashRammed = false; dashHit.Clear(); }
         Paths.Invuln(DashInvuln);
         PlayerMotion.Of(p).Lunge(DashTime + 0.05f, d);
-        Fx.Spawn("fx_shock", from, 2f, new Color(1f, 0.7f, 0.5f, 0.7f), 26f);
+        Fx.Spawn("fx_shock", from, 2f, VisualRules.Kit(new Color(1f, 0.7f, 0.5f, 0.7f), new Color(1f, 0.84f, 0.5f, 0.7f)), 26f);
         Hostile.Play("whoosh", 0.6f, 1.5f);
         return true;
     }
@@ -414,8 +414,8 @@ public sealed partial class GunnerPaths
         if (dashChain == 0 && StartDash(p, 1)) return;
         Vector3 at = p.transform.position;
         Paths.Circle(at, 3.5f, Paths.Atk * QuakeRate * Paths.Power(Shotgun), 3f, "산탄 돌격");
-        ShockRing.Spawn(at, 0.4f, 4f, 0.35f, new Color(1f, 0.5f, 0.4f, 0.9f), 0.3f);
-        Fx.Spawn("fx_shock", at, 8f, new Color(1f, 0.6f, 0.45f, 0.85f), 22f);
+        ShockRing.Spawn(at, 0.4f, 4f, 0.35f, VisualRules.Kit(new Color(1f, 0.5f, 0.4f, 0.9f), new Color(1f, 0.81f, 0.4f, 0.9f)), 0.3f);
+        Fx.Spawn("fx_shock", at, 8f, VisualRules.Kit(new Color(1f, 0.6f, 0.45f, 0.85f), new Color(1f, 0.83f, 0.45f, 0.85f)), 22f);
         Hostile.Play("thump", 0.6f, 1f);
         Hostile.Shake(0.12f);
     }

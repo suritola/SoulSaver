@@ -51,15 +51,15 @@ public partial class SpecialAbilities
                 }
                 break;
             case FireZoneId:
-                PreviewRing(previewRing, mouse, FireZoneRadius, new Color(1f, 0.45f, 0.1f, 0.8f), 0.12f);
+                PreviewRing(previewRing, mouse, FireZoneRadius, VisualRules.Kit(new Color(1f, 0.45f, 0.1f, 0.8f), new Color(1f, 0.52f, 0.1f, 0.8f)), 0.12f);
                 break;
             case HookId:
                 {
                     HookTarget(from, dir, out Collider2D enemy, out float dist);
                     Vector3 end = from + (Vector3)(dir * dist);
-                    PreviewLine(aimLine, from, end, new Color(0.85f, 0.15f, 0.2f, 0.8f), 0.1f);
-                    if (enemy != null) PreviewRing(targetRing, enemy.transform.position, 1.6f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.14f);
-                    else PreviewRing(previewRing, end, 0.8f, new Color(0.85f, 0.15f, 0.2f, 0.6f), 0.08f);
+                    PreviewLine(aimLine, from, end, VisualRules.Kit(new Color(0.85f, 0.15f, 0.2f, 0.8f), new Color(0.85f, 0.68f, 0.15f, 0.8f)), 0.1f);
+                    if (enemy != null) PreviewRing(targetRing, enemy.transform.position, 1.6f, VisualRules.Kit(new Color(1f, 0.2f, 0.25f, 0.9f), new Color(1f, 0.8f, 0.2f, 0.9f)), 0.14f);
+                    else PreviewRing(previewRing, end, 0.8f, VisualRules.Kit(new Color(0.85f, 0.15f, 0.2f, 0.6f), new Color(0.85f, 0.68f, 0.15f, 0.6f)), 0.08f);
                 }
                 break;
         }
@@ -76,7 +76,7 @@ public partial class SpecialAbilities
         {
             case DashId: StartCoroutine(Dash()); StartCooldown(id, evo ? 1.8f : 3f); fx.Play("whoosh", 0.9f, 1.2f); break;
             case FireZoneId:
-                DamageZone zone = SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, new Color(1f, 0.4f, 0.1f, 0.8f));
+                DamageZone zone = SpawnZone(MouseWorld(), FireZoneRadius, evo ? 6f : 4f, Damage * 0.75f, VisualRules.Kit(new Color(1f, 0.4f, 0.1f, 0.8f), new Color(1f, 0.52f, 0.1f, 0.8f)));
                 zone.lava = true;
                 ShockRing.Spawn(zone.transform.position, 0.3f, FireZoneRadius * 1.2f, 0.35f, new Color(1f, 0.55f, 0.2f, 0.9f), 0.3f);
                 // 1.3.3~ 도는 마법진(fx_rune)은 뺌 — 불 바닥(FireGround)이 장판을 그림
@@ -170,7 +170,7 @@ public partial class SpecialAbilities
         lastBullets = now;
 
         bool show = IsLastBulletCursed(now) && (!WeaponActive || UsesAmmo(CurrentWeapon));
-        if (show && curseGlow == null) curseGlow = MakeSprite("CurseGlow", glowSprite, player.MuzzlePosition, 0.18f, new Color(1f, 0.2f, 0.2f, 0.8f), "Effect", 6);
+        if (show && curseGlow == null) curseGlow = MakeSprite("CurseGlow", glowSprite, player.MuzzlePosition, 0.18f, VisualRules.Kit(new Color(1f, 0.2f, 0.2f, 0.8f), new Color(0.31f, 0.2f, 1f, 0.8f)), "Effect", 6);
         if (!show && curseGlow != null) Destroy(curseGlow);
         if (curseGlow != null)
         {
@@ -269,12 +269,12 @@ public partial class SpecialAbilities
         if (!pactOn) { player.damageMultiplier *= 2f; player.fireRateMultiplier *= 1.5f; pactOn = true; }
         pactUntil = Mathf.Max(pactUntil, Time.time + (evo ? 12f : 8f));     // 다시 쓰면 시간만 늘림 (먼저 쓴 쪽이 끝나며 끊지 않게)
         if (pactAura != null) Destroy(pactAura);
-        pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, new Color(1f, 0.15f, 0.2f, 0.45f), "Background", 8);
-        Flash(player.transform.position, 5f, new Color(1f, 0.15f, 0.2f, 0.7f), 0.4f);
+        pactAura = MakeSprite("PactAura", glowSprite, player.transform.position, 0.75f, VisualRules.Kit(new Color(1f, 0.15f, 0.2f, 0.45f), new Color(0.26f, 0.15f, 1f, 0.45f)), "Background", 8);
+        Flash(player.transform.position, 5f, VisualRules.Kit(new Color(1f, 0.15f, 0.2f, 0.7f), new Color(0.26f, 0.15f, 1f, 0.7f)), 0.4f);
         for (int i = 0; i < 14; i++)
-            SoulWisp.Spawn(player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f), player.transform.position, new Color(1f, 0.2f, 0.25f));
-        ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, new Color(1f, 0.2f, 0.25f, 0.9f), 0.3f);
-        Fx.Spawn("fx_shock", player.transform.position, 7f, new Color(1f, 0.25f, 0.3f), 16f);
+            SoulWisp.Spawn(player.transform.position + (Vector3)(Random.insideUnitCircle.normalized * 5f), player.transform.position, VisualRules.Kit(new Color(1f, 0.2f, 0.25f), new Color(0.31f, 0.2f, 1f)));
+        ShockRing.Spawn(player.transform.position, 4f, 0.5f, 0.4f, VisualRules.Kit(new Color(1f, 0.2f, 0.25f, 0.9f), new Color(0.31f, 0.2f, 1f, 0.9f)), 0.3f);
+        Fx.Spawn("fx_shock", player.transform.position, 7f, VisualRules.Kit(new Color(1f, 0.25f, 0.3f), new Color(0.35f, 0.25f, 1f)), 16f);
         Fx.Spawn("fx_spark", player.transform.position, 3f, new Color(1f, 0.3f, 0.3f), 14f);
         while (pactOn && Time.time < pactUntil) yield return null;     // pactUntil 은 정해진 시각이라 저절로 끝남
         if (!pactOn) yield break;       // 겹쳐 쓴 다른 코루틴이 이미 되돌림
@@ -313,15 +313,15 @@ public partial class SpecialAbilities
 
         if (enemy != null)
         {
-            DrawBolt(from, enemy.transform.position, new Color(0.9f, 0.15f, 0.2f), 0.25f);
-            Flash(enemy.transform.position, 2f, new Color(1f, 0.2f, 0.25f, 0.8f), 0.15f);
+            DrawBolt(from, enemy.transform.position, VisualRules.Kit(new Color(0.9f, 0.15f, 0.2f), new Color(0.9f, 0.71f, 0.15f)), 0.25f);
+            Flash(enemy.transform.position, 2f, VisualRules.Kit(new Color(1f, 0.2f, 0.25f, 0.8f), new Color(1f, 0.8f, 0.2f, 0.8f)), 0.15f);
             Specials.Damage(enemy.gameObject, Damage * (IsEvolved(HookId) ? 3f : 1.5f), Vector3.zero, 0f);
             if (enemy.CompareTag("enermy")) StartCoroutine(Pull(enemy.transform, from + (Vector3)dir * 2.5f));
         }
         else
         {
             Vector3 end = ClampToArena(from + (Vector3)dir * Mathf.Max(0f, wallDist - 1.5f));
-            DrawLine(from, from + (Vector3)dir * wallDist, new Color(0.8f, 0.1f, 0.15f), 0.2f);
+            DrawLine(from, from + (Vector3)dir * wallDist, VisualRules.Kit(new Color(0.8f, 0.1f, 0.15f), new Color(0.8f, 0.62f, 0.1f)), 0.2f);
             StartCoroutine(PullPlayer(end));
         }
     }

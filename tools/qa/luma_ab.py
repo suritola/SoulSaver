@@ -32,6 +32,24 @@ def nums(v):
     return [x for x in (num(p) for p in v.split(",")) if x is not None]
 
 
+# 밀도 줄: 「영웅=4.1 범위=2.1~6.2 개수=<12 초과 수> 밖=<영웅 0.5~1.5배 밖 수> 이름[텍스처]=값 …」 (2026-10-25 그래픽 개편 2단계~)
+#   예전 줄(「개수=<12 초과 수> 이름=값 …」 — 목록 = 12 초과)도 읽음
+DENSITY_META = ("영웅", "범위", "개수", "밖")
+
+
+def parse_density(rest):
+    entries, meta = {}, {}
+    for t in rest.split():
+        k, _, v = t.rpartition("=")
+        if not k:
+            continue
+        if k in DENSITY_META:
+            meta[k] = v if k == "범위" else num(v)
+        else:
+            entries[k] = num(v)
+    return entries, meta
+
+
 def read_log(folder):
     path = os.path.join(folder, "qa_log.txt")
     if not os.path.isfile(path):
@@ -45,15 +63,11 @@ def read_log(folder):
             kind, shot, rest = m.groups()
             d = shots.setdefault(shot, {})
             if kind == "밀도":
-                toks = rest.split()
-                dense = {}
-                for t in toks:
-                    k, _, v = t.rpartition("=")
-                    if k == "개수":
-                        d["밀도개수"] = num(v)
-                    elif k:
-                        dense[k] = num(v)
-                d["밀도"] = dense
+                d["밀도"], meta = parse_density(rest)
+                d["밀도개수"] = meta.get("개수")
+                d["밀도영웅"] = meta.get("영웅")
+                d["밀도범위"] = meta.get("범위")
+                d["밀도밖"] = meta.get("밖")
                 continue
             for t in rest.split():
                 k, _, v = t.partition("=")
@@ -138,11 +152,20 @@ def judge(shots):
             top_white = max(rings) if rings else None
             ok = floor < body < band and (top_white is None or band <= top_white + 1e-6)
             out.append(("6", p, ok, f"바닥 {floor:.0f} < 적 {body:.0f} < 띠 {band:.0f} ≤ 적 위험 흰 요소 {top_white if top_white is None else round(top_white)}"))
-        # 7 화소 밀도 · 큰 충격파
+        # 7 화소 밀도 · 큰 충격파 — 12 초과 0 (판정) · 영웅 0.5~1.5배 밖 목록 (참고 · 1-8 표의 남는 어긋남만 있어야 함)
         dense = {}
         for s in (c, e):
             dense.update(s.get("밀도") or {})
-        out.append(("7", p, len(dense) == 0, "화면 12화소/칸 넘는 렌더러 " + (", ".join(f"{k} {v:.1f}" for k, v in sorted(dense.items(), key=lambda x: -(x[1] or 0))[:8]) if dense else "없음") + " (이 장면엔 보스 없음 → 0)"))
+        over = {k: v for k, v in dense.items() if v is not None and v > 12}
+        n12 = sum(int(s.get("밀도개수") or 0) for s in (c, e))
+        n12 = max(n12, len(over))
+        out.append(("7", p, n12 == 0, f"화면 12화소/칸 넘는 렌더러 {n12}개 " + (", ".join(f"{k} {v:.1f}" for k, v in sorted(over.items(), key=lambda x: -x[1])[:8]) if over else "") + " (이 장면엔 보스 없음 → 0)"))
+        if any(s.get("밀도밖") is not None for s in (c, e)):
+            hero = next((s.get("밀도영웅") for s in (c, e) if s.get("밀도영웅") is not None), None)
+            band = next((s.get("밀도범위") for s in (c, e) if s.get("밀도범위")), "-")
+            lst = sorted(dense.items(), key=lambda x: -(x[1] or 0))
+            out.append(("7", p, None, f"영웅 {hero if hero is None else round(hero, 2)} 의 0.5~1.5배({band}) 밖 · 점 필터 {len(lst)}종: "
+                        + (", ".join(f"{k} {v:.1f}" for k, v in lst[:10]) + (" …" if len(lst) > 10 else "") if lst else "없음") + " — 1-8 표(중간 보스 · 정예 · 골렘 · 나무 정령 · 짧은 이펙트 등)만이어야 함"))
         shock = num(e.get("큰충격파"))
         if shock is not None:
             out.append(("7", p, shock == 0, f"화면 1/3 넘는 충격파 {shock:.0f}개 (0)"))
@@ -150,7 +173,7 @@ def judge(shots):
 
 
 TABLE_KEYS = [("바닥", "바닥"), ("바닥편차", "편차"), ("적", "적"), ("맞는적", "맞는적"), ("띠", "띠"),
-              ("화면p99", "p99"), ("테색상", "테°"), ("흰고리Y", "흰고리"), ("적차이", "차이%"), ("룬", "룬"), ("큰충격파", "충격파"), ("밀도개수", "밀도>12")]
+              ("화면p99", "p99"), ("테색상", "테°"), ("흰고리Y", "흰고리"), ("적차이", "차이%"), ("룬", "룬"), ("큰충격파", "충격파"), ("밀도개수", "밀도>12"), ("밀도밖", "밀도밖")]
 
 
 def table(shots, title):
@@ -162,7 +185,7 @@ def table(shots, title):
             d = shots.get(s)
             if not d:
                 continue
-            rows.append([s] + [str(d.get(k, "-")) if k != "밀도개수" else ("-" if d.get(k) is None else f"{d.get(k):.0f}") for k, _ in TABLE_KEYS])
+            rows.append([s] + [str(d.get(k, "-")) if k not in ("밀도개수", "밀도밖") else ("-" if d.get(k) is None else f"{d.get(k):.0f}") for k, _ in TABLE_KEYS])
     if not rows:
         print("(readability 줄 없음)")
         return
@@ -181,7 +204,7 @@ def compare(after, before):
                 continue
             parts = []
             for k, lab in TABLE_KEYS:
-                if k == "밀도개수":
+                if k in ("밀도개수", "밀도밖"):
                     va, vb = a.get(k), b.get(k)
                 else:
                     va = (nums(a.get(k)) or [None])[0]

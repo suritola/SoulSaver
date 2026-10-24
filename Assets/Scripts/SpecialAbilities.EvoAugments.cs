@@ -282,12 +282,12 @@ public partial class SpecialAbilities
                 if (b == null) continue;
                 b.gameObject.AddComponent<Homing>().turnSpeed = 420f;
                 b.transform.localScale *= 0.8f;
-                if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = new Color(0.75f, 0.5f, 1f);
+                if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = VisualRules.Kit(new Color(0.75f, 0.5f, 1f), new Color(0.57f, 0.5f, 1f));
             }
         if (!HasAug(ScytheId) || Random.value >= 0.35f) return;
         float r = 3f;
         CharacterKit.DamageCircle(pos, r, Damage * 1.8f * AugPower(ScytheId), 1.5f);
-        Fx.Spawn("fx_slash", pos, r * 2.2f, new Color(0.8f, 0.55f, 1f), 30f, Random.Range(0f, 360f), 16);
+        Fx.Spawn("fx_slash", pos, r * 2.2f, VisualRules.Kit(new Color(0.8f, 0.55f, 1f), new Color(0.61f, 0.55f, 1f)), 30f, Random.Range(0f, 360f), 16);
         if (fx != null) fx.Play("slash", 0.5f, 1.3f);
     }
 }

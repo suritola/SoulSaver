@@ -103,14 +103,14 @@ public partial class SignatureSkills
         foreach (Vector3 p in spots)
         {
             Circle(p, 1.8f * Fs("p.overnight"), dmg, 1f);
-            Fx.Spawn("fx_explosion", p, 3f * Fs("p.overnight"), Tint("p.overnight", new Color(1f, 0.6f, 0.45f)), 20f);
+            Fx.Spawn("fx_explosion", p, 3f * Fs("p.overnight"), Tint("p.overnight", VisualRules.Kit(new Color(1f, 0.6f, 0.45f), new Color(1f, 0.71f, 0.45f))), 20f);
             if (E("pe.reply") && Kit != null)
             {
                 Transform t = Specials.NearestEnemy(p, 8f);
                 if (t != null) Kit.SendLetter(p, t, Atk * 0.6f);
             }
         }
-        if (spots.Count > 0) { Flair("p.overnight", spots[0], 3f, PostRedC); Hostile.Play("boom", 0.6f, 1.3f); }
+        if (spots.Count > 0) { Flair("p.overnight", spots[0], 3f, VisualRules.Kit(PostRedC, new Color(0.95f, 0.74f, 0.3f))); Hostile.Play("boom", 0.6f, 1.3f); }
     }
 
     // ---------------- 공통 훅에서

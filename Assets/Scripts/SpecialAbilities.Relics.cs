@@ -36,7 +36,7 @@ public partial class SpecialAbilities
             fx.Play("chime", 0.7f, 1.2f);
             // 1.1.2~ 머리 위 「유물 장착: 이름」은 큰 키캡 알림(AnnounceKey -> Notice.BigKey)과 같은 말이라 뺌
         }
-        if (player != null) Fx.Spawn("fx_soulburst", player.transform.position, 4f, new Color(0.75f, 0.5f, 1f), 18f);
+        if (player != null) Fx.Spawn("fx_soulburst", player.transform.position, 4f, VisualRules.Kit(new Color(0.75f, 0.5f, 1f), new Color(0.57f, 0.5f, 1f)), 18f);
         return true;
     }
 
