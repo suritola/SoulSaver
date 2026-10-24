@@ -154,18 +154,36 @@ public class QaCapture
     }
 
     static float shotZoom = 1f;
-    static IEnumerator Shot(string name, int w = 1920, int h = 1080, bool settle = true)
+
+    // 촬영 화면 크기 (RT) 를 맞춤 — 바뀌었으면 true (캔버스가 새 크기로 다시 잡히도록 몇 프레임 기다려야 함)
+    static bool EnsureRt(Camera cam, int w, int h)
+    {
+        if (rt != null && rt.width == w && rt.height == h) return false;
+        if (rt != null) { cam.targetTexture = null; if (uiCam != null) uiCam.targetTexture = null; rt.Release(); UnityEngine.Object.Destroy(rt); }
+        rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+        if (frame != null) UnityEngine.Object.Destroy(frame);
+        frame = new Texture2D(w, h, TextureFormat.RGBA32, false);
+        return true;
+    }
+
+    // 찍지 않고 화면 크기만 바꿔 둠 (메뉴처럼 크기에 따라 배치를 다시 하는 화면 — 배치를 다시 한 뒤 Shot)
+    static IEnumerator UseSize(int w, int h)
+    {
+        Camera cam = Camera.main;
+        if (cam == null) yield break;
+        EnsureRt(cam, w, h);
+        cam.targetTexture = rt;
+        PrepCanvases(UiCam(cam));
+        yield return null; yield return null;
+        Canvas.ForceUpdateCanvases();
+    }
+
+    // save = false: frame 만 채우고 파일 · 「찰칵」 줄은 남기지 않음 (측정용 중간 촬영)
+    static IEnumerator Shot(string name, int w = 1920, int h = 1080, bool settle = true, bool save = true)
     {
         Camera cam = Camera.main;
         if (cam == null) { Log("카메라 없음 " + name); yield break; }
-        if (rt == null || rt.width != w || rt.height != h)
-        {
-            if (rt != null) { cam.targetTexture = null; if (uiCam != null) uiCam.targetTexture = null; rt.Release(); UnityEngine.Object.Destroy(rt); }
-            rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
-            if (frame != null) UnityEngine.Object.Destroy(frame);
-            frame = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            settle = true;
-        }
+        if (EnsureRt(cam, w, h)) settle = true;
         cam.targetTexture = rt;
         Camera ui = UiCam(cam);
         PrepCanvases(ui);
@@ -189,6 +207,7 @@ public class QaCapture
         frame.ReadPixels(new Rect(0, 0, w, h), 0, 0);
         frame.Apply();
         RenderTexture.active = null;
+        if (!save) yield break;
         string file = (++shotN).ToString("000") + "_" + name + (w != 1920 || h != 1080 ? "_" + w + "x" + h : "") + ".png";
         File.WriteAllBytes(Path.Combine(Out, file), frame.EncodeToPNG());
         Log("찰칵 " + file);
@@ -542,6 +561,8 @@ public class QaCapture
 
         yield return Safe("map_overview", MapOverview, 300);
         yield return Safe("readability", Readability, 240);
+        yield return Safe("boss_gallery", BossGallery, 300);
+        yield return Safe("menu_hero", MenuHero, 200);
         yield return Safe("memory_bar", MemoryBar, 240);
         yield return Safe("terrain", TerrainAndErosion, 420);
         yield return Safe("erosion_pending", ErosionPending, 180);
@@ -580,6 +601,7 @@ public class QaCapture
     const float ReadFreeze = 1e-4f;
     static readonly Dictionary<string, float> readClean = new Dictionary<string, float>();
     static readonly Dictionary<string, float> readNoFx = new Dictionary<string, float>();
+    static float readBodyOverride = -1f;          // 깨끗한 판 적 몸 Y (애니메이션 구간 평균) — ReadMeasure 가 그 판 한 장 대신 씀
 
     // 내 이펙트 렌더러: 화염 지대 + 바닥 · 효과 층의 fx_ 그림 (적 경고는 Warning 층이라 빠짐 · 피해 숫자 · 적 · 플레이어는 그대로)
     static List<Renderer> MyFxRenderers(Component zone)
@@ -619,6 +641,61 @@ public class QaCapture
             if (zoneR > 0f && Vector2.Distance(ec.transform.position, zoneC) <= zoneR + 0.3f) bodyHit.Add(s / n);
         }
         return (body.Count > 0 ? body.Average() : -1f, bodyHit.Count > 0 ? bodyHit.Average() : -1f, body.Count, bodyHit.Count);
+    }
+
+    // 무리(적 렌더러 경계를 합친 상자) 위에 「적보다 위 층으로」 겹친 작은 렌더러 중 적 · 플레이어 · 타일 · UI 가 아닌 것 (readability 깨끗한 판에서 잠깐 끔)
+    //   적 아래에 그려지는 바닥 소품 · 코인은 그대로 (바닥 점 · 사진이 예전과 같게)
+    static List<Renderer> PackFloaters(List<Component> pack)
+    {
+        var list = new List<Renderer>();
+        Bounds area = new Bounds();
+        bool any = false;
+        var own = new HashSet<Renderer>();
+        int topLayer = int.MinValue, topOrder = int.MinValue;
+        foreach (Component ec in pack)
+        {
+            if (ec == null) continue;
+            foreach (Renderer r in ec.GetComponentsInChildren<Renderer>(true)) own.Add(r);
+            if (ec.GetComponent<SpriteRenderer>() is SpriteRenderer sr && sr != null)
+            {
+                if (!any) { area = sr.bounds; any = true; } else area.Encapsulate(sr.bounds);
+                int lv = SortingLayer.GetLayerValueFromID(sr.sortingLayerID);
+                if (lv > topLayer || (lv == topLayer && sr.sortingOrder > topOrder)) { topLayer = lv; topOrder = sr.sortingOrder; }
+            }
+        }
+        if (!any) return list;
+        Component pc = (Component)Player();
+        if (pc != null) foreach (Renderer r in pc.GetComponentsInChildren<Renderer>(true)) own.Add(r);
+        foreach (Renderer r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            if (!r.enabled || !r.gameObject.activeInHierarchy || own.Contains(r) || r is UnityEngine.Tilemaps.TilemapRenderer || r.gameObject.layer == UiLayer) continue;
+            if (T("EnermyController") != null && r.GetComponentInParent(T("EnermyController")) != null) continue;
+            int rl = SortingLayer.GetLayerValueFromID(r.sortingLayerID);
+            if (rl < topLayer || (rl == topLayer && r.sortingOrder <= topOrder)) continue;      // 적 아래 · 같은 층
+            Bounds b = r.bounds;
+            if (b.size.x > 4f || b.size.y > 4f) continue;
+            Vector3 c = b.center; c.z = area.center.z;
+            Bounds b2 = new Bounds(c, new Vector3(b.size.x, b.size.y, area.size.z + 1f));
+            if (b2.Intersects(area)) list.Add(r);
+        }
+        return list;
+    }
+
+    // 무리 애니메이션을 같은 구간(phase 0~1)에 맞춤 (깨끗한 판) — 1.5초 기다리는 동안 프레임 시간 차로 그림 프레임이 실행마다 달라 겹친 무리의 「적 몸 Y」가 흔들렸음
+    static void PinPackFrames(List<Component> pack, float phase)
+    {
+        foreach (Component ec in pack)
+        {
+            if (ec == null) continue;
+            Animator an = ec.GetComponent<Animator>();
+            if (an != null && an.isActiveAndEnabled && an.runtimeAnimatorController != null)
+            {
+                an.Play(an.GetCurrentAnimatorStateInfo(0).fullPathHash, 0, phase);
+                an.Update(0f);
+            }
+            if (T("AbyssBody") != null && ec.GetComponent(T("AbyssBody")) is Component ab && Get(ab, "frames") is Sprite[] fr && fr.Length > 0 && fr[0] != null
+                && ec.GetComponent<SpriteRenderer>() is SpriteRenderer sr && sr != null) sr.sprite = fr[Mathf.Min(fr.Length - 1, (int)(phase * fr.Length))] ?? fr[0];
+        }
     }
 
     static IEnumerator Readability()
@@ -685,8 +762,24 @@ public class QaCapture
 
             // ---- 내 이펙트 없이
             Time.timeScale = 0f;
-            yield return Shot("read_" + place + "_clean");
+            // 2026-10-25~ 깨끗한 판: 무리 애니메이션 첫 프레임 고정 + 무리 위에 떠 있는 남의 작은 렌더러(주변 불씨 · 반짝이 등 — 적 · 플레이어 · 타일 · UI 빼고)를 찍는 동안만 끔
+            //   예전엔 불씨 2개가 적 몸 상자 위를 지나가는지에 따라 「적 몸 Y」가 흔들렸음 (적 몸만 재는 판이라 무엇이 떠 있든 빼는 게 맞음)
+            //   적 몸 Y = 애니메이션 네 구간(0 · ¼ · ½ · ¾)을 고정해 잰 평균 (한 프레임만 고르면 그 프레임 쪽으로 치우침) · 사진은 0 구간
+            var floaters = PackFloaters(pack24);
+            foreach (Renderer r in floaters) r.enabled = false;
+            var phaseY = new List<float>();
+            for (int k = 1; k <= 4; k++)
+            {
+                PinPackFrames(pack24, (k % 4) * 0.25f);
+                yield return Shot("read_" + place + "_clean", 1920, 1080, false, k == 4);       // 마지막(0 구간)만 저장
+                if (k < 4) phaseY.Add(EnemyBodyY(Camera.main, frame, Vector3.zero, 0f).all);
+            }
+            phaseY.Insert(0, EnemyBodyY(Camera.main, frame, Vector3.zero, 0f).all);
+            readBodyOverride = phaseY.Average();
             ReadMeasure("read_" + place + "_clean", place, null, Vector3.zero, 0f, null);
+            readBodyOverride = -1f;
+            Log("깨끗한판 " + place + " 적몸구간=" + string.Join(",", phaseY.Select(F1)) + " 끈 렌더러 " + floaters.Count + (floaters.Count > 0 ? " (" + string.Join(",", floaters.Select(r => r.name.Replace(" ", "_")).Distinct().Take(6)) + ")" : ""));
+            foreach (Renderer r in floaters) if (r != null) r.enabled = true;
             Time.timeScale = 1f;
 
             // ---- 이펙트 · 경고 · 알림
@@ -792,7 +885,7 @@ public class QaCapture
 
         // 2) 적 몸: 렌더러 화면 상자 가운데 50% 평균 (화염 지대 안 = 맞는 중)
         var bodyY = EnemyBodyY(cam, frame, zoneC, zoneR);
-        float bodyMean = bodyY.all;
+        float bodyMean = readBodyOverride >= 0f ? readBodyOverride : bodyY.all;
         sb.Append(" 적=" + F1(bodyMean) + " 적수=" + bodyY.n + " 맞는적=" + (bodyY.nHit > 0 ? F1(bodyY.hit) : "-") + " 맞는수=" + bodyY.nHit);
 
         // 3) 플레이어: 그림 상자 + 4화소 안의 밝은 쪽 10% (= 밝은 외곽 띠) · 화면 전체 상위 1% · 2%
@@ -886,19 +979,468 @@ public class QaCapture
             Log(sb5.ToString());
         }
 
-        // 6) 화소 밀도: 그림 1칸이 화면 몇 화소인지 (|배율| ÷ PPU × 화면 화소/월드) — 12 넘는 것만
-        var dense = new Dictionary<string, float>();
+        // 6) 화소 밀도 (2026-10-25 그래픽 개편 2단계 5-4~: 「12 넘는 것」 → 영웅의 0.5~1.5배 밖 목록 · 쌍선형 빛 제외 + 12 초과 개수)
+        DensityLine(shot, rends, cam, w, h);
+    }
+
+    // ================================================================= 화소 밀도 (그림 1칸이 화면 몇 화소인지 = |배율 y| ÷ PPU × 화면 화소/월드)
+    // 「밀도 <촬영> 영웅=<거너 몸> 범위=<0.5배>~<1.5배> 개수=<12 초과 수> 밖=<범위 밖 수> 이름[텍스처]=값 …」 (값은 큰 순 · 범위 밖만)
+    //   쌍선형(점 필터가 아닌) 그림 = 빛 무리 · 부드러운 이펙트는 목록에서 뺌 (12 초과 개수는 예전과 같게 모두 셈) · luma_ab.py · boss_ab.py 가 읽음
+    const float HeroDensityFallback = 4.14f;
+    static float Density(SpriteRenderer sr, float pxPerUnit) => Mathf.Abs(sr.transform.lossyScale.y) / Mathf.Max(0.0001f, sr.sprite.pixelsPerUnit) * pxPerUnit;
+    static float HeroDensity(float pxPerUnit)
+    {
+        Component p = (Component)Player();
+        SpriteRenderer sr = p != null ? p.GetComponent<SpriteRenderer>() : null;
+        return sr != null && sr.sprite != null ? Density(sr, pxPerUnit) : HeroDensityFallback;
+    }
+    static string RendKey(SpriteRenderer sr) => (sr.gameObject.name.Replace("(Clone)", "").Trim() + "[" + (sr.sprite.texture != null ? sr.sprite.texture.name : sr.sprite.name) + "]").Replace(" ", "_").Replace("=", "_");
+
+    // 화면에 보이는 월드 그림 (UI 층 · 타일맵 · 화면을 덮는 큰 바탕 · 투명한 것 빼고)
+    static List<Renderer> WorldRenderers()
+    {
+        var rends = new List<Renderer>();
+        foreach (Renderer r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+        {
+            if (!r.enabled || !r.gameObject.activeInHierarchy || r is UnityEngine.Tilemaps.TilemapRenderer || r.gameObject.layer == UiLayer) continue;
+            Vector3 s = r.bounds.size;
+            if (s.x > 30f || s.y > 30f) continue;
+            if (r is SpriteRenderer sr0 && (sr0.sprite == null || sr0.color.a < 0.02f)) continue;
+            rends.Add(r);
+        }
+        return rends;
+    }
+
+    static void DensityLine(string shot, IEnumerable<Renderer> rends, Camera cam, int w, int h)
+    {
+        if (cam == null) return;
+        float pxPerUnit = h / (2f * cam.orthographicSize);
+        float hero = HeroDensity(pxPerUnit), lo = hero * 0.5f, hi = hero * 1.5f;
+        var outside = new Dictionary<string, float>();
+        var over12 = new HashSet<string>();
         foreach (Renderer r in rends)
         {
-            if (!(r is SpriteRenderer sr) || sr.sprite == null || !r.isVisible) continue;
-            Vector2 a = Scr(r.bounds.min), b = Scr(r.bounds.max);
+            if (!(r is SpriteRenderer sr) || sr == null || sr.sprite == null || !r.isVisible) continue;
+            Vector2 a = cam.WorldToScreenPoint(r.bounds.min), b = cam.WorldToScreenPoint(r.bounds.max);
             if (b.x < 0 || a.x > w || b.y < 0 || a.y > h) continue;
-            float d = Mathf.Abs(sr.transform.lossyScale.y) / Mathf.Max(0.0001f, sr.sprite.pixelsPerUnit) * pxPerUnit;
-            if (d <= 12f) continue;
-            string key = r.gameObject.name.Replace("(Clone)", "").Trim() + "[" + sr.sprite.texture.name + "]";
-            dense[key] = Mathf.Max(dense.TryGetValue(key, out float old) ? old : 0f, d);
+            float d = Density(sr, pxPerUnit);
+            string key = RendKey(sr);
+            if (d > 12f) over12.Add(key);
+            if (d >= lo && d <= hi) continue;
+            if (sr.sprite.texture != null && sr.sprite.texture.filterMode != FilterMode.Point) continue;
+            outside[key] = Mathf.Max(outside.TryGetValue(key, out float old) ? old : 0f, d);
         }
-        Log("밀도 " + shot + " 개수=" + dense.Count + " " + (dense.Count > 0 ? string.Join(" ", dense.OrderByDescending(x => x.Value).Select(x => x.Key.Replace(" ", "_") + "=" + F1(x.Value))) : "-"));
+        Log("밀도 " + shot + " 영웅=" + F1(hero) + " 범위=" + F1(lo) + "~" + F1(hi) + " 개수=" + over12.Count + " 밖=" + outside.Count + " "
+            + (outside.Count > 0 ? string.Join(" ", outside.OrderByDescending(x => x.Value).Select(x => x.Key + "=" + F1(x.Value))) : "-"));
+    }
+
+    // ================================================================= 0-2) 보스 판정 · 그림 (2026-10-25 그래픽 개편 2단계 5-4 · 묶음 T — tools/qa/boss_ab.py 가 전 · 후 qa_log 를 비교)
+    // 거너 · 무한 · 시드 고정 · 보스 6종을 하나씩 플레이어 오른쪽 8칸에 (스킬 · 결계 · 기억 · 이동 · 소환 끔) → 1초 뒤 멈춰 1장 + 「판정」 줄 + 밀도 줄
+    //   장 보스(애니메이터에 death 가 있는 것)는 죽음 0.4초 지점 1장 더 (처치 처리 없이 애니메이터만) · 물건 줄 1장 · 도감 보스 탭 1장
+    //   「판정 <보스> 키=값 …」: 배율 · 그림 · PPU · rect · 경계(보스 자리 기준 가운데 · 크기) · col.offset · col.radius · 닿기(로컬) · 몸(월드 반지름)
+    //     · 상자(히트박스가 쓰는 그림 로컬 상자 · 출처) · 약점(보스 자리 기준 · 개발자 · 엄마는 궤도 가운데) · 약점반지름 · 글자y(OwnHeadY) · 밀도 · 화면(PNG 좌표 x0,y0,x1,y1 · 위가 0)
+    static readonly string[] GalleryNames = { "lich", "hell", "slimeking", "mirror", "developer", "mom" };
+    static readonly Vector3 GalleryAt = new Vector3(8f, 0f, 0f);
+    static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+    static string F4(float v) => v.ToString("0.0000", Inv);
+    static string V2s(Vector2 v) => F4(v.x) + "," + F4(v.y);
+
+    static void HoldEndless()
+    {
+        object em = EM();
+        if (em == null) return;
+        foreach (string f in new[] { "nextBoss", "nextMidBoss" })
+            try { Set(em, f, Time.time + 1e6f); } catch (Exception e) { Log("다음 보스 미루기 실패 " + f + " " + e.Message); }
+    }
+
+    static void HideEnemies()
+    {
+        foreach (Component e in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None).Cast<Component>()) e.gameObject.SetActive(false);
+    }
+
+    static void ClearBosses()
+    {
+        foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(T("bosss"), FindObjectsSortMode.None))
+            if (o is Component c && c != null) UnityEngine.Object.Destroy(c.gameObject);
+        if (T("BossPart") != null)
+            foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(T("BossPart"), FindObjectsSortMode.None))
+                if (o is Component c && c != null) UnityEngine.Object.Destroy(c.gameObject);
+    }
+
+    // 보스를 세워 둠: 스킬 · 결계 · 기억 끔 · 이동 0 · 소환 없음 (약점 · 히트박스 · 애니메이터는 그대로)
+    static void Still(Component b)
+    {
+        foreach (string t in new[] { "BossSkills", "BossUltimate", "BossMemory" })
+            if (T(t) != null && b.GetComponent(T(t)) is Behaviour beh && beh != null) beh.enabled = false;
+        // 꺼도 이미 시작한 코루틴은 돎 → 스킬만 멈춤 (결계 · 기억은 체력이 가득이라 아직 시작 전 · 멈추면 정적 상태가 남을 수 있어 건드리지 않음)
+        if (T("BossSkills") != null && b.GetComponent(T("BossSkills")) is MonoBehaviour skm && skm != null)
+        {
+            skm.StopAllCoroutines();
+            try { Set(skm, "next", Time.time + 1e6f); Set(skm, "ownNext", Time.time + 1e6f); } catch { }
+        }
+        Set(b, "casting", false);
+        Set(b, "speed", 0f);
+        Set(b, "summonInterval", 1e9f);
+        Set(b, "enragedSummonInterval", 1e9f);
+        Set(b, "hitsPerSummon", int.MaxValue);
+        Set(b, "domainHold", true);
+    }
+
+    static bool TryBox(object v, out Vector2 mn, out Vector2 mx)
+    {
+        mn = mx = Vector2.zero;
+        switch (v)
+        {
+            case Rect r when r.width > 0f || r.height > 0f: mn = r.min; mx = r.max; return true;
+            case Bounds bb when bb.size != Vector3.zero: mn = bb.min; mx = bb.max; return true;
+            case ValueTuple<Vector2, Vector2> t when t.Item1 != t.Item2: mn = t.Item1; mx = t.Item2; return true;
+        }
+        return false;
+    }
+
+    // 히트박스가 쓰는 그림 로컬 상자: 묶음 1 뒤엔 보스 고정 표(인스턴스 칸 — 이름에 box 가 든 Rect · Bounds · (Vector2, Vector2) 먼저) · 그 전엔 그림마다 계산해 둔 extents[sprite]
+    static string HitboxBox(Component hb, Sprite sp)
+    {
+        if (hb == null) return "- 상자출처=-";
+        Type ht = hb.GetType();
+        var fields = ht.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .OrderBy(f => f.Name.IndexOf("box", StringComparison.OrdinalIgnoreCase) >= 0 ? 0 : 1).ToList();
+        foreach (FieldInfo fi in fields)
+            if (TryBox(fi.GetValue(hb), out Vector2 a, out Vector2 b)) return V2s(a) + "," + V2s(b) + " 상자출처=" + fi.Name;
+        foreach (PropertyInfo pi in ht.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        {
+            if (pi.GetIndexParameters().Length > 0 || !pi.CanRead || pi.DeclaringType != ht) continue;
+            object v;
+            try { v = pi.GetValue(hb); } catch { continue; }
+            if (TryBox(v, out Vector2 a, out Vector2 b)) return V2s(a) + "," + V2s(b) + " 상자출처=" + pi.Name;
+        }
+        if (sp != null && Get(ht, "extents") is IDictionary d && d.Contains(sp) && TryBox(d[sp], out Vector2 a2, out Vector2 b2)) return V2s(a2) + "," + V2s(b2) + " 상자출처=extents";
+        return "- 상자출처=없음";
+    }
+
+    // 렌더러 경계의 PNG 좌표 (위가 0) — boss_ab.py 가 잘라 붙임
+    static string ScreenBox(Camera cam, Bounds bb, int w, int h)
+    {
+        Vector2 a = cam.WorldToScreenPoint(bb.min), b = cam.WorldToScreenPoint(bb.max);
+        int x0 = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.x, b.x)), 0, w), x1 = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.x, b.x)), 0, w);
+        int y0 = Mathf.Clamp(h - Mathf.CeilToInt(Mathf.Max(a.y, b.y)), 0, h), y1 = Mathf.Clamp(h - Mathf.FloorToInt(Mathf.Min(a.y, b.y)), 0, h);
+        return x0 + "," + y0 + "," + x1 + "," + y1;
+    }
+
+    static void GalleryLine(string name, Component b)
+    {
+        Camera cam = Camera.main;
+        Transform tr = b.transform;
+        Vector2 pos = tr.position;
+        SpriteRenderer sr = b.GetComponent<SpriteRenderer>();
+        Sprite sp = sr != null ? sr.sprite : null;
+        CircleCollider2D col = b.GetComponent<CircleCollider2D>();
+        Component hb = T("EnemyHitbox") != null ? b.GetComponent(T("EnemyHitbox")) : null;
+        Component ws = T("WeakSpot") != null ? b.GetComponent(T("WeakSpot")) : null;
+        Component sk = T("BossSkills") != null ? b.GetComponent(T("BossSkills")) : null;
+        int w = frame != null ? frame.width : 1920, h = frame != null ? frame.height : 1080;
+        float pxPerUnit = cam != null ? h / (2f * cam.orthographicSize) : 0f;
+        var sb = new StringBuilder("판정 " + name);
+        sb.Append(" kind=" + Get(b, "bossKind") + (Get(b, "developer") is bool dv && dv ? (Get(b, "developerMom") is bool dm && dm ? "/mom" : "/dev") : ""));
+        sb.Append(" 배율=" + F4(tr.lossyScale.x) + "," + F4(tr.lossyScale.y));
+        if (sp != null)
+        {
+            sb.Append(" 그림=" + sp.name.Replace(" ", "_") + " 텍스처=" + (sp.texture != null ? sp.texture.name.Replace(" ", "_") : "-") + " PPU=" + F4(sp.pixelsPerUnit));
+            sb.Append(" rect=" + Mathf.RoundToInt(sp.rect.width) + "x" + Mathf.RoundToInt(sp.rect.height) + " 필터=" + (sp.texture != null ? sp.texture.filterMode.ToString() : "-"));
+        }
+        else sb.Append(" 그림=- 텍스처=- PPU=0 rect=0x0");
+        if (sr != null)
+        {
+            Bounds rb = sr.bounds;
+            sb.Append(" flip=" + (sr.flipX ? 1 : 0) + " 경계=" + V2s((Vector2)rb.center - pos) + "," + V2s(rb.size));
+        }
+        if (col != null) sb.Append(" col.offset=" + V2s(col.offset) + " col.radius=" + F4(col.radius));
+        if (hb != null) sb.Append(" 닿기=" + F4(F(Get(hb, "ContactLocal"))) + " 몸=" + F4(F(Get(hb, "BodyWorldRadius"))));
+        sb.Append(" 상자=" + HitboxBox(hb, sp));
+        if (ws != null && Get(ws, "centers") is Vector2[] cs && cs.Length > 0)
+        {
+            string kind = Get(ws, "Kind")?.ToString() ?? "-";
+            bool orbit = kind == "Developer" || kind == "Mom";
+            Vector2 c = orbit && cs.Length > 1 ? (cs[0] + cs[1]) * 0.5f : cs[0];
+            sb.Append(" 약점종류=" + kind + " 약점=" + V2s(c - pos) + (orbit ? " 약점궤도=" + F4((cs[0] - c).magnitude) : "") + " 약점반지름=" + F4(F(Get(ws, "Radius"))));
+        }
+        else sb.Append(" 약점=-");
+        if (sk != null) { try { sb.Append(" 글자y=" + F4(F(Get(sk, "OwnHeadY")))); } catch { } }
+        if (sr != null && sp != null && cam != null)
+        {
+            sb.Append(" 밀도=" + F1(Density(sr, pxPerUnit)));
+            sb.Append(" 화면=" + ScreenBox(cam, sr.bounds, w, h));
+        }
+        Log(sb.ToString());
+    }
+
+    static IEnumerator BossGallery()
+    {
+        UnityEngine.Random.InitState(ReadSeed);
+        yield return LoadGame("Gunner");
+        UnityEngine.Random.InitState(ReadSeed);
+        pilot.on = false;
+        In("AutoMove", Vector2.zero); In("AutoFire", false);
+        object sp = Find("EnemySpawner");
+        if (sp != null) Set(sp, "spawningEnabled", false);
+        HideEnemies();
+        HoldEndless();
+        GameObject coinPrefab = null, potionPrefab = null;
+        for (int i = 0; i < GalleryNames.Length; i++)
+        {
+            string nm = GalleryNames[i];
+            HideEnemies();
+            HoldEndless();
+            Component b = i < 4 ? EndlessBoss(i, GalleryAt) : FinalBoss(i == 5, GalleryAt);
+            if (b == null) { Log("XX 보스 없음 " + nm); continue; }
+            yield return Frames(3);          // Start (히트박스 맞추기 · 스킬 · 결계 · 기억 붙이기) 뒤
+            Still(b);
+            b.transform.position = PPos() + GalleryAt;
+            if (coinPrefab == null) coinPrefab = Get(b, "coin") as GameObject;
+            if (potionPrefab == null) potionPrefab = Get(b, "hp") as GameObject;
+            yield return Secs(1f);
+            Time.timeScale = 0f;
+            yield return Shot("bg_" + nm);
+            GalleryLine(nm, b);
+            DensityLine("bg_" + nm, WorldRenderers(), Camera.main, frame.width, frame.height);
+            Time.timeScale = 1f;
+            Animator an = b.GetComponent<Animator>();
+            if (i < 4 && an != null && an.runtimeAnimatorController != null && an.parameters.Any(p => p.name == "death"))
+            {
+                an.SetTrigger("death");          // 처치 처리 없이 애니메이터만 (보상 · 분열 · 슬로모션 · 영토 번짐 없음)
+                yield return Secs(0.4f);
+                Time.timeScale = 0f;
+                yield return Shot("bg_" + nm + "_death");
+                SpriteRenderer dsr = b.GetComponent<SpriteRenderer>();
+                Log("죽음 " + nm + " 그림=" + (dsr != null && dsr.sprite != null ? dsr.sprite.name.Replace(" ", "_") : "-") + (dsr != null ? " 경계=" + V2s((Vector2)dsr.bounds.center - (Vector2)b.transform.position) + "," + V2s(dsr.bounds.size) + " 화면=" + ScreenBox(Camera.main, dsr.bounds, frame.width, frame.height) : ""));
+                Time.timeScale = 1f;
+            }
+            else if (i < 4) Log("죽음 " + nm + " 애니메이터 death 없음 (심연식 찌그러짐 · 건너뜀)");
+            ClearBosses();
+            yield return Frames(2);
+        }
+        yield return GalleryProps(coinPrefab, potionPrefab);
+        yield return GalleryCodex();
+    }
+
+    // 물건 줄: 코인 4단계 · 물약 · 조준 표식(처음 · 끝 배율) · 의식 물건 3 (리치 왕 기술을 실제로 불러 만든 것) → 1장 + 「물건」 줄 + 밀도 줄
+    static IEnumerator GalleryProps(GameObject coinPrefab, GameObject potionPrefab)
+    {
+        HideEnemies();
+        HoldEndless();
+        Vector3 row = PPos() + new Vector3(-7f, 4f, 0f);
+        var props = new List<(string tag, GameObject go)>();
+        int[] vals = { 1, 2, 5, 15 };          // CoinTag.SetValue: 1 → 단계 0 · 2~4 → 1 · 5~14 → 2 · 15~ → 3
+        if (coinPrefab != null)
+            for (int i = 0; i < vals.Length; i++)
+                if (SCall("CoinTag", "Spawn", coinPrefab, row + new Vector3(i * 1.8f, 0f, 0f), vals[i]) is GameObject c) props.Add(("coin_t" + i, c));
+        if (coinPrefab == null) Log("XX 코인 프리팹 없음");
+        if (potionPrefab != null) props.Add(("potion", UnityEngine.Object.Instantiate(potionPrefab, row + new Vector3(8f, 0f, 0f), Quaternion.identity)));
+        else Log("XX 물약 프리팹 없음");
+        GameObject markPrefab = Get(Player(), "targetMarkPrefab") as GameObject;
+        if (markPrefab != null)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                GameObject m = UnityEngine.Object.Instantiate(markPrefab, row + new Vector3(10.5f + i * 2.5f, 0f, 0f), Quaternion.identity);
+                Component tm = T("TargetMark") != null ? m.GetComponent(T("TargetMark")) : null;
+                float s = tm != null ? F(Get(tm, i == 0 ? "startScale" : "endScale")) : (i == 0 ? 0.8f : 0.4f);
+                if (tm is Behaviour tb) tb.enabled = false;
+                m.transform.localScale = Vector3.one * s;
+                props.Add(("mark_" + (i == 0 ? "start" : "end") + "_" + s.ToString("0.00", Inv), m));
+            }
+        }
+        else Log("XX 조준 표식 프리팹 없음");
+        // 의식 물건: 리치 왕(turn 0)의 영혼구 · 저주 묘비 · 영혼 등불 기술을 불러 실제 물건을 만든 뒤 줄로 옮김
+        Component lich = EndlessBoss(0, new Vector3(6f, -5f, 0f));
+        yield return Frames(3);
+        Component sk = lich != null && T("BossSkills") != null ? lich.GetComponent(T("BossSkills")) : null;
+        if (sk is MonoBehaviour skm)
+        {
+            Set(lich, "speed", 0f);
+            try { Set(sk, "next", Time.time + 999f); } catch { }
+            foreach (string co in new[] { "SoulOrbs", "CursedTombs", "LichRitual" })
+            {
+                try
+                {
+                    MethodInfo mi = sk.GetType().GetMethod(co, Any);
+                    if (mi == null) { Log("XX 의식 기술 없음 " + co); continue; }
+                    object[] args = mi.GetParameters().Length == 1 ? new object[] { Player() } : new object[0];
+                    skm.StartCoroutine((IEnumerator)mi.Invoke(sk, args));
+                }
+                catch (Exception e) { Log("XX 의식 기술 실패 " + co + " " + (e.InnerException ?? e).Message); }
+            }
+            yield return Secs(1.2f);           // 예고(0.6초) 뒤 물건이 생김
+            string[] parts = { "SoulOrb", "CursedTomb", "SoulLantern" };
+            var all = T("BossPart") != null ? UnityEngine.Object.FindObjectsByType(T("BossPart"), FindObjectsSortMode.None).Cast<Component>().ToList() : new List<Component>();
+            for (int i = 0; i < parts.Length; i++)
+            {
+                Component pc = all.FirstOrDefault(c => c != null && c.name.StartsWith(parts[i]));
+                if (pc == null) { Log("XX 의식 물건 없음 " + parts[i]); continue; }
+                pc.transform.position = row + new Vector3(15.5f + i * 2.2f, 0f, 0f);
+                props.Add(("ritual_" + parts[i], pc.gameObject));
+            }
+            lich.transform.position += new Vector3(60f, 0f, 0f);        // 사진 밖으로
+        }
+        yield return Frames(2);
+        Time.timeScale = 0f;
+        yield return Shot("bg_props");
+        Camera cam = Camera.main;
+        float pxPerUnit = frame.height / (2f * cam.orthographicSize);
+        foreach (var (tag, go) in props)
+        {
+            if (go == null) { Log("물건 " + tag + " 사라짐"); continue; }
+            SpriteRenderer r = go.GetComponent<SpriteRenderer>() ?? go.GetComponentInChildren<SpriteRenderer>();
+            if (r == null || r.sprite == null) { Log("물건 " + tag + " 그림 없음"); continue; }
+            Log("물건 " + tag + " 그림=" + r.sprite.name.Replace(" ", "_") + " 텍스처=" + (r.sprite.texture != null ? r.sprite.texture.name.Replace(" ", "_") : "-") + " PPU=" + F4(r.sprite.pixelsPerUnit)
+                + " rect=" + Mathf.RoundToInt(r.sprite.rect.width) + "x" + Mathf.RoundToInt(r.sprite.rect.height) + " 배율=" + F4(Mathf.Abs(r.transform.lossyScale.y)) + " 밀도=" + F1(Density(r, pxPerUnit))
+                + " 영웅배=" + F4(Density(r, pxPerUnit) / HeroDensity(pxPerUnit)) + " 필터=" + (r.sprite.texture != null ? r.sprite.texture.filterMode.ToString() : "-") + " 월드=" + F4(r.bounds.size.x) + "," + F4(r.bounds.size.y) + " 화면=" + ScreenBox(cam, r.bounds, frame.width, frame.height));
+        }
+        DensityLine("bg_props", props.Where(p => p.go != null).SelectMany(p => p.go.GetComponentsInChildren<Renderer>()), cam, frame.width, frame.height);
+        Time.timeScale = 1f;
+        foreach (var (_, go) in props) if (go != null) UnityEngine.Object.Destroy(go);
+        ClearBosses();
+        yield return Frames(2);
+    }
+
+    // 도감 보스 탭 1장 + 카드 그림 배율 (preserveAspect 그림: 칸 ÷ 그림 화소 · 정수인지)
+    static IEnumerator GalleryCodex()
+    {
+        object showAll = SGet("CodexSeen", "ShowAll");
+        SSet("CodexSeen", "ShowAll", true);
+        try
+        {
+            Transform root = ((Component)SCall("UIKit", "HudCanvas")).transform;
+            SCall("CodexUI", "Open", root);
+            SCall("CodexUI", "Show", 1);
+        }
+        catch (Exception e) { Log("XX 도감 열기 실패 " + (e.InnerException ?? e).Message); SSet("CodexSeen", "ShowAll", showAll); yield break; }
+        yield return Real(0.4f);
+        yield return Shot("bg_codex_bosses");
+        if (SGet("CodexUI", "grid") is Transform grid && grid != null)
+        {
+            int n = 0;
+            foreach (UnityEngine.UI.Image img in grid.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+            {
+                if (img.sprite == null || !img.preserveAspect || img.sprite.texture == null || img.sprite.texture.filterMode != FilterMode.Point) continue;
+                Rect rr = img.rectTransform.rect, spr = img.sprite.rect;
+                float fit = Mathf.Min(rr.width / Mathf.Max(1f, spr.width), rr.height / Mathf.Max(1f, spr.height));
+                Log("도감카드 그림=" + img.sprite.name.Replace(" ", "_") + " 그림화소=" + spr.width + "x" + spr.height + " 칸=" + F1(rr.width) + "x" + F1(rr.height) + " 배=" + F4(fit) + (Mathf.Abs(fit - Mathf.Round(fit)) < 0.01f ? " 정수" : " 비정수"));
+                if (++n >= 24) break;
+            }
+            if (n == 0) Log("도감카드 점 필터 그림 없음");
+        }
+        else Log("XX 도감 grid 없음");
+        try { SCall("CodexUI", "Close"); } catch { }
+        SSet("CodexSeen", "ShowAll", showAll);
+        Time.timeScale = 1f;
+        yield return Frames(2);
+    }
+
+    // ================================================================= 0-3) 메인 메뉴 영웅 초상 (2026-10-25 그래픽 개편 2단계 5-4 · 묶음 T)
+    // 영혼 트리 1장(게임 안 · 가지 색 테) → 메인 메뉴 1920×1080 · 1600×900 × 거너 기본 · 도적 공허(모양 다른 스킨) = 4장
+    //   「초상 <경우> <크기> 그림=… 그림화소=… 칸=… 칸÷그림=… 정수/비정수 화면배율=… 정수/비정수」 (preserveAspect 로 실제 그려지는 배율)
+    static IEnumerator MenuHero()
+    {
+        yield return LoadGame("Gunner");
+        pilot.on = false;
+        In("AutoMove", Vector2.zero); In("AutoFire", false);
+        object spc = SGet("SpecialAbilities", "SharedInstance");
+        if (spc != null && T("SoulTreeUI") != null)
+        {
+            try { SCall("SoulTreeUI", "Open", spc, null); } catch (Exception e) { Log("XX 영혼 트리 열기 실패 " + (e.InnerException ?? e).Message); }
+            yield return Real(0.6f);
+            yield return Shot("mh_soultree");
+            object tree = SGet("SoulTreeUI", "Instance");
+            if (tree != null && tree is Component tc) Log("영혼 트리 칸 그림 " + tc.GetComponentsInChildren<UnityEngine.UI.Image>(true).Count(i => i.sprite != null && i.sprite.name.StartsWith("tree_")) + "개");
+            try { SCall("SoulTreeUI", "Close"); } catch { }
+            Time.timeScale = 1f;
+            yield return Frames(3);
+        }
+        else Log("XX 영혼 트리 건너뜀 (SpecialAbilities 없음)");
+
+        SceneManager.LoadScene("MainMenu");
+        yield return Frames(30);
+        object prevOverride = SGet("CharacterData", "Override");
+        var cases = new[] { ("gunner", "Gunner", (string)null), ("rogue_void", "Rogue", "rogue__void") };
+        try
+        {
+            foreach (var (tag, hero, skin) in cases)
+            {
+                SSet("CharacterData", "Override", Nullable("CharacterId", hero));
+                int who = Convert.ToInt32(Enm("CharacterId", hero));
+                object kindChar = Enm("SkinKind", "Character");
+                string eqKey = null, prevEq = null;
+                int prevOwn = 0;
+                if (skin != null)
+                {
+                    eqKey = (string)SCall("SkinData", "EquipKey", kindChar, who);
+                    prevEq = (string)SCall("Prefs", "GetString", eqKey, "");
+                    prevOwn = Convert.ToInt32(SCall("Prefs", "GetInt", "skin.own." + skin, 0));
+                    SCall("Prefs", "SetInt", "skin.own." + skin, 1);
+                    object def = SCall("SkinData", "Get", skin);
+                    if (def == null) Log("XX 스킨 없음 " + skin);
+                    else SCall("SkinData", "Equip", def);
+                }
+                try
+                {
+                    foreach (int[] sz in new[] { new[] { 1920, 1080 }, new[] { 1600, 900 } })
+                    {
+                        yield return UseSize(sz[0], sz[1]);
+                        MenuRelayout();
+                        yield return Frames(3);
+                        yield return Shot("mh_" + tag, sz[0], sz[1]);
+                        PortraitLine(tag, sz[0], sz[1]);
+                    }
+                }
+                finally
+                {
+                    if (skin != null)
+                    {
+                        SCall("Prefs", "SetString", eqKey, prevEq ?? "");
+                        SCall("Prefs", "SetInt", "skin.own." + skin, prevOwn);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            SSet("CharacterData", "Override", prevOverride);
+            try { SCall("MenuHeroPanel", "Refresh"); } catch { }
+        }
+    }
+
+    // 메뉴를 지금 화면 크기로 다시 배치 (가운데 영웅 칸 384 / 512 · 초상 다시 그림) — 못 하면 초상만 다시
+    static void MenuRelayout()
+    {
+        try
+        {
+            // MenuExtras: MenuHeroPanel.Install(sr.parent, …) · LayoutMainV2(sr.parent) — 같은 부모
+            GameObject hp = GameObject.Find("HeroPanel");
+            Transform par = hp != null ? hp.transform.parent : null;
+            if (par != null) { SCall("MenuExtras", "LayoutMainV2", par); return; }
+        }
+        catch (Exception e) { Log("메뉴 다시 배치 실패 " + (e.InnerException ?? e).Message); }
+        try { SCall("MenuHeroPanel", "Refresh"); } catch (Exception e) { Log("XX 초상 다시 그리기 실패 " + (e.InnerException ?? e).Message); }
+    }
+
+    static void PortraitLine(string tag, int w, int h)
+    {
+        UnityEngine.UI.Image img = null, gun = null;
+        GameObject hp = GameObject.Find("HeroPanel");
+        IEnumerable<UnityEngine.UI.Image> pool = hp != null ? hp.GetComponentsInChildren<UnityEngine.UI.Image>(true) : UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Image>(FindObjectsSortMode.None);
+        foreach (UnityEngine.UI.Image i in pool) { if (i.name == "Portrait" && img == null) img = i; else if (i.name == "Gun" && gun == null) gun = i; }
+        if (img == null || img.sprite == null) { Log("초상 " + tag + " " + w + "x" + h + " 없음"); return; }
+        Rect rr = img.rectTransform.rect, spr = img.sprite.rect;
+        float sf = img.canvas != null ? img.canvas.scaleFactor : 1f;
+        float fit = img.preserveAspect ? Mathf.Min(rr.width / spr.width, rr.height / spr.height) : rr.width / spr.width;
+        float scr = fit * sf;
+        string Int(float v) => Mathf.Abs(v - Mathf.Round(v)) < 0.01f ? "정수" : "비정수";
+        Log("초상 " + tag + " " + w + "x" + h + " 그림=" + img.sprite.name.Replace(" ", "_") + " 텍스처=" + (img.sprite.texture != null ? img.sprite.texture.name.Replace(" ", "_") : "-")
+            + " 그림화소=" + spr.width + "x" + spr.height + " 칸=" + F1(rr.width) + "x" + F1(rr.height) + " PortraitV2=" + SGet("MenuHeroPanel", "PortraitV2")
+            + " 칸÷그림=" + F4(fit) + " " + Int(fit) + " 캔버스배율=" + F4(sf) + " 화면배율=" + F4(scr) + " " + Int(scr)
+            + " 필터=" + (img.sprite.texture != null ? img.sprite.texture.filterMode.ToString() : "-")
+            + (gun != null && gun.sprite != null ? " 권총=" + gun.sprite.name + " 권총배=" + F4(Mathf.Min(gun.rectTransform.rect.width / gun.sprite.rect.width, gun.rectTransform.rect.height / gun.sprite.rect.height) * sf) : " 권총=없음"));
     }
 
     // ================================================================= 1) graphics-1: 「기억: … n초」 줄 · 결계 게이지 겹침 (무한 · 이야기 · 영어)
@@ -1397,10 +1939,59 @@ public class QaCapture
                     if (Vector2.Angle(me, sd) > 60f) flankFrames++;
                 }
                 if (!broke && F(Get(b, "memoryTakenMul")) > 1.01f) { broke = true; brokeAt = Time.time - t0; }
-                if (f == 90) yield return Shot("mem_shield_" + hero);
+                if (f == 90) { yield return Shot("mem_shield_" + hero); MemFilmLine(hero, mem); }
             }
             Log(hero + " 12초 옆 · 뒤 돌기: 옆 · 뒤에 있던 비율 " + (flankFrames * 100f / Mathf.Max(1, frames)).ToString("0") + "% · 깨짐 " + broke + (broke ? " (" + brokeAt.ToString("0.0") + "초)" : "") + " · 누적 " + (mem != null ? F(Get(mem, "breakAccum")) / F(Get(b, "setEnemyHP")) : 0f).ToString("0.000"));
         }
+
+        // 2026-10-25 그래픽 개편 2단계 (묶음 0 확인용): 「결의」 = 스킬 기억 — 평타 · 지금 무기가 아닌 출처(특수 능력)의 피해로 기억 발동 → 방패 대신 몸을 덮는 막
+        //   예전엔 막이 보스 배율을 두 번 받아 지름 300~540칸 (화면 전체가 기억 색) — 기대: 몸 반지름 × 2.6 (× 1.06 맥동) · 14~21칸
+        {
+            yield return LoadGame("Gunner");
+            pilot.on = false;
+            In("AutoMove", Vector2.zero); In("AutoFire", false);
+            Component b = EndlessBoss(1, new Vector3(6f, 0f, 0f));
+            if (b == null) { Log("XX 결의 · 보스 없음"); yield break; }
+            yield return Frames(3);
+            float max = F(Get(b, "setEnemyHP"));
+            object src0 = SGet("DamageSource", "Current");
+            string special = (string)SGet("DamageSource", "Special");
+            HpFrac(b, 0.6f);
+            try { SSet("DamageSource", "Current", special); for (int i = 0; i < 3; i++) Call(b, "TakeDamage", max * 0.02f, 0f, Vector3.zero); }
+            finally { SSet("DamageSource", "Current", src0); }
+            yield return Secs(4f);            // 날개 단계(66%) 연출이 끝나도록
+            HpFrac(b, 0.505f);
+            yield return Secs(0.2f);
+            try { SSet("DamageSource", "Current", special); Call(b, "TakeDamage", max * 0.012f, 0f, Vector3.zero); }
+            finally { SSet("DamageSource", "Current", src0); }
+            object mem = null;
+            for (int i = 0; i < 120; i++) { yield return null; mem = Get(b, "memory"); if (mem != null && (bool)Get(mem, "Active")) break; }
+            bool shield = mem != null && (bool)Get(mem, "shield");
+            Log("결의 기억 " + (mem != null ? Get(mem, "Active") : "없음") + " 방패=" + shield + " (거짓이어야 결의) · 기억한 것 '" + (mem != null ? Get(mem, "remembered") : "") + "' 줄 '" + (mem != null ? Get(mem, "BarText") : "") + "'");
+            yield return Secs(1f);
+            yield return Shot("mem_shield_resolve");
+            MemFilmLine("결의", mem);
+        }
+    }
+
+    // 기억 막 크기: 결의 막(veil) 월드 지름 · 화면 화소 · 방패 호 반지름 (「막 <경우> …」)
+    static void MemFilmLine(string tag, object mem)
+    {
+        if (mem == null) { Log("막 " + tag + " 기억 없음"); return; }
+        float bodyR = F(Get(mem, "bodyR"));
+        var sb = new StringBuilder("막 " + tag + " 방패=" + Get(mem, "shield") + " 몸반지름=" + F1(bodyR));
+        GameObject veil = Get(mem, "veil") as GameObject;
+        SpriteRenderer vs = Get(mem, "veilSr") as SpriteRenderer;
+        Camera cam = Camera.main;
+        float pxPerUnit = cam != null ? 1080f / (2f * cam.orthographicSize) : 0f;
+        if (veil != null && veil.activeInHierarchy && vs != null)
+        {
+            float dia = Mathf.Max(vs.bounds.size.x, vs.bounds.size.y);
+            sb.Append(" 결의막지름=" + F1(dia) + "칸 (기대 " + F1(bodyR * 2.6f) + "~" + F1(bodyR * 2.6f * 1.06f) + " · 14~21) 화면=" + F1(dia * pxPerUnit) + "화소 알파=" + vs.color.a.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " 층=" + vs.sortingLayerName);
+        }
+        else sb.Append(" 결의막=없음");
+        if (Get(mem, "arc") is LineRenderer arc && arc != null && arc.enabled) sb.Append(" 방패호반지름=" + F1(bodyR * 1.35f) + " 폭=" + arc.startWidth.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+        Log(sb.ToString());
     }
 
     // ================================================================= 9) balance-4: 개발자 · 엄마 처치 시간 (보통 빌드 근사: 레벨 45 · 무기 진화 2번)

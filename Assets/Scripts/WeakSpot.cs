@@ -237,7 +237,7 @@ public class WeakSpot : MonoBehaviour
     void Refresh()
     {
         if (body == null) { Open = false; HideMarks(); return; }
-        Bounds b = body.bounds;
+        Bounds b = hitbox != null ? hitbox.Frame(body) : body.bounds;       // 1.6.0~ 보스는 고정 틀 (그림을 바꿔도 약점 자리 그대로)
         float baseR = hitbox != null ? hitbox.BodyWorldRadius : 0f;
         if (baseR <= 0.01f) baseR = 0.25f * (b.size.x + b.size.y);
         BodyRadius = baseR;
