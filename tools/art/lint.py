@@ -316,7 +316,7 @@ def thin_outline(X):
 
 
 # 고해상도로 바꾼 보스는 32칸 원본이 설계도 파일에만 남음 (tools/pixelart/hires/bosses/blueprints/<보스>_32.png 첫 칸 = 살아 있는 그림)
-CAL_SRC = [("리치 왕", "Assets/Sprites/enemy/boss.png", 3.75, "boss"), ("지옥의 군주", "Assets/Sprites/enemy/hell/hell_lord.png", 4.5, "boss"),
+CAL_SRC = [("리치 왕", "tools/pixelart/hires/bosses/blueprints/lich_32.png", 3.75, "boss"), ("지옥의 군주", "tools/pixelart/hires/bosses/blueprints/helllord_32.png", 4.5, "boss"),
            ("킹 슬라임", "tools/pixelart/hires/bosses/blueprints/slimeking_32.png", 5.06, "boss"), ("개발자", "tools/pixelart/hires/bosses/blueprints/developer_32.png", 3.8, "boss"),
            ("거너", "Assets/Resources/Characters/gunner_nogun.png", 4.0, "portrait")]
 
@@ -336,8 +336,8 @@ def hand_set():
             items.append(("잡몹", os.path.basename(f)[:-4], f, "sprite"))
     for n in ["wisp_0", "chainwraith_0", "voideye_0", "reaper_0", "colossus_0"]:
         items.append(("심연잡몹", n, os.path.join(A, "Resources/Abyss/%s.png" % n), "sprite"))
-    for n, p in [("boss", "Sprites/enemy/boss.png"), ("hell_lord", "Sprites/enemy/hell/hell_lord.png"), ("meadow_slimeking", "../tools/pixelart/hires/bosses/blueprints/slimeking_32.png"),
-                 ("mirrorlord_0", "Resources/Abyss/mirrorlord_0.png"), ("developer_0", "Resources/Abyss/developer_0.png")]:
+    for n, p in [("boss", "../tools/pixelart/hires/bosses/blueprints/lich_32.png"), ("hell_lord", "../tools/pixelart/hires/bosses/blueprints/helllord_32.png"), ("meadow_slimeking", "../tools/pixelart/hires/bosses/blueprints/slimeking_32.png"),
+                 ("mirrorlord_0", "../tools/pixelart/hires/bosses/blueprints/mirror_32.png"), ("developer_0", "../tools/pixelart/hires/bosses/blueprints/developer_32.png")]:
         items.append(("보스", n, os.path.join(A, p), "boss"))
     return [(g, n, p, k) for g, n, p, k in items if os.path.exists(p)]
 

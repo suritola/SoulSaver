@@ -74,6 +74,9 @@ public static class SpriteOutline
             mat = new Material(s) { name = "SpriteOutline" };
             mat.SetColor("_OutlineColor", color);
             mat.SetFloat("_SkipDark", skipDark);         // 1.6.0~ 0 = 예전 그대로 (키워드 없이 재질 값으로만 갈라 빌드에서 빠질 조합이 없음)
+            // 1.6.0~ 밝기 배율은 화면(감마) 기준 값 (VisualRules.EnemyBrightness 「Y ×1.15」) — 이 프로젝트는 Linear 색 공간이라 셰이더가 선형 색에 곱함
+            //   그대로 넣으면 화면 Y 는 약 ×1.066 뿐이었음 (바닥 · 외곽 생략 셰이더와 같은 감마 실수) → 선형 배율 = 배율^2.2
+            if (brightness != 1f && QualitySettings.activeColorSpace == ColorSpace.Linear) brightness = Mathf.Pow(brightness, 2.2f);
             mat.SetFloat("_Brightness", brightness);
         }
         if (effectLayer == int.MinValue)

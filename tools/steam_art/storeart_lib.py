@@ -74,7 +74,16 @@ ENEMY_FILES = {
 ABYSS = ["chainwraith", "colossus", "developer", "mirrorlord", "reaper", "voideye", "wisp"]
 
 
+# 2단계 그래픽 개편(2026-10-25~): 보스 시트 · 심연 보스 그림이 고해상도(90~162칸)로 바뀌어 32칸으로 잘라 쓰면 깨짐
+#   → 32칸 설계도(tools/pixelart/hires/bosses/blueprints/<이름>_32.png · 32칸 4열 × 2줄, 첫 칸 = 서 있는 모습)를 씀
+BLUEPRINTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pixelart", "hires", "bosses", "blueprints")
+BOSS_BLUEPRINTS = {"lich": "lich_32.png", "hell_lord": "helllord_32.png", "slime_king": "slimeking_32.png",
+                   "developer": "developer_32.png", "mirrorlord": "mirror_32.png", "mom": "mom_32.png"}
+
+
 def enemy(name, frame=0):
+    if name in BOSS_BLUEPRINTS:
+        return cell(os.path.join(BLUEPRINTS, BOSS_BLUEPRINTS[name]), (frame // 4) % 2, frame % 4)
     if name in ABYSS:
         return trim(load(os.path.join(RES, "Abyss", "%s_%d.png" % (name, frame % 4))))
     return cell(ENEMY_FILES[name], 1 if frame else 0, frame)
