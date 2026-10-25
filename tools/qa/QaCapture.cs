@@ -1371,7 +1371,11 @@ public class QaCapture
         var cases = new[] { ("gunner", "Gunner", (string)null, true), ("rogue", "Rogue", (string)null, true), ("rogue_void", "Rogue", "rogue__void", true),
                             ("swordsman", "Swordsman", (string)null, false), ("archer", "Archer", (string)null, false), ("alchemist", "Alchemist", (string)null, false),
                             ("cartographer", "Cartographer", (string)null, false), ("clockmaker", "Clockmaker", (string)null, false),
-                            ("postman", "Postman", (string)null, false), ("ghost", "Ghost", (string)null, false) };
+                            ("postman", "Postman", (string)null, false), ("ghost", "Ghost", (string)null, false),
+                            // 스킨 20 더함: 모양이 다른 스킨 둘 · 밝은 색 스킨(흑백 계층 확인) 셋 — 1920×1080 한 장씩
+                            ("swordsman_dragon", "Swordsman", "swordsman__dragon", false), ("alchemist_plague", "Alchemist", "alchemist__plague", false),
+                            ("gunner_gold", "Gunner", "gunner_nogun__gold", false), ("archer_snow", "Archer", "archer__snow", false),
+                            ("swordsman_paladin", "Swordsman", "swordsman__paladin", false) };
         try
         {
             foreach (var (tag, hero, skin, both) in cases)

@@ -17,7 +17,7 @@ SKINS = [
 ALL = HEROES + SKINS
 
 # 시트 이름 → 모듈 이름 (그린 것만). 시안 2 = 도적 1장 — 독립 검토 판정을 넘은 뒤 나머지 28장을 더함
-#   영웅 8 — 도적 규칙(README.md) 그대로 더함 (스킨 20 은 다음 단계)
+#   영웅 8 — 도적 규칙(README.md) 그대로 더함
 MODULES = {
     'rogue': 'rogue',
     'gunner_nogun': 'gunner_nogun',
@@ -29,6 +29,8 @@ MODULES = {
     'clockmaker': 'clockmaker',
     'cartographer': 'cartographer',
 }
+# 스킨 20 — 색 대응 15벌은 기본 영웅 모듈 + 스킨 32칸 색 단계 (skin.py Variant), 모양이 다른 5벌은 + 덧그림 (뿔 · 모자 · 가면 · 날개 자락 · 머리띠)
+MODULES.update({n: n for n in SKINS})
 
 
 def load(name):
