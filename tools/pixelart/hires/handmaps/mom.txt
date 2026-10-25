@@ -93,9 +93,9 @@ kRRrrssk
 kRrrrstk
 kRrrsstk
 krrsstuk
-ktuuuutk
-.kttttk.
-..kkkk..
+ktuuuuk.
+.kuttk..
+..kkk...
 
 # 치켜든 슬리퍼 (공격 fx_slipper 와 같은 분홍 · 흰 끈) + 쥔 손 + 소매 끝
 @grid slipper
@@ -106,8 +106,8 @@ ktuuuutk
 ......kkRRRRWWWWWWWWrrsssk....
 ....kRRRRRWWWWWWWWWwrssstk....
 ...kRRrrrrWWWWWWWwwvsssttk....
-..kRrrrrrrrWWwwwvvssttuuk.....
-.kRrrrsssrrrrsrsstttuuuk......
+..kRrrrrrrrWWWwwvvssttuuk.....
+.kRrrrsssrrrrsrssttttuuk......
 kRrrsstssrrssstttuuuuk........
 krssttttsssttssuuuuck.........
 kcccccccccccccccccck..........
@@ -156,12 +156,12 @@ kHHHHHHHHHHhhhhk
 @grid exclL
 .kkkkk.
 kHHHHhk
+kHHHhhk
 kHHHHhk
-kHHHHhk
-kHHHHhk
+kHHHhhk
 .kHHHhk
 .kHHhk.
-.kHHhk.
+.kHhhk.
 ..kHhk.
 ..khk..
 ...k...
@@ -207,7 +207,7 @@ kstttttttttttttttuuuuk..
 ...kkkkkkkkkkkkkkkkk....
 @grid footR
 ......kkkkkkkkkkkkk.....
-....kkWWWWWWwwwwvvkk....
+....kkWWWWWWwwwwwvkk....
 ...ktWWWWWwwwwwvvvtuk...
 ..ksttttttttttttttuuk...
 .ksttttttttttttttuuuuk..
@@ -297,19 +297,32 @@ kYZYk........
 ........kYXk.
 .........kYk.
 
-# 가디건 단추 (개발자 후드 남색 · 모양 셋)
+# 가디건 단추 (개발자 후드 남색 · 여섯 개 모두 모양 다름 — 같은 단추 도장 반복 금지)
 @grid btnA
-.NB
-BBb
-.bb
+.NB.
+NBBb
+BBBb
+.bb.
 @grid btnB
 NB.
 BBb
-Bbb
+Bb.
 @grid btnC
 .N.
 BBb
 .b.
+@grid btnD
+.NN
+NBB
+BBb
+Bb.
+@grid btnE
+.NB.
+BBBb
+.Bb.
+@grid btnF
+NB
+Bb
 # 곱슬 C자 반짝 더 (작은 것)
 @grid cG
 .PP
