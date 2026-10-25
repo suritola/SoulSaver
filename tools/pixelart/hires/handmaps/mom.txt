@@ -1,0 +1,327 @@
+# 개발자 엄마 손 도트 지도 (그래픽 개편 2단계 묶음 5) — 글자 = 재질:단계, 색은 bosses/mom.py 의 PAL
+# 디자인 = 새 32칸 설계도(handmaps/mom_bp.txt). 살색 단계는 개발자와 같음 (가족)
+@legend
+k = ol
+c = olc
+o = olw
+R = pink:4
+r = pink:3
+s = pink:2
+t = pink:1
+u = pink:0
+F = skin:3
+f = skin:2
+S = skin:1
+z = skin:0
+W = apron:3
+w = apron:2
+v = apron:1
+V = apron:0
+H = heart:1
+h = heart:0
+G = gold:4
+g = gold:3
+d = gold:2
+e = gold:1
+P = perm:3
+Q = perm:0
+B = hood:1
+b = hood:0
+N = hood:2
+X = wood:0
+Y = wood:1
+Z = wood:2
+L = glass:1
+M = glass:2
+m = glass:3
+
+# 반달 눈웃음 (안경알 안 · 왼눈 오른눈 모양 조금 다름)
+@grid eyeL
+..kkkkk..
+.kk...kk.
+kk.....k.
+@grid eyeR
+..kkkkk..
+.kk...kk.
+.k.....kk
+
+# 웃는 입 (입꼬리 올림 · 분홍 혀)
+@grid mouth
+k........k
+.kk....kk.
+...kkkk...
+
+# 볼 홍조 (왼쪽 · 오른쪽 모양 다름)
+@grid blushL
+.rrrr.
+rrrrrr
+.rrr..
+@grid blushR
+.rrr..
+rrrrrr
+..rrrr
+
+# 코 (작은 그늘)
+@grid nose
+S.
+SS
+
+# 헤어롤 (가로 둘 · 크기 다름, 세로 하나)
+@grid rollA
+..kkkkkkkkkkkk..
+.ktRRRRRRRRRrtk.
+ktuRRRRRRRRrrtuk
+kturrrrrrrrrstuk
+ktussssssssssuk.
+.kkttttttttttkk.
+..kkkkkkkkkkkk..
+@grid rollB
+..kkkkkkkkkk..
+.ktRRRRRRRrtk.
+ktuRRRRRRrrtuk
+kturrrrrrrstuk
+.ktussssssstuk
+.kkttttttttkk.
+..kkkkkkkkkk..
+@grid rollC
+..kkkk..
+.kttttk.
+ktuuuutk
+kRRRrrsk
+kRRrrrsk
+kRRrrssk
+kRrrrstk
+kRrrsstk
+krrsstuk
+ktuuuutk
+.kttttk.
+..kkkk..
+
+# 치켜든 슬리퍼 (공격 fx_slipper 와 같은 분홍 · 흰 끈) + 쥔 손 + 소매 끝
+@grid slipper
+.....................kkkkkk...
+................kkkRRRRRrkk...
+............kkkRRRRRRrrrrsk...
+.........kkRRRRRRRrrrrrsssk...
+......kkRRRRWWWWWWWWrrsssk....
+....kRRRRRWWWWWWWWWwrssstk....
+...kRRrrrrWWWWWWWwwvsssttk....
+..kRrrrrrrrWWwwwvvssttuuk.....
+.kRrrrsssrrrrsrsstttuuuk......
+kRrrsstssrrssstttuuuuk........
+krssttttsssttssuuuuck.........
+kcccccccccccccccccck..........
+.kkkkkkkkkkkkkkkkfffkkk.......
+...............kFFfffSzk......
+..............kFfffffSzk......
+..............kFfkfffSzk......
+..............kffkffSSzk......
+...............kfffSSzk.......
+...............kkSSSzkk.......
+...............krrrrsstk......
+...............kRrrrsstk......
+................krrsstk.......
+................kkkkkk........
+
+# 허리 짚은 손 (주먹 · 손마디)
+@grid hand
+........kkkkk.........
+......kkFFffSkk.......
+.....kFFfffffSzk......
+....kFFffffffSSzk.....
+....kFfffkffffSzk.....
+...kFfffkkfffSSzk.....
+...kffffSkffffSzk.....
+...kfffSSkfffSSzk.....
+....kffSkkffSSzk......
+....kkSSSkSSSzkk......
+.....kkkkkkkkkk.......
+
+# 앞치마 하트 주머니 (꿰맨 땀 · 왼 위 반짝)
+@grid heart
+..kkkk....kkkk..
+.kHHHHk..kHHhhk.
+kHHWHHHkkHHHhhhk
+kHWHHHHHHHHHhhhk
+kHHHHHHHHHHhhhhk
+.kHHHHHHHHHhhhk.
+..kHHHHHHHhhhk..
+...kHHHHHhhhk...
+....kHHHhhhk....
+.....kHHhhk.....
+......khhk......
+.......kk.......
+
+# 「!」 잔소리 (큰 것 · 작은 것)
+@grid exclL
+.kkkkk.
+kHHHHhk
+kHHHHhk
+kHHHHhk
+kHHHHhk
+.kHHHhk
+.kHHhk.
+.kHHhk.
+..kHhk.
+..khk..
+...k...
+.......
+..kkk..
+.kHHhk.
+.kHhhk.
+..kkk..
+@grid exclS
+.kkkk.
+kHHHhk
+kHHHhk
+kHHhhk
+.kHhk.
+.kHhk.
+..kk..
+......
+.kkk..
+kHHhk.
+.kkk..
+
+# 말풍선 꼬리 (엄마 쪽 · 왼 아래)
+@grid tailL
+..kWWk
+.kWWvk
+kWvvk.
+kvvk..
+kkk...
+@grid tailS
+.kWk
+kWvk
+kvk.
+kk..
+
+# 발 슬리퍼 (왼발 · 오른발 모양 다름)
+@grid footL
+....kkkkkkkkkkkkkk......
+..kkWWWWWWWwwwwwvvkk....
+.kssWWWWWWwwwwwvvvttk...
+ksstttttttttttttttuuk...
+kstttttttttttttttuuuuk..
+.kktttttttttttttuuuuk...
+...kkkkkkkkkkkkkkkkk....
+@grid footR
+......kkkkkkkkkkkkk.....
+....kkWWWWWWwwwwvvkk....
+...ktWWWWWwwwwwvvvtuk...
+..ksttttttttttttttuuk...
+.ksttttttttttttttuuuuk..
+..kttttttttttttuuuukk...
+...kkkkkkkkkkkkkkkk.....
+
+# 안경 반짝 (프레임 2 · 왼 알)
+@grid glint
+.W.
+WWW
+.W.
+
+@grid pin
+NB....
+BBB...
+.BBB..
+..BBB.
+...BBb
+....bb
+
+@grid cA
+..PPPP.
+.PPP...
+PP.....
+PP.....
+.P.....
+
+@grid cB
+.PPP..
+PP....
+PP....
+.PP...
+
+@grid cC
+...PPP
+.PPP..
+PP....
+PP....
+
+@grid cD
+.PP.
+PP..
+PP..
+PP..
+.PP.
+
+@grid cE
+.PPP.
+PP...
+PP...
+.P...
+
+@grid cF
+..PP
+.PP.
+PP..
+PP..
+
+@grid broom
+......kkkkkkk.......
+.....kXXYYYXXk......
+.....kXYYYYXXk......
+....kkkkkkkkkkk.....
+....kGGggddeeek.....
+...kGGggddeeeek.....
+...kGGgggddeeek.....
+..kGGggggddeeeek....
+..kGGgggddeeeeek....
+.kGGggggdddeeeeek...
+.kGGgggddeeeeeeek...
+kGGGgggddeeeeeeeek..
+kGGgggddddeeeeeeek..
+kGGgggdddeeeeeeek...
+.kkGkggkdkdeekek....
+...k..k..k..k.k.....
+
+@grid scratch
+kkk..........
+kZYk.........
+kYZYk........
+.kYYXk.......
+..kkYXk......
+....kYXk.....
+.....kYXk....
+......kYXk...
+.......kYXXk.
+........kYXk.
+.........kYk.
+
+# 가디건 단추 (개발자 후드 남색 · 모양 셋)
+@grid btnA
+.NB
+BBb
+.bb
+@grid btnB
+NB.
+BBb
+Bbb
+@grid btnC
+.N.
+BBb
+.b.
+# 곱슬 C자 반짝 더 (작은 것)
+@grid cG
+.PP
+PP.
+P..
+@grid cH
+PPP
+P..
+@grid cI
+.PP
+PP.
+.P.
+@grid cJ
+PP.
+.PP

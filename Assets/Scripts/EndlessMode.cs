@@ -424,6 +424,8 @@ public class EndlessMode : MonoBehaviour
         Vector3 at = (Vector3)spawner.bossSpawnPoint + (isMom && developer != null && !developer.IsDead ? Vector3.right * 5f : Vector3.zero);
         GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
         bosss boss = go.GetComponent<bosss>();
+        // 1.6.0~ 엄마 전용 도트 (Resources/Abyss/mom_0~3 · 그래픽 개편 2단계 묶음 5): 있으면 그 그림 그대로(물들이기 없음), 없으면 예전처럼 개발자 그림 + 분홍
+        bool momArt = isMom && !VisualRules.Legacy && AbyssStage.Frames("mom")[0] != null;      // Legacy = 예전 물들이기 (기획서 5-3)
         if (boss != null)
         {
             boss.developer = true;
@@ -440,11 +442,11 @@ public class EndlessMode : MonoBehaviour
                 // 엄마: 접촉 피해 · 이동 속도 2배 (공격 주기 · 필살기 피해 2배는 BossSkills.Developer)
                 boss.speed *= 2f;
                 boss.contactDamage *= 2f;
-                boss.baseTint = MomTint;
+                if (!momArt) boss.baseTint = MomTint;
             }
         }
-        // 개발자 전용 도트 (Resources/Abyss/developer_0~3: 금빛 후광 · 후드 · 빛나는 안경 · 코드가 흐르는 노트북) · 엄마는 같은 그림을 분홍빛으로 더 크게
-        Sprite[] art = AbyssStage.Frames("developer");
+        // 개발자 전용 도트 (Resources/Abyss/developer_0~3: 금빛 후광 · 후드 · 빛나는 안경 · 코드가 흐르는 노트북) · 엄마는 mom_0~3 (없으면 개발자 그림을 분홍빛으로) · 더 크게
+        Sprite[] art = AbyssStage.Frames(momArt ? "mom" : "developer");
         if (art[0] != null)
         {
             Animator anim = go.GetComponent<Animator>();
@@ -455,7 +457,7 @@ public class EndlessMode : MonoBehaviour
             body.frames = art;
             body.fps = isMom ? 8f : 6f;
         }
-        if (isMom && go.TryGetComponent(out SpriteRenderer tint)) tint.color = MomTint;
+        if (isMom && !momArt && go.TryGetComponent(out SpriteRenderer tint)) tint.color = MomTint;
         if (isMom) momSkills = go.GetComponent<BossSkills>(); else devSkills = go.GetComponent<BossSkills>();      // 1.4.2~ HUD 단계 표시 (FinalProgress)
         go.transform.localScale *= isMom ? 1.75f : 1.35f;
         Fx.Spawn("fx_soulburst", go.transform.position, isMom ? 18f : 14f, isMom ? MomTint : new Color(1f, 0.85f, 0.35f), 16f);

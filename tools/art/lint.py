@@ -219,6 +219,8 @@ def judge(m, kind="boss", design=None, k=None, density=None, ui=None, ui_scale=1
         if design is not None and k:
             dx0, dy0, dx1, dy1 = design["bbox"]
             ew, eh = (dx1 - dx0) * k, (dy1 - dy0) * k
+            if hi_res and K["margin"]:                                   # 설계도 글리프가 칸 끝에 닿으면 (개발자 1) 여백을 지킨 최대 상자로 자름
+                ew, eh = min(ew, W - 2 * K["margin"]), min(eh, H - 2 * K["margin"])
             ok &= abs(bw - ew) <= 1.5 and abs(bh - eh) <= 1.5          # ± 1칸 (+ k 가 정수가 아닐 때 반올림 0.5)
             parts.append(f"상자 {bw}×{bh} (설계도 × k = {ew:.0f}×{eh:.0f})")
         if hi_res and K["margin"]:
@@ -315,7 +317,7 @@ def thin_outline(X):
 
 # 고해상도로 바꾼 보스는 32칸 원본이 설계도 파일에만 남음 (tools/pixelart/hires/bosses/blueprints/<보스>_32.png 첫 칸 = 살아 있는 그림)
 CAL_SRC = [("리치 왕", "Assets/Sprites/enemy/boss.png", 3.75, "boss"), ("지옥의 군주", "Assets/Sprites/enemy/hell/hell_lord.png", 4.5, "boss"),
-           ("킹 슬라임", "tools/pixelart/hires/bosses/blueprints/slimeking_32.png", 5.06, "boss"), ("개발자", "Assets/Resources/Abyss/developer_0.png", 3.8, "boss"),
+           ("킹 슬라임", "tools/pixelart/hires/bosses/blueprints/slimeking_32.png", 5.06, "boss"), ("개발자", "tools/pixelart/hires/bosses/blueprints/developer_32.png", 3.8, "boss"),
            ("거너", "Assets/Resources/Characters/gunner_nogun.png", 4.0, "portrait")]
 
 

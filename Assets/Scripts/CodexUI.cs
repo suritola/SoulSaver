@@ -561,7 +561,8 @@ public static class CodexUI
         Sprite dev = BossIcon("developer", AbyssStage.Frames("developer")[0]);
         Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("무한 모드 15분") + "  ·  " + Stats(EndlessMode.DeveloperHp, 7.5f, 48f),
              Loc.T("codex.dev.desc2") + DevExtra("bossmem.codex.dev") + "\n" + Accent.Tag(Loc.T(DevBarrierDesc)));
-        Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 1000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
+        Sprite mom = BossIcon("mom", dev);          // 1.6.0~ 엄마 아이콘 (새 디자인 · 그래픽 개편 2단계 묶음 5) — 없으면 개발자 그림 + 분홍 (예전)
+        Card(mom, mom != dev ? Color.white : EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("개발자 처치 후 영혼 1000") + "  ·  " + Stats(EndlessMode.MomHp, 15f, 96f),
              Loc.T("codex.mom.desc2") + DevExtra("bossmem.codex.mom") + "\n" + Accent.Tag(Loc.T(MomBarrierDesc)));
     }
 
@@ -769,8 +770,9 @@ public static class CodexUI
         if (!CodexSeen.Shown("sec.dev")) Hidden("sec.dev", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.dev"));
         else Card(dev, Color.white, bossbar.BossName(bossbar.DeveloperKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("무한 모드 15분"),
                   Loc.T("codex.dev.secret"), Fresh("sec.dev"));      // 1.2.6: 결계 설명은 보스 탭 카드(높이 400)에만 (비밀 탭 카드 240 에서는 「…」로 잘렸음)
-        if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", dev, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
-        else Card(dev, EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("개발자 처치 후 영혼 1000"),
+        Sprite mom = BossIcon("mom", dev);          // 비밀 카드 실루엣도 엄마 아이콘 (기획서 검토 16)
+        if (!CodexSeen.Shown("sec.mom")) Hidden("sec.mom", mom, Loc.T("codex.sec.boss"), Loc.T("codex.hint.mom"));
+        else Card(mom, mom != dev ? Color.white : EndlessMode.MomTint, bossbar.BossName(bossbar.DeveloperMomKind), Loc.T("codex.sec.boss") + "  ·  " + Loc.T("개발자 처치 후 영혼 1000"),
                   Loc.T("codex.mom.secret"), Fresh("sec.mom"));
         Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
         if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));

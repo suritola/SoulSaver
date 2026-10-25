@@ -1,0 +1,263 @@
+# 개발자 손 도트 지도 (그래픽 개편 2단계 묶음 5) — 글자 = 재질:단계, 색은 bosses/dev.py 의 PAL
+# 얼굴은 설계도(옛 32칸)의 후드 구멍 · 빛나는 안경 · 얼굴 자리를 그대로 키워 한 칸씩 찍음 (안경 두 알은 반사 줄이 서로 다름)
+@legend
+Q = hood:1
+q = hood:0
+h = hood:1
+j = hood:2
+J = hood:3
+I = hood:4
+s = skin:0
+S = skin:1
+f = skin:2
+F = skin:3
+g = glass:0
+L = glass:1
+W = glass:2
+w = glass:3
+k = ol
+o = olw
+
+# 얼굴 (후드 구멍 · 칸 x 48 · y 22 부터 — 몸 들썩임만큼 같이 내려감)
+@grid face
+.........QqqqqqqqqqqQ.........
+.......QqqqqqqqqqqqqqqQ.......
+.....QqhhhhhhhhhhhhhhhhqQ.....
+....QqhhjjjhhhhhjjhhhhhhqQ....
+...QqhjjJJjjhhhjjjhhhhhhhqQ...
+..QqhjJJJjjhhjjjhhhhjjhhhhqQ..
+..QqjJJjjhhhjjJjhhhjjjhhhhqQ..
+..QhjJjjhhhjjJJjhhhjjjhhhhhQ..
+..QjJjjhhhjjJjjhhhjjjhhhhhhQ..
+..QjjjhhhjjJjjhhhjjJjhhhjhhQ..
+..QhjhhhjjjjhhhhjjjjhhhjjhhQ..
+..QhhhjjhhhhjjhhhhjjjhhhjhhQ..
+.QqhhhjhhhhJhhhhhjhhShhhjhhqQ.
+.QqhhhjhShhhhShhhhjSfhhhjhhqQ.
+.QqhhhjSfhhhSfShhhSfFShhhjhqQ.
+.QqhhhJFfShjFffjhjfFffJhhjhqQ.
+.QqhhhSFFfJSFffSjSffffShhjhqQ.
+.QqhhhFFFfSfffffJffffSShhjhqQ.
+.QqhhhFFffffffffSfffffSJhjhqQ.
+.QqhhhFFfffffffffffffSSShhhqQ.
+.QqhhhggggggfffggggggggShhhqQ.
+.QqhhgwWWLLLgffgWwWLLLgShhhqQ.
+.QqgggWWLLLLggggLWWLLLgggggqQ.
+.QqhhgWLLLLWgFfgLLWLLLgShhhqq.
+.QqhhgLLLLWWgffgLLLWLWgShhhqQ.
+..QhhSggggggfffggggggggSShhQ..
+..QhhFFSSSffffffSSSSffSSshhQ..
+.QqhhFFFffffffFfffffSSSSShhqQ.
+.QqhhqFFffffffffffffSSSSqhhqQ.
+.QqhqqFffffffffSfffSSSSsqhhqQ.
+..QqqqfffffffSSfffffSSSsqqqQ..
+..QqqqFffffffffffffSSSsqqqqQ..
+...QqqqffffffffffffSSSSqqqQ...
+...QqqqfffffsfffsffSSSqqqqQ...
+....QqqqfffffsssffSSSsqqqQ....
+.....QqqffffffffffSssqqqQ.....
+......QqqSffffffffSsqqqQ......
+.......QqqSSffffSSsqqqQ.......
+........QqqSSSSsssqqqQ........
+.........QqqqSSsqqqqQ.........
+..........QqqqqqqqqQ..........
+............QqqqqQ............
+
+# 후드 끈 두 가닥 (길이 · 휨이 서로 다름 · 끝 금속)
+@legend
+a = lap:3
+b = lap:2
+c = lap:1
+d = lap:0
+@grid cordL
+bb...
+bb...
+bb...
+.bb..
+.bb..
+.bb..
+.bb..
+..bb.
+..bb.
+..bb.
+.kbbk
+.kcck
+.kdck
+..kk.
+@grid cordR
+bb....
+bb....
+.bb...
+.bb...
+.bb...
+..bb..
+..bb..
+..bb..
+.kbbk.
+.kcdk.
+..kk..
+
+# 머그 (설계도 노트북 오른쪽 손잡이 자리 · 보라 띠 = 괄호 색)
+@legend
+t = book:0
+T = book:1
+P = brk:2
+p = brk:1
+@grid mug
+...kkkkkkkkk......
+..kaaaaaaccck.....
+.kaTTTttttccdk....
+.kaTttttttccdk....
+.kaatttttcccdk....
+.kaaacccccccdkk...
+.kaaccccccccdcck..
+.kaaccccccccdkdck.
+.kPPPPPppppddkkdck
+.kPPPppppppddk.dck
+.kaaaccccccddk.dck
+.kaacccccccddk.dck
+.kaacccccccddk.dck
+.kaacccccccddkkdck
+.kaaccccccdddkdck.
+.kacccccccdddkck..
+.kaccccccddddkk...
+.kaccccccdddddk...
+.kkcccccdddddkk...
+..kkkccddddkkk....
+....kkkkkkk.......
+
+# 책 두 권 (책상 왼쪽 · 설계도 갈색 칸 자리)
+@legend
+R = brk:3
+@grid books
+..kkkkkkkkk..
+.kRPPPPPPPpk.
+.kPppppppppkk
+kkkkkkkkkkkk.
+kTTTTTTTTTTk.
+kaaaaaaaabTk.
+kbbbbbbbbbtk.
+kTTTTTTTTTtk.
+.kkkkkkkkkkk.
+
+# 책상 앞판 보석 (가운데 · 앞판의 가로 띠를 끊음)
+@legend
+e = brk:0
+@grid gem
+....ooo....
+...oRPPo...
+..oRPPppk..
+.oPPPpppek.
+.kPppppeek.
+..kppeeek..
+...keekk...
+....kk.....
+
+# 괄호 「<」 큰 것 (설계도 진한 보라) · 작은 것 (옅은 보라) — 「>」 는 좌우 뒤집어 씀
+@grid brk_big
+......PPPPP
+.....PRRRP.
+....PRRPP..
+...PPPPP...
+..PPPPP....
+.PPPPP.....
+PPPPP......
+PPPpp......
+ppppp......
+.ppppp.....
+..ppppp....
+...ppppp...
+....ppppp..
+.....ppppp.
+......ppppp
+@grid brk_small
+.....RRRR
+....RRRR.
+...RRRR..
+..RRRR...
+.RRRR....
+RRRPP....
+.PPPP....
+..PPPP...
+...PPPP..
+....PPPP.
+.....PPPP
+
+# 안경 반짝 (프레임 2 · 왼 알 위 왼쪽)
+@grid glint
+.w.
+www
+.w.
+
+# 책상 앞판 새김 무늬 (덩굴 소용돌이 · 왼쪽 오른쪽 모양 다름)
+@legend
+0 = gold:0
+1 = gold:1
+4 = gold:4
+@grid scrollL
+..0000...
+.01..10..
+01.4..0..
+0.4.00.0.
+0.4.0..0.
+.0..4.0..
+..000....
+@grid scrollR
+...000..
+..0..40.
+.0.00.0.
+0.0..40.
+0.04.0..
+.0..0...
+..00....
+
+# 책상 앞판 회로 선 (판정: 동전 새김 대칭 → 보석에서 뻗는 비대칭 회로 · 왼쪽 오른쪽 모양 · 크기 다름)
+@grid circL
+000000........................
+04444000000000......0000000000
+00000000000000......0000000000
+............0000000000........
+............0000000000........
+@grid circR
+.......................00000..
+................000000004440..
+000000000.......000000004440..
+000000000.......00.....00000..
+.......00000000000............
+.......00000000000............
+...........00.................
+..........0440................
+...........00.................
+
+# 어깨 · 후드 왼옆 큰 주름 (판정: 어깨 평면 5E62B4 367칸)
+@grid foldA
+hh.......
+hhh......
+.hhh.....
+..hhh....
+...hhh...
+....hhh..
+.....hh..
+.....hhh.
+......hh.
+@grid foldB
+.hh.
+.hh.
+hh..
+hh..
+hh..
+hhh.
+.hh.
+.hh.
+.hhh
+..hh
+..hh
+@grid foldC
+...hh.
+..hhh.
+..hh..
+.hhh..
+.hh...
+hhh...
+hh....
+hh....

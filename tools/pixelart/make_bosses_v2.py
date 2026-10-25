@@ -6,6 +6,7 @@
 사용법:
   py -3.14 -X utf8 tools/pixelart/make_bosses_v2.py slimeking [--out 폴더] [--apply]
   py -3.14 -X utf8 tools/pixelart/make_bosses_v2.py --icons
+  py -3.14 -X utf8 tools/pixelart/make_bosses_v2.py dev|mirror|mom --apply   (심연식 낱장 4장 · 묶음 5)
     --icons  도감 보스 아이콘 Resources/Bosses/icon_<보스>.png (32칸 원래 그림 · 도감 카드가 정수 배 ×4 로 그림 — 고해상도 그림을 140칸에 넣으면 ×1 이라 다른 카드와 섞임)
     --out    시트 · 설계도 · 확대 견본을 쓸 폴더 (기본 tools/pixelart/out/bosses_v2)
     --apply  Assets 의 시트 PNG 를 바꾸고 .meta 를 다시 씀 (guid · 쓰는 그림 ID 유지, 안 쓰는 그림은 참조 0 일 때만 지움)
@@ -15,6 +16,7 @@
 import argparse
 import importlib
 import os
+import re
 import sys
 import uuid
 
@@ -53,6 +55,7 @@ ICONS = {
     "slimeking": ("slimeking", "Assets/Sprites/enemy/meadow/meadow_slimeking.png", 0, 0),
     "mirror": ("mirror", "Assets/Resources/Abyss/mirrorlord_0.png", 0, 0),
     "developer": ("developer", "Assets/Resources/Abyss/developer_0.png", 0, 0),
+    "mom": ("mom", "tools/pixelart/hires/bosses/blueprints/mom_32.png", 0, 0),      # 묶음 5: 새 디자인 — 설계도 첫 칸
 }
 ICON_META = """fileFormatVersion: 2
 guid: {guid}
@@ -178,6 +181,31 @@ def make_icons():
         print(f"아이콘: {os.path.relpath(path, ROOT)}")
 
 
+def apply_singles(res):
+    """심연식 낱장 (Resources/Abyss/<이름>_0~3 · 묶음 5): 프레임마다 PNG 를 바꾸고 .meta 는 guid · spriteID 그대로 PPU · 돌출만.
+    .meta 가 없으면(새 그림 — 엄마) developer_0.png.meta 를 본떠 새 guid · spriteID 로 만듦"""
+    from hires.bosses import abyss_kit
+    tmpl = os.path.join(ROOT, "Assets", "Resources", "Abyss", "developer_0.png.meta")
+    for frame, rel in zip(res["frames"], res["files"]):
+        path = os.path.join(ROOT, rel)
+        meta_path = path + ".meta"
+        if os.path.isfile(meta_path):
+            with open(meta_path, encoding="utf-8") as f:
+                meta = f.read()
+            how = "guid 그대로"
+        else:
+            with open(tmpl, encoding="utf-8") as f:
+                meta = f.read()
+            meta = re.sub(r"(?m)^guid: \w+$", f"guid: {uuid.uuid4().hex}", meta)
+            meta = re.sub(r"(?m)^(\s+spriteID: )\w+$", lambda m: m.group(1) + uuid.uuid4().hex, meta)
+            how = "새 .meta"
+        export.save_png(path, np.ascontiguousarray(frame))
+        with open(meta_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(abyss_kit.rewrite_single_meta(meta, res["ppu"], res["extrude"]))
+        print(f"적용: {rel} ({frame.shape[1]}×{frame.shape[0]} · PPU {res['ppu']} · 돌출 {res['extrude']} · {how})")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("boss", nargs="?")
@@ -205,6 +233,8 @@ def main():
     print(f"1080p 화소/칸 = {res['scale']} ÷ {res['ppu']} × 1080 ÷ 44 = {dens:.2f}")
     if not a.apply:
         return 0
+    if res.get("files"):
+        return apply_singles(res)
     asset = os.path.join(ROOT, res["asset"])
     meta_path = asset + ".meta"
     with open(meta_path, encoding="utf-8") as f:

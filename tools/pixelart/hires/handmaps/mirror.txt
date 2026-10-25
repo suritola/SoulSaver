@@ -1,0 +1,232 @@
+# 거울의 군주 손 도트 지도 (그래픽 개편 2단계 묶음 5) — 글자 = 재질:단계, 색은 bosses/mirror.py 의 PAL
+@legend
+k = ol
+w = glass:4
+W = glass:3
+v = glass:2
+V = glass:1
+o = eye:0
+I = eye:1
+i = eye:2
+j = eye:3
+u = eye:4
+0 = frame:0
+1 = frame:1
+2 = frame:2
+3 = frame:3
+A = shard:3
+B = shard:2
+C = shard:1
+D = shard:0
+p = robe:0
+q = robe:1
+s = sash:1
+S = sash:2
+
+# 눈 (설계도 세로 마름모 눈 · 동공 세로 틈 · 반짝 왼 위)
+@grid eye
+......kkk......
+.....kwwwk.....
+....kwwwwwk....
+...kwwwwwwwk...
+...kwwiiiwwk...
+..kwwiiiIIwwk..
+..kwwiooIIwwk..
+.kwwiiooiIwwwk.
+.kwwiuooiIIwwk.
+kwwwiuooiIIwwwk
+.kwwiiooiIIwwk.
+.kwwiiooiIwwwk.
+..kwwiooiIwwk..
+..kwwiiiIIwwk..
+...kwwiIIwwk...
+...kwwwwwwwk...
+....kwwwwwk....
+.....kwwwk.....
+......kkk......
+
+# 손잡이 목 (거울 아래 · 짙은 보라 고리가 옷 깃을 묶음)
+@grid neck
+k3333311110k
+k3333311110k
+.k33331111k.
+.k33331111k.
+.k33331111k.
+k3333311110k
+kSSSSSSSSSSk
+kSSSSSSSSSSk
+.kSSSSSSSSk.
+..kkkkkkkk..
+
+# 금 간 조각 (약점 1 · 거울 얼굴 왼쪽 0.35 · 0.72)
+@grid crack
+..00.....
+.0vv0....
+.0vvv00..
+0vvvvVV0.
+0vvvVVV00
+.0vVVVV0.
+.00VVV0..
+...0VV0..
+....00...
+
+# 떠 있는 거울 조각 (약점 2 · 목 오른쪽 0.62 · 0.5)
+@grid shardF
+...kk...
+..kABk..
+.kAABCk.
+kAABBCk.
+kABBCDk.
+.kBCCDk.
+.kBCDDk.
+..kCDk..
+..kDk...
+...k....
+
+# 꿰맨 거울 조각 (약점 3 · 옷자락 0.42 · 0.28) — 바늘땀은 흰 띠 색
+@grid shardS
+..s.ss..
+.skkkks.
+skABBCks
+.kABCCk.
+skBCCDks
+.kkCDkk.
+..skks..
+
+# 옆 거울 조각 3종 (설계도 옷 양옆 조각 자리 · 모양 서로 다름)
+@grid shardA
+....kk...
+...kBk...
+...kBCk..
+..kBBCk..
+..kBCCDk.
+.kBCCDDk.
+.kCCDDDk.
+kCCDDDk..
+kCDDDk...
+.kDDDk...
+.kDDk....
+..kk.....
+@grid shardB
+......kk..
+....kkBCk.
+..kkBBCCk.
+.kBBCCDDk.
+kBCCDDDDk.
+kCDDDDDk..
+.kDDDDk...
+..kkkk....
+@grid shardC
+..kk....
+.kBCk...
+.kBCCk..
+kBBCDk..
+kBCCDDk.
+.kCDDDk.
+.kCDDDk.
+..kDDDk.
+..kDDk..
+...kk...
+
+# 반짝이 3종 (큰 네 갈래 · 중간 · 작은 마름모)
+@grid starL
+......k......
+.....kwk.....
+.....kwk.....
+.....kwk.....
+....kwwWk....
+.kkkkwwWkkkk.
+kwwwwwwWWWWvk
+.kkkkWWWkkkk.
+....kWWvk....
+.....kvk.....
+.....kvk.....
+.....k2k.....
+......k......
+@grid starM
+.....k.....
+....kwk....
+....kwk....
+...kwwWk...
+.kkkwwWkkk.
+kwwwwwWWWvk
+.kkkWWWvkk.
+...kWvvk...
+....kvk....
+....k2k....
+.....k.....
+@grid starS
+....k....
+...kwk...
+..kwwWk..
+.kwwwWWk.
+kwwwwWWvk
+.kWWWvvk.
+..kWvvk..
+...k2k...
+....k....
+
+# 옷 아래 거울 비늘 (작은 조각 · 모양 셋 다름)
+@grid sq1
+CC.
+DDD
+@grid sq2
+.CC
+CCD
+.DD
+@grid sq3
+CC
+DC
+DD
+@grid sq4
+CCC
+.DD
+@grid sq5
+C.
+CD
+DD
+@grid glintA
+33
+.3
+@grid glintB
+33.
+.33
+
+# 위왼 대각 반짝임 띠 (판정: 머리 얼룩 → 거울답게 띠 둘 · 길이 다름)
+@grid refl
+.....ww
+....www
+...wwW.
+..wwW..
+.wwW...
+wwW....
+wW.....
+@grid refl2
+...WW
+..WW.
+.WW..
+WW...
+# 새 반짝이 (판정: 같은 반짝이 두 번 → 한쪽 모양 · 크기 다르게)
+@grid starN
+....k....
+...kwk...
+...kwk...
+.kkkwWkk.
+kwwwwWWvk
+.kkWWvkk.
+...kvk...
+...k2k...
+....k....
+
+# 거울 테 보석 (위 · 왼 · 오른 · 모양 다름)
+@grid studT
+.ss.
+sSSs
+.ss.
+@grid studL
+sS
+Ss
+ss
+@grid studR
+.Ss
+SSs
