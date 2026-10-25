@@ -5,6 +5,8 @@ using UnityEngine;
 public static partial class LocTable
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void AddWeightBoot() { if (!SceneFlow.DeferStartup(5, AddWeight)) AddWeight(); }      // 1.6.1~ 켤 때는 로딩 화면이 뜬 뒤로 (큰 함수는 불릴 때 통째로 JIT 되므로 작은 함수에서 미룸 · SceneFlow)
+
     static void AddWeight()
     {
         void A(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }

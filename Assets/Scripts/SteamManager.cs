@@ -73,9 +73,36 @@ public class SteamManager : MonoBehaviour
     static void Boot()
     {
         if (Instance != null) return;
+        // 1.6.1~ 스팀 밖에서 켰으면 스팀으로 다시 켜기는 가장 먼저 (가벼움 · 로딩 화면이 잠깐 떴다 꺼지지 않게) — 무거운 SteamAPI.Init 만 뒤로 미룸
+        if (RestartThroughSteam()) return;
         // 1.6.1~ Boot 장면에서 켤 때는 스팀 초기화(약 0.5초)를 로딩 화면이 뜬 뒤로 미룸 (SceneFlow.DeferStartup · 메인 메뉴를 부르기 전에 반드시 실행)
         if (SceneFlow.DeferStartup(0, Create)) return;
         Create();
+    }
+
+    // 1.6.1~ 스팀을 통해 다시 켜야 하면 true (이 프로세스는 끝냄) · 에디터 · App ID 없음 · 스팀 없는 빌드 · 오류면 false (그대로 진행)
+    static bool restartChecked;
+    public static bool Restarting { get; private set; }
+    static bool RestartThroughSteam()
+    {
+        if (restartChecked) return Restarting;
+        restartChecked = true;
+#if STEAM
+        if (Application.isEditor || AppId == 0) return false;
+        try
+        {
+            if (!Packsize.Test() || !DllCheck.Test()) return false;         // 설정이 잘못됐으면 Awake 가 경고만 남김 (예전과 같음)
+            if (SteamAPI.RestartAppIfNecessary(new AppId_t(AppId)))
+            {
+                Restarting = true;
+                Application.Quit();
+                return true;
+            }
+        }
+        catch (System.DllNotFoundException e) { Debug.LogWarning("[Steam] steam_api 라이브러리를 찾지 못했습니다: " + e.Message); }
+        catch (System.Exception e) { Debug.LogException(e); }
+#endif
+        return false;
     }
 
     static void Create()
@@ -99,8 +126,8 @@ public class SteamManager : MonoBehaviour
             Debug.LogWarning("[Steam] Steamworks.NET 설정이 잘못되었습니다 (Packsize / DllCheck)");
             return;
         }
-        // 스팀 밖에서 실행하면 스팀을 통해 다시 실행 (에디터 · App ID 미설정 때는 건너뜀)
-        if (!Application.isEditor && AppId != 0 && SteamAPI.RestartAppIfNecessary(new AppId_t(AppId)))
+        // 스팀 밖에서 실행하면 스팀을 통해 다시 실행 (에디터 · App ID 미설정 때는 건너뜀) — 1.6.1~ 검사는 Boot 에서 먼저 함 (여기선 이미 본 결과)
+        if (RestartThroughSteam())
         {
             Application.Quit();
             return;

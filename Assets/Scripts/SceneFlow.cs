@@ -21,7 +21,8 @@ public class SceneFlow : MonoBehaviour
     Image portrait;
     float dotsAt;
     // 2026-10-22~ 팁을 여러 개 (사용자 「렉 걸리는 동안 게이지가 서서히 차고 팁도 여러 개」) — TipEvery 초마다 다음 팁 (같은 팁 연속 없음)
-    const float TipEvery = 2.5f;
+    // 1.6.1~ 팁이 천천히 나타났다 사라짐 (TipFade 초씩) — 읽을 시간을 위해 간격 2.5 → 4초
+    const float TipEvery = 4f, TipFade = 0.5f;
     float tipAt;
     int tipIndex = -1;
     // 장면 불러오기는 LoadShare 까지만, 새 장면이 켜진 뒤(맵 다시 깔기 등 Awake · Start 무거운 일) 나머지를 PostLoadSecs 동안 천천히 채움
@@ -59,8 +60,10 @@ public class SceneFlow : MonoBehaviour
     static void BootToMenu()
     {
         if (SceneManager.GetActiveScene().name != BootScene) return;
+        if (SteamManager.Restarting) return;                  // 스팀으로 다시 켜는 중 (이 프로세스는 곧 끝남)
         try { AudioListener.volume = GameSettings.Volume; } catch (System.Exception e) { Debug.LogException(e); }     // 설정 시작(아래 미룬 일)보다 음악이 먼저 나와도 큰 소리로 튀지 않게
         if (GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { BootFallback(); return; }
+        bootBuild = instance == null;       // 로딩 UI 를 지금 처음 만들면 글자는 첫 프레임 뒤에 (Run 이 BuildTexts)
         try { Ensure().StartCoroutine(instance.Guard(instance.Run(MenuScene, true), BootFallback)); }
         catch (System.Exception e) { Debug.LogException(e); BootFallback(); }
     }
@@ -75,10 +78,12 @@ public class SceneFlow : MonoBehaviour
 
     // ---------------------------------------------------------------- 첫 프레임 뒤로 미루는 시작 초기화
     // 시험 빌드 계측 (1.6.0): 첫 프레임 전에 도는 시작 초기화가 약 1.7초 — 스팀 초기화 0.47초 · 설정 시작(GameSettings.Boot) 0.34초 · 커서 0.1초 등
-    //   Boot 에서 켤 때만 이 셋을 로딩 화면이 한 번 그려진 뒤로 미룸 (order 작은 것부터: 스팀 0 → 설정 10 — 첫 실행 언어 감지가 스팀 언어를 봄 → 커서 20)
+    //   1.6.1 계측 빌드 (시작 함수마다 시각): 번역표 LocTable 첫 사용(1,900줄 기본 표 정적 초기화) 약 0.5초 · LocTable.Content 0.34초 · 나머지 번역표 0.1초
+    //   Boot 에서 켤 때만 이것들을 로딩 화면이 한 번 그려진 뒤로 미룸 (order 작은 것부터: 스팀 0 → 번역표 5 → 설정 10 — 첫 실행 언어 감지가 스팀 언어를 봄 → 커서 20)
+    //   같은 order 는 등록 순서 그대로 (번역표는 먼저 넣은 쪽이 이김 — 순서가 바뀌면 글이 달라질 수 있어 안정 정렬)
     //   메인 메뉴를 부르기 전에 반드시 모두 실행 (로딩 화면 실패 · 동기 길 포함) · 하나가 예외여도 나머지는 그대로
-    static readonly System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, System.Action>> startup =
-        new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, System.Action>>();
+    struct StartupWork { public int order, seq; public System.Action work; }
+    static readonly System.Collections.Generic.List<StartupWork> startup = new System.Collections.Generic.List<StartupWork>();
     static bool startupBegun;
     static int startupNext;
 
@@ -86,7 +91,7 @@ public class SceneFlow : MonoBehaviour
     public static bool DeferStartup(int order, System.Action work)
     {
         if (startupBegun || Application.isBatchMode || work == null || !StartingFromBoot()) return false;
-        startup.Add(new System.Collections.Generic.KeyValuePair<int, System.Action>(order, work));
+        startup.Add(new StartupWork { order = order, seq = startup.Count, work = work });
         return true;
     }
 
@@ -109,13 +114,23 @@ public class SceneFlow : MonoBehaviour
         if (!startupBegun)
         {
             startupBegun = true;
-            startup.Sort((a, b) => a.Key.CompareTo(b.Key));
+            startup.Sort((a, b) => a.order != b.order ? a.order.CompareTo(b.order) : a.seq.CompareTo(b.seq));
         }
         if (startupNext >= startup.Count) return false;
-        System.Action w = startup[startupNext++].Value;
+        System.Action w = startup[startupNext++].work;
         try { w(); } catch (System.Exception e) { Debug.LogException(e); }
         return true;
     }
+
+    // 한 프레임에 budget 초까지 몰아서 (번역표 수십 개를 한 프레임씩 하면 그것만 0.5초) · 남은 게 있으면 true
+    static bool StartupSteps(float budget)
+    {
+        float until = Time.realtimeSinceStartup + budget;
+        while (StartupStep()) if (Time.realtimeSinceStartup >= until) return startupNext < startup.Count;
+        return false;
+    }
+
+    static float StartupDone => startup.Count == 0 ? 1f : (float)startupNext / startup.Count;
 
     static void RunStartupNow() { while (StartupStep()) { } }
 
@@ -186,10 +201,9 @@ public class SceneFlow : MonoBehaviour
                 motes[i] = mr;
             }
         }
-        title = UIKit.Text(loadingBox, "", 36f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 290f), new Vector2(600f, 54f));      // 바 위를 달리는 영웅(높이 240)보다 위
-        UIKit.Forget(title);
         // 로딩바: 금빛 테두리 · 어두운 칸 · 금 → 주황 채움 (왼쪽부터)
         RectTransform frame = UIKit.Rect("BarFrame", loadingBox, new Vector2(0f, 0f), new Vector2(BarW + 8f, 30f));
+        barFrame = frame;
         Image fi = frame.gameObject.AddComponent<Image>();
         // 1.4.8~ 새 도트 스타일: 금 단색 테두리 대신 막대 틀 그림(ui_bar_frame · 테두리 반 두께 3 → 안쪽 홈 BarW+2 × 24 에 칸 · 채움이 그대로 들어감)
         //   칸은 틀의 홈이 대신하므로 투명 · 채움은 막대 채움 그림(ui_bar_fill)에 주황을 곱함 · 크기 · 길이 계산은 그대로 · 그림이 없으면 예전 모습
@@ -219,21 +233,103 @@ public class SceneFlow : MonoBehaviour
         Image si = shine.gameObject.AddComponent<Image>();
         si.color = new Color(1f, 0.9f, 0.6f, 0.7f);
         si.raycastTarget = false;
-        pct = UIKit.Text(loadingBox, "", 22f, new Color(0.92f, 0.88f, 0.8f), new Vector2(BarW * 0.5f + 50f, 0f), new Vector2(90f, 30f));
-        UIKit.Forget(pct);
-        tip = UIKit.Text(loadingBox, "", 24f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, -70f), new Vector2(1200f, 70f));
-        tip.fontSizeMin = 16f;
-        UIKit.Forget(tip);
         // 바 위를 달리는 영웅 (발이 바 위끝에 닿게 · 바 채움 끝을 따라감)
         runner = UIKit.Rect("Runner", loadingBox, Vector2.zero, new Vector2(RunnerSize, RunnerSize));
         runner.pivot = new Vector2(0.5f, 0f);
         portrait = runner.gameObject.AddComponent<Image>();
         portrait.preserveAspect = true;
         portrait.raycastTarget = false;
+        logoLine = UIKit.Rect("LogoLine", loadingBox, new Vector2(0f, -84f), new Vector2(420f, UiRules.Dot));
+        Image ll = logoLine.gameObject.AddComponent<Image>();
+        ll.color = UiTokens.Accent;
+        ll.raycastTarget = false;
+        BuildSpinner();
+        // 1.6.1~ 로딩 화면 전체를 한 번에 흐리게 (메인 메뉴 · 새 장면으로 넘어갈 때 검은 컷 대신 짧은 교차 페이드) · 장 전환 RunStageLoad 도 이것을 씀
+        loadingGroup = loadingBox.gameObject.AddComponent<CanvasGroup>();
+        loadingGroup.interactable = false;
+        loadingGroup.blocksRaycasts = false;     // 클릭은 막(curtain)이 막음
         if (!UiRules.Legacy) StyleV2(bg, fi, wi, bi, shine);
+        if (!bootBuild) BuildTexts();       // 켤 때는 첫 프레임 뒤에 (Run)
+        Layout(false);
         loadingBox.gameObject.SetActive(false);
         canvas.enabled = false;
     }
+
+    // 1.6.1~ 글자 4개 (제목 · 퍼센트 · 팁 · 로고) — 켤 때는 첫 프레임을 그린 뒤에 만듦 (처음 만드는 TMP 글자가 무거워 첫 화면을 늦췄음 · 1.6.1 계측: 로딩 UI 만들기 0.5~0.6초)
+    //   보통 전환 · QA 는 Build 에서 바로 · 몇 번 불러도 한 번만
+    static bool bootBuild;
+    void BuildTexts()
+    {
+        if (title != null) return;
+        title = UIKit.Text(loadingBox, "", 36f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 290f), new Vector2(600f, 54f));      // 바 위를 달리는 영웅(높이 240)보다 위
+        UIKit.Forget(title);
+        pct = UIKit.Text(loadingBox, "", 22f, new Color(0.92f, 0.88f, 0.8f), new Vector2(BarW * 0.5f + 50f, 0f), new Vector2(90f, 30f));
+        UIKit.Forget(pct);
+        tip = UIKit.Text(loadingBox, "", 24f, new Color(0.92f, 0.88f, 0.8f), new Vector2(0f, -70f), new Vector2(1200f, 70f));
+        tip.fontSizeMin = 16f;
+        UIKit.Forget(tip);
+        // 켤 때 가운데 로고 (뒤이어 나오는 시작 연출 TitleIntro 와 같은 자리 · 크기 · 청록 밑줄 — 로딩이 걷히면 그대로 이어지게) · 게임 이름이라 번역 안 함
+        logo = UIKit.Text(loadingBox, "", 120f, UiRules.Legacy ? title.color : UiTokens.Text1, Vector2.zero, new Vector2(1600f, 160f));
+        logo.text = "SOUL SAVER";
+        logo.enableAutoSizing = false;
+        logo.fontSize = 120f;
+        UIKit.Forget(logo);
+        if (!UiRules.Legacy)
+        {
+            title.color = UiTokens.Text1; title.fontSize = title.fontSizeMax = UiTokens.Heading;
+            tip.color = UiTokens.Text2; tip.fontSize = tip.fontSizeMax = UiTokens.Body; tip.fontSizeMin = UiTokens.Small;
+            pct.color = UiTokens.Text3; pct.fontSize = pct.fontSizeMax = UiTokens.Small;
+        }
+        Layout(layoutBoot);
+    }
+
+    // ---------------------------------------------------------------- 1.6.1~ 켤 때 모양 · 영혼불 스피너
+    RectTransform barFrame, logoLine, spinner;
+    TMP_Text logo;
+    CanvasGroup loadingGroup;
+    Image spinnerImage;
+    bool spinnerGpu;             // 셰이더로 도는지 (아니면 Tick 이 크기 · 밝기를 맥동)
+
+    // boot: 가운데 로고 · 그 아래 「불러오는 중」 · 막대 (달리는 영웅 없음) / 보통: 예전 자리 (제목 위 · 막대 가운데 · 영웅이 막대 위를 달림)
+    //   팁은 둘 다 화면 아래쪽 · 스피너는 둘 다 오른쪽 아래 — 앵커 고정 (Layout Group 없음)
+    bool layoutBoot;
+    void Layout(bool boot)
+    {
+        layoutBoot = boot;
+        logoLine.gameObject.SetActive(boot);
+        runner.gameObject.SetActive(!boot);
+        float barY = boot ? -230f : 0f;
+        barFrame.anchoredPosition = new Vector2(0f, barY);
+        if (title == null) return;          // 글자는 아직 (켤 때 첫 프레임)
+        logo.gameObject.SetActive(boot);
+        pct.rectTransform.anchoredPosition = new Vector2(BarW * 0.5f + 50f, barY);
+        title.rectTransform.anchoredPosition = new Vector2(0f, boot ? barY + 52f : 290f);
+        tip.rectTransform.anchoredPosition = new Vector2(0f, -420f);
+    }
+
+    // 셰이더 UI/SoulSpinner (Resources/Shaders/UISpinner) 가 GPU 에서 _Time 으로 돌림 — 스크립트는 값을 안 바꿔 캔버스도 다시 짜지 않음
+    //   (주의: 메인 스레드가 한 덩어리 일로 막힌 프레임은 GPU 도 새로 그리지 않음 — 막힌 사이를 채우는 게 아니라 Update 없이 매끄럽게 도는 것)
+    //   셰이더를 못 읽거나 지원 안 되면 코드로 만든 둥근 빛이 맥동 (예전 방식)
+    void BuildSpinner()
+    {
+        spinner = UIKit.Rect("Spinner", loadingBox, Vector2.zero, new Vector2(SpinnerSize, SpinnerSize));
+        spinner.anchorMin = spinner.anchorMax = spinner.pivot = new Vector2(1f, 0f);
+        spinner.anchoredPosition = new Vector2(-72f, 64f);
+        spinnerImage = spinner.gameObject.AddComponent<Image>();
+        spinnerImage.raycastTarget = false;
+        spinnerImage.color = UiTokens.Accent;
+        Shader sh = null;
+        try { sh = Resources.Load<Shader>("Shaders/UISpinner"); } catch (System.Exception e) { Debug.LogException(e); }
+        spinnerGpu = sh != null && sh.isSupported;
+        if (spinnerGpu) spinnerImage.material = new Material(sh) { hideFlags = HideFlags.DontUnloadUnusedAsset };
+        else
+        {
+            Debug.LogWarning("[SceneFlow] 스피너 셰이더를 못 써서 예전 방식으로");
+            spinnerImage.sprite = SoftDot();
+        }
+    }
+
+    const float SpinnerSize = 88f;
 
     // UI 개편 (Legacy 끔): 흐린 후광 · 떠다니는 불빛 · 금 막대 틀 · 반사 줄 · 통통 튀는 영웅 대신 — 거의 검은 바탕 · 홈 막대 + 청록 두 톤 채움 · 걷기만 하는 영웅 192 (32 × 6)
     //   글자: 「불러오는 중」 뼈색 34 · 팁 26 Text2 · % 22 Text3 (씬 전환 · 장 전환 로딩이 같은 화면)
@@ -249,9 +345,6 @@ public class SceneFlow : MonoBehaviour
         if (f2 != null) { fill.sprite = f2; fill.type = Image.Type.Sliced; fill.pixelsPerUnitMultiplier = 1f; }
         fill.color = UiTokens.Accent;
         if (shine != null) shine.gameObject.SetActive(false);
-        title.color = UiTokens.Text1; title.fontSize = title.fontSizeMax = UiTokens.Heading;
-        tip.color = UiTokens.Text2; tip.fontSize = tip.fontSizeMax = UiTokens.Body; tip.fontSizeMin = UiTokens.Small;
-        pct.color = UiTokens.Text3; pct.fontSize = pct.fontSizeMax = UiTokens.Small;
         runner.sizeDelta = new Vector2(192f, 192f);
     }
 
@@ -293,10 +386,16 @@ public class SceneFlow : MonoBehaviour
         shownProgress = Mathf.MoveTowards(shownProgress, targetProgress, dt * 1.6f);
         shownProgress = Mathf.Lerp(shownProgress, targetProgress, 1f - Mathf.Exp(-dt * 6f));
         barFill.sizeDelta = new Vector2(BarW * shownProgress, barFill.sizeDelta.y);
-        pct.text = Mathf.RoundToInt(shownProgress * 100f) + "%";
+        if (pct != null) pct.text = Mathf.RoundToInt(shownProgress * 100f) + "%";
         float bob = UiRules.Legacy ? Mathf.Abs(Mathf.Sin(now * 9f)) * 6f : 0f;        // UI 개편: 통통 튀지 않고 걷기 그림만
         runner.anchoredPosition = new Vector2(-BarW * 0.5f + BarW * shownProgress, 15f + bob);
         if (runFrames != null && runFrames.Length > 0) portrait.sprite = runFrames[Mathf.FloorToInt(now * 10f) % runFrames.Length];
+        if (!spinnerGpu && spinner != null)
+        {
+            float k = 0.5f + 0.5f * Mathf.Sin(now * 4f);
+            spinner.sizeDelta = Vector2.one * SpinnerSize * (0.7f + 0.3f * k);
+            spinnerImage.color = new Color(UiTokens.Accent.r, UiTokens.Accent.g, UiTokens.Accent.b, 0.5f + 0.5f * k);
+        }
         for (int i = 0; i < motes.Length; i++)
         {
             if (motes[i] == null) continue;
@@ -370,17 +469,47 @@ public class SceneFlow : MonoBehaviour
             //   (첫 프레임 전에 LoadSceneAsync 를 부르면 Unity 가 시작 단계에서 그 불러오기를 끝까지 · 켜기까지 한꺼번에 해 버려 로딩 화면이 한 번도 안 그려졌음 — 시험 빌드에서 확인)
             curtain.color = new Color(0f, 0f, 0f, 1f);
             curtain.raycastTarget = true;
-            ShowLoading(scene);
-            // 첫 프레임은 글자 없이 (바탕 · 게이지 · 영웅만) — 처음 그리는 TMP 글자(글꼴 · 셰이더 준비 · 한글 글리프)가 약 0.5초라 첫 화면을 늦추지 않게 다음 프레임에 켬 (시험 빌드 계측)
+            // 첫 프레임은 바탕 · 빈 막대 · 스피너만 — 글자(TMP 첫 그리기 약 0.5초) · 번역표(Loc 첫 사용 = 기본 표 초기화 약 0.5초) · 영웅 그림 읽기를 하지 않음 (1.6.1 계측)
+            loadingBox.gameObject.SetActive(true);
+            loadingGroup.alpha = 1f;
+            Layout(true);
             SetTexts(false);
+            if (logo != null) logo.gameObject.SetActive(false);
+            runFrames = null;
+            shownProgress = targetProgress = 0f;
+            Tick();
+            yield return null;
+            Debug.Log("[SceneFlow] 켤 때 로딩 화면 첫 프레임: " + Time.realtimeSinceStartup.ToString("0.00") + "초");      // 1.6.1~ 시험 빌드에서 Player.log 로 확인
+            // 둘째 프레임: 글자를 만들고 로고 (영문 · 번역표를 안 봄) · 퍼센트만 켬
+            BuildTexts();
+            SetTexts(false);
+            logo.gameObject.SetActive(true);
+            pct.gameObject.SetActive(true);
+            Tick();
+            yield return null;
+            // 미뤄 둔 시작 초기화 (스팀 → 번역표 → 설정 → 커서) — 한 프레임에 약 50ms 씩 몰아서 · 게이지 0 → 15% · 메인 메뉴 불러오기 전에 모두
+            float t0 = Time.realtimeSinceStartup;
+            while (StartupSteps(0.05f)) { targetProgress = 0.15f * StartupDone; Tick(); yield return null; }
+            targetProgress = 0.15f;
+            Debug.Log("[SceneFlow] 켤 때 미룬 시작 초기화 " + startup.Count + "개: " + (Time.realtimeSinceStartup - t0).ToString("0.00") + "초");
+            // 이제 번역표 · 언어 · 글꼴이 준비됨: 「불러오는 중」 · 팁을 지금 언어로 (팁은 천천히 나타남)
+            title.gameObject.SetActive(true);
+            tip.gameObject.SetActive(true);
+            dotsAt = Time.unscaledTime;
+            tipIndex = -1;
+            try { NextTip(); } catch (System.Exception e) { Debug.LogException(e); }
             Dots(); Tick();
             yield return null;
-            SetTexts(true);
-            Dots(); Tick();
-            yield return null;
-            // 미뤄 둔 시작 초기화를 하나씩 (사이마다 한 프레임 — 게이지가 조금씩 참) · 메인 메뉴 불러오기 전에 모두
-            targetProgress = 0.1f;
-            while (StartupStep()) { Dots(); Tick(); yield return null; }
+            // 첫 전투 진입 끊김 줄이기: 게임 장면에서 쓰는 셰이더를 지금 한 번씩 준비 (상한 WarmupCap 초 · 예외면 건너뜀)
+            IEnumerator warm = WarmupShaders();
+            while (true)
+            {
+                bool more;
+                try { more = warm.MoveNext(); } catch (System.Exception e) { Debug.LogException(e); more = false; }
+                if (!more) break;
+                Dots(); Tick();
+                yield return null;
+            }
         }
         else yield return Fade(0f, 1f, 0.25f);
         while (scene != null)
@@ -396,13 +525,8 @@ public class SceneFlow : MonoBehaviour
                 break;
             }
             op.allowSceneActivation = false;
-            // 1.3.3~ 막이 내려오면 바로 로딩 화면 (예전엔 0.4초 넘게 걸릴 때만 글자 · 짧으면 검은 막뿐이었음)
+            // 1.3.3~ 막이 내려오면 바로 로딩 화면 (예전엔 0.4초 넘게 걸릴 때만 글자 · 짧으면 검은 막뿐이었음) · 켤 때는 이미 떠 있음 (게이지 · 팁 그대로)
             if (!boot) ShowLoading(scene);
-            else
-            {
-                // 켤 때는 이미 떠 있음: 게이지는 그대로 두고, 언어 설정(미뤄 둔 GameSettings 시작)이 방금 돌았으므로 팁만 지금 언어로 다시 고름 (제목은 매 프레임 다시 씀)
-                try { tipIndex = -1; NextTip(); } catch (System.Exception e) { Debug.LogException(e); }
-            }
             float capAt = Time.realtimeSinceStartup + LoadCap;
             while (op.progress < 0.9f && Time.realtimeSinceStartup < capAt)
             {
@@ -421,6 +545,7 @@ public class SceneFlow : MonoBehaviour
             while (!op.isDone && Time.realtimeSinceStartup < capAt) { Dots(); Tick(); yield return null; }
             if (!op.isDone) Debug.LogWarning("[SceneFlow] 씬 불러오기가 " + LoadCap + "초 넘게 끝나지 않아 로딩 화면을 걷음: " + scene);
             pendingOp = null;
+            if (boot) Debug.Log("[SceneFlow] 켤 때 메인 메뉴 켜짐: " + Time.realtimeSinceStartup.ToString("0.00") + "초");
             yield return null;                               // 새 씬 Awake · sceneLoaded 핸들러(MenuExtras.Install 등) 끝나기
             // 나머지를 천천히 채움 (무거운 첫 프레임들이 지나가는 동안 · 팁이 바뀜) — 실제 시간 · 이어서 부르는 씬이 있으면 건너뜀
             float post = boot ? BootPostSecs : PostLoadSecs;
@@ -437,11 +562,62 @@ public class SceneFlow : MonoBehaviour
             queued = null;
             if (scene != null) Time.timeScale = 0f;
         }
-        loadingBox.gameObject.SetActive(false);
+        // 1.6.1~ 막대가 100% 까지 다 찬 것을 보여 준 뒤 잠깐 머물고 (최대 0.6 + 0.3초) · 검은 컷 대신 로딩 화면과 막을 함께 0.3초 페이드
+        targetProgress = 1f;
+        for (float w = 0f; w < 0.6f && shownProgress < 0.995f; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f)) { Dots(); Tick(); yield return null; }
+        shownProgress = 1f; Tick();
+        for (float w = 0f; w < HoldSecs; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f)) { Dots(); yield return null; }
         Application.backgroundLoadingPriority = ThreadPriority.BelowNormal;
-        yield return Fade(1f, 0f, 0.3f);
+        float from = curtain.color.a;
+        for (float t = 0f; t < 0.3f; t += Mathf.Min(Time.unscaledDeltaTime, 0.1f))
+        {
+            float a = 1f - t / 0.3f;
+            loadingGroup.alpha = a;
+            curtain.color = new Color(0f, 0f, 0f, from * a);
+            yield return null;
+        }
+        loadingBox.gameObject.SetActive(false);
+        loadingGroup.alpha = 1f;
+        curtain.color = new Color(0f, 0f, 0f, 0f);
+        curtain.raycastTarget = false;
         canvas.enabled = false;
         loading = false;
+    }
+
+    const float HoldSecs = 0.3f;
+
+    // ---------------------------------------------------------------- 1.6.1~ 셰이더 예열 (켤 때 로딩 화면에서 한 번)
+    //   게임 장면에서 처음 쓰는 순간 GPU 프로그램을 만드느라 끊기던 것을 미리: 바닥(FloorFlat) · 외곽선(SpriteOutline) · 더하기 빛(SpriteAdditive) · 기본 스프라이트
+    //   키워드 없는 기본 변형만 (게임이 쓰는 것) · 하나에 한 프레임 · 상한 WarmupCap 초를 넘기면 나머지는 건너뜀 · 걸린 시간을 Player.log 에
+    const float WarmupCap = 3f;
+    static readonly string[] WarmupResources = { "Shaders/FloorFlat", "Shaders/SpriteOutline", "Shaders/SpriteAdditive" };
+
+    IEnumerator WarmupShaders()
+    {
+        float t0 = Time.realtimeSinceStartup;
+        int done = 0, total = WarmupResources.Length + 1;
+        for (int i = 0; i < total; i++)
+        {
+            if (Time.realtimeSinceStartup - t0 > WarmupCap) { Debug.LogWarning("[SceneFlow] 셰이더 예열 상한 " + WarmupCap + "초를 넘어 나머지 건너뜀"); break; }
+            Shader sh = null;
+            try { sh = i < WarmupResources.Length ? Resources.Load<Shader>(WarmupResources[i]) : Shader.Find("Sprites/Default"); }
+            catch (System.Exception e) { Debug.LogException(e); }
+            if (sh != null && sh.isSupported)
+            {
+                try
+                {
+                    ShaderVariantCollection svc = new ShaderVariantCollection();
+                    svc.Add(new ShaderVariantCollection.ShaderVariant(sh, UnityEngine.Rendering.PassType.Normal));
+                    svc.WarmUp();
+                    Destroy(svc);
+                    done++;
+                }
+                catch (System.Exception e) { Debug.LogWarning("[SceneFlow] 셰이더 예열 실패 " + sh.name + ": " + e.Message); }
+            }
+            targetProgress = Mathf.Max(targetProgress, 0.15f + 0.05f * (i + 1) / total);
+            yield return null;
+        }
+        Debug.Log("[SceneFlow] 셰이더 예열 " + done + "개: " + (Time.realtimeSinceStartup - t0).ToString("0.00") + "초");
     }
 
     // 2026-10-22~ 장 전환(같은 씬 안에서 맵 교체)도 로딩 화면 — 예전엔 검은 막 아래서 맵을 까는 동안 그냥 검은 화면이라 멈춘 것처럼 보였음 (사용자)
@@ -512,6 +688,9 @@ public class SceneFlow : MonoBehaviour
     void ShowLoadingCore(string scene)
     {
         loadingBox.gameObject.SetActive(true);
+        if (loadingGroup != null) loadingGroup.alpha = 1f;
+        BuildTexts();
+        Layout(false);
         SetTexts(true);                 // 켤 때 첫 프레임에 꺼 둔 글자가 혹시 남아 있어도 다음 로딩 화면에선 보이게
         dotsAt = Time.unscaledTime;
         Dots();
@@ -541,6 +720,7 @@ public class SceneFlow : MonoBehaviour
 
     void NextTip()
     {
+        if (tip == null) return;
         string[] pool = TipPool();
         tipAt = Time.unscaledTime;
         if (pool.Length == 0) { tip.text = ""; return; }
@@ -553,7 +733,10 @@ public class SceneFlow : MonoBehaviour
     // 「불러오는 중」 + 점 세 개가 0.4초마다 하나씩 · 팁은 TipEvery 초마다 다음 것
     void DotsCore()
     {
-        if (Time.unscaledTime - tipAt >= TipEvery) NextTip();
+        if (title == null) return;
+        float ph = Time.unscaledTime - tipAt;
+        if (ph >= TipEvery) { NextTip(); ph = 0f; }
+        tip.alpha = Mathf.Clamp01(Mathf.Min(ph / TipFade, (TipEvery - ph) / TipFade));
         int n = Mathf.FloorToInt((Time.unscaledTime - dotsAt) / 0.4f) % 4;
         title.text = Loc.T("불러오는 중") + new string('.', n) + "<alpha=#00>" + new string('.', 3 - n);     // 글자 폭이 흔들리지 않게 남은 점은 투명
     }
@@ -564,6 +747,10 @@ public class SceneFlow : MonoBehaviour
         "일시정지 메뉴에서 이번 판의 빌드와 능력치를 볼 수 있습니다.",
         "떠돌이 상점을 놓치면 다음 상점이 더 빨리 옵니다.",
         "보스 체력이 절반 아래로 내려가면 특수 스킬을 씁니다. 경고 표시를 잘 보세요.",
+        // 1.6.1~ 세계관 한 줄 (번역 LocTable.Ux2)
+        "영혼의 심연에 갇힌 영혼들은 청록빛 불꽃이 되어 구해 줄 이를 기다린다.",
+        "킹 슬라임의 산성은 초원의 풀 한 포기까지 녹여 버렸다.",
+        "리치 왕은 지하 묘역에서 죽은 자들을 끝없이 깨운다.",
     };
 
     static string[] TipPool()

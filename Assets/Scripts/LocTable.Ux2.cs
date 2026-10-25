@@ -6,6 +6,8 @@ using UnityEngine;
 public static partial class LocTable
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void AddUx2Boot() { if (!SceneFlow.DeferStartup(5, AddUx2)) AddUx2(); }      // 1.6.1~ 켤 때는 로딩 화면이 뜬 뒤로 (큰 함수는 불릴 때 통째로 JIT 되므로 작은 함수에서 미룸 · SceneFlow)
+
     static void AddUx2()
     {
         void C(string key, string ko, string en, string ja, string zh) { if (!Entries.ContainsKey(key)) Entries[key] = E(ko, en, ja, zh); }
@@ -17,6 +19,10 @@ public static partial class LocTable
         S("일시정지 메뉴에서 이번 판의 빌드와 능력치를 볼 수 있습니다.", "The pause menu shows your current build and stats.", "ポーズメニューで今回のビルドと能力値を確認できます。", "暂停菜单可查看本局构筑与属性。");
         S("떠돌이 상점을 놓치면 다음 상점이 더 빨리 옵니다.", "Miss a wandering shop and the next one arrives sooner.", "さすらいの商店を逃すと、次の商店が早く来ます。", "错过流浪商店后，下一家会更快出现。");
         S("보스 체력이 절반 아래로 내려가면 특수 스킬을 씁니다. 경고 표시를 잘 보세요.", "Bosses use special skills below half HP. Watch the warning marks.", "ボスは体力が半分以下になると特殊スキルを使います。警告表示に注意してください。", "首领生命低于一半时会使用特殊技能。请留意警告标记。");
+        // 1.6.1~ 로딩 화면 세계관 한 줄 (SceneFlow.ExtraTips)
+        S("영혼의 심연에 갇힌 영혼들은 청록빛 불꽃이 되어 구해 줄 이를 기다린다.", "Souls trapped in the Abyss of Souls burn as teal flames, waiting for someone to save them.", "魂の深淵に囚われた魂は青緑の炎となり、救い手を待っている。", "被困在灵魂深渊的灵魂化作青绿色火焰，等待着拯救者。");
+        S("킹 슬라임의 산성은 초원의 풀 한 포기까지 녹여 버렸다.", "King Slime's acid melted the meadow down to the last blade of grass.", "キングスライムの酸は、草原の草一本まで溶かしてしまった。", "史莱姆王的酸液把草原连一根草都溶尽了。");
+        S("리치 왕은 지하 묘역에서 죽은 자들을 끝없이 깨운다.", "Deep in the Catacombs, the Lich King raises the dead without end.", "リッチ王は地下墓所で死者を絶え間なく呼び起こす。", "巫妖王在地下墓穴中不断唤醒亡者。");
 
         // ================================================================= 7. 저장 안전성
         S("저장됨", "Saved", "保存しました", "已保存");
