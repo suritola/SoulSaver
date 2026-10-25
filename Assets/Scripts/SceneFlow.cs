@@ -46,6 +46,79 @@ public class SceneFlow : MonoBehaviour
     static bool activated;
     static string queued;
 
+    // 1.6.1~ 게임을 켤 때 (사용자 「게임을 켜면 잠시 아무 반응이 없다가 켜짐 → 먼저 게임을 켜고 로딩창을 띄워 기다리게」)
+    //   예전엔 빌드 첫 장면이 메인 메뉴라 메뉴 장면 불러오기 · 메뉴의 Awake · Start · 시작 초기화가 첫 프레임 전에 몰려 창이 약 2.5초 검게 멈춰 있었음
+    //   → 빌드 첫 장면을 거의 빈 Boot 장면(카메라 · 글꼴 참조 하나)으로 두고, 그 첫 프레임부터 이 로딩 화면을 (막이 내려오는 연출 없이) 바로 띄운 채
+    //     메인 메뉴를 비동기로 불러옴 · 자동 봇 · 배치 · 트레일러는 그냥 즉시 · 로딩 화면이 실패하면 동기로라도 메인 메뉴 (Boot 에 남는 길 없음)
+    public const string BootScene = "Boot", MenuScene = "MainMenu";
+    static bool bootRequested;          // Boot 에서 메인 메뉴 비동기 불러오기를 이미 시작했는지 (실패 처리에서 두 번 부르지 않게)
+    const float BootPostSecs = 0.5f;    // 켤 때는 메뉴가 켜진 뒤 게이지를 채우는 시간을 짧게 (그 뒤 시작 연출 TitleIntro 가 이어짐)
+    const float LoadCap = 60f;          // 장면 불러오기 기다림 상한 (실제 시간) — 넘으면 그냥 켜고 넘어감 (멈춰 남지 않게)
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void BootToMenu()
+    {
+        if (SceneManager.GetActiveScene().name != BootScene) return;
+        try { AudioListener.volume = GameSettings.Volume; } catch (System.Exception e) { Debug.LogException(e); }     // 설정 시작(아래 미룬 일)보다 음악이 먼저 나와도 큰 소리로 튀지 않게
+        if (GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { BootFallback(); return; }
+        try { Ensure().StartCoroutine(instance.Guard(instance.Run(MenuScene, true), BootFallback)); }
+        catch (System.Exception e) { Debug.LogException(e); BootFallback(); }
+    }
+
+    // 로딩 화면을 못 띄웠거나 도중에 예외: 미룬 시작 초기화를 마저 하고, 비동기를 시작했으면 Recover 가 활성화를 풀어 그대로 켜지고, 아니면 동기로 메인 메뉴
+    static void BootFallback()
+    {
+        RunStartupNow();
+        if (bootRequested) return;
+        if (SceneManager.GetActiveScene().name == BootScene) SceneManager.LoadScene(MenuScene);
+    }
+
+    // ---------------------------------------------------------------- 첫 프레임 뒤로 미루는 시작 초기화
+    // 시험 빌드 계측 (1.6.0): 첫 프레임 전에 도는 시작 초기화가 약 1.7초 — 스팀 초기화 0.47초 · 설정 시작(GameSettings.Boot) 0.34초 · 커서 0.1초 등
+    //   Boot 에서 켤 때만 이 셋을 로딩 화면이 한 번 그려진 뒤로 미룸 (order 작은 것부터: 스팀 0 → 설정 10 — 첫 실행 언어 감지가 스팀 언어를 봄 → 커서 20)
+    //   메인 메뉴를 부르기 전에 반드시 모두 실행 (로딩 화면 실패 · 동기 길 포함) · 하나가 예외여도 나머지는 그대로
+    static readonly System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, System.Action>> startup =
+        new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, System.Action>>();
+    static bool startupBegun;
+    static int startupNext;
+
+    // 미뤘으면 true (호출처는 그냥 돌아감) · false 면 호출처가 지금 바로 실행 (에디터에서 다른 장면으로 시작 · 배치 · 이미 시작함)
+    public static bool DeferStartup(int order, System.Action work)
+    {
+        if (startupBegun || Application.isBatchMode || work == null || !StartingFromBoot()) return false;
+        startup.Add(new System.Collections.Generic.KeyValuePair<int, System.Action>(order, work));
+        return true;
+    }
+
+    // 첫 장면이 Boot 인지 (장면 전 초기화 때는 활성 장면 이름이 아직 비어 있을 수 있어 빌드 첫 장면 경로로도 봄 — 에디터에서는 지금 연 장면이 첫 장면)
+    static bool StartingFromBoot()
+    {
+        string n = SceneManager.GetActiveScene().name;
+        if (n == BootScene) return true;
+        return string.IsNullOrEmpty(n) && !Application.isEditor && SceneUtility.GetScenePathByBuildIndex(0).EndsWith("/" + BootScene + ".unity");
+    }
+
+    void SetTexts(bool on)
+    {
+        foreach (TMP_Text t in new[] { title, tip, pct }) if (t != null) t.gameObject.SetActive(on);
+    }
+
+    // 하나 실행 (남은 게 없으면 false)
+    static bool StartupStep()
+    {
+        if (!startupBegun)
+        {
+            startupBegun = true;
+            startup.Sort((a, b) => a.Key.CompareTo(b.Key));
+        }
+        if (startupNext >= startup.Count) return false;
+        System.Action w = startup[startupNext++].Value;
+        try { w(); } catch (System.Exception e) { Debug.LogException(e); }
+        return true;
+    }
+
+    static void RunStartupNow() { while (StartupStep()) { } }
+
     static SceneFlow Ensure()
     {
         if (instance != null) return instance;
@@ -282,7 +355,8 @@ public class SceneFlow : MonoBehaviour
 
     bool stageLoading;
 
-    IEnumerator Run(string scene)
+    // boot: 게임을 켤 때 Boot 장면에서 (막을 바로 까맣게 · 첫 프레임 뒤 팁을 지금 언어로 다시 고름 · 메뉴가 켜진 뒤 채우는 시간 짧게)
+    IEnumerator Run(string scene, bool boot = false)
     {
         loading = true;
         activated = false;
@@ -290,23 +364,49 @@ public class SceneFlow : MonoBehaviour
         canvas.enabled = true;
         Time.timeScale = 0f;                                 // 떠나는 씬을 얼림 (일시정지 · 엔딩에서 왔어도 막이 내리는 동안 게임이 풀리지 않게)
         Application.backgroundLoadingPriority = ThreadPriority.High;
-        yield return Fade(0f, 1f, 0.25f);
+        if (boot)
+        {
+            // 켤 때: 막을 바로 까맣게 · 로딩 화면을 먼저 몇 프레임 그린 뒤에 불러오기 시작
+            //   (첫 프레임 전에 LoadSceneAsync 를 부르면 Unity 가 시작 단계에서 그 불러오기를 끝까지 · 켜기까지 한꺼번에 해 버려 로딩 화면이 한 번도 안 그려졌음 — 시험 빌드에서 확인)
+            curtain.color = new Color(0f, 0f, 0f, 1f);
+            curtain.raycastTarget = true;
+            ShowLoading(scene);
+            // 첫 프레임은 글자 없이 (바탕 · 게이지 · 영웅만) — 처음 그리는 TMP 글자(글꼴 · 셰이더 준비 · 한글 글리프)가 약 0.5초라 첫 화면을 늦추지 않게 다음 프레임에 켬 (시험 빌드 계측)
+            SetTexts(false);
+            Dots(); Tick();
+            yield return null;
+            SetTexts(true);
+            Dots(); Tick();
+            yield return null;
+            // 미뤄 둔 시작 초기화를 하나씩 (사이마다 한 프레임 — 게이지가 조금씩 참) · 메인 메뉴 불러오기 전에 모두
+            targetProgress = 0.1f;
+            while (StartupStep()) { Dots(); Tick(); yield return null; }
+        }
+        else yield return Fade(0f, 1f, 0.25f);
         while (scene != null)
         {
             AsyncOperation op = SceneManager.LoadSceneAsync(scene);
+            if (boot) bootRequested = op != null;
             pendingOp = op;
             if (op == null)
             {
                 Debug.LogWarning("[SceneFlow] 씬 없음: " + scene);
                 Time.timeScale = 1f;
+                if (boot) BootFallback();
                 break;
             }
             op.allowSceneActivation = false;
             // 1.3.3~ 막이 내려오면 바로 로딩 화면 (예전엔 0.4초 넘게 걸릴 때만 글자 · 짧으면 검은 막뿐이었음)
-            ShowLoading(scene);
-            while (op.progress < 0.9f)
+            if (!boot) ShowLoading(scene);
+            else
             {
-                targetProgress = Mathf.Clamp01(op.progress / 0.9f) * LoadShare;
+                // 켤 때는 이미 떠 있음: 게이지는 그대로 두고, 언어 설정(미뤄 둔 GameSettings 시작)이 방금 돌았으므로 팁만 지금 언어로 다시 고름 (제목은 매 프레임 다시 씀)
+                try { tipIndex = -1; NextTip(); } catch (System.Exception e) { Debug.LogException(e); }
+            }
+            float capAt = Time.realtimeSinceStartup + LoadCap;
+            while (op.progress < 0.9f && Time.realtimeSinceStartup < capAt)
+            {
+                targetProgress = Mathf.Max(targetProgress, Mathf.Clamp01(op.progress / 0.9f) * LoadShare);     // 켤 때 이미 조금 찬 게이지가 뒤로 가지 않게
                 Dots();
                 Tick();
                 yield return null;
@@ -317,14 +417,18 @@ public class SceneFlow : MonoBehaviour
             Time.timeScale = 1f;                             // 새 씬은 늘 1 로 시작 (호출처들이 각자 1 로 두던 것을 한곳에)
             activated = true;                                // 새 씬의 sceneLoaded · Awake · Start 가 부르는 Go 는 이어서 받음
             op.allowSceneActivation = true;
-            while (!op.isDone) { Dots(); Tick(); yield return null; }
+            capAt = Time.realtimeSinceStartup + LoadCap;
+            while (!op.isDone && Time.realtimeSinceStartup < capAt) { Dots(); Tick(); yield return null; }
+            if (!op.isDone) Debug.LogWarning("[SceneFlow] 씬 불러오기가 " + LoadCap + "초 넘게 끝나지 않아 로딩 화면을 걷음: " + scene);
             pendingOp = null;
             yield return null;                               // 새 씬 Awake · sceneLoaded 핸들러(MenuExtras.Install 등) 끝나기
             // 나머지를 천천히 채움 (무거운 첫 프레임들이 지나가는 동안 · 팁이 바뀜) — 실제 시간 · 이어서 부르는 씬이 있으면 건너뜀
+            float post = boot ? BootPostSecs : PostLoadSecs;
+            boot = false;                                    // 이어서 부르는 씬이 있으면 그것은 보통 전환처럼
             if (queued == null)
-                for (float w = 0f; w < PostLoadSecs; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f))
+                for (float w = 0f; w < post; w += Mathf.Min(Time.unscaledDeltaTime, 0.1f))
                 {
-                    targetProgress = Mathf.Lerp(LoadShare, 1f, w / PostLoadSecs);
+                    targetProgress = Mathf.Lerp(LoadShare, 1f, w / post);
                     Dots(); Tick();
                     yield return null;
                 }
@@ -408,6 +512,7 @@ public class SceneFlow : MonoBehaviour
     void ShowLoadingCore(string scene)
     {
         loadingBox.gameObject.SetActive(true);
+        SetTexts(true);                 // 켤 때 첫 프레임에 꺼 둔 글자가 혹시 남아 있어도 다음 로딩 화면에선 보이게
         dotsAt = Time.unscaledTime;
         Dots();
         tipIndex = -1;

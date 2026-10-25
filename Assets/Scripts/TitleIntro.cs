@@ -79,9 +79,17 @@ public class TitleIntro : MonoBehaviour
         if (navEs != null) navEs.sendNavigationEvents = navWas;
     }
 
+    // 1.6.1~ 게임을 켜면 이제 Boot 로딩 화면(SceneFlow) 아래서 메인 메뉴가 켜지므로, 로딩 화면이 덮고 있는 동안은 연출 시간을 멈춤
+    //   (안 멈추면 연출 앞 1초가 가려진 채 지나감) · 그래도 남지 않게 실제로 떠 있던 시간 상한 MaxWait
+    const float MaxWait = 30f;
+    float life;
+
     void Update()
     {
         float dt = Time.unscaledDeltaTime;
+        life += dt;
+        if (life >= MaxWait) { Destroy(gameObject); return; }
+        if (SceneFlow.Loading) return;
         t += Mathf.Min(dt, 0.1f);
         // 넘기기: 아무 키 · 클릭 · 패드 (0.25 초 뒤부터 — 켜자마자 남은 입력으로 넘어가지 않게)
         if (outAt < 0f && t > 0.25f && (Input.anyKeyDown || Input.GetMouseButtonDown(0))) outAt = t;

@@ -517,6 +517,14 @@ public static class GameSettings
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
+        // 1.6.1~ Boot 장면에서 켤 때는 로딩 화면이 뜬 뒤로 미룸 (약 0.3초 · 스팀 초기화 다음 순서 · 메인 메뉴를 부르기 전에 반드시 실행 — SceneFlow.DeferStartup)
+        //   설정 값 자체는 처음 읽을 때 Load() 하므로 그 사이 다른 코드가 읽어도 맞는 값
+        if (SceneFlow.DeferStartup(10, BootNow)) return;
+        BootNow();
+    }
+
+    static void BootNow()
+    {
         Load();
         // 1.0.4~: 이제 스팀이 켜져 있으니 스팀 언어로 다시 봄 (저장은 고르기 창에서 고를 때)
         if (!LanguageChosen)

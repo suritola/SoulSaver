@@ -22,6 +22,13 @@ public class CursorSkin : MonoBehaviour
     static void Boot()
     {
         if (Application.isBatchMode || instance != null) return;
+        if (SceneFlow.DeferStartup(20, Create)) return;      // 1.6.1~ Boot 장면에서 켤 때는 로딩 화면이 뜬 뒤로 (스킨 표 · 커서 그림 읽기 약 0.1초)
+        Create();
+    }
+
+    static void Create()
+    {
+        if (Application.isBatchMode || instance != null) return;
         GameObject go = new GameObject("CursorSkin");
         DontDestroyOnLoad(go);
         instance = go.AddComponent<CursorSkin>();

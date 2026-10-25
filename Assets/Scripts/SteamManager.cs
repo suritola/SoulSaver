@@ -73,6 +73,14 @@ public class SteamManager : MonoBehaviour
     static void Boot()
     {
         if (Instance != null) return;
+        // 1.6.1~ Boot 장면에서 켤 때는 스팀 초기화(약 0.5초)를 로딩 화면이 뜬 뒤로 미룸 (SceneFlow.DeferStartup · 메인 메뉴를 부르기 전에 반드시 실행)
+        if (SceneFlow.DeferStartup(0, Create)) return;
+        Create();
+    }
+
+    static void Create()
+    {
+        if (Instance != null) return;
         GameObject go = new GameObject("SteamManager");
         DontDestroyOnLoad(go);
         go.AddComponent<SteamManager>();
