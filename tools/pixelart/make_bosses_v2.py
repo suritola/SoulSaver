@@ -49,7 +49,7 @@ def design_sheet(mod):
 # 도감 아이콘: 이름 → (설계도 파일 이름 · 없으면 Assets 의 32칸 그림, 칸 열 · 행)
 ICONS = {
     "lich": ("lich", "Assets/Sprites/enemy/boss.png", 0, 0),
-    "hell": ("hell", "Assets/Sprites/enemy/hell/hell_lord.png", 0, 0),
+    "hell": ("helllord", "Assets/Sprites/enemy/hell/hell_lord.png", 0, 0),
     "slimeking": ("slimeking", "Assets/Sprites/enemy/meadow/meadow_slimeking.png", 0, 0),
     "mirror": ("mirror", "Assets/Resources/Abyss/mirrorlord_0.png", 0, 0),
     "developer": ("developer", "Assets/Resources/Abyss/developer_0.png", 0, 0),
