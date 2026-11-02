@@ -1,6 +1,6 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 52개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개, 2.1.1에 4장 영혼의 심연 2개, 2.0.0 대규모 업데이트에 사막 비밀 해금 5개 · 영혼 릴레이 4개 · 역류 3개 추가)
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 52개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개, 2.1.1에 4장 영혼의 심연 2개, 2.0.0 대규모 업데이트에 사막 비밀 해금 5개 · 영혼 릴레이 4개 · 역류 3개 추가) — 2026-11-02 Steamworks에 52개 모두 등록 · 아이콘 · 4개 언어 · 게시 완료
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
 - 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `tools/steam/make_achievement_icons.py` 로 만든 PNG를 JPG로 변환 (Steamworks는 JPG 권장)
