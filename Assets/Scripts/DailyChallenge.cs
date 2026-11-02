@@ -118,6 +118,7 @@ public static class DailyChallenge
     public static void Begin()
     {
         if (!Unlocked) return;
+        ModeRun.EndAll();           // 2.0.0~ 특별 모드와 배타 (영혼 릴레이 · 역류가 켜져 있었다면 풀음)
         runDay = Today;
         runRule = RuleOf(runDay);
         Active = true;
@@ -169,7 +170,8 @@ public static class DailyChallenge
         LastRank = LastTotal = 0;
         // 자세한 값: 캐릭터 · 보스 처치 · 레벨 · 처치 수 · 1.1.5~ 판 버전 (SteamLeaderboards.DetailCount · 순위 창 영웅 아이콘 · 보스 칸)
         int[] details = { (int)CharacterData.Selected, bosses, RunStats.Level, RunStats.Kills, SteamLeaderboards.VersionCode() };
-        SteamLeaderboards.Upload(board, Mathf.FloorToInt(seconds), details, (rank, total) =>
+        int score = Mathf.FloorToInt(seconds) + (daily ? DesertSecrets.DailyBonusScore : 0);      // 2.0.0~ 사막 비밀 보너스 점수 (일일 도전만)
+        SteamLeaderboards.Upload(board, score, details, (rank, total) =>
         {
             if (LastBoard != board) return;
             LastRank = rank;
@@ -183,12 +185,13 @@ public static class DailyChallenge
         public TMP_Text text;
         public string baseText;
         public bool daily;
+        public string rankName;          // 2.0.0~ 특별 모드(영혼 릴레이 「조합 순위」)의 이름 글자 (없으면 일일 / 무한)
 
         void Update()
         {
             if (text == null || LastRank <= 0) return;
             // 1.1.5~ 「내 순위 n위 / 전체」 (순위 창 LeaderboardUI 와 같은 말)
-            text.text = baseText + "   " + Loc.T(daily ? "오늘의 순위" : "무한 모드 순위") + " · " + Loc.T("lb.myrank").Replace("{0}", LastRank.ToString("N0"))
+            text.text = baseText + "   " + Loc.T(!string.IsNullOrEmpty(rankName) ? rankName : daily ? "오늘의 순위" : "무한 모드 순위") + " · " + Loc.T("lb.myrank").Replace("{0}", LastRank.ToString("N0"))
                       + " <color=#A89C86>/ " + LastTotal.ToString("N0") + "</color>";
             enabled = false;
         }

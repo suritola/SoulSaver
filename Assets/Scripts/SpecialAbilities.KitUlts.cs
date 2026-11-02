@@ -33,12 +33,32 @@ public partial class SpecialAbilities
         (KitSoulChain, "영혼 사슬", "둘레의 적을 모두 영혼 사슬로 묶어 3초 동안 0.5초마다 벱니다. (공격력 56%)"),
         (KitIceGhost, "절대 영도", "둘레의 모든 적을 2초 동안 얼리고 피해를 줍니다. (공격력 240%)"),
         (KitShadowGhost, "그림자 군단", "그림자 넷이 3초 동안 둘레의 적에게 손길을 뻗습니다. (공격력 64%씩)"),
+        // 씨름꾼 (2.0.0) — 표시 % = 코드 × KitPower 0.8
+        (KitLiftStone, "들돌 비", "마우스 둘레에 들돌 여덟 개가 차례로 떨어져 터집니다. (공격력 128%씩)"),
+        (KitCowbell, "황소 떼", "황소 다섯 마리가 마우스 쪽으로 달려가며 닿는 적을 날려 버립니다. (공격력 192%씩)"),
+        (KitRope, "줄다리기", "마우스 쪽으로 밧줄을 던져 한 줄의 적을 꿰어 당긴 뒤 내 등 뒤로 한꺼번에 넘겨 메칩니다. (공격력 192%)"),
+        // 공사 반장 (2.0.0) — 표시 % = 코드 × KitPower 0.8 (코드 160 / 90 / 70%)
+        (KitBucket, "버킷 내려찍기", "마우스 둘레를 큰 버킷이 세 번 내려찍습니다. (공격력 128%씩)"),
+        (KitJackhammer, "진동 다짐", "내 둘레 6칸에 땅울림이 네 번 퍼져 적을 기절시킵니다. (공격력 72%씩 · 0.4초 기절)"),
+        (KitWreckBall, "쌍 쇠공", "철거 공고 쇠공이 하나 더 떨어져 25° 옆으로 튕깁니다. (공격력 56%)"),
+        // 인형사 (2.0.0) — 표시 % = 코드 × KitPower 0.8 (코드 싹둑 500 / 실타래 70 / 행진 70%)
+        (KitScissorDummy, "싹둑", "커튼콜이 끝날 때 커서 자리에 거대한 가위가 닫힙니다. (공격력 400%)"),
+        (KitSpoolDummy, "실타래", "커튼콜 더미끼리 실이 이어져 그물이 되고, 그물 안 적이 느려지고 0.45초마다 베입니다. (공격력 56%씩)"),
+        (KitWindupDummy, "행진", "커튼콜 더미가 커서를 따라 한 줄로 행진하며, 지나간 길을 벱니다. (공격력 56%씩)"),
+        // 장의사 (2.0.0) — 표시 % = 코드 × KitPower 0.8 (코드 까마귀 150 / 저녁 종 125 / 석관 437.5%)
+        (KitCrow, "까마귀 떼", "화면 안 적 열두 마리에게 까마귀가 차례로 내리꽂힙니다. (공격력 120%씩 · 보스는 네 번)"),
+        (KitBell, "저녁 종", "0.5초 간격으로 종이 세 번 울려 둘레 12칸 적에게 피해를 주고 0.5초 멈춥니다. (공격력 100%씩)"),
+        (KitSarcophagus, "석관 봉인", "커서 자리에 큰 석관이 떨어져 반지름 3칸을 덮치고, 10초 동안 큰 석관(내구 20)으로 남습니다. (공격력 350%)"),
+        // 사진사 (2.0.0) — 표시 % = 코드 × KitPower 0.8 (코드 불꽃 160 / 감시 60 / 상영회 50%)
+        (KitBulb, "불꽃 플래시", "내 둘레에 전구 여덟 개가 차례로 터집니다. (공격력 128%씩)"),
+        (KitTripodCam, "감시 카메라", "카메라 네 대가 마우스 둘레에 서서 4초 동안 0.6초마다 찍습니다. (공격력 48%씩)"),
+        (KitProjector, "상영회", "마우스 자리에 4초 동안 빛 기둥 화면이 서서 안의 적을 0.3초마다 벱니다. (공격력 40%)"),
     };
 
-    public static bool IsKitWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
-    public static string KitName(int id) => IsKit(id) ? KitDefs[id - KitFirstId].name : "";
-    public static string KitDesc(int id) => IsKit(id) ? KitDefs[id - KitFirstId].desc : "";
-    public static SpecialKind KitKind(int id) => KitDefs[id - KitFirstId].kind;
+    public static bool IsKitWeapon(int id) => IsKit(id) && KitDef(id).kind == SpecialKind.Weapon;
+    public static string KitName(int id) => IsKit(id) ? KitDef(id).name : "";
+    public static string KitDesc(int id) => IsKit(id) ? KitDef(id).desc : "";
+    public static SpecialKind KitKind(int id) => KitDef(id).kind;
     public static int KitCount => KitDefs.Length;
 
     public static string KitUltName(int id)
@@ -89,7 +109,22 @@ public partial class SpecialAbilities
             case KitPostbox: size = 10f; return UltAimShape.Around;
             case KitSoulChain: size = evo ? 10f : 8f; return UltAimShape.Around;
             case KitIceGhost: size = evo ? 11f : 9f; return UltAimShape.Around;
-            case KitShadowGhost: size = 9f; return UltAimShape.Around;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
+            case KitShadowGhost: size = 9f; return UltAimShape.Around;
+            case KitLiftStone: size = evo ? 7f : 6f; return UltAimShape.Point;
+            case KitCowbell: size = evo ? 22f : 18f; return UltAimShape.Line;
+            case KitBucket: size = evo ? 6f : 5f; return UltAimShape.Point;
+            case KitJackhammer: size = evo ? 7f : 6f; return UltAimShape.Around;
+            case KitWreckBall: size = evo ? 18f : 15f; return UltAimShape.Line;
+            case KitScissorDummy: size = evo ? 4.5f : 3.5f; return UltAimShape.Point;
+            case KitSpoolDummy: size = evo ? 5f : 4.5f; return UltAimShape.Point;
+            case KitWindupDummy: size = evo ? 10f : 8f; return UltAimShape.Around;
+            case KitCrow: size = 14f; return UltAimShape.Around;
+            case KitBell: size = evo ? 14f : 12f; return UltAimShape.Around;
+            case KitSarcophagus: size = evo ? 3.6f : 3f; return UltAimShape.Point;
+            case KitBulb: size = evo ? 8f : 7f; return UltAimShape.Around;
+            case KitTripodCam: size = evo ? 5f : 4f; return UltAimShape.Point;
+            case KitProjector: size = evo ? 4f : 3.5f; return UltAimShape.Point;
+            case KitRope: size = evo ? 17f : 14f; return UltAimShape.Line;       // 카드 · 수은 구슬: 사방으로 날아감 (원으로 보여 범위 공격처럼 오해했음)
             default: size = 8f; return UltAimShape.Around;
         }
     }

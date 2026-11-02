@@ -1,12 +1,13 @@
 using UnityEngine;
 
 // 캐릭터: 거너(기본) · 검사 · 도적은 처음부터, 궁수 · 연금술사는 포인트로 구매
-// 1.0.2~ 지도 제작자 · 시계공 · 우체부 · 유령: 해제 조건을 달성한 뒤 포인트로 구매 (CharacterKit.<캐릭터>.cs), 마지막 한 칸은 준비 중
+// 1.0.2~ 지도 제작자 · 시계공 · 우체부 · 유령: 해제 조건을 달성한 뒤 포인트로 구매 (CharacterKit.<캐릭터>.cs)
+// 2.0.0~ 씨름꾼(9) · 공사 반장(10) · 인형사(11): 사막 비밀을 풀면 바로 해금 (포인트 구매 없음 · CharacterDef.secret · UnlockSecret) — 예전 마지막 한 칸 「준비 중」 자리
 // 스탯은 모두 거너를 1(100%)로 한 배율. 고른 캐릭터 · 잠금 해제 · 보유 포인트는 PlayerPrefs에 저장
 // 캐릭터 해제 조건 (1.0.2): 조건을 달성해야 포인트로 살 수 있음 (달성 기록은 저장)
 public enum CharUnlock { None = 0, Endless10 = 1, EndlessBosses5 = 2, EasyFast = 3, EndlessClear = 4 }
 
-public enum CharacterId { Gunner = 0, Swordsman = 1, Rogue = 2, Archer = 3, Alchemist = 4, Cartographer = 5, Clockmaker = 6, Postman = 7, Ghost = 8, Slot10 = 9 }
+public enum CharacterId { Gunner = 0, Swordsman = 1, Rogue = 2, Archer = 3, Alchemist = 4, Cartographer = 5, Clockmaker = 6, Postman = 7, Ghost = 8, Wrestler = 9, Foreman = 10, Puppeteer = 11, Undertaker = 12, Photographer = 13 }
 
 public class CharacterDef
 {
@@ -21,6 +22,7 @@ public class CharacterDef
     public float range;             // 평타 사거리 (칸), 0 = 무한
     public int mag;                 // 기본 탄창 수, 0 = 무한 (거너는 인스펙터 값)
     public int price;               // 0 = 처음부터, -1 = 준비 중
+    public bool secret;             // 2.0.0~ 비밀형 영웅: 가격 없이 저장 키(char.unlocked.<번호>)로만 해금 (price 0 이어도 「처음부터」가 아님 · CharacterData.UnlockSecret)
     public CharUnlock condition;     // 살 수 있게 되는 조건 (None = 바로 살 수 있음)
     public int[] pool;              // 지옥의 문에서 고를 수 있는 특수 능력 (무기 · 스킬 · 패시브)
     public Color legacyColor = Color.white;   // 개편 전 대표색 (VisualRules.Legacy) — 목록의 color = … 가 여기에 들어감
@@ -99,11 +101,44 @@ public static class CharacterData
             skill = "빙의", skillDesc = "누르고 있으면 마우스 가까운 적에 표시가 붙고, 떼면 그 적의 몸에 들어가 3초 동안 그 적의 이동 속도로 몸을 끌고 다니다가 안에서 터뜨립니다. 들어간 동안은 무적이고, 둘레 적에게도 피해와 냉기를 줍니다",     // 1.0.4~: 1초 → 3초 · 조종
             hp = 0.9f, damage = 0.9f, attackSpeed = 1.05f, gauge = 1.05f, move = 1.05f, range = 4.5f, price = 15000, condition = CharUnlock.EndlessClear,     // 1.1.3: 체력 0.8 → 0.9 (사거리 4.5 근접인데 화력은 중앙값 · 받는 피해의 70~77% 가 접촉 · 사망률 가장 높음)
             pool = new[] { 81, 82, 83, 84, 85, 86, 87 }, color = new Color(0.65f, 0.92f, 1f), ally = new Color(0.66f, 0.91f, 1f) },     // 1.6.0~ 서리 #A9E9FF
-        Coming(),
-    };
+        // ---------------- 2.0.0 새 영웅: 사막 비밀을 풀면 바로 해금 (포인트 구매 없음)
+        new CharacterDef {
+            name = "씨름꾼", title = "천하장사", body = "wrestler", held = "satba",
+            description = "명절 TV 씨름 중계에서 넘어온 장사. 적을 샅바째 붙잡아 머리 위로 들어 올리고 무리 한가운데로 메다꽂습니다. 모래판 밖으로 던져 낸 적은 그대로 장외입니다.",
+            weapon = "샅바", attack = "마우스 가까운 적을 붙잡아 머리 위로 들어 올리고(들린 적이 날아오는 공격을 막음), 다시 누르면 마우스 쪽으로 던집니다. 던진 적은 지나가는 적을 볼링처럼 쓰러뜨리고, 큰 적일수록 느리게 들리지만 세게 날아갑니다. 누르고 있으면 잡고 던지기를 저절로 이어 갑니다",
+            skill = "천하장사", skillDesc = "누르고 있으면 가장 큰 적에 표시가 붙고, 떼면 그 적에게 뛰어들어 들어 메칩니다. 모래 충격파가 둘레 적을 밀어내고, 메친 자리에 10초 동안 모래판이 깔립니다. 모래판 안에서는 받는 피해가 줄고 밀리지 않으며, 모래판 밖으로 던져 낸 적은 장외로 쓰러집니다",
+            hp = 1.2f, damage = 1.4f, attackSpeed = 0.8f, gauge = 1.0f, sig = 1.2f, special = 1.2f, move = 1f, range = 4f, price = 0, secret = true,
+            pool = new[] { 140, 141, 142, 143, 144, 145, 146 }, color = new Color(0.95f, 0.62f, 0.45f), ally = new Color(0.35f, 0.42f, 1f) },     // 청샅바 #5A6BFF (적대 대역 밖)
+        new CharacterDef {
+            name = "공사 반장", title = "영원한 공사 중", body = "foreman", held = "plow",
+            description = "어느 게임에나 걸린 「공사 중 · 추후 업데이트 예정」 표지판 뒤에서 일하던 반장. 적을 베는 대신 삽날로 밀어 한 더미로 쌓아 짓누르고, 다 모이면 통째로 쏟아 버립니다. 입버릇은 「아 지금 하잖아요!」",
+            weapon = "삽날", attack = "누르고 있는 동안 마우스 쪽으로 삽날을 세우고, 닿는 적을 앞에 더미로 쌓습니다. 더미가 무거울수록 짓누르는 피해가 커지고, 벽 · 바리케이드 · 큰 적에 부딪히면 「빠각」 크게 다칩니다. 떼면 더미를 마우스 쪽으로 쏟아 산사태를 일으킵니다 (덤프). 밀고 있는 동안은 느려지고, 옆 · 뒤로는 더 느립니다",
+            skill = "철거 공고", skillDesc = "누르고 있으면 쇠공이 떨어질 자리와 굴러갈 길이 보이고, 떼면 그 자리에 쇠공이 떨어져 세 번 튕기며 굴러갑니다. 튕긴 자리마다 「공사 중」 바리케이드가 4초 동안 적의 길을 막습니다 (보스는 부수고 지나갑니다)",
+            hp = 1.15f, damage = 2.5f, attackSpeed = 0.8f, gauge = 1.0f, sig = 1.2f, special = 1.2f, move = 0.95f, range = 2.5f, price = 0, secret = true,
+            pool = new[] { 147, 148, 149, 150, 151, 152, 153 }, color = new Color(0.95f, 0.8f, 0.2f), ally = new Color(0.95f, 0.91f, 0.36f) },     // 레몬 #F2E85C (결정 F5 · 금 영웅과 줄무늬 문양으로 구분)
+        new CharacterDef {
+            name = "인형사", title = "줄 끝의 연출가", body = "puppeteer", held = "dummy",
+            description = "개발자가 「나중에 바꿀게」 하고 넣어 둔 임시 더미를 줄에 매달아 무대에 세운 사람. 더미는 커서를 따라 떠다니며 휘두르고, 영웅과 더미 사이의 줄은 칼날이 되어 가로지르는 적을 벱니다. 「대사는 제가 할게요. 얘는 아직 없거든요.」",
+            weapon = "임시 더미", attack = "더미가 커서 자리에 떠 있다가, 누르면 그 자리에서 팔을 돌려 둘레의 적을 벱니다. 영웅과 더미 사이의 줄은 가로지르는 적을 베고, 더미가 멀수록 줄이 팽팽해져 더 아픕니다",
+            skill = "자리 바꾸기 · 커튼콜", skillDesc = "짧게 누르면 필살기 게이지 20%를 써서 영웅과 더미의 자리가 바뀌며 사이의 적을 줄로 가르고, 남은 더미가 잠깐 적을 끕니다. 게이지가 가득할 때 누르고 있으면 커튼콜: 줄에 매달린 더미 넷이 내려와 커서 둘레에서 함께 휘두르고, 박수와 함께 올라가며 크게 벱니다",
+            hp = 0.85f, damage = 1.45f, attackSpeed = 0.9f, gauge = 0.95f, sig = 1.6f, special = 1.6f, move = 1f, range = 9f, price = 0, secret = true,
+            pool = new[] { 154, 155, 156, 157, 158, 159, 160 }, color = new Color(0.62f, 0.38f, 0.85f), ally = new Color(0.62f, 0.72f, 1f) },     // 연보라빛 하늘 #9FB8FF (마젠타는 적대 대역 — 더미 그림 무늬로만)
+        new CharacterDef {
+            name = "장의사", title = "석관을 묻은 자", body = "undertaker", held = "shovel",
+            description = "이야기 모드 묘역의 석관을 묻은 장의사. 커서 자리에 구멍을 파 지나가는 적을 빠뜨리고, 한꺼번에 덮어 묻으면 쓰러진 자리마다 묘비가 솟아 적의 길과 탄을 막습니다.",
+            weapon = "삽", attack = "빈 땅을 누르고 있으면 마우스 자리에 구멍을 파 넓히고, 떼면 그 크기로 완성됩니다. 구멍을 지나가던 적은 빠져 잠깐 갇힙니다. 판 구멍 위를 누르면 매장: 모든 구멍을 한꺼번에 덮어 안의 적을 묻고, 묻혀 쓰러진 자리에는 묘비가 솟아 적의 길과 탄을 막습니다. (구멍은 3개까지 · 장의사는 자기 묘비를 지나다님)",
+            skill = "장례", skillDesc = "누르고 있으면 종이 흔들리고, 떼면 종이 울려 화면 안 모든 적의 발밑이 열려 떨어집니다. 1초 뒤 한꺼번에 묻혀 그 자리에 잠깐 묘비가 솟습니다",
+            hp = 1.05f, damage = 2.0f, attackSpeed = 0.95f, gauge = 1.15f, sig = 1.9f, special = 1.9f, move = 1f, range = 10f, price = 0, secret = true,
+            pool = new[] { 161, 162, 163, 164, 165, 166, 167 }, color = new Color(0.72f, 0.8f, 0.9f), ally = new Color(0.725f, 0.796f, 0.894f) },     // 창백한 청회색 은 #B9CBE4 (흙빛 황토는 거너 · 우체부 금과 겹침)
 
-    static CharacterDef Coming(CharUnlock condition = CharUnlock.None) => new CharacterDef { name = "???", title = "준비 중", body = "mystery", price = -1, pool = new int[0], condition = condition,
-                                                        description = "아직 준비 중인 캐릭터입니다." };
+        new CharacterDef {
+            name = "사진사", title = "마감 직전의 사진사", body = "photographer", held = "camera",
+            description = "상점 페이지 스크린샷을 찍던 사진사. 「적이 많이 보이는 장면이 없다」는 지적을 듣고 사막까지 왔습니다. 뷰파인더에 담은 적을 납작한 종이로 만들고, 필름 한 통을 다 찍으면 가장 잘 나온 사진을 인화해 미끼로 세웁니다.",
+            weapon = "카메라", attack = "마우스 자리에 네모난 뷰파인더가 따라다닙니다. 누르면 「찰칵」 — 틀 안의 적이 피해를 입고 잠깐 흰 테두리의 종이가 됩니다 (종이는 느리게 펄럭이고, 부딪혀도 아프지 않으며, 맞으면 크게 다칩니다). 틀 가운데에 담은 적은 초점이 맞아 더 아프고, 여섯 마리 넘게 담으면 「걸작」입니다. 필름 6장을 다 쓰면 저절로 감기면서 그 통에서 가장 잘 나온 사진을 마우스 자리에 인화해, 찍힌 적들의 종이 사본이 둘레의 적을 끌어모았다가 찢어지며 벱니다 (재장전 키로 일찍 감을 수도 있음)",
+            skill = "파노라마", skillDesc = "누르고 있으면 화면을 가로지르는 촬영 띠가 보이고 (마우스로 위아래 · 오래 누를수록 두껍게), 떼면 셔터 커튼이 띠를 따라 한 번 지나가 그 안의 적을 모두 찍습니다. 찍힌 적은 종이가 되어 커튼이 지나간 쪽으로 바람에 날아갑니다",
+            hp = 0.9f, damage = 1.7f, attackSpeed = 0.9f, gauge = 1.0f, sig = 1.7f, special = 1.7f, move = 1f, range = 11f, mag = 6, price = 0, secret = true,
+            pool = new[] { 168, 169, 170, 171, 172, 173, 174 }, color = new Color(0.95f, 0.95f, 0.95f), ally = new Color(0.78f, 0.83f, 1f) },     // 플래시 청백 #C8D4FF
+    };
 
     // 캐릭터 능력 8개 (from ~ from+7) + 나중에 더한 패시브
     static int[] Pool(int from, params int[] more)
@@ -146,7 +181,7 @@ public static class CharacterData
         CharacterDef d = Def(id);
         if (d.price < 0) return false;
         if (Demo.On) return Demo.CharacterAllowed(id);      // 체험판: 거너 · 검사만 (구매 없이)
-        return d.price == 0 || Prefs.GetInt(UnlockKeyOf(id), 0) == 1;
+        return (d.price == 0 && !d.secret) || Prefs.GetInt(UnlockKeyOf(id), 0) == 1;
     }
 
     // 저장 키를 영웅마다 한 번만 만들어 둠 (예전엔 부를 때마다 문자열을 이어 붙였음 — 피해마다 · 프레임마다 불림)
@@ -191,8 +226,27 @@ public static class CharacterData
 
     public static CharacterDef Current => Def(Selected);
     public static bool IsGunner => Selected == CharacterId.Gunner;
-    // 1.0.2 새 캐릭터 (지도 제작자 · 시계공 · 우체부 · 유령)
-    public static bool IsNewHero(CharacterId id) => id >= CharacterId.Cartographer && id <= CharacterId.Ghost;
+    // 1.0.2 새 캐릭터 (지도 제작자 · 시계공 · 우체부 · 유령) · 2.0.0~ 씨름꾼 (새 영웅이 늘면 끝 번호를 늘림)
+    public static bool IsNewHero(CharacterId id) => id >= CharacterId.Cartographer && id <= CharacterId.Photographer;
+
+    // 2.0.0~ 비밀형 영웅 (사막 비밀로만 해금)
+    public static bool IsSecret(CharacterId id) => Def(id).secret;
+    // 고르기 화면에서 이름 · 능력을 보여 줘도 되는지 (비밀형은 해금 전까지 ???)
+    public static bool IsKnown(CharacterId id) => IsUnlocked(id) || (IsDeveloped(id) && !Def(id).secret);
+
+    // 2.0.0~ 비밀형 영웅 해금 자리: 조건을 달성한 순간 부름 (조건 판정 장치는 사막 비밀 쪽 — 여기는 저장 · 알림만). 이미 열렸거나 막힌 판이면 false
+    //   조건 달성 = 바로 해금, 포인트 없음 (2.0.0 기획 D3)
+    public static bool UnlockSecret(CharacterId id)
+    {
+        CharacterDef d = Def(id);
+        if (!d.secret || d.price < 0 || IsUnlocked(id) || GameInput.Auto || TutorialRun.Active || Demo.On || Application.isBatchMode) return false;
+        Prefs.SetInt(UnlockKeyOf(id), 1);
+        Prefs.Save();
+        selectedFrame = -1;
+        if (StageManager.Instance != null) Notice.Big(Loc.T("새 영웅: {0}").Replace("{0}", Loc.T(d.name)), NoticeIcon.Unlock, 3f, NoticeLevel.Important);
+        Hostile.Play("chime", 0.9f, 1.1f);
+        return true;
+    }
 
     // ================================================================= 포인트 (적 처치 등으로 쌓이고 캐릭터 구매에 씀)
     public static int Points => Prefs.GetInt(PointsKey, 0);

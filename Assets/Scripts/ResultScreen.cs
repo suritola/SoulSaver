@@ -113,7 +113,7 @@ public static class ResultScreen
 
         all.Sort((a, b) => b.progress.CompareTo(a.progress));
         // 1.2~ 무한 모드 판(일일 도전 제외)이면 다음 이정표를 맨 위에 (「다음 이정표까지 n:nn」)
-        int next = GameMode.IsEndless && !DailyChallenge.Active ? EndlessMilestones.NextTime() : -1;
+        int next = GameMode.IsEndless && !ModeRun.Special ? EndlessMilestones.NextTime() : -1;      // 2.0.0~ 특별 모드(일일 도전 · 영혼 릴레이 · 역류)는 무한 이정표 다음 목표를 숨김
         if (next >= 0)
         {
             EndlessMilestones.Def m = EndlessMilestones.All[next];
@@ -413,7 +413,7 @@ public static class ResultScreen
             }
             y -= RowBtnH + Step;
         }
-        foreach (string n in new[] { "EndlessRecord", "RecommendLine", "LeftBehindLine", "RunPointsLine" })
+        foreach (string n in new[] { "EndlessRecord", "RecommendLine", "LeftBehindLine", "SecretLine", "RunPointsLine" })
         {
             if (!(canvas.Find(n) is RectTransform r)) continue;
             float h = r.sizeDelta.y;

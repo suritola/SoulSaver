@@ -142,6 +142,7 @@ public partial class SpecialAbilities : MonoBehaviour
         fx = gameObject.AddComponent<SpecialFeedback>();
         fx.Init(font, fontMaterial);
         SharedFx = fx;
+        Impact.Sounds.Register(fx);         // 2.0.0 검토: 특수효과 「꺼짐」이어도 imp_* 소리(사진사 비밀 찰칵 등)가 남게 장면마다 한 번
         SharedInstance = this;
         aimLine = fx.NewLine("AimLine", true);
         previewRing = fx.NewLine("PreviewRing", true);
@@ -1082,6 +1083,18 @@ public readonly struct PhysHits : System.IDisposable
         filter.useLayerMask = !allLayers;
         filter.layerMask = Physics2D.DefaultRaycastLayers;
         Physics2D.OverlapCircle(pos, radius, filter, l);
+        return new PhysHits(l);
+    }
+
+    // 2.0.0~ 사진사 뷰파인더 · 해금 판정: 사각형 범위 (angle 도 0 = 화면 축) — Circle 과 같은 빌림 목록 방식
+    public static PhysHits Box(Vector2 center, Vector2 size, float angle = 0f, bool allLayers = false)
+    {
+        List<Collider2D> l = pool.Count > 0 ? pool.Pop() : new List<Collider2D>(64);
+        l.Clear();
+        filter.useTriggers = Physics2D.queriesHitTriggers;
+        filter.useLayerMask = !allLayers;
+        filter.layerMask = Physics2D.DefaultRaycastLayers;
+        Physics2D.OverlapBox(center, size, angle, filter, l);
         return new PhysHits(l);
     }
 

@@ -813,6 +813,7 @@ public class EndlessTerrain : MonoBehaviour
         foreach (Vector3 f in found) if (Vector2.Distance(at, f) < ClearPiece) return false;
         if (Vector2.Distance(at, gate) < ClearGate || (at.x >= gate.x - 7.5f && at.x <= gate.x + 7.5f && at.y >= ArenaRules.GateForbidY(gate.y))) return false;     // 성문 아래 12칸 (예전 고정 y 20 = 32 − 12)
         if (Hostile.WallNear(at, 2.5f)) return false;
+        if (DesertSecrets.NearAny(at, 1.5f)) return false;      // 2.0.0~ 사막 비밀 자리는 비켜 감
         int n = Physics2D.OverlapCircle(at, ClearEnemy, allFilter, nearBuf);
         for (int i = 0; i < n; i++) if (nearBuf[i] != null && nearBuf[i].CompareTag("enermy")) return false;
         foreach (HPpack h in packs) if (h != null && Vector2.Distance(at, h.transform.position) < 2.5f) return false;

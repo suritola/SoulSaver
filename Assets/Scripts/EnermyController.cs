@@ -56,6 +56,12 @@ public class EnermyController : MonoBehaviour
     public float skillCooldown = 0f;       // 0이면 스킬 기본값
     // 스킬 시전 중에는 걸어서 움직이지 않음
     [HideInInspector] public bool casting;
+    // 2.0.0~ 붙잡힘 (EnemyHold): null 이 아니면 스스로 걷지 · 치지 · 스킬을 쓰지 않음 (옮기는 쪽이 위치를 정함). casting 은 적 자신의 기술용이라 따로 둠
+    [System.NonSerialized] public object holder;
+
+    // 2.0.0~ 사진사 인화 미끼 (적마다): lureUntil 전까지 플레이어 대신 lure 를 쫓음 (EnermyController.Update 의 이동 방향 한 줄)
+    [System.NonSerialized] public Transform lure;
+    [System.NonSerialized] public float lureUntil;
 
     public bool IsDead => isDead;
 
@@ -68,14 +74,18 @@ public class EnermyController : MonoBehaviour
         slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
     }
     // 1.5.9~ 빙결 · 덫 묶임(Slow(0, …)) 중인지 — 걷기만 멈추고 스킬은 그대로 써서 얼어 있는 지옥견이 덮쳤음 (EnemySkill 이 봄)
-    public bool Held => Time.time < slowUntil && slowMul <= 0.05f;
+    //   2.0.0~ 붙잡힌 적(EnemyHold)도 포함 — EnemySkill 이 새 시전을 시작하지 않음
+    public bool Held => holder != null || (Time.time < slowUntil && slowMul <= 0.05f);
 
     // 시간 왜곡 (적 전체 감속)
     public static float GlobalSpeedMultiplier = 1f;
     // 거울 분신이 있으면 플레이어 대신 분신을 쫓음
     public static Transform Decoy;
+    public static bool DecoyBossToo = true;       // 2.0.0~ 인형사 미끼는 보스를 끌지 않음 (잦은 자리 바꾸기로 보스 이동을 빼앗지 못하게 · 도적 미끼는 그대로 true)
     // 적이 처치됐을 때 (영혼 모으기 등)
     public static System.Action<Vector3> Killed;
+    // 2.0.0~ Killed 를 알리는 동안 쓰러지는 적 (씨름꾼 장사 밥상 같은 「무거운 적을 쓰러뜨리면」 패시브가 봄 · 그 밖에는 null)
+    public static EnermyController Dying { get; private set; }
     // 1.2~ 지금 알리는 처치가 처치 수에 들어가는지 (RunStats.Kills · Juice 처치 이정표가 봄) — 맵 물체 「정화」로 쓰러진 적 중 절반은 false
     public static bool KillCounts { get; private set; } = true;
     // 1.2~ 이 적은 처치 수(보스까지 처치 수 · 이번 판 처치 수 · 이정표)에 넣지 않음 (MapProps.DropPurify 가 정함, 경험치 · 코인 · 포인트는 그대로)
@@ -222,7 +232,9 @@ public class EnermyController : MonoBehaviour
         if (player == null) return;
 
         // 적 → 플레이어 방향 계산
-        move = (Decoy != null ? Decoy.position : player.position) - transform.position;
+        // 2.0.0~ 사진사 미끼: 이 적만 인화 사본을 쫓음 (lure · lureUntil — 보스는 쓰지 않음) · 그 밖에는 거울 분신 또는 플레이어
+        Vector3 goal = lure != null && Time.time < lureUntil ? lure.position : Decoy != null ? Decoy.position : player.position;
+        move = goal - transform.position;
 
         // z축 제거
         move.z = 0;
@@ -239,7 +251,7 @@ public class EnermyController : MonoBehaviour
     {
         if (swarm != null) return;      // 1.1~ 부스러기는 SwarmMote 가 직선으로 움직임 (밀어내기 · 벽 검사 없음)
         // 죽지 않았을 때만 이동
-        if (!isDead && player != null && !casting)
+        if (!isDead && player != null && !casting && holder == null)
         {
             moveTime += Time.fixedDeltaTime;
 
@@ -385,12 +397,13 @@ public class EnermyController : MonoBehaviour
     public void ReviveForPool()
     {
         isDead = false;
+        EnemyHold.OnGone(this);
         skipKillCount = false;
         EnemyHealth = setEnemyHP;
         if (healthBar != null) healthBar.ResetFeel(EnemyHealth);
         if (bodyCollider != null) bodyCollider.enabled = true;
     }
-    public void PoolDead() => isDead = true;
+    public void PoolDead() { isDead = true; EnemyHold.OnGone(this); }
 
     // 몸 반지름 (월드): 키운 히트박스가 아니라 예전 크기 — 밀어내기 · 벽 판정이 예전처럼
     // 아직 Start 전이면 (막 소환된 적) 받은 콜라이더로
@@ -439,7 +452,7 @@ public class EnermyController : MonoBehaviour
             if (otherCircle == null) continue;
 
             // 콜라이더 → 적 대응표 (주변 적마다 GetComponent 를 부르지 않게)
-            if (!byCollider.TryGetValue(other, out EnermyController otherEnemy) || otherEnemy == null || otherEnemy.IsDead) continue;
+            if (!byCollider.TryGetValue(other, out EnermyController otherEnemy) || otherEnemy == null || otherEnemy.IsDead || otherEnemy.holder != null) continue;     // 붙잡힌 적은 밀어내지 않음
 
             Vector2 away = center - (Vector2)other.bounds.center;
             float dist = away.magnitude;
@@ -474,7 +487,7 @@ public class EnermyController : MonoBehaviour
         DamagePopup.Show(transform, damage, spriteRenderer, false, tier);
         SkinFx.OnEnemyHit(transform.position);      // 이펙트 스킨 명중 불꽃
 
-        transform.position += dir * knockBack * knockBackTaken;
+        if (holder == null) transform.position += dir * knockBack * knockBackTaken;      // 2.0.0~ 붙잡힌 적은 다른 출처의 넉백을 무시 (옮기는 쪽이 위치를 정함)
 
         // 피격 애니메이션
         //animator.SetTrigger("hit");
@@ -616,17 +629,19 @@ public class EnermyController : MonoBehaviour
         if (isDead) return;
 
         isDead = true;
+        EnemyHold.OnGone(this);       // 2.0.0~ 붙잡힌 채 쓰러지면 holder 자동 해제
         if (swarm != null) { swarm.Died(a == 1); return; }      // 1.1~ 부스러기: 경험치 · 처치 알림 · 풀로 돌려놓기는 SwarmMote (스포너 수 · 코인 · 포인트 없음)
         // 영혼 트리 '저주 전이': 걸려 있던 화상 · 독 · 출혈을 가까운 적에게 (상태 이상이 아직 붙어 있을 때)
         if (a == 1 && SpecialAbilities.SharedInstance != null) SpecialAbilities.SharedInstance.FateOnEnemyDie(this);
         KillCounts = !skipKillCount;
         try
         {
+            Dying = this;
             if (a == 1) Killed?.Invoke(transform.position);
             if (a == 1) onKilled?.Invoke();
             if (a == 1) Juice.EnemyDied(transform.position, survivesContact ? 1.8f : 1f);
         }
-        finally { KillCounts = true; }
+        finally { KillCounts = true; Dying = null; }
         if (a == 1 && IsMidBoss) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
         if (a == 1 && IsMidBoss)
         {
@@ -721,7 +736,7 @@ public class EnermyController : MonoBehaviour
 
     void TouchPlayer(Collider2D collision)
     {
-        if (swarm != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수)
+        if (swarm != null || holder != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수) · 2.0.0~ 붙잡힌 적도 접촉 피해 없음
         if (contactDamage <= 0f) return;    // 1.1.0 다시 올림: 황금 고블린(피해 0)에 닿으면 보호막이 사라지고 피격음 · 무적이 붙었음
         if (isDead || !collision.CompareTag("Player")) return;
         PlayerController target = collision.GetComponent<PlayerController>();

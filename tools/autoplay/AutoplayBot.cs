@@ -403,6 +403,9 @@ public partial class AutoplayBot : MonoBehaviour
         CharacterId.Ghost => 4.3f,
         CharacterId.Alchemist => 9.5f,
         CharacterId.Cartographer => 8.5f,
+        CharacterId.Puppeteer => 7.5f,      // 인형사: 더미가 커서 자리에 떠서 휘두름 (줄이 9칸)
+        CharacterId.Undertaker => 9f,       // 장의사: 사거리 10 안 커서 자리에 구멍
+        CharacterId.Photographer => 10f,    // 사진사: 사거리 11 안 커서 자리에 뷰파인더
         CharacterId.Clockmaker => 14f,
         CharacterId.Postman => Paths.Has(PostmanPaths.LongHaul) ? 18f : 11f,
         CharacterId.Gunner when Paths.Has(GunnerPaths.Shotgun) => 5.5f,
@@ -596,10 +599,19 @@ public partial class AutoplayBot : MonoBehaviour
     void Aim(Vector3 me)
     {
         Vector3 at = hasTarget ? targetPos : me + (Vector3)(chosen.sqrMagnitude > 0f ? chosen : Vector2.right) * 5f;
+        // 장의사: 갇힌 적이 4마리 이상이거나 가장 오래된 구멍이 4초를 넘으면 그 구멍 가운데를 눌러 매장 · 평소엔 「가장 가까운 적 + 그 적 → 플레이어 방향 1.5칸」(적이 곧 밟을 자리)에 구멍
+        if (hero == CharacterId.Undertaker)
+        {
+            CharacterKit uk = CharacterKit.Instance;
+            if (uk != null && uk.UtAutoBuryAt(out Vector3 holeAt)) { aimPoint = holeAt; GameInput.AutoAim = holeAt; return; }
+            if (hasTarget) at = targetPos + (Vector3)((Vector2)(me - targetPos)).normalized * 1.5f;
+        }
         Vector2 off = at - me;
         off = Quaternion.Euler(0f, 0f, aimErr) * off;
         // 투척 · 획 영웅은 최대 사거리 안으로
-        float maxR = hero == CharacterId.Alchemist ? 9.8f : hero == CharacterId.Cartographer ? 8.8f : 99f;
+        float maxR = hero == CharacterId.Alchemist ? 9.8f : (hero == CharacterId.Cartographer || hero == CharacterId.Puppeteer) ? 8.8f : 99f;
+        // 인형사: 조준점을 ±35° 1.2초 주기로 흔들어 줄이 무리를 왕복하며 쓸게 함
+        if (hero == CharacterId.Puppeteer) off = Quaternion.Euler(0f, 0f, 35f * Mathf.Sin(Time.time * (2f * Mathf.PI / 1.2f))) * off;
         if (off.magnitude > maxR) off = off.normalized * maxR;
         aimPoint = me + (Vector3)off;
         GameInput.AutoAim = aimPoint;
@@ -642,12 +654,19 @@ public partial class AutoplayBot : MonoBehaviour
             if (drawFullAt >= 0f && Time.time - drawFullAt >= releaseAfter) { Lift(); drawFullAt = -1f; rehold = Time.time + 0.03f; }
             return;
         }
+        // 장의사: 0.6초 누르고 0.3초 뗌 (누른 동안 구멍이 넓어지고 뗀 사이 새 구멍 · 매장) — 매장할 때는 적이 없어도 누름
+        if (hero == CharacterId.Undertaker && kit != null)
+        {
+            bool bury = kit.UtAutoBuryAt(out Vector3 _);
+            if ((want || bury) && (Time.time % 0.9f) < 0.6f) Press(); else Lift();
+            return;
+        }
         if (want) Press(); else Lift();
     }
 
     // ================================================================= 필살기
     bool ultHolding;
-    float ultStart, ultHoldFor, fullSince = -1f, lastParry = -9f;
+    float ultStart, ultHoldFor, fullSince = -1f, lastParry = -9f, lastSwap = -9f;
     void UltDown() { GameInput.AutoUlt = true; GameInput.UltDownFrame = Time.frameCount + 1; ultHolding = true; ultStart = Time.time; ultStartUnscaled = Time.unscaledTime; }
     void UltUp() { GameInput.AutoUlt = false; GameInput.UltUpFrame = Time.frameCount + 1; ultHolding = false; }
     float ultStartUnscaled;
@@ -672,11 +691,27 @@ public partial class AutoplayBot : MonoBehaviour
             ultHoldFor = full ? 1.95f : 0.05f;
             return;
         }
+        // 인형사 자리 바꾸기: 게이지 20% 이상 · 덜 참 · 위협이 곧 닿고 더미 쪽이 덜 위험하면 짧게 (60% 넘으면 커튼콜을 위해 위험할 때만 아낌 없이 쓰지 않음)
+        if (hero == CharacterId.Puppeteer && !full && g != null && g.MaxSkillPoint > 0 && Time.time - lastSwap > 1.6f)
+        {
+            float f = g.SkillPoint / g.MaxSkillPoint;
+            CharacterKit pk = CharacterKit.Instance;
+            if (f >= 0.2f && pk != null && ThreatSoon(me, 0.22f) && !ThreatSoon(new Vector3(pk.PupPos.x, pk.PupPos.y, 0f), 0.22f) && (f < 0.6f || R01() < 0.3f))
+            {
+                lastSwap = Time.time;
+                UltDown();
+                ultHoldFor = 0.05f;
+                return;
+            }
+        }
         if (!full) { fullSince = -1f; return; }
         if (fullSince < 0f) fullSince = Time.time;
         bool bossNear = false;
         foreach (var b in bossBodies) if (((Vector2)(b.c - me)).magnitude < 16f) bossNear = true;
         bool good = bossNear || nearCount >= 10 || Time.time - fullSince > 10f;
+        if (hero == CharacterId.Puppeteer) good = bossNear || nearCount >= 4 || Time.time - fullSince > 10f;        // 커튼콜: 둘레 적 4 이상이면 0.5초 누르고 뗌
+        if (hero == CharacterId.Photographer) good = bossNear || nearCount >= 6 || Time.time - fullSince > 10f;     // 파노라마: 화면 안 적이 많으면 짧게 누르고 뗌
+        if (hero == CharacterId.Undertaker) good = bossNear || nearCount >= 6 || Time.time - fullSince > 10f;      // 장례: 화면 안 적이 많으면 0.6초 누르고 뗌
         // 시계공 되감기: 최근 3초에 크게 맞았거나 위험할 때
         if (hero == CharacterId.Clockmaker)
         {
@@ -698,6 +733,7 @@ public partial class AutoplayBot : MonoBehaviour
             CharacterId.Archer => 0.15f,
             CharacterId.Ghost => 0.15f,
             CharacterId.Clockmaker => 0.05f,
+            CharacterId.Photographer => 0.3f,
             _ => 0.5f,
         };
         UltDown();

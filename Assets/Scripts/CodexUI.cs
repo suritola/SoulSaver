@@ -682,7 +682,7 @@ public static class CodexUI
             {
                 if (!SpecialAbilities.IsKit(id) || !SpecialAbilities.KitIsWeapon(id)) continue;
                 string key = "evo.f." + id;
-                Sprite icon = Resources.Load<Sprite>("Icons/ability_" + id);
+                Sprite icon = Resources.Load<Sprite>(SpecialAbilities.KitIconPath(id));      // 2.0.0 검토: 60번 이상은 400 + id
                 string tag = who + " · " + Loc.T("1차 진화");
                 if (!known || !CodexSeen.Shown(key)) { Hidden(key, icon, tag, Loc.T(known ? "codex.hint.evo1" : "codex.hint.lockedhero")); continue; }
                 Card(icon, tint, Loc.T(CharacterKit.FormAugName(id)), tag,
@@ -777,6 +777,21 @@ public static class CodexUI
         Sprite chest = Resources.Load<Sprite>(ChoiceUI.IconPath("chest"));
         if (!CodexSeen.Shown("sec.jackpot")) Hidden("sec.jackpot", chest, Loc.T("codex.sec.luck"), Loc.T("codex.hint.jackpot"));
         else Card(chest, Color.white, Loc.T("chest.jackpot.name"), Loc.T("codex.sec.luck") + "  ·  " + Loc.T("chest.legend.title"), Loc.T("codex.sec.jackpot.desc"), Fresh("sec.jackpot"));
+        // 2.0.0~ 사막에서 본 것: 본 비밀은 실루엣 + 수수께끼, 해금하면 그림 · 이름 (안 본 것은 설정 「모두 보기」일 때만)
+        foreach (var d in DesertSecrets.Defs)
+        {
+            string key = "sec.desert." + d.key;
+            Sprite face = CharacterUI.Portrait(d.hero);
+            string tag = Loc.T("codex.sec.desert");
+            string riddle = Loc.T("secret.riddle." + d.key);
+            if (CharacterData.IsUnlocked(d.hero))
+            {
+                CharacterDef def = CharacterData.Def(d.hero);
+                Card(face, Color.white, Loc.T(def.name) + "  <size=70%>" + Loc.T(def.title) + "</size>", tag,
+                     "<color=#A89C86>" + riddle + "</color>\n" + Loc.T(def.description), Fresh(key));
+            }
+            else if (DesertSecrets.IsSeen(d.key) || CodexSeen.ShowAll) Card(face, Color.black, "???", tag, "<color=#A89C86>" + riddle + "</color>");
+        }
     }
 
     // ================================================================= 1.2~ 수집률 · 보상 · NEW 배지
@@ -976,6 +991,7 @@ public static class CodexUI
             if (!CharacterData.IsUnlocked(c))
             {
                 // 잠긴 캐릭터: 모습 · 능력 모두 숨김
+                if (d.secret) { Card(portrait, Color.black, "???", Loc.T("비밀"), Loc.T("sec.hint." + i)); continue; }      // 2.0.0~ 비밀형 영웅 (사막 비밀)
                 Card(portrait, Color.black, "???", Loc.T("잠긴 캐릭터") + "  ·  " + d.price.ToString("N0") + " P",
                      Loc.T("포인트로 잠금을 풀면 이 캐릭터의 모습과 능력을 볼 수 있습니다."));
                 continue;
@@ -999,7 +1015,7 @@ public static class CodexUI
     // 해금한 캐릭터의 전용 무기 · 스킬 · 패시브
     static void KitSpecials(SpecialKind kind)
     {
-        for (int id = SpecialAbilities.KitFirstId; id < SpecialAbilities.KitFirstId + SpecialAbilities.KitCount; id++)
+        foreach (int id in SpecialAbilities.KitIds())         // 2.0.0~ 두 대역 (KitFirstId · KitFirstId2)
         {
             if (SpecialAbilities.KitKind(id) != kind) continue;
             CharacterId? owner = OwnerOf(id);
@@ -1014,7 +1030,7 @@ public static class CodexUI
             string body = desc.Replace("\n", " ");
             if (kind == SpecialKind.Weapon)
                 body += "\n" + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + Loc.T(SpecialAbilities.KitUltName(id))) + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
-            Card(Resources.Load<Sprite>("Icons/ability_" + id), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
+            Card(Resources.Load<Sprite>(SpecialAbilities.KitIconPath(id)), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
         }
     }
 

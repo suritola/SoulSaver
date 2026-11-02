@@ -47,6 +47,7 @@ public static class CharacterUI
         if (open != null) Object.Destroy(open);
         open = null;
         detail = null;
+        gridContent = null;
         menuFx = null;
         MenuHeroPanel.Refresh();            // 1.1.9~ 메인 메뉴 「지금 영웅」 패널에 바로 반영
     }
@@ -73,16 +74,52 @@ public static class CharacterUI
 
     static readonly List<GameObject> cards = new List<GameObject>();
 
+    // 2.0.0~ 카드 스크롤 판 (창마다 한 번): 보이는 칸 = 제목 아래(340) ~ 「닫기」 위(-345)
+    const int GridCols = 5;
+    const float GridRowH = 340f, GridPad = 10f, ViewTop = 340f, ViewBottom = -345f;
+    static RectTransform gridContent;
+
+    static RectTransform GridContent()
+    {
+        if (gridContent != null) return gridContent;
+        RectTransform view = UIKit.Rect("GridView", win, new Vector2(0f, (ViewTop + ViewBottom) * 0.5f), new Vector2(1460f, ViewTop - ViewBottom));
+        Image hit = view.gameObject.AddComponent<Image>();
+        hit.color = new Color(0f, 0f, 0f, 0f);                // 빈 곳에서도 휠 · 끌기가 먹게
+        view.gameObject.AddComponent<RectMask2D>();
+        gridContent = UIKit.Rect("GridContent", view, Vector2.zero, new Vector2(1460f, 0f));
+        gridContent.anchorMin = gridContent.anchorMax = gridContent.pivot = new Vector2(0.5f, 1f);
+        ScrollRect sr = view.gameObject.AddComponent<ScrollRect>();
+        sr.viewport = view;
+        sr.content = gridContent;
+        sr.horizontal = false;
+        sr.vertical = true;
+        sr.movementType = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 40f;
+        sr.inertia = false;
+        view.gameObject.AddComponent<CharacterGridFollow>().Init(sr);
+        return gridContent;
+    }
+
     static void BuildGrid()
     {
         foreach (GameObject c in cards) if (c != null) Object.Destroy(c);
         cards.Clear();
         RefreshPoints();
-        for (int i = 0; i < CharacterData.All.Length; i++)
+        // 2.0.0~ 5칸 × 여러 줄 + 세로 스크롤 (사용자 「5칸 3줄로 · 스크롤하게」) — 예전 5칸 × 2줄 고정이라 11번째 영웅부터 겹쳤음
+        //   카드 크기 · 칸 간격(280) · 줄 간격(340)은 그대로, 보이는 곳은 제목 아래 ~ 「닫기」 위 (두 줄), 나머지는 휠 · 끌기 · 키 이동으로
+        RectTransform content = GridContent();
+        int n = CharacterData.All.Length, rows = (n + GridCols - 1) / GridCols;
+        content.sizeDelta = new Vector2(content.sizeDelta.x, rows * GridRowH + GridPad * 2f);
+        content.anchoredPosition = Vector2.zero;
+        for (int i = 0; i < n; i++)
         {
             CharacterId id = (CharacterId)i;
-            Vector2 pos = new Vector2(-560f + 280f * (i % 5), i < 5 ? 150f : -190f);     // 1.1~ 아래 줄 -200 → -190 (가운데 카드가 「닫기」 버튼 위를 10px 덮었음)
-            cards.Add(Card(id, pos));
+            Vector2 pos = new Vector2(-560f + 280f * (i % GridCols), -GridPad - 160f - GridRowH * (i / GridCols));
+            GameObject card = Card(id, pos, content);
+            RectTransform cr = card.GetComponent<RectTransform>();
+            cr.anchorMin = cr.anchorMax = new Vector2(0.5f, 1f);
+            cr.anchoredPosition = pos;
+            cards.Add(card);
         }
     }
 
@@ -128,13 +165,13 @@ public static class CharacterUI
         return best;
     }
 
-    static GameObject Card(CharacterId id, Vector2 pos)
+    static GameObject Card(CharacterId id, Vector2 pos, RectTransform parent)
     {
         CharacterDef d = CharacterData.Def(id);
         bool unlocked = CharacterData.IsUnlocked(id), developed = CharacterData.IsDeveloped(id);
         bool selected = unlocked && CharacterData.Selected == id;
 
-        Button b = UIKit.MakeButton(win, "", pos, new Vector2(250f, 320f), () => ShowDetail(id), 20f);
+        Button b = UIKit.MakeButton(parent, "", pos, new Vector2(250f, 320f), () => ShowDetail(id), 20f);
         if (!UiRules.Legacy)
         {
             // UI 개편: 고른 영웅 = 청록 테 카드 · 잠긴 영웅 = 비활성 그림 (금색 · 회색 덧칠이 새 석판에서 탁해졌음 — 캡처 확인)
@@ -164,9 +201,10 @@ public static class CharacterUI
             gi.raycastTarget = false;
         }
 
-        string name = unlocked || developed ? d.name : "???";       // 1.0.4~ 잠긴 캐릭터도 이름은 보임 (그림만 실루엣)
+        bool secretLocked = !unlocked && d.secret;       // 2.0.0~ 비밀형 영웅은 해금 전까지 이름도 ??? (사막 비밀로만 열림)
+        string name = unlocked || (developed && !secretLocked) ? d.name : "???";       // 1.0.4~ 잠긴 캐릭터도 이름은 보임 (그림만 실루엣)
         TMP_Text nameText = UIKit.Text(t, name, 30f, unlocked ? Gold : Dim, new Vector2(0f, -100f), new Vector2(230f, 40f));
-        string sub = selected ? "선택됨" : unlocked ? d.title : developed ? "잠김" : "준비 중";
+        string sub = selected ? "선택됨" : unlocked ? d.title : secretLocked ? "비밀" : developed ? "잠김" : "준비 중";
         TMP_Text subText = UIKit.Text(t, sub, 20f, selected ? new Color(0.5f, 1f, 0.6f) : Dim, new Vector2(0f, -134f), new Vector2(230f, 30f));
         // 영웅 숙련도 (1.0.1): 마지막 보스를 쓰러뜨릴 때마다 +1 (단계마다 시작 레벨업 카드 +1) · 칸 위쪽 안
         // 1.0.4~: 0단계도 늘 보임 (예전엔 숨어 있어 숙련도가 있는 줄 몰랐음)
@@ -177,7 +215,7 @@ public static class CharacterUI
             string weight = SoulWeight.CardTag(id);      // 1.2~ 이 영웅의 가장 무거운 클리어 (기록이 있을 때만)
             if (weight.Length > 0) star.text += "  ·  <color=#C9A0FF>" + weight + "</color>";
         }
-        if (!unlocked && developed)
+        if (!unlocked && developed && !secretLocked)
         {
             subText.text = Loc.T("잠김") + " · " + d.price.ToString("N0") + " P";
             subText.color = CharacterData.Points >= d.price && CharacterData.ConditionMet(id) ? new Color(1f, 0.85f, 0.4f) : Dim;
@@ -230,10 +268,11 @@ public static class CharacterUI
         }
 
         // 1.0.4~: 잠긴 캐릭터도 이름 · 한 줄 소개 · 스탯 · 무기 · 스킬을 보여 줌 (예전엔 모두 ??? 라 최대 15,000P를 모르고 써야 했음, 그림만 실루엣)
-        bool known = unlocked || developed;
+        bool secretLocked = !unlocked && d.secret;      // 2.0.0~ 비밀형 영웅: 해금 전엔 이름 · 능력 모두 숨기고 수수께끼 한 줄만
+        bool known = unlocked || (developed && !secretLocked);
         UIKit.Text(dr, known ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
         TMP_Text titleText = UIKit.Text(dr, "", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
-        titleText.text = unlocked ? Loc.T(d.title) : developed ? Loc.T(d.title) + " · " + Loc.T("잠김") : Loc.T("준비 중");
+        titleText.text = unlocked ? Loc.T(d.title) : secretLocked ? Loc.T("비밀") : developed ? Loc.T(d.title) + " · " + Loc.T("잠김") : Loc.T("준비 중");
         // 영웅 숙련도: 단계 · 올리는 법 · 효과 (1.0.4~ 0단계도)
         if (unlocked)
         {
@@ -260,6 +299,12 @@ public static class CharacterUI
             cond.text = Loc.T("해제 조건") + ": " + CharacterData.ConditionText(d.condition) + "  " + (met ? Loc.T("(달성)") : Loc.T("(미달성)"));
         }
 
+        if (secretLocked)
+        {
+            UIKit.Text(dr, "sec.hint." + (int)id, 30f, Parch, new Vector2(200f, 60f), new Vector2(800f, 120f));       // 도감 수수께끼 한 줄 (조건을 글로 다 말하지 않음)
+            UIKit.MakeButton(dr, "취소", new Vector2(0f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
+            return;
+        }
         if (!developed)
         {
             UIKit.Text(dr, "아직 준비 중인 캐릭터입니다.", 30f, Parch, new Vector2(200f, 60f), new Vector2(800f, 60f));
@@ -406,5 +451,30 @@ public class CharacterUIInput : MonoBehaviour
     void Update()
     {
         if (GameInput.EscDown) CharacterUI.Back();
+    }
+}
+
+// 2.0.0~ 키보드 · 패드로 고른 카드가 보이는 칸 밖이면 그 줄까지 스크롤 (마우스 휠 · 끌기는 ScrollRect 가 함)
+public class CharacterGridFollow : MonoBehaviour
+{
+    ScrollRect sr;
+    GameObject last;
+    public void Init(ScrollRect s) => sr = s;
+
+    void LateUpdate()
+    {
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        GameObject sel = es != null ? es.currentSelectedGameObject : null;
+        if (sel == null || sel == last || sr == null || sr.content == null) return;
+        last = sel;
+        RectTransform r = sel.transform as RectTransform;
+        if (r == null || r.parent != sr.content) return;
+        float viewH = sr.viewport.rect.height;
+        float top = -r.anchoredPosition.y - r.rect.height * 0.5f - 10f, bottom = top + r.rect.height + 20f;     // 내용 위에서부터 잰 카드 위 · 아래
+        Vector2 p = sr.content.anchoredPosition;
+        if (top < p.y) p.y = top;
+        else if (bottom > p.y + viewH) p.y = bottom - viewH;
+        p.y = Mathf.Clamp(p.y, 0f, Mathf.Max(0f, sr.content.rect.height - viewH));
+        sr.content.anchoredPosition = p;
     }
 }

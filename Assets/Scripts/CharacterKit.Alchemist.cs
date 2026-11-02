@@ -109,6 +109,7 @@ public partial class CharacterKit
                 Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 16f, 0f, AttackLook.AreaOrder - 2);
                 Fx.Spawn("fx_shock", p, r * 2.2f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.8f), new Color(0.5f, 1f, 0.92f, 0.8f)), 20f);
                 Hostile.Shake(0.18f);
+                Impact.Hit(ImpactTier.Attack, p);     // 2.0.0~ 손맛 연출: 불안정 플라스크가 터지는 순간
                 Play("boom", 0.7f, 1.1f);
                 int dead = DeadCount(caught);
                 // 연쇄 폭발 공명 I: 불안정 플라스크로 처치할 때마다 불안정도 −10 (한 번에 최대 −30)

@@ -690,25 +690,37 @@ public class SpecialFeedback : MonoBehaviour
     }
 
     // ================================================================= screen shake
-    public void Shake(float strength = 0.25f, float duration = 0.12f)
+    public void Shake(float strength = 0.25f, float duration = 0.12f) => Shake(strength, duration, Vector2.zero);
+
+    // 2.0.0~ 센 쪽이 이김: 예전엔 새 호출이 늘 덮어써서 필살기 큰 흔들림이 바로 뒤 처치 잔흔들림에 잘렸음
+    //   지금 남은 세기(시작 세기 × 남은 비율)보다 약한 흔들림은 무시 · dir 이 있으면 그 방향으로 튕기듯 (Impact 의 방향 흔들림), 없으면 예전처럼 무작위
+    float shakeStrength, shakeStart, shakeDur = 1f;
+    public float ShakeLeft => shake == null ? 0f : shakeStrength * Mathf.Clamp01(1f - (Time.unscaledTime - shakeStart) / shakeDur);
+
+    public void Shake(float strength, float duration, Vector2 dir)
     {
         if (!GameSettings.ScreenShake) return;
         Camera cam = Camera.main;
         if (cam == null) return;
+        if (strength < ShakeLeft) return;
         if (shake != null) StopCoroutine(shake);
-        shake = StartCoroutine(ShakeRoutine(cam.transform, strength, duration));
+        shakeStrength = strength; shakeStart = Time.unscaledTime; shakeDur = Mathf.Max(0.01f, duration);
+        shake = StartCoroutine(ShakeRoutine(cam.transform, strength, duration, dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector2.zero));
     }
 
     Vector3 camRest;
     bool camRestSet;
 
-    IEnumerator ShakeRoutine(Transform cam, float strength, float duration)
+    IEnumerator ShakeRoutine(Transform cam, float strength, float duration, Vector2 dir)
     {
         if (!camRestSet) { camRest = cam.localPosition; camRestSet = true; }
         for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
         {
             float k = 1f - t / duration;
-            shakeOffset = Random.insideUnitCircle * strength * k;
+            if (dir == Vector2.zero) shakeOffset = Random.insideUnitCircle * strength * k;
+            // 방향 흔들림: 맞은 쪽으로 크게 밀렸다가 되튀며 잦아듦 (35 Hz 감쇠 진동) + 옆으로 30% 잔떨림
+            else shakeOffset = dir * (Mathf.Cos(t * 35f * 2f * Mathf.PI * 0.5f) * strength * k * k)
+                             + Random.insideUnitCircle * strength * 0.3f * k;
             yield return null;
         }
         shakeOffset = Vector2.zero;

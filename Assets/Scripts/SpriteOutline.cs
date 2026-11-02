@@ -61,6 +61,23 @@ public static class SpriteOutline
             return myEffect;
         }
     }
+    // 2.0.0~ 사진사 종이 재질: 흰 테 1도트(불투명) + 흑백(채도 0.3) · 밝기 1.15 — 종이가 된 적의 자식 렌더러가 모두 같이 씀 (그리기 묶음이 늘지 않게 재질 하나)
+    static Material paper;
+    public static Material Paper
+    {
+        get
+        {
+            if (paper != null || failed) return paper;
+            Shader s = Resources.Load<Shader>("Shaders/SpriteOutline");
+            if (s == null || !s.isSupported) { failed = true; return null; }
+            paper = new Material(s) { name = "PhotoPaper" };
+            paper.SetColor("_OutlineColor", new Color(1f, 1f, 1f, 1f));
+            paper.SetFloat("_Saturation", 0.3f);
+            paper.SetFloat("_Brightness", QualitySettings.activeColorSpace == ColorSpace.Linear ? Mathf.Pow(1.15f, 2.2f) : 1.15f);
+            paper.SetFloat("_EmptyAlpha", 0.05f);
+            return paper;
+        }
+    }
     // 1.6.0~ 플레이어 외곽은 흰색 불투명 (VisualRules.PlayerOutline · 예전 (1, 0.95, 0.8, 0.85)) · 외곽 생략 없음 · 밝기 1
     public static void Player(GameObject go) => Apply(go, ref light, VisualRules.PlayerOutline, 0f, 1f);
 

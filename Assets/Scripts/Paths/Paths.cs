@@ -103,7 +103,7 @@ public abstract class HeroPaths
 // ================================================================= 판 상태 · 묻기 · 도우미
 public static class Paths
 {
-    // 전체 스위치: false 면 모든 판이 예전 규칙 (영웅별로는 HeroPaths 가 없거나 갈래가 5개가 아니면 꺼짐 — Slot10)
+    // 전체 스위치: false 면 모든 판이 예전 규칙 (영웅별로는 HeroPaths 가 없거나 갈래가 5개가 아니면 꺼짐 — 갈래 없는 영웅은 예전 규칙: 씨름꾼은 갈래 구현 전까지)
     public static bool RulesOn = true;
 
     // 카드 번호 (기존 0 ~ 24 · 성장 100 ~ 103 은 그대로): 입문 25 ~ 29 (갈래 번호 + 25) · 외길 30 · 새 카드 31
@@ -131,6 +131,11 @@ public static class Paths
         CharacterId.Clockmaker => new ClockmakerPaths(),
         CharacterId.Postman => new PostmanPaths(),
         CharacterId.Ghost => new GhostPaths(),
+        CharacterId.Wrestler => new WrestlerPaths(),
+        CharacterId.Foreman => new ForemanPaths(),
+        CharacterId.Puppeteer => new PuppeteerPaths(),
+        CharacterId.Undertaker => new UndertakerPaths(),
+        CharacterId.Photographer => new PhotographerPaths(),
         _ => null,
     };
 
@@ -510,6 +515,15 @@ public static class Paths
 
     // 갈래 규칙을 이번 판 끔 (튜토리얼 · 영웅 데이터를 못 읽음 → 구판 규칙)
     internal static void Disable() => Active = false;
+
+    // 2.0.0~ 역류 「갈래를 잃는다」: 걸어 둔 효과를 되돌리고(Hero.End) 전투 훅 · 묻기를 멈춤 (Hero = null) — 판 기록 LogRow 는 A · B 를 그대로 둬 지난 판 값이 남음
+    //   Disable 과 달리 영웅 효과를 먼저 풀어 줌 (소품 · 구독이 남지 않게) · 판이 끝날 때 End() 는 Hero 가 null 이라 그냥 지나감
+    internal static void Lose()
+    {
+        if (Hero != null) Safe(() => Hero.End());
+        Active = false;
+        Hero = null;
+    }
 
     public static float MoveMul()
     {

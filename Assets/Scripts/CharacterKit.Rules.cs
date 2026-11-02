@@ -136,6 +136,10 @@ public partial class CharacterKit
             Color c = d == 9 ? Color.Lerp(new Color(1f, 0.4f, 0.35f), Color.white, 0.4f + 0.4f * Mathf.Sin(Time.time * 14f)) : new Color(1f, 0.45f, 0.4f);
             DrawRuleBar(d / 10f, c, true, "배달", d, 10);
         }
+        else if (Id == CharacterId.Wrestler) WrRuleBar();      // 2.0.0~ 들기 · 모래판 남은 시간
+        else if (Id == CharacterId.Foreman) FmRuleBar();       // 2.0.0~ 더미 무게
+        else if (Id == CharacterId.Puppeteer) PupRuleBar();    // 2.0.0~ 자리 바꾸기 남은 횟수
+        else if (Id == CharacterId.Undertaker) UtRuleBar();    // 2.0.0~ 구멍 수 / 묘비 수
         else if (Id == CharacterId.Ghost)
         {
             // 영혼: 몸 둘레를 도는 영혼 수 / 최대

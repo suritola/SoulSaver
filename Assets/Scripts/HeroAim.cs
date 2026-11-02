@@ -6,7 +6,7 @@ using UnityEngine;
 //   지정된 선만: 맨 위 그리기 · 영웅 문양 고리(PixelRingArt style) · 움직이는 장식 · 가운데 큰 상징 (PixelStrokeMin 이 그림)
 //   지정이 끊기거나 선이 꺼지면 같은 프레임(늦어도 다음 프레임)에 장식이 숨고 맨 위 그리기도 원래대로
 //   판정은 손대지 않음 — 그림은 선이 가진 좌표(판정 값으로 그린 것)를 읽어 그리기만
-public enum HeroAimKind { None = 0, Gunner, Swordsman, Rogue, Archer, Alchemist, Cartographer, Clockmaker, Postman, Ghost }
+public enum HeroAimKind { None = 0, Gunner, Swordsman, Rogue, Archer, Alchemist, Cartographer, Clockmaker, Postman, Ghost, Wrestler, Foreman, Puppeteer, Undertaker, Photographer }
 
 // 장식: None = 문양 고리 · 맨 위만 (덧붙는 궁극기 · 보조 선), Full = 움직이는 장식 + 가운데 상징, Skull = 머리 위 해골만 (유령 숙주 고리)
 public enum HeroAimFx { None, Full, Skull }
@@ -26,6 +26,11 @@ public static class HeroAim
             case CharacterId.Clockmaker: return HeroAimKind.Clockmaker;
             case CharacterId.Postman: return HeroAimKind.Postman;
             case CharacterId.Ghost: return HeroAimKind.Ghost;
+            case CharacterId.Wrestler: return HeroAimKind.Wrestler;
+            case CharacterId.Foreman: return HeroAimKind.Foreman;
+            case CharacterId.Puppeteer: return HeroAimKind.Puppeteer;
+            case CharacterId.Undertaker: return HeroAimKind.Undertaker;
+            case CharacterId.Photographer: return HeroAimKind.Photographer;
         }
         return HeroAimKind.None;
     }
@@ -47,6 +52,11 @@ public static class HeroAim
             case HeroAimKind.Clockmaker: return new Color(1f, 0.8f, 0.35f);
             case HeroAimKind.Postman: return new Color(0.98f, 0.38f, 0.32f);
             case HeroAimKind.Ghost: return new Color(0.6f, 0.92f, 1f);
+            case HeroAimKind.Wrestler: return new Color(0.95f, 0.62f, 0.45f);
+            case HeroAimKind.Foreman: return new Color(0.95f, 0.91f, 0.36f);
+            case HeroAimKind.Puppeteer: return new Color(0.62f, 0.72f, 1f);
+            case HeroAimKind.Undertaker: return new Color(0.725f, 0.796f, 0.894f);
+            case HeroAimKind.Photographer: return new Color(0.78f, 0.83f, 1f);
         }
         return Color.white;
     }
@@ -662,6 +672,62 @@ public class HeroAimDecor
                     Vector3 p = Polar(c, a, r) + Vector3.up * (0.15f * Mathf.Sin(t * 3f + i));
                     Draw(HeroAimArt.WeaponAt("weapon_flask", tilt), p, col);
                 }
+                break;
+            }
+            case HeroAimKind.Wrestler:
+            {
+                // 천하장사 조준 고리 위를 모래 알갱이가 흘러내리며 돎 (샅바 매듭 네 방향 마름모는 PixelRingArt)
+                for (int i = 0; i < 10; i++)
+                {
+                    float a = t * 40f + i * 36f;
+                    float rr = r * (0.82f + 0.12f * Mathf.Sin(t * 3f + i));
+                    Draw(HeroAimArt.BubbleDot, Polar(c, a, rr) + Vector3.down * (0.15f * Mathf.Sin(t * 5f + i * 2f)), new Color(0.91f, 0.76f, 0.48f, 0.8f));
+                }
+                break;
+            }
+            case HeroAimKind.Foreman:
+            {
+                // 철거 공고 조준 고리 위를 안전 고깔이 천천히 돎 + 가운데 쇠공 그림자가 흔들리며 커짐 (안전 테이프 줄무늬는 PixelRingArt)
+                for (int i = 0; i < 3; i++)
+                {
+                    float a = t * 30f + i * 120f;
+                    Draw(HeroAimArt.BubbleDot, Polar(c, a, r * 0.9f) + Vector3.up * (0.1f * Mathf.Sin(t * 4f + i)), new Color(1f, 0.55f, 0.1f, 0.9f));
+                }
+                float sh = 0.35f + 0.25f * Mathf.PingPong(t * 1.2f, 1f);
+                Draw(HeroAimArt.BubbleDot, c + new Vector3(0.12f * Mathf.Sin(t * 6f), 0f, 0f), new Color(0.1f, 0.1f, 0.1f, 0.35f + sh * 0.3f));
+                break;
+            }
+            case HeroAimKind.Puppeteer:
+            {
+                // 커튼콜 조준 고리 위 작은 더미 넷이 실에 매달려 오르내림 (조종대 십자 테는 PixelRingArt) — 다 차면 박수 손 반짝은 생략(간소화)
+                for (int i = 0; i < 4; i++)
+                {
+                    float a = 45f + 90f * i;
+                    Vector3 p = Polar(c, a, r) + Vector3.up * (0.25f * Mathf.Sin(t * 3f + i * 1.7f));
+                    Draw(HeroAimArt.BubbleDot, p, new Color(col.r, col.g, col.b, 0.9f));
+                    Draw(HeroAimArt.BubbleDot, p + Vector3.up * 0.55f, new Color(1f, 1f, 1f, 0.6f));
+                }
+                break;
+            }
+            case HeroAimKind.Photographer:
+            {
+                // 초점 원 둘레를 조리개 날 점 여섯이 천천히 돎 (조리개 빗금 · 필름 구멍 네모는 PixelRingArt)
+                for (int i = 0; i < 6; i++) Draw(HeroAimArt.BubbleDot, Polar(c, t * 40f + 60f * i, r), new Color(col.r, col.g, col.b, 0.85f));
+                break;
+            }
+            case HeroAimKind.Undertaker:
+            {
+                // 구멍 고리 위를 흙 알갱이가 떨어져 쌓이고 (장례 테 위에서는 작은 묘비 점이 돎) — 흙덩이 돌기 · 묘비 모양은 PixelRingArt
+                for (int i = 0; i < 6; i++)
+                {
+                    float local = t * 0.9f + i * 0.17f;
+                    int cyc = Mathf.FloorToInt(local);
+                    float f = local - cyc;
+                    float ang = H(cyc * 7 + i) * 360f;
+                    Vector3 p = Polar(c, ang, r * 0.7f) + Vector3.up * ((1f - f) * 0.9f);
+                    Draw(HeroAimArt.BubbleDot, p, new Color(0.72f, 0.55f, 0.36f, 0.85f * Mathf.Sin(f * Mathf.PI)));
+                }
+                for (int i = 0; i < 4; i++) Draw(HeroAimArt.BubbleDot, Polar(c, 45f + 90f * i, r), new Color(col.r, col.g, col.b, 0.9f));
                 break;
             }
             case HeroAimKind.Clockmaker:

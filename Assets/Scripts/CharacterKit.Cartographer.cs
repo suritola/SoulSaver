@@ -222,7 +222,7 @@ public partial class CharacterKit
         Play("chime", 0.6f, 1.25f);
         Play("paperfold", 0.6f, 1.2f);
         Play("stamp", 0.5f, 0.9f);
-        if (inside.Count >= 4) Hostile.Shake(0.1f);
+        if (inside.Count >= 4) { Hostile.Shake(0.1f); Impact.Hit(ImpactTier.Attack, center); }     // 2.0.0~ 손맛 연출: 도형이 닫혀 안쪽 적 4마리 이상을 친 순간
         SpecialAbilities.SharedFx?.FloatText(center + Vector3.up, Loc.T("측량 완료!"), InkGold, 4f, 0.4f);
         SignatureSkills.Closed(poly, center, reach, inside);
         CartographerPaths.ShapeClosed();        // 접지술: 도형마다 게이지
@@ -524,6 +524,7 @@ public partial class CharacterKit
         Fx.Spawn("fx_shock", center, len * 0.8f, new Color(0.45f, 0.6f, 1f, 0.85f), 18f);
         for (int i = 0; i <= 4; i++) Fx.Spawn("fx_slash", Vector3.Lerp(a, b, i / 4f), 3f, new Color(0.8f, 0.9f, 1f), 26f, Mathf.Atan2(crease.y, crease.x) * Mathf.Rad2Deg);
         Hostile.Shake(0.22f);
+        Impact.Hit(ImpactTier.Ult, center, n);     // 2.0.0~ 손맛 연출: 지도가 접혀 닫히는 순간 (방향 = 접힌 방향)
         Play("boom", 0.7f, 1.2f);
         Play("paperfold", 1f, 0.8f);
         Play("crack", 0.6f, 0.8f);

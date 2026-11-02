@@ -32,6 +32,7 @@ public class PlayerLook : MonoBehaviour
         SpecialAbilities.KitSurveyChain => KitMove.Whirl, SpecialAbilities.KitInkpot => KitMove.Toss, SpecialAbilities.KitGlobe => KitMove.Spin,
         SpecialAbilities.KitCuckoo => KitMove.Shake, SpecialAbilities.KitHourglass => KitMove.Spin, SpecialAbilities.KitGrandfather => KitMove.Shake,
         SpecialAbilities.KitPigeon => KitMove.Release, SpecialAbilities.KitParcel => KitMove.Toss, SpecialAbilities.KitPostbox => KitMove.Smash,
+        SpecialAbilities.KitBucket => KitMove.Smash, SpecialAbilities.KitJackhammer => KitMove.Shake, SpecialAbilities.KitWreckBall => KitMove.Whirl,
         SpecialAbilities.KitSoulChain => KitMove.Whirl, SpecialAbilities.KitIceGhost => KitMove.Pulse, SpecialAbilities.KitShadowGhost => KitMove.Pulse,
         _ => KitMove.None,
     };
@@ -119,11 +120,15 @@ public class PlayerLook : MonoBehaviour
     // 기본 무기 (-1): 캐릭터마다 다름 — 검은 크게 휘두르고, 표창 · 플라스크는 던지는 손짓
     static float BaseRecoil() => CharacterData.Selected switch
     {
-        CharacterId.Swordsman => 0f, CharacterId.Rogue => 0.1f, CharacterId.Archer => 0.15f, CharacterId.Alchemist => 0.1f, _ => 0.18f,
+        CharacterId.Swordsman => 0f, CharacterId.Rogue => 0.1f, CharacterId.Archer => 0.15f, CharacterId.Alchemist => 0.1f,
+        CharacterId.Wrestler => 0.05f, CharacterId.Foreman => 0.1f, CharacterId.Puppeteer => 0.08f, CharacterId.Undertaker => 0.1f, CharacterId.Photographer => 0.04f,      // 2.0.0 검토: 새 영웅 5명
+        _ => 0.18f,
     };
     static float BaseLift() => CharacterData.Selected switch
     {
-        CharacterId.Swordsman => 0f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f, _ => 8f,
+        CharacterId.Swordsman => 0f, CharacterId.Rogue => 45f, CharacterId.Archer => 6f, CharacterId.Alchemist => 75f,
+        CharacterId.Wrestler => 4f, CharacterId.Foreman => 6f, CharacterId.Puppeteer => 20f, CharacterId.Undertaker => 30f, CharacterId.Photographer => 4f,      // 2.0.0 검토: 새 영웅 5명
+        _ => 8f,
     };
 
     float Lift(int id) => id == -1 ? baseLift : id switch
@@ -188,6 +193,22 @@ public class PlayerLook : MonoBehaviour
         FootShadow.Player(GetComponent<PlayerController>(), CharacterData.Current.color);     // 1단계-11~ 발밑 접촉 원
     }
 
+    // 2.0.0~ 영혼 릴레이: 판 중간에 영웅이 바뀌면 영웅별 상수 · 발 그림자 색 · 손에 든 무기 그림을 다시 (Start 의 캐시를 되풀이)
+    public static void Rebind() { if (Instance != null) Instance.RebindNow(); }
+
+    void RebindNow()
+    {
+        baseRecoil = BaseRecoil();
+        baseLift = BaseLift();
+        swordsman = CharacterData.Selected == CharacterId.Swordsman;
+        shownWeapon = -99;
+        kitForm = -1;
+        bareOf.Clear();
+        Transform shadow = transform.Find("FootShadow");
+        if (shadow != null) DestroyImmediate(shadow.gameObject);
+        FootShadow.Player(GetComponent<PlayerController>(), CharacterData.Current.color);
+    }
+
     void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -232,7 +253,7 @@ public class PlayerLook : MonoBehaviour
             held.color = id >= 0 && SkinFx.WeaponSkin != null ? SkinFx.Tint(Color.white) : Color.white;
         }
         // 죽는 연출 · 숨김(시작 연출) 중에는 몸과 함께 숨김
-        bool show = held.sprite != null && body.enabled;
+        bool show = held.sprite != null && body.enabled && !(CharacterKit.Instance != null && (CharacterKit.Instance.HideHeldWeapon || CharacterKit.Instance.Id == CharacterId.Puppeteer));      // 2.0.0~ 씨름꾼: 적을 들고 있는 동안 손에 든 샅바는 숨김
         if (held.enabled != show) held.enabled = show;
         if (!show) return;
 

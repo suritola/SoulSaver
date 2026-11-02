@@ -252,6 +252,28 @@ public partial class BossSkills : MonoBehaviour
                         Hostile.Play("whoosh", 0.5f, 0.7f);
                         break;
                     }
+                case CharacterId.Wrestler:
+                    // 씨름꾼: 샅바 잡기 (BossSkills.Wrestler) — 한 번에 한 라운드 (4라운드 이상이면 예고 원 둘)
+                    yield return MirrorGrab(rounds >= 5);
+                    break;
+                case CharacterId.Foreman:
+                    // 공사 반장: 거울 조각 탄 6발을 반원으로 모았다가 쏟아붓기 (BossSkills.Foreman)
+                    yield return MirrorDump();
+                    break;
+                case CharacterId.Puppeteer:
+                    // 인형사: 예측한 자리에 거울 더미 휘두름 + 줄 칼날 (BossSkills.Puppeteer)
+                    yield return MirrorPuppetSwing();
+                    break;
+                case CharacterId.Undertaker:
+                    // 장의사: 진행 방향 앞 2 · 4칸과 발밑에 함몰 (BossSkills.Undertaker)
+                    yield return MirrorSinkholes();
+                    break;
+                    yield return MirrorSinkholes();
+                    break;
+                case CharacterId.Photographer:
+                    // 사진사: 플레이어 둘레 사각 틀 예고 셋 -> 찰칵 (BossSkills.Photographer)
+                    yield return MirrorShutter();
+                    break;
                 case CharacterId.Postman:
                     // 우체부: 플레이어를 쫓는 편지 넷 (느리게 꺾임)
                     for (int i = 0; i < 4; i++) Hostile.Shoot(c, Rotate(d, (i - 1.5f) * 22f), 10f, Capped(13f * Power), 0.5f, Mirror, 1.3f, 3f);
@@ -442,6 +464,11 @@ public partial class BossSkills : MonoBehaviour
             case CharacterId.Clockmaker: yield return UltClock(strong ? 5 : 4); break;
             case CharacterId.Postman: yield return UltExpress(strong ? 10 : 7); break;
             case CharacterId.Ghost: yield return UltPossess(strong ? 3 : 2); break;
+            case CharacterId.Wrestler: yield return UltSandSlam(strong ? 2 : 1); break;         // 씨름꾼 · 천하장사 (BossSkills.Wrestler)
+            case CharacterId.Foreman: yield return UltWreck(strong ? 4 : 3); break;              // 공사 반장 · 철거 공고 (BossSkills.Foreman)
+            case CharacterId.Puppeteer: yield return UltCurtain(strong ? 6 : 4); break;           // 인형사 · 커튼콜 (BossSkills.Puppeteer)
+            case CharacterId.Photographer: yield return UltPanorama(strong); break;               // 사진사 · 파노라마 (BossSkills.Photographer)
+            case CharacterId.Undertaker: yield return UltFuneral(strong); break;                  // 장의사 · 장례 (BossSkills.Undertaker)
             default: yield return UltLockOn(strong ? 6 : 4); break;
         }
     }
@@ -610,6 +637,17 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Volley, Pat.Echo, Pat.Trail, Pat.Volley, Pat.Lines, Pat.Ring, Pat.Blast, Pat.Mines, Pat.Lines, Pat.Volley },
         // 유령: 원한 · 곡소리 · 한기 · 생기 흡수 · 실체 없음 · 도깨비불 · 저주 · 폴터가이스트 · 동상 · 망령의 행렬
         new[] { Pat.Lines, Pat.Ring, Pat.Mines, Pat.Pull, Pat.Trail, Pat.Volley, Pat.Blast, Pat.Rain, Pat.Mines, Pat.Clones },
+        // 2.0.0~ 새 영웅 다섯 (예전엔 줄이 없어 마지막 줄(유령)로 대체됐음)
+        // 씨름꾼: 샅바 낚기 · 장외 패대기 · 배지기 · 황소 돌진 · 모래판 다지기 · 끈기 · 기술 연결 · 거인 메치기 · 눈덩이 · 꽃가마
+        new[] { Pat.Pull, Pat.Blast, Pat.Blast, Pat.Trail, Pat.Ring, Pat.Echo, Pat.Echo, Pat.Blast, Pat.Lines, Pat.Rain },
+        // 공사 반장: 야근 수당 · 철근 · 롤러 자국 · 크레인 · 안전 제일 · 시멘트 · 과적 · 우회로 · 자재 회수 · 추후 업데이트 예정
+        new[] { Pat.Volley, Pat.Lines, Pat.Trail, Pat.Rain, Pat.Ring, Pat.Mines, Pat.Blast, Pat.Lines, Pat.Pull, Pat.Blast },
+        // 인형사: 무대 조명 · 현 울림 · 복화술 · 솜 채우기 · 줄타기 · 막 내림 · 앙코르 · 얽힌 실 · T 자세 · 실 퉁기기
+        new[] { Pat.Ring, Pat.Echo, Pat.Clones, Pat.Mines, Pat.Lines, Pat.Rain, Pat.Echo, Pat.Pull, Pat.Clones, Pat.Lines },
+        // 장의사: 관 뚜껑 · 도랑 파기 · 유령 손 · 흙담 · 운구 · 추모 · 빈 무덤 · 부고 · 명부 · 산 자의 무덤
+        new[] { Pat.Blast, Pat.Trail, Pat.Mines, Pat.Ring, Pat.Lines, Pat.Echo, Pat.Mines, Pat.Volley, Pat.Echo, Pat.Pull },
+        // 사진사: 플래시 반사 · 셀카 · 셀프 타이머 · 오려 붙이기 · 노출 과다 · 흔들린 사진 · 앨범 · 셔터 찬스 · 현상소 · 기념 사진
+        new[] { Pat.Ring, Pat.Echo, Pat.Mines, Pat.Clones, Pat.Blast, Pat.Echo, Pat.Volley, Pat.Lines, Pat.Mines, Pat.Rain },
     };
 
     // 캐릭터 전용 레벨업 카드 7장 (LevelShop.KitIds 순서: 관통 · 멀티 샷 · 밀어내기 · 노려보는 눈빛 · 사냥의 기세 · 추가 A · 추가 B 자리)
@@ -624,6 +662,11 @@ public partial class BossSkills : MonoBehaviour
         new[] { Pat.Lines, Pat.Echo, Pat.Blast, Pat.Mines, Pat.None, Pat.Ring, Pat.Volley },       // 튕기는 톱니 · 빠른 태엽 · 시계추 · 남은 시각 · - · 정각의 종 · 녹슨 톱니
         new[] { Pat.Lines, Pat.Blast, Pat.Volley, Pat.Rain, Pat.None, Pat.Lines, Pat.Echo },       // 등기 우편 · 소포 · 우표 수집 · 답장 · - · 빠른 우편 · 반송
         new[] { Pat.Lines, Pat.Mines, Pat.Echo, Pat.Ring, Pat.None, Pat.Volley, Pat.Blast },       // 꿰뚫는 냉기 · 얼어붙는 손길 · 원혼 · 빙의 여운 · - · 영혼 수호 · 얼음 파편
+        new[] { Pat.Lines, Pat.Pull, Pat.Echo, Pat.Ring, Pat.None, Pat.Blast, Pat.Trail },         // 도미노 · 한 아름 · 되치기 · 모래 둑 · - · 번쩍 들기 · 발 걸기
+        new[] { Pat.Lines, Pat.Mines, Pat.Blast, Pat.Ring, Pat.None, Pat.Echo, Pat.Pull },         // 긴 삽날 · 잔해 · 빠각! · 공사 구간 · - · 안전 수칙 · 적재함 확장
+        new[] { Pat.Trail, Pat.Clones, Pat.Lines, Pat.Mines, Pat.None, Pat.Echo, Pat.Ring },       // 실 자국 · 팔 벌린 인형 · 끊어진 실 · 빈자리의 인형 · - · 짧은 막간 · 관객의 박수
+        new[] { Pat.Mines, Pat.Volley, Pat.Blast, Pat.Ring, Pat.None, Pat.Echo, Pat.Mines },       // 깊은 구덩이 · 여러 삽 · 무너지는 흙 · 종지기 · - · 비문 · 되파기
+        new[] { Pat.Lines, Pat.Ring, Pat.Mines, Pat.Rain, Pat.None, Pat.Echo, Pat.Volley },        // 장노출 · 광각 렌즈 · 현상액 · 바람에 날린 사진 · - · 자동 초점 · 인화지 추가
     };
 
     // 특수 능력 (SpecialAbilities 번호): 무기 0 ~ 7 · 스킬 8 ~ 15 · 패시브 16 ~ 19, 캐릭터 전용 특수 능력(20 ~)은 종류로

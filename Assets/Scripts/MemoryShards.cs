@@ -11,7 +11,7 @@ using UnityEngine.UI;
 //   체험판: 거너 · 검사의 ①만 · 글: LocTable.Memory 의 memory.<영웅>.<n>.title · .text (줄은 \n)
 public static class MemoryShards
 {
-    public const int PerHero = 6, Heroes = 9, Total = PerHero * Heroes, AllBonus = 5000;
+    public const int PerHero = 6, Heroes = 14, Total = PerHero * Heroes, AllBonus = 5000;
     const string NewKey = "memory.new";         // 아직 읽지 않은 기억 (쉼표) — 도감 버튼 · 탭 반짝임
 
     static string Key(CharacterId h, int n) => "memory." + Contracts.HeroKey(h) + "." + n;

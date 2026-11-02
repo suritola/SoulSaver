@@ -464,6 +464,7 @@ public class Bullet : MonoBehaviour
 
         if (collision.CompareTag("Wall"))
         {
+            if (collision.TryGetComponent(out UndertakerGrave _)) return;       // 2.0.0~ 장의사 묘비 · 흙담은 플레이어 탄이 지나감 (적 탄은 별도 투사체라 막힘)
             if (onHitWall != null) { onHitWall(); return; }
             Gone();
 

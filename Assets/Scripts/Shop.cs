@@ -123,12 +123,13 @@ public partial class Shop : MonoBehaviour
 
     void SpawnStall()
     {
+        if (ModeRun.Reflux) return;         // 2.0.0~ 역류는 떠돌이 상점이 없음 (쌓는 길을 끔)
         // 플레이어 근처, 벽이 아닌 곳
         Vector3 at = playerControllerd.transform.position;
         for (int i = 0; i < 12; i++)
         {
             Vector3 p = Hostile.ClampArena(playerControllerd.transform.position + (Vector3)(UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(5f, 8f)));
-            if (!Hostile.WallNear(p, 1.5f)) { at = p; break; }
+            if (!Hostile.WallNear(p, 1.5f) && !DesertSecrets.NearAny(p, 1.5f)) { at = p; break; }
         }
         ShopStall.Spawn(this, at);
         // 1.0.4~: 「영구히 · 체력」 → 이번 판 동안 · 실제로 파는 것 (공격력 · 이동 속도 · 물약), 머무는 시간 10초 → 15초

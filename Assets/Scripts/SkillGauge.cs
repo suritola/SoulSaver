@@ -218,6 +218,7 @@ public class SkillGauge : MonoBehaviour
     {
         ReadyFeedback();
         UpdateStack();
+        UpdateTicks();
         PlayerController p = Hostile.Player;
         // 멈췄을 때나 스킬을 쓰는 중에는 차지 않음
         if (Time.timeScale == 0f || (p != null && p.IsSkillUsing) || IsFull()) return;
@@ -263,6 +264,45 @@ public class SkillGauge : MonoBehaviour
     public bool IsFull()
     {
         return SkillPoint >= MaxSkillPoint;
+    }
+
+    // 2.0.0~ 인형사 자리 바꾸기: 게이지의 일부(fraction = 최대치의 몫)만 씀 · 모자라면 false (아무것도 안 씀) — 필살기 쓴 것으로 세지 않음
+    public bool TrySpend(float fraction)
+    {
+        float need = MaxSkillPoint * Mathf.Max(0f, fraction);
+        if (SkillPoint + 0.0001f < need) return false;
+        SkillPoint = Mathf.Max(0f, SkillPoint - need);
+        UpdateGauge();
+        return true;
+    }
+
+    // 2.0.0~ 인형사: 게이지에 20% 마다 가는 눈금 (남은 자리 바꾸기 횟수가 보이게) — 인형사가 아니면 만들지 않음
+    readonly System.Collections.Generic.List<Image> ticks = new System.Collections.Generic.List<Image>(4);
+    bool ticksChecked;
+
+    void UpdateTicks()
+    {
+        if (ticksChecked || gaugeImage == null) return;
+        CharacterKit k = CharacterKit.Instance;
+        if (k == null) return;
+        ticksChecked = true;
+        if (k.Id != CharacterId.Puppeteer) return;
+        RectTransform src = gaugeImage.rectTransform;
+        for (int i = 1; i < 5; i++)
+        {
+            GameObject go = new GameObject("Tick" + i, typeof(RectTransform), typeof(Image));
+            RectTransform rt = (RectTransform)go.transform;
+            rt.SetParent(src, false);
+            rt.anchorMin = new Vector2(i * 0.2f, 0f);
+            rt.anchorMax = new Vector2(i * 0.2f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(2f, 0f);
+            Image im = go.GetComponent<Image>();
+            im.color = new Color(1f, 1f, 1f, 0.6f);
+            im.raycastTarget = false;
+            ticks.Add(im);
+        }
     }
 
     public void ResetSkillPoint()

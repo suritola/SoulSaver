@@ -31,7 +31,7 @@ public static class MenuExtras
             TMP_Text title = msg != null ? msg.GetComponentInChildren<TMP_Text>(true) : null;
             if (title != null)
             {
-                if (RunStats.Cleared) title.text = GameMode.Name(GameMode.Current) + " " + Loc.T("클리어!");
+                if (RunStats.Cleared) title.text = (ModeRun.Reflux ? Loc.T("역류") : GameMode.Name(GameMode.Current)) + " " + Loc.T("클리어!");
                 else { title.text = Loc.T("여기까지!"); UIKit.Remember(title, "여기까지!"); }
                 title.color = new Color(0.96f, 0.83f, 0.47f);
             }
@@ -109,11 +109,13 @@ public static class MenuExtras
         {
             UIKit.EnsureStyle();
             bool daily = DailyChallenge.Active;
-            string text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
+            bool relay = RelayRun.Active;        // 2.0.0~ 영혼 릴레이: 조합 · 구간 시간 · 조합 기록 세 줄 (RelayRun.ResultText)
+            bool reflux = RefluxRun.Active;      // 2.0.0~ 역류: 영웅 · 갈래 · 클리어 시간 · 남은 영혼 · 끝까지 쥔 것 (RefluxRun.ResultText)
+            string text = reflux ? RefluxRun.ResultText(EndlessMode.LastSeconds) : relay ? RelayRun.ResultText(EndlessMode.LastSeconds, EndlessMode.LastBosses) : (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
                         + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
                         + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
             // 1.4.8~ 34 → 30 (획득 포인트 줄과 같은 크기 · 줄 높이 38) · 자리는 StackCenter (버튼 열 → 순위 보기 · 결과 복사 줄 아래)
-            TMP_Text t = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, daily ? 114f : 76f));
+            TMP_Text t = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, daily || relay || reflux ? 114f : 76f));
             t.fontSizeMin = 20f;
             t.name = "EndlessRecord";
             t.text = text;
@@ -122,18 +124,21 @@ public static class MenuExtras
             line.text = t;
             line.baseText = text;
             line.daily = daily;
+            line.rankName = reflux ? "reflux.lb.rank" : relay ? "relay.lb.rank" : null;
             // 1.1.5~ 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
             // 1.4.8~ 기록 글 오른쪽(x 600)에 떠 있던 것을 「결과 복사」와 한 줄로 (StackCenter)
             if (!Demo.On)
             {
                 Transform root = canvas.transform;
                 Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
-                    () => LeaderboardUI.Open(root, daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe), 24f);
+                    () => LeaderboardUI.Open(root, reflux ? LeaderboardUI.Board.Reflux : relay ? LeaderboardUI.Board.Relay : daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe, null, relay ? RelayRun.LastCombo : null), 24f);
                 view.name = "LeaderboardViewButton";
                 if (!UiRules.Legacy) { UiV2.Restyle(view, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(view, "ui.btn.ranks"); }
             }
         }
         EndlessMode.LastSeconds = -1f;
+        DesertSecrets.BuildResultLine(canvas != null ? canvas.transform : null);       // 2.0.0~ 사막 비밀 축하 한 줄
+        if (CharacterData.Selected == CharacterId.Photographer) PhotographerAlbum.BuildResult(canvas != null ? canvas.transform : null);       // 2.0.0~ 사진사 「이번 판 최고의 사진」
         if (canvas != null) ResultScreen.StackCenter(canvas.transform);
     }
 
@@ -143,7 +148,7 @@ public static class MenuExtras
 
     static void InstallMainMenu()
     {
-        DailyChallenge.End();
+        ModeRun.EndAll();               // 2.0.0~ 일일 도전 · 영혼 릴레이 · 역류 중 켜진 모드를 풂 (DailyChallenge.End 를 포함)
         EndlessMode.LastSeconds = -1f;  // 1.2.3~ 무한 판을 저장하고 나오면 남은 기록이 다음 이야기 판 결과 화면에 붙지 않게
         RunSave.EndContinue();          // 1.0.4~: 이어한 판의 캐릭터 · 난이도를 메뉴 선택에서 거둠 (난이도 버튼을 그리기 전에)
         mainLaidOut = false;
@@ -162,6 +167,8 @@ public static class MenuExtras
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
+        GameObject modes = UIKit.CloneButton(start, "ModesButton", "특별 모드", () => ModeHubUI.Open(sr.root));      // 2.0.0~ 영혼 릴레이 · 역류를 한 줄로 (결정 M1)
+        if (ModeHubUI.HasNew) modes.AddComponent<NewGlow>();
         // 1.0.4~: 잠긴 일일 도전은 흐리게 · 「잠김」 표시 · 여는 방법 툴팁 (창 안의 오늘 규칙 · 순위표는 그대로 볼 수 있음)
         bool dailyLocked = !DailyChallenge.Unlocked;
 
@@ -188,7 +195,7 @@ public static class MenuExtras
             if (hide != null) hide.SetActive(false);
         // 1.4.8~ 사용자 「게임이 덜 완성된 것 같다」: 칸 격자 대신 게임 시작 아래 같은 폭 버튼을 세로로 (도감 · 일일 도전 · 설정 · 더 보기 · 게임 종료)
         //   글자만 · 같은 폭 · 같은 간격 — 흔한 게임 메인 메뉴 모양 (게임 시작 바로 아래 한 줄은 영혼의 무게 버튼 자리로 비워 둠)
-        GameObject[] list = { codex, daily, settings, more, exit };
+        GameObject[] list = { codex, daily, modes, settings, more, exit };
         // (1.4.8~ 메뉴 뒤 반투명 판은 사용자 「별로」로 뺌 → 글자 자체에 굵기 · 어두운 외곽선 · 그림자 (MenuItemFx))
         float listY = StartY - StartH * 0.5f - (LockRowH + Gap) - ListH * 0.5f;
         for (int i = 0; i < list.Length; i++)
@@ -254,6 +261,7 @@ public static class MenuExtras
         LeaderboardUI.InstallMenuButton(sr.parent, sr.root);   // 1.1.5~ 영혼 각인 아래: 스팀 순위표 (무한 모드 · 일일 도전, 체험판은 숨김)
         // 1.4.8~ 이번 판 계약 패널은 메인 화면에서 뺌 → 「더 보기」의 계약 보드 (판을 시작하면 그 판 계약 띠가 뜸)
         DailyRewards.MenuCheck();                              // 1.2~ 연속 출석이 끊겼으면 한 번 알림
+        ModeHubUI.MenuCheck();                                 // 2.0.0~ 새 모드(영혼 릴레이)가 열렸으면 한 번 알림
         if (daily != null && !dailyLocked && DailyRewards.Streak > 0)
         {
             // 1.2~ 일일 도전 칸 아래: 「연속 n일」 (폰트에 없는 그림 글자는 쓰지 않음)
@@ -513,7 +521,7 @@ public static class MenuExtras
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             if (t.text == "Soul Saver") { title = t; break; }
         List<RectTransform> items = new List<RectTransform>();
-        foreach (string n in new[] { "GameStartButton", "ContinueButton", "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
+        foreach (string n in new[] { "GameStartButton", "ContinueButton", "CodexButton", "DailyButton", "ModesButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
             Transform t = parent.Find(n);
             if (t != null && t.gameObject.activeSelf) items.Add((RectTransform)t);
@@ -751,7 +759,7 @@ public static class MenuExtras
         }
         if (weightOn) y -= MainRowGap + WeightH;
         y -= MainRowGap + MainRowH * 0.5f;
-        foreach (string n in new[] { "CodexButton", "DailyButton", "SettingsButton", "MoreButton", "ExitButton" })
+        foreach (string n in new[] { "CodexButton", "DailyButton", "ModesButton", "SettingsButton", "MoreButton", "ExitButton" })
         {
             RectTransform placed = LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Body);
             if (placed == null) continue;
@@ -2419,6 +2427,9 @@ public static class SettingsUI
                   "버튼 · 배지의 맥동, 카드 뒤집기, 체력바 흔들림, 알림이 들어오는 움직임을 없애고 제자리에서 바로 보여 줍니다. 켜면 화면 흔들림도 함께 꺼집니다. 조준 줌과 진화 연출은 그대로입니다.");
         ToggleRow("빠른 연출", y[6], () => GameSettings.FastFx, v => GameSettings.FastFx = v,
                   "보스 처치, 진화, 상자 · 보상, 장 전환, 엔딩 같은 조작하지 않는 연출을 절반 시간으로 보여 줍니다. 상점 · 포털 카운트다운, 보스 결계 · 등장 연출, 카드 실수 방지 시간은 그대로입니다.");
+        // 2.0.0~ 영웅 손맛 연출 세기 (Impact) — 접근성 탭 빈 ⑧ 줄
+        CycleRow("특수효과", y[7], GameSettings.SpecialFxNames, () => GameSettings.SpecialFx, v => GameSettings.SpecialFx = v,
+                 "specialfx.desc");
     }
 
     // ================================================================= 1.1.9~ 표시 (전장 · HUD 에 그려지는 것 — 75 간격 · 높이 64, 남은 두 줄은 비워 둠)

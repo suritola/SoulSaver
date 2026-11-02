@@ -117,6 +117,7 @@ public partial class CharacterKit
                 if (augment == AugRift) StartCoroutine(TimeRift(p));
                 if (form == SpecialAbilities.KitCuckoo) StartCoroutine(Cuckoos(p, 3));
                 SignatureSkills.BigGear(p);
+                Impact.Hit(ImpactTier.Attack, p, ((Vector2)(p - transform.position)).normalized);     // 2.0.0~ 손맛 연출: 「정각」 톱니가 적에게 명중해 터지는 순간
                 Play("bell", 0.7f, 1f);
             }
         };
@@ -403,6 +404,7 @@ public partial class CharacterKit
         Fx.Spawn("fx_shock", to, 10f, new Color(0.55f, 0.85f, 1f, 0.8f), 18f);
         ShockRing.Spawn(to, 0.5f, RewindArriveRadius, 0.4f, Brass, 0.25f);
         Hostile.Shake(0.2f);
+        Impact.Hit(ImpactTier.Ult, to);     // 2.0.0~ 손맛 연출: 되감기가 도착해 터지는 순간
         Play("rewind", 0.9f, 1f);
         Play("bell", 0.6f, 0.8f);
         SignatureSkills.Rewound(from, to, lost, caught);

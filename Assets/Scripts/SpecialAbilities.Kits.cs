@@ -115,23 +115,93 @@ public partial class SpecialAbilities
         ("명계의 문", SpecialKind.Passive, "체력이 20% 아래로 떨어질 피해를 받으면 3초 동안 무적이 됩니다. (60초에 한 번)\n진화: 40초"),
     };
 
-    public static bool IsKit(int id) => id >= KitFirstId && id < KitFirstId + KitDefs.Length;
-    public static bool KitIsWeapon(int id) => IsKit(id) && KitDefs[id - KitFirstId].kind == SpecialKind.Weapon;
+    // 2.0.0~ 두 번째 대역: 첫 대역(20 ~ 87)은 88 ~ 99 열두 칸만 남았고 100 부터는 무기 강화(CharacterKit.AugFirst ~ AugLast) 번호라
+    //   새 영웅(2.0.0 다섯 명 ~)의 특수 능력은 140 부터 (아이콘은 똑같이 400 + 번호 → 540 ~) — 기존 번호 · 저장은 그대로
+    //   사이(88 ~ 139)는 abilities 배열에서 비어 있음(null) — 배열을 도는 곳은 모두 null 을 거르거나 영웅 pool 번호만 씀
+    public const int KitFirstId2 = 140;
+    // 씨름꾼 (140 ~ 146 · 아이콘 540 ~ 546)
+    public const int KitLiftStone = 140, KitCowbell = 141, KitRope = 142, KitSturdyBone = 143, KitSandGrit = 144, KitFeast = 145, KitCheer = 146;
+    // 공사 반장 (147 ~ 153 · 아이콘 547 ~ 553)
+    public const int KitBucket = 147, KitJackhammer = 148, KitWreckBall = 149, KitBoots = 150, KitManager = 151, KitRuin = 152, KitSnack = 153;
+    // 인형사 (154 ~ 160 · 아이콘 554 ~ 560)
+    public const int KitScissorDummy = 154, KitSpoolDummy = 155, KitWindupDummy = 156, KitStageborn = 157, KitLongArm = 158, KitAudience = 159, KitHollow = 160;
+    // 장의사 (161 ~ 167 · 아이콘 561 ~ 567)
+    public const int KitCrow = 161, KitBell = 162, KitSarcophagus = 163, KitGraveBoots = 164, KitCondolence = 165, KitVigil = 166, KitGraveGoods = 167;
+    // 사진사 (168 ~ 174 · 아이콘 568 ~ 574)
+    public const int KitBulb = 168, KitTripodCam = 169, KitProjector = 170, KitFilmCase = 171, KitModel = 172, KitShutterSound = 173, KitQuickDev = 174;
+    static readonly (string name, SpecialKind kind, string desc)[] KitDefs2 =
+    {
+        // ---------------- 씨름꾼 (140 ~ 146)
+        ("들돌", SpecialKind.Weapon, "던진 적이 한 단계 무겁게 날아갑니다(피해 · 핀 상한 ↑ · 거리 ↓). 잡을 적이 없으면 발밑의 들돌을 들어 던집니다. (공격력 150% · 핀 4)\n궁극기: 들돌 비"),
+        ("워낭", SpecialKind.Weapon, "적을 들고 있는 동안 워낭이 울려 0.5초마다 둘레 3칸의 적에게 소리 파동이 퍼집니다. (공격력 30%)\n궁극기: 황소 떼"),
+        ("밧줄 샅바", SpecialKind.Weapon, "잡는 거리가 1.5칸 늘고, 던진 적이 밧줄에 매여 끝에서 되돌아오며 한 번 더 쓰러뜨립니다. (피해 50%)\n궁극기: 줄다리기"),
+        ("통뼈", SpecialKind.Passive, "밀쳐지지 않고, 적과 부딪혀 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
+        ("모래 근성", SpecialKind.Passive, "체력이 30% 아래면 들기 · 던지기가 25% 빨라집니다.\n진화: 40%"),
+        ("장사 밥상", SpecialKind.Passive, "무거운 적이나 중간 보스를 쓰러뜨리면 체력을 3 회복합니다.\n진화: 6"),
+        ("관중의 환호", SpecialKind.Passive, "링아웃시킬 때마다 필살기 게이지가 1.5% 찹니다. (0.5초에 한 번까지)\n진화: 2.5%"),
+
+        // ---------------- 공사 반장 (147 ~ 153)
+        ("굴착기 버킷", SpecialKind.Weapon, "더미가 버킷에 담겨 높이 들립니다. 덤프가 포물선으로 30% 더 멀리 날아가 착지할 때 터집니다. (공격력 80% · 반지름 1.6칸)\n궁극기: 버킷 내려찍기"),
+        ("착암기", SpecialKind.Weapon, "삽날이 떨리며 짓누를 때마다 삽날 앞 적을 0.3초 기절시키고, 압착 피해가 20% 늘어납니다.\n궁극기: 진동 다짐"),
+        ("철거 쇠공", SpecialKind.Weapon, "더미 둘레를 사슬 쇠공이 돌며(반지름 R + 1) 닿는 적을 칩니다. (공격력 60% · 적마다 0.5초에 한 번)\n궁극기: 쌍 쇠공"),
+        ("안전화", SpecialKind.Passive, "더미를 밀 때 느려지는 정도가 절반이 됩니다.\n진화: 느려지지 않음"),
+        ("현장 소장", SpecialKind.Passive, "보스 · 중간 보스에게 주는 들이받기 · 빠각 피해가 20% 늘어납니다.\n진화: +35%"),
+        ("무너진 담", SpecialKind.Passive, "바리케이드가 사라질 때 무너지며 둘레 2칸 적에게 피해를 줍니다. (공격력 100%)\n진화: 180%"),
+        ("새참", SpecialKind.Passive, "덤프할 때마다 체력을 1 회복합니다. (1초에 한 번)\n진화: 2"),
+
+        // ---------------- 인형사 (154 ~ 160)
+        ("가위 손 인형", SpecialKind.Weapon, "더미의 팔이 가위가 되어, 휘두를 때 더미 바로 아래(0.8칸 안)의 적 하나에게 두 배 피해를 줍니다.\n궁극기: 싹둑"),
+        ("실감개 인형", SpecialKind.Weapon, "더미가 실감개가 되어, 줄에 처음 베인 적을 0.6초 동안 묶습니다. (보스 제외 · 같은 적 3초에 한 번)\n궁극기: 실타래"),
+        ("태엽 병정", SpecialKind.Weapon, "좌클릭을 떼고 있으면 더미가 0.6초마다 저절로 휘두릅니다. (피해 60%)\n궁극기: 행진"),
+        ("무대 체질", SpecialKind.Passive, "자리 바꾸기로 적을 가를 때마다 필살기 게이지가 1% 찹니다. (한 번에 최대 3%)\n진화: 1.5% (최대 5%)"),
+        ("긴 팔", SpecialKind.Passive, "최대 줄 길이가 1칸 늘어납니다.\n진화: 2칸"),
+        ("만원 관객", SpecialKind.Passive, "둘레 6칸에 적이 열 넘게 있으면 주는 피해가 10% 늘어납니다.\n진화: +18%"),
+        ("텅 빈 몸", SpecialKind.Passive, "더미가 6칸보다 멀리 있는 동안 받는 피해가 10% 줄어듭니다.\n진화: 18%"),
+
+        // ---------------- 장의사 (161 ~ 167)
+        ("묘지 까마귀", SpecialKind.Weapon, "구멍에 갇힌 적을 까마귀가 0.5초마다 쪼습니다. (공격력 30%)\n궁극기: 까마귀 떼"),
+        ("상여 종", SpecialKind.Weapon, "매장할 때마다 작은 종이 울려 매장한 구멍 둘레 3칸 적이 0.4초 멈춥니다. (보스 제외)\n궁극기: 저녁 종"),
+        ("석관", SpecialKind.Weapon, "묘비 대신 석관이 솟습니다. 석관은 내구가 두 배이고 닿아 있는 적에게 0.5초마다 공격력 25%를 줍니다.\n궁극기: 석관 봉인"),
+        ("묘지기의 장화", SpecialKind.Passive, "이동 속도가 8% 빨라집니다.\n진화: 14%"),
+        ("조의금", SpecialKind.Passive, "매장으로 쓰러뜨린 적이 5% 확률로 코인 1개를 떨어뜨립니다.\n진화: 10%"),
+        ("밤샘", SpecialKind.Passive, "체력이 30% 아래면 구멍이 50% 빨리 넓어집니다.\n진화: 80%"),
+        ("부장품", SpecialKind.Passive, "묘비가 솟을 때 10% 확률로 경험치 구슬이 하나 나옵니다.\n진화: 20%"),
+
+        // ---------------- 사진사 (168 ~ 174)
+        ("플래시 전구", SpecialKind.Weapon, "셔터를 누를 때마다 틀 둘레 1칸 테두리에도 전구 불꽃이 튀어 피해를 줍니다. (피해 40%)\n궁극기: 불꽃 플래시"),
+        ("삼각대 카메라", SpecialKind.Weapon, "3초마다 마지막으로 찍은 자리에 삼각대 카메라가 서서 5초 동안 1.2초마다 그 자리를 찍습니다. (피해 50% · 종이 포함 · 최대 2대)\n궁극기: 감시 카메라"),
+        ("영사기", SpecialKind.Weapon, "한 장에 찍힌 종이 적들이 필름 줄로 이어져, 줄을 가로지르는 적이 0.4초마다 베입니다. (피해 30%)\n궁극기: 상영회"),
+        ("필름 보관함", SpecialKind.Passive, "필름이 1장 늘어납니다.\n진화: 2장"),
+        ("모델 섭외", SpecialKind.Passive, "걸작 사진을 찍으면 체력을 2 회복합니다.\n진화: 4"),
+        ("셔터 소리", SpecialKind.Passive, "셔터를 누를 때 내 둘레 2칸의 적을 밀쳐 냅니다.\n진화: 3칸"),
+        ("빠른 현상", SpecialKind.Passive, "필름 감기가 20% 빨라집니다.\n진화: 35%"),
+    };
+
+    public static bool IsKit(int id) => (id >= KitFirstId && id < KitFirstId + KitDefs.Length) || (id >= KitFirstId2 && id < KitFirstId2 + KitDefs2.Length);
+    static (string name, SpecialKind kind, string desc) KitDef(int id) => id >= KitFirstId2 ? KitDefs2[id - KitFirstId2] : KitDefs[id - KitFirstId];
+    public static bool KitIsWeapon(int id) => IsKit(id) && KitDef(id).kind == SpecialKind.Weapon;
+    // 모든 특수 능력 번호 (두 대역 차례로) — 도감 등 전부를 도는 곳
+    public static System.Collections.Generic.IEnumerable<int> KitIds()
+    {
+        for (int i = 0; i < KitDefs.Length; i++) yield return KitFirstId + i;
+        for (int i = 0; i < KitDefs2.Length; i++) yield return KitFirstId2 + i;
+    }
 
     // 인스펙터의 능력 목록(거너) 뒤에 새 캐릭터 능력을 붙임 (ID = 순서)
     void KitExtendAbilities()
     {
-        if (abilities == null || abilities.Length >= KitFirstId + KitDefs.Length) return;
-        SpecialDef[] all = new SpecialDef[KitFirstId + KitDefs.Length];
+        int size = KitDefs2.Length > 0 ? KitFirstId2 + KitDefs2.Length : KitFirstId + KitDefs.Length;
+        if (abilities == null || abilities.Length >= size) return;
+        SpecialDef[] all = new SpecialDef[size];
         for (int i = 0; i < abilities.Length && i < KitFirstId; i++) all[i] = abilities[i];
-        for (int i = 0; i < KitDefs.Length; i++)
+        foreach (int id in KitIds())
         {
-            int id = KitFirstId + i;
+            var d = KitDef(id);
             all[id] = new SpecialDef
             {
-                name = KitDefs[i].name,
-                kind = KitDefs[i].kind,
-                description = KitDefs[i].desc,
+                name = d.name,
+                kind = d.kind,
+                description = d.desc,
                 icon = Resources.Load<Sprite>(KitIconPath(id)),
             };
         }
@@ -162,6 +232,11 @@ public partial class SpecialAbilities
         >= 67 and < 74 => new Color(1f, 0.78f, 0.35f),
         >= 74 and < 81 => VisualRules.Kit(new Color(0.95f, 0.45f, 0.4f), new Color(0.95f, 0.78f, 0.4f)),
         >= 81 and < 88 => new Color(0.65f, 0.92f, 1f),
+        >= 140 and < 147 => VisualRules.Kit(new Color(0.95f, 0.62f, 0.45f), new Color(0.35f, 0.42f, 1f)),        // 씨름꾼: 살빛 / 청샅바
+        >= 147 and < 154 => new Color(0.95f, 0.88f, 0.35f),        // 공사 반장: 레몬 노랑 (안전모)
+        >= 154 and < 161 => new Color(0.62f, 0.72f, 1f),           // 인형사: 연보라빛 하늘 (줄)
+        >= 161 and < 168 => new Color(0.725f, 0.796f, 0.894f),     // 장의사: 창백한 청회색 은
+        >= 168 and < 175 => new Color(0.78f, 0.83f, 1f),           // 사진사: 플래시 청백
         _ => new Color(1f, 0.9f, 0.6f),
     };
 

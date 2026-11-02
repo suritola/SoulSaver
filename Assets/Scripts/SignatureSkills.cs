@@ -30,6 +30,16 @@ public partial class SignatureSkills : MonoBehaviour
         return Instance;
     }
 
+    // 2.0.0~ 영혼 릴레이: 판 중간에 영웅이 바뀌면 고유 스킬 효과를 새로 (OnDestroy 가 구독 · 갈래 값을 거두고 Awake 가 새 영웅으로 다시 붙음)
+    //   CharacterData.Override 가 이미 새 영웅이어야 함
+    public static void Rebind(LevelShop shop)
+    {
+        SignatureSkills old = Instance;
+        if (old != null) DestroyImmediate(old);
+        SignatureSkills fresh = Ensure();
+        if (fresh != null && shop != null) fresh.Refresh(shop);
+    }
+
     void Awake()
     {
         Instance = this;
@@ -131,6 +141,7 @@ public partial class SignatureSkills : MonoBehaviour
     void Flair(string key, Vector3 p, float size, Color c)
     {
         if (key != null && !Big(key)) return;
+        Impact.Hit(ImpactTier.Evolve, p);       // 2.0.0~ 손맛 연출: 진화한 스킬이 장식을 그리며 터지는 순간
         using var tier = Fx.Tier(3);       // 1.1.2~ 진화 장식은 늘 가장 화려한 단계 그림으로
         if (Time.time >= flairSoundAt) { flairSoundAt = Time.time + 0.15f; Hostile.Play("evoflair", 0.5f, Random.Range(0.9f, 1.2f)); }      // 1.0.2
         Color v = Vivid(c, 0.95f), comp = Complement(v, 0.9f);
@@ -165,7 +176,26 @@ public partial class SignatureSkills : MonoBehaviour
 
     // ================================================================= 훅 (게임 코드가 부름 · 없으면 아무것도 안 함)
     public static float Outgoing(GameObject target, float dmg) => Instance != null && target != null ? Instance.OutgoingMul(target, dmg) : dmg;
-    public static void Hit(GameObject target, float dmg, bool killed) { if (Instance != null && target != null) Instance.OnHit(target, dmg, killed); }
+    public static void Hit(GameObject target, float dmg, bool killed)
+    {
+        if (Instance == null || target == null) return;
+        Instance.OnHit(target, dmg, killed);
+        if (killed && DamageSource.Current == DamageSource.Signature) SkillKillImpact(target.transform.position);
+    }
+
+    // 2.0.0~ 손맛 연출: 고유 스킬로 0.25초(실제 시간) 안에 세 마리째 처치한 순간 (한 창에 한 번)
+    static float skillKillWindowAt = -99f;
+    static int skillKillCount;
+    static bool skillKillFired;
+    static void SkillKillImpact(Vector3 at)
+    {
+        float now = Time.unscaledTime;
+        if (now - skillKillWindowAt > 0.25f) { skillKillWindowAt = now; skillKillCount = 0; skillKillFired = false; }
+        skillKillCount++;
+        if (skillKillCount < 3 || skillKillFired) return;
+        skillKillFired = true;
+        Impact.Hit(ImpactTier.Skill, at);
+    }
     public static float Taken(float dmg) => Instance != null ? Instance.TakenMul(dmg) : dmg;
     public static void Hurt(float taken) { if (Instance != null) Instance.OnHurt(taken); }
     public static void Attacked(Vector3 start, Vector2 dir) { if (Instance != null) Instance.OnAttack(start, dir); }
@@ -186,6 +216,9 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Cartographer: mul *= MapOutgoing(target); break;
             case CharacterId.Postman: mul *= PostOutgoing(target); break;
             case CharacterId.Ghost: mul *= GhostOutgoing(target); break;
+            case CharacterId.Puppeteer: mul *= PupOutgoing(target); break;
+            case CharacterId.Undertaker: mul *= UtOutgoing(target); break;
+            case CharacterId.Photographer: mul *= PhOutgoing(target); break;
         }
         mul *= Paths.Outgoing(target, dmg);         // 2026-10-19~ 갈래 효과 (모든 영웅 · Paths.<영웅>.cs)
         return dmg * mul;
@@ -202,6 +235,7 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Archer: ArcherHit(target, dmg, killed, proc); break;
             case CharacterId.Alchemist: AlchemistHit(target, dmg, killed, proc); break;
             case CharacterId.Clockmaker: ClockHit(target, dmg); break;
+            case CharacterId.Photographer: PhHit(target, dmg, killed, proc); break;
         }
         Paths.Hit(target, dmg, killed, proc);
     }
@@ -216,6 +250,10 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Clockmaker: dmg = ClockTaken(dmg); break;
             case CharacterId.Postman: dmg = PostTaken(dmg); break;
             case CharacterId.Ghost: dmg = GhostTaken(dmg); break;
+            case CharacterId.Wrestler: dmg = WrTaken(dmg); break;
+            case CharacterId.Foreman: dmg = FmTaken(dmg); break;
+            case CharacterId.Puppeteer: dmg = PupTaken(dmg); break;
+            case CharacterId.Undertaker: dmg = UtTaken(dmg); break;
         }
         return Paths.Taken(dmg);
     }
@@ -225,6 +263,7 @@ public partial class SignatureSkills : MonoBehaviour
         if (who == CharacterId.Gunner) GunnerHurt(taken);
         else if (who == CharacterId.Swordsman) SwordHurt(taken);
         else if (who == CharacterId.Postman) PostHurt(taken);       // 1.0.6~ 맞으면 우표 절반
+        else if (who == CharacterId.Wrestler) WrHurt(taken);        // 2.0.0~ 끈기 보호막은 맞으면 2초 쉼
         Paths.Hurt(taken);
     }
 
@@ -242,6 +281,7 @@ public partial class SignatureSkills : MonoBehaviour
         else if (who == CharacterId.Swordsman) SwordKilled(pos);
         else if (who == CharacterId.Cartographer) MapKilled(pos);
         else if (who == CharacterId.Clockmaker) ClockKilled(pos);
+        else if (who == CharacterId.Wrestler) WrKilled(pos);        // 2.0.0~ 모래판 다지기 · 장사 밥상
         Paths.Killed(pos);
     }
 
@@ -261,10 +301,12 @@ public partial class SignatureSkills : MonoBehaviour
         else if (who == CharacterId.Cartographer) m *= MapMove();
         else if (who == CharacterId.Postman) m *= PostMove();
         else if (who == CharacterId.Ghost) m *= GhostMove();
+        else if (who == CharacterId.Puppeteer) m *= PupMove();
+        else if (who == CharacterId.Undertaker) m *= UtMove();
         return m * Paths.MoveMul();
     }
 
-    float RateMultiplier() => (who == CharacterId.Swordsman ? SwordRate() : who == CharacterId.Clockmaker ? ClockRate() : 1f) * Paths.RateMul();
+    float RateMultiplier() => (who == CharacterId.Swordsman ? SwordRate() : who == CharacterId.Clockmaker ? ClockRate() : who == CharacterId.Wrestler ? WrRate() : 1f) * Paths.RateMul();
 
     // 2.1.3: 고유 스킬이 그리는 이펙트 · 코루틴도 출처를 이어 감 (Fx 가 스킬 이펙트를 눈에 띄게)
     public new Coroutine StartCoroutine(System.Collections.IEnumerator routine) => base.StartCoroutine(DamageSource.Keep(routine));
@@ -290,6 +332,11 @@ public partial class SignatureSkills : MonoBehaviour
             case CharacterId.Cartographer: MapTick(); break;
             case CharacterId.Clockmaker: ClockTick(); break;
             case CharacterId.Ghost: GhostTick(); break;
+            case CharacterId.Wrestler: WrTick(); break;
+            case CharacterId.Foreman: FmTick(); break;
+            case CharacterId.Puppeteer: PupTick(); break;
+            case CharacterId.Undertaker: UtTick(); break;
+            case CharacterId.Photographer: PhTick(); break;
         }
         CommonTick();
         }
@@ -321,6 +368,11 @@ public partial class SignatureSkills : MonoBehaviour
         if (who == CharacterId.Clockmaker) return ClockStack(key);
         if (who == CharacterId.Postman) return PostStack(key);
         if (who == CharacterId.Ghost) return GhostStack(key);
+        if (who == CharacterId.Wrestler) return WrStack(key);
+        if (who == CharacterId.Foreman) return FmStack(key);
+        if (who == CharacterId.Puppeteer) return PupStack(key);
+        if (who == CharacterId.Undertaker) return UtStack(key);
+        if (who == CharacterId.Photographer) return PhStack(key);
         return null;
     }
 

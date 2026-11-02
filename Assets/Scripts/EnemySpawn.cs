@@ -67,7 +67,8 @@ public class EnemySpawner : MonoBehaviour
     bossbar bossbar;
 
     public StageConfig Stage => stages[Mathf.Clamp(stageIndex, 0, stages.Length - 1)];
-    SpawnPhase Phase => Stage.phases[Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
+    // 2.0.0~ 역류: 15분째 몸에서 시작하므로 처음부터 마지막 페이즈 (몹 종류는 RefluxRun.MobTier 가 가상 시간으로 거름 · 수와 간격은 MobRamp 가 줄임)
+    SpawnPhase Phase => Stage.phases[ModeRun.Reflux ? Stage.phases.Length - 1 : Mathf.Clamp(paze - 1, 0, Stage.phases.Length - 1)];
     // 보스를 뺀 적은 (소환 포함) 최대 20마리
     public const int AliveLimit = 20;
     // 1.0.4~ 무한 모드 최종 보스 「개발자」를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (1.0.7~ 일반 적은 다시 나옴)
@@ -81,6 +82,8 @@ public class EnemySpawner : MonoBehaviour
         : Density > 1f
             ? Mathf.Min(Chapters.StoryAliveCap, Mathf.RoundToInt((Mathf.Min(AliveLimit, Chapters.MaxAlive(stageIndex, Phase.maxAlive)) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0)) * Density))
             : Mathf.Min(AliveLimit + GameMode.ExtraAliveCount, Chapters.MaxAlive(stageIndex, Phase.maxAlive) + GameMode.ExtraAliveCount + (bossSpawned ? bossExtraAlive : 0));
+    // 2.0.0~ 지금 한 화면 최대 수 (읽기 전용 · 사진사 해금 「북적이는 장면」이 기준을 이 수에 맞춤) — 스포너가 없으면 0
+    public static int MaxAliveNow => live != null ? live.MaxAlive : 0;
     // 1.4.7~ 이야기 모드 적 수 배율 (Chapters.StoryDensity · 이 장이 시작된 뒤 흐른 시간 기준)
     float stageStartedAt;
     float Density => Chapters.StoryDensity(stageIndex, Time.time - stageStartedAt);
@@ -245,7 +248,7 @@ public class EnemySpawner : MonoBehaviour
     // 지금 페이즈에 나오는 적 중 하나를 크고 단단하게 만들어 소환 (처치하면 특수 능력 포인트)
     public void SpawnMidBoss()
     {
-        if (NoMobs) return;
+        if (NoMobs || ModeRun.Reflux) return;       // 2.0.0~ 역류는 중간 보스가 없음
         var candidates = new System.Collections.Generic.List<GameObject>();
         for (int i = 0; i < Stage.enemies.Length; i++)
             if (Weight(Phase.weights, i) > 0f && Stage.enemies[i] != null) candidates.Add(Stage.enemies[i]);
@@ -291,15 +294,16 @@ public class EnemySpawner : MonoBehaviour
     GameObject Pick(float[] weights)
     {
         GameObject[] enemies = Stage.enemies;
+        bool reflux = ModeRun.Reflux;       // 2.0.0~ 역류: 가상 시간에 맞는 장의 적만 (MobTier)
         float total = 0f;
-        for (int i = 0; i < enemies.Length; i++) total += Weight(weights, i);
+        for (int i = 0; i < enemies.Length; i++) total += Weight(weights, i) * (reflux ? RefluxRun.TierMul(EndlessMode.EnemyTierOf(i)) : 1f);
 
         if (total <= 0f) return enemies[0];
 
         float roll = Random.Range(0f, total);
         for (int i = 0; i < enemies.Length; i++)
         {
-            roll -= Weight(weights, i);
+            roll -= Weight(weights, i) * (reflux ? RefluxRun.TierMul(EndlessMode.EnemyTierOf(i)) : 1f);
             if (roll < 0f) return enemies[i];
         }
         return enemies[enemies.Length - 1];

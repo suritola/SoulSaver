@@ -329,6 +329,11 @@ public class BossMemory : MonoBehaviour
                 CharacterId.Clockmaker => "bossmem.noun.clockmaker",
                 CharacterId.Postman => "bossmem.noun.postman",
                 CharacterId.Ghost => "bossmem.noun.ghost",
+                CharacterId.Wrestler => "bossmem.noun.wrestler",
+                CharacterId.Foreman => "bossmem.noun.foreman",
+                CharacterId.Puppeteer => "bossmem.noun.puppeteer",
+                CharacterId.Undertaker => "bossmem.noun.undertaker",
+                CharacterId.Photographer => "bossmem.noun.photographer",
                 _ => "bossmem.noun.gunner",
             });
         }

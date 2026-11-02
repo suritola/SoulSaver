@@ -213,7 +213,7 @@ public class MapProps : MonoBehaviour
             for (int i = socks.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (socks[i], socks[j]) = (socks[j], socks[i]); }
             foreach (Vector3 s in socks)
             {
-                if (Vector2.Distance(s, me) < minFromPlayer || Hostile.WallNear(s, clear)) continue;
+                if (Vector2.Distance(s, me) < minFromPlayer || Hostile.WallNear(s, clear) || DesertSecrets.NearAny(s)) continue;
                 bool used = false;
                 foreach (Vector3 t in taken) if (Vector2.Distance(s, t) < 1f) { used = true; break; }
                 if (!used) return s;
@@ -230,7 +230,7 @@ public class MapProps : MonoBehaviour
             float score = Mathf.Min(Vector2.Distance(at, me) / minFromPlayer, 2f);
             foreach (Vector3 t in taken) score = Mathf.Min(score, Vector2.Distance(at, t) / MinBetween);
             if (score > anyScore) { anyScore = score; anyBest = at; }
-            if (Hostile.WallNear(at, clear)) continue;
+            if (Hostile.WallNear(at, clear) || DesertSecrets.NearAny(at)) continue;
             if (score >= 1f) return at;
             if (score > bestScore) { bestScore = score; best = at; }
         }

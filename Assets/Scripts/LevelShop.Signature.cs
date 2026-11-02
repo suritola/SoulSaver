@@ -29,6 +29,11 @@ public partial class LevelShop
         new[] { "t.overclock", "t.alarm", "t.cog", "t.pocket", "t.minute", "t.echo", "t.spring", "t.loop", "t.borrowed", "t.stopwatch" },
         new[] { "p.express", "p.postmark", "p.bag", "p.chain", "p.route", "p.receipt", "p.weather", "p.overnight", "p.address", "p.junk" },
         new[] { "h.grudge", "h.wail", "h.chill", "h.drain", "h.phase", "h.wisp", "h.curse", "h.polter", "h.frostbite", "h.procession" },
+        new[] { "wr.lasso", "wr.ringslam", "wr.belly", "wr.bullrush", "wr.tamp", "wr.grit", "wr.combo", "wr.giant", "wr.snowball", "wr.parade" },       // 씨름꾼 (2.0.0 · 앞글자 wr. — w. 는 영혼 트리가 씀)
+        new[] { "b.overtime", "b.rebar", "b.roller", "b.crane", "b.safety", "b.cement", "b.overload", "b.detour", "b.salvage", "b.later" },       // 공사 반장 (2.0.0 · 앞글자 b. — Evo 앞말 be.)
+        new[] { "m.spotlight", "m.twang", "m.voice", "m.stuffing", "m.tightrope", "m.curtaindrop", "m.encore", "m.tangle", "m.tpose", "m.snap" },       // 인형사 (2.0.0 · 앞글자 m. — Evo 앞말 me.)
+        new[] { "y.lid", "y.trench", "y.hand", "y.wall", "y.bier", "y.mourn", "y.empty", "y.notice", "y.ledger", "y.alive" },       // 장의사 (2.0.0 · 앞글자 y. — Evo 앞말 ye.)
+        new[] { "x.flash", "x.selfie", "x.timer", "x.cutout", "x.overexpose", "x.motion", "x.album", "x.chance", "x.darkroom", "x.group" },       // 사진사 (2.0.0 · 앞글자 x. — Evo 앞말 xe.)
     };
 
     static int Who(CharacterId who) => Mathf.Clamp((int)who, 0, SigKeys.Length - 1);
@@ -237,6 +242,56 @@ public partial class LevelShop
             Evo("he.doom", "파멸", "저주가 둘레 20칸의 모든 적에게 걸립니다.", 934, GlareId, S(6)),
             Evo("he.house", "소란한 집", "폴터가이스트가 적 셋을 한꺼번에 들어 올립니다.", 935, KnockId, S(7)),
             Evo("he.glacier", "빙하", "얼음 파편에 맞은 적이 곧바로 얼어붙습니다.", 936, ExtraBId, S(8)),
+        },
+        new[]   // 씨름꾼 (2.0.0 · 아이콘 940번대)
+        {
+            Evo("wre.strike", "스트라이크 장사", "한 번에 핀을 다섯 넘게 쓰러뜨리면 볼이 터지며 핀들이 사방으로 흩어져 각자 한 번씩 더 굴러갑니다. (2세대까지)", 940, PierceId, S(8)),
+            Evo("wre.dohyo", "천하 도효", "모래판이 1.4배 넓어지고, 링아웃마다 모래판이 1초 더 남으며 장외 패대기가 두 배로 넓게 터집니다.", 941, GlareId, S(1)),
+            Evo("wre.wall", "철벽 샅바", "들고 있는 동안 밀리지 않고, 황소 돌진이 들이받은 적을 핀처럼 날려 보내며, 돌진하는 동안 뒤에서 오는 투사체도 막습니다.", 942, KnockId, S(3)),
+            Evo("wre.slam", "천지 메치기", "들어 올릴 때와 떨어질 때 모두 둘레 2칸에 쿵이 울리고, 둘을 들어 던지면 둘이 X자로 엇갈려 날아갑니다.", 943, MultiId, S(2)),
+            Evo("wre.bull", "황금 황소", "보스 배지기 두 번째마다 뒤집기가 되고, 뒤집을 때 황금 황소가 달려와 보스를 들이받습니다. (공격력 300%)", 944, ExtraAId, S(7)),
+            Evo("wre.ringstrike", "장외 스트라이크", "볼에 튕긴 보통 적까지 경계를 넘으면 링아웃되고, 링아웃마다 모래판이 0.5초 더 남습니다.", 945, ExtraBId, S(4)),
+            Evo("wre.giantbull", "황소 장사", "천하장사로 든 적이 보스가 아니면 메친 뒤에도 4초 동안 머리 위 방패로 남고(끈기 보호막 두 배), 그 적을 던지면 천하장사 충격파가 한 번 더 퍼집니다. (공격력 150%)", 946, S(5), S(9)),
+        },
+        new[]   // 공사 반장 (2.0.0 · 아이콘 950번대)
+        {
+            Evo("be.dozer", "불도저", "더미 상한이 1.5배가 되고, 삽날이 1칸 더 멀리서 적을 빨아들입니다. 과적으로 굴러떨어진 적은 다시 더미 끝에 붙습니다.", 950, PierceId, S(6)),
+            Evo("be.truck", "덤프 트럭", "덤프한 흙이 착지한 뒤 한 번 더 앞으로 쏟아지고(피해 60%), 철근이 두 배로 튀어나갑니다.", 951, ExtraBId, S(1)),
+            Evo("be.concrete", "콘크리트", "굳은 적이 쓰러지면 콘크리트 덩이(무게 2)가 남고, 덤프하면 바위처럼 꿰뚫으며 굴러갑니다. 잔해 최대가 두 배가 됩니다.", 952, MultiId, S(5)),
+            Evo("be.closed", "통행 금지", "바리케이드가 다섯 개로 늘고 서로 테이프로 이어져, 테이프를 넘는 적이 빠각 피해를 받고 튕겨 나갑니다.", 953, GlareId, S(7)),
+            Evo("be.zero", "무재해 100일", "더미가 막은 적 투사체를 앞으로 되튕기고(공격력 80%), 안전 제일의 피해 감소가 두 배가 됩니다.", 954, ExtraAId, S(4)),
+            Evo("be.pile", "항타기", "빠각 충격파가 세 번 연달아 내리찍고, 롤러 자국이 두 배로 넓고 오래 남습니다.", 955, KnockId, S(2)),
+            Evo("be.release", "정식 출시", "공정률이 곧바로 100%가 되고 완공 쇠공이 두 개씩 떨어지며, 자재 회수 확률이 두 배가 됩니다. 「얼리 액세스 종료!」", 956, S(8), S(9)),
+        },
+        new[]   // 인형사 (2.0.0 · 아이콘 960번대)
+        {
+            Evo("me.harp", "하프 현", "실 자국도 줄과 같은 피해로 베고, 현 울림 파동이 0.3초 뒤 한 번 더 퍼집니다.", 960, PierceId, S(1)),
+            Evo("me.armor", "갑옷 인형", "T 자세 쉬는 시간이 1.5초에서 0.8초가 되고, 큰 휘두름이 더미 둘레의 적 투사체를 쳐냅니다.", 961, MultiId, S(8)),
+            Evo("me.quickchange", "퀵 체인지", "남은 더미가 끄는 시간이 끝날 때 터지고 (공격력 200%), 막 내림 범위가 두 배가 됩니다.", 962, GlareId, S(5)),
+            Evo("me.troupe", "극단", "커튼콜의 더미가 넷에서 여섯이 되고, 앙코르로 남는 더미가 둘이 됩니다.", 963, ExtraBId, S(6)),
+            Evo("me.strings", "천 가닥의 실", "꼭두각시가 풀릴 때 실이 가까운 적 둘에게 옮겨 가 실 2를 쌓고, 끊어진 실이 두 번 튑니다.", 964, KnockId, S(7)),
+            Evo("me.exit", "가르는 퇴장", "자리를 바꾸는 순간 실 퉁기기가 저절로 터지고, 바꿀 때 가르는 피해가 두 배가 됩니다.", 965, ExtraAId, S(9)),
+            Evo("me.bodyguard", "인형 호위대", "복화술로 끌려온 적이 1초 동안 꼭두각시처럼 영웅을 치지 않고, 그 적을 쓰러뜨리면 솜 채우기 회복이 두 배가 됩니다.", 966, S(3), S(2)),
+        },
+        new[]   // 장의사 (2.0.0 · 아이콘 970번대)
+        {
+            Evo("ye.mass", "집단 매장", "갇힌 적끼리 짓눌려 0.5초마다 공격력 25%를 받고, 관 뚜껑 충격이 0.4초 뒤 한 번 더 퍼집니다.", 970, PierceId, S(0)),
+            Evo("ye.keeper", "묘지기의 담", "흙담이 5칸까지 이어지고, 흙담에 닿은 적은 0.5초 묶이며 비문 효과를 받습니다.", 971, ExtraAId, S(3)),
+            Evo("ye.catacomb", "지하 묘도", "도랑 끝에 작은 구멍(반지름 1칸)이 저절로 열리고, 도랑 위의 적도 매장 피해(110%)를 받습니다.", 972, MultiId, S(1)),
+            Evo("ye.state", "국장", "장례 때 종이 세 번 울리고(두 번째 · 세 번째는 둘레 적에게 피해 40%), 장례로 쓰러진 적마다 게이지 1%를 돌려받습니다. (최대 25%)", 973, GlareId, S(7), S(8)),
+            Evo("ye.robber", "무덤 털이", "되파기로 무너진 묘비가 코인 1개와 관 하나(운구 피해)를 내보내고, 유령 손이 둘씩 뻗습니다.", 974, ExtraBId, S(4), S(2)),
+            Evo("ye.haven", "안식처", "산 자의 무덤에서 나온 자리에 큰 묘비가 솟고, 추모 효과가 두 배가 되며, 쉬는 시간이 60초 → 40초가 됩니다.", 975, S(5), S(9)),
+            Evo("ye.antlion", "개미지옥", "빈 무덤 함정이 둘레 2칸 적을 끌어당기고, 한 번에 세 마리까지 빠뜨립니다.", 976, KnockId, S(6)),
+        },
+        new[]   // 사진사 (2.0.0 · 아이콘 980번대)
+        {
+            Evo("xe.night", "야경", "남은 틀이 커서를 따라 끌려가며 1초 동안 빛 궤적을 남깁니다. 궤적에 닿은 적은 0.3초마다 공격력 25%를 받습니다.", 980, PierceId, S(5)),
+            Evo("xe.track", "추적 초점", "자동 초점이 체력이 가장 많은 적을 잠그고, 잠긴 적이 예고 중이면 언제 찍어도 셔터 찬스 + 1초 기절입니다. (보스는 피해만)", 981, ExtraAId, S(7)),
+            Evo("xe.studio", "스튜디오", "인화 자리에 조명이 3초 서서 사본에 끌린 적을 0.5초마다 1초 종이로 만들고, 사본이 찢어질 때 끌어당긴 적을 모두 종이로 만듭니다.", 982, ExtraBId, S(8)),
+            Evo("xe.confetti", "색종이 폭풍", "종잇조각이 맞힌 적에게서 조각 한 장이 더 튀고 (최대 2세대), 종이비행기가 적 셋을 꿰뚫습니다.", 983, KnockId, S(3)),
+            Evo("xe.typhoon", "태풍 파노라마", "파노라마 커튼이 되돌아오며 한 번 더 지나가고, 날아간 종이 적이 화면 끝에서 되튕겨 한 번 더 부딪힙니다.", 984, MultiId, GlareId),
+            Evo("xe.flipbook", "플립북", "걸작을 찍으면 앨범이 넘어가며 같은 틀이 0.4초 간격으로 세 번 더 찍힙니다. (피해 40%)", 985, S(6), S(4)),
+            Evo("xe.memorial", "기념 앨범", "셀프 타이머도 기념 사진이 되고, 타이머 카메라가 두 대 섭니다.", 986, S(9), S(2)),
         },
     };
 
@@ -458,6 +513,7 @@ public partial class LevelShop
     // 업적: 첫 스킬 진화 · 한 판에 3번 · 서로 다른 진화 15종 (캐릭터별 진화를 이 PC에 누적)
     void EvolveAchievements(SkillEvo e)
     {
+        if (ModeRun.Reflux) return;         // 2.0.0~ 역류의 자동 채우기가 진화를 공짜로 만들므로 업적 · 도감을 세지 않음
         SteamAchievements.Unlock(SteamAchievements.SkillEvolve);
         if (evolved.Count >= 3) SteamAchievements.Unlock(SteamAchievements.SkillEvolve3);
         if (GameInput.Auto) return;
@@ -511,6 +567,15 @@ public partial class LevelShop
         { "pe.reply", (1.5f, new[] { S(7) }) },         // 익일 배송
         { "pe.flyers", (1.6f, new[] { S(9) }) },        // 광고 전단
         { "he.banshee", (1.6f, new[] { S(1) }) },       // 곡소리
+        { "be.truck", (1.5f, new[] { S(1) }) },         // 철근 (공사 반장)
+        { "be.concrete", (1.4f, new[] { S(5) }) },      // 시멘트
+        { "be.closed", (1.4f, new[] { S(7) }) },        // 우회로
+        { "me.harp", (1.5f, new[] { S(1) }) },          // 현 울림 (인형사)
+        { "me.exit", (1.4f, new[] { S(9) }) },          // 실 퉁기기
+        { "ye.mass", (1.4f, new[] { S(0) }) },          // 관 뚜껑 (장의사)
+        { "ye.robber", (1.4f, new[] { S(4) }) },        // 운구
+        { "xe.night", (1.3f, new[] { S(5) }) },         // 흔들린 사진 (사진사)
+        { "xe.confetti", (1.3f, new[] { S(3) }) },      // 오려 붙이기
     };
 
     public static float EvoPowMul(SkillEvo e) => e != null && EvoPowTable.TryGetValue(e.key, out var v) ? v.mul : 1f;

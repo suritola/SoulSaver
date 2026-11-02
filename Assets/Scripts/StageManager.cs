@@ -262,8 +262,11 @@ public class StageManager : MonoBehaviour
         if (endless) PrepareEndless();
         else if (Chapters.First != 0) PrepareFirstChapter();
         else ArenaLayout.EnsureLaid(EndlessTerrain.Cave);          // 1장 묘역 (ShowStageMap 을 거치지 않음)
-        yield return StoryDirector.Intro(endless);
-        yield return HeroGuide.Show(this);                  // 1.1.9~ 이 영웅으로 처음이면 평타 · 필살기 · 머리 위 막대 안내 (한 번)
+        if (!ModeRun.Reflux)        // 2.0.0~ 역류는 이야기 · 영웅 안내 없이 바로 (RefluxDirector 의 자동 채우기 · 배너)
+        {
+            yield return StoryDirector.Intro(endless);
+            yield return HeroGuide.Show(this);                  // 1.1.9~ 이 영웅으로 처음이면 평타 · 필살기 · 머리 위 막대 안내 (한 번)
+        }
         // 무한 모드 (1.8.7~): 시작할 때는 진화하지 않고, 보스를 잡을 때마다 1차 → 2차 → 각성 (최대 3번)
         if (endless && !Evo) yield return PickEndlessSpecials();
         Contracts.BeginRun();                                   // 1.2~ 영혼 계약 세 장 (화면 아래 · 멈추지 않음)
@@ -389,7 +392,7 @@ public class StageManager : MonoBehaviour
     bool glowWritten = true;     // 1.1.9: 꺼진 모습을 아직 안 썼으면 true
     void UpdateSoulTreeButton()
     {
-        bool show = started && !transitioning && !upgradeOpen && !evolving && !GameInput.TrailerRunning;
+        bool show = started && !transitioning && !upgradeOpen && !evolving && !GameInput.TrailerRunning && !ModeRun.Reflux;      // 2.0.0~ 역류는 영혼 트리가 없음
         if (upgradeButton == null) return;
         if (upgradeButton.activeSelf != show) upgradeButton.SetActive(show);
         if (!show) return;
@@ -494,6 +497,7 @@ public class StageManager : MonoBehaviour
     public void OpenSoulTree()
     {
         // 상점, 레벨업, 일시정지 중에는 열지 않음
+        if (ModeRun.Reflux) return;         // 2.0.0~ 역류는 영혼 트리가 없음
         if (upgradeOpen || evolving || Time.timeScale == 0f || specials == null || SoulTreeUI.IsOpen) return;
         // 1.5.9~ 거너 일제 사격 조준(시간 0.5)도 ESC 처럼 쏘지 않고 거둠 (게이지는 그대로) — 트리 안에서 우클릭을 떼면 닫은 뒤 조준 상태에 갇혀 움직이지도 쏘지도 못했음
         PlayerController pc = Hostile.Player;

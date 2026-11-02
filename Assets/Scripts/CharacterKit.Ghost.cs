@@ -168,6 +168,7 @@ public partial class CharacterKit
             if (e != null) e.Slow(0f, FreezeTime);
             Fx.Spawn("fx_sparkle", g.transform.position, 1.6f, Chill, 20f);
             Play("freeze", 0.5f, 1f);
+            Impact.Hit(ImpactTier.Attack, g.transform.position);     // 2.0.0~ 손맛 연출: 냉기 다섯 겹으로 적이 얼어붙는 순간
             RunCounters.Both("freeze");             // 1.2~ 영혼 계약 · 보드
             SignatureSkills.Frozen(g);
             Paths.Safe(() => GhostPaths.Froze(g, Time.time + FreezeTime));    // 갈래 혹한 공명 II: 풀릴 때 냉기 파동 (예외가 나도 빙결 흐름은 끊기지 않게)
@@ -713,6 +714,7 @@ public partial class CharacterKit
             Fx.Spawn("fx_shock", at, radius * 2f, Chill, 18f);
             ShockRing.Spawn(at, 0.5f, radius, 0.4f, Chill, 0.25f);
             Hostile.Shake(0.25f);
+            if (!chained) Impact.Hit(ImpactTier.Ult, at);     // 2.0.0~ 손맛 연출: 빙의가 터지는 순간 (이어진 빙의는 빼서 두 번 터지지 않게)
             Play("boom", 0.8f, 0.8f);
             Play("wail", 0.8f, 0.8f);
             Play("freeze", 0.7f, 0.8f);

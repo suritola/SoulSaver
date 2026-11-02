@@ -138,7 +138,9 @@ public static class GameMode
     }
     // 무한 모드 판이 진행 중일 때만 (메뉴에서는 0)
     public static float EndlessSeconds => IsEndless && endlessClockOn && EndlessMode.Instance != null ? Mathf.Max(0f, Time.time - endlessStart) : 0f;
-    static float Ramp => EndlessRampAt(EndlessSeconds);
+    // 2.0.0~ 역류: 곡선 식은 그대로, 넣는 시간만 뒤집음 (899 − 1.5 × 실제 초 · RefluxRun.VirtualSeconds) — 평소엔 EndlessSeconds
+    public static float RampSeconds => RefluxRun.Active ? RefluxRun.VirtualSeconds : EndlessSeconds;
+    static float Ramp => EndlessRampAt(RampSeconds);
     // 1.4.2~ 그 시각의 보스 강도 (Ramp 와 같은 식) — 최후의 시간 뒤 무리를 15:00 체력으로 맞출 때 씀 (EndlessMode.SpawnWave2)
     public static float EndlessRampAt(float s)
     {
@@ -152,22 +154,22 @@ public static class GameMode
     //   0분 0.6 · 3분 0.8 · 5분 1.0 · 10분 1.7 · 15분 2.8 · 20분 4.6 · 25분 7.7 · 약 27분에 최대 10
     // 체력 · 주는 피해 · 스킬 간격 · 나오는 간격 · 한 화면 수에 씀, 보스 체력과 보스 · 중간 보스 주기는 그대로 Ramp
     const float MobStart = 0.6f, MobGrowth = 0.102f;      // 1분마다 e^0.102 ≈ 1.107배
-    static float MobRamp => IsEndless ? Mathf.Min(EndlessRampMax, MobStart * Mathf.Exp(MobGrowth * EndlessSeconds / 60f)) : 1f;
+    static float MobRamp => IsEndless ? Mathf.Min(EndlessRampMax, MobStart * Mathf.Exp(MobGrowth * RampSeconds / 60f)) : 1f;
 
     // 최종 국면 (1.0.2 · 1.0.4~ 30분 → 15분, EndlessMode.FinalAt): 그때부터 적이 기하급수로 — 1분마다 2배씩 더 자주 · 더 많이 (약 4분에 최대 16배)
     //   1.0.4~ 개발자가 나온 뒤로는 잡몹 자체가 나오지 않음 (EnemySpawner.NoMobs)
     // 1.4.2~ 최후의 시간(EndlessMode.FinalPhase)은 2분마다 2배 (왕 국면이 길어져도 폭증이 지금 왕 국면 수준 · 최대 16배 그대로)
     //   15:00 을 보스 처치 0 으로 넘긴 모래 폭풍 판은 1분마다 2배 그대로 (벌칙을 약하게 하지 않음 · 무한 30분 기획 B4)
     const float SurgeGrowth = 0.693f, SurgeGrowthFinal = 0.347f, SurgeMax = 16f;
-    static float Surge => IsEndless && EndlessSeconds >= EndlessMode.FinalAt
-        ? Mathf.Min(SurgeMax, Mathf.Exp((EndlessMode.Instance != null && EndlessMode.Instance.FinalPhase ? SurgeGrowthFinal : SurgeGrowth) * (EndlessSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
+    static float Surge => IsEndless && RampSeconds >= EndlessMode.FinalAt
+        ? Mathf.Min(SurgeMax, Mathf.Exp((EndlessMode.Instance != null && EndlessMode.Instance.FinalPhase ? SurgeGrowthFinal : SurgeGrowth) * (RampSeconds - EndlessMode.FinalAt) / 60f)) : 1f;
 
     // 1.1.7~ 무한 모드 초반 완화: 처음 5분은 잡몹 체력 ×0.5 · 받는 피해 ×0.6 · 보스 체력 ×0.5 · 적 스킬 간격 ×1.5 로 시작하고
     //   5분 → 9분 사이에 SmoothStep 으로 1 에 합류 (9분 뒤 · 최종 국면 · 개발자 · 엄마 · 한계 돌파는 그대로)
     //   1.1.4 잡몹 +40% · 1.1.6 피해 ×0.8 이 무한 초반에 겹쳐 처치 시간이 1.1.3 대비 ×1.75 였음 (이야기 모드의 1장 완화는 무한에 걸리지 않음)
     const float EarlyHold = 300f, EarlyEnd = 540f;
     const float EarlyHp = 0.5f, EarlyHurt = 0.6f, EarlyBoss = 0.5f, EarlySkill = 1.5f;
-    static float EarlyT => IsEndless ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(EarlyHold, EarlyEnd, EndlessSeconds)) : 1f;
+    static float EarlyT => IsEndless ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(EarlyHold, EarlyEnd, RampSeconds)) : 1f;
     static float Early(float mul) => Mathf.Lerp(mul, 1f, EarlyT);
 
     // 무한 모드 강도 (1 = 기본). 보스 간격 · 중간 보스 주기 등에 씀

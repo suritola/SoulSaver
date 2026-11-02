@@ -234,7 +234,7 @@ public class bosss : MonoBehaviour
         }
 
         // 적 → 플레이어 방향 계산
-        move = (EnermyController.Decoy != null ? EnermyController.Decoy.position : player.position) - transform.position;
+        move = (EnermyController.Decoy != null && EnermyController.DecoyBossToo ? EnermyController.Decoy.position : player.position) - transform.position;       // 2.0.0~ 인형사 미끼는 보스가 쫓지 않음
 
         // z축 제거
         move.z = 0;

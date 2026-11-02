@@ -9,7 +9,7 @@
 #   pwsh tools/autoplay/run.ps1 -Hero Archer,Rogue -Path1 2 -NoDeath                                   (쓰러져도 계속 · 사망 횟수만 셈)
 #   pwsh tools/autoplay/run.ps1 -Hero Clockmaker,Swordsman -NoDeath -HoardLevels 5 -OutName 2026-10-2x-2차-쌓기   (레벨업 쌓아 두기 · 1.4.2~)
 # 인자:
-#   -Hero      영웅 이름 (Gunner Swordsman Rogue Archer Alchemist Cartographer Clockmaker Postman Ghost · 쉼표 · all)
+#   -Hero      영웅 이름 (Gunner Swordsman Rogue Archer Alchemist Cartographer Clockmaker Postman Ghost Wrestler Foreman Puppeteer Undertaker Photographer · 쉼표 · all)
 #   -Path1     첫 갈래: 0~4 · 갈래 키(g.snipe) · 상수 이름(Snipe) · random · all(0~4 모두)
 #   -Path2     두 번째 갈래: 0~4 · 키 · 이름 · single(외길) · random · all(첫 갈래와 다른 넷 + 외길)  /  -Single 은 -Path2 single 과 같음
 #   -Runs      조합마다 판 수 · -Seed 첫 시드 (판마다 +1)
@@ -59,7 +59,7 @@ $Out = Join-Path (Join-Path $Work "AutoplayOut") $OutName
 New-Item -ItemType Directory -Force $Out | Out-Null
 
 # ---------------------------------------------------------------- 계획 (영웅 × 갈래1 × 갈래2 × 판)
-$AllHeroes = "Gunner", "Swordsman", "Rogue", "Archer", "Alchemist", "Cartographer", "Clockmaker", "Postman", "Ghost"
+$AllHeroes = "Gunner", "Swordsman", "Rogue", "Archer", "Alchemist", "Cartographer", "Clockmaker", "Postman", "Ghost", "Wrestler", "Foreman", "Puppeteer", "Undertaker", "Photographer"      # 2.0.0~ 새 영웅 5
 $heroes = @($Hero -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if ($heroes -contains "all") { $heroes = $AllHeroes }
 foreach ($h in $heroes) { if ($h -notin $AllHeroes) { throw "모르는 영웅: $h" } }

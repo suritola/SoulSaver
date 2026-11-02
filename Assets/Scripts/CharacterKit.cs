@@ -35,7 +35,7 @@ public partial class CharacterKit : MonoBehaviour
     public float AttackSpeedMul => FormRate * SignatureSkills.AttackRateMul;          // 진화 형태에 따라 (전쟁 망치는 느리게, 독침 대롱은 빠르게)
     // 궁수: 시위를 당기는 동안 40% 느려짐 (1.0.1: 쏘면서 마음대로 도망칠 수 있어 위험이 없었음)
     // 1.0.4~: 유령이 빙의해 적의 몸을 끌고 다니는 동안은 그 적의 이동 속도 그대로 (CharacterKit.Ghost · PossessMoveMul)
-    public float MoveMul => possessSpeed >= 0f ? PossessMoveMul() : DrawsBow && drawing ? 0.6f : 1f;
+    public float MoveMul => (possessSpeed >= 0f ? PossessMoveMul() : DrawsBow && drawing ? 0.6f : 1f) * WrWalkMul;      // 2.0.0~ 씨름꾼: 적을 들면 무게만큼 느려짐
     public string WeaponName => Loc.T(def.weapon);
     // 탄창이 있는 캐릭터 (도적 표창 6발): 다 쓰면 거너처럼 재장전
     public bool UsesAmmo => def.mag > 0;
@@ -97,15 +97,31 @@ public partial class CharacterKit : MonoBehaviour
         if (reagentTag != null) Destroy(reagentTag);
         if (ultAimLine != null) Destroy(ultAimLine.gameObject);
         if (ultAimRing != null) Destroy(ultAimRing.gameObject);
+        // 2.0.0~ 영혼 릴레이가 판 중간에 키트를 갈아 끼워도 남지 않게: 우클릭 충전 고리 (검사 · 연금술사) · 비 조준 고리 (궁수) · 시위 선
+        if (ring != null) Destroy(ring.gameObject);
+        if (aimRing != null) Destroy(aimRing.gameObject);
+        if (bowLine != null) bowLine.enabled = false;
         OnDestroyCartographer();
         OnDestroyClockmaker();
         OnDestroyPostman();
         OnDestroyGhost();
+        OnDestroyWrestler();
+        OnDestroyForeman();
+        OnDestroyPuppeteer();
+        OnDestroyUndertaker();
+        OnDestroyPhotographer();
         OnDestroyRules();
     }
 
-    void Start()
+    void Start() => ApplyDef();
+
+    // 2.0.0~ 영웅 정의 적용 (스탯 배율 · 몸 그림): 원래는 Start 에서 한 번이지만, 영혼 릴레이가 판 중간에 키트를 갈아 끼울 때는
+    //   다음 프레임의 Start 를 기다리면 이어하기 재생이 넣은 체력을 PlayerHealth = Max 가 덮으므로 교대가 바로 부름 (defApplied 로 두 번 하지 않음)
+    bool defApplied;
+    public void ApplyDef()
     {
+        if (defApplied) return;
+        defApplied = true;
         // 거너 기준 스탯 배율
         player.PlayerMaxHealth *= def.hp;
         player.PlayerHealth = player.PlayerMaxHealth;
@@ -151,6 +167,11 @@ public partial class CharacterKit : MonoBehaviour
         }
         lastPos = transform.position;
         UpdateReagentTag();
+        if (Id == CharacterId.Wrestler) WrLate();       // 2.0.0~ 씨름꾼: 들린 적 위치 · 투사체 막기 · 모래판 (CharacterKit.Wrestler)
+        else if (Id == CharacterId.Foreman) FmLate();    // 2.0.0~ 공사 반장: 더미 위치 · 바리케이드 · 투사체 막기 (CharacterKit.Foreman)
+        else if (Id == CharacterId.Puppeteer) PupLate();  // 2.0.0~ 인형사: 더미 따라가기 · 줄 판정 · 커튼콜 대형 (CharacterKit.Puppeteer)
+        else if (Id == CharacterId.Photographer) PhLate();  // 2.0.0~ 사진사: 뷰파인더 · 종이 적 · 인화 사본 (CharacterKit.Photographer)
+        else if (Id == CharacterId.Undertaker) UtLate();  // 2.0.0~ 장의사: 구멍 · 갇힌 적 · 묘비 · 조준 표시 (CharacterKit.Undertaker)
         UpdateKitRules();       // 궁수 숨 · 연금술사 불안정도 (CharacterKit.Rules)
     }
 
@@ -301,6 +322,7 @@ public partial class CharacterKit : MonoBehaviour
         player.FaceTowards(target);
         Vector3 start = player.MuzzlePosition;
         Vector2 dir = ((Vector2)(target - start)).normalized;
+        PlayerController.RaiseAttackFired(start, dir);      // 2.0.0~ 공격 신호
         int shots = Mathf.Max(1, player.multiShot);
         float dmg = Damage * player.MultiShotDamageRate(shots);
         // 그림자 은신: 오래 안 맞았으면 이번 평타가 강해짐
@@ -345,6 +367,15 @@ public partial class CharacterKit : MonoBehaviour
             case CharacterId.Ghost:
                 GhostAttack(start, dir, dmg, shots);        // 차가운 손길 (CharacterKit.Ghost)
                 break;
+            case CharacterId.Wrestler:
+                WrestlerAttack(start, dir, dmg, shots);     // 샅바 잡기 · 던지기 (CharacterKit.Wrestler)
+                break;
+            case CharacterId.Puppeteer:
+                PuppetAttack(start, dir, dmg, shots);       // 더미 휘두름 (CharacterKit.Puppeteer)
+                break;
+            case CharacterId.Photographer:
+                PhotoAttack(dmg, shots);                    // 셔터 (CharacterKit.Photographer)
+                break;
         }
     }
 
@@ -383,6 +414,7 @@ public partial class CharacterKit : MonoBehaviour
             WeakHit.Damage(c.gameObject, WeakShape.Arc(origin, dir, 10f, reach, 1.4f), Damage * sig * (combo ? 1.6f : 1f) * SwingHitMul(c, to.magnitude, reach)     /* 1.0.1: 연속 베기 2 → 1.6배 */, to.normalized, combo ? 4f : 3f);
             OnSwingHit(c, hits == 0);
             SignatureSkills.SwingHit(c);
+            if (combo && hits == 0) Impact.Hit(ImpactTier.Attack, c.transform.position, to.normalized);     // 2.0.0~ 손맛 연출: 연속 베기 마지막 타가 처음 명중한 순간
             Fx.Spawn("fx_sparkle", c.transform.position, 0.9f, new Color(0.8f, 0.9f, 1f), 24f);
             hits++;
         }
@@ -528,6 +560,19 @@ public partial class CharacterKit : MonoBehaviour
             Bullet b = Projectile(start, d, dmg, player.pene + 1, speed, 0f, "fx_arrow", 0.4f + 0.25f * draw + (perfect ? 0.15f : 0f), perfect ? new Color(1f, 0.8f, 0.25f) : draw >= 1f ? new Color(1f, 0.95f, 0.6f) : Color.white, false);
             if (b == null) continue;
             b.perfect = perfect;
+            if (perfect)
+            {
+                // 2.0.0~ 손맛 연출: 「완벽!」 화살이 처음 명중한 순간 (적 · 보스 모두, 첫 명중 한 번만)
+                bool perfectHit = false;
+                System.Action<Bullet, Collider2D> perfectImpact = (arrow, col) =>
+                {
+                    if (perfectHit || col == null) return;
+                    perfectHit = true;
+                    Impact.Hit(ImpactTier.Attack, col.transform.position, ((Vector2)(col.transform.position - start)).normalized);
+                };
+                b.onHitEnemy += perfectImpact;
+                b.onHitBoss += perfectImpact;
+            }
             ArrowForm(b, draw, start);
             if (draw >= 1f) b.pene += 1;                        // 가득 당기면 하나 더 꿰뚫음
             if (card[0] > 0 && draw >= 1f) b.onHitEnemy += (arrow, c) => SplitArrow(arrow, c);
@@ -593,6 +638,7 @@ public partial class CharacterKit : MonoBehaviour
                 Fx.Spawn("fx_alchemyblast", p, r * 2.4f, SkinFx.Tint(VisualRules.Kit(new Color(0.9f, 0.55f, 1f), new Color(0.55f, 1f, 0.93f))), 16f, 0f, AttackLook.AreaOrder - 2);
                 Fx.Spawn("fx_shock", p, r * 2.2f, VisualRules.Kit(new Color(0.85f, 0.5f, 1f, 0.8f), new Color(0.5f, 1f, 0.92f, 0.8f)), 20f);
                 Hostile.Shake(0.18f);
+                Impact.Hit(ImpactTier.Attack, p);     // 2.0.0~ 손맛 연출: 불안정 플라스크가 터지는 순간
                 Play("boom", 0.7f, 1.1f);
                 SignatureSkills.Flask(p, r, kind, true, new List<Collider2D>(caught), DeadCount(caught), conc > 1f);
                 return;
@@ -708,6 +754,21 @@ public partial class CharacterKit : MonoBehaviour
             case CharacterId.Ghost:
                 UpdatePossess(gauge, full);                 // 빙의
                 break;
+            case CharacterId.Wrestler:
+                UpdateGrandSlam(gauge, full);               // 천하장사 (CharacterKit.Wrestler.Ult)
+                break;
+            case CharacterId.Foreman:
+                UpdateWreckBall(gauge, full);               // 철거 공고 (CharacterKit.Foreman.Ult)
+                break;
+            case CharacterId.Puppeteer:
+                UpdatePuppetUlt(gauge, full);               // 자리 바꾸기 · 커튼콜 (CharacterKit.Puppeteer.Ult)
+                break;
+            case CharacterId.Undertaker:
+                UpdateFuneral(gauge, full);                 // 장례 (CharacterKit.Undertaker.Ult)
+                break;
+            case CharacterId.Photographer:
+                UpdatePanorama(gauge, full);                // 파노라마 (CharacterKit.Photographer.Ult)
+                break;
         }
     }
 
@@ -730,7 +791,7 @@ public partial class CharacterKit : MonoBehaviour
     LineRenderer ultAimLine, ultAimRing;
 
     // 1.1.9~ 필살기 조준 · 발동 중인지 (「필살기 누르면 토글」이 헛누름을 풀 때 씀)
-    public bool UltEngaged => ultAiming || charging || aiming || folding || rewinding || expressing || possessAiming;
+    public bool UltEngaged => ultAiming || charging || aiming || folding || rewinding || expressing || possessAiming || wrAiming || fmAiming || pupAiming || utBell || phPano;
 
     void CancelUltAim()
     {
@@ -748,6 +809,9 @@ public partial class CharacterKit : MonoBehaviour
         if (charging) { charging = false; if (ring != null) ring.enabled = false; }
         if (aiming) { aiming = false; if (aimRing != null) aimRing.enabled = false; }
         if (possessAiming) HidePossessAim();
+        if (wrAiming) WrHideUltAim();
+        if (pupAiming || pupPressed) { PupHideAim(); pupPressed = false; }
+        if (utBell) { utBell = false; UtHideUltAim(); }
         if (folding) CancelFold();
         if (expressing) { expressing = false; if (expressRing != null) expressRing.enabled = false; ClearExpressIcons(expressIcons); expressMarks.Clear(); }
         if (rewinding) CancelRewind();
@@ -898,6 +962,7 @@ public partial class CharacterKit : MonoBehaviour
             // 회전 베기: 누른 만큼 강해짐 (1.1.3: 3 + 5c → 2.5 + 4.5c, 밸런스 점검)
             float dmg = Damage * (2f + 3.5f * charge) * UltMul;      // 1.1.3 빌드 뒤 2.5 + 4.5c → 2 + 3.5c
             DamageCircle(transform.position, radius, dmg, 2.5f);
+            Impact.Hit(ImpactTier.Ult, transform.position);     // 2.0.0~ 손맛 연출: 회전 베기가 터지는 순간
             PlayerMotion.Of(this).Spin(0.45f, 2f);      // 몸동작: 회전 베기 (1.0.1)
             SignatureSkills.Spin(transform.position, radius, dmg, charge);
             Fx.Spawn("fx_spinslash", transform.position, radius * 2.4f, Color.white, 22f);
@@ -916,6 +981,7 @@ public partial class CharacterKit : MonoBehaviour
             FlaskLob.Throw(player.MuzzlePosition, at, 0.55f, 1.6f, new Color(0.8f, 1f, 0.7f), (p) =>
             {
                 DamageCircle(p, radius, dmg, 3f);
+                Impact.Hit(ImpactTier.Ult, p);     // 2.0.0~ 손맛 연출: 큰 플라스크가 떨어져 터지는 순간
                 SignatureSkills.BigFlask(p, radius);
                 Fx.Spawn("fx_alchemyblast", p, radius * 2.4f, Color.white, 16f);
                 if (Special != null) Special.SpawnZone(p, radius * 0.7f, 4f, Damage * 0.5f, new Color(0.45f, 1f, 0.35f, 0.7f));
@@ -970,12 +1036,14 @@ public partial class CharacterKit : MonoBehaviour
 
         HashSet<Collider2D> hit = new HashSet<Collider2D>();
         int ghosts = 0;
+        bool impacted = false;      // 2.0.0~ 손맛 연출: 돌진이 처음 적을 벤 순간 한 번 (게이지를 쓴 필살기 돌진만)
         Vector3 prev = from;
         for (float t = 0f; t < time; t += Time.deltaTime)
         {
             Vector3 p = Vector3.Lerp(from, to, t / time);
             transform.position = p;
             Cut(prev, p, width, dir, hit, gaugeDash);
+            if (!impacted && gaugeDash && hit.Count > 0) { impacted = true; Impact.Hit(ImpactTier.Ult, p, dir.normalized); }
             prev = p;
             // 보라 잔상과 그림자 줄기
             if (t >= ghosts * 0.03f)
@@ -991,6 +1059,7 @@ public partial class CharacterKit : MonoBehaviour
         }
         transform.position = to;
         Cut(prev, to, width, dir, hit, gaugeDash);
+        if (!impacted && gaugeDash && hit.Count > 0) Impact.Hit(ImpactTier.Ult, to, dir.normalized);
         Fx.Spawn("fx_stealth", to, 2.4f, new Color(1f, 0.7f, 0.8f), 18f);
         if (hit.Count > 0) Hostile.Shake(0.1f);
         if (card[3] > 0) StarBurst(to, 4 + 4 * card[3]);
@@ -1078,6 +1147,7 @@ public partial class CharacterKit : MonoBehaviour
         Friendly.Circle(center, radius, 0.4f, new Color(0.6f, 1f, 0.5f, 0.6f));
         SignatureSkills.Rain(center, radius);
         Play("whoosh", 0.8f, 0.9f);
+        Impact.Hit(ImpactTier.Ult, center);     // 2.0.0~ 손맛 연출: 화살비가 쏟아지기 시작하는 순간 (천공 극의의 두 번째 비는 따로 부르지 않음 — 0.25초 뒤 겹쳐 두 번 터지지 않게)
         // 몸집이 큰 보스는 화살이 거의 다 맞아 피해가 너무 컸음: 한 번의 화살비에 보스 하나당 6발까지만
         Dictionary<Collider2D, int> bossHits = new Dictionary<Collider2D, int>();
         // 2.1.8: 필살기 강화(UltMul)가 화살 수 대신 한 발 피해에 붙음 (보스는 6발 제한이라 화살 수가 늘어도 보스 피해는 그대로였음)
@@ -1147,6 +1217,8 @@ public partial class CharacterKit : MonoBehaviour
     {
         get
         {
+            if (Id == CharacterId.Wrestler) return WrTakenMul();        // 2.0.0~ 모래판 안 −20% · 되치기
+            if (Id == CharacterId.Foreman) return FmTakenMul();         // 2.0.0~ (안전 제일은 SignatureSkills)
             if (Id != CharacterId.Swordsman) return 1f;
             float mul = 1f;
             if (Time.time < swingGuardUntil && !SwordPathNoGuard) mul *= 0.5f;     // 검기 갈래는 근접 특성이 없음
@@ -1156,9 +1228,17 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 적이 받는 피해 배율 (SpecialAbilities.KitDamageHook): 도적 급소 노리기 · 궁수 사냥감 표식
+    // 2.0.0~ 손맛 연출: 평타가 출혈 중인 적을 때린 프레임 · 자리 (그 적이 같은 프레임에 쓰러지면 급소 처치 — OnKill)
+    int bleedStrikeFrame = -1;
+    Vector3 bleedStrikePos;
+
     public float TargetDamageMul(EnermyController e)
     {
-        if (Id == CharacterId.Rogue && card[5] > 0 && e.GetComponent<Bleed>() != null) return 1f + 0.3f * card[5];
+        if (Id == CharacterId.Rogue && card[5] > 0 && e.GetComponent<Bleed>() != null)
+        {
+            if (DamageSource.Current == DamageSource.Basic) { bleedStrikeFrame = Time.frameCount; bleedStrikePos = e.transform.position; }
+            return 1f + 0.3f * card[5];
+        }
         if (Id == CharacterId.Archer && card[6] > 0 && HuntMark.Has(e.gameObject)) return 1.05f + 0.1f * card[6];
         return 1f;
     }
@@ -1193,6 +1273,14 @@ public partial class CharacterKit : MonoBehaviour
     void OnKill(Vector3 pos)
     {
         GhostKill(pos);         // 유령: 영혼 · 원혼 · 얼음 파편 (CharacterKit.Ghost)
+        if (Id == CharacterId.Photographer) PhKilled(pos);       // 사진사: 종이 적 처치 -> 종잇조각 · 앨범
+        if (Id == CharacterId.Puppeteer) PupKilled(pos);       // 인형사: 줄로 쓰러뜨림 → 끊어진 실 · 휘두름으로 쓰러뜨림 → 솜 채우기
+        // 2.0.0~ 손맛 연출: 도적 평타로 출혈 중인 적을 처치한 순간 (급소)
+        if (Id == CharacterId.Rogue && bleedStrikeFrame == Time.frameCount && (pos - bleedStrikePos).sqrMagnitude < 4f)
+        {
+            bleedStrikeFrame = -1;
+            Impact.Hit(ImpactTier.Attack, pos, player != null ? ((Vector2)(pos - player.transform.position)).normalized : default);
+        }
         if (card[4] <= 0 || player == null || Time.time - lastUlt < 1f) return;     // 필살기 직후 1초는 쉼
         if (gaugeRef == null) gaugeRef = FindFirstObjectByType<SkillGauge>();
         if (gaugeRef == null || gaugeRef.IsFull()) return;
@@ -1203,6 +1291,12 @@ public partial class CharacterKit : MonoBehaviour
     public void CardPicked(int slot)
     {
         if (Id == CharacterId.Alchemist && slot == 2 && homunculus == null) StartCoroutine(Homunculus());
+    }
+
+    // 2.0.0~ 역류: 카드를 잃음 (카드 수는 부른 쪽이 이미 0 으로 — 카드가 소환해 둔 것만 정리 · 나머지 영웅 카드는 매번 card[] 를 읽어 효과가 저절로 꺼짐)
+    public void CardLost(int slot)
+    {
+        if (Id == CharacterId.Alchemist && slot == 2 && homunculus != null) { Destroy(homunculus); homunculus = null; }
     }
 
     // 검사: 검기 · 흡혈 베기 · 쳐내기 (평타를 휘두를 때마다)

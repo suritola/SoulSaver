@@ -249,6 +249,22 @@ public class AbilityHUD : MonoBehaviour
         finally { LevelShop.HudView = false; }
     }
 
+    // 2.0.0~ 영혼 릴레이: 버린 카드 칸을 지움 (ids 가 null 이면 스킬 진화 칸 id >= 1000 만) · 합쳐진 재료 표시도 비움
+    public void RemoveAbilities(System.Collections.Generic.ICollection<int> ids)
+    {
+        List<int> gone = new List<int>();
+        foreach (int id in slots.Keys) if (id >= 1000 || (ids != null && ids.Contains(id))) gone.Add(id);
+        foreach (int id in gone)
+        {
+            if (slots.TryGetValue(id, out Slot s) && s.rect != null) Destroy(s.rect.gameObject);
+            slots.Remove(id);
+        }
+        order.RemoveAll(id => !slots.ContainsKey(id));
+        merged.Clear();
+        Relayout();
+        ApplyOpen();
+    }
+
     // 스킬 진화: 재료 칸들을 지우고 그 자리에 진화 칸 하나 (빛나는 테두리)
     readonly HashSet<int> merged = new HashSet<int>();      // 진화 칸에 합쳐진 재료 (다시 칸을 만들지 않음)
 

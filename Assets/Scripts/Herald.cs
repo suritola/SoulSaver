@@ -43,6 +43,8 @@ public static partial class Herald
 
     static readonly string[] BossNames = { "lich", "demon", "slime", "mirror" };
 
+    public static string Forced;        // 2.0.0~ 이번 한 번은 이 줄 (사막 비밀 묘비)
+
     static Facts Gather(bool gaveUp)
     {
         Facts f = new Facts();
@@ -87,6 +89,7 @@ public static partial class Herald
         foreach (SoulBrandDef b in SoulBrand.Current) f.extra.Add("brand:" + b.id);
         if (endless)
         {
+            DesertSecrets.AddHeraldExtras(f.extra);        // 2.0.0~ 사막 비밀 힌트 (아직 못 푼 비밀 영웅이 있을 때)
             float t = GameMode.EndlessSeconds;
             if (t < 300f) f.extra.Add("t<5");
             if (t < 600f) f.extra.Add("t<10");
@@ -228,8 +231,9 @@ public static partial class Herald
     // 쓰러짐 (gaveUp = 포기하고 결과 보기) — 다 끝나면 (넘겨도) 돌아옴, 결과 화면은 부른 쪽이 엶
     public static IEnumerator Play(bool gaveUp)
     {
-        if (!Enabled || ShownThisRun) yield break;
-        string key = Pick(Gather(gaveUp));
+        if (!Enabled || ShownThisRun) { Forced = null; yield break; }      // 2.0.0 검토: 전령을 끈 사람에게 다음 판까지 남지 않게
+        string key = Forced ?? Pick(Gather(gaveUp));      // 2.0.0~ 사막 묘비 앞에서 쓰러졌으면 그 줄로 (DesertSecrets)
+        Forced = null;
         if (key == null) yield break;
         ShownThisRun = true;
         RunLog.HeraldShown = true;          // 1.2~ 판 기록 herald_shown (RunLog)

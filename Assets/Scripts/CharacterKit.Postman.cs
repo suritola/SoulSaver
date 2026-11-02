@@ -204,7 +204,11 @@ public partial class CharacterKit
         {
             Deliveries++;
             RunCounters.Both("letter");             // 1.2~ 영혼 계약 · 보드
-            if (Deliveries % 10 == 0) { PostBonus(at); RunCounters.Add("post.bonus"); }
+            if (Deliveries % 10 == 0)
+            {
+                PostBonus(at); RunCounters.Add("post.bonus");
+                Impact.Hit(ImpactTier.Attack, at, ((Vector2)(at - transform.position)).normalized);     // 2.0.0~ 손맛 연출: 10번째 배달 우편 보너스
+            }
         }
         // 장거리 배송 공명 II: 보스에게 배달하면 우표 2중첩
         //   1.4.1~ 우표 수집(card[2]) 없이 공명 II 에 닿아도 보스 배달이면 쌓임 (전엔 card[2]==0 이면 0 그대로)
@@ -696,6 +700,7 @@ public partial class CharacterKit
             }
         }
         if (spots.Count > 0) Hostile.Shake(Mathf.Min(0.35f, 0.1f + 0.01f * spots.Count));
+        if (spots.Count > 0) Impact.Hit(ImpactTier.Ult, spots[0], ((Vector2)(spots[0] - transform.position)).normalized);     // 2.0.0~ 손맛 연출: 속달 표식이 터지는 순간 (방향 = 날아간 방향)
         Play("boom", 0.8f, 1.1f);
         Play("stamp", 0.9f, 0.7f);
         Play("crackle", 0.7f, 1.2f);

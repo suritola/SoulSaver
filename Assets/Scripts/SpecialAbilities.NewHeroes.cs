@@ -197,6 +197,41 @@ public partial class SpecialAbilities
                     break;
                 }
 
+            // ---------------- 씨름꾼 (SpecialAbilities.Wrestler)
+            case KitLiftStone:
+            case KitCowbell:
+            case KitRope:
+                yield return StartCoroutine(WrestlerKitUlt(id, D, me, mouse, dir, evo));
+                break;
+
+            // ---------------- 공사 반장 (SpecialAbilities.Foreman)
+            case KitBucket:
+            case KitJackhammer:
+            case KitWreckBall:
+                yield return StartCoroutine(ForemanKitUlt(id, D, me, mouse, dir, evo));
+                break;
+
+            // ---------------- 인형사 (SpecialAbilities.Puppeteer)
+            case KitScissorDummy:
+            case KitSpoolDummy:
+            case KitWindupDummy:
+                yield return StartCoroutine(PuppeteerKitUlt(id, D, me, mouse, dir, evo));
+                break;
+
+            // ---------------- 장의사 (SpecialAbilities.Undertaker)
+            case KitCrow:
+            case KitBell:
+            case KitSarcophagus:
+                yield return StartCoroutine(UndertakerKitUlt(id, D, me, mouse, dir, evo));
+                break;
+
+            // ---------------- 사진사 (SpecialAbilities.Photographer)
+            case KitBulb:
+            case KitTripodCam:
+            case KitProjector:
+                yield return StartCoroutine(PhotographerKitUlt(id, D, me, mouse, dir, evo));
+                break;
+
             // ---------------- 시계공
             case KitCuckoo:
                 {

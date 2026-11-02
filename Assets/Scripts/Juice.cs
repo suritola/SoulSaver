@@ -126,6 +126,12 @@ public static class Juice
         Runner.Hold(0.3f, 0.5f);
     }
 
+    // 2.0.0~ Impact(영웅 손맛 연출)가 같은 시간 관리 · 줌 · 번쩍임을 씀 — 시간을 건드려도 되는지, 최근 멈춤 시각을 함께 봄
+    public static bool CanSlow => CanStop();
+    public static void MarkStop() => lastStopAt = Time.unscaledTime;
+    public static float SinceStop => Time.unscaledTime - lastStopAt;
+    public static JuiceRunner Shared => Runner;
+
     static JuiceRunner runner;
     static JuiceRunner Runner
     {
@@ -263,6 +269,7 @@ public class JuiceRunner : MonoBehaviour
     bool active;
     UnityEngine.UI.Image flash;
     float flashAt = -9f, flashStrength;
+    Color flashColor = Color.white;
     const float FlashFor = 0.35f;
 
     // 지금 시간 배율이 우리가 건 값인지
@@ -288,8 +295,12 @@ public class JuiceRunner : MonoBehaviour
         if (fixedChanged) { Time.fixedDeltaTime = baseFixed; fixedChanged = false; }
     }
 
-    public void Flash(float strength)
+    public void Flash(float strength) => Flash(strength, Color.white);
+
+    // 2.0.0~ 색 번쩍임 (Impact: 영웅색으로 화면을 아주 잠깐 물들임)
+    public void Flash(float strength, Color color)
     {
+        flashColor = color;
         if (flash == null)
         {
             GameObject cg = new GameObject("JuiceFlash", typeof(Canvas));
@@ -318,7 +329,7 @@ public class JuiceRunner : MonoBehaviour
             float k = 1f - (Time.unscaledTime - flashAt) / FlashFor;
             float a = k > 0f ? k * k * flashStrength : 0f;
             if (flash.enabled != a > 0f) flash.enabled = a > 0f;
-            if (a > 0f) flash.color = new Color(1f, 1f, 1f, a);
+            if (a > 0f) flash.color = new Color(flashColor.r, flashColor.g, flashColor.b, a);
         }
     }
 

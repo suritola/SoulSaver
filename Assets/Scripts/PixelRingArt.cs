@@ -282,6 +282,85 @@ public static class PixelRingArt
                         }
                 }
                 break;
+            case HeroAimKind.Wrestler:      // 새끼줄 테: 테 사이 2칸 사선 꼬임 무늬 · 네 방향 마름모 자리 = 샅바 매듭
+                {
+                    int twist = Mathf.Max(12, Mathf.RoundToInt(2f * Mathf.PI * r / 2.5f));
+                    for (int i = 0; i < twist; i++)
+                    {
+                        float a = (float)i / twist * 2f * Mathf.PI;
+                        M(c, a, r + 1f, (i & 1) == 0 ? -0.5f : 0.5f, Band);
+                        if ((i & 1) == 0) M(c, a + 0.5f / twist * 2f * Mathf.PI, r + 2f, 0f, Light);
+                    }
+                    for (int q = 0; q < 4; q++)
+                    {
+                        float a = q * Q;
+                        M(c, a, r + 3f, 0f, Light); M(c, a, r + 2f, -1f, Band); M(c, a, r + 2f, 1f, Band); M(c, a, r + 4f, 0f, Band);
+                    }
+                }
+                break;
+            case HeroAimKind.Foreman:       // 안전 테이프: 바깥 테를 4칸 주기 사선 줄무늬(Band/Light 번갈아) · 네 방향 마름모 자리 = 작은 고깔(삼각 3칸)
+                {
+                    int stripes = Mathf.Max(8, Mathf.RoundToInt(2f * Mathf.PI * r / 4f));
+                    for (int i = 0; i < stripes; i++)
+                    {
+                        float a = (float)i / stripes * 2f * Mathf.PI;
+                        bool dark = (i & 1) == 0;
+                        for (int d = 1; d <= 2; d++) M(c, a, r + d, 0f, dark ? Band : Light);
+                    }
+                    for (int q = 0; q < 4; q++)
+                    {
+                        float a = q * Q;
+                        M(c, a, r + 3f, 0f, Light); M(c, a, r + 4f, 0f, Band); M(c, a, r + 3f, -1f, Band); M(c, a, r + 3f, 1f, Band);
+                    }
+                }
+                break;
+            case HeroAimKind.Puppeteer:     // 조종대: 네 방향 작은 십자(가로 3칸 · 세로 3칸) · 테 사이마다 매달린 실(세로 2칸 점선)
+                {
+                    int strings = Mathf.Max(8, Mathf.RoundToInt(2f * Mathf.PI * r / 5f));
+                    for (int i = 0; i < strings; i++)
+                    {
+                        float a = (float)i / strings * 2f * Mathf.PI;
+                        M(c, a, r + 1f, 0f, Light); M(c, a, r + 3f, 0f, Band);
+                    }
+                    for (int q = 0; q < 4; q++)
+                    {
+                        float a = q * Q;
+                        M(c, a, r + 2f, 0f, Light); M(c, a, r + 2f, -1f, Band); M(c, a, r + 2f, 1f, Band);
+                        M(c, a, r + 3f, 0f, Band); M(c, a, r + 4f, 0f, Light);
+                    }
+                }
+                break;
+            case HeroAimKind.Undertaker:    // 흙덩이: 바깥 테에 높이 고르지 않은 불규칙 돌기(1~2칸) · 네 방향에 작은 묘비 모양(위가 둥근 3×4칸)
+                {
+                    int lumps = Mathf.Max(12, Mathf.RoundToInt(2f * Mathf.PI * r / 2.2f));
+                    for (int i = 0; i < lumps; i++)
+                    {
+                        float a = (float)i / lumps * 2f * Mathf.PI;
+                        int hgt = 1 + (i * 7 + (i >> 1)) % 2;
+                        for (int d = 1; d <= hgt; d++) M(c, a, r + d, 0f, (i & 3) == 0 ? Light : Band);
+                    }
+                    for (int q = 0; q < 4; q++)
+                    {
+                        float a = q * Q;
+                        M(c, a, r + 2f, 0f, Light); M(c, a, r + 3f, -1f, Band); M(c, a, r + 3f, 0f, Light); M(c, a, r + 3f, 1f, Band);
+                        M(c, a, r + 4f, -1f, Band); M(c, a, r + 4f, 0f, Band); M(c, a, r + 4f, 1f, Band); M(c, a, r + 5f, 0f, Band);
+                    }
+                }
+                break;
+            case HeroAimKind.Photographer:  // 조리개 날: 테 사이 휘어진 날 빗금 6개 · 네 방향 마름모 자리 = 작은 네모(필름 구멍)
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float a0 = (i + 0.5f) / 6f * 2f * Mathf.PI;
+                        for (int d = 1; d <= 3; d++) M(c, a0 + d * 0.05f, r + d, 0f, d == 3 ? Light : Band);
+                    }
+                    for (int q = 0; q < 4; q++)
+                    {
+                        float a = q * Q;
+                        M(c, a, r + 2f, -1f, Light); M(c, a, r + 2f, 1f, Light); M(c, a, r + 3f, -1f, Light); M(c, a, r + 3f, 1f, Light);
+                    }
+                }
+                break;
             case HeroAimKind.Ghost:         // 일렁이는 혼불 꼬리 (바깥으로 1~3칸 · 높이 고르지 않게)
                 {
                     int hairs = Mathf.Max(10, Mathf.RoundToInt(2f * Mathf.PI * r / 2.5f));

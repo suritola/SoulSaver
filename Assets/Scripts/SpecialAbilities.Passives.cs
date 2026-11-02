@@ -131,7 +131,20 @@ public partial class SpecialAbilities
         if (b.TryGetComponent(out SpriteRenderer sr)) sr.color = VisualRules.Kit(new Color(1f, 0.3f, 0.3f), new Color(0.39f, 0.3f, 1f));
         b.transform.localScale *= 1.5f;
         float dmg = Damage * 1.5f;
-        b.onHitEnemy += (bullet, col) => Explode(col.transform.position, 2.5f, dmg, 1.5f, VisualRules.Kit(new Color(1f, 0.3f, 0.2f, 0.85f), new Color(0.31f, 0.2f, 1f, 0.85f)));
+        b.onHitEnemy += (bullet, col) =>
+        {
+            Explode(col.transform.position, 2.5f, dmg, 1.5f, VisualRules.Kit(new Color(1f, 0.3f, 0.2f, 0.85f), new Color(0.31f, 0.2f, 1f, 0.85f)));
+            // 2.0.0~ 손맛 연출: 저주받은 마지막 탄이 적에게 명중한 순간
+            CurseImpact(bullet, col);
+        };
+        b.onHitBoss += CurseImpact;
+    }
+
+    void CurseImpact(Bullet bullet, Collider2D col)
+    {
+        if (col == null) return;
+        Vector3 from = player != null ? player.transform.position : bullet.transform.position;
+        Impact.Hit(ImpactTier.Attack, col.transform.position, ((Vector2)(col.transform.position - from)).normalized);
     }
 
     void OnEnemyKilled(Vector3 pos)

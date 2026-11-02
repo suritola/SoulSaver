@@ -34,6 +34,11 @@ public partial class Shop
         CharacterId.Clockmaker => "톱니 공격력",
         CharacterId.Postman => "편지 공격력",
         CharacterId.Ghost => "손길 공격력",
+        CharacterId.Wrestler => "메치기 공격력",
+        CharacterId.Foreman => "압착 공격력",
+        CharacterId.Puppeteer => "더미 공격력",
+        CharacterId.Undertaker => "삽질 공격력",
+        CharacterId.Photographer => "셔터 공격력",
         _ => "총알 공격력",
     };
 

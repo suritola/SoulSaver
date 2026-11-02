@@ -62,7 +62,7 @@ public class EvoPreview : MonoBehaviour
         Color orange = new Color(1f, 0.6f, 0.25f), cyan = new Color(0.55f, 0.95f, 1f), gold = new Color(1f, 0.85f, 0.45f),
               purple = new Color(0.75f, 0.5f, 1f), green = new Color(0.6f, 1f, 0.45f), white = new Color(0.9f, 0.95f, 1f), red = new Color(1f, 0.4f, 0.35f),
               ink = new Color(0.45f, 0.6f, 1f), brass = new Color(1f, 0.72f, 0.4f), sand = new Color(0.95f, 0.85f, 0.55f), paper = new Color(0.95f, 0.88f, 0.72f),
-              ice = new Color(0.7f, 0.92f, 1f), shade = new Color(0.62f, 0.5f, 0.9f);
+              ice = new Color(0.7f, 0.92f, 1f), shade = new Color(0.62f, 0.5f, 0.9f), sky = new Color(0.62f, 0.72f, 1f);
         switch (id)
         {
             case SpecialAbilities.ShotgunId: Set(Kind.Cone, orange, 5, 1f); break;
@@ -110,6 +110,36 @@ public class EvoPreview : MonoBehaviour
             case SpecialAbilities.KitSoulChain: Set(Kind.Chain, cyan, 1, 1f); break;
             case SpecialAbilities.KitIceGhost: Set(Kind.Beam, ice, 1, 1.2f); break;
             case SpecialAbilities.KitShadowGhost: Set(Kind.Spray, shade, 1, 1f); twice = true; break;
+            case SpecialAbilities.KitLiftStone: Set(Kind.Lob, sand, 1, 1.4f); break;
+            case SpecialAbilities.KitCowbell: Set(Kind.Around, gold, 1, 1.2f); break;
+            case SpecialAbilities.KitRope: Set(Kind.Beam, brass, 1, 1.2f); break;
+            case SpecialAbilities.KitBucket: Set(Kind.Lob, gold, 1, 1.6f); break;
+            case SpecialAbilities.KitJackhammer: Set(Kind.Around, gold, 1, 1.2f); break;
+            case SpecialAbilities.KitWreckBall: Set(Kind.Pull, gold, 1, 1.4f); break;
+            case SpecialAbilities.KitScissorDummy: Set(Kind.Around, sky, 1, 1.1f); break;
+            case SpecialAbilities.KitSpoolDummy: Set(Kind.Pull, sky, 1, 1.3f); break;
+            case SpecialAbilities.KitWindupDummy: Set(Kind.Beam, sky, 1, 1.2f); twice = true; break;
+            case SpecialAbilities.KitCrow: Set(Kind.Homing, white, 2, 1f); break;
+            case SpecialAbilities.KitBell: Set(Kind.Around, brass, 1, 1.4f); break;
+            case SpecialAbilities.KitSarcophagus: Set(Kind.Lob, sand, 1, 1.3f); break;
+            case SpecialAbilities.KitBulb: Set(Kind.Around, white, 1, 1.1f); break;
+            case SpecialAbilities.KitTripodCam: Set(Kind.Lob, white, 1, 1.2f); twice = true; break;
+            case SpecialAbilities.KitProjector: Set(Kind.Beam, white, 1, 1.2f); break;
+            case CharacterKit.AugDoubleExposure: Set(Kind.Lob, white, 1, 1.2f); twice = true; break;
+            case CharacterKit.AugMonochrome: Set(Kind.Around, white, 1, 1.3f); break;
+            case CharacterKit.AugRetouch: Set(Kind.Lob, gold, 1, 0.9f); break;
+            case CharacterKit.AugWideBlade: Set(Kind.Lob, sand, 1, 1.7f); break;
+            case CharacterKit.AugDoubleDig: Set(Kind.Lob, sand, 2, 1.1f); twice = true; break;
+            case CharacterKit.AugHeavySoil: Set(Kind.Lob, brass, 1, 1.5f); break;
+            case CharacterKit.AugUnderstudy: Set(Kind.Around, sky, 1, 1.4f); break;
+            case CharacterKit.AugSecondString: Set(Kind.Beam, sky, 2, 1.1f); break;
+            case CharacterKit.AugHeavyHead: Set(Kind.Around, sky, 1, 1.6f); break;
+            case CharacterKit.AugBackBlade: Set(Kind.Cone, gold, 1, 1f); break;
+            case CharacterKit.AugHydraulic: Set(Kind.Pull, gold, 1, 1.5f); break;
+            case CharacterKit.AugFence: Set(Kind.Beam, gold, 1, 1.2f); break;
+            case CharacterKit.AugInsideTrip: Set(Kind.Around, sand, 1, 1.1f); break;
+            case CharacterKit.AugFlip: Set(Kind.Lob, sand, 1, 1.2f); twice = true; break;
+            case CharacterKit.AugSandWake: Set(Kind.Beam, sand, 1, 1f); twice = true; break;
             case CharacterKit.AugSurvey: Set(Kind.Chain, ink, 1, 1f); break;
             case CharacterKit.AugReprint: Set(Kind.Spray, ink, 2, 1f); twice = true; break;
             case CharacterKit.AugEngrave: Set(Kind.Lob, ink, 1, 1.5f); break;

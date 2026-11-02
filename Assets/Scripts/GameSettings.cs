@@ -34,7 +34,8 @@ public static class GameSettings
     const string ReduceMotionKey = "settings.reduceMotion", FastFxKey = "settings.fastFx";
     const string CombatStatsKey = "settings.combatStats", PickupRangeKey = "settings.showPickupRange", EdgeMarkersKey = "settings.edgeMarkers";
     const string DisplayKey = "settings.display";
-    const string EnemyBarsKey = "settings.enemyBars";      // 1.6.0~ 적 머리 위 체력바 (옛 저장엔 키가 없어 기본 「정예만」)
+    const string EnemyBarsKey = "settings.enemyBars";
+    const string SpecialFxKey = "settings.specialFx";      // 2.0.0~ 특수효과 (영웅 손맛 연출 Impact)      // 1.6.0~ 적 머리 위 체력바 (옛 저장엔 키가 없어 기본 「정예만」)
     public const float MouseSensMin = 0.25f, MouseSensMax = 3f;
 
     // 1.1.9~ 기본값 (처음 불러올 때 · 설정 「이 탭 기본값으로」가 같이 써서 어긋나지 않게)
@@ -64,6 +65,8 @@ public static class GameSettings
     static bool bossIntroAlways, attackLock, ultToggle, reduceMotion, fastFx, showPickupRange, edgeMarkers = DefEdgeMarkers;
     static int dialogueSpeed, combatStats, displayIndex;
     static int enemyBars = DefEnemyBars;
+    const int DefSpecialFx = 2;
+    static int specialFx = DefSpecialFx;
 
     public static Loc.Lang Language
     {
@@ -155,6 +158,7 @@ public static class GameSettings
         dialogueSpeed = Mathf.Clamp(Prefs.GetInt(DialogueKey, DefDialogueSpeed), 0, 2);
         reduceMotion = Prefs.GetInt(ReduceMotionKey, B(DefReduceMotion)) == 1;
         fastFx = Prefs.GetInt(FastFxKey, B(DefFastFx)) == 1;
+        specialFx = Mathf.Clamp(Prefs.GetInt(SpecialFxKey, DefSpecialFx), 0, 3);
         combatStats = Mathf.Clamp(Prefs.GetInt(CombatStatsKey, DefCombatStats), 0, 2);
         showPickupRange = Prefs.GetInt(PickupRangeKey, B(DefShowPickupRange)) == 1;
         edgeMarkers = Prefs.GetInt(EdgeMarkersKey, B(DefEdgeMarkers)) == 1;
@@ -209,8 +213,18 @@ public static class GameSettings
     }
     public static float FxTime => FastFx && !GameInput.Auto && !TutorialRun.Active ? 0.5f : 1f;
 
+    // 2.0.0~ 특수효과: 영웅 평타 특수 조건 · 고유 스킬 · 진화 · 필살기의 줌 · 짧은 슬로우 · 흔들림 · 번쩍임 · 효과음 (Impact)
+    //   0 꺼짐 · 1 약하게 · 2 보통 · 3 강하게 — 화면 흔들림 · 번쩍임 효과 · 움직임 줄이기 설정도 그대로 따름
+    public static readonly string[] SpecialFxNames = { "꺼짐", "약하게", "보통", "강하게" };
+    public static int SpecialFx
+    {
+        get { Load(); return GameInput.Auto ? DefSpecialFx : specialFx; }
+        set { Load(); specialFx = Mathf.Clamp(value, 0, 3); Prefs.SetInt(SpecialFxKey, specialFx); }
+    }
+
     public static void ResetAccess()
     {
+        SpecialFx = DefSpecialFx;
         ColorBlind = DefColorBlind; AttackLock = DefAttackLock; UltToggle = DefUltToggle; DialogueSpeed = DefDialogueSpeed;
         BossIntroAlways = DefBossIntroAlways; ReduceMotion = DefReduceMotion; FastFx = DefFastFx;
         Save();

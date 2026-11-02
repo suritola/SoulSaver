@@ -10,7 +10,7 @@ public partial class BossSkills
 {
     const int DevMaxHits = 4;
     static readonly Color Dev = new Color(1f, 0.85f, 0.35f, 0.95f);
-    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령" };     // CharacterId 순서
+    static readonly string[] DevHeroes = { "거너", "검사", "도적", "궁수", "연금술사", "지도 제작자", "시계공", "우체부", "유령", "씨름꾼", "공사 반장", "인형사", "장의사", "스크린샷 담당" };     // CharacterId 순서
     int devTurn;
 
     // 필살기가 끝나기를 기다리지 않고 겹쳐서 씀 (예고 시간은 그대로라 여전히 피할 수 있음)
@@ -75,7 +75,7 @@ public partial class BossSkills
         }
         // 보스 위치를 옮기는 흉내 (검사 회전 베기 · 도적 출혈 돌진 · 유령 빙의): 타임 세일 · 효자손 다가서기가 겹쳐 옮기지 않게 셈
         CharacterId c = (CharacterId)who;
-        bool mover = c == CharacterId.Swordsman || c == CharacterId.Rogue || c == CharacterId.Ghost;
+        bool mover = c == CharacterId.Swordsman || c == CharacterId.Rogue || c == CharacterId.Ghost || c == CharacterId.Wrestler;
         StartCoroutine(DevRun(DeveloperUlt(c, boss.Enraged), mover));
     }
 
@@ -163,6 +163,31 @@ public partial class BossSkills
                 // 지도 접기: 접히는 띠 사이로 잉크 탄
                 StartCoroutine(DevBulletStorm(strong ? 3 : 2));
                 yield return DevFold(strong ? 4 : 3);
+                break;
+            case CharacterId.Foreman:
+                // 공사 반장: 플레이어 둘레 세 방향에 「추후 업데이트 예정」 표지판 → 1.2초 뒤 흙더미 탄 (BossSkills.Foreman)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevSigns(strong ? 4 : 3);
+                break;
+            case CharacterId.Puppeteer:
+                // 인형사: 「나중에 바꿀게!」 T 자세 임시 더미 5(강하면 7)를 떨어뜨리고 줄로 이음 (BossSkills.Puppeteer)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevDummies(strong ? 7 : 5);
+                break;
+            case CharacterId.Undertaker:
+                // 장의사: 화면 곳곳 함몰 원 12개(강하면 16)가 차례로 + 종 + 임시 묘비 4개 (BossSkills.Undertaker)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevFuneral(strong ? 16 : 12);
+                break;
+            case CharacterId.Photographer:
+                // 사진사: 화면 가로 띠 예고 두 줄(위 · 아래) -> 커튼이 지나감 + 탄막 (BossSkills.Photographer)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevPanorama(strong);
+                break;
+            case CharacterId.Wrestler:
+                // 천하장사: 세 번(분노 넷) 뛰어 플레이어 쪽에 내려찍고, 착지마다 모래 탄 고리 + 탄막 (BossSkills.Wrestler)
+                StartCoroutine(DevBulletStorm(strong ? 3 : 2));
+                yield return DevSandSlam(strong ? 4 : 3);
                 break;
             default:
                 // 대폭발: 큰 폭발 사이사이 불꽃놀이

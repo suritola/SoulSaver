@@ -63,6 +63,7 @@ public class TutorialRun : MonoBehaviour
     // 메인 메뉴 「튜토리얼」
     public static void Begin()
     {
+        ModeRun.EndAll();           // 2.0.0~ 특별 모드와 배타
         Active = true;
         Prefs.SetInt(SeenKey, 1);
         Prefs.Save();

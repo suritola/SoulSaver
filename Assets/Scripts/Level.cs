@@ -31,11 +31,11 @@ public class Level : MonoBehaviour
     {
 
         PlayerController player = Cache<PlayerController>.Get;
-        playerLevel = player.level;
+        playerLevel = ModeRun.Reflux ? RefluxRun.ShownLevel : player.level;       // 2.0.0~ 역류: 잃을 때마다 같이 줄어드는 숫자
         // 레벨업 카드를 모두 배웠거나 최대 레벨이면 만렙 (LevelShop.GrowthOnly) · 1.0.4~: 그 뒤 고른 성장 카드 수를 「+n」으로
         LevelShop shop = Cache<LevelShop>.Get;
-        bool max = shop != null && shop.GrowthOnly;
-        int grown = shop != null ? shop.GrowthPicks : 0;
+        bool max = shop != null && shop.GrowthOnly && !ModeRun.Reflux;
+        int grown = shop != null && !ModeRun.Reflux ? shop.GrowthPicks : 0;
         int show = playerLevel * 8192 + grown * 2 + (max ? 1 : 0);
         if (show != shownLevel)
         {

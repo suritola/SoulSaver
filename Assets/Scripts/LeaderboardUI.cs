@@ -11,7 +11,8 @@ using UnityEngine.UI;
 // 스팀이 없거나(에디터 · GitHub 빌드 · 오프라인) 체험판이면 안내 문구만 (SteamLeaderboards.Available)
 public static class LeaderboardUI
 {
-    public enum Board { Endless, Daily }
+    public enum Board { Endless, Daily, Relay, Reflux }       // 2.0.0~ 영혼 릴레이 (모든 조합 / 조합별) · 역류 (짧을수록 좋음) 탭
+    static string relayCombo;           // 영혼 릴레이 탭이 보여 줄 조합 (RelayRun.ComboKey, 비면 모든 조합 한 줄)
 
     static GameObject open;
     static Action onClosed;
@@ -20,10 +21,11 @@ public static class LeaderboardUI
     const float W = 1500f, H = 880f;
 
     // closed: 닫힌 뒤 부름 (일일 도전 창에서 열었으면 그 창으로 돌아감) · day: 일일 도전 날 (없으면 결과 화면이면 그 판의 날, 아니면 오늘)
-    public static void Open(Transform root, Board board, SteamLeaderboards.Scope tab, Action closed = null)
+    public static void Open(Transform root, Board board, SteamLeaderboards.Scope tab, Action closed = null, string combo = null)
     {
         if (open != null || root == null) return;
         onClosed = closed;
+        relayCombo = combo;
         RectTransform win = UIKit.Modal(root, "Leaderboard", new Vector2(W, H), out open);
         WindowFit.Attach(win, new Vector2(W + 60f, H + 60f));        // 좁은 화면 · 큰 UI 크기에서도 창이 화면 안에
         UIKit.EscCancel(open, Close);
@@ -87,6 +89,7 @@ public static class LeaderboardUI
     {
         public RectTransform r;
         public Image bg, icon;
+        public Image[] extra = new Image[2];        // 2.0.0~ 영혼 릴레이 둘째 · 셋째 주자 초상
         public TMP_Text rank, name, bosses, time;
         public SteamLeaderboards.Entry entry;
     }
@@ -98,7 +101,7 @@ public static class LeaderboardUI
         string boardName;
         float localBest;
 
-        readonly Button[] boardButtons = new Button[2];
+        readonly Button[] boardButtons = new Button[4];
         readonly Button[] tabButtons = new Button[3];
         TMP_Text title, summary, status, hint;
         Button jump;
@@ -119,8 +122,11 @@ public static class LeaderboardUI
             title = UIKit.Text(win, "", 44f, Gold, new Vector2(0f, 385f), new Vector2(1000f, 60f));
             UIKit.MakeButton(win, "닫기", new Vector2(650f, 385f), new Vector2(150f, 56f), Close, 22f);
 
-            boardButtons[0] = UIKit.MakeButton(win, "무한 모드", new Vector2(-575f, 315f), new Vector2(230f, 56f), () => SetBoard(Board.Endless), 22f);
-            boardButtons[1] = UIKit.MakeButton(win, "일일 도전", new Vector2(-335f, 315f), new Vector2(230f, 56f), () => SetBoard(Board.Daily), 22f);
+            // 2.0.0~ 순위표 4개: 폭 170 · 간격 180 (탭 3개 앞까지)
+            boardButtons[0] = UIKit.MakeButton(win, "무한 모드", new Vector2(-640f, 315f), new Vector2(170f, 56f), () => SetBoard(Board.Endless), 22f);
+            boardButtons[1] = UIKit.MakeButton(win, "일일 도전", new Vector2(-460f, 315f), new Vector2(170f, 56f), () => SetBoard(Board.Daily), 22f);
+            boardButtons[2] = UIKit.MakeButton(win, "영혼 릴레이", new Vector2(-280f, 315f), new Vector2(170f, 56f), () => SetBoard(Board.Relay), 22f);
+            boardButtons[3] = UIKit.MakeButton(win, "역류", new Vector2(-100f, 315f), new Vector2(170f, 56f), () => SetBoard(Board.Reflux), 22f);
             string[] tabKeys = { "lb.tab.global", "lb.tab.around", "lb.tab.friends" };
             for (int i = 0; i < 3; i++)
             {
@@ -193,12 +199,24 @@ public static class LeaderboardUI
         void RefreshChrome()
         {
             // UI 개편 (Legacy 끔): 금색 칠 대신 그림 + 청록 밑줄 (UiV2.Choose)
-            for (int i = 0; i < 2; i++) if (!UiRules.Legacy) UiV2.Choose(boardButtons[i], i == (int)board); else boardButtons[i].GetComponent<Image>().color = i == (int)board ? Gold : TabOff;
+            for (int i = 0; i < boardButtons.Length; i++) if (!UiRules.Legacy) UiV2.Choose(boardButtons[i], i == (int)board); else boardButtons[i].GetComponent<Image>().color = i == (int)board ? Gold : TabOff;
             for (int i = 0; i < 3; i++) if (!UiRules.Legacy) UiV2.Choose(tabButtons[i], i == (int)tab); else tabButtons[i].GetComponent<Image>().color = i == (int)tab ? Gold : TabOff;
             DateTime day = Day();
             title.text = board == Board.Endless ? Loc.T("무한 모드 순위")
+                       : board == Board.Relay ? Loc.T("영혼 릴레이") + "  <size=60%><color=#A89C86>" + (string.IsNullOrEmpty(relayCombo) ? Loc.T("relay.lb.all") : ComboNames(relayCombo)) + "</color></size>"
+                       : board == Board.Reflux ? Loc.T("역류") + "  <size=60%><color=#A89C86>" + Loc.T("relay.lb.reflux") + "</color></size>"
                        : Loc.T("일일 도전") + "  <size=60%><color=#A89C86>" + day.ToString("yyyy-MM-dd") + " (UTC) · " + Loc.T(DailyChallenge.RuleOf(day).name) + "</color></size>";
             hint.text = Loc.T(GamePad.Active ? "lb.hint.pad" : "lb.hint.keys");
+        }
+
+        // "00_08_09" → 「거너 · 유령 · 씨름꾼」
+        static string ComboNames(string combo)
+        {
+            System.Text.StringBuilder b = new System.Text.StringBuilder();
+            foreach (string part in combo.Split('_'))
+                if (int.TryParse(part, out int id) && id >= 0 && id < CharacterData.All.Length)
+                    b.Append(b.Length > 0 ? " · " : "").Append(Loc.T(CharacterData.Def((CharacterId)id).name));
+            return b.ToString();
         }
 
         // 일일 도전 날: 그 판의 결과 화면이면 시작한 날(자정을 넘겨도), 아니면 오늘
@@ -223,8 +241,12 @@ public static class LeaderboardUI
             waitUpload = false;
             timedOut = false;
             DateTime day = Day();
-            boardName = board == Board.Endless ? SteamLeaderboards.Endless : DailyChallenge.BoardOf(day);
-            localBest = board == Board.Endless ? EndlessMode.BestSeconds : DailyChallenge.Best(day);
+            boardName = board == Board.Endless ? SteamLeaderboards.Endless
+                      : board == Board.Relay ? (string.IsNullOrEmpty(relayCombo) ? SteamLeaderboards.RelayAll : SteamLeaderboards.Relay(relayCombo))
+                      : board == Board.Reflux ? SteamLeaderboards.Reflux : DailyChallenge.BoardOf(day);
+            localBest = board == Board.Endless ? EndlessMode.BestSeconds
+                      : board == Board.Relay ? (string.IsNullOrEmpty(relayCombo) ? RelayRun.BestAll : RelayRun.BestOfCombo(relayCombo))
+                      : board == Board.Reflux ? RefluxRun.Best : DailyChallenge.Best(day);
             RefreshChrome();
             content.anchoredPosition = Vector2.zero;
             if (!SteamLeaderboards.Available) { Render(); return; }
@@ -246,7 +268,7 @@ public static class LeaderboardUI
                 });
             };
             Render();
-            if (synced.Add(boardName)) SteamLeaderboards.SyncBest(boardName, localBest, fetch);
+            if (board != Board.Reflux && synced.Add(boardName)) SteamLeaderboards.SyncBest(boardName, localBest, fetch);       // 역류는 짧을수록 좋아 이 PC 최고를 올리는 길이 달라 건너뜀
             else fetch();
         }
 
@@ -303,6 +325,14 @@ public static class LeaderboardUI
             row.icon = ir.gameObject.AddComponent<Image>();
             row.icon.preserveAspect = true;
             row.icon.raycastTarget = false;
+            for (int k = 0; k < row.extra.Length; k++)
+            {
+                RectTransform xr = UIKit.Rect("Hero" + (k + 2), row.r, new Vector2(IconX + 46f * (k + 1), 0f), new Vector2(44f, 44f));
+                row.extra[k] = xr.gameObject.AddComponent<Image>();
+                row.extra[k].preserveAspect = true;
+                row.extra[k].raycastTarget = false;
+                row.extra[k].enabled = false;
+            }
             row.name = UIKit.Text(row.r, "", 26f, Parch, new Vector2(NameX, 0f), new Vector2(700f, 40f), TextAlignmentOptions.Left);
             row.name.enableWordWrapping = false;
             row.name.overflowMode = TextOverflowModes.Ellipsis;
@@ -320,9 +350,18 @@ public static class LeaderboardUI
             Color c = e.me ? (UiRules.Legacy ? Gold : UiTokens.Accent) : Parch;       // 내 줄 강조 (새 모습: 청록)
             row.rank.text = "#" + e.rank.ToString("N0");
             row.rank.color = e.rank >= 1 && e.rank <= 3 ? Podium[e.rank - 1] : c;
-            Sprite icon = HeroIcon(e.character);
+            // 2.0.0~ 영혼 릴레이: 자세한 값 칸 0 = 순서 부호 a*10000+b*100+c → 초상 셋 (이름 글자는 오른쪽으로)
+            bool relayRow = board == Board.Relay && e.character >= 0;
+            Sprite icon = HeroIcon(relayRow ? e.character / 10000 : e.character);
             row.icon.sprite = icon;
             row.icon.enabled = icon != null;
+            for (int k = 0; k < row.extra.Length; k++)
+            {
+                Sprite xs = relayRow ? HeroIcon(k == 0 ? e.character / 100 % 100 : e.character % 100) : null;
+                row.extra[k].sprite = xs;
+                row.extra[k].enabled = xs != null;
+            }
+            row.name.rectTransform.anchoredPosition = new Vector2(relayRow ? NameX + 90f : NameX, 0f);
             string name = SteamLeaderboards.DisplayName(e.user, 20);
             row.name.text = string.IsNullOrEmpty(name) ? "…" : name;
             row.name.color = c;
@@ -378,7 +417,7 @@ public static class LeaderboardUI
                 SetTab((SteamLeaderboards.Scope)(((int)tab + dx + 3) % 3));
                 GamePad.WarpTo((RectTransform)tabButtons[(int)tab].transform);
             }
-            if (Input.GetKeyDown(KeyCode.Tab)) SetBoard(board == Board.Endless ? Board.Daily : Board.Endless);
+            if (Input.GetKeyDown(KeyCode.Tab)) SetBoard((Board)(((int)board + 1) % boardButtons.Length));
 
             // 목록: ↑ ↓ 한 줄 · PageUp/Down 한 쪽 · Home 맨 위 · End 내 줄 · 패드 오른쪽 스틱 (커서가 목록 위면 ScrollRect 가 받음)
             float y = content.anchoredPosition.y;

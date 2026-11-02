@@ -12,7 +12,7 @@ using UnityEngine.UI;
 //   저장: 다음 판의 계약은 Prefs "contract.slot.<칸>" (뒤에 * = 이어진 계약) — 이루는 순간 그 칸은 새로 뽑아 둠
 //         (판 중간에 나갔다가 새 판을 시작해도 같은 계약을 두 번 받지 않게) · 판 중간 저장은 RunSave.Data.contracts (옛 저장은 계약 없는 판)
 //   글: LocTable.Contract 의 contract.<id>.name · .cond (4개 언어)
-public enum ContractKind { Easy, Normal, Hero, EndlessEasy, EndlessNormal, Daily }
+public enum ContractKind { Easy, Normal, Hero, EndlessEasy, EndlessNormal, Daily, Relay, Reflux, RefluxHard }
 
 public sealed class ContractDef
 {
@@ -24,7 +24,7 @@ public sealed class ContractDef
     public int target = 1;
     public System.Func<int> value;      // 이번 판 진행 (목표 이상이면 이룸)
     public System.Func<bool> available; // 지금 뽑아도 되는지 (없으면 늘)
-    public int Reward => kind == ContractKind.Normal || kind == ContractKind.EndlessNormal ? 800 : kind == ContractKind.Hero ? 600 : 300;
+    public int Reward => kind == ContractKind.Normal || kind == ContractKind.EndlessNormal || kind == ContractKind.RefluxHard ? 800 : kind == ContractKind.Hero || kind == ContractKind.Relay ? 600 : 300;
     public string Name => Loc.T("contract." + id + ".name");
     public string Cond => Loc.T("contract." + id + ".cond");
     public int Now => value != null ? Mathf.Max(0, value()) : 0;
@@ -33,7 +33,7 @@ public sealed class ContractDef
 public static class Contracts
 {
     // ================================================================= 영웅 이름 (글 열쇠 · 보드 열쇠의 가운데)
-    public static readonly string[] HeroKeys = { "gunner", "sword", "rogue", "archer", "alch", "carto", "clock", "post", "ghost" };
+    public static readonly string[] HeroKeys = { "gunner", "sword", "rogue", "archer", "alch", "carto", "clock", "post", "ghost", "wrestler", "foreman", "pup", "under", "photo" };
     public static string HeroKey(CharacterId id) => (int)id >= 0 && (int)id < HeroKeys.Length ? HeroKeys[(int)id] : "gunner";
 
     // ================================================================= 판 안 값 (RunCounters · 기존 기록)
@@ -158,6 +158,31 @@ public static class Contracts
         H(CharacterId.Ghost, 1, true, 4, () => C("ult")),          // 체험판 영웅 (2026-10-18~)
         H(CharacterId.Ghost, 2, false, 50, () => C("freeze")),
         H(CharacterId.Ghost, 4, false, 10, () => C("ult.wave")),
+        H(CharacterId.Wrestler, 1, false, 100, () => C("throw")),            // 백 번 메치기 (한 판 약 700~1000번)
+        H(CharacterId.Wrestler, 2, false, 10, () => C("ult")),               // 열 번의 천하장사
+        H(CharacterId.Wrestler, 3, false, 40, () => C("ringout")),           // 장외! (한 판에 링아웃 40번)
+        H(CharacterId.Wrestler, 4, false, 8, () => C("strike")),             // 스트라이크 (한 번 던져 적 6마리 쓰러뜨리기 8번)
+        H(CharacterId.Wrestler, 6, false, 300, () => C("throw")),            // 삼백 번 메치기
+        H(CharacterId.Foreman, 1, false, 100, () => C("b.dump")),            // 덤프 백 번 (한 판 약 200~300번)
+        H(CharacterId.Foreman, 2, false, 10, () => C("ult")),                // 열 번의 철거 공고
+        H(CharacterId.Foreman, 3, false, 15, () => C("b.pile.max")),         // 무게 15 더미 한 번 (긴 삽날 1단계 이상 필요)
+        H(CharacterId.Foreman, 4, false, 50, () => C("b.crash")),            // 빠각 50번
+        H(CharacterId.Foreman, 6, false, 300, () => C("b.crushkill")),       // 압착으로 300마리
+        H(CharacterId.Puppeteer, 1, false, 400, () => C("pup.cut")),         // 줄로 400번 베기 (한 판 약 2,000~3,000번)
+        H(CharacterId.Puppeteer, 2, false, 10, () => C("ult")),              // 열 번의 커튼콜
+        H(CharacterId.Puppeteer, 3, false, 30, () => C("pup.swap.cut3")),    // 자리 바꾸기로 적 셋 이상 한꺼번에 가르기 30번
+        H(CharacterId.Puppeteer, 4, false, 8, () => C("pup.sweep5")),        // 한 번 쓸기로 다섯 이상 베기 8번
+        H(CharacterId.Puppeteer, 6, false, 600, () => C("pup.cut")),         // 줄로 600번 베기 (누적)
+        H(CharacterId.Undertaker, 1, false, 150, () => C("bury")),           // 백오십 번의 매장 (한 판 약 600마리 추정 · 25%)
+        H(CharacterId.Undertaker, 2, false, 10, () => C("ult")),             // 열 번의 장례 (장례만 셈)
+        H(CharacterId.Undertaker, 3, false, 6, () => C("bury.hole")),        // 한 구덩이에 여섯 (한 구멍에서 한 번에 묻은 최대)
+        H(CharacterId.Undertaker, 4, false, 60, () => C("grave")),           // 묘역 조성 (묘비 60개 · 한 판 약 200 추정)
+        H(CharacterId.Undertaker, 6, false, 400, () => C("bury")),           // 사백 번의 매장 (누적)
+        H(CharacterId.Photographer, 1, false, 20, () => C("photo.masterpiece")),   // 걸작 사진 20장 (셔터 약 900장 중 8~12%)
+        H(CharacterId.Photographer, 2, false, 300, () => C("paper")),              // 종이 공장 (종이가 된 적 300)
+        H(CharacterId.Photographer, 3, false, 10, () => C("ult")),                 // 파노라마 열 번
+        H(CharacterId.Photographer, 4, false, 40, () => C("print.tear")),          // 인화 찢기 40
+        H(CharacterId.Photographer, 6, false, 15, () => C("photo.withboss")),      // 기념 사진 15장 (보스·중간 보스와 잡몹을 한 틀에)
         // ---------------- 무한 모드 전용
         X("t5", false, 300, () => Mathf.FloorToInt(EndlessT)),
         X("boss2", false, 2, () => Em != null ? Em.BossesDefeated : 0),
@@ -165,6 +190,16 @@ public static class Contracts
         X("boss5", true, 5, () => Em != null ? Em.BossesDefeated : 0),
         X("final", true, 1, () => Em != null && Em.FinalPhase ? 1 : 0),
         X("beyond", true, 1, () => Em != null && Em.Beyond ? 1 : 0),
+        // ---------------- 2.0.0~ 영혼 릴레이 전용 (영웅 계약 칸 대신 · 영웅이 바뀌어 영웅 계약은 셀 수 없음) — 값은 RelayRun 이 RunCounters 에 적음
+        new ContractDef { id = "r.first5", kind = ContractKind.Relay, target = 300, value = () => C("relay.segment0") },           // 첫 주자로 5분 버티기
+        new ContractDef { id = "r.handoff30", kind = ContractKind.Relay, target = 30, value = () => C("relay.handoffBurst") },    // 이어받고 10초 안에 30마리 처치
+        new ContractDef { id = "r.allboss", kind = ContractKind.Relay, target = 7, value = () => C("relay.bossBy") },             // 세 주자 모두 보스를 하나씩 (비트 7)
+        new ContractDef { id = "r.burstboss", kind = ContractKind.Relay, target = 1, value = () => C("relay.burstBoss") },        // 이어받기 파동으로 보스에게 피해
+        // ---------------- 2.0.0~ 역류 전용 (쉬움 · 보통 칸 대신 300 · 800 P) — 값은 RefluxRun / RefluxDirector 가 RunCounters 에 적음
+        new ContractDef { id = "rf.dev2", kind = ContractKind.Reflux, target = 1, value = () => C("reflux.dev2") },                  // 개발자를 2분 안에
+        new ContractDef { id = "rf.keepEvo", kind = ContractKind.Reflux, target = 1, value = () => C("reflux.keepevo") },          // 무기 진화를 리치 왕까지 하나도 잃지 않기
+        new ContractDef { id = "rf.nakedNoHit", kind = ContractKind.RefluxHard, target = 1, value = () => C("reflux.nakedclean") }, // 맨몸으로 처음의 슬라임을 맞지 않고
+        new ContractDef { id = "rf.spirit3", kind = ContractKind.RefluxHard, target = 3, value = () => C("reflux.spirit") },        // 남은 영혼 3 이상으로 끝까지
         // ---------------- 일일 도전 전용 (일일 보상과 겹치지 않게 하나만)
         new ContractDef { id = "d.midboss", kind = ContractKind.Daily, target = 1, value = () => C("midboss") },
     };
@@ -209,6 +244,9 @@ public static class Contracts
         ContractKind.Hero => "h" + (int)who,
         ContractKind.EndlessEasy => "xe",
         ContractKind.EndlessNormal => "xn",
+        ContractKind.Relay => "r",
+        ContractKind.Reflux => "rf",
+        ContractKind.RefluxHard => "rh",
         _ => "d",
     };
     const string SlotKey = "contract.slot.";
@@ -217,6 +255,8 @@ public static class Contracts
     static List<ContractKind> KindsFor(bool endless, bool daily)
     {
         if (daily) return new List<ContractKind> { ContractKind.Daily };
+        if (endless && RefluxRun.Active) return new List<ContractKind> { ContractKind.Reflux, ContractKind.RefluxHard, ContractKind.Hero };      // 2.0.0~ 쉬움 · 보통 칸은 역류 전용 계약 둘로
+        if (endless && RelayRun.Active) return new List<ContractKind> { ContractKind.EndlessEasy, ContractKind.EndlessNormal, ContractKind.Relay };      // 2.0.0~ 영웅 계약 칸은 릴레이 전용 계약으로
         if (endless) return new List<ContractKind> { ContractKind.EndlessEasy, ContractKind.EndlessNormal, ContractKind.Hero };
         if (Demo.On) return new List<ContractKind> { ContractKind.Easy, ContractKind.Hero };
         return new List<ContractKind> { ContractKind.Easy, ContractKind.Normal, ContractKind.Hero };
@@ -446,8 +486,8 @@ public static class Contracts
     }
 
     // 결과 화면 · 메뉴 한 줄 꼬리표 (쉬움 · 300 P)
-    public static string KindTag(ContractDef d) => Loc.T(d.kind == ContractKind.Normal || d.kind == ContractKind.EndlessNormal ? "contract.kind.normal"
-                                                       : d.kind == ContractKind.Hero ? "contract.kind.hero" : "contract.kind.easy");
+    public static string KindTag(ContractDef d) => Loc.T(d.kind == ContractKind.Normal || d.kind == ContractKind.EndlessNormal || d.kind == ContractKind.RefluxHard ? "contract.kind.normal"
+                                                       : d.kind == ContractKind.Relay ? "relay.contract.kind" : d.kind == ContractKind.Hero ? "contract.kind.hero" : "contract.kind.easy");
 
     public static string Progress(ContractDef d, int now) => Mathf.Min(now, d.target).ToString("N0") + " / " + d.target.ToString("N0");
 

@@ -71,8 +71,18 @@ public class DamagePopup : MonoBehaviour
     bool inSmall;
     float crowd, riseMul = 1f, alphaMul = 1f, dieT = -1f;
 
+    // 2.0.0~ 공사 반장 압착: 한 틱에 열두 마리가 맞아도 적마다 숫자를 띄우지 않고, 부른 쪽이 더미 위에 합산 숫자 하나만 띄움 (using (DamagePopup.Quiet()) { … })
+    static int quietDepth;
+    public readonly struct QuietScope : System.IDisposable
+    {
+        public QuietScope(bool on) { quietDepth++; }
+        public void Dispose() { quietDepth = Mathf.Max(0, quietDepth - 1); }
+    }
+    public static QuietScope Quiet() => new QuietScope(true);
+
     public static void Show(Transform target, float damage, SpriteRenderer body, bool fromBoss = false, HealthBarFeel.Tier tier = HealthBarFeel.Tier.Small)
     {
+        if (quietDepth > 0) { NextCrit = false; return; }
         bool isCrit = NextCrit;
         NextCrit = false;
         bool isWeak = target != null && NextWeakTarget == target, weakPerf = isWeak && NextWeakPerfect;

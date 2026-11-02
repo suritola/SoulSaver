@@ -70,5 +70,10 @@ public static partial class LocTable
         AddPathsClockmaker();
         AddPathsPostman();
         AddPathsGhost();
+        AddPathsWrestler();
+        AddPathsForeman();
+        AddPathsPuppeteer();
+        AddPathsUndertaker();
+        AddPathsPhotographer();
     }
 }

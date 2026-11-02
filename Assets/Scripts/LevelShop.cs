@@ -59,17 +59,17 @@ public partial class LevelShop : MonoBehaviour
             // 11번(처치 시 회복)은 더 이상 나오지 않음 (도적은 사냥의 기세), 12 · 13번은 캐릭터 카드, 14번은 비상 보급 전용
             // 2번(재활용 에너지)은 스킬 강화라 빠짐: 필살기는 영혼 트리 · 특수 능력에서만 강화
             // 25 ~ 30 입문 · 외길은 입문 · 갈림길 창에서만, 31 새 카드는 그 카드가 있는 영웅만 (LevelShop.Paths)
-            ability_selected[i] = ((i == 11 || i == 12 || i == 13) && KitIcon(i) == null) || i == SupplyId || i == RecycleId || PathIdClosed(i);
+            ability_selected[i] = ClosedAtStart(i);          // 2.0.0~ 식은 LevelShop.Modes (영혼 릴레이 교대 뒤 다시 계산이 같이 씀)
         }
         CompactLevelUp();
         CompactTitle();
         TidyCards();                // 1.4.8~ 카드 칸 정리 · 본문 글씨 26 ~ 20
-        freePick = true;           // 시작할 때 주는 카드는 레벨을 올리지 않음
+        freePick = !ModeRun.Reflux;           // 시작할 때 주는 카드는 레벨을 올리지 않음 (2.0.0~ 역류는 자동 채우기가 대신 — 입문 창을 열지 않음)
         SignatureSkills.Ensure()?.Refresh(this);         // 고유 스킬 효과 (플레이어에 붙음)
         //레벨업 능력들
         setAbilitys();
         abilitysLoc = Loc.Version;
-        StartCoroutine(OpenFreeWhenReady());
+        if (!ModeRun.Reflux) StartCoroutine(OpenFreeWhenReady());
     }
 
     // 1.4.1~ 판 시작 무료 카드(= 갈래 입문) 창은 시작 순서(이야기 · 영웅 안내 · 영혼 각인 · 특수 능력)가 끝난 뒤에 엶
@@ -263,6 +263,7 @@ public partial class LevelShop : MonoBehaviour
 
     public void AddPending(int n = 1)
     {
+        if (ModeRun.Reflux) return;         // 2.0.0~ 역류: 상자 · 깨달음 같은 어떤 길로도 레벨업이 쌓이지 않음
         PendingLevels += n;
         SpecialAbilities.SharedInstance?.TreeOnLevelUp(n);       // 영혼 트리 '깨달음'
         Hints.Show("levelup", "레벨이 오르면 레벨업 카드를 고를 수 있습니다. [{INTERACT}]를 눌러 원할 때 카드를 고르세요.");     // 1.0.4~: 용어를 「레벨업 카드」로 통일
@@ -723,7 +724,7 @@ public partial class LevelShop : MonoBehaviour
     // 경험치를 더하고 넘친 만큼 레벨업. 처치한 적 · 보스가 곧 사라져도 연출과 포인트가 끊기지 않게 이 창이 맡음
     public void GainExp(PlayerController p, float amount)
     {
-        if (p == null) return;
+        if (p == null || ModeRun.Reflux) return;       // 2.0.0~ 역류는 경험치 · 레벨업이 없음 (쌓는 길을 끔)
         // 최대 레벨 50 (무한 모드도 50): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
@@ -765,7 +766,7 @@ public partial class LevelShop : MonoBehaviour
     // 한꺼번에 레벨업 포인트를 줌 (무한 모드는 레벨 10 만큼 미리)
     public void GrantLevels(PlayerController p, int n)
     {
-        if (p == null || n <= 0) return;
+        if (p == null || n <= 0 || ModeRun.Reflux) return;
         earned += n;
         p.needEXP = PlayerController.NeedExp(1 + earned);
         AddPending(n);
@@ -1066,7 +1067,7 @@ public partial class LevelShop : MonoBehaviour
         RunSave.Record((freePick ? "f" : "c") + what);         // 판 중간 저장 (2.1.9): 고른 카드를 순서대로
         Paths.NoteCard(what);                                   // 판 기록 cards_seq (2026-10-19~)
         // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외) · 최대 레벨에서 멈춤 (그 뒤는 성장 카드, 1.0.4~)
-        if (freePick) freePick = false;
+        if (freePick) { freePick = false; RelayFreePicked(); }      // 2.0.0~ 영혼 릴레이 환급 카드는 한 장씩 이어서
         else if (bul != null && bul.level < LevelCap) bul.level++;
         // 성장 카드 (1.0.4~): 능력 배열 밖이라 HUD · 진화 확인 없이 효과만
         if (IsGrowth(what))

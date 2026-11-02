@@ -229,7 +229,7 @@ public class PlayerController : MonoBehaviour
     // 후반 도적이 주체할 수 없이 빨라졌음 → 기본 속도의 1.3배까지는 그대로, 넘는 몫은 40%만, 최대 1.7배 (둔화는 그대로 적용)
     const float SpeedSoftCap = 1.3f, SpeedOverRate = 0.4f, SpeedHardCap = 1.7f;
     float baseMoveSpeed = -1f;
-    public float BaseMoveSpeed => baseMoveSpeed > 0f ? baseMoveSpeed : speed;     // 엄마 결계 「청소기」 끄는 힘의 기준 (걸어서 빠져나갈 수 있게)
+    public float BaseMoveSpeed { get => baseMoveSpeed > 0f ? baseMoveSpeed : speed; set => baseMoveSpeed = value; }     // 엄마 결계 「청소기」 끄는 힘의 기준 (걸어서 빠져나갈 수 있게) · 2.0.0~ 영혼 릴레이가 교대 때 영웅 배율을 갈아 끼움
     float CappedSpeed(float raw)
     {
         if (baseMoveSpeed <= 0f) return raw;
@@ -260,14 +260,11 @@ public class PlayerController : MonoBehaviour
 
         // 들고 있는 무기 모습 · 발사 연출
         PlayerLook.Attach(this);
+        RelayRun.CaptureBase(this);         // 2.0.0~ 영혼 릴레이: 영웅 배율이 곱해지기 전 탄창 · 장전 시간 (교대 때 되돌림)
         // 거너가 아닌 캐릭터: 스탯 · 몸 그림 · 평타 · 우클릭 스킬 (CharacterData)
         CharacterKit.Attach(this);
         // 거너: 공격력 배율 · 장전 1.8 → 1.3초(2.1.0, 1대 상대 피해가 가장 낮았음) → 1.5초(2.1.1)
-        if (CharacterData.IsGunner)
-        {
-            damage *= CharacterData.Current.damage;
-            reloadTime = Mathf.Min(reloadTime, 1.5f);         // 2.1.1: 1.3 → 1.5초 (1 · 2장에서 너무 셌음)
-        }
+        if (CharacterData.IsGunner) ApplyGunnerDef();
 
         mainCamera = Camera.main;
 
@@ -286,6 +283,13 @@ public class PlayerController : MonoBehaviour
     }
 
 
+
+    // 거너 영웅 배율 (Start · 영혼 릴레이 교대가 같은 식으로)
+    public void ApplyGunnerDef()
+    {
+        damage *= CharacterData.Current.damage;
+        reloadTime = Mathf.Min(reloadTime, 1.5f);         // 2.1.1: 1.3 → 1.5초 (1 · 2장에서 너무 셌음)
+    }
 
     // 레벨이 오를수록 조금씩 더 필요 (100, 150, 200 ...)
     // 1.0.1: 최고점은 그대로 두고 성장 속도만 늦춤 — 레벨마다 +50 → +65 (초반 +15%, 레벨 20쯤 +30%)
@@ -431,7 +435,19 @@ public class PlayerController : MonoBehaviour
         {
             // 다른 캐릭터: 누르고 있으면 공격 속도에 맞춰 계속 (탄창이 있으면 한 발씩 씀)
             bool ammo = kit.UsesAmmo;
-            if (kit.DrawsBow)
+            if (kit.Plows)
+            {
+                // 공사 반장: 누르는 동안 삽날을 세우고 적을 더미로 쌓다가, 떼면 쏟아냄 (CharacterKit.Foreman) — 이미 누르는 중이면 UI 위로 커서가 지나가도 풀지 않음
+                kit.UpdatePlow(!specialWeapon && !kit.Busy && (kit.PlowActive || !GameInput.FireHeld || !PointerOverUI()),
+                               ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul));
+            }
+            else if (kit.Digs)
+            {
+                // 장의사: 빈 땅을 누르고 있으면 커서 자리의 구멍이 넓어지고 떼면 완성 · 판 구멍 위를 누르면 매장 (CharacterKit.Undertaker) — 이미 파는 중이면 UI 위로 커서가 지나가도 풀지 않음
+                kit.UpdateDig(!specialWeapon && !kit.Busy && (kit.DigActive || !GameInput.FireHeld || !PointerOverUI()),
+                              ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul));
+            }
+            else if (kit.DrawsBow)
             {
                 // 궁수: 좌클릭을 누르고 있으면 시위를 당기고, 떼면 발사 (오래 당길수록 강하고 빠른 화살)
                 // 공격 속도가 빠를수록 빨리 가득 당김
@@ -449,7 +465,7 @@ public class PlayerController : MonoBehaviour
                     NowBullet--;
                     if (NowBullet <= 0) kit.OnMagEmpty();
                 }
-                nextShootTime = Time.time + ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul);
+                nextShootTime = Time.time + kit.AttackGap(ShootSpeed / (fireRateMultiplier * kit.AttackSpeedMul));      // 2.0.0~ 씨름꾼: 잡은 뒤에는 짧게 (바로 던질 수 있게)
             }
             if (!specialWeapon) ammoTextOverride = ammo ? null : kit.WeaponName;
         }
@@ -563,7 +579,9 @@ public class PlayerController : MonoBehaviour
 
         float slowMul = Time.time < slowUntil ? slowFactor : 1f;
         float kitMul = CharacterKit.Instance != null ? CharacterKit.Instance.MoveMul : 1f;
-        if (!isSkillUsing) transform.Translate(move * CappedSpeed(speed * kitMul * SignatureSkills.MoveMul) * slowMul * Time.fixedDeltaTime);
+        Vector3 stepMove = move;
+        if (CharacterKit.Instance != null) CharacterKit.Instance.FilterMove(ref stepMove);      // 2.0.0~ 공사 반장: 삽날 방향에 따른 이동 배율
+        if (!isSkillUsing) transform.Translate(stepMove * CappedSpeed(speed * kitMul * SignatureSkills.MoveMul) * slowMul * Time.fixedDeltaTime);
 
         // 1.4.6~ 결계 뒤 맵 테두리 벽 너머에 갇히지 않게 (0.5초마다 · BossUltimate.KeepInside)
         if (Time.time >= nextInsideCheck) { nextInsideCheck = Time.time + 0.5f; BossUltimate.KeepInside(this); }
@@ -632,6 +650,7 @@ public class PlayerController : MonoBehaviour
         bool done = false;
         try
         {
+            if (CharacterKit.Instance != null) SafeHook(() => CharacterKit.Instance.PhReloadStart());     // 2.0.0~ 사진사: 필름 감기 시작 = 최고의 사진 인화
             SafeHook(() => special?.ReloadShockwave(transform.position));
             SafeHook(() => SignatureSkills.ReloadStart(true));          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발 (1.4.1~ 권총 장전 표시)
 
@@ -690,6 +709,7 @@ void Shoot()
         GunnerPaths gp = GunnerPaths.Live;
 
         nextShootTime = Time.time + ShootSpeed / fireRateMultiplier * (gp != null ? gp.IntervalMul : 1f);
+        AttackFired?.Invoke(MuzzlePosition, ((Vector2)(special != null ? special.MouseWorldPos - MuzzlePosition : Vector3.right)).normalized);
         // 탄창 저주: 마지막 한 발 강화
         // 과열 사격은 탄이 줄지 않으므로 「과열까지 남은 발 수」를 탄 수 대신 씀 (마지막 발 = 이 발로 과열) — 갈래 없으면 NowBullet 그대로
         bool noAmmo = gp != null && gp.NoAmmo;
@@ -1044,6 +1064,7 @@ void Shoot()
         targetMarks.Clear();
         special?.EndAim();
 
+        volleyImpacted = false;
         StartCoroutine(ShootTargets());
 
         if (skillGauge != null) skillGauge.ResetSkillPoint();
@@ -1096,15 +1117,29 @@ void Shoot()
 
     // 필살기를 썼을 때 (업적 등)
     public static event System.Action UltUsed;
+    // 2.0.0~ 공격을 낸 순간 신호 (사막 비밀 표지판 판정 등 — 평타 한 번마다 부름. 구독자는 (낸 자리, 방향))
+    public static event System.Action<Vector3, Vector2> AttackFired;
+    public static void RaiseAttackFired(Vector3 origin, Vector2 dir) => AttackFired?.Invoke(origin, dir);
     // 다른 캐릭터의 우클릭 스킬도 필살기로 셈 (업적 등)
     public void RaiseUltUsed() => UltUsed?.Invoke();
+
+    // 2.0.0~ 손맛 연출: 필살기 일제 사격의 첫 발이 나가는 순간 한 번 (조준 끝 사격 · 즉발형 · 진화 무기 일제 사격 모두)
+    bool volleyImpacted;
+    void VolleyImpact(Vector3 at, Vector2 dir)
+    {
+        if (volleyImpacted) return;
+        volleyImpacted = true;
+        Impact.Hit(ImpactTier.Ult, at, dir);
+    }
 
     IEnumerator InstantUlt()
     {
         UltUsed?.Invoke();
+        volleyImpacted = false;
         isVolleying = true;
         skillGauge.ResetSkillPoint();
         FaceTowards(mainCamera.ScreenToWorldPoint(GameInput.MousePosition));
+        VolleyImpact(transform.position, Vector2.zero);
         yield return StartCoroutine(special.WeaponVolley(new List<EnermyController>(), damage * 5f, 0f));
         isVolleying = false;
     }
@@ -1120,6 +1155,7 @@ void Shoot()
         // 필살기를 바꾸는 진화(쌍권총 · 총알 폭풍)면 그 무기다운 일제 사격
         if (special != null && special.UltReplaced)
         {
+            VolleyImpact(transform.position, Vector2.zero);
             yield return StartCoroutine(special.WeaponVolley(targets, skillDamage, getHP));
             yield return StartCoroutine(ShootBossTargets());
             targets.Clear();
@@ -1171,6 +1207,7 @@ void Shoot()
 
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
 
+                VolleyImpact(aim, ((Vector2)(aim - startPosition)).normalized);
                 Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized, skillDamage * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
                 // 2.2.1: 필살기 총알에도 총알 카드 · 고유 스킬(영혼 탄환 · 총열 과열 · 소각탄 · 전기탄 …), 덤 총알 · 유도 · 폭발탄은 빼고(light)
                 SignatureSkills.UltShots = true;
@@ -1214,6 +1251,7 @@ void Shoot()
                 FaceTowards(aim);
                 PlayerMotion.Of(this).Recoil(aim - startPosition, 0.6f);
                 if (audioSource != null && shotSound != null) audioSource.PlayOneShot(shotSound, GameSettings.SfxVolume);
+                VolleyImpact(aim, ((Vector2)(aim - startPosition)).normalized);
                 Bullet shot = CreateBullet(startPosition, ((Vector2)(aim - startPosition)).normalized,
                     skillDamage * GunUltBossMul * (special != null ? special.UltPower(SpecialAbilities.PistolUlt) : 1f), pene, getHP, true);
                 SignatureSkills.UltShots = true;
@@ -1504,7 +1542,11 @@ void Shoot()
         SignatureSkills.Hurt(taken);
         LastStand.Check(this);      // 체력 30% 아래: 장마다 한 번 2초 무적 + 밀쳐 내기 (1.0.1)
 
-        if (PlayerHealth <= 0) StartCoroutine(DeathSequence());
+        if (PlayerHealth <= 0)
+        {
+            if (RelayRun.TryHandoff(this)) return true;       // 2.0.0~ 영혼 릴레이: 앞 주자가 쓰러지면 다음 주자가 그 자리에서 일어남
+            StartCoroutine(DeathSequence());
+        }
 
         return true;
     }

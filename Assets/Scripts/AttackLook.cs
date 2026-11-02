@@ -116,6 +116,11 @@ public static class AttackLook
     public static Color InkBlue => Pick(new Color(0.4f, 0.6f, 1f), CharacterId.Cartographer);      // 지도 제작자
     public static Color PostGold => Pick(new Color(1f, 0.78f, 0.35f), CharacterId.Postman);        // 우체부
     public static Color Frost => Pick(LegacyFrost, CharacterId.Ghost);                              // 유령
+    public static Color SandBlue => Pick(new Color(0.95f, 0.62f, 0.45f), CharacterId.Wrestler);    // 씨름꾼 (청샅바)
+    public static Color Lemon => Pick(new Color(0.95f, 0.88f, 0.35f), CharacterId.Foreman);        // 공사 반장 (레몬 안전모)
+    public static Color Skyline => Pick(new Color(0.62f, 0.72f, 1f), CharacterId.Puppeteer);       // 인형사 (연보라빛 하늘 · 줄)
+    public static Color FlashWhite => Pick(new Color(0.78f, 0.83f, 1f), CharacterId.Photographer);       // 사진사 (플래시 청백)
+    public static Color GraveSilver => Pick(new Color(0.725f, 0.796f, 0.894f), CharacterId.Undertaker);       // 장의사 (창백한 청회색 은)
 
     // 1.6.0~ 전투색(테두리 · 빛 무리 · 잔상 · Vivid 의 대체색)이라 색각 모드 보정을 여기서 — 거너 · 시계공 · 우체부의 금 · 황동이 적 테 주황과 겹쳐서
     public static Color HeroColor() => VisualRules.AllyCb(HeroColorRaw());
@@ -136,6 +141,11 @@ public static class AttackLook
             case CharacterId.Clockmaker: return Brass;
             case CharacterId.Postman: return PostGold;
             case CharacterId.Ghost: return Frost;
+            case CharacterId.Wrestler: return SandBlue;
+            case CharacterId.Foreman: return Lemon;
+            case CharacterId.Puppeteer: return Skyline;
+            case CharacterId.Undertaker: return GraveSilver;
+            case CharacterId.Photographer: return FlashWhite;
             default: return Gold;
         }
     }

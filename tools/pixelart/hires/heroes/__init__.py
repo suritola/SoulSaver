@@ -5,7 +5,7 @@
 import importlib
 
 HEROES = [
-    'gunner_nogun', 'swordsman', 'archer', 'alchemist', 'rogue', 'ghost', 'postman', 'clockmaker', 'cartographer',
+    'gunner_nogun', 'swordsman', 'archer', 'alchemist', 'rogue', 'ghost', 'postman', 'clockmaker', 'cartographer', 'wrestler', 'foreman', 'puppeteer', 'undertaker', 'photographer',
 ]
 SKINS = [
     'alchemist__herb', 'alchemist__mercury', 'alchemist__plague', 'alchemist__stone',
@@ -14,7 +14,25 @@ SKINS = [
     'rogue__ninja', 'rogue__raven', 'rogue__sand', 'rogue__void',
     'swordsman__black', 'swordsman__bronze', 'swordsman__dragon', 'swordsman__paladin',
 ]
-ALL = HEROES + SKINS
+# 2.0.0~ 새 영웅 넷의 스킨 16 (지도 제작자 · 시계공 · 우체부 · 유령)
+SKINS2 = [
+    'cartographer__drafter', 'cartographer__hydro', 'cartographer__starmap', 'cartographer__blank',
+    'clockmaker__apprentice', 'clockmaker__hourglass', 'clockmaker__cuckoo', 'clockmaker__stopped',
+    'postman__paperboy', 'postman__pigeon', 'postman__courier', 'postman__return',
+    'ghost__sheet', 'ghost__wisp', 'ghost__deepsea', 'ghost__deleted',
+]
+# 2.1.0~ 새 영웅 둘의 스킨 8 (씨름꾼 · 공사 반장)
+SKINS3 = [
+    'wrestler__local', 'wrestler__bronze', 'wrestler__crypt', 'wrestler__referee',
+    'foreman__night', 'foreman__snow', 'foreman__hell', 'foreman__beta',
+]
+# 2.2.0~ 새 영웅 셋의 스킨 12 (인형사 · 장의사 · 사진사)
+SKINS4 = [
+    'puppeteer__shadow', 'puppeteer__paper', 'puppeteer__crypt', 'puppeteer__devhand',
+    'undertaker__keeper', 'undertaker__mason', 'undertaker__hell', 'undertaker__todo',
+    'photographer__press', 'photographer__instant', 'photographer__ghost', 'photographer__f12',
+]
+ALL = HEROES + SKINS + SKINS2 + SKINS3 + SKINS4
 
 # 시트 이름 → 모듈 이름 (그린 것만). 시안 2 = 도적 1장 — 독립 검토 판정을 넘은 뒤 나머지 28장을 더함
 #   영웅 8 — 도적 규칙(README.md) 그대로 더함
@@ -28,9 +46,14 @@ MODULES = {
     'postman': 'postman',
     'clockmaker': 'clockmaker',
     'cartographer': 'cartographer',
+    'wrestler': 'wrestler',
+    'foreman': 'foreman',
+    'puppeteer': 'puppeteer',
+    'undertaker': 'undertaker',
+    'photographer': 'photographer',
 }
 # 스킨 20 — 색 대응 15벌은 기본 영웅 모듈 + 스킨 32칸 색 단계 (skin.py Variant), 모양이 다른 5벌은 + 덧그림 (뿔 · 모자 · 가면 · 날개 자락 · 머리띠)
-MODULES.update({n: n for n in SKINS})
+MODULES.update({n: n for n in SKINS + SKINS2 + SKINS3 + SKINS4})
 
 
 def load(name):

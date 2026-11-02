@@ -214,3 +214,7 @@ if __name__ == '__main__':
     gunner_skins()
     weapon_skins()
     effect_icons()
+    import make_skins2          # 2.0.0~ 새 영웅 넷 스킨 (캐릭터 16 · 무기 8)
+    make_skins2.run()
+    import make_skins3          # 2.1.0~ 새 영웅 둘(씨름꾼 · 공사 반장) 스킨 (캐릭터 8 · 무기 4)
+    make_skins3.run()

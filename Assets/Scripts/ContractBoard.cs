@@ -31,15 +31,15 @@ public sealed class BoardCell
 
 public static class ContractBoard
 {
-    public const int Cols = 9, Rows = 5, HeroRows = 3;
+    public const int Cols = 14, Rows = 5, HeroRows = 3;       // 2.0.0~ 영웅 열 9 → 11 (씨름꾼 · 공사 반장) · 새 영웅이 늘 때마다 +1 (공용 칸은 앞 아홉 열 그대로)
     static int L(string k) => RunCounters.Life(k);
     static int Lh(string k, int c) => RunCounters.Life(RunCounters.Hero(k, (CharacterId)c));
 
-    static readonly string[] Row1 = { "ult", "ult", "ult", "perfect", "unstable", "shape", "oclock", "letter", "freeze" };
-    static readonly int[] Row1Target = { 100, 100, 100, 300, 100, 1000, 200, 1000, 500 };
-    static readonly string[] Row3 = { "chest", "sarco", "event.goblin", "event.done", "chest.legend", "sarco", "midboss", "shop", "event.altar" };
-    static readonly int[] Row3Target = { 20, 10, 10, 15, 5, 10, 30, 20, 10 };
-    public static readonly string[] Row3Relic = { "casing", "scabbard", "seal", "arrow", "notebook", "mapscrap", "clock", "letter", null };
+    static readonly string[] Row1 = { "ult", "ult", "ult", "perfect", "unstable", "shape", "oclock", "letter", "freeze", "throw", "b.dump", "pup.cut", "bury", "photo" };
+    static readonly int[] Row1Target = { 100, 100, 100, 300, 100, 1000, 200, 1000, 500, 1000, 500, 1500, 1500, 3000 };
+    static readonly string[] Row3 = { "chest", "sarco", "event.goblin", "event.done", "chest.legend", "sarco", "midboss", "shop", "event.altar", "ringout", "b.crash", "pup.swap.cut3", "grave", "print.tear" };
+    static readonly int[] Row3Target = { 20, 10, 10, 15, 5, 10, 30, 20, 10, 200, 300, 150, 200, 150 };
+    public static readonly string[] Row3Relic = { "casing", "scabbard", "seal", "arrow", "notebook", "mapscrap", "clock", "letter", null, null, null, null, null, null };
     static readonly string[] OriginalRelics = { "wc", "jd", "dm", "ct", "fa", "ga", "gi", "sk" };
 
     static List<BoardCell> cells;
@@ -305,7 +305,7 @@ public static class ContractBoard
         how.fontSizeMin = 14f;
 
         HashSet<string> done = Set(DoneKey), claimed = Set(ClaimKey);
-        const float CellW = 160f, CellH = 118f, Gap = 8f, LabelW = 96f;
+        const float CellW = 122f, CellH = 118f, Gap = 8f, LabelW = 96f;       // 2.0.0~ 열이 11개라 칸 폭 160 → 132
         float x0 = -((Cols - 1) * (CellW + Gap)) * 0.5f + LabelW * 0.5f;
         float yHead = 318f, y0 = 238f;
         // 열 머리: 영웅 초상 · 이름 (못 산 영웅은 흐리게)

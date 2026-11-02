@@ -47,6 +47,20 @@ public class EnemySkill : MonoBehaviour
         abyssCasting = Mathf.Max(0, abyssCasting - 1);
     }
 
+    // 2.0.0~ 사진사 「셔터 찬스」: 예고(시전) 중인지 · 끊기 — 끊으면 시전 코루틴을 멈추고 예고선 · 빛을 거둠 (다음 시전은 쿨다운 뒤)
+    public bool Winding => busy;
+    public void CancelCast()
+    {
+        if (!busy) return;
+        StopAllCoroutines();
+        ReleaseAbyss();
+        foreach (GameObject g in owned) if (g != null) Destroy(g);
+        owned.Clear();
+        if (enemy != null) { enemy.casting = false; if (sr != null && !enemy.IsDead) sr.color = enemy.baseColor; }
+        busy = false;
+        next = Time.time + cooldown * 0.6f;
+    }
+
     void OnDisable()
     {
         ReleaseAbyss();

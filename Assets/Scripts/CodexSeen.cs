@@ -82,6 +82,7 @@ public static class CodexSeen
         Add("sec.dev", Cat.Secret, false);
         Add("sec.mom", Cat.Secret, false);
         Add("sec.jackpot", Cat.Secret, true);
+        foreach (var d in DesertSecrets.Defs) Add("sec.desert." + d.key, Cat.Secret, false);       // 2.0.0~ 「사막에서 본 것」: 사막 비밀로 얻은 새 영웅
         return l;
     }
 
@@ -175,6 +176,7 @@ public static class CodexSeen
             if (Demo.On && Demo.CharacterAllowed((CharacterId)c)) return true;     // 체험판: 처음부터 고를 수 있는 영웅은 만난 것
             return CharacterData.ConditionMet((CharacterId)c);       // 해금 조건을 이룬 순간 만난 것 (사기 전이라도)
         }
+        if (key.StartsWith("sec.desert.")) return DesertSecrets.IsSolvedEver(key.Substring(11));      // 비밀을 풀어 영웅을 얻었으면 (해금 저장이 곧 기록)
         if (key == "sec.dev" || key == "sec.mom")
             return EndlessMode.EverCleared || UnlockRoutes.MainRouteMet(CharUnlock.EndlessClear);       // 무한 모드 클리어 = 둘 다 쓰러뜨림 (1.2~ 유령을 이야기 모드 대체 루트로 열었으면 만난 것이 아님)
         return false;
@@ -238,7 +240,7 @@ public static class CodexSeen
         if (sa == null) return;
         string key;
         if (SpecialAbilities.IsAwaken(id)) key = "evo.aw." + id;
-        else if (id >= CharacterKit.AugFirst) key = "evo.a." + id;
+        else if (CharacterKit.IsAug(id)) key = "evo.a." + id;
         else if (!CharacterData.IsGunner) key = "evo.f." + id;
         else if (sa.EvolutionTier <= 1) key = GunT1(id);
         else key = GunT2(sa.GunEvo1, id);

@@ -25,6 +25,17 @@ public class SteamManager : MonoBehaviour
 
     public static SteamManager Instance { get; private set; }
     public static bool Initialized { get; private set; }
+    // 2.0.0~ 내 스팀 이름 (자기 이름이라 요청 없이 바로 나옴 · 스팀이 없거나 실패하거나 빈 이름이면 "" — 쓰는 쪽이 「여행자」로 바꿈 · 화면에 쓸 때는 noparse 로 감싸고 글자 단위로 자를 것: SteamLeaderboards.DisplayName 과 같은 방식)
+    public static string MyName()
+    {
+#if STEAM
+        if (!Initialized) return "";
+        try { return SteamFriends.GetPersonaName() ?? ""; }
+        catch { return ""; }
+#else
+        return "";
+#endif
+    }
     // 1.1.9~ 스팀 덱에서 실행 중인지 (첫 실행 자동 설정 · GameSettings)
     public static bool OnDeck { get; private set; }
 
@@ -135,6 +146,13 @@ public class SteamManager : MonoBehaviour
             if (SkinData.Owns(s.id)) OnSkinBought(s);
     }
 
+    // 2.0.0 검토: 해금한 비밀 영웅의 업적을 장면마다 다시 맞춤 (오프라인에서 풀어 놓친 것을 나중에 받게 · 이미 받은 것은 Unlock 이 그대로 둠)
+    void CheckUnlockedHeroes()
+    {
+        foreach (var d in DesertSecrets.Defs)
+            if (CharacterData.IsUnlocked(d.hero)) SteamAchievements.Unlock(d.achievement);
+    }
+
     // 한 판 클리어 (3장 보스): 난이도별 업적
     void OnCleared(Difficulty d)
     {
@@ -162,6 +180,7 @@ public class SteamManager : MonoBehaviour
     {
         if (scene.name == "GameOver" && !RunStats.Cleared && !RunStats.GaveUp)SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
         CheckOwnedSkins();
+        CheckUnlockedHeroes();
         if (scene.name != "GameScene") return;
         runKills = runEvolves = runUlts = 0;
         bossFight = false;
@@ -240,6 +259,7 @@ public class SteamManager : MonoBehaviour
         TrackBossFight();
         if (Time.unscaledTime < nextPoll) return;
         nextPoll = Time.unscaledTime + 0.5f;
+        if (ModeRun.Reflux) return;       // 2.0.0~ 역류는 완성된 몸으로 시작하므로 레벨 · 진화 · 트리 · 무한 시간 업적을 세지 않음
         if (player != null && player.level >= 10) SteamAchievements.Unlock(SteamAchievements.Level10);
         if (player != null && player.level >= 15) SteamAchievements.Unlock(SteamAchievements.Level15);
         SpecialAbilities special = player != null ? player.special : null;
@@ -325,6 +345,21 @@ public static class SteamAchievements
     // 2.1.1~: 4장 영혼의 심연
     public const string EnterAbyss = "ACH_ENTER_ABYSS";
     public const string MirrorQuick = "ACH_MIRROR_QUICK";
+    // 2.0.0~ 사막 비밀로 새 영웅 해금 (DesertSecrets · 스팀 파트너 사이트 등록은 사용자 몫)
+    public const string UnlockWrestler = "UNLOCK_WRESTLER";
+    public const string UnlockForeman = "UNLOCK_FOREMAN";
+    public const string UnlockPuppeteer = "UNLOCK_PUPPETEER";
+    public const string UnlockUndertaker = "UNLOCK_UNDERTAKER";
+    public const string UnlockPhotographer = "UNLOCK_PHOTOGRAPHER";
+    // 2.0.0~ 영혼 릴레이 (스팀 파트너 사이트 등록은 사용자 몫)
+    public const string RelayFirst = "ACH_RELAY_FIRST";                // 영혼 릴레이를 10분 넘게 버팀
+    public const string RelayDev = "ACH_RELAY_DEV";                    // 영혼 릴레이에서 개발자 처치
+    public const string RelayAllBoss = "ACH_RELAY_ALLBOSS";            // 세 주자 모두 보스 처치
+    public const string RelayFirstHero = "ACH_RELAY_FIRSTHERO";        // 첫 주자 혼자 15분 (넘겨주지 않고 최후의 시간 진입)
+    // 2.0.0~ 역류 (스팀 파트너 사이트 등록은 사용자 몫)
+    public const string RefluxClear = "ACH_REFLUX_CLEAR";              // 역류 클리어
+    public const string RefluxFast = "ACH_REFLUX_FAST";                // 8분 안에 역류 클리어
+    public const string RefluxNaked = "ACH_REFLUX_NAKED";             // 맨몸으로 처음의 슬라임을 맞지 않고 처치
 
     static readonly System.Collections.Generic.HashSet<string> done = new System.Collections.Generic.HashSet<string>();
 
@@ -350,6 +385,11 @@ public static class SteamLeaderboards
 {
     public const string Endless = "ENDLESS_BEST";
     public static string Daily(string day) => "DAILY_" + day;
+    // 2.0.0~ 특별 모드: 영혼 릴레이는 모든 조합 한 줄 + 조합별(영웅 번호를 작은 순으로 정렬한 두 자리 수 — RelayRun.ComboKey), 역류는 짧을수록 좋음(오름차순)
+    public const string RelayAll = "RELAY_ALL";
+    public static string Relay(string combo) => "RELAY_" + combo;
+    public const string Reflux = "REFLUX_BEST";
+    static bool Ascending(string board) => board == Reflux;
 
     // 점수 = 버틴 시간(초, 내림) — 스팀 화면(커뮤니티 허브)에 시간으로 보이게 표시 방식이 「시간(초)」이라 다른 값을 섞지 않음
     // 자세한 값(details) 순서: 0 영웅 번호 · 1 보스 처치 · 2 레벨 · 3 처치 수 · 4 판 버전(1.1.5 → 10105) — 모르면 -1
@@ -513,7 +553,7 @@ public static class SteamLeaderboards
             then(r.m_hSteamLeaderboard);
         });
         alive.Add(cr);
-        cr.Set(SteamUserStats.FindOrCreateLeaderboard(board, ELeaderboardSortMethod.k_ELeaderboardSortMethodDescending, ELeaderboardDisplayType.k_ELeaderboardDisplayTypeTimeSeconds));
+        cr.Set(SteamUserStats.FindOrCreateLeaderboard(board, Ascending(board) ? ELeaderboardSortMethod.k_ELeaderboardSortMethodAscending : ELeaderboardSortMethod.k_ELeaderboardSortMethodDescending, ELeaderboardDisplayType.k_ELeaderboardDisplayTypeTimeSeconds));
     }
 
     static void Download(SteamLeaderboard_t h, ELeaderboardDataRequest req, int from, int to, System.Action<List<Entry>> then)

@@ -95,6 +95,11 @@ public static class RunSave
         public int paths;
         public float pathsState;                        // 1.4.1~ 영웅 갈래가 남기는 값 하나 (HeroPaths.SaveState · 예 지도 제작자 접지술 극의의 두 번째 충전, 옛 저장은 0)
         public bool freeDue;                            // 1.4.1~ 판 시작 무료 카드(= 갈래 입문)를 아직 고르지 않음 → 이어할 때 그 창을 다시 엶
+        // 2.0.0~ 영혼 릴레이 (RelayRun.SaveTo · 옛 저장은 빈 글 = 릴레이 아님): 주자 순서 "0,8,9" · 지금 주자 · 진화 빚 · 못 고른 환급 카드 · 구간 시작 초 "0,482,1172"
+        //   교대는 기록 한 줄 hz<번호> 로 남아 이어할 때 같은 RelaySwap.Run(replaying) 을 그 자리에서 되풀이 (character 에는 첫 주자를 적음)
+        public string relay = "";
+        public int relayIndex, relayEvoOwed, relayFreeLeft;
+        public string relaySegments = "";
     }
 
     // 이번 판에서 지금까지 한 선택
@@ -103,6 +108,8 @@ public static class RunSave
     public static Data Pending { get; private set; }
     // 기록을 다시 적용하는 동안 (기록이 두 번 쌓이지 않게 · 연출을 띄우지 않게)
     public static bool Replaying { get; private set; }
+    // 2.0.0~ 역류 자동 채우기(LevelShop.AutoFill)가 기록 재생과 같은 「연출 없음」 표시를 켬 · 끔
+    internal static void SetAutoFill(bool on) => Replaying = on;
     // 보스를 쓰러뜨렸고 무기 진화를 아직 고르지 않음
     public static bool NeedEvolution;
     // 보스를 쓰러뜨렸고 보스 보상 3택을 아직 고르지 않음 (1.0.4~)
@@ -135,7 +142,7 @@ public static class RunSave
 
     // 저장해도 되는 판인지
     // 1.2.7~ 무한 모드 판이 끝난 뒤(게임을 끄며 순위표에 올림 · EndlessQuit)는 끌 때 저장(OnApplicationQuit)이 이어하기를 다시 만들지 않게
-    static bool Savable => !Disabled && !DailyChallenge.Active && !Demo.On && !EndlessMode.Ended
+    static bool Savable => !Disabled && !DailyChallenge.Active && !RefluxRun.Active && !Demo.On && !EndlessMode.Ended
                            && !GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode
                            && SceneManager.GetActiveScene().name == "GameScene";
 
@@ -215,6 +222,7 @@ public static class RunSave
         {
             Data d = JsonUtility.FromJson<Data>(json);
             if (d == null || d.version != Version || !CharacterData.IsUnlocked((CharacterId)d.character)) return null;
+            if (!string.IsNullOrEmpty(d.relay) && !RelayRun.SaveValid(d)) return null;       // 2.0.0~ 릴레이 저장은 셋 모두 해금일 때만
             return d;
         }
         catch { return null; }
@@ -264,6 +272,7 @@ public static class RunSave
         LevelShop shop = Cache<LevelShop>.Get;
         EnemySpawner sp = Cache<EnemySpawner>.Get;
         if (sm == null || p == null || shop == null || sp == null || p.IsDying || p.PlayerHealth <= 0f) return false;
+        if (RelayRun.Swapping) return false;                        // 2.0.0~ 영웅 교대가 도는 같은 프레임 안은 반쯤 바뀐 상태
         if (!sm.Started) return false;                              // 시작 이야기 · 첫 카드를 고르기 전은 저장할 게 없음
         if (FinalBossDown) return false;                            // 마지막 보스가 쓰러지는 연출 중에도 저장하지 않음 (1.0.4~, 예전엔 보스전이 다시 저장됐음)
 
@@ -290,6 +299,7 @@ public static class RunSave
             runPoints = CharacterData.RunPoints,        // 1.2.5~ 이번 판 포인트 (표시 · 기록용)
             runBonus = Point.RunBonus,
         };
+        if (RelayRun.Active) { d.character = RelayRun.Order[0]; RelayRun.SaveTo(d); }     // 2.0.0~ 영혼 릴레이: 재생은 첫 주자부터 시작해야 함
         Point pt = Cache<Point>.Get;
         d.pointsShown = pt != null ? pt.points : 0;
         d.paths = Paths.Active ? 1 : 0;                             // 2026-10-19~ 갈래 규칙 판인지
@@ -375,6 +385,7 @@ public static class RunSave
         if (d == null) return false;
         Pending = d;
         continuing = true;
+        if (!string.IsNullOrEmpty(d.relay)) RelayRun.Resume(RelayRun.ParseInts(d.relay, RelayRun.Runners), RelayRun.ParseInts(d.relaySegments, RelayRun.Runners));      // 2.0.0~ 첫 주자부터 (재생의 hz 가 교대를 되풀이)
         CharacterData.Override = (CharacterId)d.character;
         GameMode.Override = (Difficulty)Mathf.Clamp(d.difficulty, 0, 3);
         SoulWeight.Override = Mathf.Clamp(d.weight, 0, SoulWeight.Max);      // 1.2~ 저장한 판의 무게로 (메뉴에서 고른 무게는 그대로 둠)
@@ -412,6 +423,9 @@ public static class RunSave
         // 기준 공격력을 기록 재생 전에 고정: 실제 판은 시작 직후 첫 프레임(영혼 트리 버튼)에 시작 공격력으로 정해지는데,
         // 재생 중 처음 GrowAttack 에서 정하면 앞서 재생한 상점 공격력(b1) 만큼 부푼 값이 기준이 되어 ap · 트리 · 성장이 더 크게 들어갔음
         if (specials != null) specials.RestoreBase(d.baseAttack, d.baseMag);
+        // 2.0.0~ 영혼 릴레이: 저장한 기준 공격력은 지금 주자 배율이 곱해진 값 → 첫 주자 시점으로 (재생 중 hz 가 교대마다 다시 곱해 저장값과 같아짐)
+        if (RelayRun.Active && specials != null && d.baseAttack > 0f)
+            specials.RelayRebaseForReplay(CharacterData.Def(RelayRun.HeroAt(d.relayIndex)).damage, CharacterData.Def(RelayRun.HeroAt(0)).damage);
 
         EndlessMode.ResumeBeyond = GameMode.IsEndless && d.endlessFinal >= 3;      // 1.4.6~ 한계 돌파 판은 레벨 100 까지 다시 쌓이게 (카드 재생 전에)
         Replaying = true;
@@ -447,6 +461,11 @@ public static class RunSave
                     if (int.TryParse(e.Substring(2), out int bt) && specials != null) specials.BossTrophy(bt, true);
                     continue;
                 }
+                if (twoDigit && e.StartsWith("hz"))         // 2.0.0~ 영혼 릴레이 교대 한 번 (hz<번호>): 같은 RelaySwap 을 그 자리에서 되풀이
+                {
+                    if (RelayRun.Active && RelayRun.Index < RelayRun.Runners - 1) RelaySwap.Run(p, RelayRun.HeroAt(RelayRun.Index + 1), true);
+                    continue;
+                }
                 string arg = e.Substring(1);
                 switch (e[0])
                 {
@@ -472,6 +491,7 @@ public static class RunSave
             }
         }
         finally { Replaying = false; }
+        if (RelayRun.Active) RelayRun.RestoreAfterReplay(d);       // 2.0.0~ 지금 주자 · 진화 빚 · 못 고른 환급 카드 · 유품
         log.Clear();
         log.AddRange(d.log);
 
@@ -537,6 +557,7 @@ public static class RunSave
         if (d.gatePending) yield return sm.ResumeGate(d.stage);
         else if (d.altarPending) sm.StartCoroutine(Curse.Altar(d.stage));
         if (d.freeDue) shop.ResumeFreePick();                      // 1.4.1~ 무료 입문을 고르기 전에 나간 판: 그 창을 다시 (CancelOpening 이 끈 것을 되돌림)
+        if (RelayRun.Active && (RelayRun.EvoOwed > 0 || RelayRun.FreeLeft > 0)) sm.StartCoroutine(RelayRun.Pending());      // 2.0.0~ 교대 직후 나간 판: 못 한 진화 · 환급 카드
     }
 
     static int[] ParseIds(string s)

@@ -59,6 +59,7 @@ public partial class SpecialAbilities
     public int[] NextEvolutionOptions()
     {
         if (!UsesEvolution) return null;
+        if (EvolutionTier == 2 && awakenId >= 0) { EvolutionTier = 3; return null; }       // 2.0.0~ 영혼 릴레이: 이어진 각성은 다시 고르지 않음 (2차를 다시 고르면 곧바로 3단계로)
         if (EvolutionTier == 2 && AwakenOpen) return AwakenOptions;
         if (!Gunner)
         {
@@ -101,7 +102,7 @@ public partial class SpecialAbilities
     public string EvolutionKey(int id, int tier)
     {
         if (IsAwaken(id)) return AwakenNames[id - AwakenFirst];
-        if (id >= CharacterKit.AugFirst) return CharacterKit.AugmentName(id);
+        if (CharacterKit.IsAug(id)) return CharacterKit.AugmentName(id);
         if (id < 0) return Gunner ? "기본 권총" : CharacterData.Current.weapon;
         // 무기가 아니라 기본 공격에 붙는 능력 이름 (2차에서 같은 계열이면 극대화 이름)
         if (IsKit(id)) return CharacterKit.FormAugName(id);
@@ -130,7 +131,7 @@ public partial class SpecialAbilities
     public Sprite EvolutionIcon(int id)
     {
         if (IsAwaken(id)) return id == AwakenFirst ? StatIcon(0) : id == AwakenFirst + 1 ? StatIcon(2) : LvIcon(3);
-        if (id >= CharacterKit.AugFirst) return Resources.Load<Sprite>(CharacterKit.AugIcon(id));
+        if (CharacterKit.IsAug(id)) return Resources.Load<Sprite>(CharacterKit.AugIcon(id));
         if (id < 0) return Resources.Load<Sprite>("Weapons/weapon_" + (CharacterData.Current.held ?? "pistol"));
         Sprite s = Resources.Load<Sprite>("Weapons/weapon_" + id);
         return s != null ? s : abilities[id].icon;
@@ -151,7 +152,7 @@ public partial class SpecialAbilities
     public string EvolutionDesc(int id, int tier)
     {
         if (IsAwaken(id)) return Loc.T(AwakenDescs[id - AwakenFirst]);
-        if (id >= CharacterKit.AugFirst) return Loc.T(CharacterKit.AugmentDesc(id));
+        if (CharacterKit.IsAug(id)) return Loc.T(CharacterKit.AugmentDesc(id));
         // 기본 공격에 붙는 능력 + 바뀌는 필살기
         // 2.2.0~ 거너도 쌍권총만 필살기가 바뀌고, 나머지는 원래 조준 사격 뒤에 덧붙음
         string ult = "\n<color=#9fd8ff>" + Loc.T("필살기에 덧붙음") + " · " + UltName(id) + "</color>  ";
@@ -195,7 +196,7 @@ public partial class SpecialAbilities
         CharacterKit k = Kit;
         if (k == null) return;
         int tier = EvolutionTier + 1;
-        if (id >= CharacterKit.AugFirst) k.SetAugment(id);
+        if (CharacterKit.IsAug(id)) k.SetAugment(id);
         else
         {
             k.SetForm(id);
@@ -959,7 +960,7 @@ public static class SoulShards
 
     public static void Add(int n, Vector3 at, bool announce)
     {
-        if (n <= 0) return;
+        if (n <= 0 || ModeRun.Reflux) return;        // 2.0.0~ 역류는 영혼 조각이 없음 (트리 없음)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
         if (sp != null) n = Mathf.Max(1, Mathf.RoundToInt(n * sp.TreeShardMul * (announce ? sp.TreeBigShardMul : 1f)));
         Amount += n;

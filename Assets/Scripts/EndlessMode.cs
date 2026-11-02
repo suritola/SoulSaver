@@ -94,7 +94,7 @@ public class EndlessMode : MonoBehaviour
     }
     public bool Cleared => finalStage == 3;          // 1.1~ 클리어 → 엔딩 대기 중 (초월 카드 창이 엔딩 위에 뜨지 않게)
     // 1.0.4~ 개발자를 부르기 시작한 뒤로는 습격 · 중간 보스 · 보스 부하가 나오지 않음 (EnemySpawner 가 물어봄 · 1.0.7~ 일반 잡몹은 다시 나옴 · 1.2.3~ 개발자 · 엄마전 잡몹은 규칙 E 뿐)
-    public bool NoMobs => devSummoned && finalStage != 4;
+    public bool NoMobs => devSummoned && finalStage != 4 && !reflux;         // 2.0.0~ 역류는 개발자가 먼저 나와도 이후 부하 · 소환이 막히지 않음
     // 1.1.4~ 클리어 뒤 「한계 돌파」: 잡몹 · 습격 · 중간 보스 · 보스가 다시 나오고 시간이 갈수록 계속 강해짐 (기록은 죽을 때까지 늘어남)
     public bool Beyond => finalStage == 4;
     // 1.4.6~ 한계 돌파: 최대 레벨 100 (LevelShop.LevelCap) · 1.4.7~ 받는 경험치 ×0.2 는 없앰 (몹이 훨씬 빨리 세지므로 · GameMode.BeyondDamageMul · BeyondSpeedMul)
@@ -117,7 +117,7 @@ public class EndlessMode : MonoBehaviour
     public const float AfterDevSpawnEvery = 0.15f;
     // 1.4.2~ 영혼 구간은 약한 적 5종 (EnemySpawner.SpawnEnemy) — 기본 경험치 평균 33 이라 ×2.5 로 이 구간 경험치(약 5.4만)를 예전 강한 적과 비슷하게 (무한 30분 기획 B3)
     public const float SoulsExpMul = 2.5f;
-    public static bool GatheringSouls => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3;
+    public static bool GatheringSouls => Instance != null && Instance.devDown && !Instance.momSummoned && Instance.finalStage < 3 && !Instance.reflux;      // 2.0.0~ 역류는 영혼 모으기 국면이 없음
     public static float MobSpawnBoost => GatheringSouls ? AfterDevSpawnMul : 1f;
     public static readonly Color MomTint = new Color(1f, 0.6f, 0.78f);      // 1.0.4~ 개발자 엄마: 개발자 그림을 분홍빛으로 · 더 크게
 
@@ -132,12 +132,17 @@ public class EndlessMode : MonoBehaviour
     int shownSec = -1, shownBosses = -1, shownSouls = -1;
 
     bool daily;      // 일일 도전 판 (메인 메뉴로 나갈 때 DailyChallenge 가 먼저 풀려도 기록이 섞이지 않게 시작할 때 기억)
+    bool relay, special, reflux;     // 2.0.0~ 영혼 릴레이 판 · 특별 모드 판(일일 도전 · 릴레이 · 역류) — 무한 모드 기록 · 이정표 · 순위표에 섞지 않음 · 역류 판
+    int shownRunner = -1;
 
     public void Init(StageManager sm, GameObject[] bosses, bool resumed = false)
     {
         Instance = this;
         ResumeBeyond = false;       // 1.4.6~ 이어하기 표시는 여기까지 (곧 RestoreRun 이 finalStage 를 되살림 · 같은 프레임)
         daily = DailyChallenge.Active;
+        relay = RelayRun.Active;
+        special = ModeRun.Special;
+        reflux = RefluxRun.Active;
         stages = sm;
         spawner = sm.spawner;
         bossPrefabs = bosses;
@@ -145,8 +150,14 @@ public class EndlessMode : MonoBehaviour
         nextMidBoss = Time.time + MidBossFrom;
         BuildHud();
         // 1.2.3~ 지형 변화 「왕들의 영토」 시드 (일일 도전은 그날 시드 · 이어하기는 RestoreRun 이 저장한 시드로 Restore)
-        if (!resumed && EndlessTerrain.Instance != null) EndlessTerrain.Instance.Begin(daily ? DailyChallenge.RunSeed : EndlessTerrain.NewSeed());
-        if (!resumed) StartCoroutine(StartAtLevel(10));     // 1.2.3~ 이어하기는 LevelShop.RestoreLevels 가 레벨 · 대기 레벨업을 이미 되살렸음 (다시 주면 두 번 쌓임)
+        if (!resumed && !reflux && EndlessTerrain.Instance != null) EndlessTerrain.Instance.Begin(daily ? DailyChallenge.RunSeed : EndlessTerrain.NewSeed());
+        if (!resumed && !reflux) StartCoroutine(StartAtLevel(10));     // 1.2.3~ 이어하기는 LevelShop.RestoreLevels 가 레벨 · 대기 레벨업을 이미 되살렸음 (다시 주면 두 번 쌓임)
+        if (reflux)
+        {
+            // 2.0.0~ 역류: 일정(보스 · 중간 보스 · 15:00)은 RefluxDirector 가 대신 · 지형 변화 없음 · 레벨 10 시작 보너스 없음
+            nextBoss = nextMidBoss = float.MaxValue;
+            gameObject.AddComponent<RefluxDirector>().Begin(this, sm);
+        }
     }
 
     // 무한 모드는 레벨 10으로 시작: 올라간 레벨만큼 레벨업 포인트가 쌓임
@@ -171,24 +182,32 @@ public class EndlessMode : MonoBehaviour
         // 초나 보스 수가 바뀔 때만 글자를 새로
         int sec = Mathf.FloorToInt(s);
         int souls = MomSoulsLeft;
-        if (hud != null && (sec != shownSec || BossesDefeated != shownBosses || souls != shownSouls))
+        if (reflux && hud != null && sec != shownSec)       // 2.0.0~ 역류: 가상 시계(15:00 → 00:00) · 기록은 실제 시계 · 잃기 n/9 · 보스 n/6
         {
+            shownSec = sec;
+            hud.text = RefluxRun.HudLine(s);
+        }
+        else if (!reflux && hud != null && (sec != shownSec || BossesDefeated != shownBosses || souls != shownSouls || (relay && RelayRun.Index != shownRunner)))
+        {
+            shownRunner = RelayRun.Index;
             shownSec = sec;
             shownBosses = BossesDefeated;
             shownSouls = souls;
-            float best = daily ? DailyChallenge.RunBest : BestSeconds;
+            float best = relay ? RelayRun.BestOf(RelayRun.Order) : reflux ? RefluxRun.Best : daily ? DailyChallenge.RunBest : BestSeconds;
             // 1.1.2~ 개발자를 쓰러뜨렸으면 엄마가 강림하기까지 남은 영혼(잡몹 처치) 수
             string final = finalStage == 4 ? Loc.T("클리어 뒤 · 한계 돌파") : devDown && !momSummoned ? Loc.T("그녀의 강림까지 남은 영혼 수") + " " + MomSoulsLeft + "/" + MomSouls : FinalProgress();     // 1.4.2~ 진행 표시
-            hud.text = (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
+            hud.text = (relay ? Loc.T("영혼 릴레이") + " · " + Loc.T("relay.hud.runner").Replace("{0}", (RelayRun.Index + 1).ToString()) : daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) : Loc.T("무한 모드")) + "  " + Clock(s) + "   " + Loc.T("보스 처치 ") + BossesDefeated
                      + (finalStage > 0 ? "   <color=#FF5A4A>" + final + "</color>"
                         : storm ? "   <color=#FF5A4A>" + Loc.T("모래 폭풍") + "</color>"         // 1.2.3~ 15:00 을 보스 처치 0 으로 넘긴 판
                         : best > 0f ? "   " + Loc.T("최고 ") + Clock(best) : "");
         }
         if (sec != erodeSec) { erodeSec = sec; UpdateErosion(); }      // 1.2.3~ 풍화는 1초에 한 번 (HUD 글이 안 바뀌어도)
 
-        if (s >= 600f) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2)
-        if (!daily) EndlessMilestones.CheckTime(s);                         // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 제외)
+        if (s >= 600f && !reflux) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2) · 2.0.0~ 역류는 해제 조건을 세지 않음
+        if (!special) EndlessMilestones.CheckTime(s);                       // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 · 특별 모드 제외)
+        if (relay) RelayRun.Tick(s);                                        // 2.0.0~ 영혼 릴레이 업적 · 계약 값
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
+        if (reflux) return;         // 2.0.0~ 역류: 15:00 최후의 시간 · 엄마 · 보스 순환 · 중간 보스는 모두 RefluxDirector 가 대신 (HUD · 풍화는 위 그대로)
         if (finalStage == 0 && !storm && s >= FinalAt && free && !BossUltimate.Active && !BossUltimate.ErosionPending)      // 결계 · 공간 침식이 끝난 프레임에 시작 (안에 새 보스 · 인트로가 겹치지 않게)
         {
             // 1.2.3~ 15:00 판정 한 번: 보스를 쓰러뜨려 왔으면 지금처럼 모든 보스 → 개발자 → 엄마, 처치 0 이면 모래 폭풍만 (보스 순환은 계속)
@@ -257,9 +276,11 @@ public class EndlessMode : MonoBehaviour
         foreach (bosss b in bosss.Live)
         {
             if (b == null || b.IsDead) continue;
-            if (b.developer || !b.spawnTimed) { b.erosionMul = 1f; continue; }
+            float safety = reflux ? RefluxRun.SafetyErosion : 1f;     // 2.0.0~ 역류: 실제 12:00 이 지나도 보스가 남으면 개발자까지 1분마다 +50% (끝판이 영원히 안 끝나는 일 방지)
+            if (b.developer || !b.spawnTimed) { b.erosionMul = safety; continue; }
             float over = Time.time - b.spawnedAt - ErodeAfter;
             float mul = over <= 0f ? 1f : 1f + Mathf.Min(over / 60f * ErodePerMin, ErodeMax - 1f);
+            if (safety > mul) mul = safety;
             if (mul > 1f && b.erosionMul <= 1f)
                 Notice.Toast(NoticeIcon.Warn, Loc.T("{0} — 모래 폭풍에 풍화되어 받는 피해가 1분마다 {1}% 늘어납니다.").Replace("{0}", bossbar.BossName(b.bossKind)).Replace("{1}", Mathf.RoundToInt(ErodePerMin * 100f).ToString()), 4f);
             b.erosionMul = mul;
@@ -414,7 +435,7 @@ public class EndlessMode : MonoBehaviour
     }
 
     // 개발자 · 개발자 엄마 만들기 (Start 전에 정함: 체력은 난이도 배율 없이 정확히 10만 · 30만 · 1.0.7~)
-    bosss SpawnFinalBoss(bool isMom)
+    bosss SpawnFinalBoss(bool isMom, float hpMul = 1f)
     {
         GameObject prefab = null;
         if (bossPrefabs != null)
@@ -433,7 +454,7 @@ public class EndlessMode : MonoBehaviour
             CodexSeen.Mark(isMom ? "sec.mom" : "sec.dev", bossbar.BossName(isMom ? bossbar.DeveloperMomKind : bossbar.DeveloperKind));     // 1.2~ 발견형 도감 비밀
             boss.bossKind = AbyssStage.MirrorKind;
             boss.difficultyApplied = true;
-            boss.setEnemyHP = Mathf.RoundToInt((isMom ? MomHp : DeveloperHp) * GameMode.GlobalEnemyHpMul);     // 1.3.3~ 적 체력 공통 ×0.6 (개발자 10만 → 6만 · 엄마 20만 → 12만)
+            boss.setEnemyHP = Mathf.RoundToInt((isMom ? MomHp : DeveloperHp) * GameMode.GlobalEnemyHpMul * hpMul);     // 1.3.3~ 적 체력 공통 ×0.6 (개발자 10만 → 6만 · 엄마 20만 → 12만)
             boss.expReward *= isMom ? 10 : 5;
             boss.coinDrop *= isMom ? 10 : 5;
             boss.contactDamage *= 0.8f;        // 1.0.6~ 피해 -20% (접촉 48 → 38.4, 엄마 96 → 76.8)
@@ -465,6 +486,44 @@ public class EndlessMode : MonoBehaviour
         spawner.bossCleared = false;
         if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
         return boss;
+    }
+
+    // ================================================================= 2.0.0~ 역류 (RefluxDirector 가 부름)
+    // 종류(0 리치 왕 · 1 지옥의 군주 · 2 킹 슬라임 · 3 거울의 군주)로 보스를 소환 — SpawnBoss 와 같은 길이지만 차례 · 다음 보스 시각은 건드리지 않음
+    //   hpMul: Start 가 BossHpMul 을 곱하기 전 체력 배율 (이미 살아 있는 보스가 있으면 겹쳐 등장)
+    internal bosss SpawnBossKind(int kind, float hpMul)
+    {
+        if (bossPrefabs == null || spawner == null) return null;
+        GameObject prefab = null;
+        foreach (GameObject g in bossPrefabs)
+            if (g != null && g.TryGetComponent(out bosss pb) && pb.bossKind == kind) { prefab = g; break; }
+        if (prefab == null || bosss.KindAlive(kind)) return null;
+        bool overlap = bosss.LiveCount > 0;
+        spawner.bossSpawned = true;
+        spawner.bossCleared = false;
+        if (stages.bossBar != null) stages.bossBar.bossSpawn = true;
+        Vector3 at = (Vector3)spawner.bossSpawnPoint + (overlap ? Vector3.right * 4.5f : Vector3.zero);
+        GameObject go = Instantiate(prefab, Hostile.ClampArena(at), Quaternion.identity);
+        bosss b = go.GetComponent<bosss>();
+        if (b != null)
+        {
+            b.spawnTimed = true;
+            b.spawnedAt = Time.time;
+            if (!Mathf.Approximately(hpMul, 1f)) b.setEnemyHP = Mathf.Max(1, Mathf.RoundToInt(b.setEnemyHP * hpMul));
+        }
+        Hostile.Play("roar", 1f, overlap ? 0.75f : 0.9f);
+        Notice.Big(Loc.T("reflux.boss.arrive").Replace("{0}", bossbar.BossName(kind)), NoticeIcon.Boss, 2.5f, NoticeLevel.Urgent);
+        return b;
+    }
+
+    // 역류 1번째 보스 「개발자」 (SummonDeveloper 와 같은 몸 · 잡몹을 비우지 않고 · 엄마 없음 · 체력 배율 0.6)
+    internal bosss SpawnDeveloperReflux(float hpMul)
+    {
+        if (spawner == null) return null;
+        developer = SpawnFinalBoss(false, hpMul);
+        devSummoned = developer != null;
+        if (developer != null) finalMusic = 1;
+        return developer;
     }
 
     // 1.0.4~ 개발자를 30분 전에 쓰러뜨림: 처치 연출 · 보상이 끝난 뒤 다음을 예고
@@ -521,13 +580,17 @@ public class EndlessMode : MonoBehaviour
     {
         if (finalStage == 3) return;
         BossesDefeated++;
-        if (BossesDefeated >= 5) CharacterData.Achieve(CharUnlock.EndlessBosses5);
-        if (!daily && BossesDefeated >= 5) EndlessMilestones.Reach(EndlessMilestones.Bosses5);      // 1.2~ 이정표 (첫 달성 한 번)
+        if (BossesDefeated >= 5 && !reflux) CharacterData.Achieve(CharUnlock.EndlessBosses5);
+        if (!special && BossesDefeated >= 5) EndlessMilestones.Reach(EndlessMilestones.Bosses5);      // 1.2~ 이정표 (첫 달성 한 번)
+        if (relay) RelayRun.OnBossDefeated();       // 2.0.0~ 이 주자가 보스를 쓰러뜨렸음 (계약 · 업적)
         // 1.0.4~ 개발자를 쓰러뜨려도 끝나지 않음: 개발자와 엄마를 모두 쓰러뜨려야 클리어 (보스가 쓰러진 그 순간 불리므로 그때 표시)
         bool devWas = devDown, momWas = momDown;
         if (developer != null && developer.IsDead) devDown = true;
         if (mom != null && mom.IsDead) momDown = true;
-        if (!daily && devDown && !devWas && developer != null) EndlessMilestones.Reach(EndlessMilestones.Developer);     // 1.2~ 이정표: 개발자 처치 (엄마와 함께 쓰러져 바로 클리어로 가도)
+        if (!special && devDown && !devWas && developer != null) EndlessMilestones.Reach(EndlessMilestones.Developer);     // 1.2~ 이정표: 개발자 처치 (엄마와 함께 쓰러져 바로 클리어로 가도)
+        if (relay && devDown && !devWas && developer != null) RelayRun.OnDeveloperDefeated();
+        if (devDown && !devWas && developer != null) RefluxRun.MarkDeveloperDefeated();       // 2.0.0~ 역류가 열림 (D10 · 무한 · 일일 도전 · 릴레이 어디서든 처음 쓰러뜨릴 때)
+        if (reflux) { RefluxRun.OnBossDown(); return; }       // 2.0.0~ 역류: 진화 창 · 전리품 대신 체력 회복 + 다음 일정 (RefluxDirector)
         if (finalStage != 4 && devSummoned && momSummoned && devDown && momDown) { StartCoroutine(ClearEndless(momDown && !momWas)); return; }
         // 1.4.2~ 앞 무리가 다 쓰러지면 뒤 무리 (Update 가 자유 프레임에 · 진화 창 뒤), 뒤 무리까지 다 쓰러지면 개발자
         if (finalStage == 1 && bosss.LiveCount == 0) { if (finalWave == 1) wave2Due = true; else StartCoroutine(SummonDeveloper()); }
@@ -732,13 +795,15 @@ public class EndlessMode : MonoBehaviour
         finished = true;
         LastSeconds = GameMode.EndlessSeconds;
         LastBosses = BossesDefeated;
-        // 일일 도전은 그날 기록 · 순위표에만 (규칙이 달라 무한 모드 최고 기록과 섞지 않음)
-        if (!daily && LastSeconds > BestSeconds && !GameInput.Auto)
+        // 일일 도전은 그날 기록 · 순위표에만 (규칙이 달라 무한 모드 최고 기록과 섞지 않음) · 2.0.0~ 영혼 릴레이도 조합별 기록 · 순위표에만 (목숨이 셋이라 규칙이 다름)
+        if (!special && LastSeconds > BestSeconds && !GameInput.Auto)
         {
             Prefs.SetFloat(BestKey, LastSeconds);
             Prefs.Save();
         }
-        DailyChallenge.Submit(daily, LastSeconds, LastBosses);
+        if (relay) RelayRun.Submit(LastSeconds, LastBosses);
+        else if (reflux) RefluxRun.Submit(LastSeconds, LastBosses);         // 2.0.0~ 역류는 자기 순위표(짧을수록 좋음) · 클리어한 판만 올림
+        else DailyChallenge.Submit(daily, LastSeconds, LastBosses);
     }
 
     public static string Clock(float seconds)
@@ -778,6 +843,10 @@ public class EndlessMode : MonoBehaviour
 
     // ================================================================= 스테이지 구성
     // 1 · 2 · 3 · 4장의 적을 모두 모은 마지막 스테이지 (보스는 EndlessMode가 따로 부름)
+    static List<float> enemyTiers;
+    // 2.0.0~ 무한 스테이지 적 목록의 i 번째가 몇 장 적인지 (0 = 1장 … 2 = 3장 · 소수는 장 안의 강함)
+    public static float EnemyTierOf(int i) => enemyTiers != null && i >= 0 && i < enemyTiers.Count ? enemyTiers[i] : 0f;
+
     public static StageConfig[] WithEndlessStage(StageConfig[] stages, out GameObject[] bosses)
     {
         List<GameObject> enemies = new List<GameObject>();
@@ -796,6 +865,7 @@ public class EndlessMode : MonoBehaviour
             }
         }
         bosses = bossList.ToArray();
+        enemyTiers = tiers;         // 2.0.0~ 역류의 몹 종류 거름이 읽음 (EnemyTierOf)
 
         // 처치 수에 따라 강한 적이 차례로 풀리는 페이즈 9개: 처음엔 1장 첫 적들만, 점점 강한 적 위주로
         // 아직 차례가 안 된 강한 적은 나오지 않고, 이미 풀린 약한 적은 계속 조금씩 섞여 나옴

@@ -20,7 +20,14 @@ public partial class CharacterKit
     public const int AugPrecise = 115, AugTwinGear = 116, AugRift = 117;       // 시계공
     public const int AugThickEnvelope = 118, AugBundle = 119, AugRegistered = 120;       // 우체부
     public const int AugDeepChill = 121, AugTwoHands = 122, AugSoulBurst = 123;       // 유령
-    public const int AugFirst = 100, AugLast = 123;
+    public const int AugInsideTrip = 124, AugFlip = 125, AugSandWake = 126;       // 씨름꾼 (2.0.0 · 영웅마다 3개씩 이어 붙임)
+    public const int AugBackBlade = 127, AugHydraulic = 128, AugFence = 129;       // 공사 반장 (2.0.0)
+    public const int AugUnderstudy = 130, AugSecondString = 131, AugHeavyHead = 132;       // 인형사 (2.0.0)
+    public const int AugWideBlade = 133, AugDoubleDig = 134, AugHeavySoil = 135;       // 장의사 (2.0.0)
+    public const int AugDoubleExposure = 136, AugMonochrome = 137, AugRetouch = 138;       // 사진사 (2.0.0)
+    public const int AugFirst = 100, AugLast = 138;
+    // 2.0.0~ 「100 이상 = 강화」가 아니라 범위로 (새 영웅 특수 능력 번호가 140 부터라 겹치지 않게 — SpecialAbilities.KitFirstId2)
+    public static bool IsAug(int id) => id >= AugFirst && id <= AugLast;
     // 강화 아이콘: 1.0.2 새 캐릭터는 600번대 (예전 92 ~ 103 다음 번호는 다른 아이콘이 쓰고 있음)
     public static string AugIcon(int id) => "Icons/ability_" + (id >= 112 ? 600 + (id - 112) : id - AugFirst + 92);
 
@@ -38,6 +45,11 @@ public partial class CharacterKit
         CharacterId.Clockmaker => new[] { AugPrecise, AugTwinGear, AugRift },
         CharacterId.Postman => new[] { AugThickEnvelope, AugBundle, AugRegistered },
         CharacterId.Ghost => new[] { AugDeepChill, AugTwoHands, AugSoulBurst },
+        CharacterId.Wrestler => new[] { AugInsideTrip, AugFlip, AugSandWake },
+        CharacterId.Foreman => new[] { AugBackBlade, AugHydraulic, AugFence },
+        CharacterId.Puppeteer => new[] { AugUnderstudy, AugSecondString, AugHeavyHead },
+        CharacterId.Undertaker => new[] { AugWideBlade, AugDoubleDig, AugHeavySoil },
+        CharacterId.Photographer => new[] { AugDoubleExposure, AugMonochrome, AugRetouch },
         _ => new[] { AugDouble, AugGiant, AugOverload },
     };
 
@@ -51,6 +63,11 @@ public partial class CharacterKit
         AugPrecise => "정밀 톱니", AugTwinGear => "이중 톱니", AugRift => "시간 균열",
         AugThickEnvelope => "두꺼운 봉투", AugBundle => "다발 배송", AugRegistered => "등기 표식",
         AugDeepChill => "깊은 냉기", AugTwoHands => "두 손", AugSoulBurst => "영혼 폭발",
+        AugInsideTrip => "안다리", AugFlip => "뒤집기", AugSandWake => "모래 바람",
+        AugBackBlade => "뒷날", AugHydraulic => "유압 실린더", AugFence => "안전 펜스",
+        AugUnderstudy => "대역 배우", AugSecondString => "두 번째 실", AugHeavyHead => "무거운 머리",
+        AugWideBlade => "넓은 삽날", AugDoubleDig => "두 번 파기", AugHeavySoil => "무거운 흙",
+        AugDoubleExposure => "이중 노출", AugMonochrome => "흑백 사진", AugRetouch => "보정",
         _ => "연금 폭주",
     };
 
@@ -79,6 +96,21 @@ public partial class CharacterKit
         AugDeepChill => "얼어붙는 시간이 50% 늘어납니다.",
         AugTwoHands => "손길이 양옆으로 두 갈래 더 뻗습니다. (피해 70%)",
         AugSoulBurst => "영혼이 피해를 막을 때 터져 둘레 적에게 피해를 줍니다. (공격력 150%)",
+        AugInsideTrip => "적을 잡는 순간 둘레 1.5칸의 적이 넘어져 0.5초 동안 움직이지 못합니다. (보스 제외)",
+        AugFlip => "던진 적이 떨어진 뒤 한 번 더 튀어 올라 메쳐집니다. (피해 50%)",
+        AugSandWake => "던지면 0.15초 뒤 같은 길로 모래 바람이 한 번 더 쓸고 지나갑니다. (핀 피해 50%)",
+        AugBackBlade => "삽날 뒤에도 작은 날이 달려, 뒤에서 닿는 적을 밀쳐내고 다치게 합니다. (공격력 40% · 0.5초에 한 번)",
+        AugHydraulic => "압착 피해가 무게 12가 아니라 18까지 계속 커집니다. (무게 18 → 한 마리당 81%)",
+        AugFence => "덤프한 자리에 2초 동안 짧은 바리케이드(폭 2칸)가 섭니다.",
+        AugUnderstudy => "자리를 바꾸면 남은 더미가 0.5초 뒤 터집니다. (공격력 150%)",
+        AugSecondString => "줄이 한 가닥 더 생깁니다. (영웅 쪽에서 0.6칸 옆으로 갈라짐 · 피해 60%)",
+        AugHeavyHead => "휘두름 범위 +30% · 피해 +20%, 대신 더미가 따라오는 속도가 20% 느려집니다.",
+        AugWideBlade => "구멍이 최대 30% 더 크게 넓어집니다. (2.0칸 → 2.6칸 · 한 구멍에 갇히는 마릿수 상한도 함께 늘어남)",
+        AugDoubleDig => "구멍을 완성하면 0.4초 뒤 커서 쪽 3칸 앞에 절반 크기 구멍이 하나 더 열립니다. (구멍 수에 셈)",
+        AugHeavySoil => "매장 피해가 25% 늘어납니다.",
+        AugDoubleExposure => "셔터를 누르고 0.3초 뒤 같은 틀이 한 번 더 찍힙니다. (피해 50% · 종이 판정 없음)",
+        AugMonochrome => "종이가 된 적이 받는 피해가 ×1.4에서 ×1.6이 됩니다.",
+        AugRetouch => "초점 원이 50% 커지고 초점 피해가 ×1.6에서 ×1.9가 됩니다.",
         _ => "네 번째 플라스크마다 반드시 불안정해져 크게 터집니다.",
     };
 
@@ -109,6 +141,21 @@ public partial class CharacterKit
         SpecialAbilities.KitSoulChain => "사슬 망령",
         SpecialAbilities.KitIceGhost => "얼음 유령",
         SpecialAbilities.KitShadowGhost => "그림자 유령",
+        SpecialAbilities.KitLiftStone => "들돌",
+        SpecialAbilities.KitCowbell => "워낭",
+        SpecialAbilities.KitRope => "밧줄 샅바",
+        SpecialAbilities.KitBucket => "굴착기 버킷",
+        SpecialAbilities.KitJackhammer => "착암기",
+        SpecialAbilities.KitWreckBall => "철거 쇠공",
+        SpecialAbilities.KitScissorDummy => "가위 손 인형",
+        SpecialAbilities.KitSpoolDummy => "실감개 인형",
+        SpecialAbilities.KitWindupDummy => "태엽 병정",
+        SpecialAbilities.KitCrow => "묘지 까마귀",
+        SpecialAbilities.KitBell => "상여 종",
+        SpecialAbilities.KitSarcophagus => "석관",
+        SpecialAbilities.KitBulb => "플래시 전구",
+        SpecialAbilities.KitTripodCam => "삼각대 카메라",
+        SpecialAbilities.KitProjector => "영사기",
         _ => "",
     };
 
@@ -139,6 +186,21 @@ public partial class CharacterKit
         SpecialAbilities.KitSoulChain => "손길에 처음 맞은 적에게서 영혼 사슬이 가장 가까운 적에게 튑니다. (피해 40%)",
         SpecialAbilities.KitIceGhost => "냉기가 두 배로 쌓입니다.",
         SpecialAbilities.KitShadowGhost => "손길이 0.15초 뒤 한 번 더 뻗습니다. (피해 50%)",
+        SpecialAbilities.KitLiftStone => "던진 적이 한 단계 무겁게 날아갑니다(피해 · 핀 상한 ↑ · 거리 ↓). 잡을 적이 없으면 발밑의 들돌을 들어 던집니다. (공격력 150% · 핀 4)",
+        SpecialAbilities.KitCowbell => "적을 들고 있는 동안 워낭이 울려 0.5초마다 둘레 3칸의 적에게 소리 파동이 퍼집니다. (공격력 30%)",
+        SpecialAbilities.KitRope => "잡는 거리가 1.5칸 늘고, 던진 적이 밧줄에 매여 끝에서 되돌아오며 한 번 더 쓰러뜨립니다. (피해 50%)",
+        SpecialAbilities.KitBucket => "더미가 버킷에 담겨 높이 들립니다. 덤프가 포물선으로 30% 더 멀리 날아가 착지할 때 터집니다. (공격력 80% · 반지름 1.6칸)",
+        SpecialAbilities.KitJackhammer => "삽날이 떨리며 짓누를 때마다 삽날 앞 적을 0.3초 기절시키고, 압착 피해가 20% 늘어납니다.",
+        SpecialAbilities.KitWreckBall => "더미 둘레를 사슬 쇠공이 돌며(반지름 R + 1) 닿는 적을 칩니다. (공격력 60% · 적마다 0.5초에 한 번)",
+        SpecialAbilities.KitScissorDummy => "더미의 팔이 가위가 되어, 휘두를 때 더미 바로 아래(0.8칸 안)의 적 하나에게 두 배 피해를 줍니다.",
+        SpecialAbilities.KitSpoolDummy => "더미가 실감개가 되어, 줄에 처음 베인 적을 0.6초 동안 묶습니다. (보스 제외 · 같은 적 3초에 한 번)",
+        SpecialAbilities.KitWindupDummy => "좌클릭을 떼고 있으면 더미가 0.6초마다 저절로 휘두릅니다. (피해 60%)",
+        SpecialAbilities.KitCrow => "구멍에 갇힌 적을 까마귀가 0.5초마다 쪼습니다. (공격력 30%)",
+        SpecialAbilities.KitBell => "매장할 때마다 작은 종이 울려 매장한 구멍 둘레 3칸 적이 0.4초 멈춥니다. (보스 제외)",
+        SpecialAbilities.KitSarcophagus => "묘비 대신 석관이 솟습니다. 석관은 내구가 두 배이고 닿아 있는 적에게 0.5초마다 공격력 25%를 줍니다.",
+        SpecialAbilities.KitBulb => "셔터를 누를 때마다 틀 둘레 1칸 테두리에도 전구 불꽃이 튀어 피해를 줍니다. (피해 40%)",
+        SpecialAbilities.KitTripodCam => "3초마다 마지막으로 찍은 자리에 삼각대 카메라가 서서 5초 동안 1.2초마다 그 자리를 찍습니다. (피해 50% · 종이 포함 · 최대 2대)",
+        SpecialAbilities.KitProjector => "한 장에 찍힌 종이 적들이 필름 줄로 이어져, 줄을 가로지르는 적이 0.4초마다 베입니다. (피해 30%)",
         _ => "",
     };
 

@@ -41,9 +41,13 @@ public class SkinShopUI : MonoBehaviour
         SkinShopUI ui = open.AddComponent<SkinShopUI>();
         ui.win = w;
         // 1.0.4~: 새 영웅(아직 스킨 없음)을 고른 채 열면 「기본」 한 장만 보였음 → 거너 칸으로 열고 「스킨 준비 중」 안내
-        ui.who = CharacterData.IsNewHero(CharacterData.Selected) ? (int)CharacterId.Gunner : (int)CharacterData.Selected;
+        // 2.0.0~: 새 영웅도 스킨이 하나라도 있으면 그 칸으로 열고, 스킨이 없는 영웅만 거너 칸 + 「준비 중」
+        ui.who = NoSkins(CharacterData.Selected) ? (int)CharacterId.Gunner : (int)CharacterData.Selected;
         ui.Build();
     }
+
+    // 그 영웅의 스킨이 하나도 없는가 (앞으로 올 새 영웅 중 아직 스킨이 없는 경우만)
+    static bool NoSkins(CharacterId c) => CharacterData.IsNewHero(c) && !SkinData.HasSkins((int)c);
 
     public static void Close()
     {
@@ -71,20 +75,31 @@ public class SkinShopUI : MonoBehaviour
             SkinKind k = (SkinKind)i;
             tabButtons.Add(UIKit.MakeButton(win, tabs[i], new Vector2(-520f + 220f * i, 345f), new Vector2(200f, 56f), () => { kind = k; selected = null; Rebuild(); }, 24f));
         }
-        // 캐릭터 고르기 (해금한 캐릭터만)
+        // 캐릭터 고르기 (해금한 캐릭터만 · 스킨이 있는 캐릭터만) — 아홉 명이 창 폭에 들어가게 가운데 맞춰 좁힘
+        List<int> whoIds = new List<int>();
         for (int i = 0; i < CharacterData.All.Length; i++)
         {
             CharacterId c = (CharacterId)i;
-            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c) || CharacterData.IsNewHero(c)) continue;     // 1.0.2 새 캐릭터는 아직 스킨이 없음
-            int id = i;
-            Button b = UIKit.MakeButton(win, CharacterData.Def(c).name, new Vector2(-560f + 190f * whoButtons.Count, 270f), new Vector2(175f, 50f), () => { who = id; selected = null; Rebuild(); }, 20f);
+            if (!CharacterData.IsDeveloped(c) || !CharacterData.IsUnlocked(c) || NoSkins(c)) continue;
+            whoIds.Add(i);
+        }
+        // 2.1.0~ 영웅이 열네 명까지 늘어 한 줄에 7명씩 두 줄로 (버튼은 UiTokens 최소 크기 192×48 · 글자 22 이상)
+        const int PerRow = 7;
+        int rows = (whoIds.Count + PerRow - 1) / PerRow;
+        float step = UiTokens.ButtonMinW + 12f;
+        for (int k = 0; k < whoIds.Count; k++)
+        {
+            int id = whoIds[k];
+            int row = k / PerRow, inRow = Mathf.Min(PerRow, whoIds.Count - row * PerRow);
+            float y = rows <= 1 ? 270f : 292f - 56f * row;
+            Button b = UIKit.MakeButton(win, CharacterData.Def((CharacterId)id).name, new Vector2((k % PerRow - (inRow - 1) / 2f) * step, y), new Vector2(UiTokens.ButtonMinW, UiTokens.ButtonHInWindow), () => { who = id; selected = null; Rebuild(); }, 22f);
             b.name = "Who_" + id;
             whoButtons.Add(b);
         }
 
-        if (CharacterData.IsNewHero(CharacterData.Selected))
+        if (NoSkins(CharacterData.Selected))
         {
-            newHeroNote = UIKit.Text(win, "", 18f, Dim, new Vector2(0f, 222f), new Vector2(1400f, 28f));
+            newHeroNote = UIKit.Text(win, "", 18f, Dim, new Vector2(0f, 205f), new Vector2(1400f, 28f));
             newHeroNote.text = Loc.T("「{0}」의 스킨은 준비 중입니다").Replace("{0}", Loc.T(CharacterData.Def(CharacterData.Selected).name));
         }
 
@@ -199,7 +214,7 @@ public class SkinShopUI : MonoBehaviour
         TMP_Text name = UIKit.Text(t, "", 26f, s != null && tier == 3 ? (UiRules.Legacy ? Gold : UiTokens.Bronze) : Parch, new Vector2(0f, -80f), new Vector2(260f, 36f));      // 전설 이름 (새 모습: 청동 — 보상색)
         name.text = s != null ? Loc.T(s.name) : Loc.T("기본");
         TMP_Text state = UIKit.Text(t, "", 22f, equipped ? new Color(0.6f, 1f, 0.5f) : owned ? Parch : Gold, new Vector2(0f, -130f), new Vector2(260f, 32f));
-        state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.Price.ToString("N0") + " P";
+        state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.achievement ? Loc.T("업적으로 해금") : s.Price.ToString("N0") + " P";
         return b.gameObject;
     }
 
@@ -258,6 +273,13 @@ public class SkinShopUI : MonoBehaviour
         descText.text = s != null ? Loc.T(s.desc) : Loc.T("원래 모습 · 원래 소리");
         if (equipped) actionLabel.text = Loc.T("장착 중");
         else if (owned) actionLabel.text = Loc.T("장착");
+        else if (s.achievement)
+        {
+            actionLabel.text = Loc.T("업적으로 해금");       // 업적형 전설: 상점에서 못 삼 (해금은 SkinData.UnlockByAchievement)
+            actionButton.interactable = false;
+            actionLabel.color = new Color(1f, 0.5f, 0.45f);
+            return;
+        }
         else if (confirm)
         {
             actionLabel.text = Loc.T("한 번 더 누르면 구매");
@@ -351,6 +373,16 @@ public class SkinShopUI : MonoBehaviour
         CharacterId.Rogue => "whoosh",
         CharacterId.Archer => "bowtwang",
         CharacterId.Alchemist => "glassclink",
+        CharacterId.Wrestler => "thump",
+        CharacterId.Foreman => "thump",
+        // 2.0.0 검토: 새 영웅 소리 이름은 SkinFx.IsAttack 과 맞춤
+        CharacterId.Cartographer => "ink",
+        CharacterId.Clockmaker => "ratchet",
+        CharacterId.Postman => "flick",
+        CharacterId.Ghost => "freeze",
+        CharacterId.Puppeteer => "whoosh",
+        CharacterId.Undertaker => "dig",
+        CharacterId.Photographer => "shutter",
         _ => "gunshot",
     };
 

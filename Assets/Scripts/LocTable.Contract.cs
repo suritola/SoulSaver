@@ -432,7 +432,7 @@ public static partial class LocTable
         A("board.ghost.6.cond", "유령 숙련 3 · 유령으로 어려움 클리어하기", "Ghost mastery 3 · Clear Hard as the Ghost", "幽霊熟練3・幽霊でハードをクリアする", "幽灵熟练3 · 以幽灵通关困难");
         A("board.c.alleasy.name", "아홉 개의 쉬움", "Nine Easies", "九つのイージー", "九次简单");
         A("board.c.alleasy.desc", "아홉 영웅이 모두 한 번씩 세상을 구했습니다.", "All nine heroes have saved the world once.", "九人の英雄が皆一度ずつ世界を救いました。", "九位英雄各救了世界一次。");
-        A("board.c.alleasy.cond", "모든 영웅으로 쉬움 클리어하기", "Clear Easy with every hero", "すべての英雄でイージーをクリアする", "以所有英雄通关简单难度");
+        A("board.c.alleasy.cond", "영웅 아홉 명으로 쉬움 클리어하기", "Clear Easy with nine heroes", "英雄9人でイージーをクリアする", "以九位英雄通关简单难度");
         A("board.c.brands12.name", "열두 저울", "Twelve Scales", "十二の天秤", "十二把秤");
         A("board.c.brands12.desc", "열두 각인을 모두 한 번씩 저울에 올렸습니다.", "All twelve brands weighed once each.", "十二の刻印をすべて一度ずつ天秤に載せました。", "十二枚烙印各上秤一次。");
         A("board.c.brands12.cond", "각인 12장 모두 한 번씩 새기기", "Carve all 12 brands at least once", "刻印12種をすべて一度ずつ刻む", "刻下全部12枚烙印各一次");
@@ -477,7 +477,7 @@ public static partial class LocTable
         A("board.c.endlessclear.cond", "무한 모드 클리어하기", "Clear Endless", "エンドレスをクリアする", "通关无尽模式");
         A("board.c.mastery9.name", "아홉 손", "Nine Hands", "九つの手", "九只手");
         A("board.c.mastery9.desc", "아홉 손이 모두 세 번씩 세상을 구했습니다.", "Nine hands, each saved the world three times.", "九つの手が皆三度ずつ世界を救いました。", "九只手各救了世界三次。");
-        A("board.c.mastery9.cond", "모든 영웅 숙련 3", "Mastery 3 with every hero", "すべての英雄で熟練3", "所有英雄熟练3");
+        A("board.c.mastery9.cond", "영웅 아홉 명 숙련 3", "Mastery 3 with nine heroes", "英雄9人で熟練3", "九位英雄熟练3");
         A("board.c.weight6.name", "여섯 번째 무게", "The Sixth Weight", "六つ目の重み", "第六重");
         A("board.c.weight6.desc", "가장 무거운 것을 들고 끝까지 갔습니다.", "The heaviest load carried to the end.", "最も重いものを背負って最後まで行きました。", "背着最重的东西走到了最后。");
         A("board.c.weight6.cond", "영혼의 무게 6 클리어하기", "Clear Soul Weight 6", "魂の重み6をクリアする", "通关灵魂之重6");
