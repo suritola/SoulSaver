@@ -583,6 +583,8 @@ public class QaCapture
         yield return Safe("system2", System2, 240);
         yield return Safe("soak", Soak, 600);
         yield return Safe("ui_menu", UiMenu, 900);
+        yield return Safe("v2menu", V2Menu, 1800);
+        yield return Safe("v2game", V2Game, 1800);
 
         scene = "-";
         Log("QA 끝 · 오류 합계 " + errCount.Values.Sum() + " · 경고 합계 " + warnCount.Values.Sum());
@@ -2412,6 +2414,259 @@ public class QaCapture
     }
 
     // ================================================================= 14) 메인 메뉴 새 UI · 4개 언어 · 16:9 / 4:3 · 소리 경로
+    // ================================================================= 2.0.0 출시 전 화면 검사 (겹침 · 잘림 · 화면 밖) — 메뉴 창들
+    static readonly string[] Langs = { "ko", "en", "ja", "zh" };
+    static IEnumerator V2Menu()
+    {
+        In("Auto", false);
+        SceneManager.LoadScene("MainMenu");
+        yield return Frames(30);
+        Transform root = ((Component)SCall("UIKit", "HudCanvas")).transform;
+        SSet("CodexSeen", "ShowAll", true);
+        // 메인 메뉴: 크기 × UI 크기
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            foreach (int[] c in new[] { new[] { 1920, 1080, 2 }, new[] { 1280, 720, 0 }, new[] { 1280, 720, 2 }, new[] { 1280, 720, 4 }, new[] { 1920, 1080, 4 } })
+            {
+                SSet("GameSettings", "UiScaleIndex", c[2]);
+                yield return UseSize(c[0], c[1]);
+                yield return Frames(6);
+                yield return Shot("m_menu_" + l + "_s" + c[2], c[0], c[1]);
+            }
+            SSet("GameSettings", "UiScaleIndex", 2);
+        }
+        yield return UseSize(1920, 1080);
+        yield return Frames(6);
+        // 비밀 영웅 잠긴 모습
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            yield return Frames(4);
+            try { SCall("ModeHubUI", "Open", root); } catch (Exception e) { Log("모드 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_hub_" + l);
+            SCall("ModeHubUI", "Close");
+            yield return Frames(2);
+            try { SCall("CharacterUI", "Open", root); } catch (Exception e) { Log("영웅 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_chars_locked_" + l);
+            SCall("CharacterUI", "Close");
+            yield return Frames(2);
+        }
+        // 영웅 전부 해금
+        for (int i = 0; i < 14; i++) SCall("Prefs", "SetInt", "char.unlocked." + i, 1);
+        SCall("Prefs", "SetInt", "mode.unlocked", 2);
+        SCall("Prefs", "SetInt", "endless.milestone.dev", 1);
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            yield return Frames(4);
+            try { SCall("ModeHubUI", "Open", root); } catch (Exception e) { Log("모드 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_hub2_" + l);
+            SCall("ModeHubUI", "Close");
+            yield return Frames(2);
+            try { SCall("ModeHubUI", "OpenRelay", root); } catch (Exception e) { Log("릴레이 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_relay_" + l);
+            SCall("ModeHubUI", "Close");
+            yield return Frames(2);
+            try { SCall("RefluxPrepUI", "Open", root); } catch (Exception e) { Log("역류 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_reflux_" + l);
+            try { SCall("RefluxPrepUI", "Close"); } catch { }
+            yield return Frames(2);
+            try { SCall("CharacterUI", "Open", root); } catch (Exception e) { Log("영웅 창 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_chars_" + l);
+            ScrollAllToEnd();
+            yield return Frames(3);
+            yield return Shot("m_chars_end_" + l);
+            foreach (int id in new[] { 5, 6, 7, 8, 9, 10, 11, 12, 13, 0 })
+            {
+                try { SCall("CharacterUI", "ShowDetail", Enum.ToObject(T("CharacterId"), id)); } catch (Exception e) { Log("자세히 실패 " + id + " " + (e.InnerException ?? e).Message); }
+                yield return Frames(3);
+                yield return Shot("m_detail" + id + "_" + l);
+            }
+            SCall("CharacterUI", "Close");
+            yield return Frames(2);
+        }
+        // 스킨 상점
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            foreach (int who in new[] { 0, 5, 9, 13 })
+            {
+                try { SCall("SkinShopUI", "Open", root); Object2(Find("SkinShopUI"), who); } catch (Exception e) { Log("스킨 실패 " + (e.InnerException ?? e).Message); }
+                yield return Frames(4);
+                yield return Shot("m_skin" + who + "_" + l);
+                if (who == 0)
+                {
+                    object ui = Find("SkinShopUI");
+                    for (int k = 1; k < 4; k++)
+                    {
+                        try { Set(ui, "kind", Enum.ToObject(T("SkinKind"), k)); Set(ui, "selected", null); Call(ui, "Rebuild"); } catch (Exception e) { Log("스킨 탭 실패 " + (e.InnerException ?? e).Message); }
+                        yield return Frames(3);
+                        yield return Shot("m_skin_k" + k + "_" + l);
+                    }
+                }
+                SCall("SkinShopUI", "Close");
+                yield return Frames(2);
+            }
+        }
+        SSet("CharacterData", "Selected", Enum.ToObject(T("CharacterId"), 0));
+        // 계약 보드 · 설정 · 도감
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            yield return Frames(3);
+            try { SCall("ContractBoard", "Open", root); } catch (Exception e) { Log("계약 보드 실패 " + (e.InnerException ?? e).Message); }
+            yield return Frames(4);
+            yield return Shot("m_contracts_" + l);
+            try { SCall("ContractBoard", "Close"); } catch { }
+            yield return Frames(2);
+            SCall("SettingsUI", "Open", root);
+            foreach (int t in new[] { 4, 1 })
+            {
+                SCall("SettingsUI", "ShowTab", t);
+                yield return Frames(3);
+                yield return Shot("m_settings" + t + "_" + l);
+            }
+            SCall("SettingsUI", "Close");
+            yield return Frames(2);
+            SCall("CodexUI", "Open", root);
+            for (int t = 0; t < 14; t++)
+            {
+                SCall("CodexUI", "Show", t);
+                yield return Frames(3);
+                yield return Shot("m_codex" + t + "_" + l);
+                if (t == 9 || t == 2 || t == 6)
+                {
+                    ScrollAllToEnd();
+                    yield return Frames(3);
+                    yield return Shot("m_codex" + t + "end_" + l);
+                }
+            }
+            SCall("CodexUI", "Close");
+            yield return Frames(2);
+        }
+        Lang("ko");
+        In("Auto", true);
+    }
+
+    static void Object2(object ui, int who) { Set(ui, "who", who); Set(ui, "selected", null); Call(ui, "Rebuild"); }
+    static void ScrollAllToEnd()
+    {
+        foreach (UnityEngine.UI.ScrollRect sr in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.ScrollRect>(FindObjectsSortMode.None))
+            if (sr.isActiveAndEnabled) sr.verticalNormalizedPosition = 0f;
+    }
+
+    // 판 안 장면 (HUD · 레벨업 카드 · 비밀 글 · 결과 화면)
+    static IEnumerator V2Game()
+    {
+        In("Auto", true);
+        // 1) 새 영웅 레벨업 카드
+        pilot.autoCards = false;
+        foreach (int hero in new[] { 5, 9, 10, 11, 12, 13 })
+        {
+            yield return LoadGame(Enum.GetName(T("CharacterId"), hero));
+            pilot.autoCards = false;
+            pilot.on = false;
+            foreach (string l in Langs)
+            {
+                Lang(l);
+                Call(Find("LevelShop"), "GrantLevels", Player(), 1);
+                yield return Real(0.4f);
+                try { Call(Find("LevelShop"), "OpenPending"); } catch (Exception e) { Log("카드 열기 실패 " + (e.InnerException ?? e).Message); }
+                yield return Real(1.2f);
+                yield return Shot("g_cards" + hero + "_" + l);
+                CloseLevelShop();
+                yield return Frames(6);
+                if (hero == 13 && l == "ko") { }
+            }
+        }
+        pilot.autoCards = true;
+        // 2) 사막 비밀 글
+        yield return LoadGame("Gunner");
+        pilot.on = false;
+        Vector3 pp = PPos();
+        foreach (string l in Langs)
+        {
+            Lang(l);
+            var made = new List<GameObject>();
+            string[] signs = { "secret.sign.0", "secret.sign.4", "secret.sign.done", "secret.sign.beta", "secret.sign.again", "secret.sign.6" };
+            for (int i = 0; i < signs.Length; i++)
+            {
+                Vector2 at = new Vector2(pp.x - 8f + 3.6f * i, pp.y + 2f);
+                var spr = (SpriteRenderer)SCall("DesertSecrets", "MakeSprite", null, "secret_sign_0", at, 1.6f, false, "Sign");
+                var tx = (TMPro.TextMeshPro)SCall("DesertSecrets", "MakeText", null, at + Vector2.up * 2.25f, L(signs[i]), 2.2f, new Color(0.1f, 0.08f, 0.06f), new Vector2(3.4f, 1.4f));
+                made.Add(spr.gameObject); made.Add(tx.gameObject);
+            }
+            string[] gr = { "secret.grave.text", "secret.grave.empty", "secret.grave.today" };
+            for (int i = 0; i < gr.Length; i++)
+            {
+                Vector2 at = new Vector2(pp.x - 4f + 4f * i, pp.y - 3f);
+                var spr = (SpriteRenderer)SCall("DesertSecrets", "MakeSprite", null, "secret_grave", at, 1.6f, false, "Grave");
+                string name = i == 0 ? "ABCDEFGH…" : L("여행자");
+                var tx = (TMPro.TextMeshPro)SCall("DesertSecrets", "MakeText", null, at + new Vector2(0f, 1.5f), L(gr[i]).Replace("{0}", name).Replace("{1}", "128"), 1.7f, new Color(0.12f, 0.12f, 0.16f), new Vector2(2.4f, 1.8f));
+                tx.fontStyle = FontStyles.Normal; tx.enableAutoSizing = true; tx.fontSizeMin = 0.8f;
+                made.Add(spr.gameObject); made.Add(tx.gameObject);
+            }
+            object fx = SGet("SpecialAbilities", "SharedFx");
+            string[] says = { "secret.say.wrestler", "secret.say.foreman.first", "secret.say.foreman", "secret.say.puppeteer", "secret.say.undertaker", "secret.say.undertaker.again", "secret.say.undertaker.self" };
+            for (int i = 0; i < says.Length; i++)
+                Call(fx, "FloatText", pp + new Vector3(-6f + 2f * (i % 7), 5.5f - 0.8f * (i % 3), 0f), L(says[i]), Color.white, 5f, 0f, 4f);
+            yield return Real(0.5f);
+            yield return Shot("g_secret_" + l);
+            foreach (var g in made) UnityEngine.Object.Destroy(g);
+            yield return Frames(3);
+        }
+        // 3) 릴레이 · 역류 HUD (보스 체력바 겹침)
+        for (int mode = 0; mode < 2; mode++)
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("MainMenu");
+            yield return Frames(20);
+            try
+            {
+                if (mode == 0) SCall("RelayRun", "BeginForTest", new[] { 9, 13, 11 });
+                else SCall("RefluxRun", "BeginForTest", Enum.ToObject(T("CharacterId"), 13), 0, 0);
+            }
+            catch (Exception e) { Log("모드 시작 실패 " + (e.InnerException ?? e).Message); }
+            SceneManager.LoadScene("GameScene");
+            yield return Frames(14);
+            for (int i = 0; i < 10; i++) { yield return null; CloseLevelShop(); }
+            pilot.Reset(true);
+            pilot.autoCards = true;
+            yield return Real(2f);
+            Component boss = null;
+            try { boss = EndlessBoss(0, new Vector3(6f, 0f, 0f)); } catch (Exception e) { Log("보스 실패 " + (e.InnerException ?? e).Message); }
+            yield return Secs(2f);
+            foreach (string l in Langs)
+            {
+                Lang(l);
+                yield return Frames(6);
+                yield return Shot("g_hud" + mode + "_" + l);
+                yield return Shot("g_hud" + mode + "_" + l, 1280, 720);
+            }
+            Lang("ko");
+            // 결과 화면
+            SSet("RunStats", "GaveUp", true);
+            foreach (string l in Langs)
+            {
+                Lang(l);
+                SceneManager.LoadScene("GameOver");
+                yield return Real(2.5f);
+                yield return Shot("g_result" + mode + "_" + l);
+            }
+            Lang("ko");
+            try { SCall(mode == 0 ? "RelayRun" : "RefluxRun", "End"); } catch { }
+        }
+        In("Auto", true);
+        pilot.on = false;
+    }
+
     static IEnumerator UiMenu()
     {
         // 게임 안 소리 사전 확인

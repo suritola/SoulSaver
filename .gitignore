@@ -71,3 +71,6 @@ __pycache__/
 /_check.csproj
 tools/pixelart/out/glyph/
 tools/pixelart/out/
+
+# 출시 전 QA 캡처 (용량이 커서 저장소 밖에 둠)
+docs/plans/*/qa-shots/

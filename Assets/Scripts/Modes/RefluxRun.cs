@@ -63,7 +63,17 @@ public static class RefluxRun
     }
 
     // 배치 테스트 · 봇 균형 측정용: 장면은 부르는 쪽이 로드 (업적 · 순위 · 포인트는 기존 Auto 조건이 막음)
-    public static void BeginForTest(CharacterId hero, int path, int form) => Setup(hero, path, form);
+    public static void BeginForTest(CharacterId hero, int path, int form) { if (Setup(hero, path, form)) fresh = false; }
+
+    // 2.0.0~ 검토: 「다시 시작」(ESC · 결과 화면 [R] · 같은 영웅으로 다시)은 Begin 을 거치지 않고 GameScene 을 다시 불러서 앞 판의 클리어 · 맨몸 · 잃기가 남았음
+    //   SceneFlow.Go("GameScene") 가 여기를 부름 — Begin 이 막 준비한 첫 판은 그대로, 그 뒤 같은 모드로 다시 불러오는 판은 판 상태를 새로
+    static bool fresh;
+    internal static void BeforeGameScene()
+    {
+        if (!Active) return;
+        if (fresh) { fresh = false; return; }
+        ResetRunState();
+    }
 
     static bool Setup(CharacterId hero, int path, int form)
     {
@@ -73,6 +83,7 @@ public static class RefluxRun
         Path = Mathf.Clamp(path, 0, Paths.Count - 1);
         Form = Mathf.Clamp(form, 0, 2);
         ResetRunState();
+        fresh = true;
         Active = true;
         GameMode.Override = Difficulty.Endless;
         CharacterData.Override = hero;
@@ -83,6 +94,7 @@ public static class RefluxRun
     {
         if (!Active) return;
         Active = false;
+        fresh = false;
         GameMode.Override = null;
         CharacterData.Override = null;
         VirtualOverride = -1f;
@@ -262,6 +274,7 @@ public class RefluxDirector : MonoBehaviour
 
     // 처음의 슬라임
     EnermyController slime;
+    bool slimeSpawned;
     GameObject slimePrefab;
     Image barFill;
     GameObject barRoot;
@@ -335,6 +348,8 @@ public class RefluxDirector : MonoBehaviour
         if (calm && !nakedStarted && !offering && nextBoss >= At.Length && AllBossesDown() && bosss.Dying == 0)
             StartCoroutine(Naked());
         if (slime != null) UpdateBar();
+        // 2.0.0~ 검토: 슬라임이 onKilled 없이 사라지면(Purge · 장외 · Destroy) 클리어 조건이 영영 안 켜짐 → 사라졌으면 클리어로 침
+        if (slimeSpawned && !finished && (slime == null || slime.IsDead)) Clear();
     }
 
     bool AllBossesDown()
@@ -636,7 +651,7 @@ public class RefluxDirector : MonoBehaviour
     {
         shop.RefluxStripCards();
         while (sp.RefluxTopTier > 0) sp.UndoEvolution();
-        for (int b = 0; b < sp.blessing.Length; b++) while (sp.blessing[b] > 0) sp.RefluxBless(b, -1);
+        for (int b = 0; b < sp.blessing.Length; b++) for (int guard = 0; guard < 99 && sp.blessing[b] > 0; guard++) sp.RefluxBless(b, -1);      // 2.0.0~ 검토: 횟수 상한 (RefluxBless 가 값을 못 줄이는 경우에도 멈추지 않게)
         RefluxRun.Naked = true;
         RefluxRun.ShownLevel = 1;
         if (player != null) player.PlayerHealth = Mathf.Min(player.PlayerMaxHealth, Mathf.Max(player.PlayerHealth, player.PlayerMaxHealth * 0.6f));
@@ -670,6 +685,7 @@ public class RefluxDirector : MonoBehaviour
         slime.survivesContact = true;
         slime.knockBackTaken *= 0.3f;
         slime.onKilled += OnSlimeKilled;
+        slimeSpawned = true;
         lastHp = player != null ? player.PlayerHealth : 0f;
         RefluxRun.NakedHit = false;
         BuildBar();

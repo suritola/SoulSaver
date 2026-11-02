@@ -12,6 +12,7 @@ public static class BuildScript
     const string IconPath = "Assets/Art/Icon/GunSaverIcon.png";
     const string NoSteam = "DISABLESTEAMWORKS";
     const string DemoDefine = "SOULSAVER_DEMO";
+    const string TestUnlockDefine = "SOULSAVER_TESTUNLOCK";
 
     public static void BuildWindows()
     {
@@ -22,9 +23,13 @@ public static class BuildScript
         bool steam = Environment.GetCommandLineArgs().Contains("-steam");
         // -demo: 체험판 (Demo.cs). 저장 데이터 · 실행 파일이 정식판과 섞이지 않게 제품 이름도 바꿈
         bool demo = Environment.GetCommandLineArgs().Contains("-demo");
+        // -testUnlock: 개발자 시험 빌드 — 모든 영웅을 열린 것으로 봄 (저장은 건드리지 않음 · 정식 빌드 스크립트는 이 인자를 넘기지 않음)
+        bool testUnlock = Environment.GetCommandLineArgs().Contains("-testUnlock");
         var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone)
-            .Split(';').Where(d => d.Length > 0 && d != NoSteam && d != DemoDefine).ToList();
+            .Split(';').Where(d => d.Length > 0 && d != NoSteam && d != DemoDefine && d != TestUnlockDefine).ToList();
         if (!steam) defines.Add(NoSteam);
+        if (testUnlock) defines.Add(TestUnlockDefine);
+        Debug.Log("시험용 전체 해금: " + (testUnlock ? "켬" : "끔"));
         if (demo)
         {
             defines.Add(DemoDefine);

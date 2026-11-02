@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,6 +24,9 @@ public static class AutoplayRunner
     public static int Runs = 1, Seed = 1000;
     public static float Skill = 0.5f, Step = 1f / 30f, MaxMinutes = 45f, BeyondSeconds = 0f;
     public static bool NoDeath;
+    public static string Mode = "endless";    // 2.0.0~ AP_MODE: endless | relay | reflux
+    public static bool God;                     // AP_GOD: 흐름 검사용 — 지금 영웅 공격력을 크게 올리고 계속 무적 (역류 처음의 슬라임까지 가 보기 · 화력 수치는 의미 없음)
+    public static float SwapEvery, SaveAt;      // 릴레이 교대 강제 간격 · 저장 → 이어하기 검사 시각 (게임 초)
     public static int HoardLevels;      // 1.4.2~ AP_HOARD: 레벨업을 n 개 쌓일 때까지 안 고름 (0 = 끔 · 기획 검토 1번 「쌓아 두기」 확인)
 
     // 판 하나의 기록
@@ -49,6 +52,10 @@ public static class AutoplayRunner
         public float exp1517, expPost15, bossDealt;                  // 경험치 합 (15:00~17:00 · 15분 뒤) · 보스에게 준 피해 합 (넘친 피해 빼고)
         public readonly Dictionary<string, float> bossDealtBy = new Dictionary<string, float>();
         public string topBossDealt = "";
+        // 2.0.0~ 모드 · 교대 · 저장 이어하기 · 사진사 비밀 기준 측정 (3~15분)
+        public string mode = "endless", note = "";
+        public int swaps, photoHits, photoSamples, photoAbove, photoMaxN, photoThrSum;
+        public float photoExposure;
     }
 
     static RunRecord cur;
@@ -112,6 +119,16 @@ public static class AutoplayRunner
         BeyondSeconds = EnvF("AP_BEYOND", 0f);
         NoDeath = Env("AP_NODEATH", "0") == "1";
         HoardLevels = Mathf.Max(0, EnvI("AP_HOARD", 0));
+        God = Env("AP_GOD", "0") == "1";
+        SwapEvery = EnvF("AP_SWAPEVERY", 0f);
+        SaveAt = EnvF("AP_SAVEAT", 0f);
+        AutoplayFlags.SaveOn = SaveAt > 0f;
+        if (Env("AP_SHOTS", "").Length > 0)
+        {
+            string sl = Env("AP_SHOTLANG", "ko");
+            GameSettings.Language = sl == "en" ? Loc.Lang.English : (Loc.Lang)0;
+            AutoplayShots.Init(Env("AP_SHOTS", ""), sl);
+        }
         NoRender = Env("AP_RENDER", "0") != "1";
         Directory.CreateDirectory(Out);
         progress = new StreamWriter(Path.Combine(Out, "progress.log"), true, new UTF8Encoding(false));
@@ -142,8 +159,9 @@ public static class AutoplayRunner
         for (int run = skip; run < plan.Count; run++)
         {
             Hero = plan[run][0]; Path1 = plan[run][1]; Path2 = plan[run][2];
+            Mode = plan[run].Length > 4 ? plan[run][4] : "endless";
             int seed = int.TryParse(plan[run][3], out int sd) ? sd : Seed + run;
-            cur = new RunRecord { hero = Hero, skill = Skill, seed = seed };
+            cur = new RunRecord { hero = Hero, skill = Skill, seed = seed, mode = Mode };
             Log("==== 판 " + (run + 1) + "/" + plan.Count + " · " + Hero + " 갈래 " + Path1 + "/" + Path2 + " · 시드 " + seed);
             float realStart = Time.realtimeSinceStartup;
             IEnumerator one = null;
@@ -215,6 +233,63 @@ public static class AutoplayRunner
         catch (Exception e) { Log("docs 복사 실패 " + e.Message); }
     }
 
+    // 화면 캡처 지점 (AP_SHOTS): 영웅 머리 위 막대 · 릴레이 교대 직후 HUD · 역류 잃기 창 · 처음의 슬라임 막대
+    static float lastSwapSec = -99f;
+    static float choiceSince = -1f;
+    static IEnumerator ShotPoll(float s)
+    {
+        if (cur == null || Time.timeScale <= 0f && !ChoiceUI.Open) return null;
+        string hero = (Mode == "relay" && RelayRun.Active ? RelayRun.Current.ToString() : Hero.Split('+')[0]);
+        if (Mode == "relay")
+        {
+            if (cur.swaps > 0 && s >= lastSwapSec + 1.2f && !AutoplayShots.Taken("relay_swap" + cur.swaps)) return AutoplayShots.Shot("relay_swap" + cur.swaps);
+            if (cur.swaps > 0 && s >= lastSwapSec + 12f && bosss.LiveCount > 0 && !AutoplayShots.Taken("relay_boss" + cur.swaps)) return AutoplayShots.Shot("relay_boss" + cur.swaps);
+            if (cur.swaps == 0 && s > 60f && !AutoplayShots.Taken("relay_first_" + hero)) return AutoplayShots.Shot("relay_first_" + hero);
+            if (cur.swaps > 0 && AutoplayHooksSwapSeen(s)) return null;
+            return null;
+        }
+        if (Mode == "reflux")
+        {
+            if (ChoiceUI.Open && !AutoplayShots.Taken("reflux_loss")) return AutoplayShots.Shot("reflux_loss", 1.8f);
+            RefluxDirector d = UnityEngine.Object.FindFirstObjectByType<RefluxDirector>();
+            if (d != null && AutoplayBot.Get<EnermyController>(d, "slime") != null && !AutoplayShots.Taken("reflux_slime")) return AutoplayShots.Shot("reflux_slime");
+            if (s > 90f && !AutoplayShots.Taken("reflux_hud_" + hero)) return AutoplayShots.Shot("reflux_hud_" + hero);
+            return null;
+        }
+        if (s > 100f && !AutoplayShots.Taken("hud_" + hero + "_a")) return AutoplayShots.Shot("hud_" + hero + "_a");
+        if (s > 420f && bosss.LiveCount == 0 && !AutoplayShots.Taken("hud_" + hero + "_b")) return AutoplayShots.Shot("hud_" + hero + "_b");
+        return null;
+    }
+    static bool AutoplayHooksSwapSeen(float s) { return false; }
+
+    // 사진사 비밀 기준 측정 (DesertSecrets.CrowdSecret 과 같은 식: 0.25초마다 화면 안 적 수 n >= clamp(MaxAliveNow - 6, 10, 16) 이면 노출 +0.25, 아니면 -0.125, 12 가 차면 한 번 충족)
+    static float photoAt;
+    static void PhotoSample()
+    {
+        float s = GameMode.EndlessSeconds;
+        if (cur == null || s < 180f || s > 900f || Time.time < photoAt) return;
+        photoAt = Time.time + 0.25f;
+        EndlessMode em = EndlessMode.Instance;
+        if (em == null || em.NoMobs) return;
+        Camera cam = Camera.main;
+        if (cam == null || !cam.orthographic) return;
+        float h = cam.orthographicSize - 1f, w = cam.orthographicSize * cam.aspect - 1f;
+        int n = 0;
+        using (var ovl = PhysHits.Box(cam.transform.position, new Vector2(w * 2f, h * 2f), 0f))
+            foreach (Collider2D c in ovl)
+            {
+                if (c == null || !c.CompareTag("enermy")) continue;
+                EnermyController e = EnermyController.FromCollider(c);
+                if (e != null && !e.IsDead && e.swarm == null) n++;
+            }
+        int thr = Mathf.Clamp(EnemySpawner.MaxAliveNow - 6, 10, 16);
+        cur.photoSamples++; cur.photoThrSum += thr;
+        cur.photoMaxN = Mathf.Max(cur.photoMaxN, n);
+        if (n >= thr) { cur.photoAbove++; cur.photoExposure = Mathf.Min(12f, cur.photoExposure + 0.25f); }
+        else cur.photoExposure = Mathf.Max(0f, cur.photoExposure - 0.125f);
+        if (cur.photoExposure >= 12f) { cur.photoHits++; cur.photoExposure = 0f; }
+    }
+
     static string Clock(float s) => s < 0f ? "-" : EndlessMode.Clock(s);
 
     // ================================================================= 판 하나
@@ -223,9 +298,31 @@ public static class AutoplayRunner
         UnityEngine.Random.InitState(seed);
         Time.captureDeltaTime = 0f;
         Time.timeScale = 1f;
-        if (!Enum.TryParse(Hero, true, out CharacterId id)) throw new Exception("모르는 영웅 " + Hero);
-        CharacterData.Override = id;
-        GameMode.Override = Difficulty.Endless;
+        RunSave.Delete();
+        CharacterId id;
+        int[] relayOrder = null;
+        if (Mode == "relay")
+        {
+            relayOrder = Hero.Split('+').Select(h => (int)(CharacterId)Enum.Parse(typeof(CharacterId), h, true)).ToArray();
+            id = (CharacterId)relayOrder[0];
+            RelayRun.BeginForTest(relayOrder);
+            if (!RelayRun.Active) throw new Exception("릴레이 시작 거절 " + Hero);
+        }
+        else if (Mode == "reflux")
+        {
+            if (!Enum.TryParse(Hero, true, out id)) throw new Exception("모르는 영웅 " + Hero);
+            int rp = int.TryParse(Path1, out int a1) ? a1 : Mathf.Abs(seed) % 5;
+            int rf = int.TryParse(Path2, out int a2) ? a2 : (Mathf.Abs(seed) / 5) % 3;
+            cur.path1 = rp.ToString(); cur.path2 = rf.ToString();
+            RefluxRun.BeginForTest(id, rp, rf);
+            if (!RefluxRun.Active) throw new Exception("역류 시작 거절 " + Hero);
+        }
+        else
+        {
+            if (!Enum.TryParse(Hero, true, out id)) throw new Exception("모르는 영웅 " + Hero);
+            CharacterData.Override = id;
+            GameMode.Override = Difficulty.Endless;
+        }
         AutoplayMeta.BeforeRun(id);
         SceneManager.LoadScene("GameScene");
         // 씬이 열리고 플레이어 · 스테이지가 생길 때까지
@@ -234,7 +331,9 @@ public static class AutoplayRunner
         AutoplayBot bot = host.GetComponent<AutoplayBot>();
         if (bot != null) UnityEngine.Object.DestroyImmediate(bot);
         bot = host.AddComponent<AutoplayBot>();
-        bot.Begin(cur, id, Path1, Path2, Skill, seed);
+        bot.Begin(cur, id, Mode == "endless" ? Path1 : "random", Mode == "endless" ? Path2 : "random", Skill, seed);
+        CharacterId botHero = id;
+        float nextSwap = SwapEvery > 0f ? SwapEvery : float.MaxValue, saveAt = SaveAt, resumeEnd = float.MaxValue;
         AutoplayHooks.Begin(cur);
         Time.captureDeltaTime = Step;
 
@@ -244,6 +343,27 @@ public static class AutoplayRunner
         {
             yield return null;
             if (NoRender && Time.frameCount % 30 == 0) MuteCameras();
+            // 릴레이: 주자가 바뀌면 봇도 새 영웅으로 (갈래는 무작위) · -SwapEvery 마다 지금 주자를 쓰러뜨려 교대를 강제
+            if (Mode == "relay" && RelayRun.Active)
+            {
+                if (RelayRun.Current != botHero) { botHero = RelayRun.Current; bot.FollowHero(botHero); lastSwapSec = GameMode.EndlessSeconds; Log("교대 → " + botHero + " (" + (RelayRun.Index + 1) + "번째 주자) " + EndlessMode.Clock(GameMode.EndlessSeconds)); }
+                PlayerController rp0 = Hostile.Player;
+                if (GameMode.EndlessSeconds >= nextSwap && RelayRun.Index < RelayRun.Runners - 1 && rp0 != null && !rp0.IsDying && Time.timeScale > 0f && !RelayRun.Swapping)
+                {
+                    nextSwap = GameMode.EndlessSeconds + SwapEvery;
+                    rp0.PlayerHealth = 0f;
+                    if (RelayRun.TryHandoff(rp0)) AutoplayHooks.Handoff(); else Log("?? 교대 강제 거절");
+                }
+            }
+            if (cur.mode == "reflux" && RefluxRun.Cleared) { cur.result = "클리어"; cur.note = "역류 클리어 " + Inv(RefluxRun.ClearSeconds, "0") + "초"; break; }
+            PhotoSample();
+            if (God && Hostile.Player != null && !Hostile.Player.IsDying && Time.frameCount % 15 == 0)
+            {
+                PlayerController gp = Hostile.Player;
+                gp.damage = Mathf.Max(gp.damage, 300f);
+                gp.GrantInvincibility(1f);
+            }
+            if (AutoplayShots.On) { IEnumerator sh = ShotPoll(GameMode.EndlessSeconds); if (sh != null) yield return sh; }
             string scene = SceneManager.GetActiveScene().name;
             EndlessMode em = EndlessMode.Instance;
             float s = GameMode.EndlessSeconds;
@@ -258,6 +378,38 @@ public static class AutoplayRunner
                 if (beyondAt < 0f) beyondAt = s;
                 if (s - beyondAt >= BeyondSeconds) { cur.result = "클리어"; break; }
             }
+            // 판 중간 저장 → 메인 메뉴 → 이어하기 (한 번)
+            if (saveAt > 0f && s >= saveAt && Time.timeScale > 0f)
+            {
+                saveAt = 0f;
+                PlayerController sp0 = Hostile.Player;
+                int lvBefore = sp0 != null ? sp0.level : -1;
+                int idxBefore = RelayRun.Active ? RelayRun.Index : -1;
+                RunSave.Save();
+                bool has = RunSave.Has;
+                Log("저장 검사: 저장 " + (has ? "있음" : "없음") + " · Lv " + lvBefore + " · " + EndlessMode.Clock(s) + (idxBefore >= 0 ? " · 주자 " + (idxBefore + 1) : ""));
+                if (!has) { cur.result = "저장실패"; cur.errors++; cur.firstErrors.Add("SAVE: 저장이 남지 않음"); break; }
+                bot.enabled = false;
+                GameInput.AutoMove = Vector2.zero; GameInput.AutoFire = false; GameInput.AutoUlt = false;
+                Time.captureDeltaTime = 0f; Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+                for (int i = 0; i < 40; i++) yield return null;
+                Log("메인 메뉴 → 저장 " + (RunSave.Has ? "남아 있음" : "사라짐"));
+                if (!RunSave.Has) { cur.result = "저장사라짐"; cur.errors++; cur.firstErrors.Add("SAVE: 메뉴로 나가자 저장이 사라짐"); break; }
+                if (!RunSave.Continue()) { cur.result = "이어하기거절"; cur.errors++; cur.firstErrors.Add("SAVE: Continue 거절"); break; }
+                for (int i = 0; i < 900 && (SceneManager.GetActiveScene().name != "GameScene" || Hostile.Player == null || StageManager.Instance == null); i++) yield return null;
+                for (int i = 0; i < 60; i++) yield return null;
+                bot.enabled = true;
+                Time.captureDeltaTime = Step;
+                float s2 = GameMode.EndlessSeconds;
+                PlayerController p2 = Hostile.Player;
+                Log("이어하기 뒤: " + EndlessMode.Clock(s2) + " · Lv " + (p2 != null ? p2.level : -1) + " · 영웅 " + CharacterData.Selected + (RelayRun.Active ? " · 주자 " + (RelayRun.Index + 1) : ""));
+                cur.note = "저장 Lv" + lvBefore + " 이어 Lv" + (p2 != null ? p2.level : -1) + " · 주자 " + (idxBefore + 1) + "→" + (RelayRun.Active ? RelayRun.Index + 1 : 0) + " · " + CharacterData.Selected;
+                lastGame = -1f; lastMoveReal = Time.realtimeSinceStartup;
+                resumeEnd = s2 + 120f;
+                continue;
+            }
+            if (s >= resumeEnd) { cur.result = "저장이어하기OK"; break; }
             if (s >= MaxMinutes * 60f) { cur.result = cur.devKillSec >= 0f ? "시간초과(개발자처치)" : "시간초과"; break; }
             // 멈춤 감시: 게임 시계가 흐르지 않으면 (창이 안 닫힘 · 컷신 등) 상태를 남기고, 3분이면 이 판을 버림
             if (s > lastGame + 0.01f || em == null) { lastGame = s; lastMoveReal = Time.realtimeSinceStartup; }
@@ -275,6 +427,7 @@ public static class AutoplayRunner
         }
         // 판 정보 (씬이 바뀌기 전 · 또는 바뀐 뒤에도 남는 정적 값)
         Finalize(cur);
+        RunSave.Delete();
         AutoplayHooks.End();
         if (bot != null) UnityEngine.Object.Destroy(bot);
         Time.captureDeltaTime = 0f;
@@ -318,7 +471,7 @@ public static class AutoplayRunner
     // ================================================================= CSV
     // 1.4.2~ 무한 30분 측정 열은 끝에 붙임 (옛 CSV 와 앞 열 순서 그대로)
     const string Header = "time,hero,path1,path2,skill,seed,result,end_time,four_bosses,dev_summon,dev_kill,mom_summon,mom_kill,bosses,level,kills,deaths,laststand,taken,dealt,top_taken,top_dealt,path_tiers,cross,exceptions,errors,first_errors,stuck,unknown_windows,real_minutes,step,version"
-        + ",lv30_at,lv40_at,lv45_at,lv50_at,exp_15_17,exp_post15,tree_done_at,bosses_at15,deaths_pre15,wave2_at,wave2_timer,transcends,refines,phase_shards,barriers,boss_dealt,boss_top_dealt,hoard_levels";
+        + ",lv30_at,lv40_at,lv45_at,lv50_at,exp_15_17,exp_post15,tree_done_at,bosses_at15,deaths_pre15,wave2_at,wave2_timer,transcends,refines,phase_shards,barriers,boss_dealt,boss_top_dealt,hoard_levels,mode,swaps,note,photo_hits,photo_above_pct,photo_maxn,photo_thr_avg";
 
     static void WriteRow(RunRecord r)
     {
@@ -337,6 +490,7 @@ public static class AutoplayRunner
             T(r.lv30Sec), T(r.lv40Sec), T(r.lv45Sec), T(r.lv50Sec), ExpRate(r.exp1517, r.endSec, 900f, 1020f), ExpRate(r.expPost15, r.endSec, 900f, float.MaxValue),
             T(r.treeDoneSec), N(r.bossesAt15), N(r.deathsPre15), T(r.wave2Sec), N(r.wave2Timer), r.transcends.ToString(), r.refines.ToString(), r.phaseShards.ToString(), r.barriers.ToString(),
             Inv(r.bossDealt, "0"), Q(r.topBossDealt), HoardLevels.ToString(),
+            r.mode, r.swaps.ToString(), Q(r.note), r.photoHits.ToString(), r.photoSamples > 0 ? Inv(100f * r.photoAbove / r.photoSamples, "0.0") : "", r.photoMaxN.ToString(), r.photoSamples > 0 ? Inv((float)r.photoThrSum / r.photoSamples, "0.0") : "",
         });
         try { File.AppendAllText(path, (fresh ? Header + "\n" : "") + line + "\n", new UTF8Encoding(fresh)); }
         catch (Exception e) { Log("CSV 쓰기 실패 " + e.Message); }

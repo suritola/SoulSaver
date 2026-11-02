@@ -347,7 +347,7 @@ public static class ChestRewards
         Object.Destroy(go);
         Object.Destroy(sfx, 0.5f);
         ChoiceUI.Open = false;
-        Time.timeScale = before > 0f ? before : 1f;
+        Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
     }
 
     // 코드에서 만드는 소리 (UISound 방식): 짧은 틱 · 도-미-솔-도 상승 화음

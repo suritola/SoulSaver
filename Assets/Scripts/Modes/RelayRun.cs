@@ -15,6 +15,7 @@ public static class RelayRun
     public static int[] Order = { 0, 1, 2 };                  // 영웅 번호 (CharacterId) 순서
     public static int Index { get; private set; }             // 지금 주자 0 ~ 2
     public static bool Swapping { get; internal set; }        // 교대 논리가 도는 같은 프레임 (피해 · 저장을 거절)
+    public static bool HandoffPending { get; private set; }   // 2.0.0~ 검토: 교대가 다음 프레임으로 미뤄진 사이 (물리 콜백 안에서 키트를 지우지 않으려고) — 두 번째 교대 · 쓰러짐 처리를 막음
     public static int FreeLeft, EvoOwed;                      // 아직 못 고른 환급 무료 카드 · 진화 빚
     public static readonly float[] SegmentStart = new float[3];     // 각 주자가 시작한 때 (GameMode.EndlessSeconds)
     public static int BaseMag = 6;                            // 영웅 배율이 곱해지기 전 인스펙터 값 (PlayerController.Start 가 기록)
@@ -70,7 +71,28 @@ public static class RelayRun
     }
 
     // 배치 테스트 · 봇 균형 측정용: 장면은 부르는 쪽이 로드 (업적 · 순위 · 포인트는 기존 Auto 조건이 막음)
-    public static void BeginForTest(int[] order) => Setup(order);
+    public static void BeginForTest(int[] order) { if (Setup(order)) fresh = false; }
+
+    // 2.0.0~ 검토: 「다시 시작」(ESC · 결과 화면 [R] · 같은 영웅으로 다시)은 Begin 을 거치지 않고 GameScene 을 다시 불러서 마지막 주자 · 유품 · 구간 시간이 남았음
+    //   SceneFlow.Go("GameScene") → ModeRun.BeforeGameScene 이 여기를 부름 — Begin · Resume 이 막 준비한 첫 판은 그대로, 그 뒤 다시 불러오는 판은 첫 주자부터 새로
+    static bool fresh;
+    internal static void BeforeGameScene()
+    {
+        if (!Active) return;
+        if (fresh) { fresh = false; return; }
+        ResetRunProgress();
+    }
+
+    static void ResetRunProgress()
+    {
+        Index = 0;
+        Swapping = false;
+        HandoffPending = false;
+        FreeLeft = EvoOwed = 0;
+        System.Array.Clear(SegmentStart, 0, SegmentStart.Length);
+        CharacterData.Override = (CharacterId)Order[0];
+        ResetRunState();
+    }
 
     static bool Setup(int[] order)
     {
@@ -82,14 +104,10 @@ public static class RelayRun
         }
         ModeRun.EndAll();
         Order = (int[])order.Clone();
-        Index = 0;
-        Swapping = false;
-        FreeLeft = EvoOwed = 0;
-        System.Array.Clear(SegmentStart, 0, SegmentStart.Length);
+        ResetRunProgress();
+        fresh = true;
         Active = true;
         GameMode.Override = Difficulty.Endless;
-        CharacterData.Override = (CharacterId)Order[0];
-        ResetRunState();
         return true;
     }
 
@@ -105,6 +123,8 @@ public static class RelayRun
         if (!Active) return;
         Active = false;
         Swapping = false;
+        HandoffPending = false;
+        fresh = false;
         GameMode.Override = null;
         CharacterData.Override = null;
         ResetRunState();
@@ -141,6 +161,23 @@ public static class RelayRun
     public static bool TryHandoff(PlayerController p)
     {
         if (!Active || Swapping || p == null || p.IsDying || Index >= Runners - 1 || RunSave.Replaying) return false;
+        if (HandoffPending) return true;        // 이미 다음 프레임에 교대가 예약됨 — 또 맞아도 두 번 교대하지 않고 쓰러짐도 시작하지 않음
+        RelayRunner r = RelayRunner.Instance;
+        if (r == null) return false;
+        // 2.0.0~ 검토: 이 함수는 물리 콜백(OnTriggerStay2D → TryHit) 안에서 불림 — 거기서 DestroyImmediate(키트)는 막혀 키트가 둘 붙었음
+        //   체력 1 + 무적만 주고 실제 교대는 다음 프레임 (코루틴 yield return null 뒤 = 콜백 밖)
+        HandoffPending = true;
+        p.PlayerHealth = 1f;
+        p.GrantInvincibility(3f);
+        r.StartCoroutine(DoHandoff(p));
+        return true;
+    }
+
+    static IEnumerator DoHandoff(PlayerController p)
+    {
+        yield return null;
+        HandoffPending = false;
+        if (!Active || p == null || p.IsDying || Index >= Runners - 1) yield break;
         CharacterId prev = Current;
         Vector3 at = p.transform.position;
         float now = GameMode.EndlessSeconds;
@@ -152,7 +189,6 @@ public static class RelayRun
         RelaySwap.Run(p, Current, false);
         RelayRunner r = RelayRunner.Instance;
         if (r != null) r.StartCoroutine(HandoffFx(p, prev, at));
-        return true;
     }
 
     static float handoffAt = -99f;
@@ -266,6 +302,7 @@ public static class RelayRun
         while (t < 0.6f)
         {
             yield return null;
+            if (Time.timeScale == 0f) continue;      // 2.0.0~ 검토: 창이 멈춘 동안은 기다림 (창이 닫으며 Juice.Settle 로 1 을 돌려줌 → 아래에서 끝남)
             if (Mathf.Abs(Time.timeScale - expect) > 0.02f) yield break;      // 일시정지 · 창이 시간을 잡았으면 맡김
             t += Time.unscaledDeltaTime;
             expect = Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(t / 0.6f));
@@ -465,6 +502,7 @@ public static class RelayRun
                 }
             }
             heirloomText.text = RelayHeirlooms.HudLine();
+            heirloomText.enabled = !Notice.BigShowing;      // 2.0.0~ 화면 검사: 큰 알림 띠가 떠 있는 동안은 띠 글자와 겹쳐 읽히지 않음
         }
     }
 

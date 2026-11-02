@@ -14,7 +14,6 @@ public partial class CharacterKit
     GameObject utBellGo;
     SpriteRenderer utBellSr;
     Sprite[] utBellFrames;
-    LineRenderer utBellRect;
     bool utFuneralBusy;
     static readonly List<EnermyController> utFall = new List<EnermyController>(64);
 
@@ -71,7 +70,7 @@ public partial class CharacterKit
     // echo: 장례식 극의의 두 번째 장례 (피해 50% · 판 구멍 매장 · 묘비 · 명부 · 후속 효과 없음)
     IEnumerator UtFuneralRoutine(bool echo)
     {
-        if (!echo) utFuneralBusy = true;
+        utFuneralBusy = true;      // 2.0.0~ 검토: 두 번째 장례(echo)도 잡음 — 안 잡으면 그 사이 새 장례가 static utFall 을 지워 붙잡힌 적이 안 풀렸음
         Vector3 me = transform.position;
         float mul = echo ? UltMul * UndertakerPaths.FuneralMasteryMul : UltMul * SignatureSkills.UtLedgerTake();
         float massMul = 1f, delay = UndertakerTuning.FuneralFall;
@@ -170,7 +169,7 @@ public partial class CharacterKit
         Play("thump", 0.8f, 0.5f);
         Impact.Hit(ImpactTier.Ult, me, Vector2.down);            // 일제 매장 순간 한 번 (종 순간이 아님)
         RunCounters.Both("bury", killed);
-        if (echo) yield break;          // 두 번째 장례는 묘비 · 후속 효과 없음
+        if (echo) { utFuneralBusy = false; yield break; }          // 두 번째 장례는 묘비 · 후속 효과 없음
         // 4) 쓰러진 자리마다 임시 묘비 (4초 · 12개까지 가까운 순)
         List<Vector3> graves = new List<Vector3>();
         dead.Sort((a, b) => ((Vector2)(a - me)).sqrMagnitude.CompareTo(((Vector2)(b - me)).sqrMagnitude));
@@ -228,16 +227,19 @@ public partial class CharacterKit
         Color hero = HeroAim.ColorOf(HeroAimKind.Undertaker);
         if (UtView(-0.35f, out Rect r))
         {
-            if (utBellRect == null) { utBellRect = Hostile.NewLine("UtBellRect", hero, 0.16f, 25); utBellRect.loop = true; utBellRect.positionCount = 4; }
-            utBellRect.enabled = true;
-            utBellRect.SetPosition(0, new Vector3(r.xMin, r.yMin, 0f));
-            utBellRect.SetPosition(1, new Vector3(r.xMax, r.yMin, 0f));
-            utBellRect.SetPosition(2, new Vector3(r.xMax, r.yMax, 0f));
-            utBellRect.SetPosition(3, new Vector3(r.xMin, r.yMax, 0f));
-            float a = Mathf.Clamp01(0.3f + held * 0.7f) * (0.75f + 0.25f * Mathf.Sin(Time.time * 10f));
-            utBellRect.startColor = utBellRect.endColor = new Color(hero.r, hero.g, hero.b, a);
-            utBellRect.startWidth = utBellRect.endWidth = 0.12f + 0.12f * Mathf.Clamp01(held);
-            HeroAim.Mark(utBellRect, HeroAimKind.Undertaker, HeroAimFx.None);
+            // 2.0.0~ 도트 부고 테: 판정 사각형(화면) 안쪽 가장자리에 은빛 줄 · 구슬 박힌 그늘 띠 + 네 모서리 꺾쇠 · 십자
+            //   (예전: 화면 가장자리를 두른 얇은 단색 네모 선) · 안 그린 프레임엔 저절로 숨음
+            utBellRectOn = true;
+            float a = Mathf.Clamp01(0.3f + held * 0.7f) * (GameSettings.ReduceMotion ? 0.9f : 0.75f + 0.25f * Mathf.Sin(Time.time * 10f));
+            Color hc = new Color(hero.r, hero.g, hero.b, a);
+            PixelMarks pm = PixelMarks.Ensure(ref utPx, this);
+            pm.EdgeBands(r, PixelMarkArt.Mourning(false), PixelMarkArt.Mourning(true), PixelMarkArt.MourningThick, hc, true, true, 0);
+            pm.Corners(r.center, r.width * 0.5f, r.height * 0.5f, hc);
+            float k = PixelMarkArt.MourningThick + 0.45f;
+            pm.Put(PixelMarkArt.Cross, new Vector2(r.xMin + k, r.yMax - k), hc);
+            pm.Put(PixelMarkArt.Cross, new Vector2(r.xMax - k, r.yMax - k), hc);
+            pm.Put(PixelMarkArt.Cross, new Vector2(r.xMin + k, r.yMin + k), hc);
+            pm.Put(PixelMarkArt.Cross, new Vector2(r.xMax - k, r.yMin + k), hc);
             // 화면 위 가운데 종 (오래 누를수록 크게 흔들림 — 효과는 같음)
             if (utBellGo == null)
             {
@@ -262,18 +264,21 @@ public partial class CharacterKit
 
     void UtUltTick()
     {
-        if (!utBell && ((utBellRect != null && utBellRect.enabled) || (utBellGo != null && utBellGo.activeSelf))) UtHideUltAim();
+        if (!utBell && (utBellRectOn || (utBellGo != null && utBellGo.activeSelf))) UtHideUltAim();
     }
+
+    PixelMarks utPx;
+    bool utBellRectOn;
 
     void UtHideUltAim()
     {
-        if (utBellRect != null) utBellRect.enabled = false;
+        utBellRectOn = false;
         if (utBellGo != null && utBellGo.activeSelf) utBellGo.SetActive(false);
     }
 
     void UtUltCleanup()
     {
-        if (utBellRect != null) Destroy(utBellRect.gameObject);
+        if (utPx != null) Destroy(utPx.gameObject);
         if (utBellGo != null) Destroy(utBellGo);
         foreach (EnermyController e in utFall) if (e != null) EnemyHold.Release(e, this);
         utFall.Clear();

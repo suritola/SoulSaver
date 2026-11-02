@@ -143,6 +143,7 @@ public partial class CharacterKit
     }
 
     readonly List<UtHole> utHoles = new List<UtHole>(8);
+    readonly List<UtHole> utBurying = new List<UtHole>(8);      // 2.0.0~ 검토: 매장 중(utHoles 에서는 빠짐)인 구멍 — 매장 중 교대하면 그림이 남지 않게 정리 대상에 둠
     readonly List<UndertakerGrave> utGraves = new List<UndertakerGrave>(24);
     readonly List<UndertakerGrave> utWalls = new List<UndertakerGrave>(8);
     UtHole utCur;
@@ -576,6 +577,7 @@ public partial class CharacterKit
     {
         Play("thump", 0.5f, 0.7f);
         Vector2 aim = utCursor;
+        utBurying.AddRange(list);
         foreach (UtHole h in list)
         {
             if (h.go == null) continue;
@@ -605,7 +607,7 @@ public partial class CharacterKit
         }
         SignatureSkills.UtBuryEnd(list.Count, trappedKilledAll, fromUlt);
         if (!fromUlt) RunCounters.Both("bury.times");
-        foreach (UtHole h in list) if (h.go != null) Destroy(h.go);
+        foreach (UtHole h in list) { if (h.go != null) Destroy(h.go); utBurying.Remove(h); }
     }
 
     // 구멍 하나 매장: 갇힌 적 → 구멍 위 적 → 보스 (구멍당 한 번) · 쓰러진 갇힌 적이 있으면 그 자리에 묘비 하나
@@ -999,6 +1001,8 @@ public partial class CharacterKit
         EnemyHold.ReleaseAll(this);
         foreach (UtHole h in utHoles) if (h != null && h.go != null) Destroy(h.go);
         utHoles.Clear();
+        foreach (UtHole h in utBurying) if (h != null && h.go != null) Destroy(h.go);
+        utBurying.Clear();
         foreach (UndertakerGrave g in utGraves) if (g != null) Destroy(g.gameObject);
         utGraves.Clear();
         foreach (UndertakerGrave w in utWalls) if (w != null) Destroy(w.gameObject);

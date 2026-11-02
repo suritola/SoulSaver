@@ -27,17 +27,21 @@ public static class RelaySwap
             Safe(() => Paths.End());            // 갈래 효과가 바꿔 둔 값(도적 광란 탄창 등)은 아래 배율 되돌림 전에 거둠
 
             // 2. 앞 영웅 배율 빼기 (거너는 체력 · 공격 속도 · 이동을 곱하지 않음 — CharacterKit.ApplyDef 만 곱함)
-            p.damage /= Mathf.Max(0.01f, old.damage);
-            if (oldIsKit)
+            // 2.0.0~ 검토: 배율 나누기 · 키트 갈아 끼우기도 Safe 로 — 예외가 밖으로 나가면 Index 만 오르고 Record · 저장이 빠진 반쯤 바뀐 상태로 남았음
+            Safe(() =>
             {
-                p.PlayerMaxHealth /= Mathf.Max(0.01f, old.hp);
-                p.ShootSpeed *= Mathf.Max(0.1f, old.attackSpeed);
-                p.speed /= Mathf.Max(0.01f, old.move);
-            }
-            p.BaseMoveSpeed /= Mathf.Max(0.01f, old.move);
-            p.MaxBullet = RelayRun.BaseMag;
-            p.reloadTime = RelayRun.BaseReload;
-            if (sp != null) sp.RescaleBase(1f / Mathf.Max(0.01f, old.damage));
+                p.damage /= Mathf.Max(0.01f, old.damage);
+                if (oldIsKit)
+                {
+                    p.PlayerMaxHealth /= Mathf.Max(0.01f, old.hp);
+                    p.ShootSpeed *= Mathf.Max(0.1f, old.attackSpeed);
+                    p.speed /= Mathf.Max(0.01f, old.move);
+                }
+                p.BaseMoveSpeed /= Mathf.Max(0.01f, old.move);
+                p.MaxBullet = RelayRun.BaseMag;
+                p.reloadTime = RelayRun.BaseReload;
+                if (sp != null) sp.RescaleBase(1f / Mathf.Max(0.01f, old.damage));
+            });
 
             // 3. 카드 정리 (영웅 카드 · 고유 스킬 · 갈래 → 단계 수를 셈) · 5. 트리 영웅 칸 · 특수 능력 (진화를 되돌리기 전 — 트리 칸 비용을 지금 영웅 기준으로 읽음)
             if (shop != null) Safe(() => shop.RelayDropHero(out dropped));
@@ -52,28 +56,31 @@ public static class RelaySwap
             if (sm != null && refundPoints > 0) sm.specialPoints += refundPoints;       // 내려놓은 특수 능력은 포인트로 돌려줌 (새 영웅의 것을 다시 고름)
 
             // 6. 키트 갈아 끼우기: DestroyImmediate — Instance 가 같은 프레임에 새 키트를 가리켜야 하고 OnDestroy 정리(호문쿨루스 · 도형 · 톱니 …)가 지금 끝나야 함
-            if (oldKit != null) Object.DestroyImmediate(oldKit);
-            if (replaying) RelayRun.ReplayAdvance();
-            else CharacterData.Override = next;
-            CharacterDef nd = CharacterData.Current;
-            if (next != CharacterId.Gunner)
+            Safe(() =>
             {
-                Animator anim = p.GetComponent<Animator>();
-                CharacterKit.Attach(p);
-                CharacterKit kit = p.GetComponent<CharacterKit>();
-                if (kit != null) kit.ApplyDef();      // Start(다음 프레임)를 기다리면 이어하기 재생이 넣은 체력을 PlayerHealth = Max 가 덮음
-                else Debug.LogWarning("[RelaySwap] 키트가 붙지 않았다: " + next);
-                if (anim != null) anim.enabled = false;
-            }
-            else
-            {
-                p.ApplyGunnerDef();
-                Animator anim = p.GetComponent<Animator>();
-                if (anim != null) anim.enabled = true;       // 키트가 껐던 거너 애니메이터 (그림은 애니메이터가 다시 고름)
-            }
-            p.BaseMoveSpeed *= Mathf.Max(0.01f, nd.move);
-            p.NowBullet = p.MaxBullet;
-            if (sp != null) sp.RescaleBase(Mathf.Max(0.01f, nd.damage));
+                if (oldKit != null) Object.DestroyImmediate(oldKit);
+                if (replaying) RelayRun.ReplayAdvance();
+                else CharacterData.Override = next;
+                CharacterDef nd = CharacterData.Current;
+                if (next != CharacterId.Gunner)
+                {
+                    Animator anim = p.GetComponent<Animator>();
+                    CharacterKit.Attach(p);
+                    CharacterKit kit = p.GetComponent<CharacterKit>();
+                    if (kit != null) kit.ApplyDef();      // Start(다음 프레임)를 기다리면 이어하기 재생이 넣은 체력을 PlayerHealth = Max 가 덮음
+                    else Debug.LogWarning("[RelaySwap] 키트가 붙지 않았다: " + next);
+                    if (anim != null) anim.enabled = false;
+                }
+                else
+                {
+                    p.ApplyGunnerDef();
+                    Animator anim = p.GetComponent<Animator>();
+                    if (anim != null) anim.enabled = true;       // 키트가 껐던 거너 애니메이터 (그림은 애니메이터가 다시 고름)
+                }
+                p.BaseMoveSpeed *= Mathf.Max(0.01f, nd.move);
+                p.NowBullet = p.MaxBullet;
+                if (sp != null) sp.RescaleBase(Mathf.Max(0.01f, nd.damage));
+            });
 
             // 7. 다시 캐시: 손에 든 무기 · 발 그림자 · 고유 스킬 · 갈래 · 카드 닫힘 (영웅을 Start/Awake 에서 한 번만 읽는 곳)
             Safe(() => PlayerLook.Rebind());

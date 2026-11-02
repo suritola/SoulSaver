@@ -683,6 +683,12 @@ public static class Notice
             bigHigh = false;
             v.band.anchoredPosition = new Vector2(0f, BigTopNow());
         }
+        // 2.0.0~ 띠가 뜬 뒤에 둘째 보스 체력바가 생기면(알림이 보스 생성 직후 · 막대보다 먼저 뜸) 띠가 그 막대를 덮었음 → 더 내려가야 할 때만 따라 내림 (올라가며 흔들리지 않게)
+        else if (!bigHigh)
+        {
+            float top = BigTopNow();
+            if (top < v.band.anchoredPosition.y - 0.5f) v.band.anchoredPosition = new Vector2(0f, top);
+        }
         bigT += dt;
 
         // 기다리는 알림이 있으면 짧게 끊음: 보통 1.5초 · 급한 것이 오면 0.8초 · 중요(해금 · 클리어)는 급한 것이 올 때만 1.2초 · 급한 것은 끝까지

@@ -97,8 +97,8 @@ public class DesertSecrets : MonoBehaviour
             findAt = Time.unscaledTime + 0.5f;
             GameObject map = GameObject.Find("DesertMap");
             if (map == null) return;
+            built = true;      // 2.0.0~ 검토: Build 앞에 — 중간에 예외가 나도 0.5초마다 다시 지어 비밀이 쌓이지 않게
             Build(map.transform, sm.stage2PlayerStart);
-            built = true;
         }
         float dt = Time.deltaTime;
         if (dt <= 0f) dt = 0f;
@@ -291,7 +291,7 @@ public class DesertSecrets : MonoBehaviour
         Loc.EnsureCjkFallback(t);
         MeshRenderer mr = go.GetComponent<MeshRenderer>();
         mr.sortingLayerID = SortingLayer.NameToID("Character");
-        mr.sortingOrder = -Mathf.RoundToInt(at.y * 10f) + 2;
+        mr.sortingOrder = -Mathf.RoundToInt((at.y - 2.5f) * 10f) + 2;      // 글은 표지판 · 비석 그림 위쪽에 놓여 (at.y 가 그림 발끝보다 높음) 그림 뒤에 가려졌음 → 발끝 기준으로 그림보다 앞에
         return t;
     }
 

@@ -393,7 +393,7 @@ public class SpaceErosion : MonoBehaviour
         Destroy(canvas.gameObject);
         fx?.ReleaseCamera();
         BossUltimate.SetCutscene(false);
-        Time.timeScale = before > 0f ? before : 1f;
+        Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
     }
 
     Vector3 FocusPoint()

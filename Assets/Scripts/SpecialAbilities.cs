@@ -127,6 +127,8 @@ public partial class SpecialAbilities : MonoBehaviour
         // 씬을 다시 불러와도 정적 상태가 남지 않도록
         EnermyController.GlobalSpeedMultiplier = 1f;
         EnermyController.Decoy = null;
+        EnermyController.DecoyBossToo = true;      // 2.0.0~ 검토: 인형사가 false 로 두고 판을 떠나도 다음 판 도적 미끼가 보스를 끌 수 있게
+        EnemyHold.ClearStatics();                  // 2.0.0~ 검토: 앞 판의 파괴된 적 키가 쌓이지 않게
     }
 
     void Start()

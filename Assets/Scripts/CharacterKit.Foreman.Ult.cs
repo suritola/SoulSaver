@@ -10,6 +10,7 @@ public partial class CharacterKit
 {
     bool fmAiming, fmWrecking;
     LineRenderer fmUltLine, fmUltRing;
+    PixelMarks fmPx;           // 2.0.0~ 굴림 길 · 쏟을 범위 도트 점선 (안 그린 프레임엔 저절로 숨음)
     readonly LineRenderer[] fmUltBounce = new LineRenderer[6];       // 3 + 갈래 철거 1 (+ 여유)
     Vector3 fmAimLand;
     Vector2 fmAimDir = Vector2.right;
@@ -78,7 +79,6 @@ public partial class CharacterKit
         Color hero = HeroAim.ColorOf(HeroAimKind.Foreman);
         float pulse = 0.55f + 0.3f * Mathf.Sin(Time.time * 14f);
         if (fmUltRing == null) { fmUltRing = Hostile.NewLine("WreckLand", hero, 0.12f, 25); fmUltRing.loop = true; }
-        if (fmUltLine == null) fmUltLine = Hostile.NewLine("WreckRoll", hero, 0.1f, 25);
         Color c = new Color(hero.r, hero.g, hero.b, pulse);
         fmUltRing.enabled = true;
         Hostile.SetArc(fmUltRing, fmAimLand, 2.6f, 0f, 360f);
@@ -86,16 +86,18 @@ public partial class CharacterKit
         fmUltRing.startWidth = fmUltRing.endWidth = 0.14f;
         HeroAim.Mark(fmUltRing, HeroAimKind.Foreman);
         int bounces = FmBounceCount;
-        Vector3 last = fmAimLand + (Vector3)(fmAimDir * 4f * bounces);
-        // 굴림길: 플레이어 → 착지 → 마지막 튕김 (판정과 같은 점들)
-        fmUltLine.enabled = true;
-        fmUltLine.positionCount = 3;
-        fmUltLine.SetPosition(0, transform.position);
-        fmUltLine.SetPosition(1, fmAimLand);
-        fmUltLine.SetPosition(2, Hostile.ClampArena(last));
-        fmUltLine.startColor = fmUltLine.endColor = new Color(hero.r, hero.g, hero.b, pulse * 0.8f);
-        fmUltLine.startWidth = fmUltLine.endWidth = 0.1f;
-        HeroAim.Mark(fmUltLine, HeroAimKind.Foreman, HeroAimFx.None);
+        // 굴림길: 플레이어 → 착지 → 튕김마다 (판정과 같은 점들) · 2.0.0~ 얇은 단색 꺾은선 → 도트 점선
+        //   플레이어 → 착지는 곧은 점선 · 튕김 사이는 작은 포물선 · 마지막에 화살촉 (안 그린 프레임엔 저절로 숨음)
+        PixelMarks pm = PixelMarks.Ensure(ref fmPx, this);
+        Color pc = new Color(hero.r, hero.g, hero.b, Mathf.Max(0.55f, pulse * 0.9f));
+        pm.DotPath(transform.position, fmAimLand, 0f, new Color(pc.r, pc.g, pc.b, pc.a * 0.7f), 0.6f, false, default, true);
+        Vector3 prev = fmAimLand;
+        for (int i = 0; i < bounces; i++)
+        {
+            Vector3 nx = Hostile.ClampArena(fmAimLand + (Vector3)(fmAimDir * 4f * (i + 1)));
+            pm.DotPath(prev, nx, 0.9f, pc, 0.55f, i == bounces - 1);
+            prev = nx;
+        }
         for (int i = 0; i < fmUltBounce.Length; i++)
         {
             if (fmUltBounce[i] == null) { fmUltBounce[i] = Hostile.NewLine("WreckBounce" + i, hero, 0.1f, 25); fmUltBounce[i].loop = true; }

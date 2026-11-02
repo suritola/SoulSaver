@@ -8,7 +8,12 @@
 #   pwsh tools/autoplay/run.ps1 -Hero all -Path1 all -Path2 random -Runs 1 -OutName 2026-10-19-1차    (9명 × 갈래 5 = 45판)
 #   pwsh tools/autoplay/run.ps1 -Hero Archer,Rogue -Path1 2 -NoDeath                                   (쓰러져도 계속 · 사망 횟수만 셈)
 #   pwsh tools/autoplay/run.ps1 -Hero Clockmaker,Swordsman -NoDeath -HoardLevels 5 -OutName 2026-10-2x-2차-쌓기   (레벨업 쌓아 두기 · 1.4.2~)
+#   pwsh tools/autoplay/run.ps1 -Mode relay -Orders Wrestler+Gunner+Foreman,Ghost+Photographer+Undertaker -SwapEvery 120 -Runs 1   (2.0.0~ 영혼 릴레이 · 주자 셋은 + 로 · SwapEvery 게임 초마다 교대를 강제)
+#   pwsh tools/autoplay/run.ps1 -Mode reflux -Hero Wrestler,Foreman -Path1 random -Path2 random -NoDeath                         (2.0.0~ 역류 · Path1 갈래 0~4 · Path2 첫 무기 0~2)
+#   pwsh tools/autoplay/run.ps1 -Hero Puppeteer -SaveAt 240 -MaxMinutes 6                                                          (판 중간 저장 → 메인 메뉴 → 이어하기 → 2분 더 · -Mode relay 와도 됨)
 # 인자:
+#   -Mode      endless(기본) | relay | reflux     -Orders 릴레이 주자 순서들(쉼표로 여러 판 · 없으면 -Hero 첫 셋 · 모자라면 기본 조합)
+#   -SwapEvery 릴레이: 이 게임 초마다 지금 주자를 쓰러뜨려 교대를 강제 (0 = 자연 사망만)     -SaveAt 이 게임 초에 저장 → 메뉴 → 이어하기 검사 (0 = 끔)
 #   -Hero      영웅 이름 (Gunner Swordsman Rogue Archer Alchemist Cartographer Clockmaker Postman Ghost Wrestler Foreman Puppeteer Undertaker Photographer · 쉼표 · all)
 #   -Path1     첫 갈래: 0~4 · 갈래 키(g.snipe) · 상수 이름(Snipe) · random · all(0~4 모두)
 #   -Path2     두 번째 갈래: 0~4 · 키 · 이름 · single(외길) · random · all(첫 갈래와 다른 넷 + 외길)  /  -Single 은 -Path2 single 과 같음
@@ -30,6 +35,13 @@ param(
     [string[]]$Path1 = @("random"),
     [string[]]$Path2 = @("random"),
     [switch]$Single,
+    [ValidateSet("endless", "relay", "reflux")][string]$Mode = "endless",
+    [string[]]$Orders = @(),
+    [double]$SwapEvery = 0,
+    [double]$SaveAt = 0,
+    [switch]$God,                 # 흐름 검사용 — 공격력 크게 + 무적 (역류 슬라임까지)
+    [string]$Shots = "",          # 화면 캡처 폴더 (-Render 와 함께 · AutoplayShots.cs)
+    [string]$ShotLang = "ko",
     [int]$Runs = 1,
     [int]$Seed = 1000,
     [double]$Skill = 0.5,
@@ -69,12 +81,27 @@ if ($Single) { $Path2 = @("single") }
 $p2In = @($Path2 -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $plan = New-Object System.Collections.Generic.List[string]
 $s = $Seed
+if ($Mode -eq "relay") {
+    $ords = @($Orders -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($ords.Count -eq 0) {
+        if ($heroes.Count -ge 3 -and $heroes -notcontains "all") { $ords = @($heroes[0..2] -join "+") }
+        else { $ords = @("Wrestler+Gunner+Foreman", "Ghost+Photographer+Undertaker", "Puppeteer+Swordsman+Wrestler", "Photographer+Archer+Puppeteer") }
+    }
+    foreach ($o in $ords) {
+        $parts = $o -split "\+"
+        if ($parts.Count -ne 3) { throw "릴레이 순서는 영웅 셋: $o" }
+        foreach ($h in $parts) { if ($h -notin $AllHeroes) { throw "모르는 영웅: $h" } }
+        for ($r = 0; $r -lt $Runs; $r++) { $plan.Add("$o|random|random|$s|relay"); $s++ }
+    }
+    $heroes = @()
+}
 foreach ($h in $heroes) {
     foreach ($a in $p1s) {
         $p2s = $p2In
-        if ($p2In -contains "all") { $p2s = @("0", "1", "2", "3", "4" | Where-Object { $_ -ne $a }) + "single" }
+        if ($Mode -eq "reflux" -and $p2In -contains "all") { $p2s = @("0", "1", "2") }
+        elseif ($p2In -contains "all") { $p2s = @("0", "1", "2", "3", "4" | Where-Object { $_ -ne $a }) + "single" }
         foreach ($b in $p2s) {
-            for ($r = 0; $r -lt $Runs; $r++) { $plan.Add("$h|$a|$b|$s"); $s++ }
+            for ($r = 0; $r -lt $Runs; $r++) { $plan.Add("$h|$a|$b|$s|$Mode"); $s++ }
         }
     }
 }
@@ -101,7 +128,7 @@ foreach ($d in "Assets", "Packages", "ProjectSettings") {
 $scripts = Join-Path $CopyDir "Assets\Scripts"
 $botDir = Join-Path $scripts "Autoplay"
 New-Item -ItemType Directory -Force $botDir | Out-Null
-Copy-Item (Join-Path $PSScriptRoot "AutoplayRunner.cs"), (Join-Path $PSScriptRoot "AutoplayBot.cs"), (Join-Path $PSScriptRoot "AutoplayBot.Windows.cs"), (Join-Path $PSScriptRoot "AutoplayBot.World.cs") $botDir
+Copy-Item (Join-Path $PSScriptRoot "AutoplayRunner.cs"), (Join-Path $PSScriptRoot "AutoplayBot.cs"), (Join-Path $PSScriptRoot "AutoplayBot.Windows.cs"), (Join-Path $PSScriptRoot "AutoplayBot.World.cs"), (Join-Path $PSScriptRoot "AutoplayShots.cs") $botDir
 $testDir = Join-Path $CopyDir "Assets\AutoplayTest"
 New-Item -ItemType Directory -Force $testDir | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "AutoplayTest.cs"), (Join-Path $PSScriptRoot "AutoplayTest.asmdef") $testDir
@@ -119,7 +146,9 @@ Patch "LevelShop.TranscendPips.cs" "&& !TutorialRun.Active && !GameInput.Auto;" 
 Patch "CharacterKit.cs" "if (!GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();" "if (AutoplayFlags.Real || (!GameInput.Auto && !GameInput.TrailerRunning)) ConsumeBreath();"
 Patch "CharacterKit.Archer.cs" "if (Paths.Has(ArcherPaths.Wind) && !GameInput.Auto && !GameInput.TrailerRunning) ConsumeBreath();" "if (Paths.Has(ArcherPaths.Wind) && (AutoplayFlags.Real || (!GameInput.Auto && !GameInput.TrailerRunning))) ConsumeBreath();"
 # 쓰러짐: 사망 횟수를 세고, -NoDeath 면 체력을 채우고 계속
-Patch "PlayerController.cs" "if (PlayerHealth <= 0) StartCoroutine(DeathSequence());" "if (PlayerHealth <= 0 && !AutoplayHooks.KeepAlive(this)) StartCoroutine(DeathSequence());"
+Patch "PlayerController.cs" "if (RelayRun.TryHandoff(this)) return true;" "if (RelayRun.TryHandoff(this)) { AutoplayHooks.Handoff(); return true; } if (AutoplayHooks.KeepAlive(this)) return true;"
+# 판 중간 저장 검사(-SaveAt): Auto · 배치에서 꺼지던 저장을 켬
+Patch "RunSave.cs" "&& !GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode" "&& (AutoplayFlags.SaveOn || (!GameInput.Auto && !GameInput.TrailerRunning && !Application.isBatchMode))"
 # 1.4.2~ 경험치 수입 (15:00~17:00 · 15분 뒤) · 보스에게 준 피해 출처 (무한 30분 기획 10-1 · 복사본에만)
 Patch "LevelShop.cs" "p.nowEXP += amount;" "AutoplayHooks.Exp(amount); p.nowEXP += amount;"
 Patch "boss.cs" "RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));" "AutoplayHooks.BossDealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth))); RunStats.Dealt(Mathf.Min(damage, Mathf.Max(0f, EnemyHealth)));"
@@ -136,6 +165,12 @@ $env:AP_MAXMIN = $MaxMinutes.ToString($inv)
 $env:AP_BEYOND = $Beyond.ToString($inv)
 $env:AP_NODEATH = $(if ($NoDeath) { "1" } else { "0" })
 $env:AP_HOARD = "$([Math]::Max(0, $HoardLevels))"
+$env:AP_MODE = $Mode
+$env:AP_GOD = $(if ($God) { "1" } else { "0" })
+$env:AP_SHOTS = $Shots
+$env:AP_SHOTLANG = $ShotLang
+$env:AP_SWAPEVERY = $SwapEvery.ToString($inv)
+$env:AP_SAVEAT = $SaveAt.ToString($inv)
 $env:AP_TRACE = $(if ($Trace) { "1" } else { "0" })
 $env:AP_RENDER = $(if ($Render) { "1" } else { "0" })
 $env:AP_DOCS = $(if ($NoCopyToDocs) { "" } else { Join-Path $Project ("docs/balance/runs/" + $OutName) })

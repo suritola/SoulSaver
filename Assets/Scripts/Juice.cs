@@ -132,6 +132,17 @@ public static class Juice
     public static float SinceStop => Time.unscaledTime - lastStopAt;
     public static JuiceRunner Shared => Runner;
 
+    // 2.0.0~ 검토: 창(ESC · 레벨업 · 고르기 …)이 멈추기 전 시간 배율을 되돌릴 때 — 그 값이 손맛 슬로(0.3) · 릴레이 교대 감속(0.35~1)이 한창이던 중간값이면
+    //   주인(JuiceRunner)이 이미 손을 뗀 뒤라 아무도 1 로 돌려놓지 못해 0.3~0.9배로 굳었음 → 조준 중(필살기 슬로) · 쓰러지는 중이 아니고 우리가 잡고 있지도 않으면 1 로
+    public static float Settle(float before)
+    {
+        if (before <= 0f || before >= 1f) return before;
+        PlayerController p = Hostile.Player;
+        if (p != null && (p.IsAiming || p.IsDying)) return before;
+        if (runner != null && runner.Owns) return before;
+        return 1f;
+    }
+
     static JuiceRunner runner;
     static JuiceRunner Runner
     {

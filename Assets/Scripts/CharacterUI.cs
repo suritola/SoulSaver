@@ -249,7 +249,7 @@ public static class CharacterUI
         dr.SetParent(win, false);
         dr.anchorMin = Vector2.zero; dr.anchorMax = Vector2.one;
         dr.offsetMin = dr.offsetMax = Vector2.zero;
-        detail.GetComponent<Image>().color = new Color(0.06f, 0.05f, 0.09f, 0.98f);
+        detail.GetComponent<Image>().color = new Color(0.06f, 0.05f, 0.09f, 1f);
 
         // 그래픽 개편 2단계: 360 (32칸 × 11.25 · 비정수) → 384 (128칸 메뉴 초상 × 3 · 없으면 32칸 × 12) · Legacy 면 360 · 32칸
         float dp = VisualRules.Legacy ? 360f : 384f;
@@ -314,8 +314,8 @@ public static class CharacterUI
 
         // 오른쪽: 설명 · 스탯 (1.0.4~ 잠겨도 보임)
         float x = 190f;
-        UIKit.Text(dr, d.description, 24f, Parch, new Vector2(x, 290f), new Vector2(820f, 70f), TextAlignmentOptions.Left);
-        float y = 200f;
+        UIKit.Text(dr, d.description, 24f, Parch, new Vector2(x, 292f), new Vector2(820f, 80f), TextAlignmentOptions.Left);
+        float y = 206f;
         Stat(dr, "체력", d.hp, known, ref y);
         Stat(dr, "공격력", d.damage / AttackShowBase, known, ref y);     // 1.3.7~ 거너 = 100% 로 (배율이 2 를 넘으면서 막대가 모두 꽉 차 비교가 안 되던 것) · 1.4.2~ 나누는 값을 상수로
         Stat(dr, "공격 속도", d.attackSpeed, known, ref y);
@@ -326,11 +326,11 @@ public static class CharacterUI
         Stat(dr, "이동 속도", d.move, known, ref y);
         StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), known, ref y);
         y -= 10f;
-        Info(dr, "기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack), ref y);
-        Info(dr, "{ULT}", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc), ref y);      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭) · 잠긴 영웅도 미리 보기
+        Info(dr, "기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack), ref y, 74f);
+        Info(dr, "{ULT}", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc), ref y, 104f);      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭) · 잠긴 영웅도 미리 보기
         // 1.1.9~ 머리 위 막대 한 줄 (영웅 안내 카드와 같은 글 · 막대가 없는 영웅은 생략) — 한 줄 상자 680×44
         string bar = HeroGuide.BarText(id);
-        if (bar != null) Info(dr, "머리 위 막대", bar, ref y, 44f);
+        if (bar != null) Info(dr, "머리 위 막대", bar, ref y, 40f);
 
         if (unlocked)
         {
@@ -421,7 +421,7 @@ public static class CharacterUI
             mark.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.6f);
         }
         UIKit.Text(parent, known ? Mathf.RoundToInt(value * 100f) + "%" : "???", 26f, Gold, new Vector2(580f, y), new Vector2(120f, 40f), TextAlignmentOptions.Right);
-        y -= 42f;           // 1.1.9~ 46 → 42 (머리 위 막대 줄 자리)
+        y -= 40f;           // 1.1.9~ 46 → 42 (머리 위 막대 줄 자리)
     }
 
     static void StatText(RectTransform parent, string ko, string value, bool known, ref float y)
@@ -429,7 +429,7 @@ public static class CharacterUI
         UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
         TMP_Text t = UIKit.Text(parent, "", 26f, Gold, new Vector2(580f, y), new Vector2(300f, 40f), TextAlignmentOptions.Right);
         t.text = known ? value : "???";
-        y -= 42f;
+        y -= 40f;
     }
 
     // height: 글 상자 높이 (1.1.9~ 머리 위 막대 줄은 한 줄짜리 44)
@@ -437,11 +437,11 @@ public static class CharacterUI
     {
         TMP_Text head = UIKit.Text(parent, ko, 24f, Gold, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
         head.fontSizeMin = 14f;
-        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(330f, y - 6f - (70f - height) * 0.5f), new Vector2(680f, height), TextAlignmentOptions.TopLeft);
-        t.fontSizeMin = 14f;
+        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(392f, y + 20f - height * 0.5f), new Vector2(636f, height), TextAlignmentOptions.TopLeft);
+        t.fontSizeMin = 12f;
         t.enableWordWrapping = true;
         t.text = value;
-        y -= 72f;           // 1.1.9~ 78 → 72
+        y -= height + 8f;           // 1.1.9~ 78 → 72
     }
 }
 

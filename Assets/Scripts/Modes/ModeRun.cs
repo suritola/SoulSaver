@@ -13,6 +13,13 @@ public static class ModeRun
     public static bool Reflux => RefluxRun.Active;
 
     // 메인 메뉴 진입 (MenuExtras.InstallMainMenu): 어느 모드든 풀어 GameMode · CharacterData Override 를 원래대로
+    // 2.0.0~ 검토: GameScene 을 (다시) 불러오기 직전 — 「다시 시작」 경로가 모두 SceneFlow.Go 를 지나므로 여기 하나에서 모드 판 상태를 새로
+    public static void BeforeGameScene()
+    {
+        RelayRun.BeforeGameScene();
+        RefluxRun.BeforeGameScene();
+    }
+
     public static void EndAll()
     {
         DailyChallenge.End();

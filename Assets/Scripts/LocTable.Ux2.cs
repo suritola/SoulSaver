@@ -100,8 +100,8 @@ public static partial class LocTable
         S("스팀 덱에 맞춰 설정했습니다 (UI 크기 110% · 게임패드). 설정에서 바꿀 수 있습니다.", "Settings were adjusted for Steam Deck (UI size 110%, gamepad). You can change them in Settings.", "Steam Deck向けに設定しました（UIサイズ110%・ゲームパッド）。設定で変更できます。", "已针对 Steam Deck 调整设置（界面大小110% · 手柄）。可在设置中更改。");
 
         // ================================================================= 10. 접근성 탭
-        S("접근성", "Accessibility", "アクセシビリティ", "辅助功能");
-        S("표시", "HUD", "表示", "显示");
+        S("접근성", "Accessibility", "補助機能", "辅助功能");
+        S("표시", "HUD", "表示", "HUD");
         S("공격 고정", "Attack Lock", "攻撃固定", "攻击锁定");
         S("켜면 공격 키를 한 번 누르면 손을 떼도 계속 쏘고, 다시 누르면 멈춥니다. 조준은 마우스 그대로입니다. 궁수는 가득 당겨지면 자동으로 놓되 「완벽!」 보너스는 받지 못하고, 숨이 차면 숨을 고릅니다.", "Press the attack key once to keep firing after you let go, and press it again to stop. Aiming still follows the mouse. The Archer releases automatically at full draw, gets no Perfect bonus, and rests when out of breath.", "攻撃キーを1回押すと離しても撃ち続け、もう1回押すと止まります。照準はマウスのままです。弓使いは引き切ると自動で放ちますが「パーフェクト！」ボーナスは得られず、息が切れると休みます。", "按一次攻击键后松手也会持续射击，再按一次停止。瞄准仍跟随鼠标。弓箭手拉满后自动松开，但不会获得「完美！」加成，喘不过气时会停下休息。");
         S("[{ATTACK}] 다시 누르면 멈춤", "Press [{ATTACK}] again to stop", "[{ATTACK}] をもう一度押すと停止", "再按 [{ATTACK}] 停止");

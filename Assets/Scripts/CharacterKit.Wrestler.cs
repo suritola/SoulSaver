@@ -85,6 +85,7 @@ public partial class CharacterKit
     readonly List<WrBall> wrBalls = new List<WrBall>();
     static readonly List<Collider2D> wrHits = new List<Collider2D>(64);
     LineRenderer wrAimLine, wrAimRing, wrMarkRing;
+    PixelMarks wrPx;           // 2.0.0~ 던질 길 · 뛰어갈 길 도트 점선 (안 그린 프레임엔 저절로 숨음)
     Vector3 wrMoveLast;
     float wrMoveDirTime;
     Vector2 wrMoveDir;
@@ -248,7 +249,7 @@ public partial class CharacterKit
 
     void WrGatherExtra(EnermyController main)
     {
-        wrExtra.Clear();
+        WrReleaseExtras();      // 2.0.0~ 검토: 지우기 전에 남은 동행을 풀어 줌 (목록에서만 빠지면 holder 가 영영 남음)
         foreach (Collider2D c in Specials.Overlap(main.transform.position, 1.2f, wrHits))
         {
             if (wrExtra.Count >= card[1]) break;
@@ -398,7 +399,8 @@ public partial class CharacterKit
         WrPathTick();                   // 갈래: 모래 웅덩이 · 경계 미끄러짐 · 모래판 끌기
         if (!WrCarrying)
         {
-            if (wrCarried != null) { wrCarried = null; wrExtra.RemoveAll(x => x == null || x.IsDead || x.holder != (object)this); }
+            // 2.0.0~ 검토: 주된 적이 들린 채 죽거나 빼앗겨도 함께 든 적(한 아름)은 풀어 줌 — 안 풀면 holder 가 남아 공중에 얼어붙었음
+            if (wrCarried != null || wrExtra.Count > 0) { wrCarried = null; WrReleaseExtras(); }
             WrDrawMarks(false);
             return;
         }
@@ -501,6 +503,18 @@ public partial class CharacterKit
         }
     }
 
+    // 2.0.0~ 검토: 함께 든 적(한 아름)만 놓음 — 놓은 적은 근처 빈 자리에 섬
+    void WrReleaseExtras()
+    {
+        foreach (EnermyController x in wrExtra)
+        {
+            if (x == null) continue;
+            EnemyHold.Release(x, this);
+            if (!x.IsDead) x.transform.position = EnemyHold.FreeSpot(x.transform.position + Vector3.down * 1.2f);
+        }
+        wrExtra.Clear();
+    }
+
     void WrReleaseAll()
     {
         wrCarried = null;
@@ -548,7 +562,12 @@ public partial class CharacterKit
         List<EnermyController> mates = new List<EnermyController>(wrExtra);
         wrCarried = null;
         wrExtra.Clear();
-        if (e == null || e.IsDead) return;
+        if (e == null || e.IsDead)
+        {
+            // 2.0.0~ 검토: 주된 적이 이미 죽었어도 함께 든 적은 풀어 줌
+            foreach (EnermyController x in mates) if (x != null) { EnemyHold.Release(x, this); if (!x.IsDead) x.transform.position = EnemyHold.FreeSpot(x.transform.position + Vector3.down * 1.2f); }
+            return;
+        }
         if (dir.sqrMagnitude < 0.01f) dir = body != null && body.flipX ? Vector2.left : Vector2.right;
         Vector3 from = e.transform.position;
         bool inRing = WrInRing(transform.position);
@@ -1048,7 +1067,6 @@ public partial class CharacterKit
         }
         // 들고 있음: 커서 쪽 던질 길(길이 = 그 무게의 던짐 거리) · 끝 원 = 떨어질 자리 (모래판 밖이면 금색)
         if (wrMarkRing != null) wrMarkRing.enabled = false;
-        if (wrAimLine == null) { wrAimLine = Hostile.NewLine("ThrowLine", hero, 0.12f, 22); }
         if (wrAimRing == null) { wrAimRing = Hostile.NewLine("ThrowEnd", hero, 0.1f, 22); wrAimRing.loop = true; }
         Vector3 from = transform.position;
         Vector2 dir = ((Vector2)(Mouse - from)).normalized;
@@ -1066,13 +1084,8 @@ public partial class CharacterKit
         bool out2 = WrRingOn && WrInRing(from) && !WrInRing(end);
         Color c = out2 ? WrGold : hero;
         c.a = 0.75f;
-        wrAimLine.enabled = true;
-        wrAimLine.positionCount = 2;
-        wrAimLine.SetPosition(0, from);
-        wrAimLine.SetPosition(1, end);
-        wrAimLine.startColor = wrAimLine.endColor = c;
-        wrAimLine.startWidth = wrAimLine.endWidth = 0.14f;
-        HeroAim.Mark(wrAimLine, HeroAimKind.Wrestler, HeroAimFx.None);
+        // 2.0.0~ 던질 길: 곧은 단색 선 → 위로 휘는 도트 점 포물선 + 끝 화살촉 (점이 떨어질 자리 쪽으로 흐름) · 길이 · 끝 자리는 판정 그대로
+        PixelMarks.Ensure(ref wrPx, this).DotPath(from, end, Mathf.Min(1.6f, 0.25f * len), new Color(c.r, c.g, c.b, 0.9f), 0.6f, true);
         wrAimRing.enabled = true;
         Hostile.SetArc(wrAimRing, end, WrestlerPaths.On(WrestlerPaths.Slam) ? WrSlamRadiusOf(w, false) : w.ballR, 0f, 360f);
         wrAimRing.startColor = wrAimRing.endColor = c;
@@ -1108,11 +1121,13 @@ public partial class CharacterKit
         EnemyHold.ReleaseAll(this);
         wrCarried = null;
         wrExtra.Clear();
+        foreach (WrBall b in wrBalls) if (b != null && b.stone && b.mover != null) Destroy(b.mover.gameObject);      // 2.0.0~ 검토: 날아가던 들돌
         wrBalls.Clear();
         WrPathCleanup();
         if (wrRingObj != null) Destroy(wrRingObj);
         if (wrRingRope != null) Destroy(wrRingRope.gameObject);
         if (wrAimLine != null) Destroy(wrAimLine.gameObject);
+        if (wrPx != null) Destroy(wrPx.gameObject);
         if (wrAimRing != null) Destroy(wrAimRing.gameObject);
         if (wrMarkRing != null) Destroy(wrMarkRing.gameObject);
         if (wrUltLine != null) Destroy(wrUltLine.gameObject);

@@ -1,10 +1,11 @@
 # 스팀 업적 등록표
 
-Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 40개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개, 2.1.1에 4장 영혼의 심연 2개 추가)
+Steamworks → **앱 관리 → 스탯 및 업적 → 업적**에서 아래 **API 이름**을 그대로 써서 52개를 만듭니다. (2.0.8에 스킬 진화 · 보스 결계 6개, 2.1.1에 4장 영혼의 심연 2개, 2.0.0 대규모 업데이트에 사막 비밀 해금 5개 · 영혼 릴레이 4개 · 역류 3개 추가)
 API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Scripts/SteamManager.cs`의 `SteamAchievements`)
 
 - 아이콘: `docs/steam/art/achievements/` — 달성 `<API>.jpg`, 미달성 `<API>_locked.jpg` (256×256). 1.8.6에 추가한 6개는 `tools/steam/make_achievement_icons.py` 로 만든 PNG를 JPG로 변환 (Steamworks는 JPG 권장)
-- 모두 **숨김 아님**으로 두면 됩니다. (`ACH_CLEAR`만 숨김으로 해도 좋음)
+- 대부분 **숨김 아님**으로 두면 됩니다. (`ACH_CLEAR`만 숨김으로 해도 좋음) 단 사막 비밀 해금 5개(`UNLOCK_*`)는 **숨김 권장** — 이름 · 설명이 비밀의 존재를 알려 주므로 달성 전엔 가려 둡니다. 릴레이 · 역류 7개는 숨김 아님.
+- 2.0.0 새 업적 12개의 아이콘 24장도 `make_achievement_icons.py` 로 만듦.
 - `ACH_KILLS_3000_TOTAL`의 누적 처치 수는 이 PC에 저장됩니다 (PlayerPrefs `stats.totalKills`).
 - 다 만든 뒤 **게시(Publish)**를 눌러야 적용됩니다.
 
@@ -50,6 +51,18 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_BARRIER_BREAK` | **결계 파괴자** — 결계가 펼쳐진 동안 보스를 쓰러뜨렸다 | **Barrier Breaker** — Defeat a boss while its barrier is up | **結界破り** — 結界が展開している間にボスを倒した | **结界破坏者** — 在结界展开时击败首领 |
 | `ACH_ENTER_ABYSS` | **심연으로** — 영혼의 심연에 발을 들였다 | **Into the Abyss** — Enter the Abyss of Souls | **深淵へ** — 魂の深淵に足を踏み入れた | **坠入深渊** — 踏入灵魂深渊 |
 | `ACH_MIRROR_QUICK` | **거울을 깨뜨리다** — 거울의 군주가 결계를 펼치기 전에 쓰러뜨렸다 | **Shattered Reflection** — Defeat the Mirror Sovereign before it raises its barrier | **鏡を砕く** — 鏡の君主が結界を展開する前に倒した | **击碎镜像** — 在镜之君主展开结界前将其击败 |
+| `UNLOCK_WRESTLER` | **씨름 한판** — 사막에서 씨름꾼을 찾았다 | **Best of Three** — Found the Wrestler in the desert | **一本勝負** — 砂漠で相撲取りを見つけた | **摔跤一局** — 在沙漠中找到了摔跤手 |
+| `UNLOCK_FOREMAN` | **안전 제일** — 사막에서 공사 반장을 찾았다 | **Safety First** — Found the Foreman in the desert | **安全第一** — 砂漠で現場監督を見つけた | **安全第一** — 在沙漠中找到了工头 |
+| `UNLOCK_PUPPETEER` | **보이지 않는 실** — 사막에서 인형사를 찾았다 | **Unseen Strings** — Found the Puppeteer in the desert | **見えない糸** — 砂漠で人形使いを見つけた | **看不见的线** — 在沙漠中找到了傀儡师 |
+| `UNLOCK_UNDERTAKER` | **마지막 배웅** — 사막에서 장의사를 찾았다 | **Final Farewell** — Found the Undertaker in the desert | **最後の見送り** — 砂漠で葬儀屋を見つけた | **最后的送行** — 在沙漠中找到了殡葬师 |
+| `UNLOCK_PHOTOGRAPHER` | **찰칵** — 사막에서 사진사를 찾았다 | **Say Cheese** — Found the Photographer in the desert | **はい、チーズ** — 砂漠で写真家を見つけた | **茄子** — 在沙漠中找到了摄影师 |
+| `ACH_RELAY_FIRST` | **바통 터치** — 영혼 릴레이에서 10분 넘게 버텼다 | **Pass the Baton** — Survive over 10 minutes in Soul Relay | **バトンタッチ** — 魂のリレーで10分以上生き延びた | **交接棒** — 在灵魂接力中存活超过10分钟 |
+| `ACH_RELAY_DEV` | **책임자 나오세요** — 영혼 릴레이에서 개발자를 쓰러뜨렸다 | **Take It Up With the Dev** — Defeat the Developer in Soul Relay | **責任者を出せ** — 魂のリレーで開発者を倒した | **叫负责人出来** — 在灵魂接力中击败开发者 |
+| `ACH_RELAY_ALLBOSS` | **각자의 몫** — 영혼 릴레이에서 세 주자가 모두 보스를 쓰러뜨렸다 | **Everyone Pulls Their Weight** — Have all three runners defeat a boss in one Soul Relay run | **三者三様** — 魂のリレーで3人のランナー全員がボスを倒した | **各尽其责** — 在灵魂接力中三名接力者都击败了首领 |
+| `ACH_RELAY_FIRSTHERO` | **끝까지 내가** — 영혼 릴레이에서 첫 주자 혼자 15분까지 버텼다 | **Anchor of Steel** — Last 15 minutes in Soul Relay with the first runner alone | **最後まで俺が** — 魂のリレーで最初のランナーだけで15分まで耐え抜いた | **我跑到底** — 在灵魂接力中仅靠第一位接力者坚持到15分钟 |
+| `ACH_REFLUX_CLEAR` | **거슬러 오르다** — 역류를 클리어했다 | **Against the Current** — Clear Reflux | **流れに逆らって** — 逆流をクリアした | **逆流而上** — 通关逆流 |
+| `ACH_REFLUX_FAST` | **감기 버튼** — 8분 안에 역류를 클리어했다 | **Fast Rewind** — Clear Reflux in under 8 minutes | **早送り巻き戻し** — 8分以内に逆流をクリアした | **快速倒带** — 在8分钟内通关逆流 |
+| `ACH_REFLUX_NAKED` | **초심으로** — 맨몸이 된 뒤 처음의 슬라임을 한 대도 맞지 않고 쓰러뜨렸다 | **Back to Basics** — Defeat the very first slime without taking a hit after losing everything | **初心に帰る** — すべてを失った後、最初のスライムを一度も被弾せずに倒した | **回归初心** — 失去一切后，不受伤击败最初的史莱姆 |
 
 ## 풀리는 조건 (코드 기준)
 
@@ -83,8 +96,38 @@ API 이름이 다르면 게임에서 풀리지 않습니다. (코드: `Assets/Sc
 | `ACH_BARRIER_BREAK` | 결계가 펼쳐진 동안 그 보스를 쓰러뜨림 |
 | `ACH_ENTER_ABYSS` | 4장 영혼의 심연에 들어섬 (2.1.1, 무한 모드 제외) |
 | `ACH_MIRROR_QUICK` | 거울의 군주가 결계 「거울의 방」을 한 번도 펼치지 않은 채 쓰러뜨림 (2.1.1) |
+| `UNLOCK_WRESTLER` | 사막의 비밀 하나를 풀어 씨름꾼 해금 (`DesertSecrets` 황소 비밀, 처음 풀 때만) |
+| `UNLOCK_FOREMAN` | 사막의 비밀 하나를 풀어 공사 반장 해금 (표지판 비밀) |
+| `UNLOCK_PUPPETEER` | 사막의 비밀 하나를 풀어 인형사 해금 (더미 비밀) |
+| `UNLOCK_UNDERTAKER` | 사막의 비밀 하나를 풀어 장의사 해금 (묘비 비밀) |
+| `UNLOCK_PHOTOGRAPHER` | 사막의 비밀 하나를 풀어 사진사 해금 (군중 비밀) |
+| `ACH_RELAY_FIRST` | 영혼 릴레이에서 판 시간 10분(600초) 도달 |
+| `ACH_RELAY_DEV` | 영혼 릴레이에서 개발자 처치 |
+| `ACH_RELAY_ALLBOSS` | 영혼 릴레이 한 판에서 세 주자가 각자 보스를 한 번씩 처치 (이어하기 포함) |
+| `ACH_RELAY_FIRSTHERO` | 영혼 릴레이에서 첫 주자가 교대 없이 15분(최후의 시간) 도달 |
+| `ACH_REFLUX_CLEAR` | 역류 클리어 |
+| `ACH_REFLUX_FAST` | 역류를 480초(8분) 미만에 클리어 |
+| `ACH_REFLUX_NAKED` | 「역류의 끝」 뒤 맨몸으로 처음의 슬라임을 피해 없이 처치하며 클리어 |
 
 ## Steamworks 현지화 파일
 
 `docs/steam/achievement-loc/*.vdf` — Steamworks → 도전 과제 현지화에서 업로드한 파일 (영어 · 한국어 · 일본어 · 중국어 간체).
 키 `NEW_ACHIEVEMENT_1_<번호>_NAME/DESC`의 번호는 위 표의 순서(0부터)와 같습니다. 도전 과제를 새로 만들면 번호가 바뀌므로 먼저 "All Languages"를 받아서 확인하세요.
+
+### 2.0.0 새 업적 12개 — 토큰 번호와 만들 순서
+번호는 Steamworks 에서 업적을 만든 순서(0부터)로 정해집니다. 기존 40개(0~39)를 만든 뒤 **아래 순서대로** 12개를 이어서 만들면 번호가 vdf 와 맞습니다.
+
+| 번호 | API 이름 |
+|---|---|
+| 40 | `UNLOCK_WRESTLER` |
+| 41 | `UNLOCK_FOREMAN` |
+| 42 | `UNLOCK_PUPPETEER` |
+| 43 | `UNLOCK_UNDERTAKER` |
+| 44 | `UNLOCK_PHOTOGRAPHER` |
+| 45 | `ACH_RELAY_FIRST` |
+| 46 | `ACH_RELAY_DEV` |
+| 47 | `ACH_RELAY_ALLBOSS` |
+| 48 | `ACH_RELAY_FIRSTHERO` |
+| 49 | `ACH_REFLUX_CLEAR` |
+| 50 | `ACH_REFLUX_FAST` |
+| 51 | `ACH_REFLUX_NAKED` |

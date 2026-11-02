@@ -181,7 +181,11 @@ public static class CharacterData
         CharacterDef d = Def(id);
         if (d.price < 0) return false;
         if (Demo.On) return Demo.CharacterAllowed(id);      // 체험판: 거너 · 검사만 (구매 없이)
+#if SOULSAVER_TESTUNLOCK
+        return true;                                        // 개발자 시험 빌드(BuildScript -testUnlock): 모든 영웅 열림 · 저장은 그대로
+#else
         return (d.price == 0 && !d.secret) || Prefs.GetInt(UnlockKeyOf(id), 0) == 1;
+#endif
     }
 
     // 저장 키를 영웅마다 한 번만 만들어 둠 (예전엔 부를 때마다 문자열을 이어 붙였음 — 피해마다 · 프레임마다 불림)

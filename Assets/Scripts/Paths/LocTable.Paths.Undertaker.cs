@@ -62,7 +62,7 @@ public static partial class LocTable
         PA("구멍 사이를 오감 · 기동", "Travel between holes · Mobility", "穴の間を行き来 · 機動", "在坑之间穿行 · 机动");
         PA("땅굴꾼", "Tunneler", "坑道掘り", "掘地道的人");
         PA("내 구멍 위로 걸어 들어가면 땅속으로 들어가(0.25초 무적) 가장 최근에 판 다른 구멍에서 튀어나와, 둘레 2칸 적에게 공격력 100%를 주고 밀칩니다. (2초에 한 번)",
-           "Walking into one of your holes sends you underground (0.25s invulnerable) and out of the most recently dug other hole, dealing 100% Attack to foes within 2 tiles and knocking them back. (Once per 2s)",
+           "Step into your hole to pop out of the latest other one (0.25s invulnerable), hitting foes within 2 tiles for 100% Attack and knocking them back. (Once per 2s)",
            "自分の穴に歩いて入ると地中に潜り（0.25秒無敵）、最後に掘った別の穴から飛び出して、周囲2マスの敵に攻撃力100%を与えて押しのけます。（2秒に1回）",
            "走进自己的坑会钻入地下（0.25秒无敌），从最近挖的另一个坑里冒出，对周围2格内的敌人造成攻击力100%的伤害并将其推开。（每2秒一次）");
         PA("최대 구멍이 1개 줄고, 받는 피해가 10% 늘어납니다.", "One fewer hole at most, and you take 10% more damage.", "穴の最大数が1つ減り、受けるダメージが10%増えます。", "最大坑数减少1个，受到的伤害提高10%。");

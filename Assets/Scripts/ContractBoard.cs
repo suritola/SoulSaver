@@ -298,14 +298,14 @@ public static class ContractBoard
     static void Draw()
     {
         if (open != null) Object.Destroy(open);
-        RectTransform win = UIKit.Modal(openRoot, "ContractBoard", new Vector2(1660f, 980f), out open);
+        RectTransform win = UIKit.Modal(openRoot, "ContractBoard", new Vector2(1880f, 980f), out open);
         UIKit.Text(win, "board.title", 46f, Gold, new Vector2(0f, 440f), new Vector2(800f, 64f));
-        UIKit.MakeButton(win, "닫기", new Vector2(730f, 440f), new Vector2(150f, 58f), Close, 22f);
-        TMP_Text how = UIKit.Text(win, "board.how", 19f, Dim, new Vector2(0f, 386f), new Vector2(1500f, 50f));
+        UIKit.MakeButton(win, "닫기", new Vector2(790f, 440f), new Vector2(150f, 58f), Close, 22f);
+        TMP_Text how = UIKit.Text(win, "board.how", 19f, Dim, new Vector2(0f, 386f), new Vector2(1700f, 50f));
         how.fontSizeMin = 14f;
 
         HashSet<string> done = Set(DoneKey), claimed = Set(ClaimKey);
-        const float CellW = 122f, CellH = 118f, Gap = 8f, LabelW = 96f;       // 2.0.0~ 열이 11개라 칸 폭 160 → 132
+        const float CellW = 120f, CellH = 118f, Gap = 4f, LabelW = 84f;       // 2.0.0~ 열이 14개라 창을 1880 으로 넓히고 칸 폭 120 · 간격 4 (14열 + 줄 이름이 창 안에)
         float x0 = -((Cols - 1) * (CellW + Gap)) * 0.5f + LabelW * 0.5f;
         float yHead = 318f, y0 = 238f;
         // 열 머리: 영웅 초상 · 이름 (못 산 영웅은 흐리게)
@@ -317,15 +317,16 @@ public static class ContractBoard
             Sprite face = CharacterUI.Portrait(id);
             if (face != null)
             {
-                Image fi = UIKit.Rect("Face", win, new Vector2(x - 52f, yHead), new Vector2(46f, 46f)).gameObject.AddComponent<Image>();
+                Image fi = UIKit.Rect("Face", win, new Vector2(x - 46f, yHead), new Vector2(36f, 36f)).gameObject.AddComponent<Image>();
                 fi.sprite = face;
                 fi.preserveAspect = true;
                 fi.color = owned ? Color.white : new Color(0.4f, 0.4f, 0.45f, 0.8f);
                 fi.raycastTarget = false;
             }
-            TMP_Text n = UIKit.Text(win, "", 17f, owned ? Parch : Dim, new Vector2(x + 18f, yHead), new Vector2(CellW - 60f, 40f), TextAlignmentOptions.Left);
+            TMP_Text n = UIKit.Text(win, "", 17f, owned ? Parch : Dim, new Vector2(x + 16f, yHead), new Vector2(CellW - 36f, 40f), TextAlignmentOptions.Left);
+            n.enableWordWrapping = false;
             n.text = Loc.T(CharacterData.Def(id).name);
-            n.fontSizeMin = 11f;
+            n.fontSizeMin = 9f;
             UIKit.Forget(n);
         }
         // 줄 이름
@@ -353,7 +354,7 @@ public static class ContractBoard
         all.interactable = claimable > 0;
         if (claimable > 0) all.gameObject.AddComponent<NewGlow>();
         UIKit.EscCancel(open, Close);
-        WindowFit.Attach(win, new Vector2(1680f, 1000f));
+        WindowFit.Attach(win, new Vector2(1900f, 1000f));
     }
 
     static void CellView(RectTransform win, BoardCell c, Vector2 pos, Vector2 size, HashSet<string> done, HashSet<string> claimed)

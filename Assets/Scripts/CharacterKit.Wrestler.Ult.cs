@@ -81,22 +81,16 @@ public partial class CharacterKit
     {
         Color hero = HeroAim.ColorOf(HeroAimKind.Wrestler);
         float pulse = 0.55f + 0.3f * Mathf.Sin(Time.time * 14f);
-        if (wrUltLine == null) wrUltLine = Hostile.NewLine("SlamLine", hero, 0.12f, 25);
         if (wrUltRing == null) { wrUltRing = Hostile.NewLine("SlamWave", hero, 0.12f, 25); wrUltRing.loop = true; }
         if (wrUltRing2 == null) { wrUltRing2 = Hostile.NewLine("SlamRing", hero, 0.12f, 25); wrUltRing2.loop = true; }
         Vector3 me = transform.position;
         Vector3 at = wrUltTarget != null ? wrUltTarget.position : me;
         float ringR = (WrestlerPaths.On(WrestlerPaths.Ring) ? WrestlerPaths.RingRadiusSeed : WrRingRadius) * (SignatureSkills.IsEvo("wre.dohyo") ? 1.4f : 1f);
-        // 뛰어갈 선
-        wrUltLine.enabled = wrUltTarget != null;
+        // 뛰어갈 길: 2.0.0~ 곧은 단색 선 → 높이 뛰는 도트 점 포물선 + 끝 화살촉 (안 그린 프레임엔 저절로 숨음)
         if (wrUltTarget != null)
         {
-            wrUltLine.positionCount = 2;
-            wrUltLine.SetPosition(0, me);
-            wrUltLine.SetPosition(1, at);
-            wrUltLine.startColor = wrUltLine.endColor = new Color(hero.r, hero.g, hero.b, pulse);
-            wrUltLine.startWidth = wrUltLine.endWidth = 0.16f;
-            HeroAim.Mark(wrUltLine, HeroAimKind.Wrestler, HeroAimFx.None);
+            float jump = Vector2.Distance(me, at);
+            PixelMarks.Ensure(ref wrPx, this).DotPath(me, at, Mathf.Min(2.4f, 0.35f * jump), new Color(hero.r, hero.g, hero.b, Mathf.Max(0.6f, pulse + 0.1f)), 0.55f, true, default, false, 2f);
         }
         // 착지 충격파 원(7) — 황소 뿔 표식이 가운데에 (HeroAim 장식) · 남을 모래판 원(5.5)
         wrUltRing.enabled = true;
@@ -175,9 +169,10 @@ public partial class CharacterKit
             // 메침
             Vector3 center = tg != null && !boss ? transform.position + (Vector3)Vector2.down * 0.2f : transform.position;
             if (boss && tg != null) center = tg.position + (Vector3)((Vector2)(transform.position - tg.position)).normalized * 1.2f;
-            WrSlamAt(center, e != null && taken ? e : null, boss ? tg.gameObject : null);
+            WrSlamAt(center, e != null && taken ? e : null, boss && tg != null ? tg.gameObject : null);      // 2.0.0~ 검토: 기다리는 사이 보스가 사라졌으면 tg 가 파괴된 참조
             // 황소 장사(진화): 천하장사로 든 적이 보스가 아니면 메친 뒤에도 4초 동안 머리 위 방패로 남음
-            if (taken && e != null && !e.IsDead && SignatureSkills.IsEvo("wre.giantbull"))
+            //   2.0.0~ 검토: WrSlamAt 이 먼저 Release 하므로 다시 잡아야 함 (holder 없이 Raise 하면 그림자 · 정렬을 되돌릴 길이 없어 망가진 채 남았음)
+            if (taken && e != null && !e.IsDead && SignatureSkills.IsEvo("wre.giantbull") && EnemyHold.TryTake(e, this, true))
             {
                 wrCarried = e;
                 wrW = WrWeightOf(e);

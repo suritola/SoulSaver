@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +39,9 @@ public partial class AutoplayBot : MonoBehaviour
         CharacterKit.ManualBowInAuto = true;
         WindowsBegin();
     }
+
+    // 릴레이: 주자가 바뀜 — 새 영웅으로 보고 갈래는 무작위로 고름
+    public void FollowHero(CharacterId id) { hero = id; pathForced1 = -2; pathForced2 = -2; }
 
     void OnDestroy()
     {
@@ -180,7 +183,7 @@ public partial class AutoplayBot : MonoBehaviour
     void Update()
     {
         PlayerController p = Hostile.Player;
-        if (p == null) return;
+        if (p == null || AutoplayShots.Hold) return;
         // 멈춘 화면(카드 · 창) — 공격 · 필살기를 떼고 창을 처리 (누르고 있으면 카드 선택이 잠김)
         if (Time.timeScale <= 0f || AnyWindowOpen())
         {

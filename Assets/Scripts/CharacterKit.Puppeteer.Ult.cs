@@ -189,7 +189,7 @@ public partial class CharacterKit
             if (pupFrames != null && pupFrames.Length > 1)
             {
                 float sw = Time.time - ex.swingAt;
-                Sprite s = pupFrames[sw < 0.25f ? 1 + Mathf.Min(2, (int)(sw / 0.25f * 3f)) : 0];
+                Sprite s = pupFrames[sw < 0.25f ? Mathf.Min(pupFrames.Length - 1, 1 + Mathf.Min(2, (int)(sw / 0.25f * 3f))) : 0];      // 2.0.0~ 검토: 프레임이 2~3장인 스킨에서도 범위를 넘지 않게
                 if (ex.sr.sprite != s) ex.sr.sprite = s;
             }
             // 세로 줄: 더미에서 화면 위로

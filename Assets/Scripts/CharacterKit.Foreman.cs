@@ -443,6 +443,7 @@ public partial class CharacterKit
         Vector3 head = origin;
         bool crashed = false;
         Vector3 crashAt = origin;
+        fmDumping.Add(items);      // 2.0.0~ 검토: 날아가는 중 교대하면 fmItems 에는 이미 없는 잔해가 남았음 — 정리 대상에 둠
         try
         {
             Play("whoosh", 0.4f, 0.6f);
@@ -486,8 +487,10 @@ public partial class CharacterKit
             Vector3 land = crashed ? crashAt - (Vector3)(dir * (fmR + 0.4f)) : head;
             try { FmLanding(items, land, off, M, landDmg, crashed, crashAt, dir, bucket, new FmDumpInfo { origin = origin, pathDmg = pathDmg, fence = crashFence, redump = redumpMul < 0.999f }); }
             catch (System.Exception ex) { Debug.LogException(ex); foreach (FmItem it in items) if (it.e != null) EnemyHold.Release(it.e, this); }
+            fmDumping.Remove(items);
         }
     }
+    readonly List<FmItem[]> fmDumping = new List<FmItem[]>(2);
 
     void FmLanding(FmItem[] items, Vector3 land, Vector3[] off, int M, float landDmg, bool crashed, Vector3 crashAt, Vector2 dir, bool bucket, FmDumpInfo info)
     {
@@ -862,18 +865,20 @@ public partial class CharacterKit
     {
         bool show = fmHolding && fmMass >= 3 && !PlayerController.Cinematic;
         if (!show) { if (fmPreview != null) fmPreview.enabled = false; return; }
-        if (fmPreview == null) { fmPreview = Hostile.NewLine("DumpPreview", FmYellow, 0.07f, 30); fmPreview.loop = false; }
         float dist = Mathf.Min(7f, 3.5f + 0.25f * Mathf.Min(fmMass, 14)) * (1f + 0.2f * card[6]) * (form == SpecialAbilities.KitBucket ? 1.3f : 1f) * FmPathDumpDist();
         Vector3 o = fmCenter;
         Vector2 l = Rotate2(fmBlade, 25f * FmPathSweepWidth), r = Rotate2(fmBlade, -25f * FmPathSweepWidth);
-        fmPreview.enabled = true;
-        fmPreview.positionCount = 3;
-        fmPreview.SetPosition(0, o + (Vector3)(l * dist));
-        fmPreview.SetPosition(1, o);
-        fmPreview.SetPosition(2, o + (Vector3)(r * dist));
+        // 2.0.0~ 쏟을 범위: 얇은 단색 V 선 → 노랑 · 검정이 번갈아 드는 안전 테이프 점선 두 가장자리 + 끝 둘레 작은 점 호
+        //   (판정과 같은 각 · 거리 · 안 그린 프레임엔 저절로 숨음)
         Color c = HeroAim.ColorOf(HeroAimKind.Foreman);
-        fmPreview.startColor = fmPreview.endColor = new Color(c.r, c.g, c.b, 0.45f);
-        HeroAim.Mark(fmPreview, HeroAimKind.Foreman, HeroAimFx.None);
+        Color tape = new Color(c.r, c.g, c.b, 0.8f), dark = new Color(0.12f, 0.1f, 0.08f, 0.8f);
+        PixelMarks pm = PixelMarks.Ensure(ref fmPx, this);
+        pm.DotPath(o, o + (Vector3)(l * dist), 0f, tape, 0.45f, false, dark);
+        pm.DotPath(o, o + (Vector3)(r * dist), 0f, tape, 0.45f, false, dark);
+        float half = Vector2.Angle(fmBlade, l);
+        int arcDots = Mathf.Clamp(Mathf.CeilToInt(2f * half * Mathf.Deg2Rad * dist / 0.5f), 2, 24);
+        for (int i = 1; i < arcDots; i++)
+            pm.Put(PixelMarkArt.DotSmall, (Vector2)o + Rotate2(fmBlade, Mathf.Lerp(half, -half, i / (float)arcDots)) * dist, new Color(c.r, c.g, c.b, 0.6f));
     }
 
     static Vector2 Rotate2(Vector2 v, float deg)
@@ -901,10 +906,13 @@ public partial class CharacterKit
         EnemyHold.ReleaseAll(this);
         foreach (FmItem it in fmItems) if (it.rubble != null) Destroy(it.rubble.gameObject);
         fmItems.Clear();
+        foreach (FmItem[] arr in fmDumping) foreach (FmItem it in arr) if (it.rubble != null) Destroy(it.rubble.gameObject);
+        fmDumping.Clear();
         FmClearFences();
         if (fmPreview != null) Destroy(fmPreview.gameObject);
         if (fmOrbitBall != null) Destroy(fmOrbitBall);
         if (fmUltLine != null) Destroy(fmUltLine.gameObject);
+        if (fmPx != null) Destroy(fmPx.gameObject);
         if (fmUltRing != null) Destroy(fmUltRing.gameObject);
         for (int i = 0; i < fmUltBounce.Length; i++) if (fmUltBounce[i] != null) Destroy(fmUltBounce[i].gameObject);
     }

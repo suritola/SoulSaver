@@ -229,6 +229,9 @@ public class ChoiceUI : MonoBehaviour
             TMP_Text nameText = UIKit.Text(face, o.name, v2 ? UiTokens.Heading : 38f, v2 ? UiTokens.Text1 : o.color, new Vector2(0f, 10f), new Vector2(w - (v2 ? 48f : 40f), 60f));
             nameText.enableWordWrapping = false;
             nameText.fontSizeMin = v2 ? UiTokens.MinSize(UiTokens.Heading) : 24f;
+            // 2.0.0~ 실행 검사: 역류 「잃기」 이름은 항목 둘 · 셋을 이어 붙여 하한 크기로도 한 줄에 안 들어가 옆 카드 글자를 덮음 → 그때만 두 줄로 꺾음
+            nameText.ForceMeshUpdate();
+            if (nameText.preferredWidth > w - (v2 ? 48f : 40f) + 2f) nameText.enableWordWrapping = true;
             // 1.1.2~ 단계 칸이 있으면 이름 바로 아래에 두고 설명을 그만큼 내림 (설명은 UIKit.Text 의 자동 크기라 칸 안에서 줄어듦)
             bool pips = o.pipMax > 0;
             if (pips) LevelPips.Create(face, new Vector2(0f, -32f), new Vector2(w - 120f, 16f)).Set(o.pipLevel, o.pipMax, o.pipAdd);
@@ -309,7 +312,7 @@ public class ChoiceUI : MonoBehaviour
         int pick = ui.confirmed;
         Destroy(go);
         Open = false;
-        Time.timeScale = before > 0f ? before : 1f;
+        Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
         Hostile.Play("pulse", 0.6f, 1.2f);
         onPick?.Invoke(pick);
     }

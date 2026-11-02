@@ -323,7 +323,7 @@ public partial class BossUltimate : MonoBehaviour
         Destroy(canvas.gameObject);
         fx?.ReleaseCamera();
         CutscenePlaying = false;
-        Time.timeScale = before > 0f ? before : 1f;
+        Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
     }
 
     // 1.0.4~ 보스 종류마다 결계 컷신을 이번 실행에서 본 적 있는지 (두 번째부터 짧게)

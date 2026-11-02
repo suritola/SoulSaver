@@ -540,7 +540,7 @@ public class StageManager : MonoBehaviour
         // 1.1~ 각성은 aw<번호>@<초> (이야기 모드 3장 각성)
         RunSave.Record((SpecialAbilities.IsAwaken(picked) ? "aw" : "e") + picked + "@" + Mathf.RoundToInt(RunStats.Seconds));      // 판 중간 저장 (이어할 때 같은 진화를 같은 시각으로 다시 적용)
         if (first) specials.OnEvolvedTier1();
-        Time.timeScale = before > 0f ? before : 1f;
+        Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
         evolving = false;
         affordCheckAt = 0f;
         Hints.Show("soultree_btn", "영혼 조각이 모이면 [{UPGRADE}]로 영혼 트리를 열어 무기 · 필살기 · 생존 · 영혼 칸을 배우세요.");
@@ -1035,7 +1035,7 @@ public class StageManager : MonoBehaviour
             ApplyPicks(pendingPicks);
             TooltipUI.Hide();
             specialPanel.SetActive(false);
-            Time.timeScale = before > 0f ? before : 1f;
+            Time.timeScale = Juice.Settle(before > 0f ? before : 1f);
             transitioning = false;
         }
         bool points = !Evo && !firstGate;

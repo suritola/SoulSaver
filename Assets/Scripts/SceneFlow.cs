@@ -32,6 +32,7 @@ public class SceneFlow : MonoBehaviour
     {
         GameInput.ResetAttackLock();        // 공격 고정 · 필살기 토글은 씬이 바뀌면 풀림 (새 판이 저절로 쏘며 시작하지 않게)
         GameInput.ResetUltLatch();
+        if (scene == "GameScene" && !loading) ModeRun.BeforeGameScene();      // 2.0.0~ 검토: 릴레이 · 역류 「다시 시작」 때 앞 판 정적 상태 초기화 (겹친 호출은 무시되므로 loading 중엔 건너뜀)
         if (GameInput.Auto || Application.isBatchMode || GameInput.TrailerRunning) { Time.timeScale = 1f; SceneManager.LoadScene(scene); return; }   // 테스트 · 트레일러는 즉시
         if (loading)
         {

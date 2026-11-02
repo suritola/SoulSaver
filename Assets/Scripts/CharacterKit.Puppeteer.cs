@@ -29,6 +29,7 @@ public partial class CharacterKit
     float pupLockUntil, pupSwingAt = -9f, pupSwapNextAt, pupLastSwingAt, pupAutoAt, pupBuzzAt, pupSwapAt = -9f, pupFlashAt = -9f;
     bool pupMade, pupLocked;
     LineRenderer pupLine, pupLine2, pupRing, pupGuide;
+    PixelMarks pupPx;          // 2.0.0~ 줄이 모자랄 때 안내 도트 점선 (안 그린 프레임엔 저절로 숨음)
     readonly List<LineRenderer> pupTraceLines = new List<LineRenderer>(24);
 
     // ---------------- 줄 판정 기억 (적의 지난 쪽 부호 · 다시 벨 시각) — 2초마다 정리
@@ -38,7 +39,7 @@ public partial class CharacterKit
     readonly Dictionary<int, float> pupCutAt = new Dictionary<int, float>();
     readonly List<float> pupCutTimes = new List<float>(8);
     float pupPruneAt, pupSweepCool, pupCutPitchAt, pupCutPitch = 1f;
-    bool pupSwinging, pupCutting;
+    bool pupSwinging, pupCutting, pupThreading;      // pupThreading: 2.0.0~ 검토 — 끊어진 실이 도는 동안 (실로 죽인 적에서 또 튀는 재귀를 막음)
     int pupCutsThisFrame;
 
     // ---------------- 실 자국 (카드 0) — 지나간 줄이 잠시 남음
@@ -338,14 +339,9 @@ public partial class CharacterKit
     {
         bool far = !pupLocked && !GamePad.Active && Vector2.Distance(pupRaw, pupPos) > 1f && PupOverstretch > 0.05f;
         if (!far) { if (pupGuide != null) pupGuide.enabled = false; return; }
-        if (pupGuide == null) { pupGuide = Hostile.NewLine("PupGuide", PupSky, 0.05f, 21); pupGuide.loop = false; }
-        pupGuide.enabled = true;
+        // 2.0.0~ 주석대로 점선: 얇은 단색 선 → 작은 도트 점이 커서 쪽으로 흐름 + 끝 화살촉 (안 그린 프레임엔 저절로 숨음)
         Color c = HeroAim.ColorOf(HeroAimKind.Puppeteer);
-        pupGuide.startColor = pupGuide.endColor = new Color(c.r, c.g, c.b, 0.35f);
-        pupGuide.positionCount = 2;
-        pupGuide.SetPosition(0, new Vector3(pupPos.x, pupPos.y, 0f));
-        pupGuide.SetPosition(1, new Vector3(pupRaw.x, pupRaw.y, 0f));
-        pupGuide.startWidth = pupGuide.endWidth = 0.05f;
+        PixelMarks.Ensure(ref pupPx, this).DotPath(pupPos, pupRaw, 0f, new Color(c.r, c.g, c.b, 0.55f), 0.45f, true, default, true, 0.8f);
     }
 
     // ================================================================= 평타: 휘두름
@@ -576,7 +572,7 @@ public partial class CharacterKit
     // ---------------- 줄 베기로 쓰러뜨림 · 휘두름으로 쓰러뜨림 (OnKill 이 부름)
     void PupKilled(Vector3 pos)
     {
-        if (pupCutting && card[2] > 0) PupBrokenThread(pos, PupEvo("me.strings") ? 2 : 1);
+        if (pupCutting && !pupThreading && card[2] > 0) PupBrokenThread(pos, PupEvo("me.strings") ? 2 : 1);
         if (pupSwinging) SignatureSkills.PupSwingKill(pos);
         if (pupSwapCutting) pupSwapKills++;
     }
@@ -587,6 +583,9 @@ public partial class CharacterKit
         float dmg = Damage * (0.4f + 0.2f * card[2]) * formPower;
         Vector3 cur = from;
         HashSet<Transform> hit = new HashSet<Transform>();
+        pupThreading = true;
+        try
+        {
         for (int j = 0; j < jumps; j++)
         {
             Transform best = null;
@@ -605,6 +604,8 @@ public partial class CharacterKit
             Specials.Damage(best.gameObject, dmg, (best.position - cur).normalized, 0.5f);
             cur = best.position;
         }
+        }
+        finally { pupThreading = false; }
     }
     static readonly List<Collider2D> pupHits = new List<Collider2D>(64);
 
@@ -807,6 +808,10 @@ public partial class CharacterKit
         PupPathCleanup(true);
         if (pupRoot != null) Destroy(pupRoot);
         foreach (LineRenderer lr in new[] { pupLine, pupLine2, pupRing, pupGuide }) if (lr != null) Destroy(lr.gameObject);
+        if (pupPx != null) Destroy(pupPx.gameObject);
         foreach (LineRenderer lr in pupTraceLines) if (lr != null) Destroy(lr.gameObject);
+        // 2.0.0~ 검토: 커튼콜 가장자리 붉은 막(플레이어 자식 캔버스) · 궁극기 조준 고리가 교대 뒤에도 남았음
+        if (pupEdgeCanvas != null) Destroy(pupEdgeCanvas.gameObject);
+        if (pupAimRing != null) Destroy(pupAimRing.gameObject);
     }
 }

@@ -113,7 +113,7 @@ public partial class CharacterKit
     int phLastMax = 6;
 
     // ---------------- 뷰파인더 그림
-    readonly LineRenderer[] phCorner = new LineRenderer[4];
+    PixelMarks phPx;        // 2.0.0~ 도트 뷰파인더 · 필름 띠 · 영사기 필름 구멍 (안 그린 프레임엔 저절로 숨음)
     LineRenderer phFocusRing;
     TMPro.TextMeshPro phCountText;
     int phCount;
@@ -578,6 +578,7 @@ public partial class CharacterKit
     // PlayerController.Reload 가 감기 시작할 때 부름
     public void PhReloadStart()
     {
+        if (Id != CharacterId.Photographer) return;      // 2.0.0~ 검토: 탄창 영웅(도적 등)의 장전에도 불려 「clank」 소리가 났음
         // 이번 통의 사진을 많이 찍힌 순서로 (같으면 나중 것이 앞) — 암실은 두 장 · 극의는 세 장 인화
         List<PhShot> picks = new List<PhShot>(3);
         foreach (PhShot s in phRoll) if (s.count > 0) picks.Add(s);
@@ -762,7 +763,8 @@ public partial class CharacterKit
                     }
                 }
             }
-            if (phStripLine == null) { phStripLine = Hostile.NewLine("PhStrip", new Color(1f, 1f, 1f, 0.5f), 0.1f, 18); }
+            // 2.0.0~ 필름 줄: 어두운 필름 띠(굵게) + 띠 위 필름 구멍이 흐름 (예전: 반투명 흰 얇은 선)
+            if (phStripLine == null) { phStripLine = Hostile.NewLine("PhStrip", new Color(0.09f, 0.08f, 0.13f, 0.8f), 0.3f, 18); }
             int n = phStrip.Count;
             phStripLine.enabled = n >= 2;
             if (n >= 2)
@@ -771,6 +773,13 @@ public partial class CharacterKit
                 phStripLine.positionCount = n;
                 for (int i = 0; i < n; i++) { if (phStrip[i] != null) { phStripLine.SetPosition(cnt++, phStrip[i].transform.position); } }
                 phStripLine.positionCount = Mathf.Max(2, cnt);
+                PixelMarks pm = PixelMarks.Ensure(ref phPx, this);
+                Color hole = new Color(PhFlash.r, PhFlash.g, PhFlash.b, 0.85f);
+                for (int i = 0; i + 1 < cnt; i++)
+                {
+                    Vector3 a = phStripLine.GetPosition(i), b = phStripLine.GetPosition(i + 1);
+                    if ((a - b).sqrMagnitude <= 100f) pm.Perforate(a, b, hole);       // 피해가 나는 마디만 (10칸 넘게 떨어지면 베지 않음)
+                }
             }
         }
         else if (phStripLine != null && phStripLine.enabled) phStripLine.enabled = false;
@@ -829,7 +838,6 @@ public partial class CharacterKit
 
     void PhHideAim()
     {
-        foreach (LineRenderer lr in phCorner) if (lr != null) lr.enabled = false;
         if (phFocusRing != null) phFocusRing.enabled = false;
         if (phCountText != null) phCountText.gameObject.SetActive(false);
     }
@@ -840,19 +848,26 @@ public partial class CharacterKit
         if (phPano || paused) { PhHideAim(); return; }
         Vector2 c = PhCursor();
         Vector2 size = PhFrameSize(Mathf.Max(1, player.multiShot));
-        Color col = PhFlash; col.a = 0.45f;
-        float hw = size.x * 0.5f, hh = size.y * 0.5f, arm = Mathf.Min(0.6f, hw * 0.4f);
-        for (int i = 0; i < 4; i++)
+        Color col = PhFlash; col.a = 0.7f;
+        float hw = size.x * 0.5f, hh = size.y * 0.5f;
+        // 2.0.0~ 도트 뷰파인더 (예전: 얇은 선 꺾쇠 넷 → 네모로만 보였음) — 판정 틀(size)과 같은 사각형에
+        //   안쪽 가장자리 디더 그늘 · 삼분할 점선 · 외곽 있는 꺾쇠 넷 · 가장자리 가운데 눈금 · 가운데 초점 점
+        PixelMarks pm = PixelMarks.Ensure(ref phPx, this);
+        Rect frame = new Rect(c.x - hw, c.y - hh, size.x, size.y);
+        pm.EdgeBands(frame, PixelMarkArt.Vignette(false), PixelMarkArt.Vignette(true), PixelMarkArt.VignetteThick, Color.white, true, true, -2);
+        Color third = new Color(PhFlash.r, PhFlash.g, PhFlash.b, 0.3f);
+        for (int k = -1; k <= 1; k += 2)
         {
-            if (phCorner[i] == null) { phCorner[i] = Hostile.NewLine("PhCorner" + i, col, 0.12f, 25); phCorner[i].positionCount = 3; }
-            LineRenderer lr = phCorner[i];
-            lr.enabled = true;
-            float sx = (i & 1) == 0 ? -1f : 1f, sy = i < 2 ? -1f : 1f;
-            lr.SetPosition(0, new Vector3(c.x + sx * hw - sx * arm, c.y + sy * hh, 0f));
-            lr.SetPosition(1, new Vector3(c.x + sx * hw, c.y + sy * hh, 0f));
-            lr.SetPosition(2, new Vector3(c.x + sx * hw, c.y + sy * hh - sy * arm, 0f));
-            lr.startColor = lr.endColor = col;
+            pm.Tiled(PixelMarkArt.Third(true), new Vector2(c.x + k * size.x / 6f, c.y), new Vector2(1f / HeroAimArt.PPU, size.y - 0.6f), third, false, false, -1);
+            pm.Tiled(PixelMarkArt.Third(false), new Vector2(c.x, c.y + k * size.y / 6f), new Vector2(size.x - 0.6f, 1f / HeroAimArt.PPU), third, false, false, -1);
         }
+        Color edge = new Color(PhFlash.r, PhFlash.g, PhFlash.b, 0.92f);
+        pm.Corners(c, hw, hh, edge);
+        pm.Put(PixelMarkArt.TickV, new Vector2(c.x, c.y + hh - 1f / HeroAimArt.PPU), edge);
+        pm.Put(PixelMarkArt.TickV, new Vector2(c.x, c.y - hh + 1f / HeroAimArt.PPU), edge, false, true);
+        pm.Put(PixelMarkArt.TickH, new Vector2(c.x - hw + 1f / HeroAimArt.PPU, c.y), edge);
+        pm.Put(PixelMarkArt.TickH, new Vector2(c.x + hw - 1f / HeroAimArt.PPU, c.y), edge, true);
+        pm.Put(PixelMarkArt.Focus, c, new Color(PhFlash.r, PhFlash.g, PhFlash.b, 0.75f));
         if (phFocusRing == null)
         {
             phFocusRing = Hostile.NewLine("PhFocus", col, 0.1f, 25);
@@ -907,12 +922,19 @@ public partial class CharacterKit
     void OnDestroyPhotographer()
     {
         EnemyHold.ReleaseAll(this);
-        for (int i = phPaperList.Count - 1; i >= 0; i--) if (phPaperList[i].body != null) phPaperList[i].body.enabled = true;
+        // 2.0.0~ 검토: 종이였던 적에 붙은 납작 사본(child)도 지움 — 안 지우면 그 판 내내 적이 두 겹으로 보였음
+        for (int i = phPaperList.Count - 1; i >= 0; i--)
+        {
+            if (phPaperList[i].body != null) phPaperList[i].body.enabled = true;
+            if (phPaperList[i].child != null) Destroy(phPaperList[i].child.gameObject);
+        }
         phPaperList.Clear(); phPapers.Clear();
+        foreach (var t in phTripods) if (t.tf != null) Destroy(t.tf.gameObject);      // 삼각대 카메라
+        phTripods.Clear();
         foreach (SpriteRenderer sr in phChildPool) if (sr != null) Destroy(sr.gameObject);
         foreach (PhCopy c in phCopies) if (c.tf != null) Destroy(c.tf.gameObject);
         phCopies.Clear();
-        foreach (LineRenderer lr in phCorner) if (lr != null) Destroy(lr.gameObject);
+        if (phPx != null) Destroy(phPx.gameObject);
         if (phFocusRing != null) Destroy(phFocusRing.gameObject);
         if (phStripLine != null) Destroy(phStripLine.gameObject);
         if (phCountText != null) Destroy(phCountText.gameObject);

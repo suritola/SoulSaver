@@ -355,7 +355,7 @@ public class ESCmenu : MonoBehaviour
             // 1.0.1: 되돌릴 값이 「멈춤」인데 실제로 멈춰 둘 창(상점 · 레벨업 · 고르기 · 영혼 트리 · 진화 · 연출)이 없으면 다시 흐르게 (어떤 길로든 영영 멈추지 않게)
             float back = timeScaleBeforeOpen;
             if (back <= 0f && !SomethingHoldsPause()) back = 1f;
-            Time.timeScale = back;
+            Time.timeScale = Juice.Settle(back);
         }
     }
 

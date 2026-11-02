@@ -11,7 +11,6 @@ public partial class CharacterKit
 {
     bool phPano, phPanoBusy;
     float phPanoAt;
-    LineRenderer phBand;
     static readonly List<(GameObject go, EnermyController e, float x)> phSweepList = new List<(GameObject, EnermyController, float)>(64);
 
     public bool PhUltEngaged => phPano || phPanoBusy;
@@ -69,21 +68,20 @@ public partial class CharacterKit
     {
         if (!PhView(out Rect r)) return;
         Color hero = HeroAim.ColorOf(HeroAimKind.Photographer);
-        if (phBand == null) { phBand = Hostile.NewLine("PhBand", hero, 0.16f, 25); phBand.loop = true; phBand.positionCount = 4; }
-        phBand.enabled = true;
-        float y0 = y - thick * 0.5f, y1 = y + thick * 0.5f;
-        phBand.SetPosition(0, new Vector3(r.xMin, y0, 0f));
-        phBand.SetPosition(1, new Vector3(r.xMax, y0, 0f));
-        phBand.SetPosition(2, new Vector3(r.xMax, y1, 0f));
-        phBand.SetPosition(3, new Vector3(r.xMin, y1, 0f));
+        // 2.0.0~ 도트 필름 띠: 촬영 띠(판정 = 화면 너비 × thick) 위 · 아래 바깥에 구멍 뚫린 필름 가장자리 + 띠 안 옅은 체크 빛 + 네 모서리 꺾쇠
+        //   (예전: 화면을 가로지르는 얇은 단색 네모 선)
+        phBandOn = true;
         float held = Time.time - phPanoAt;
-        float a = Mathf.Clamp01(0.4f + held) * (0.7f + 0.3f * Mathf.Sin(Time.time * 10f));
-        phBand.startColor = phBand.endColor = new Color(hero.r, hero.g, hero.b, a);
-        phBand.startWidth = phBand.endWidth = 0.12f + 0.1f * Mathf.Clamp01(held);
-        HeroAim.Mark(phBand, HeroAimKind.Photographer, HeroAimFx.None);
+        float a = Mathf.Clamp01(0.4f + held) * (GameSettings.ReduceMotion ? 0.85f : 0.7f + 0.3f * Mathf.Sin(Time.time * 10f));
+        Rect band = new Rect(r.xMin, y - thick * 0.5f, r.width, thick);
+        PixelMarks pm = PixelMarks.Ensure(ref phPx, this);
+        pm.EdgeBands(band, PixelMarkArt.Film(false), null, PixelMarkArt.FilmThick, new Color(hero.r, hero.g, hero.b, a), false, false, 0);
+        pm.Tiled(PixelMarkArt.Sheen, band.center, band.size, new Color(hero.r, hero.g, hero.b, 0.35f * a), false, false, -2);
+        pm.Corners(band.center, band.width * 0.5f - 0.6f, band.height * 0.5f - 0.3f, new Color(hero.r, hero.g, hero.b, Mathf.Min(1f, a + 0.1f)));
     }
 
-    void PhHideBand() { if (phBand != null) phBand.enabled = false; }
+    bool phBandOn;
+    void PhHideBand() { phBandOn = false; }     // 도트 띠는 안 그린 프레임에 저절로 숨음
 
     IEnumerator PhPanoRoutine(float y, float thick, float dirX)
     {
@@ -151,11 +149,8 @@ public partial class CharacterKit
 
     void PhUltLate()
     {
-        if (!phPano && phBand != null && phBand.enabled) PhHideBand();
+        if (!phPano && phBandOn) PhHideBand();
     }
 
-    void PhUltCleanup()
-    {
-        if (phBand != null) Destroy(phBand.gameObject);
-    }
+    void PhUltCleanup() { phBandOn = false; }
 }

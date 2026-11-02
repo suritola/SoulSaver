@@ -69,7 +69,7 @@ public static class RefluxPrepUI
             {
                 int who = i;
                 int col = i % 5, row = i / 5;
-                Vector2 pos = new Vector2(-440f + 100f * col, 215f - 98f * row);
+                Vector2 pos = new Vector2(-500f + 100f * col, 215f - 98f * row);
                 Button b = UIKit.MakeButton(win, "", pos, new Vector2(94f, 90f), () => PickHero(who), 18f);
                 TMP_Text bl = b.GetComponentInChildren<TMP_Text>(true);
                 if (bl != null) bl.gameObject.SetActive(false);
@@ -91,21 +91,21 @@ public static class RefluxPrepUI
             }
 
             // 오른쪽: 갈래 5 · 1차 무기 3
-            UIKit.Text(win, "reflux.prep.path", 24f, Gold, new Vector2(300f, 255f), new Vector2(560f, 32f));
+            UIKit.Text(win, "reflux.prep.path", 24f, Gold, new Vector2(270f, 255f), new Vector2(560f, 32f));
             for (int p = 0; p < pathBtn.Length; p++)
             {
                 int pi = p;
-                pathBtn[p] = UIKit.MakeButton(win, "", new Vector2(40f + 128f * p, 205f), new Vector2(122f, 62f), () => { path = pi; UISound.Click(); Refresh(); }, 18f);
+                pathBtn[p] = UIKit.MakeButton(win, "", new Vector2(30f + 120f * p, 205f), new Vector2(114f, 62f), () => { path = pi; UISound.Click(); Refresh(); }, 18f);
             }
-            pathInfo = UIKit.Text(win, "", 20f, Parch, new Vector2(300f, 110f), new Vector2(560f, 100f), TextAlignmentOptions.Top);
+            pathInfo = UIKit.Text(win, "", 20f, Parch, new Vector2(270f, 110f), new Vector2(560f, 100f), TextAlignmentOptions.Top);
             pathInfo.enableAutoSizing = true;
             pathInfo.fontSizeMin = 13f;
             pathInfo.fontSizeMax = 20f;
-            UIKit.Text(win, "reflux.prep.form", 24f, Gold, new Vector2(300f, 30f), new Vector2(560f, 32f));
+            UIKit.Text(win, "reflux.prep.form", 24f, Gold, new Vector2(270f, 30f), new Vector2(560f, 32f));
             for (int f = 0; f < formBtn.Length; f++)
             {
                 int fi = f;
-                formBtn[f] = UIKit.MakeButton(win, "", new Vector2(110f + 190f * f - 20f, -25f), new Vector2(180f, 62f), () => { form = fi; UISound.Click(); Refresh(); }, 18f);
+                formBtn[f] = UIKit.MakeButton(win, "", new Vector2(90f + 190f * f, -25f), new Vector2(180f, 62f), () => { form = fi; UISound.Click(); Refresh(); }, 18f);
             }
 
             bodyLine = UIKit.Text(win, "", 22f, Parch, new Vector2(0f, -150f), new Vector2(1100f, 80f), TextAlignmentOptions.Top);

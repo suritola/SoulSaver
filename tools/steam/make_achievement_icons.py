@@ -69,6 +69,19 @@ ICONS = [
     # 2.1.1 4장 영혼의 심연
     ('ACH_ENTER_ABYSS', frame('Abyss/wisp_0.png'), (0.10, 0.08, 0.26)),
     ('ACH_MIRROR_QUICK', frame('Abyss/mirrorlord_0.png'), (0.16, 0.22, 0.36)),
+    # 2.0.0 사막 비밀 영웅 해금 · 영혼 릴레이 · 역류
+    ('UNLOCK_WRESTLER', frame('Characters/wrestler.png', 0), (0.46, 0.24, 0.10)),
+    ('UNLOCK_FOREMAN', frame('Characters/foreman.png', 0), (0.44, 0.34, 0.08)),
+    ('UNLOCK_PUPPETEER', frame('Characters/puppeteer.png', 0), (0.34, 0.12, 0.34)),
+    ('UNLOCK_UNDERTAKER', frame('Characters/undertaker.png', 0), (0.12, 0.14, 0.18)),
+    ('UNLOCK_PHOTOGRAPHER', frame('Characters/photographer.png', 0), (0.12, 0.30, 0.34)),
+    ('ACH_RELAY_FIRST', frame('Icons/mode_relay.png'), (0.10, 0.28, 0.34)),
+    ('ACH_RELAY_DEV', frame('Icons/mode_relay.png'), (0.12, 0.30, 0.14)),
+    ('ACH_RELAY_ALLBOSS', frame('Icons/mode_relay.png'), (0.44, 0.10, 0.12)),
+    ('ACH_RELAY_FIRSTHERO', frame('Icons/mode_relay.png'), (0.42, 0.30, 0.08)),
+    ('ACH_REFLUX_CLEAR', frame('Icons/mode_reflux.png'), (0.26, 0.14, 0.40)),
+    ('ACH_REFLUX_FAST', frame('Icons/mode_reflux.png'), (0.08, 0.22, 0.42)),
+    ('ACH_REFLUX_NAKED', frame('Icons/mode_reflux.png'), (0.30, 0.30, 0.32)),
 ]
 # ONLY=ACH_A,ACH_B 로 일부만 다시 만듦 (나머지 JPG 를 건드리지 않게)
 ONLY = [a for a in os.environ.get('ONLY', '').split(',') if a]
@@ -108,3 +121,18 @@ for api, sprite, bg in ICONS:
     write(done, OUT + api + '.png')
     write(gray(done), OUT + api + '_locked.png')
     print(api, sprite.w, sprite.h)
+
+
+# PNG -> JPG (PIL), PNG 는 지움
+try:
+    from PIL import Image
+    for api, _, _ in ICONS:
+        if ONLY and api not in ONLY:
+            continue
+        for suf in ('', '_locked'):
+            f = OUT + api + suf
+            if os.path.exists(f + '.png'):
+                Image.open(f + '.png').convert('RGB').save(f + '.jpg', quality=95)
+                os.remove(f + '.png')
+except ImportError:
+    print('PIL 없음: PNG 를 JPG 로 직접 바꿀 것')

@@ -17,6 +17,13 @@ public static class EnemyHold
 
     public static int HeldCount => held.Count;
 
+    // 2.0.0~ 검토: 씬이 새로 시작될 때 (SpecialAbilities.Awake) — 앞 판의 적은 모두 사라졌으므로 목록 · 되돌릴 값을 비움
+    public static void ClearStatics()
+    {
+        held.Clear();
+        saved.Clear();
+    }
+
     public static bool IsHeld(EnermyController e) => e != null && e.holder != null;
 
     // 잡을 수 있는 적인지 (거절 사유: 죽음 · 이미 잡힘 · 부스러기 · 시전 중 · 콜라이더 꺼짐 · 중간 보스)

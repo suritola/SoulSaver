@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 // 자동 플레이 봇 — 줍기 · 지형 위험 · 튕기는 구 · 고요의 눈 (복사본 전용)
@@ -83,7 +83,7 @@ public static class AutoplayMeta
 {
     public static void SetupVeteranAccount()
     {
-        for (int i = 0; i <= 8; i++) { Prefs.SetInt("char.unlocked." + i, 1); Prefs.SetInt("mastery." + i, 3); Prefs.SetInt("hero.guide." + i, 1); }
+        for (int i = 0; i < CharacterData.All.Length; i++) { Prefs.SetInt("char.unlocked." + i, 1); Prefs.SetInt("mastery." + i, 3); Prefs.SetInt("hero.guide." + i, 1); }
         for (int i = 1; i <= 4; i++) Prefs.SetInt("char.cond." + i, 1);
         Prefs.SetInt("mode.unlocked", 2);
         for (int i = 0; i <= 2; i++) Prefs.SetInt("mode.cleared." + i, 1);
@@ -109,6 +109,13 @@ public static class AutoplayHooks
     public static void End() => rec = null;
 
     // PlayerController.TryHit: 체력이 0 이 됐을 때 — 불사 측정이면 체력을 채우고 사망 횟수만 셈 (true = 쓰러지지 않음)
+    public static void Handoff()
+    {
+        if (rec == null) return;
+        rec.swaps++;
+        AutoplayRunner.Log("릴레이 교대 " + rec.swaps + "번째 · " + EndlessMode.Clock(GameMode.EndlessSeconds) + " · 마지막 피해 " + RunStats.LastHurtBy);
+    }
+
     public static bool KeepAlive(PlayerController p)
     {
         if (rec == null) return false;
@@ -144,5 +151,6 @@ public static class AutoplayHooks
 // 복사본에서 Auto 로 꺼지던 실제 플레이 규칙(초월 카드 · 궁수 숨 고르기)을 되살리는 스위치
 public static class AutoplayFlags
 {
+    public static bool SaveOn;        // -SaveAt: 저장을 켬 (RunSave.Savable)
     public static bool Real => GameInput.Auto && AutoplayRunner.Out != null;
 }

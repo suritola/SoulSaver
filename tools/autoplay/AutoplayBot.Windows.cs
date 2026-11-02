@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -94,6 +94,17 @@ public partial class AutoplayBot
         {
             rec.unknownWindows++;
             string line = "멈춤 안전장치: 창 " + name + " · " + DescribeUi();
+            if (shop != null && name == "레벨업")
+            {
+                try
+                {
+                    GameObject panel = Get<GameObject>(shop, "LvshopPanel");
+                    line += " · [카드창] panel " + (panel != null && panel.activeInHierarchy) + " selectReady " + Get(shop, "selectReady", false) + " freePick " + Get(shop, "freePick", false)
+                          + " introEnd-now " + (Get(shop, "introEnd", 0f) - Time.unscaledTime).ToString("0.0") + " openedAt-now " + (Get(shop, "openedAt", 0f) - Time.unscaledTime).ToString("0.0")
+                          + " fire " + GameInput.FireHeld + " ult " + GameInput.UltHeld + " mouse " + Input.GetMouseButton(0) + Input.GetMouseButton(1);
+                }
+                catch (Exception ex) { line += " · [카드창 진단 실패 " + ex.Message + "]"; }
+            }
             AutoplayRunner.Log("?? " + line);
             if (WindowLog.Count < 20) WindowLog.Add(line);
             ForceFirstChoice();
@@ -290,7 +301,6 @@ public partial class AutoplayBot
         if (((Vector2)stall.transform.position - me).magnitude > stall.openDistance * 0.9f) return;
         if (stallShop.OpenFromStall())
         {
-            ShopStall.PlayerNear = false;
             Destroy(stall.gameObject);
             stall = null;
             shopBuys = 0;
@@ -324,7 +334,7 @@ public partial class AutoplayBot
     {
         var names = new List<string>();
         foreach (Canvas cv in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
-            if (cv.isRootCanvas && cv.isActiveAndEnabled && names.Count < 12) names.Add(cv.name);
+            if (cv.isRootCanvas && cv.isActiveAndEnabled && names.Count < 12) { var kids = new List<string>(); foreach (Transform ch in cv.transform) if (ch.gameObject.activeSelf && kids.Count < 14) kids.Add(ch.name); names.Add(cv.name + "[" + string.Join("/", kids) + "]"); }
         return "timeScale " + Time.timeScale + " · 캔버스 " + string.Join(",", names) + " · 컷신 " + PlayerController.Cinematic + " · 진화 중 " + (StageManager.Instance != null && StageManager.Instance.IsEvolving);
     }
 
