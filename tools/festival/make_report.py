@@ -40,7 +40,7 @@ html = f"""
 <h1>Soul Saver</h1>
 <p class="sub">자동 조준이 없는 도트 그래픽 서바이버 로그라이트</p>
 <p class="meta">제작보고서</p>
-<p class="meta">출품자: 박민근 (1인 개발)<br/>소속 · 학번: [소속학부 / 학번 기입]<br/>버전: 2.0.1 (Windows)<br/>스팀 상점: store.steampowered.com/app/5328770</p>
+<p class="meta">출품자: 박민근 (1인 개발)<br/>학번: 22400258<br/>버전: 2.0.1 (Windows)<br/>스팀 상점: store.steampowered.com/app/5328770</p>
 </div>
 
 <h2 class="pb">1. 게임 소개</h2>
