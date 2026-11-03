@@ -1,5 +1,5 @@
 # V2.0 대규모 업데이트 공지 표시 이미지 800x450 — 이전 공지(어두운 성 · 금 띠)와 다르게 노을 사막 + 새 영웅 5명
-# 실행 (저장소 루트에서): py tools/steam_art/make_v2_banner.py
+# 실행 (저장소 루트에서): py tools/steam_art/make_v2_banner.py ["제목" "아랫줄" 출력이름]   (기본: V2.0 대규모 업데이트)
 import math
 import os
 import sys
@@ -91,9 +91,12 @@ def put(text, size, col, ytop, shadow=(16, 6, 20)):
     dr.text((x0 + 4, y0 + 4), text, font=f, fill=shadow); dr.text((x0, y0), text, font=f, fill=col)
 
 
-put("V2.0  MAJOR UPDATE", 50, (110, 240, 222), 352)
-put("5 NEW HEROES  +  54 SKINS  +  2 MODES", 22, (255, 214, 150), 414)
+TITLE = sys.argv[1] if len(sys.argv) > 1 else "V2.0  MAJOR UPDATE"
+SUB = sys.argv[2] if len(sys.argv) > 2 else "5 NEW HEROES  +  54 SKINS  +  2 MODES"
+NAME = sys.argv[3] if len(sys.argv) > 3 else "v2.0_800x450.png"
+put(TITLE, 50, (110, 240, 222), 352)
+put(SUB, 22, (255, 214, 150), 414)
 
-out = os.path.join(L.ROOT, "docs", "steam", "art", "events", "v2.0_800x450.png")
+out = os.path.join(L.ROOT, "docs", "steam", "art", "events", NAME)
 img.convert("RGB").save(out)
 print(out)
