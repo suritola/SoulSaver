@@ -45,13 +45,23 @@ public static class ModeHubUI
     public static void Open(Transform root)
     {
         if (open != null) return;
-        RectTransform win = UIKit.Modal(root, "ModeHub", new Vector2(1240f, 820f), out open);
+        // 2.0.1~ 메뉴 개편: 「도전 모드」 — 일일 도전 · 영혼 릴레이 · 역류 세 카드 + 아래 계약 보드 (메인 화면 버튼 둘을 하나로)
+        RectTransform win = UIKit.Modal(root, "ModeHub", new Vector2(1320f, 900f), out open);
         UIKit.EscCancel(open, Close);
-        TMP_Text title = UIKit.Text(win, "특별 모드", 46f, Gold, new Vector2(0f, 355f), new Vector2(700f, 64f));
+        TMP_Text title = UIKit.Text(win, "도전 모드", 46f, Gold, new Vector2(0f, 395f), new Vector2(700f, 64f));
         title.fontSizeMin = 24f;
-        UIKit.MakeButton(win, "닫기", new Vector2(510f, 355f), new Vector2(150f, 58f), Close, 22f);
-        Card(win, root, -300f, false);
-        Card(win, root, 300f, true);
+        UIKit.MakeButton(win, "닫기", new Vector2(550f, 395f), new Vector2(150f, 58f), Close, 22f);
+        Card(win, root, -430f, Kind.Daily);
+        Card(win, root, 0f, Kind.Relay);
+        Card(win, root, 430f, Kind.Reflux);
+        if (!Demo.On)
+        {
+            string board = Loc.T("board.open") + (ContractBoard.Claimable > 0 ? "  <color=#7FE08A>+" + ContractBoard.Claimable + "</color>" : "");
+            Button b = UIKit.MakeButton(win, "", new Vector2(-190f, -408f), new Vector2(360f, 54f), () => { Close(); ContractBoard.Open(root); }, 24f);
+            if (b.GetComponentInChildren<TMP_Text>(true) is TMP_Text bt) bt.text = board;
+            if (ContractBoard.Claimable > 0) b.gameObject.AddComponent<NewGlow>();
+            UIKit.MakeButton(win, "기록", new Vector2(190f, -408f), new Vector2(360f, 54f), () => { Close(); RunHistoryUI.Open(root); }, 24f);      // 2.0.1~ 메인 화면 오른쪽 위에서 옮김
+        }
         MarkSeen();
     }
 
@@ -61,19 +71,23 @@ public static class ModeHubUI
         open = null;
     }
 
-    // 카드 하나 (reflux = 오른쪽)
-    static void Card(RectTransform win, Transform root, float x, bool reflux)
+    enum Kind { Daily, Relay, Reflux }
+    const float CardW = 410f;
+
+    // 카드 하나
+    static void Card(RectTransform win, Transform root, float x, Kind kind)
     {
         bool demo = Demo.On;
-        bool unlocked = reflux ? RefluxRun.Unlocked && RefluxRun.Implemented : RelayRun.Unlocked;
-        RectTransform card = UIKit.Rect(reflux ? "RefluxCard" : "RelayCard", win, new Vector2(x, -20f), new Vector2(560f, 640f));
+        bool reflux = kind == Kind.Reflux, daily = kind == Kind.Daily;
+        bool unlocked = daily ? DailyChallenge.Unlocked : reflux ? RefluxRun.Unlocked && RefluxRun.Implemented : RelayRun.Unlocked;
+        RectTransform card = UIKit.Rect(daily ? "DailyCard" : reflux ? "RefluxCard" : "RelayCard", win, new Vector2(x, 0f), new Vector2(CardW, 680f));
         Image bg = card.gameObject.AddComponent<Image>();
         bg.color = new Color(0f, 0f, 0f, 0.18f);
         bg.raycastTarget = false;
 
         // 그림 128칸 (아직 안 만들었으면 비움)
-        Sprite art = Resources.Load<Sprite>(reflux ? "Icons/mode_reflux" : "Icons/mode_relay");
-        RectTransform ar = UIKit.Rect("Art", card, new Vector2(0f, 220f), new Vector2(160f, 160f));
+        Sprite art = Resources.Load<Sprite>(daily ? "Icons/menu_daily" : reflux ? "Icons/mode_reflux" : "Icons/mode_relay");
+        RectTransform ar = UIKit.Rect("Art", card, new Vector2(0f, 240f), new Vector2(160f, 160f));
         Image ai = ar.gameObject.AddComponent<Image>();
         ai.sprite = art;
         ai.preserveAspect = true;
@@ -81,45 +95,46 @@ public static class ModeHubUI
         ai.enabled = art != null;
         if (!unlocked) ai.color = new Color(0.55f, 0.55f, 0.6f, 1f);
 
-        TMP_Text name = UIKit.Text(card, reflux ? "역류" : "영혼 릴레이", 40f, Gold, new Vector2(0f, 108f), new Vector2(520f, 54f));
+        TMP_Text name = UIKit.Text(card, daily ? "일일 도전" : reflux ? "역류" : "영혼 릴레이", 40f, Gold, new Vector2(0f, 128f), new Vector2(CardW - 40f, 54f));
         name.fontSizeMin = 24f;
-        TMP_Text rules = UIKit.Text(card, reflux ? "relay.card.reflux" : "relay.card.relay", 24f, Parch, new Vector2(0f, -25f), new Vector2(500f, 190f), TextAlignmentOptions.Top);
+        TMP_Text rules = UIKit.Text(card, daily ? "mode.card.daily" : reflux ? "relay.card.reflux" : "relay.card.relay", 22f, Parch, new Vector2(0f, -15f), new Vector2(CardW - 50f, 220f), TextAlignmentOptions.Top);
         rules.fontSizeMin = 16f;
         rules.lineSpacing = 6f;
+        if (daily && unlocked)
+        {
+            // 오늘 영웅 · 규칙 (언어를 바꾸면 창을 다시 여므로 한 번만 씀)
+            DailyChallenge.Rule r = DailyChallenge.RuleOf(DailyChallenge.Today);
+            rules.text = Loc.T("mode.card.daily") + "\n\n<color=#F5D478>" + Loc.T(CharacterData.Def(DailyChallenge.CharacterOf(DailyChallenge.Today)).name)
+                       + " · " + Loc.T(r.name) + "</color>";
+            UIKit.Forget(rules);
+        }
 
-        float best = reflux ? RefluxRun.Best : RelayRun.BestAll;
-        TMP_Text rec = UIKit.Text(card, "", 24f, Parch, new Vector2(0f, -150f), new Vector2(500f, 34f));
-        rec.text = Loc.T("relay.hub.best") + "  <color=#F5D478>" + (best > 0f ? EndlessMode.Clock(best) : "-") + "</color>";
+        float best = daily ? DailyChallenge.Best(DailyChallenge.Today) : reflux ? RefluxRun.Best : RelayRun.BestAll;
+        TMP_Text rec = UIKit.Text(card, "", 24f, Parch, new Vector2(0f, -150f), new Vector2(CardW - 40f, 34f));
+        rec.text = Loc.T(daily ? "오늘 내 최고 기록" : "relay.hub.best") + "  <color=#F5D478>" + (best > 0f ? EndlessMode.Clock(best) : "-") + "</color>";
         rec.fontSizeMin = 16f;
 
-        Button pick = UIKit.MakeButton(card, "relay.hub.pick", new Vector2(0f, -225f), new Vector2(320f, 76f), () =>
+        Button pick = UIKit.MakeButton(card, "relay.hub.pick", new Vector2(0f, -225f), new Vector2(300f, 76f), () =>
         {
             Close();
-            if (reflux) RefluxOpener?.Invoke(root);
+            if (daily) DailyChallenge.Open(root);
+            else if (reflux) RefluxOpener?.Invoke(root);
             else OpenRelay(root);
         }, 30f);
         pick.interactable = unlocked && (!reflux || RefluxOpener != null);
         if (!pick.interactable) GrayOut(pick);
 
-        string note = demo ? "정식판에서 만날 수 있습니다" : unlocked ? "" : reflux ? (RefluxRun.Implemented ? "relay.hub.locked.reflux" : "relay.hub.soon") : "relay.hub.locked.relay";
-        if (note.Length > 0) UIKit.Text(card, note, 20f, Dim, new Vector2(0f, -285f), new Vector2(520f, 30f));
+        string note = demo ? "정식판에서 만날 수 있습니다" : unlocked ? "" : daily ? "ladder.lock.daily"
+                    : reflux ? (RefluxRun.Implemented ? "relay.hub.locked.reflux" : "relay.hub.soon") : "relay.hub.locked.relay";
+        if (note.Length > 0) UIKit.Text(card, note, 20f, Dim, new Vector2(0f, -290f), new Vector2(CardW - 30f, 56f));
 
-        if (!demo && !reflux)
+        if (demo || (reflux && !RefluxRun.Implemented)) return;
+        LeaderboardUI.Board board = daily ? LeaderboardUI.Board.Daily : reflux ? LeaderboardUI.Board.Reflux : LeaderboardUI.Board.Relay;
+        UIKit.MakeButton(card, "relay.hub.ranks", new Vector2(0f, -340f), new Vector2(260f, 50f), () =>
         {
-            UIKit.MakeButton(card, "relay.hub.ranks", new Vector2(0f, -325f), new Vector2(260f, 50f), () =>
-            {
-                Close();
-                LeaderboardUI.Open(root, LeaderboardUI.Board.Relay, SteamLeaderboards.Scope.Global, () => Open(root));
-            }, 22f);
-        }
-        else if (!demo && reflux && RefluxRun.Implemented)
-        {
-            UIKit.MakeButton(card, "relay.hub.ranks", new Vector2(0f, -325f), new Vector2(260f, 50f), () =>
-            {
-                Close();
-                LeaderboardUI.Open(root, LeaderboardUI.Board.Reflux, SteamLeaderboards.Scope.Global, () => Open(root));
-            }, 22f);
-        }
+            Close();
+            LeaderboardUI.Open(root, board, SteamLeaderboards.Scope.Global, () => Open(root));
+        }, 22f);
     }
 
     // 잠긴 버튼 (DailyChallenge.Open 과 같은 처리: 판이 기본 disabledColor 와 곱해져 사라지지 않게 · 글자는 흐리게)

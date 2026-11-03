@@ -2435,6 +2435,17 @@ public class QaCapture
                 yield return Shot("m_menu_" + l + "_s" + c[2], c[0], c[1]);
             }
             SSet("GameSettings", "UiScaleIndex", 2);
+            // 2.0.1~ 「더 보기」 창
+            yield return UseSize(1920, 1080);
+            GameObject sb = GameObject.Find("GameStartButton");
+            if (sb != null)
+            {
+                SCall("MenuExtras", "OpenMore", sb.transform.root);
+                yield return Frames(6);
+                yield return Shot("m_more_" + l);
+                SCall("MenuExtras", "CloseMore");
+                yield return Frames(2);
+            }
         }
         yield return UseSize(1920, 1080);
         yield return Frames(6);

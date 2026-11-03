@@ -157,7 +157,7 @@ public static class MenuExtras
         if (start == null || GameObject.Find("TutorialButton") != null) return;
 
         RectTransform sr = (RectTransform)start.transform;
-        GameObject character = UIKit.CloneButton(start, "CharacterButton", "캐릭터", () => CharacterUI.Open(sr.root));
+        GameObject character = UIKit.CloneButton(start, "CharacterButton", "영웅 · 스킨", () => CharacterUI.Open(sr.root));     // 2.0.1~ 메뉴 개편: 큰 버튼으로 (스킨 상점은 창 안)
         GameObject skins = UIKit.CloneButton(start, "SkinButton", "스킨 상점", () => SkinShopUI.Open(sr.root));
         // 2.1.9: 글 튜토리얼 대신 직접 해 보는 플레이 튜토리얼 (TutorialRun), 한 번도 안 해 봤으면 반짝임
         GameObject tutorial = UIKit.CloneButton(start, "TutorialButton", "튜토리얼", () => TutorialRun.Begin());
@@ -167,7 +167,7 @@ public static class MenuExtras
         GameObject evo = UIKit.CloneButton(start, "SkillEvoButton", "스킬 진화", () => SkillEvoCodexUI.Open(sr.root));
         GameObject settings = UIKit.CloneButton(start, "SettingsButton", "설정", () => SettingsUI.Open(sr.root));
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
-        GameObject modes = UIKit.CloneButton(start, "ModesButton", "특별 모드", () => ModeHubUI.Open(sr.root));      // 2.0.0~ 영혼 릴레이 · 역류를 한 줄로 (결정 M1)
+        GameObject modes = UIKit.CloneButton(start, "ModesButton", "도전 모드", () => ModeHubUI.Open(sr.root));      // 2.0.1~ 일일 도전 · 영혼 릴레이 · 역류 · 계약 보드 · 기록을 한 창에
         if (ModeHubUI.HasNew) modes.AddComponent<NewGlow>();
         // 1.0.4~: 잠긴 일일 도전은 흐리게 · 「잠김」 표시 · 여는 방법 툴팁 (창 안의 오늘 규칙 · 순위표는 그대로 볼 수 있음)
         bool dailyLocked = !DailyChallenge.Unlocked;
@@ -191,11 +191,13 @@ public static class MenuExtras
         if (!TutorialRun.Done) more.AddComponent<NewGlow>();
         Transform clonedIcon = more.transform.Find("Icon");          // 게임 시작에서 복제된 ▶ 그림은 뺌 (칸 밖 왼쪽으로 삐져나옴)
         if (clonedIcon != null) Object.Destroy(clonedIcon.gameObject);
-        foreach (GameObject hide in new[] { character, skins, evo, tutorial })
+        // 2.0.1~ 메뉴 개편 (사용자 「버튼이 너무 많고 더 보기는 구겨 넣은 느낌」): 큰 버튼은 도전 모드 · 영웅 · 스킨 · 도감 · 설정 (+ 튜토리얼은 마칠 때까지만)
+        //   「더 보기」 · 일일 도전 칸은 지우지 않고 꺼 둠 (다른 코드가 이름으로 찾음) — 일일 도전은 도전 모드 창 카드로
+        foreach (GameObject hide in new[] { skins, evo, TutorialRun.Done ? tutorial : null, daily, more })
             if (hide != null) hide.SetActive(false);
         // 1.4.8~ 사용자 「게임이 덜 완성된 것 같다」: 칸 격자 대신 게임 시작 아래 같은 폭 버튼을 세로로 (도감 · 일일 도전 · 설정 · 더 보기 · 게임 종료)
         //   글자만 · 같은 폭 · 같은 간격 — 흔한 게임 메인 메뉴 모양 (게임 시작 바로 아래 한 줄은 영혼의 무게 버튼 자리로 비워 둠)
-        GameObject[] list = { codex, daily, modes, settings, more, exit };
+        GameObject[] list = { modes, character, codex, TutorialRun.Done ? null : tutorial, settings, exit };
         // (1.4.8~ 메뉴 뒤 반투명 판은 사용자 「별로」로 뺌 → 글자 자체에 굵기 · 어두운 외곽선 · 그림자 (MenuItemFx))
         float listY = StartY - StartH * 0.5f - (LockRowH + Gap) - ListH * 0.5f;
         for (int i = 0; i < list.Length; i++)
@@ -287,10 +289,11 @@ public static class MenuExtras
         {
             Transform t = sr.parent.Find(n);
             if (t == null) continue;
-            if (t.GetComponent<NewGlow>() != null && more.GetComponent<NewGlow>() == null) more.AddComponent<NewGlow>();      // 안에 새 것이 있으면 「더 보기」가 반짝임
+            // 2.0.1~ 영혼 각인 새것은 도감(각인 탭)에서 알림
+            if (n == "SoulBrandButton" && t.GetComponent<NewGlow>() != null && codex.GetComponent<NewGlow>() == null) codex.AddComponent<NewGlow>();
             t.gameObject.SetActive(false);
         }
-        if (ContractBoard.Claimable > 0 && more.GetComponent<NewGlow>() == null) more.AddComponent<NewGlow>();      // 1.5.9~ 받을 계약 보상도 (메뉴의 계약 배지가 빠진 뒤 알릴 곳이 없었음)
+        if (ContractBoard.Claimable > 0 && modes.GetComponent<NewGlow>() == null) modes.AddComponent<NewGlow>();      // 받을 계약 보상 → 도전 모드 창 아래 계약 보드
         // 1.0.4~: 저장 복구 알림 → 처음 켰을 때 언어 고르기 → 새 버전이면 패치노트, 하나씩 차례로
         Transform root = sr.root;
         // 1.1.9~ 스팀 덱 첫 실행 자동 설정 알림: 언어 고르기 창이 뜨면 그 안에 한 줄, 아니면 메뉴 아래에 8초
@@ -475,11 +478,13 @@ public static class MenuExtras
             System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
                       + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
-                      + " · " + (saved.difficulty == (int)Difficulty.Endless      // 1.2.3~ 무한 판은 장이 없어 생존 시간 · 보스 처치 수로
-                                 ? Loc.T("생존 시간 ") + EndlessMode.Clock(saved.endlessSeconds) + " · " + Loc.T("보스 처치 ") + saved.endlessBosses
+                      + " · " + (saved.difficulty == (int)Difficulty.Endless      // 1.2.3~ 무한 판은 장이 없어 생존 시간으로 (2.0.1~ 보스 처치 수는 뺌: 줄이 넘쳐 「Lv」 숫자가 다음 줄로 잘렸음)
+                                 ? EndlessMode.Clock(saved.endlessSeconds)
                                  : Chapters.Title(saved.stage))
                       + " · Lv " + saved.level + "</size>";
             label();
+            ct.enableWordWrapping = false;              // 2.0.1~ 넘치면 접지 말고 말줄임 (\n 줄바꿈은 그대로)
+            ct.overflowMode = TextOverflowModes.Ellipsis;
             ct.gameObject.AddComponent<LocRefresh>().refresh = label;
         }
         Image img = cont.GetComponent<Image>();
@@ -521,7 +526,7 @@ public static class MenuExtras
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             if (t.text == "Soul Saver") { title = t; break; }
         List<RectTransform> items = new List<RectTransform>();
-        foreach (string n in new[] { "GameStartButton", "ContinueButton", "CodexButton", "DailyButton", "ModesButton", "SettingsButton", "MoreButton", "ExitButton" })
+        foreach (string n in new[] { "GameStartButton", "ContinueButton", "ModesButton", "CharacterButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })
         {
             Transform t = parent.Find(n);
             if (t != null && t.gameObject.activeSelf) items.Add((RectTransform)t);
@@ -759,9 +764,10 @@ public static class MenuExtras
         }
         if (weightOn) y -= MainRowGap + WeightH;
         y -= MainRowGap + MainRowH * 0.5f;
-        foreach (string n in new[] { "CodexButton", "DailyButton", "ModesButton", "SettingsButton", "MoreButton", "ExitButton" })
+        foreach (string n in new[] { "ModesButton", "CharacterButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })
         {
-            RectTransform placed = LeftPlace(parent, n, y, MainRowH, MainW, UiTokens.Body);
+            bool quit = n == "ExitButton";      // 2.0.1~ 종료는 맨 아래 반 폭 · 작은 글자 (자주 누르지 않음)
+            RectTransform placed = LeftPlace(parent, n, quit ? y - MainRowGap : y, quit ? MainRowH * 0.8f : MainRowH, quit ? MainW * 0.5f : MainW, quit ? UiTokens.Small : UiTokens.Body);
             if (placed == null) continue;
             bool streak = false;
             if (n == "DailyButton" && placed.Find("StreakLabel") is RectTransform sl)
@@ -787,7 +793,7 @@ public static class MenuExtras
             hr.anchorMin = hr.anchorMax = new Vector2(0.5f, 0.5f);
             hr.pivot = new Vector2(0.5f, 0.5f);
             hr.sizeDelta = new Vector2(half * 2f, MenuHeroPanel.PortraitV2 + 188f);
-            hr.anchoredPosition = new Vector2(Mathf.Max(0f, colRight + half), -60f);
+            hr.anchoredPosition = new Vector2(Mathf.Max(0f, colRight + half), 40f);      // 2.0.1~ -60 → 40: 이름이 화면 아래에 걸리고 「영웅 변경」 버튼이 화면 밖이었음
             MenuHeroPanel.Refresh();             // 새 크기로 안쪽 그림 · 이름 자리를 다시
         }
         InstallNewsCard(parent);
@@ -920,6 +926,8 @@ public static class MenuExtras
         head.fontSizeMin = UiTokens.Small;
         TMP_Text t = UIKit.Text(card, "", UiTokens.Body, UiTokens.Text1, new Vector2(0f, 6f), new Vector2(W - 60f, 64f), TextAlignmentOptions.TopLeft);
         t.fontSizeMin = UiTokens.Small;
+        t.enableWordWrapping = false;               // 2.0.1~ 긴 제목(V2.0)이 두 줄로 접혀 아래 「패치노트」 버튼과 겹쳤음 → 한 줄 · 줄여서 · 넘치면 말줄임
+        t.overflowMode = TextOverflowModes.Ellipsis;
         t.text = title;
         System.Action refresh = () => t.text = PatchNotesUI.LatestTitle();
         t.gameObject.AddComponent<LocRefresh>().refresh = refresh;
@@ -2396,6 +2404,12 @@ public static class SettingsUI
         if (againLabel != null) { againLabel.enableAutoSizing = true; againLabel.fontSizeMin = 20f; againLabel.fontSizeMax = 22f; }
         TMP_Text cursorLabel = ToggleRow("게임 커서", y[1], () => GameSettings.GameCursor, v => GameSettings.GameCursor = v,
                   "게임 전용 화살표와 조준점을 씁니다. 끄면 윈도우 기본 커서라 반응이 더 빠릅니다.");
+        // 2.0.1~ 메뉴 개편: 마친 튜토리얼은 여기서 다시 (메인 「더 보기」에서 옮김) · 게임 안 설정에서는 숨김 (판을 버리고 나가게 됨)
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "GameScene")
+        {
+            Button tut = UIKit.MakeButton(page, "튜토리얼 다시 하기", new Vector2(370f, y[1]), new Vector2(230f, rowH), () => { Close(); TutorialRun.Begin(); }, 22f);
+            if (tut.GetComponentInChildren<TMP_Text>() is TMP_Text tl) { tl.enableAutoSizing = true; tl.fontSizeMin = 18f; tl.fontSizeMax = 22f; }
+        }
         if (GamePad.Active && cursorLabel != null) cursorLabel.color = Off;       // 1.1.9~ 패드 중엔 뜻이 없어 흐리게 (누를 수는 있음 · 스팀 덱)
         ToggleRow("커서를 창 안에 가두기", y[2], () => GameSettings.ConfineCursor, v => GameSettings.ConfineCursor = v,
                   "전투 중 마우스가 창 밖으로 나가지 않게 합니다. 멈춘 화면 · 메뉴 · 패드를 쓸 때는 풀립니다. 창 모드나 모니터가 두 대일 때 유용합니다.");

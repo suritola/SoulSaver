@@ -15,7 +15,8 @@ public partial class CharacterKit
     static readonly Color FmOrange = new Color(1f, 0.6f, 0.15f);
     static readonly Color FmDust = new Color(0.8f, 0.7f, 0.5f);
 
-    const float FmBladeAt = 0.9f, FmBladeDepth = 1f, FmBladeWidth = 2.2f;
+    // 2.0.1~ 판정 넓힘 (폭 2.2 → 3.4 · 두께 1 → 2): 붙은 적을 못 담고 부딪혀 맞던 것
+    const float FmBladeAt = 0.9f, FmBladeDepth = 2f, FmBladeWidth = 3.4f, FmBodyGrab = 1.1f;
     const float FmCrushBase = 0.30f, FmCrushPerMass = 0.03f, FmBashRate = 0.85f;
     const int FmFenceCap = 9, FmPileBase = 12;
     public const float FmWreckRange = 14f;
@@ -179,7 +180,7 @@ public partial class CharacterKit
         int max = FmPileMax;
         fmBossTarget = null;
         bool touchHard = false;
-        Specials.Overlap(bc, Mathf.Max(halfW, halfD) + 1.4f, fmHits);
+        Specials.Overlap(bc, Mathf.Max(Mathf.Max(halfW, halfD), reachAt + FmBodyGrab) + 1.4f, fmHits);
         for (int i = 0; i < fmHits.Count; i++)
         {
             Collider2D c = fmHits[i];
@@ -188,10 +189,13 @@ public partial class CharacterKit
             if (!boss && !c.CompareTag("enermy")) continue;
             Vector2 rel = (Vector2)(c.transform.position - bc);
             float r = FmBodyR(c);
-            if (Mathf.Abs(Vector2.Dot(rel, fmBlade)) > halfD + r * 0.5f || Mathf.Abs(Vector2.Dot(rel, side)) > halfW + r * 0.3f) continue;
+            bool inBlade = Mathf.Abs(Vector2.Dot(rel, fmBlade)) <= halfD + r && Mathf.Abs(Vector2.Dot(rel, side)) <= halfW + r;
+            // 몸에 붙은 잡몹도 방향 상관없이 더미로 (보스 · 중간 보스는 삽날 앞일 때만 벽 취급)
+            bool onBody = !boss && ((Vector2)(c.transform.position - me)).magnitude <= FmBodyGrab + r;
+            if (!inBlade && !onBody) continue;
             if (boss) { fmBossTarget = c.gameObject; touchHard = true; continue; }
             if (!c.TryGetComponent(out EnermyController e) || e.IsDead || e.holder != null) continue;
-            if (e.IsMidBoss) { fmBossTarget = c.gameObject; touchHard = true; continue; }       // 중간 보스는 잡지 않음 (벽 취급)
+            if (e.IsMidBoss) { if (inBlade) { fmBossTarget = c.gameObject; touchHard = true; } continue; }       // 중간 보스는 잡지 않음 (삽날 앞이면 벽 취급)
             if (e.swarm != null) continue;
             if (e.casting) { e.transform.position += (Vector3)(rel.normalized * 0.6f); continue; }     // 시전 중인 적은 끊지 않고 밀쳐 냄
             if (FmPathShove(e, rel)) continue;       // 갈래 불도저 공명 I: 무게 10 이상이면 밀쳐 길을 냄

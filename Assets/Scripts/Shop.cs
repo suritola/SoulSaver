@@ -361,25 +361,10 @@ public partial class Shop : MonoBehaviour
     public IEnumerator StartGameCountdown()
     {
         RunSave.MarkDirty();            // 1.1.9~ 상점을 닫는 순간 — 카운트다운이 끝나 시간이 흐르면 곧 저장
-        isPause = true;
-        if (pause != null) pause.SetActive(true);
-
-
-        Time.timeScale = 0f;
-
-        for (int countdown = 1; countdown > 0; countdown--)
-        {
-            if (pauseText != null) pauseText.text = Loc.T("일시정지 ") + countdown + Loc.T("초");
-
-            // Time.timeScale = 0이어도 시간이 흐름
-            yield return new WaitForSecondsRealtime(1f);
-        }
-
-        if (pause != null)
-        {
-            pause.SetActive(false);
-        }
+        // 2.0.1~ 1초 「일시정지」 대신 모든 창 공통 3초 카운트다운 (ResumeCountdown, [Space] 즉시 시작)
+        if (pause != null) pause.SetActive(false);
         isPause = false;
+        yield return null;
 
         // 1.0.1: 일시정지 메뉴가 열려 있으면 지금 풀지 않고, 메뉴를 닫을 때 흐르게
         if (ESCmenu.IsOpen) ESCmenu.ResumeAt(1f);

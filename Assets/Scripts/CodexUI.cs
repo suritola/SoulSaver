@@ -13,6 +13,7 @@ public static class CodexUI
     static RectTransform grid;
     static ScrollRect scroll;
     static TMP_Text hint;
+    static Button brandButton;
     static readonly List<Button> tabButtons = new List<Button>();
     // 1.1~ 카드 높이: 캐릭터 탭은 본문(설명 + 기본 무기 + 필살기 + 전용 무기)이 길어 더 큼 (영어 11줄도 14px 로 들어가게)
     static GridLayoutGroup gridLayout;
@@ -216,7 +217,7 @@ public static class CodexUI
         }
         rewardButton = UIKit.MakeButton(win, "codex.rewards", new Vector2(520f, 425f), new Vector2(200f, 58f), OpenRewards, 22f);
         // 1.1.9~ 게임 씬(일시정지 메뉴)에서 열면 「스킬 진화」 버튼 (메인 메뉴에는 타일이 따로 있음 · 편의성 3차 1)
-        bool inGame = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene";
+        bool inGame = true;     // 2.0.1~ 메뉴 개편: 메인 메뉴에서도 (「더 보기」의 스킬 진화를 여기로) — 검색 칸도 게임 씬과 같은 좁은 배치
         if (inGame)
         {
             Transform evoRoot = root;
@@ -252,6 +253,10 @@ public static class CodexUI
         RefreshHeader();
         hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 278f), new Vector2(1500f, 56f));      // 2026-10-16: 두 줄까지 (탭 아래끝 313 · 목록 위끝 238 사이) — 문장으로 다듬어 길어진 안내가 작아지지 않게
         hint.fontSizeMin = 16f;
+        // 2.0.1~ 메뉴 개편: 각인 탭에서 영혼 각인 창(해금 조건)으로 (메인 「더 보기」에서 옮김)
+        Transform brandRoot = root;
+        brandButton = UIKit.MakeButton(win, "brand.title", new Vector2(650f, 278f), new Vector2(200f, 50f), () => { Close(); SoulBrand.Open(brandRoot); }, 20f);
+        brandButton.gameObject.SetActive(false);
 
         BuildScroll(win);
         Show(0);
@@ -309,6 +314,10 @@ public static class CodexUI
             tabButtons[i].transform.localScale = Vector3.one * (on ? 1.05f : 1f);
         }
         hint.text = Loc.T(Hints[tab]);
+        bool brandTab = tab == TabBrand && brandButton != null;
+        if (brandButton != null) brandButton.gameObject.SetActive(brandTab);
+        hint.rectTransform.anchoredPosition = new Vector2(brandTab ? -120f : 0f, 278f);
+        hint.rectTransform.sizeDelta = new Vector2(brandTab ? 1260f : 1500f, 56f);
         if (tab == 0 && CurrentStage >= 0) hint.text = Loc.T("지금 장: {0}").Replace("{0}", Chapters.Title(CurrentStage)) + "  ·  " + hint.text;     // 1.1.9~ 판 안에서 열면 지금 장의 적이 맨 앞
         if (tab == TabMemory) hint.text = "<color=#F5D478>" + MemoryShards.HeaderLine + "</color>  " + hint.text;
         CodexSeen.Cat? cat = CatOf(tab);

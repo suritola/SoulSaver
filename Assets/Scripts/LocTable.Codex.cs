@@ -51,10 +51,10 @@ public static partial class LocTable
         C("codex.milestone.sub", "메인 메뉴 도감에서 보상을 받으세요.", "Claim your reward in the main menu Codex.", "メインメニューの図鑑で報酬を受け取りましょう。", "请在主菜单的图鉴中领取奖励。");
 
         // ================================================================= 진화 탭
-        C("codex.skillevo.body", "레벨업 카드를 모두 최대로 올려 만든 스킬 진화는 메인 메뉴 「스킬 진화」 도감에 하나씩 기록되고, 이곳 수집률에도 들어갑니다.",
-          "Skill evolutions you create by maxing their level-up cards are recorded one by one in the main menu \"Skill Evolutions\" codex, and count toward the collection here too.",
-          "レベルアップカードをすべて最大にして作ったスキル進化は、メインメニューの「スキル進化」図鑑に1つずつ記録され、ここの収集率にも含まれます。",
-          "将升级卡全部升到最高而形成的技能进化，会逐一记录在主菜单的「技能进化」图鉴中，并计入此处的收集率。");
+        C("codex.skillevo.body", "레벨업 카드를 모두 최대로 올려 만든 스킬 진화는 위 「스킬 진화」 버튼의 도감에 하나씩 기록되고, 이곳 수집률에도 들어갑니다.",
+          "Skill evolutions you create by maxing their level-up cards are recorded one by one in the \"Skill Evolutions\" codex (button above), and count toward the collection here too.",
+          "レベルアップカードをすべて最大にして作ったスキル進化は、上の「スキル進化」ボタンの図鑑に1つずつ記録され、ここの収集率にも含まれます。",
+          "将升级卡全部升到最高而形成的技能进化，会逐一记录在上方「技能进化」按钮的图鉴中，并计入此处的收集率。");
         C("codex.hint.evo1", "보스를 쓰러뜨린 뒤 무기 진화에서 이 갈래를 고르면 기록됩니다.",
           "Recorded when you choose this path in a weapon evolution after defeating a boss.",
           "ボスを倒した後の武器進化でこの系統を選ぶと記録されます。",
