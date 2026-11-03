@@ -12,6 +12,7 @@ public static partial class LocTable
 
         S("도전 모드", "Challenges", "チャレンジ", "挑战模式");
         S("영웅 · 스킨", "Heroes · Skins", "ヒーロー・スキン", "英雄 · 皮肤");
+        C("hero.window.title", "영웅", "Heroes", "ヒーロー", "英雄");     // 「영웅」 키는 스킨 등급(Epic)이라 따로
         S("튜토리얼 다시 하기", "Replay Tutorial", "チュートリアルをもう一度", "重玩教程");
         C("mode.card.daily", "매일 바뀌는 영웅과 규칙으로 하루 한 판. 모두 같은 조건에서 순위를 겨룹니다.",
           "A new hero and rule every day. Everyone plays the same setup and competes on one leaderboard.",

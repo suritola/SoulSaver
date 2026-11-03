@@ -114,7 +114,7 @@ public static class ModeHubUI
         rec.text = Loc.T(daily ? "오늘 내 최고 기록" : "relay.hub.best") + "  <color=#F5D478>" + (best > 0f ? EndlessMode.Clock(best) : "-") + "</color>";
         rec.fontSizeMin = 16f;
 
-        Button pick = UIKit.MakeButton(card, "relay.hub.pick", new Vector2(0f, -225f), new Vector2(300f, 76f), () =>
+        Button pick = UIKit.MakeButton(card, daily ? "ui.btn.start" : "relay.hub.pick", new Vector2(0f, -225f), new Vector2(300f, 76f), () =>
         {
             Close();
             if (daily) DailyChallenge.Open(root);

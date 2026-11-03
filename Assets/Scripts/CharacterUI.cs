@@ -35,7 +35,7 @@ public static class CharacterUI
             menuFx = a.AddComponent<SpecialFeedback>();
             menuFx.Init(UIKit.Font, UIKit.FontMaterial);
         }
-        UIKit.Text(win, "캐릭터", 52f, Gold, new Vector2(0f, 380f), new Vector2(600f, 70f));
+        UIKit.Text(win, "hero.window.title", 52f, Gold, new Vector2(0f, 380f), new Vector2(600f, 70f));     // 2.0.1~ 「캐릭터」 → 「영웅」 (메뉴 「영웅 · 스킨」 · 「영웅 변경」과 같은 이름)
         pointsText = UIKit.Text(win, "", 28f, Parch, new Vector2(520f, 380f), new Vector2(420f, 50f), TextAlignmentOptions.Right);
         UIKit.MakeButton(win, "닫기", new Vector2(0f, -385f), new Vector2(240f, 70f), Close, 28f);
         // 2.0.1~ 메뉴 개편: 「영웅 · 스킨」 — 스킨 상점은 이 창에서 (메인 「더 보기」에서 옮김)

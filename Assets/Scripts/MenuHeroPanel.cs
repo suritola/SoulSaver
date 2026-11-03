@@ -107,6 +107,22 @@ public static class MenuHeroPanel
         change.name = "ChangeHeroButton";
         if (!UiRules.Legacy) { UiV2.Restyle(change, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(change, "result.retry.hero"); }      // UI 개편 P0-4b: 석판 보조 버튼 · P0-6 「영웅 변경」 (결과 화면과 같은 이름)
         else MenuItemFx.Apply(change, 26f, false, false);       // 1.4.8~ 메인 메뉴와 같은 글자 버튼
+        KeepOnScreen((RectTransform)change.transform);
+    }
+
+    // 2.0.1~ 「영웅 변경」 버튼 아래 끝이 화면 아래 16 안에 들도록 패널을 올림
+    //   UI 120% · 언어를 바꿔 다시 그릴 때 초상 크기가 달라져 이름이 화면 아래에 걸리고 버튼이 화면 밖이었음 (QA 캡처)
+    static readonly Vector3[] cornersA = new Vector3[4], cornersB = new Vector3[4];
+    static void KeepOnScreen(RectTransform button)
+    {
+        Canvas cv = panel.GetComponentInParent<Canvas>();
+        if (cv == null) return;
+        RectTransform root = (RectTransform)cv.rootCanvas.transform;
+        button.GetWorldCorners(cornersA);
+        root.GetWorldCorners(cornersB);
+        float scale = Mathf.Max(0.0001f, root.lossyScale.y);
+        float gap = (cornersA[0].y - cornersB[0].y) / scale;        // 캔버스 단위
+        if (gap < 16f) panel.anchoredPosition += new Vector2(0f, 16f - gap);
     }
 
     // 메뉴 초상 칸 크기 (캔버스 단위) — 그림 1칸 = 메뉴 배경 도트 1칸과 같은 화면 화소 (정수)

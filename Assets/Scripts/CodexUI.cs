@@ -316,8 +316,8 @@ public static class CodexUI
         hint.text = Loc.T(Hints[tab]);
         bool brandTab = tab == TabBrand && brandButton != null;
         if (brandButton != null) brandButton.gameObject.SetActive(brandTab);
-        hint.rectTransform.anchoredPosition = new Vector2(brandTab ? -120f : 0f, 278f);
-        hint.rectTransform.sizeDelta = new Vector2(brandTab ? 1260f : 1500f, 56f);
+        hint.rectTransform.anchoredPosition = new Vector2(brandTab ? -100f : 0f, 278f);
+        hint.rectTransform.sizeDelta = new Vector2(brandTab ? 1300f : 1500f, 56f);
         if (tab == 0 && CurrentStage >= 0) hint.text = Loc.T("지금 장: {0}").Replace("{0}", Chapters.Title(CurrentStage)) + "  ·  " + hint.text;     // 1.1.9~ 판 안에서 열면 지금 장의 적이 맨 앞
         if (tab == TabMemory) hint.text = "<color=#F5D478>" + MemoryShards.HeaderLine + "</color>  " + hint.text;
         CodexSeen.Cat? cat = CatOf(tab);
