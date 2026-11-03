@@ -264,9 +264,9 @@ def aim_scene(w, h, demo=False, layout="wide", seed=11, logo=True):
         hx, hy = w * 0.22, h * 1.0
     k = max(hs, bs * 0.8)
     fl = max(1, round(k / 6))
-    floor(cv, fl, 0.40, seed=seed, sheet=sheet)
+    floor(cv, fl, 0.55, seed=seed, sheet=sheet)      # 2026-11-03: 작은 캡슐에서 어두워 안 읽혀 바닥 · 위쪽 밝기를 올림 (0.40 · 0.35 → 0.55 · 0.50)
     yy = np.linspace(0, 1, h)[:, None, None]
-    cv.a *= (0.35 + 0.65 * np.clip(yy * 1.4, 0, 1))
+    cv.a *= (0.50 + 0.50 * np.clip(yy * 1.4, 0, 1))
     cv.a += np.array((14, 8, 30), np.float32) * (1 - yy)
 
     # 무리: 보스 뒤 실루엣 (어둡게 0.38배 안팎)
@@ -303,7 +303,8 @@ def aim_scene(w, h, demo=False, layout="wide", seed=11, logo=True):
     crosshair(cv, wx, wy, max(1, int(bs / 9)) if layout != "small" else max(1, int(h / 110)))
 
     L.sparks(cv, rnd, 30 if layout != "small" else 10, (w * 0.4, h * 0.1, w, h), [(255, 120, 40), (255, 180, 70), (120, 230, 220)], 1.0, 2.4 * max(hs, 4) / 6)
-    cv.vignette(0.55, 0.5)
+    cv.vignette(0.42, 0.5)
+    cv.grade(contrast=1.12, sat=1.15)
 
     if logo:
         if layout == "tall":
