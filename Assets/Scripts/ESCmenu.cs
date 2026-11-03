@@ -103,7 +103,8 @@ public class ESCmenu : MonoBehaviour
     {
         if (isEscOpen || GameInput.Auto || Application.isBatchMode || StoryDirector.Playing) return;
         if (sceneStartReal < 0f || Time.realtimeSinceStartup - sceneStartReal < StartGrace) { Debug.Log("[ESCmenu] 장면 시작 직후라 일시정지 안 함: " + why); return; }
-        if (Time.timeScale == 0f || (shop != null && (shop.isShopOpen || shop.isPause))) return;
+        // 2.0.1~ 재개 카운트다운 중(시간 0)이면 일시정지를 엶 (오버레이 · 패드 분리인데 3초 뒤 그냥 흘렀음 · 카운트다운은 ESC 가 닫히면 다시 셈)
+        if ((Time.timeScale == 0f && !ResumeCountdown.Active) || (shop != null && (shop.isShopOpen || shop.isPause))) return;
         if (Hostile.Player != null && Hostile.Player.IsDying) return;      // 쓰러지는 연출 중엔 결과 화면으로 그대로
         ToggleEsc();
     }

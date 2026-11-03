@@ -116,6 +116,7 @@ public partial class CharacterKit
     IEnumerator WrGrandSlam(Transform tg)
     {
         wrSlamming = true;
+        EnermyController lifted = null;         // 2.0.1~ 뛰어든 뒤 붙잡은 적 — 중간에 끊겨도(죽음 · 사라짐) finally 에서 놓아 줌 (1.2.7 교훈: 끊기는 경로가 상태를 남기지 않게)
         try
         {
             if (player == null) yield break;
@@ -150,6 +151,7 @@ public partial class CharacterKit
             if (e != null && EnemyHold.TryTake(e, this, true))
             {
                 taken = true;
+                lifted = e;
                 EnemyHold.Raise(e, body, 2);
                 Vector3 grab = e.transform.position;
                 for (float t = 0f; t < 0.3f; t += Time.deltaTime)
@@ -174,6 +176,8 @@ public partial class CharacterKit
             //   2.0.0~ 검토: WrSlamAt 이 먼저 Release 하므로 다시 잡아야 함 (holder 없이 Raise 하면 그림자 · 정렬을 되돌릴 길이 없어 망가진 채 남았음)
             if (taken && e != null && !e.IsDead && SignatureSkills.IsEvo("wre.giantbull") && EnemyHold.TryTake(e, this, true))
             {
+                // 2.0.1~ 덮어쓰기 전에 들고 있던 적을 놓음 (덮어쓰면 먼저 잡은 적이 holder 그대로 공중에 영구히 얼어붙었음)
+                if (wrCarried != null && wrCarried != e) WrReleaseCarried(true);
                 wrCarried = e;
                 wrW = WrWeightOf(e);
                 wrGrabPos = e.transform.position;
@@ -185,9 +189,14 @@ public partial class CharacterKit
                 EnemyHold.Raise(e, body, 2);
             }
             else if (taken && e != null) EnemyHold.Release(e, this);
+            lifted = null;
             yield return new WaitForSeconds(0.3f);
         }
-        finally { wrSlamming = false; }
+        finally
+        {
+            wrSlamming = false;
+            if (lifted != null && lifted != wrCarried) EnemyHold.Release(lifted, this);
+        }
     }
 
     // 메침: 대상 공격력 800% · 둘레 7칸 충격파 300% → 가장자리 50% · 바깥으로 3.5칸 · 모래판

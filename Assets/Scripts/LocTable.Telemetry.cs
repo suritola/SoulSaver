@@ -16,7 +16,7 @@ public static partial class LocTable
         C("telemetry.summary",
           "판이 끝날 때마다 영웅 · 카드 · 결과 같은 플레이 기록을 익명으로 보내 게임 밸런스를 다듬는 데 씁니다. 이름 · SteamID · 이메일은 보내지 않습니다. 동의하지 않아도 게임은 똑같이 즐길 수 있고, 설정 > 일반에서 언제든 바꿀 수 있습니다.",
           "After each run, anonymous play records such as your hero, cards and result are sent to help balance the game. Your name, SteamID and email are never sent. The game plays exactly the same if you decline, and you can change this anytime in Settings > General.",
-          "各プレイの終了時に、英雄・カード・結果などのプレイ記録を匿名で送信し、ゲームバランスの調整に使います。名前・SteamID・メールアドレスは送信しません。同意しなくてもゲームは同じように遊べ、設定 > 一般でいつでも変更できます。",
+          "各プレイの終了時に、ヒーロー・カード・結果などのプレイ記録を匿名で送信し、ゲームバランスの調整に使います。名前・SteamID・メールアドレスは送信しません。同意しなくてもゲームは同じように遊べ、設定 > 一般でいつでも変更できます。",
           "每局结束时，将匿名发送英雄、卡牌、结果等游戏记录，用于调整游戏平衡。不会发送姓名、SteamID 或电子邮箱。即使不同意，游戏体验也完全相同，并可随时在 设置 > 常规 中更改。");
         C("telemetry.agree", "동의", "Agree", "同意する", "同意");
         C("telemetry.disagree", "동의하지 않음", "Decline", "同意しない", "不同意");

@@ -13,7 +13,7 @@ public static partial class LocTable
         A("result.bonus", "클리어 보너스 +{0}", "Clear bonus +{0}", "クリアボーナス +{0}", "通关奖励 +{0}");
         A("result.diffpoints", "포인트 ×{0}", "Points ×{0}", "ポイント ×{0}", "点数 ×{0}");
         A("result.goal.title", "다음 목표", "Next Goals", "次の目標", "下一个目标");
-        A("result.goal.hero", "영웅 · {0}", "Hero · {0}", "英雄・{0}", "英雄 · {0}");
+        A("result.goal.hero", "영웅 · {0}", "Hero · {0}", "ヒーロー・{0}", "英雄 · {0}");
         A("result.goal.mastery", "{0} 숙련", "{0} Mastery", "{0} 熟練度", "{0} 熟练度");
         A("result.goal.masteryhint", "이야기 모드를 클리어하면 +1", "+1 per Story mode clear", "ストーリーモードクリアで+1", "通关故事模式+1");
         A("result.goal.kills", "업적 · 적 3,000마리 처치", "Achievement · Defeat 3,000 enemies", "実績・敵を3,000体撃破", "成就 · 击败3,000名敌人");
@@ -21,7 +21,7 @@ public static partial class LocTable
         A("result.goal.ready", "지금 살 수 있습니다!", "Ready to buy!", "今すぐ買えます！", "现在就能购买！");
         A("result.goal.almost", "거의 다!", "Almost!", "あと少し！", "就差一点！");
         A("result.retry.same", "다시 하기", "Retry", "もう一度", "再来一次");          // 2026-10-22~ 짧게 (예전 「같은 설정으로 다시」)
-        A("result.retry.hero", "영웅 변경", "Change Hero", "英雄変更", "更换英雄");     // 예전 「영웅 바꿔 다시」
+        A("result.retry.hero", "영웅 변경", "Change Hero", "ヒーロー変更", "更换英雄");     // 예전 「영웅 바꿔 다시」
         A("result.menu", "메인 메뉴", "Main Menu", "メインメニュー", "主菜单");
     }
 }

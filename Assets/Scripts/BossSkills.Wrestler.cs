@@ -29,10 +29,12 @@ public partial class BossSkills
             p = Hostile.Player;
             if (p != null && Hostile.HurtDistance(p, at) < 2.2f + 0.2f)
             {
+                // 2.0.1~ 무적(구르기 · 피격 직후 등) 중이거나 밀리지 않는 씨름꾼(통뼈 · 모래판 · 철벽 샅바)이면 밀치지 않음 — 예전엔 피해만 막히고 4칸 밀려났음
+                bool pushable = !p.IsInvincible && !CharacterKit.HeroUnpushable;
                 Hostile.HitCircle(at, 2.2f, Capped(16f * Power));
                 Vector3 away = (Vector3)((Vector2)(p.transform.position - transform.position)).normalized * 4f;
                 Vector3 np = Hostile.ClampArena(p.transform.position + away);
-                if (!Hostile.IsWall(np)) p.transform.position = np;       // 4칸 밀쳐짐 (조작은 그대로)
+                if (pushable && !Hostile.IsWall(np)) p.transform.position = np;       // 4칸 밀쳐짐 (조작은 그대로)
             }
             yield return new WaitForSeconds(0.2f);
         }
@@ -82,6 +84,7 @@ public partial class BossSkills
             if (off.magnitude > r) continue;
             Vector2 away = off.sqrMagnitude < 0.01f ? Random.insideUnitCircle.normalized : off.normalized;
             Vector3 np = Hostile.ClampArena(p.transform.position + (Vector3)(away * 1.5f));
+            if (p.IsInvincible || CharacterKit.HeroUnpushable) continue;       // 2.0.1~ 무적 · 밀리지 않는 씨름꾼이면 밀어내지 않음 (장외 피해도 없음)
             if (!Hostile.IsWall(np)) p.transform.position = np;
             Fx.Spawn("fx_sparkle", p.transform.position, 1.6f, col, 22f);
             if (((Vector2)(p.transform.position - at)).magnitude > r)

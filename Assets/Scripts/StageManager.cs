@@ -516,8 +516,7 @@ public class StageManager : MonoBehaviour
     // 보스를 쓰러뜨리면 무기 진화 (진화할 단계가 남아 있을 때만). waitMenus: 다른 창이 닫힐 때까지 기다림
     public IEnumerator Evolution(bool waitMenus)
     {
-        int[] options = specials != null ? specials.NextEvolutionOptions() : null;
-        if (options == null) yield break;
+        if (specials == null || specials.NextEvolutionOptions() == null) yield break;
         evolving = true;
         if (waitMenus)
         {
@@ -527,6 +526,9 @@ public class StageManager : MonoBehaviour
             PlayerController pl = Hostile.Player;
             if (pl != null && pl.IsDying) { evolving = false; yield break; }
         }
+        // 2.0.1~ 선택지는 대기 뒤에 계산 — 기다리는 사이 단계가 바뀌면(영혼 릴레이 교대가 진화를 되돌림 · 다른 진화가 먼저 끝남) 옛 단계 선택지로 창이 열려 단계가 꼬였음
+        int[] options = specials != null ? specials.NextEvolutionOptions() : null;
+        if (options == null) { evolving = false; yield break; }
         // 1.5.9~ 조준 중(시간 0.5)에 열려도 조준을 거둔 뒤 시간을 잡음 — 창 안에서 우클릭을 떼면 닫은 뒤 느린 시간 · 조준 상태에 갇혔음
         PlayerController aimer = Hostile.Player;
         if (aimer != null) aimer.CancelSkill();
@@ -546,7 +548,17 @@ public class StageManager : MonoBehaviour
         Hints.Show("soultree_btn", "영혼 조각이 모이면 [{UPGRADE}]로 영혼 트리를 열어 무기 · 필살기 · 생존 · 영혼 칸을 배우세요.");
     }
 
+    // 2.0.1~ 보스를 잡고 진화 → 보상 → 각인 창이 이어지는 동안 (ResumeCountdown 이 사이사이 3초를 끼우지 않게 · 지켜보기 판단에만 씀 — 남아도 카운트다운이 빠질 뿐 멈추지 않음)
+    public bool RewardChain { get; private set; }
+
     IEnumerator EvolutionThenPortal(string banner, float time, bool evolve)
+    {
+        RewardChain = true;
+        try { yield return EvolutionThenPortalBody(banner, time, evolve); }
+        finally { RewardChain = false; }
+    }
+
+    IEnumerator EvolutionThenPortalBody(string banner, float time, bool evolve)
     {
         int fromStage = CurrentStage;
         if (evolve) yield return Evolution(true);

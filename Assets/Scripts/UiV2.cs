@@ -35,7 +35,7 @@ public static class UiV2
         br.anchorMin = Vector2.zero; br.anchorMax = Vector2.one;
         br.offsetMin = br.offsetMax = Vector2.zero;
         br.SetAsLastSibling();
-        blocker.GetComponent<Image>().color = UiTokens.Scrim(false);
+        blocker.GetComponent<Image>().color = UiTokens.Scrim(true);      // 2.0.1~ 0.78 → 0.92: 뒤 메뉴의 포인트 · 버전 · 메뉴 글자가 창 테두리에 반쯤 걸려 보였음 (일시정지 막은 그대로 0.78)
         RectTransform win = UIKit.Rect("Window", br, Vector2.zero, size);
         Slab(win, "ui2_panel", UiTokens.Panel);
         Sprite rune = UiRules.Sprite("ui2_rune");

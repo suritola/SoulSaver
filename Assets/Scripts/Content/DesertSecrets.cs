@@ -31,7 +31,6 @@ public class DesertSecrets : MonoBehaviour
     public static DesertSecrets Instance { get; private set; }
     public static int DailyBonusScore { get; private set; }        // 이번 판 일일 도전 보너스 (DailyChallenge.Submit 이 순위 점수에 더함)
     public static string ResultLine { get; private set; } = "";    // 결과 화면 축하 한 줄 (MenuExtras.InstallGameOver)
-    static readonly HashSet<string> rewarded = new HashSet<string>();
 
     // 무한 모드 사막 · 진짜 플레이만 (모드 플래그는 아직 릴레이 · 역류가 없어 무한 모드 조건으로)
     public static bool On => GameMode.IsEndless && !TutorialRun.Active && !GameInput.Auto && !GameInput.TrailerRunning && !Demo.On && !Application.isBatchMode;
@@ -47,7 +46,6 @@ public class DesertSecrets : MonoBehaviour
     {
         DailyBonusScore = 0;
         ResultLine = "";
-        rewarded.Clear();
         zones.Clear();
         if (Instance != null) Destroy(Instance.gameObject);
         if (!On) return;
@@ -194,9 +192,17 @@ public class DesertSecrets : MonoBehaviour
         else
         {
             // 이미 해금: 같은 장치가 작은 보상 (판당 한 번)
-            if (rewarded.Add(s.key))
+            //   2.0.1~ 받은 표시를 판 안 수(RunCounters)에 — 이어하기 저장(RunSave.Data.counters)에 같이 남음.
+            //   예전엔 Begin 마다 비는 HashSet 이라 풀고 나가서 이어하기를 되풀이하면 영혼 조각이 끝없이 나왔음 (옛 저장은 빈 글 = 아직 안 받음)
+            string got = "secret." + s.key + ".rewarded";
+            if (RunCounters.Get(got) == 0)
             {
-                if (ModeRun.Reflux) Cache<Point>.Get?.AddPoint(100);        // 2.0.0~ 역류는 영혼 조각이 없어 포인트로 (쌓는 길을 끔)
+                RunCounters.Add(got);
+                if (ModeRun.Reflux)
+                {
+                    Cache<Point>.Get?.AddPoint(100);        // 2.0.0~ 역류는 영혼 조각이 없어 포인트로 (쌓는 길을 끔)
+                    Notice.Toast(NoticeIcon.Star, Loc.T("secret.toast.points").Replace("{0}", "100"), 3.5f);      // 2.0.1~ 예전엔 알림 없이 포인트만 올라 푼 줄 몰랐음
+                }
                 else
                 {
                     SoulShards.Add(ShardReward, at, true);
@@ -438,8 +444,7 @@ public class DesertSecrets : MonoBehaviour
                     pushing = true;
                 }
                 Vector2 want = bull + n * BodyR;
-                p.transform.position += (Vector3)(want - cc);
-                cc = want;
+                if (TryMove(p, want - cc)) cc = want;      // 2.0.1~ 벽 쪽이면 떼어 내지 않음 (잠깐 겹쳐 보여도 벽 속에 갇히는 것보다 나음)
             }
             if (Mathf.Abs(lastDir.x) > 0.2f) face = lastDir.x > 0f ? 1 : -1;
 
@@ -468,8 +473,7 @@ public class DesertSecrets : MonoBehaviour
             {
                 float step = Mathf.Min(pushBack, 14f * dt);
                 pushBack -= step;
-                Vector3 np = Hostile.ClampArena(p.transform.position + (Vector3)(backDir * step));
-                p.transform.position = np;
+                if (!TryMove(p, backDir * step)) pushBack = 0f;     // 2.0.1~ 벽 · 맵 끝에 닿으면 되밂을 거기서 멈춤
             }
             if (lurch > 0f)
             {
@@ -485,6 +489,16 @@ public class DesertSecrets : MonoBehaviour
             prevCc = cc;
             prevOk = true;
             Place(tele ? Mathf.Sin(anim * 60f) * 0.08f : 0f);
+        }
+
+        // 2.0.1~ 플레이어 옮기기: transform 을 바로 옮겨 물리 충돌을 건너뛰므로 (ClampArena 는 맵 끝만 봄)
+        //   돌 원 둘레에 벽 · 지형 조각이 있으면 황소 떼어 내기 · 되밂이 플레이어를 벽 속으로 넣었음 → 도착 발밑이 벽 · 맵 밖이면 옮기지 않음
+        static bool TryMove(PlayerController p, Vector2 delta)
+        {
+            Vector2 to = p.ContactCenter + delta;
+            if (Hostile.WallNear(to, 0.3f) || !Hostile.InArena(to)) return false;
+            p.transform.position += (Vector3)delta;
+            return true;
         }
 
         void Place(float shake = 0f)
@@ -773,8 +787,8 @@ public class DesertSecrets : MonoBehaviour
 
     // ================================================================= 5. 사진사: 북적이는 장면 (조건형 · 화면 안 적을 살려 둔 채 12초)
     //   고정 흔적: 빈 삼각대 (렌즈 반사광이 3초마다 반짝) — 판정 장소가 아님
-    //   조건: 3:00 이후, 카메라 화면 안(1칸 안쪽) 살아 있는 일반 적 수 >= N (N = 한 화면 최대 수 - 4, 12~18) 인 동안 노출 시간이 쌓여 12초
-    //         기준 아래면 0.5배속으로 줄어듦 · 개발자 · 엄마전(잡몹 없음)은 판정 멈춤
+    //   조건: 3:00 이후, 카메라 화면 안(1칸 안쪽) 살아 있는 일반 적 수 >= N (N = 한 화면 최대 수 - 9, 7~12 · 2.0.1~) 인 동안 노출 시간이 쌓여 12초
+    //         기준 아래면 0.25배속으로 줄어듦 (2.0.1~) · 개발자 · 엄마전(잡몹 없음)은 판정 멈춤
     //   달성: 화면 가장자리 밖 가까운 곳에서 플래시 「찰칵!」 -> 그쪽에 삼각대와 사진사 -> 가까이 가면 해금 (30초 안에 못 가면 처음부터)
     internal sealed class CrowdSecret : Secret
     {
@@ -798,9 +812,12 @@ public class DesertSecrets : MonoBehaviour
             flickAt = Time.time + 1f;
         }
 
-        // 기준 수: 지금 한 화면 상한 - 6 (10 ~ 16)
-        //   2.0.0 검토: 3~15분이 너무 빡빡 (상한의 75~82%를 화면 안에 12초) — 자동 조작 실측으로 다시 볼 것
-        const int ThresholdBelow = 6, ThresholdMin = 10, ThresholdMax = 16;
+        // 기준 수: 지금 한 화면 상한 - 9 (7 ~ 12)
+        //   2.0.0 검토: 3~15분이 너무 빡빡 (상한의 75~82%를 화면 안에 12초)
+        //   2.0.1~ 완화: 화면 안은 상한의 일부만 보이고 (나머지는 화면 밖에서 다가오는 중) 처치하면 바로 줄어 기준을 12초 붙들기 어려움
+        //     → 상한 - 9 (상한 16~22 기준 약 45~55%) · 최대 12 로 낮추고, 기준 아래로 떨어질 때 줄어드는 속도를 0.5 → 0.25배 (잠깐 줄어도 쌓은 시간이 거의 남음)
+        const int ThresholdBelow = 9, ThresholdMin = 7, ThresholdMax = 12;
+        const float DecayRate = 0.25f;
         static int Threshold() => Mathf.Clamp(EnemySpawner.MaxAliveNow - ThresholdBelow, ThresholdMin, ThresholdMax);
 
         public override void Tick(PlayerController p, float dt)
@@ -820,7 +837,7 @@ public class DesertSecrets : MonoBehaviour
             if (em != null && em.NoMobs) return;                 // 개발자 · 엄마전: 판정 멈춤 (노출 시간 유지)
             int n = CountInView();
             if (n >= Threshold()) exposure = Mathf.Min(Need, exposure + CheckEvery);
-            else exposure = Mathf.Max(0f, exposure - CheckEvery * 0.5f);
+            else exposure = Mathf.Max(0f, exposure - CheckEvery * DecayRate);
             Fade();
             if (exposure >= Need) host.StartCoroutine(Appear(p));
         }
@@ -1049,7 +1066,8 @@ public class DesertSecrets : MonoBehaviour
         public override void Tick(PlayerController p, float dt)
         {
             if (solved || dyingDone || !p.IsDying) return;
-            if (CharacterData.Selected == hero) return;         // 기획: 「장의사가 아닌 영웅」 (장의사 본인은 해금 대상이 아님)
+            // 2.0.1~ 장의사 본인도 판정 — 예전엔 여기서 끊어 「그 영웅으로 다시 풀면」 주는 전설 스킨(미완성 묘비)을 얻을 길이 없었음
+            //   (장의사로 풀면 Solve 의 이미 해금 갈래 → UnlockLegend · 대사는 Reveal 의 secret.say.undertaker.self)
             dyingDone = true;                                   // 쓰러지는 순간 위치를 한 번만 봄
             if (Vector2.Distance(p.transform.position, pos) > DeathR) return;
             RunCounters.Add("secret.undertaker");

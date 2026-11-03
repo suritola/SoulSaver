@@ -31,7 +31,7 @@ public static partial class LocTable
         K("다시 빌드…", "Rebuilding…", "再ビルド中…", "重新构建…");
         C("devown.popup.title", "오류", "Error", "エラー", "错误");
         C("devown.popup.ok", "확인!", "OK!", "OK！", "确定！");
-        C("devown.popup.msg0", "영웅이 너무 강합니다. 너프가 필요합니다.", "Hero is too strong. Nerf required.", "英雄が強すぎます。ナーフが必要です。", "英雄太强了，需要削弱。");
+        C("devown.popup.msg0", "영웅이 너무 강합니다. 너프가 필요합니다.", "Hero is too strong. Nerf required.", "ヒーローが強すぎます。ナーフが必要です。", "英雄太强了，需要削弱。");
         C("devown.popup.msg1", "프로그램이 응답하지 않습니다.", "The program is not responding.", "プログラムは応答していません。", "程序未响应。");
         C("devown.popup.msg2", "알 수 없는 오류가 발생했습니다.", "An unknown error has occurred.", "不明なエラーが発生しました。", "发生了未知错误。");
         C("devown.stack", "스택", "Stack", "スタック", "栈");
@@ -82,15 +82,15 @@ public static partial class LocTable
         // ================================================================= 도감 · 일시정지 · 보스바
         C("codex.dev.desc2", "15분까지 보스를 하나라도 쓰러뜨렸으면, 15분부터 차례로 깨어나는 왕들을 모두 쓰러뜨린 뒤 강림합니다. 영웅들의 최종 진화 필살기를 10초에 한 번 쓰고, 체력이 닳을수록 1초에 한 번까지 빨라집니다. 사이사이 「라이브 코딩」 · 「범위 선택」 · 「빌드 실패」를 쓰고, 체력 66% 아래에서 「오류 창」 · 「로딩 중…」, 33% 아래에서 「스택 오버플로」가 더해집니다. 싸우는 동안 약한 적만 1초에 4마리씩(최대 30) 나옵니다.",
           "If you've defeated at least one boss by 15:00, it descends after you defeat every king that awakens in turn from 15:00 on. It uses the heroes' final-evolution Ultimates every 10s, speeding up to once per second as its health drops. In between it uses Live Coding, Select & Delete and Build Failed; below 66% health it adds Error Popup and Loading…, and below 33% Stack Overflow. During the fight only weak enemies appear, 4 per second (up to 30).",
-          "15分までにボスを1体でも倒していれば、15分から順に目覚める王たちを全て倒した後に降臨します。英雄たちの最終進化必殺技を10秒に1回使い、体力が減るほど速まり、最後は1秒に1回になります。合間に「ライブコーディング」・「範囲選択」・「ビルド失敗」を使い、体力66%未満で「エラーダイアログ」・「読み込み中…」、33%未満で「スタックオーバーフロー」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。",
+          "15分までにボスを1体でも倒していれば、15分から順に目覚める王たちを全て倒した後に降臨します。ヒーローたちの最終進化必殺技を10秒に1回使い、体力が減るほど速まり、最後は1秒に1回になります。合間に「ライブコーディング」・「範囲選択」・「ビルド失敗」を使い、体力66%未満で「エラーダイアログ」・「読み込み中…」、33%未満で「スタックオーバーフロー」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。",
           "若在15分钟前至少击败过一名首领，击败从15分钟起依次苏醒的所有王者后便会降临。每10秒使用一次英雄们的最终进化必杀技，生命越低越快，最终每1秒一次。其间使出「现场编程」、「框选删除」、「构建失败」，生命低于66%时加入「错误弹窗」和「加载中…」，低于33%时加入「栈溢出」。战斗期间只出现弱小敌人，每秒4名（最多30名）。");
         C("codex.mom.desc2", "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면 강림합니다. 체력 · 피해 · 이동 속도가 개발자의 2배입니다. 영웅들의 필살기를 5초에 한 번, 체력이 닳을수록 1초에 한 번까지 쓰고, 사이사이 「슬리퍼 투척」 · 「효자손」 · 「타임 세일!」을 씁니다. 체력 75% 아래에서 「빗자루질」, 50% 아래에서 「엄친아」, 25% 아래에서 「불 끄고 자!」가 더해집니다. 싸우는 동안 약한 적만 1초에 4마리씩(최대 30) 나옵니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
           "Descends once you gather 500 souls after defeating the Developer. Her health, damage and movement speed are twice the Developer's. She uses the heroes' Ultimates every 5s, speeding up to once per second as her health drops, with Slipper Toss, Back Scratcher and Time Sale! in between. Below 75% health she adds Broom Sweep, below 50% Mom's Friend's Son, and below 25% Lights Out!. During the fight only weak enemies appear, 4 per second (up to 30). Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
-          "開発者を倒した後、魂を500個集めると降臨します。体力・ダメージ・移動速度は開発者の2倍です。英雄たちの必殺技を5秒に1回、体力が減るほど速く最後は1秒に1回使い、合間に「スリッパ投げ」・「孫の手」・「タイムセール！」を使います。体力75%未満で「ほうき掃き」、50%未満で「ママ友の息子」、25%未満で「電気消して寝なさい！」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。開発者とママを両方倒すと、エンドレスをクリアします。",
+          "開発者を倒した後、魂を500個集めると降臨します。体力・ダメージ・移動速度は開発者の2倍です。ヒーローたちの必殺技を5秒に1回、体力が減るほど速く最後は1秒に1回使い、合間に「スリッパ投げ」・「孫の手」・「タイムセール！」を使います。体力75%未満で「ほうき掃き」、50%未満で「ママ友の息子」、25%未満で「電気消して寝なさい！」が加わります。戦闘中は弱い敵だけが1秒に4体ずつ（最大30体）現れます。開発者とママを両方倒すと、エンドレスをクリアします。",
           "击败开发者后收集500个灵魂即会降临。生命、伤害和移动速度都是开发者的2倍。每5秒使用一次英雄们的必杀技，生命越低越快，最终每1秒一次，其间使出「拖鞋飞袭」、「痒痒挠」、「限时抢购！」。生命低于75%时加入「扫帚横扫」，低于50%加入「别人家的孩子」，低于25%加入「关灯睡觉！」。战斗期间只出现弱小敌人，每秒4名（最多30名）。击败开发者和妈妈即可通关无尽模式。");
         C("codex.dev.secret", "15분까지 보스를 하나라도 쓰러뜨렸으면, 15분부터 깨어나는 왕들을 모두 쓰러뜨린 뒤 강림합니다. 영웅들의 최종 진화 필살기에 「라이브 코딩」 같은 자기 기술을 섞어 씁니다.",
           "If you've defeated at least one boss by 15:00, it descends after you defeat every king that awakens from 15:00 on. It mixes the heroes' final-evolution Ultimates with moves of its own, like Live Coding.",
-          "15分までにボスを1体でも倒していれば、15分から目覚める王たちを全て倒した後に降臨します。英雄たちの最終進化必殺技に「ライブコーディング」などの自分の技を織り交ぜます。",
+          "15分までにボスを1体でも倒していれば、15分から目覚める王たちを全て倒した後に降臨します。ヒーローたちの最終進化必殺技に「ライブコーディング」などの自分の技を織り交ぜます。",
           "若在15分钟前至少击败过一名首领，击败从15分钟起苏醒的所有王者后便会降临。会把英雄们的最终进化必杀技与「现场编程」等自己的招式混合使用。");
         C("codex.mom.secret", "개발자를 쓰러뜨린 뒤 영혼 500개를 거두면 강림합니다. 체력 · 피해 · 이동 속도가 개발자의 2배입니다. 개발자와 엄마를 모두 쓰러뜨리면 무한 모드를 클리어합니다.",
           "Descends once you gather 500 souls after defeating the Developer. Her health, damage and movement speed are twice the Developer's. Defeat both the Developer and the Developer's Mom to clear Endless Mode.",
@@ -99,12 +99,12 @@ public static partial class LocTable
         C("codex.dev.tip",
           "영웅들의 최종 진화 필살기를 흉내 내고, 사이사이 자기 기술을 씁니다.\n· 라이브 코딩 — 띄어쓰기 자리가 빈틈 · 초록 「//」 줄은 안전 · 멈춰 깜빡인 줄은 되돌아옴\n· 범위 선택 — 점선 사각형 밖으로\n· 빌드 실패 — 막대가 차기 전에 멀리\n· 오류 창 — 「확인」 버튼 위나 창 밖 (체력 66% 아래)\n· 로딩 중… — 도는 빈자리로 빠져나가기 (66% 아래)\n· 스택 오버플로 — 쓰러지는 쪽에서 비켜서기 (33% 아래)",
           "Mimics the heroes' final-evolution ultimates, using moves of its own in between.\n· Live Coding — the spaces are the gaps · green // lines are safe · a line that stops and flickers comes back\n· Select & Delete — get out of the dotted rectangle\n· Build Failed — get away before the bar fills\n· Error Popup — stand on OK or leave the window (below 66% health)\n· Loading… — escape through the spinning gap (below 66%)\n· Stack Overflow — step aside from where it topples (below 33%)",
-          "英雄たちの最終進化必殺技を真似し、合間に自分の技を使います。\n・ライブコーディング — 空白の位置が隙間 ・ 緑の「//」行は安全 ・ 止まって点滅した行は戻ってくる\n・範囲選択 — 点線の四角の外へ\n・ビルド失敗 — バーが満ちる前に離れる\n・エラーダイアログ — 「OK」ボタンの上かウィンドウの外へ（体力66%未満）\n・読み込み中… — 回る隙間から抜け出す（66%未満）\n・スタックオーバーフロー — 倒れる方向から退く（33%未満）",
+          "ヒーローたちの最終進化必殺技を真似し、合間に自分の技を使います。\n・ライブコーディング — 空白の位置が隙間 ・ 緑の「//」行は安全 ・ 止まって点滅した行は戻ってくる\n・範囲選択 — 点線の四角の外へ\n・ビルド失敗 — バーが満ちる前に離れる\n・エラーダイアログ — 「OK」ボタンの上かウィンドウの外へ（体力66%未満）\n・読み込み中… — 回る隙間から抜け出す（66%未満）\n・スタックオーバーフロー — 倒れる方向から退く（33%未満）",
           "模仿英雄们的最终进化必杀技，其间穿插自己的招式。\n· 现场编程 — 空格处就是缝隙 · 绿色「//」行是安全的 · 停下闪烁的那一行会折返\n· 框选删除 — 离开虚线方框\n· 构建失败 — 进度条填满前远离\n· 错误弹窗 — 站在「确定」按钮上或离开窗口（生命低于66%）\n· 加载中… — 从旋转的缺口钻出去（低于66%）\n· 栈溢出 — 避开它倒下的方向（低于33%）");
         C("codex.mom.tip",
           "영웅들의 필살기를 흉내 내고, 사이사이 엄마만의 기술을 씁니다.\n· 슬리퍼 투척 — 그어진 선에서 비켜서기 · 땅에 맞으면 한 번 더 튈 수 있음\n· 효자손 — 부채꼴 밖이나 엄마 등 뒤로\n· 타임 세일! — 그어 둔 길 위에 서 있지 않기\n· 빗자루질 — 빗자루 사이 빈틈으로 (체력 75% 아래)\n· 엄친아 — 메달은 쏴서 깨뜨릴 수 있음 (50% 아래)\n· 불 끄고 자! — 불빛 안에서는 가만히, 아니면 불빛 밖으로 (25% 아래)",
           "Mimics the heroes' ultimates, using moves of her own in between.\n· Slipper Toss — step off the drawn line · it can bounce once off the ground\n· Back Scratcher — get outside the fan or behind her\n· Time Sale! — don't stand on the route she marks\n· Broom Sweep — slip through the gap in the broom (below 75% health)\n· Mom's Friend's Son — the medals can be shot down (below 50%)\n· Lights Out! — hold still inside the light, or leave it (below 25%)",
-          "英雄たちの必殺技を真似し、合間にママだけの技を使います。\n・スリッパ投げ — 引かれた線から退く ・ 地面に当たるともう一度跳ねることがある\n・孫の手 — 扇形の外かママの背後へ\n・タイムセール！ — 描かれた道の上に立たない\n・ほうき掃き — ほうきの隙間を抜ける（体力75%未満）\n・ママ友の息子 — メダルは撃って壊せる（50%未満）\n・電気消して寝なさい！ — 光の中ではじっと、さもなくば光の外へ（25%未満）",
+          "ヒーローたちの必殺技を真似し、合間にママだけの技を使います。\n・スリッパ投げ — 引かれた線から退く ・ 地面に当たるともう一度跳ねることがある\n・孫の手 — 扇形の外かママの背後へ\n・タイムセール！ — 描かれた道の上に立たない\n・ほうき掃き — ほうきの隙間を抜ける（体力75%未満）\n・ママ友の息子 — メダルは撃って壊せる（50%未満）\n・電気消して寝なさい！ — 光の中ではじっと、さもなくば光の外へ（25%未満）",
           "模仿英雄们的必杀技，其间穿插妈妈专属的招式。\n· 拖鞋飞袭 — 离开画出的线 · 落地后可能再弹一次\n· 痒痒挠 — 躲到扇形外或妈妈身后\n· 限时抢购！ — 别站在她画好的路线上\n· 扫帚横扫 — 从扫帚的缝隙钻过去（生命低于75%）\n· 别人家的孩子 — 奖牌可以打碎（低于50%）\n· 关灯睡觉！ — 在光里一动不动，或者走出光外（低于25%）");
         C("codex.dev.rule", "체력이 줄수록 필살기를 더 자주 쓰고 새 기술이 더해지며, 결계 게이지가 차면 결계를 펼칩니다.",
           "As its health drops it uses ultimates more often and adds new moves, and it opens its barrier when the barrier gauge fills.",

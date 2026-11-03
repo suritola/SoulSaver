@@ -185,11 +185,13 @@ public partial class CharacterKit
     }
 
     // 선분 근처(폭 width) 적에게 한 번씩
+    readonly List<GameObject> fmLineTargets = new List<GameObject>(32);
     void FmLineDamage(Vector3 a, Vector3 b, float width, float dmg, Vector2 dir)
     {
         fmTmp.Clear();
         Specials.Overlap((a + b) * 0.5f, Vector3.Distance(a, b) * 0.5f + width + 1f, fmHits);
-        List<GameObject> targets = new List<GameObject>();
+        List<GameObject> targets = fmLineTargets;       // 2.0.1~ 빌린 목록 (쇠공 · 산사태가 프레임마다 부를 때 새 목록을 만들던 것)
+        targets.Clear();
         for (int i = 0; i < fmHits.Count; i++)
         {
             Collider2D c = fmHits[i];
@@ -198,6 +200,13 @@ public partial class CharacterKit
             if (c.TryGetComponent(out EnermyController e) && (e.holder != null || e.IsDead)) continue;
             targets.Add(c.gameObject);
         }
-        foreach (GameObject g in targets) if (g != null) Specials.Damage(g, dmg, dir, 1f);
+        // 피해 중에 다시 불려도(처치 효과 등) 목록이 꼬이지 않게 뒤에서부터 꺼내며 비움
+        for (int i = targets.Count - 1; i >= 0; i--)
+        {
+            if (i >= targets.Count) continue;
+            GameObject g = targets[i];
+            targets.RemoveAt(i);
+            if (g != null) Specials.Damage(g, dmg, dir, 1f);
+        }
     }
 }

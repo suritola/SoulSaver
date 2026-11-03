@@ -24,12 +24,25 @@ public static partial class LocTable
         C("reflux.prep.go", "역류 시작", "Begin Reflux", "逆流開始", "开始逆流");
         C("reflux.prep.nosave", "역류는 중간 저장되지 않습니다", "Reflux runs are not saved mid-run", "逆流は途中セーブされません", "逆流不会中途存档");
         C("reflux.prep.thishero", "이 영웅", "this hero", "この英雄", "该英雄");
+        // 2.0.1~ 남은 영혼 설명 · 막힌 1차 무기 · 해금 조건 · 감독 준비 실패
+        C("reflux.prep.spirit", "남은 영혼 = 클리어할 때 아직 쓰지 않은 잃기 수 (1분마다 하나씩 줄어 빨리 깰수록 많음)",
+          "Spirits left = losses you haven't used when you clear (one is spent every minute, so faster clears keep more)",
+          "残りの魂 = クリア時にまだ使っていない喪失の数（1分ごとに1つ減るので、早くクリアするほど多い）",
+          "剩余灵魂 = 通关时尚未用掉的放弃次数（每分钟用掉一个，通关越快剩得越多）");
+        C("reflux.prep.formblocked", "「일필」은 도형을 닫지 않아 「지구본」을 1차 무기로 고를 수 없습니다",
+          "\"Single Stroke\" never closes shapes, so \"Globe\" can't be your first weapon",
+          "「一筆」は図形を閉じないため、「地球儀」を第一武器に選べません",
+          "“一笔”不会闭合图形，因此无法选择“地球仪”作为一阶武器");
+        C("reflux.hub.locked", "무한 모드에서 개발자를 쓰러뜨리면 열립니다", "Unlocks after defeating the Developer in Endless Mode", "エンドレスモードで開発者を倒すと解放", "在无尽模式中击败开发者后解锁");
+        C("reflux.fail.title", "역류를 준비하지 못했습니다", "Couldn't prepare Reflux", "逆流の準備に失敗しました", "逆流准备失败");
+        C("reflux.fail.sub", "메인 메뉴로 돌아갑니다. 다시 시작해 주세요", "Returning to the main menu. Please start again.", "メインメニューに戻ります。もう一度開始してください", "将返回主菜单，请重新开始");
 
         // ---------------- 판 안 HUD · 알림
         C("reflux.banner", "역류 — 시간이 거꾸로 흐른다", "Reflux — time flows backward", "逆流 — 時間が逆に流れる", "逆流 — 时间倒流");
         C("reflux.banner.sub", "1분마다 힘을 하나씩 내려놓고, 적도 함께 약해진다", "Give up a power every minute — the enemies weaken too", "1分ごとに力を手放す。敵も弱くなる", "每分钟放弃一项力量，敌人也随之变弱");
         C("reflux.hud.time", "기록", "Time", "記録", "记录");
         C("reflux.hud.lost", "잃기 {0}/{1}", "Lost {0}/{1}", "喪失 {0}/{1}", "放弃 {0}/{1}");
+        C("reflux.hud.spirit", "남은 영혼 {0}", "Spirits {0}", "残りの魂 {0}", "剩余灵魂 {0}");
         C("reflux.hud.boss", "보스 {0}/{1}", "Boss {0}/{1}", "ボス {0}/{1}", "首领 {0}/{1}");
         C("reflux.boss.arrive", "{0} 강림!", "{0} descends!", "{0}が降臨！", "{0}降临！");
 
@@ -72,7 +85,7 @@ public static partial class LocTable
         C("contract.rf.keepEvo.name", "끝까지 지킨 진화", "Evolution Kept", "守り抜いた進化", "守住的进化");
         C("contract.rf.keepEvo.cond", "역류에서 무기 진화를 리치 왕까지 하나도 잃지 않기", "Lose no weapon evolution until the Lich King in Reflux", "逆流でリッチキングまで武器進化を一つも失わない", "在逆流中直到巫妖王都不失去任何武器进化");
         C("contract.rf.nakedNoHit.name", "맨몸의 춤", "Dance of the Bare", "素手の舞", "赤手之舞");
-        C("contract.rf.nakedNoHit.cond", "역류에서 맨몸으로 처음의 슬라임을 맞지 않고 쓰러뜨리기", "Defeat the First Slime bare-handed without being hit in Reflux", "逆流で素手のまま最初のスライムを被弾せず倒す", "在逆流中赤手空拳无伤击败最初的史莱姆");
+        C("contract.rf.nakedNoHit.cond", "역류에서 처음의 슬라임이 나온 뒤 한 대도 맞지 않고 쓰러뜨리기", "In Reflux, defeat the First Slime without taking any hit after it appears", "逆流で最初のスライムが現れてから一度も被弾せずに倒す", "在逆流中，最初的史莱姆出现后不受任何伤害将其击败");      // 2.0.1~ 판정(슬라임이 나온 뒤 어떤 피해든)에 맞춤
         C("contract.rf.spirit3.name", "아껴 둔 영혼", "Spirits Saved", "取っておいた魂", "留存的灵魂");
         C("contract.rf.spirit3.cond", "역류를 남은 영혼 3 이상으로 클리어하기", "Clear Reflux with 3 or more Spirits left", "残りの魂3以上で逆流をクリアする", "以3个以上剩余灵魂通关逆流");
     }

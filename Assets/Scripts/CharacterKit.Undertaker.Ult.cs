@@ -165,7 +165,7 @@ public partial class CharacterKit
         for (int i = 0; i < spots.Count; i++) Fx.Spawn("fx_bury", spots[i], 2.6f, Color.white, 12f, 0f, 16);
         foreach (FxAnim a in pits) if (a != null) Destroy(a.gameObject);
         utFall.Clear();
-        Hostile.Shake(0.3f);
+        if (!Impact.UltRecent) Hostile.Shake(0.3f);       // 2.0.1~ 메아리 장례로 1초 안에 두 번째면 큰 흔들림 없이 소리만
         Play("thump", 0.8f, 0.5f);
         Impact.Hit(ImpactTier.Ult, me, Vector2.down);            // 일제 매장 순간 한 번 (종 순간이 아님)
         RunCounters.Both("bury", killed);

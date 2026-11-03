@@ -21,7 +21,7 @@ public partial class SignatureSkills
     public static float WrLassoCooldown => Instance != null ? Mathf.Max(1f, 4f - 0.5f * (Instance.L("wr.lasso") - 1)) : 4f;
     public static bool WrParade => Instance != null && Instance.IsWr && Time.time < Instance.paradeUntil;
 
-    float paradeUntil, bellyGiantCount, rushAt, wrLastHurt, wrGritAt, wrShieldPool, wrCheerAt;
+    float paradeUntil, bellyGiantCount, rushAt, wrLastHurt, wrGritAt, wrShieldPool, wrCheerAt, wrGritCarryEnd;
     int wrShieldLayers;
 
     // 던질 때 피해 배율: 기술 연결(연결당) · 꽃가마(천하장사 뒤 5초)
@@ -69,7 +69,8 @@ public partial class SignatureSkills
         if (bellyGiantCount % 3 != 0) return;
         float d = Atk * V(lv, 3f, 1f) * P("wr.giant");
         if (boss != null) Deal(boss, d, Vector3.up, 0.5f);
-        Circle(bossAt, 4.5f * Fs("wr.giant"), d * 0.4f, 3f, c => { if (c != null && c.gameObject != boss) { } });
+        // 2.0.1~ 둘레 충격은 보스 말고 다른 적에게만 (예전엔 Circle 이 보스까지 쳐서 보스가 두 번 맞았음)
+        Circle(bossAt, 4.5f * Fs("wr.giant"), 0f, 0f, c => { if (c != null && c.gameObject != boss) Deal(c.gameObject, d * 0.4f, (c.transform.position - bossAt).normalized, 3f); });
         Fx.Spawn("fx_shock", bossAt, 9f * Fs("wr.giant"), Tint("wr.giant", new Color(1f, 0.8f, 0.4f, 0.8f)), 18f);
         Flair("wr.giant", bossAt, 4f, EvoGold);
         Hostile.Shake(0.25f);
@@ -117,9 +118,8 @@ public partial class SignatureSkills
     {
         if (Sp != null && Sp.Has(SpecialAbilities.KitSturdyBone) && player != null)
         {
-            bool touching = false;
-            foreach (Collider2D c in Specials.Overlap(player.transform.position, 1.8f, hits)) if (c != null && c.CompareTag("enermy")) { touching = true; break; }
-            if (touching) dmg *= Sp.IsEvolved(SpecialAbilities.KitSturdyBone) ? 0.82f : 0.9f;
+            // 2.0.1~ 적 몸통에 부딪혀 받는 피해만 (예전엔 곁에 적만 있으면 탄 · 장판까지 모든 피해를 줄였음)
+            if (EnermyController.ContactHitting) dmg *= Sp.IsEvolved(SpecialAbilities.KitSturdyBone) ? 0.82f : 0.9f;
         }
         if (wrShieldPool > 0f && dmg > 0f)
         {
@@ -135,6 +135,7 @@ public partial class SignatureSkills
     void WrHurt(float taken)
     {
         if (taken > 0f) { wrLastHurt = Time.time; wrGritAt = Time.time + 2f; }
+        if (Kit != null) Kit.WrCounterHurt();       // 2.0.1~ 되치기는 실제로 맞았을 때만 (피해 배율을 읽기만 해도 발동하던 것)
     }
 
     float WrRate()
@@ -152,6 +153,8 @@ public partial class SignatureSkills
         bool carrying = k.WrCarrying;
         // 끈기: 적을 들고 있는 동안 맞지 않고 2초가 지날 때마다 보호막이 한 겹 (최대 2겹)
         int lg = L("wr.grit");
+        // 2.0.1~ 들기 시작부터 2초를 채워야 첫 겹 (예전엔 wrGritAt 이 지난 값이라 들자마자 생겼음)
+        if (!carrying) wrGritAt = Mathf.Max(wrGritAt, Time.time + 2f);
         if (lg > 0 && carrying)
         {
             if (Time.time >= wrGritAt && wrShieldLayers < 2)
@@ -162,7 +165,9 @@ public partial class SignatureSkills
                 Fx.Spawn("fx_sparkle", player.transform.position, 2f, new Color(0.7f, 0.8f, 1f), 22f);
             }
         }
-        else if (!carrying && wrShieldLayers > 0 && Time.time - wrLastHurt > 6f && lg <= 0) { wrShieldLayers = 0; wrShieldPool = 0f; }
+        // 2.0.1~ 내려놓고 6초 지나면 보호막이 사라짐 (예전 조건 lg <= 0 은 끈기가 있으면 늘 거짓이라 영영 남았음)
+        else if (!carrying && wrShieldLayers > 0 && Time.time - wrLastHurt > 6f && Time.time - wrGritCarryEnd > 6f) { wrShieldLayers = 0; wrShieldPool = 0f; }
+        if (carrying) wrGritCarryEnd = Time.time;
         // 황소 돌진: 적을 든 채 0.6초 넘게 한 방향으로 달리면 들린 적으로 앞을 들이받음 (0.4초마다 · 밀침)
         int lb = L("wr.bullrush");
         if (lb > 0 && carrying && k.WrMoveTime >= 0.6f && Time.time >= rushAt)
@@ -170,7 +175,10 @@ public partial class SignatureSkills
             rushAt = Time.time + 0.4f;
             Vector3 front = k.WrCarriedPos + (Vector3)(k.WrMoveDir * 1.6f);
             float kn = E("wre.wall") ? 6f : 3.5f;
-            Circle(front, 1.7f * Fs("wr.bullrush"), Atk * V(lb, 0.4f, 0.15f) * P("wr.bullrush"), kn);
+            float rushDmg = Atk * V(lb, 0.4f, 0.15f) * P("wr.bullrush");
+            // 2.0.1~ 철벽 샅바(진화): 들이받은 적이 핀처럼 날아감 (설명만 있고 밀침만 셌던 것)
+            System.Action<Collider2D> pin = E("wre.wall") ? c => { if (c != null && c.TryGetComponent(out EnermyController pe)) k.WrRushPin(pe, k.WrMoveDir, rushDmg * 0.6f); } : null;
+            Circle(front, 1.7f * Fs("wr.bullrush"), rushDmg, kn, pin);
             Fx.Spawn("fx_shock", front, 3.4f, Tint("wr.bullrush", new Color(0.95f, 0.8f, 0.5f, 0.7f)), 20f);
             Hostile.Play("thump", 0.35f, 1.1f);
             Impact.Hit(ImpactTier.Skill, front, k.WrMoveDir);

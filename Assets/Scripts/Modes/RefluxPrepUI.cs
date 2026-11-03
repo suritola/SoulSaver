@@ -41,6 +41,21 @@ public static class RefluxPrepUI
         return names;
     }
 
+    // 2.0.1~ 1차 무기 형태 번호 (FormNames 와 같은 순서 · SpecialAbilities.RefluxFormIds 와 같은 목록)
+    static List<int> FormIds(CharacterId who)
+    {
+        List<int> ids = new List<int>();
+        if (who == CharacterId.Gunner) ids.AddRange(SpecialAbilities.Tier1Options);
+        else
+            foreach (int id in CharacterData.Def(who).pool)
+                if (SpecialAbilities.IsKitWeapon(id)) ids.Add(id);
+        return ids;
+    }
+
+    // 2.0.1~ 이 갈래에서 못 쓰는 1차 무기 (SpecialAbilities.DropDeadEvolutions 와 같은 규칙): 지도 제작자 「일필」은 도형을 닫지 않아 지구본 효과가 0
+    //   자동 채우기는 외길이라 교차 · 행군이 없음 → 일필이면 늘 막힘 (예전엔 준비 화면에서 고른 지구본이 판에서 말없이 다른 무기로 바뀜)
+    static bool FormBlocked(CharacterId who, int path, int formId) => who == CharacterId.Cartographer && path == CartographerPaths.Stroke && formId == SpecialAbilities.KitGlobe;
+
     class Prep : MonoBehaviour
     {
         Transform root;
@@ -108,7 +123,9 @@ public static class RefluxPrepUI
                 formBtn[f] = UIKit.MakeButton(win, "", new Vector2(90f + 190f * f, -25f), new Vector2(180f, 62f), () => { form = fi; UISound.Click(); Refresh(); }, 18f);
             }
 
-            bodyLine = UIKit.Text(win, "", 22f, Parch, new Vector2(0f, -150f), new Vector2(1100f, 80f), TextAlignmentOptions.Top);
+            bodyLine = UIKit.Text(win, "", 22f, Parch, new Vector2(0f, -160f), new Vector2(1100f, 130f), TextAlignmentOptions.Top);
+            bodyLine.enableAutoSizing = true;          // 2.0.1~ 남은 영혼 · 막힌 무기 줄이 더해져 넘치지 않게
+            bodyLine.fontSizeMax = 22f;
             bodyLine.fontSizeMin = 14f;
             recordLine = UIKit.Text(win, "", 24f, Parch, new Vector2(0f, -250f), new Vector2(900f, 34f));
             go = UIKit.MakeButton(win, "reflux.prep.go", new Vector2(0f, -325f), new Vector2(380f, 80f), Depart, 32f);
@@ -126,7 +143,7 @@ public static class RefluxPrepUI
         void PickHero(int who)
         {
             if (!CharacterData.IsUnlocked((CharacterId)who)) return;
-            if (hero != who) { hero = who; form = 0; }
+            if (hero != who) { hero = who; form = 0; path = 0; }      // 2.0.1~ 갈래 번호도 처음으로 (영웅마다 갈래가 달라 번호만 남으면 엉뚱한 갈래가 골라져 있었음)
             UISound.Click();
             Refresh();
         }
@@ -168,19 +185,25 @@ public static class RefluxPrepUI
             PathDef pd = Paths.DefOf(who, path);
             pathInfo.text = pd == null ? "" : Loc.T(pd.tagline) + "\n<color=#A89C86>" + Loc.T("reflux.prep.strong") + " " + Loc.T(pd.strong) + "  ·  " + Loc.T("reflux.prep.weak") + " " + Loc.T(pd.weak) + "</color>";
             List<string> forms = FormNames(who);
+            List<int> formIds = FormIds(who);
+            bool Blocked(int f) => f < formIds.Count && FormBlocked(who, path, formIds[f]);
             if (form >= forms.Count) form = 0;
+            bool anyBlocked = false;
+            if (Blocked(form)) for (int f = 0; f < forms.Count; f++) if (!Blocked(f)) { form = f; break; }
             for (int f = 0; f < formBtn.Length; f++)
             {
                 TMP_Text l = formBtn[f].GetComponentInChildren<TMP_Text>(true);
-                bool has = f < forms.Count;
+                bool has = f < forms.Count, blocked = Blocked(f);
+                anyBlocked |= blocked;
                 if (l != null) { l.text = has ? Loc.T(forms[f]) : "-"; l.enableAutoSizing = true; l.fontSizeMin = 10f; }
-                formBtn[f].interactable = has;
+                formBtn[f].interactable = has && !blocked;
                 Tint(formBtn[f], f == form);
             }
-            bodyLine.text = Loc.T("reflux.prep.body");
+            bodyLine.text = Loc.T("reflux.prep.body") + "\n<color=#A89C86>" + Loc.T("reflux.prep.spirit") + "</color>"
+                          + (anyBlocked ? "\n<color=#E89A7A>" + Loc.T("reflux.prep.formblocked") + "</color>" : "");
             float mine = RefluxRun.BestOf(who), all = RefluxRun.Best;
             recordLine.text = Loc.T("relay.hub.best") + "  <color=#F5D478>" + (all > 0f ? EndlessMode.Clock(all) : "-") + "</color>"
-                            + "   <size=80%><color=#A89C86>(" + Loc.T("reflux.prep.thishero") + " " + (mine > 0f ? EndlessMode.Clock(mine) : "-") + ")</color></size>";
+                            + (mine > 0f ? "   <size=80%><color=#A89C86>(" + Loc.T("reflux.prep.thishero") + " " + EndlessMode.Clock(mine) + ")</color></size>" : "");     // 2.0.1~ 이 영웅 기록이 없으면 줄이지 않고 뺌
             go.interactable = CharacterData.IsUnlocked(who);
         }
     }

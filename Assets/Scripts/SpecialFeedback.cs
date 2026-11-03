@@ -36,9 +36,10 @@ public class SpecialFeedback : MonoBehaviour
     }
 
     // ================================================================= sound
-    public void Play(string name, float vol = 1f, float pitch = 1f)
+    // 2.0.1~ from: 부른 파일 (컴파일 때 채워짐 · 실행 비용 없음) — 무기 스킨이 같은 이름 공용 소리(쿵 · 휙)를 낸 적 · 보스 소리까지 바꾸던 문제를 가름
+    public void Play(string name, float vol = 1f, float pitch = 1f, [System.Runtime.CompilerServices.CallerFilePath] string from = "")
     {
-        SkinAudio.Adjust(this, ref name, ref vol, ref pitch);      // 스킨: 공격 · 코인 소리 음색
+        SkinAudio.Adjust(this, ref name, ref vol, ref pitch, from);      // 스킨: 공격 · 코인 소리 음색
         // 1.0.2: 같은 소리가 반복돼도 단조롭지 않게 음높이를 조금씩
         // 1.1~: 5단계(±2.5% 간격)로만 흔들어 같은 음높이 소스를 함께 쓰게 함 (무작위 값마다 소스를 하나씩 차지해 긴 소리가 잘리던 문제)
         pitch *= 1f + Random.Range(-2, 3) * 0.025f;

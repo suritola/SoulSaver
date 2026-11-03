@@ -97,10 +97,46 @@ public static class CharacterUI
         sr.horizontal = false;
         sr.vertical = true;
         sr.movementType = ScrollRect.MovementType.Clamped;
-        sr.scrollSensitivity = 40f;
+        // 2.0.1~ 휠 한 칸 = 한 줄 (예전 40 이라 몇 번을 굴려야 셋째 줄이 보였음) + 오른쪽 세로 막대 — 두 줄만 보여 새 영웅 넷이 아래 있는 줄 몰랐음
+        sr.scrollSensitivity = GridRowH;
         sr.inertia = false;
+        sr.verticalScrollbar = GridBar(view);
+        sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
         view.gameObject.AddComponent<CharacterGridFollow>().Init(sr);
         return gridContent;
+    }
+
+    // 세로 스크롤 막대 (보이기만 · MenuExtras 목록 막대와 같은 모양): 누를 수 없게 해 패드 커서가 막대로 붙지 않음
+    static Scrollbar GridBar(RectTransform view)
+    {
+        RectTransform bar = UIKit.Rect("GridBar", view, Vector2.zero, Vector2.zero);
+        bar.anchorMin = new Vector2(1f, 0f);
+        bar.anchorMax = Vector2.one;
+        bar.pivot = new Vector2(1f, 0.5f);
+        bar.sizeDelta = new Vector2(12f, -20f);
+        bar.anchoredPosition = Vector2.zero;
+        Image barImg = bar.gameObject.AddComponent<Image>();
+        barImg.color = new Color(0.2f, 0.17f, 0.25f, 1f);
+        barImg.raycastTarget = false;
+        RectTransform slide = UIKit.Rect("Sliding Area", bar, Vector2.zero, Vector2.zero);
+        slide.anchorMin = Vector2.zero;
+        slide.anchorMax = Vector2.one;
+        slide.offsetMin = slide.offsetMax = Vector2.zero;
+        RectTransform handle = UIKit.Rect("Handle", slide, Vector2.zero, Vector2.zero);
+        handle.offsetMin = handle.offsetMax = Vector2.zero;
+        Image handleImg = handle.gameObject.AddComponent<Image>();
+        handleImg.color = Gold;
+        handleImg.raycastTarget = false;
+        Scrollbar sb = bar.gameObject.AddComponent<Scrollbar>();
+        sb.handleRect = handle;
+        sb.targetGraphic = handleImg;
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.interactable = false;
+        ColorBlock sc = sb.colors;
+        sc.disabledColor = Color.white;
+        sb.colors = sc;
+        sb.navigation = new Navigation { mode = Navigation.Mode.None };
+        return sb;
     }
 
     static void BuildGrid()
@@ -256,7 +292,7 @@ public static class CharacterUI
 
         // 그래픽 개편 2단계: 360 (32칸 × 11.25 · 비정수) → 384 (128칸 메뉴 초상 × 3 · 없으면 32칸 × 12) · Legacy 면 360 · 32칸
         float dp = VisualRules.Legacy ? 360f : 384f;
-        RectTransform pr = UIKit.Rect("Portrait", dr, new Vector2(-470f, 60f), new Vector2(dp, dp));
+        RectTransform pr = UIKit.Rect("Portrait", dr, new Vector2(-470f, 52f), new Vector2(dp, dp));
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = MenuPortrait(id);
         img.preserveAspect = true;
@@ -273,20 +309,21 @@ public static class CharacterUI
         // 1.0.4~: 잠긴 캐릭터도 이름 · 한 줄 소개 · 스탯 · 무기 · 스킬을 보여 줌 (예전엔 모두 ??? 라 최대 15,000P를 모르고 써야 했음, 그림만 실루엣)
         bool secretLocked = !unlocked && d.secret;      // 2.0.0~ 비밀형 영웅: 해금 전엔 이름 · 능력 모두 숨기고 수수께끼 한 줄만
         bool known = unlocked || (developed && !secretLocked);
-        UIKit.Text(dr, known ? d.name : "???", 50f, Gold, new Vector2(-470f, 300f), new Vector2(420f, 64f));
-        TMP_Text titleText = UIKit.Text(dr, "", 24f, Dim, new Vector2(-470f, 255f), new Vector2(420f, 36f));
+        // 2.0.1~ 메뉴 검수: 이름 · 부제를 조금 위로, 그림을 조금 아래로 (인형사 치켜든 손이 부제에 닿았음)
+        UIKit.Text(dr, known ? d.name : "???", 50f, Gold, new Vector2(-470f, 314f), new Vector2(420f, 64f));
+        TMP_Text titleText = UIKit.Text(dr, "", 24f, Dim, new Vector2(-470f, 268f), new Vector2(420f, 36f));
         titleText.text = unlocked ? Loc.T(d.title) : secretLocked ? Loc.T("비밀") : developed ? Loc.T(d.title) + " · " + Loc.T("잠김") : Loc.T("준비 중");
         // 영웅 숙련도: 단계 · 올리는 법 · 효과 (1.0.4~ 0단계도)
         if (unlocked)
         {
-            TMP_Text mastery = UIKit.Text(dr, "", 18f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(-470f, -160f), new Vector2(460f, 60f));
+            TMP_Text mastery = UIKit.Text(dr, "", 18f, Mastery.Level(id) > 0 ? new Color(1f, 0.85f, 0.35f) : Dim, new Vector2(-470f, -168f), new Vector2(460f, 60f));
             mastery.text = Mastery.Label(id) + "\n" + Loc.T("마지막 보스를 쓰러뜨릴 때마다 +1 (무한 모드 제외) · 단계마다 시작 레벨업 카드 +1");
             string weight = SoulWeight.DetailLine(id);       // 1.2~ 영혼의 무게 기록 (어려움을 클리어해 열렸을 때만)
             if (weight.Length > 0)
             {
                 mastery.text += "\n<color=#C9A0FF>" + weight + "</color>";
                 mastery.rectTransform.sizeDelta = new Vector2(460f, 90f);         // 한 줄 늘어난 만큼 아래로 (선택 버튼 위끝 -295 보다 위)
-                mastery.rectTransform.anchoredPosition = new Vector2(-470f, -175f);
+                mastery.rectTransform.anchoredPosition = new Vector2(-470f, -183f);
             }
             mastery.enableWordWrapping = true;
         }
@@ -305,6 +342,11 @@ public static class CharacterUI
         if (secretLocked)
         {
             UIKit.Text(dr, "sec.hint." + (int)id, 30f, Parch, new Vector2(200f, 60f), new Vector2(800f, 120f));       // 도감 수수께끼 한 줄 (조건을 글로 다 말하지 않음)
+            // 2.0.1~ 어디서 풀리는지는 고정 한 줄로 (수수께끼만으론 무한 모드 사막에서만 켜지는 줄 몰랐음) · 무한 모드가 잠겼으면 그 선행 조건부터
+            TMP_Text where = UIKit.Text(dr, "", 22f, new Color(1f, 0.6f, 0.45f), new Vector2(200f, -50f), new Vector2(800f, 90f));
+            where.enableWordWrapping = true;
+            where.fontSizeMin = 15f;
+            where.text = CharacterData.SecretWhereText();
             UIKit.MakeButton(dr, "취소", new Vector2(0f, -330f), new Vector2(240f, 70f), CloseDetail, 28f);
             return;
         }
@@ -316,24 +358,30 @@ public static class CharacterUI
         }
 
         // 오른쪽: 설명 · 스탯 (1.0.4~ 잠겨도 보임)
-        float x = 190f;
-        UIKit.Text(dr, d.description, 24f, Parch, new Vector2(x, 292f), new Vector2(820f, 80f), TextAlignmentOptions.Left);
-        float y = 206f;
+        // 2.0.1~ 메뉴 검수: 새 영웅 설명이 11 ~ 12px 로 줄던 것 → 칸을 넓히고 높여 최소 17
+        TMP_Text descText = UIKit.Text(dr, d.description, 24f, Parch, new Vector2(200f, 282f), new Vector2(880f, 104f), TextAlignmentOptions.Left);
+        descText.fontSizeMin = 17f;
+        float y = 202f;
         Stat(dr, "체력", d.hp, known, ref y);
         Stat(dr, "공격력", d.damage / AttackShowBase, known, ref y);     // 1.3.7~ 거너 = 100% 로 (배율이 2 를 넘으면서 막대가 모두 꽉 차 비교가 안 되던 것) · 1.4.2~ 나누는 값을 상수로
         Stat(dr, "공격 속도", d.attackSpeed, known, ref y);
-        StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한"), known, ref y);
-        // 필살기 충전은 1 / 게이지 (높을수록 빨리 참, 거너보다 낮으면 빨강) — 1.0.4~ 안내가 「높을수록 늦게 참」으로 반대였음
-        UIKit.Text(dr, "높을수록 빨리 참", 15f, new Color(0.7f, 0.65f, 0.6f), new Vector2(300f, y - 20f), new Vector2(420f, 18f), TextAlignmentOptions.Center);
+        StatText(dr, "사거리", d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한.값"), known, ref y);      // 2.0.1~ 값용 「무한」 (「무한 모드」와 다른 낱말)
         Stat(dr, "필살기 충전", 1f / Mathf.Max(0.1f, d.gauge), known, ref y);
         Stat(dr, "이동 속도", d.move, known, ref y);
-        StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"), known, ref y);
-        y -= 10f;
-        Info(dr, "기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack), ref y, 74f);
-        Info(dr, "{ULT}", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc), ref y, 104f);      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭) · 잠긴 영웅도 미리 보기
-        // 1.1.9~ 머리 위 막대 한 줄 (영웅 안내 카드와 같은 글 · 막대가 없는 영웅은 생략) — 한 줄 상자 680×44
+        StatText(dr, "탄창", d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한.값"), known, ref y);
+        // 필살기 충전은 1 / 게이지 (높을수록 빨리 참, 거너보다 낮으면 빨강) — 1.0.4~ 안내가 「높을수록 늦게 참」으로 반대였음
+        //   2.0.1~ 막대 사이 15pt(9px) → 스탯 아래 한 줄 17pt
+        TMP_Text gaugeHint = UIKit.Text(dr, "", 17f, new Color(0.7f, 0.65f, 0.6f), new Vector2(255f, y + 12f), new Vector2(790f, 24f), TextAlignmentOptions.Left);
+        gaugeHint.fontSizeMin = 15f;
+        gaugeHint.text = Loc.T("필살기 충전") + " · " + Loc.T("높을수록 빨리 참");
+        y -= 16f;
+        // 2.0.1~ 기본 무기 · 필살기 · 머리 위 막대: 글 길이만큼 높이를 잡고 넘치면 함께 줄임 (사진사 기본 무기 설명이 아래 우클릭 칸과 겹쳤음)
+        var infos = new List<(string, string)> { ("기본 무기", Loc.T(d.weapon) + " — " + Loc.T(d.attack)),
+                                                 ("{ULT}", Loc.T(d.skill) + " — " + Loc.T(d.skillDesc)) };      // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭) · 잠긴 영웅도 미리 보기
+        // 1.1.9~ 머리 위 막대 한 줄 (영웅 안내 카드와 같은 글 · 막대가 없는 영웅은 생략)
         string bar = HeroGuide.BarText(id);
-        if (bar != null) Info(dr, "머리 위 막대", bar, ref y, 40f);
+        if (bar != null) infos.Add(("머리 위 막대", bar));
+        Infos(dr, infos, y, unlocked ? -302f : -250f);      // 아래 끝: 선택 버튼 위 (잠겼으면 「포인트가 부족합니다」 줄 위)
 
         if (unlocked)
         {
@@ -407,7 +455,7 @@ public static class CharacterUI
     static void Stat(RectTransform parent, string ko, float value, bool known, ref float y, bool lowerIsBetter = false)
     {
         float good = lowerIsBetter ? 2f - value : value;
-        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
+        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 36f), TextAlignmentOptions.Left);
         RectTransform bg = UIKit.Rect("Bar", parent, new Vector2(300f, y), new Vector2(420f, 18f));
         bg.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.18f, 0.25f);
         if (known)
@@ -423,28 +471,54 @@ public static class CharacterUI
             mark.anchorMin = mark.anchorMax = new Vector2(0.5f, 0.5f);
             mark.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.6f);
         }
-        UIKit.Text(parent, known ? Mathf.RoundToInt(value * 100f) + "%" : "???", 26f, Gold, new Vector2(580f, y), new Vector2(120f, 40f), TextAlignmentOptions.Right);
-        y -= 40f;           // 1.1.9~ 46 → 42 (머리 위 막대 줄 자리)
+        UIKit.Text(parent, known ? Mathf.RoundToInt(value * 100f) + "%" : "???", 26f, Gold, new Vector2(StatValueRight - 60f, y), new Vector2(120f, 36f), TextAlignmentOptions.Right);
+        y -= 36f;           // 1.1.9~ 46 → 42 (머리 위 막대 줄 자리) · 2.0.1~ 40 → 36 (아래 설명 칸 자리)
     }
 
     static void StatText(RectTransform parent, string ko, string value, bool known, ref float y)
     {
-        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
-        TMP_Text t = UIKit.Text(parent, "", 26f, Gold, new Vector2(580f, y), new Vector2(300f, 40f), TextAlignmentOptions.Right);
+        UIKit.Text(parent, ko, 26f, Parch, new Vector2(-40f, y), new Vector2(200f, 36f), TextAlignmentOptions.Left);
+        // 2.0.1~ 값 오른쪽 끝을 막대 스탯 값과 같은 줄에 (예전 상자가 90 더 오른쪽이라 「사거리」 · 「탄창」 값 열이 어긋났음)
+        TMP_Text t = UIKit.Text(parent, "", 26f, Gold, new Vector2(StatValueRight - 150f, y), new Vector2(300f, 36f), TextAlignmentOptions.Right);
         t.text = known ? value : "???";
-        y -= 40f;
+        y -= 36f;
     }
 
-    // height: 글 상자 높이 (1.1.9~ 머리 위 막대 줄은 한 줄짜리 44)
-    static void Info(RectTransform parent, string ko, string value, ref float y, float height = 70f)
+    const float StatValueRight = 640f;
+
+    // 2.0.1~ 머리말을 글 앞에 붙인 설명 칸들 (왼쪽 스탯 이름 열부터 창 오른쪽까지 한 폭) — 글 길이대로 높이를 잡고, top ~ bottom 에 안 들어가면 20 → 15 로 함께 줄임
+    const float InfoLeft = -140f, InfoW = 850f, InfoGap = 8f;
+    static void Infos(RectTransform parent, List<(string head, string value)> items, float top, float bottom)
     {
-        TMP_Text head = UIKit.Text(parent, ko, 24f, Gold, new Vector2(-40f, y), new Vector2(200f, 40f), TextAlignmentOptions.Left);
-        head.fontSizeMin = 14f;
-        TMP_Text t = UIKit.Text(parent, "", 22f, Parch, new Vector2(392f, y + 20f - height * 0.5f), new Vector2(636f, height), TextAlignmentOptions.TopLeft);
-        t.fontSizeMin = 12f;
-        t.enableWordWrapping = true;
-        t.text = value;
-        y -= height + 8f;           // 1.1.9~ 78 → 72
+        string gold = "#" + ColorUtility.ToHtmlStringRGB(Gold);
+        var texts = new List<TMP_Text>();
+        foreach (var it in items)
+        {
+            TMP_Text t = UIKit.Text(parent, "", 20f, Parch, Vector2.zero, new Vector2(InfoW, 30f), TextAlignmentOptions.TopLeft);
+            t.enableAutoSizing = false;
+            t.enableWordWrapping = true;
+            t.text = "<color=" + gold + ">" + Loc.T(it.head) + "</color>   " + it.value;
+            texts.Add(t);
+        }
+        float[] h = new float[texts.Count];
+        for (float size = 20f; size >= 15f; size -= 1f)
+        {
+            float total = 0f;
+            for (int i = 0; i < texts.Count; i++)
+            {
+                texts[i].fontSize = size;
+                h[i] = texts[i].GetPreferredValues(InfoW, 0f).y;      // 2.0.1~ 글을 넘기지 않는 쪽 — 일본어 줄 묶음(JaWordWrap 전처리)까지 거친 높이
+                total += h[i] + InfoGap;
+            }
+            if (top - total >= bottom) break;       // 15 에서도 넘치면 15 그대로 (더 줄이지 않고 조금 내려감)
+        }
+        float y = top;
+        for (int i = 0; i < texts.Count; i++)
+        {
+            texts[i].rectTransform.sizeDelta = new Vector2(InfoW, h[i]);
+            texts[i].rectTransform.anchoredPosition = new Vector2(InfoLeft + InfoW * 0.5f, y - h[i] * 0.5f);
+            y -= h[i] + InfoGap;
+        }
     }
 }
 

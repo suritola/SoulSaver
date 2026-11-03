@@ -111,9 +111,9 @@ public static partial class LocTable
         A("필요", "Requires", "必要", "需要");
         A("진화 조합", "Evolution recipes", "進化の組み合わせ", "进化组合");
         K("레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 생깁니다. 레벨은 50까지라 모두 올릴 수는 없습니다.", "레벨업 카드 두세 장을 모두 최대 단계로 올리면 하나로 합쳐져 새 능력이 됩니다. 최대 레벨이 있어 모두 올릴 수는 없습니다.", "Max out two or three level-up cards and they merge into a new ability. Levels are capped, so you can't max everything.", "レベルアップカード2〜3枚をすべて最大段階にすると一つに合わさり、新しい能力になります。最大レベルがあるので全部は上げられません。", "将两到三张升级卡全部升到最高级后合而为一，成为新能力。等级有上限，无法全部升满。");
-        K("모든 캐릭터", "모든 영웅", "All Heroes", "すべての英雄", "所有英雄");
+        K("모든 캐릭터", "모든 영웅", "All Heroes", "すべてのヒーロー", "所有英雄");
         A("잠긴 캐릭터", "Locked hero", "ロック中のキャラクター", "未解锁角色");
-        K("포인트로 잠금을 풀면 이 캐릭터의 진화 조합을 볼 수 있습니다.", "포인트로 잠금을 풀면 이 영웅의 진화 조합을 볼 수 있습니다.", "Unlock this hero with points to see their evolution recipes.", "ポイントでロックを解除すると、この英雄の進化の組み合わせが見られます。", "用点数解锁该英雄后即可查看其进化组合。");
+        K("포인트로 잠금을 풀면 이 캐릭터의 진화 조합을 볼 수 있습니다.", "포인트로 잠금을 풀면 이 영웅의 진화 조합을 볼 수 있습니다.", "Unlock this hero with points to see their evolution recipes.", "ポイントでロックを解除すると、このヒーローの進化の組み合わせが見られます。", "用点数解锁该英雄后即可查看其进化组合。");
 
         // ================================================================= 거너
         A("탄피 지뢰", "Shell Mines", "薬莢地雷", "弹壳地雷");
@@ -169,7 +169,7 @@ public static partial class LocTable
         A("같은 적을 세 번 벨 때마다 균열이 터져 추가 피해를 줍니다.", "Every third cut on the same enemy shatters it for bonus damage.", "同じ敵を3回斬るたびに亀裂が弾けて追加ダメージを与えます。", "每斩同一敌人三次，裂痕爆开造成额外伤害。");
         A("균열 피해", "Fracture damage", "亀裂ダメージ", "裂痕伤害");
         A("거인 사냥꾼", "Giant Hunter", "巨人狩り", "巨人猎手");
-        A("보스 · 중간 보스에게 주는 피해가 늘어납니다.", "Deal more damage to bosses and mid-bosses.", "ボス・中ボスへのダメージが増えます。", "对首领和中头目造成的伤害提升。");
+        A("보스 · 중간 보스에게 주는 피해가 늘어납니다.", "Deal more damage to bosses and mid-bosses.", "ボス・中ボスへのダメージが増えます。", "对首领和精英首领造成的伤害提升。");
         A("보스에게 주는 피해", "Damage to bosses", "ボスへのダメージ", "对首领伤害");
         A("잔향 베기", "Echo Slash", "残響斬り", "余响斩");
         A("필살기가 끝나고 잠시 뒤 더 작은 회전 베기가 한 번 더 일어납니다.", "A moment after your Ultimate ends, a smaller echo spin follows.", "必殺技が終わった少し後、もう一度小さな回転斬りが起こります。", "必杀技结束片刻后，再发动一次较小的回旋斩。");

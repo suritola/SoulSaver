@@ -97,7 +97,7 @@ public static class Juice
     const float CounterHold = 0.6f, CounterZoom = 0.82f, CounterZoomBack = 0.3f;
     public static void CounterFreeze()
     {
-        if (!CanStop()) return;
+        if (Impact.Off || !CanStop()) return;       // 2.0.1~ 설정 「특수효과 꺼짐」이면 멈춤 · 줌도 없음 (설명은 「모두 끕니다」)
         lastStopAt = Time.unscaledTime;
         Runner.Hold(StopScale, CounterHold);
         PlayerController p = Hostile.Player;
@@ -121,7 +121,7 @@ public static class Juice
     {
         if (Application.isBatchMode) return;
         if (GameSettings.Flashes) Runner.Flash(0.35f);
-        if (!CanStop()) return;
+        if (Impact.Off || !CanStop()) return;       // 2.0.1~ 특수효과 꺼짐이면 슬로 없음
         lastStopAt = Time.unscaledTime;
         Runner.Hold(0.3f, 0.5f);
     }
@@ -292,6 +292,8 @@ public class JuiceRunner : MonoBehaviour
 
     public void Hold(float s, float seconds)
     {
+        // 2.0.1~ 더 느린 배율(멈춤 0.02 · 보스 처치 0.15)이 진행 중이면 덮어쓰지 않음 — Impact 슬로 0.3 이 멈춤을 풀어 버렸음
+        if (Owns && scale < s && Time.unscaledTime < until) return;
         until = Mathf.Max(Owns ? until : 0f, Time.unscaledTime + seconds);
         scale = s;
         active = true;

@@ -17,7 +17,9 @@ public static class CodexUI
     static readonly List<Button> tabButtons = new List<Button>();
     // 1.1~ 카드 높이: 캐릭터 탭은 본문(설명 + 기본 무기 + 필살기 + 전용 무기)이 길어 더 큼 (영어 11줄도 14px 로 들어가게)
     static GridLayoutGroup gridLayout;
-    const float BaseCardH = 240f, HeroCardH = 300f, BossCardH = 500f;     // 보스: 설명 + 빈틈 · 기억 · 결계 줄 (4~5문단) · 개발자 · 엄마 고유 기본 공격 설명으로 400 → 500
+    static readonly System.Collections.Generic.List<TMP_Text> tabLabels = new System.Collections.Generic.List<TMP_Text>();
+    const float BaseCardH = 240f, HeroCardH = 300f, BossCardH = 500f;
+    const float CharCardH = 640f, LevelUpCardH = 380f;     // 2.0.1~ 메뉴 검수: 새 영웅 설명 · 초월 카드 본문이 깨알로 줄고 「…」로 잘림 → 그 탭만 칸을 키움     // 보스: 설명 + 빈틈 · 기억 · 결계 줄 (4~5문단) · 개발자 · 엄마 고유 기본 공격 설명으로 400 → 500
     static float CardH = BaseCardH;
 
     static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
@@ -29,7 +31,7 @@ public static class CodexUI
     // 1.2~ 발견형 도감: 유물 · 각인 · 비밀 탭을 더함 · 진화 · 유물 · 각인 · 비밀은 얻은 것만 자세히 (CodexSeen)
     // 1.1.9~ 13번째 「이야기」 탭 (편의성 2차 6 — 본 이야기를 글로 다시 읽기 · 수집률 · 보상에는 넣지 않음)
     // 1.2~ 14번째 「기억」: 영웅마다 기억 조각 6장 (MemoryShards · 도감 수집률 밖)
-    static readonly string[] Tabs = { "적", "보스", "캐릭터", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "레벨업", "상점", "이야기", "memory.section" };
+    static readonly string[] Tabs = { "적", "보스", "codex.tab.hero", "무기", "운명", "패시브", "진화", "유물", "각인", "비밀", "codex.tab.levelup", "상점", "이야기", "memory.section" };      // 2.0.1~ 탭 전용 짧은 이름 (ja 「キャラクター」 「レベルアップ」이 줄바꿈 · 작아졌음)
     const int TabEvo = 6, TabRelic = 7, TabBrand = 8, TabSecret = 9, TabLevelUp = 10, TabShop = 11, TabStory = 12, TabMemory = 13;
     static CodexSeen.Cat? CatOf(int t) => t == TabEvo ? CodexSeen.Cat.Evo : t == TabRelic ? CodexSeen.Cat.Relic : t == TabBrand ? CodexSeen.Cat.Brand : t == TabSecret ? CodexSeen.Cat.Secret : (CodexSeen.Cat?)null;
     static readonly List<GameObject> tabBadges = new List<GameObject>();
@@ -231,7 +233,7 @@ public static class CodexUI
             TMP_Text sLabel = UIKit.Text(win, "검색", 20f, Dim, sPos - new Vector2(sSize.x * 0.5f + 34f, 0f), new Vector2(64f, 40f));
             sLabel.fontSizeMin = 12f;
         }
-        search = UIKit.MakeInput(win, GamePad.Active && !SteamManager.Initialized ? "키보드로 입력" : "이름이나 설명으로 찾기…", sPos, sSize, 20f);
+        search = UIKit.MakeInput(win, GamePad.Active && !SteamManager.Initialized ? "키보드로 입력" : "검색…", sPos, sSize, 20f);
         search.onValueChanged.AddListener(_ => searchAt = Time.unscaledTime + 0.15f);
         search.onSelect.AddListener(_ => SteamManager.ShowTextInput(Loc.T("검색"), search.text, s => { if (search != null) search.text = s; }));
         searchAt = -1f;
@@ -248,8 +250,14 @@ public static class CodexUI
             TMP_Text bt = b.GetComponentInChildren<TMP_Text>();
             if (bt != null) { bt.enableAutoSizing = true; bt.fontSizeMin = 14f; bt.fontSizeMax = 26f; }
             tabButtons.Add(b);
+            tabLabels.Add(bt);
             tabBadges.Add(CatOf(i).HasValue || i == TabMemory ? Badge(b.transform, new Vector2(-24f, -6f)) : null);      // 1.2~ 기억 탭은 안 읽은 조각
         }
+        // 2.0.1~ 탭 글자 크기 통일: 저마다 자동 크기라 「Fate」 26 · 「Characters」 17 처럼 들쭉날쭉했음 → 가장 작게 줄어든 크기 하나로
+        float tabSize = 26f;
+        foreach (TMP_Text tl in tabLabels) if (tl != null) { tl.ForceMeshUpdate(); tabSize = Mathf.Min(tabSize, tl.fontSize); }
+        foreach (TMP_Text tl in tabLabels) if (tl != null) { tl.enableAutoSizing = false; tl.fontSize = Mathf.Max(14f, tabSize); }
+        tabLabels.Clear();
         RefreshHeader();
         hint = UIKit.Text(win, "", 22f, Dim, new Vector2(0f, 278f), new Vector2(1500f, 56f));      // 2026-10-16: 두 줄까지 (탭 아래끝 313 · 목록 위끝 238 사이) — 문장으로 다듬어 길어진 안내가 작아지지 않게
         hint.fontSizeMin = 16f;
@@ -323,7 +331,7 @@ public static class CodexUI
         CodexSeen.Cat? cat = CatOf(tab);
         tabWasOpened = cat.HasValue && CodexSeen.TabOpenedThisVersion(cat.Value);
         if (cat.HasValue && CodexSeen.ShowAll) hint.text += "  <color=#F5D478>(" + Loc.T("codex.showall.on") + ")</color>";
-        CardH = tab == 1 ? BossCardH : tab == 2 || tab == TabStory ? HeroCardH : BaseCardH;
+        CardH = tab == 1 ? BossCardH : tab == 2 ? CharCardH : tab == TabLevelUp ? LevelUpCardH : tab == TabStory ? HeroCardH : BaseCardH;
         if (gridLayout != null) gridLayout.cellSize = new Vector2(756f, CardH);
 
         Build(tab, CodexData.Load());
@@ -586,7 +594,7 @@ public static class CodexUI
         {
             SpecialDef d = data.specials[id];
             if (d == null || d.kind != kind) continue;
-            string body = Loc.T(d.description).Replace("\n", " ");
+            string body = Loc.T(d.description).Replace("\n", Sp);
             string tag = kind == SpecialKind.Weapon ? Loc.T("특수 무기") : kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브");
             if (kind == SpecialKind.Weapon && id < UltDesc.Length)
             {
@@ -736,7 +744,7 @@ public static class CodexUI
             string desc = SpecialAbilities.IsKit(id) ? SpecialAbilities.KitDesc(id) : d != null ? d.description : "";
             string tag = Loc.T("relic.tag");
             if (!CodexSeen.Shown(key)) { Hidden(key, icon, tag, Loc.T("codex.hint.relic"), r.since); continue; }
-            Card(icon, Color.white, Loc.T(name), tag, SpecialAbilities.BodyText(id, desc).Replace("\n", " "), Fresh(key, r.since));
+            Card(icon, Color.white, Loc.T(name), tag, SpecialAbilities.BodyText(id, desc).Replace("\n", Sp), Fresh(key, r.since));
         }
     }
 
@@ -799,7 +807,7 @@ public static class CodexUI
                 Card(face, Color.white, Loc.T(def.name) + "  <size=70%>" + Loc.T(def.title) + "</size>", tag,
                      "<color=#A89C86>" + riddle + "</color>\n" + Loc.T(def.description), Fresh(key));
             }
-            else if (DesertSecrets.IsSeen(d.key) || CodexSeen.ShowAll) Card(face, Color.black, "???", tag, "<color=#A89C86>" + riddle + "</color>");
+            else if (DesertSecrets.IsSeen(d.key) || CodexSeen.ShowAll) Card(face, Color.black, "???", tag, "<color=#A89C86>" + riddle + "</color>\n" + CharacterData.SecretWhereText());      // 2.0.1~ 어디서 풀리는지 한 줄
         }
     }
 
@@ -952,7 +960,7 @@ public static class CodexUI
         // 캐릭터 전용 카드 (무기 관련 카드 대신 나옴): 거너 + 해금한 캐릭터
         foreach (CharacterId c in System.Linq.Enumerable.Prepend(UnlockedKits(), CharacterId.Gunner))
             foreach (var k in LevelShop.KitCardsFor(c))
-                Card(Resources.Load<Sprite>("Icons/ability_" + k.icon), Color.white, Loc.T(k.name), Loc.T(CharacterData.Def(c).name) + " " + Loc.T("전용"), Loc.T(k.desc).Replace("\n", " "));
+                Card(Resources.Load<Sprite>("Icons/ability_" + k.icon), Color.white, Loc.T(k.name), Loc.T(CharacterData.Def(c).name) + Sp + Loc.T("전용"), Loc.T(k.desc).Replace("\n", Sp));
     }
 
     // 1.1~ 스킬 진화 종 수: 만들어진 캐릭터마다 전용 진화 + 모든 캐릭터 공통 진화 (공통은 한 번만)
@@ -987,6 +995,9 @@ public static class CodexUI
         return null;
     }
 
+    // 2.0.1~ 낱말 사이 띄어쓰기: 일본어 · 중국어는 붙여 씀 (「ガンナー 専用」 · 「。 」처럼 문장 속에 빈칸이 생겼음)
+    static string Sp => Loc.Current == Loc.Lang.Japanese || Loc.Current == Loc.Lang.Chinese ? "" : " ";
+
     static string Pct(float v) => Mathf.RoundToInt(v * 100f) + "%";
 
     static void Characters()
@@ -1000,16 +1011,16 @@ public static class CodexUI
             if (!CharacterData.IsUnlocked(c))
             {
                 // 잠긴 캐릭터: 모습 · 능력 모두 숨김
-                if (d.secret) { Card(portrait, Color.black, "???", Loc.T("비밀"), Loc.T("sec.hint." + i)); continue; }      // 2.0.0~ 비밀형 영웅 (사막 비밀)
+                if (d.secret) { Card(portrait, Color.black, "???", Loc.T("비밀"), Loc.T("sec.hint." + i) + "\n" + CharacterData.SecretWhereText()); continue; }      // 2.0.0~ 비밀형 영웅 (사막 비밀) · 2.0.1~ 어디서 풀리는지 한 줄
                 Card(portrait, Color.black, "???", Loc.T("잠긴 캐릭터") + "  ·  " + d.price.ToString("N0") + " P",
                      Loc.T("포인트로 잠금을 풀면 이 캐릭터의 모습과 능력을 볼 수 있습니다."));
                 continue;
             }
             string tag = Loc.T("체력") + " " + Pct(d.hp) + " · " + Loc.T("공격력") + " " + Pct(d.damage) + " · " + Loc.T("공격 속도") + " " + Pct(d.attackSpeed)
-                         + " · " + Loc.T("필살기 충전") + " " + Pct(1f / Mathf.Max(0.1f, d.gauge)) + " · " + Loc.T("탄창") + " " + (d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한"));
+                         + " · " + Loc.T("필살기 충전") + " " + Pct(1f / Mathf.Max(0.1f, d.gauge)) + " · " + Loc.T("탄창") + " " + (d.mag > 0 ? d.mag + Loc.T("발") : Loc.T("무한.값"));
             string body = Loc.T(d.description)
                 + "\n" + Accent.Tag(Loc.T("기본 무기") + " · " + Loc.T(d.weapon)) + "  " + Loc.T(d.attack)
-                + "  (" + Loc.T("사거리") + " " + (d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한")) + ")"
+                + "  (" + Loc.T("사거리") + " " + (d.range > 0f ? Loc.T("약 ") + d.range.ToString("0") + Loc.T("칸") : Loc.T("무한.값")) + ")"
                 + "\n" + Accent.Tag(Loc.T("{ULT}") + " · " + Loc.T(d.skill)) + "  " + Loc.T(d.skillDesc);     // 1.0.4~ 바꾼 필살기 키 이름 (기본 우클릭)
             if (c != CharacterId.Gunner)
             {
@@ -1030,13 +1041,13 @@ public static class CodexUI
             CharacterId? owner = OwnerOf(id);
             if (owner == null || !CharacterData.IsUnlocked(owner.Value)) continue;
             string tag = (kind == SpecialKind.Weapon ? Loc.T("특수 무기") : kind == SpecialKind.Skill ? Loc.T("스킬") : Loc.T("패시브"))
-                         + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + " " + Loc.T("전용");
+                         + "  ·  " + Loc.T(CharacterData.Def(owner.Value).name) + Sp + Loc.T("전용");
             string desc = Loc.T(SpecialAbilities.KitDesc(id));
             // 새 영웅 진화 무기는 설명 마지막 줄이 「필살기에 덧붙음: X」 — 아래 태그 줄과 겹치므로 뺌
             int last = desc.LastIndexOf('\n');
             if (kind == SpecialKind.Weapon && last >= 0 && desc.Substring(last + 1).StartsWith(Loc.T("필살기에 덧붙음")))
                 desc = desc.Substring(0, last);
-            string body = desc.Replace("\n", " ");
+            string body = desc.Replace("\n", Sp);
             if (kind == SpecialKind.Weapon)
                 body += "\n" + Accent.Tag(Loc.T("필살기에 덧붙음") + " · " + Loc.T(SpecialAbilities.KitUltName(id))) + "  " + Loc.T(SpecialAbilities.KitUltDesc(id));
             Card(Resources.Load<Sprite>(SpecialAbilities.KitIconPath(id)), Color.white, Loc.T(SpecialAbilities.KitName(id)), tag, body);
@@ -1077,9 +1088,10 @@ public static class CodexUI
         TMP_Text t = UIKit.Text(inner, "", 32f, Gold, new Vector2(90f, 80f + extra * 0.5f), new Vector2(540f, 44f), TextAlignmentOptions.Left);
         t.text = title;
         TMP_Text g = UIKit.Text(inner, "", 20f, Dim, new Vector2(90f, 46f + extra * 0.5f), new Vector2(540f, 28f), TextAlignmentOptions.Left);
+        g.fontSizeMin = 15f;
         g.text = tag;
         TMP_Text b = UIKit.Text(inner, "", 22f, Parch, new Vector2(90f, -38f), new Vector2(540f, 136f + extra), TextAlignmentOptions.TopLeft);
-        b.fontSizeMin = 14f;
+        b.fontSizeMin = 16f;        // 2.0.1~ 14 → 16 (긴 카드는 탭 칸 높이를 키워 맞춤)
         b.overflowMode = TextOverflowModes.Ellipsis;     // 그래도 넘치면 다음 카드에 겹치지 않고 줄임표 (기본 높이 카드 · 검색 결과도)
         b.text = body;
         TermLinks.Apply(b);                 // 1.4.8~ 용어에 마우스 → 정의

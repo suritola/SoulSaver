@@ -34,7 +34,7 @@ public static partial class LocTable
         // ================================================================= 도감 「개발자」 설명 (CodexUI · 옛 문장 키는 LocTable.cs 에 그대로)
         K("15분까지 보스를 하나라도 쓰러뜨렸으면 15분에 리치 왕과 지옥의 군주가, 그 둘을 쓰러뜨리거나 1분이 지나면 킹 슬라임과 거울의 군주가 깨어나고, 왕들을 모두 쓰러뜨리면 강림합니다. 영웅들의 최종 진화 필살기를 씁니다. 처음엔 10초에 한 번 쓰고, 체력이 닳을수록 점점 빨라져 1초에 한 번까지 씁니다. 싸우는 동안에는 약한 적만 1초에 4마리씩, 최대 30마리까지 나옵니다.",
           "If you have defeated at least one boss by the 15-minute mark, the Lich King and the Demon Lord awaken at 15 minutes, and the King Slime and the Mirror Sovereign follow once those two fall or a minute passes; defeat every king and the Developer descends. It uses the heroes' final-evolution ultimates, once every 10 seconds at first and faster as its health drops, down to once every second. During the fight only weak enemies appear, 4 every second, up to 30 at a time.",
-          "15分までにボスを1体でも倒していれば、15分にリッチ王と地獄の君主が、その2体を倒すか1分が過ぎるとキングスライムと鏡の君主が目覚め、王たちを全て倒すと降臨します。英雄たちの最終進化必殺技を使います。最初は10秒に1回、体力が減るほど速くなり、最後は1秒に1回使います。戦っている間は弱い敵だけが1秒に4体ずつ、最大30体まで現れます。",
+          "15分までにボスを1体でも倒していれば、15分にリッチ王と地獄の君主が、その2体を倒すか1分が過ぎるとキングスライムと鏡の君主が目覚め、王たちを全て倒すと降臨します。ヒーローたちの最終進化必殺技を使います。最初は10秒に1回、体力が減るほど速くなり、最後は1秒に1回使います。戦っている間は弱い敵だけが1秒に4体ずつ、最大30体まで現れます。",
           "若在15分钟前至少击败过一名首领，15分钟时巫妖王与地狱领主苏醒，击败这两位或过了1分钟后，史莱姆王与镜之君主也会苏醒；击败所有王者后开发者降临。它会使用英雄们的最终进化必杀技，起初每10秒一次，生命越低越快，最终每1秒一次。战斗期间只会出现弱小的敌人，每秒4名，最多同时30名。");
 
         // ================================================================= 도감 「개발자 엄마」 설명 (완결 문장 · 규칙 E)

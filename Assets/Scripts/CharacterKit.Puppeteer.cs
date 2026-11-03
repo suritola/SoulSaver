@@ -195,6 +195,7 @@ public partial class CharacterKit
     void PupLate()
     {
         if (player == null) return;
+        PupEdgePause(Time.timeScale == 0f);         // 2.0.1~ 일시정지 · 창 위에 붉은 막(정렬 880)이 덮이지 않게
         if (player.IsDying) { PupHide(); return; }
         PupEnsure();
         if (pupRoot == null) return;
@@ -270,6 +271,7 @@ public partial class CharacterKit
         PupReleaseDecoy();
         PupCurtainCleanup();
         PupPathCleanup();
+        PupEdgeOff();       // 2.0.1~ 걷힘 연출(PupEdgeTick)은 죽는 중엔 돌지 않아 막이 사망 · 결과 화면까지 남았음 → 바로 끔
     }
 
     // ================================================================= 그리기

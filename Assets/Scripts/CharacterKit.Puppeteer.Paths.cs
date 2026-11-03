@@ -20,6 +20,7 @@ public partial class CharacterKit
     int pupSwingSerial;                                    // 휘두름 번호 (연타가 같은 휘두름의 두 번째 피해를 구분)
     float pupEntranceUntil, pupStandInUntil;
     Transform pupStandInTf;
+    EnermyController pupStandInE;       // 2.0.1~ 대역이 죽으면(시체가 남아 있는 동안) 미끼를 바로 풀려고
 
     struct PupCombo { public int serial, n; public float at; }
     readonly Dictionary<int, PupCombo> pupCombos = new Dictionary<int, PupCombo>(64);
@@ -322,6 +323,7 @@ public partial class CharacterKit
         best.until = Mathf.Max(best.until, best.standUntil);
         if (EnermyController.Decoy == null) { EnermyController.Decoy = best.e.transform; EnermyController.DecoyBossToo = false; }
         pupStandInTf = best.e.transform;
+        pupStandInE = best.e;
         pupStandInUntil = best.standUntil;
         Fx.Spawn(FFxPup("fx_swap_poof", "fx_sparkle"), spot, 3f, Color.white, 20f);
         return true;
@@ -439,7 +441,7 @@ public partial class CharacterKit
         // 대역 미끼가 끝남 / 사라짐
         if (pupStandInTf != null || pupStandInUntil > 0f)
         {
-            if (pupStandInTf == null || Time.time >= pupStandInUntil)
+            if (pupStandInTf == null || Time.time >= pupStandInUntil || pupStandInE == null || pupStandInE.IsDead)      // 2.0.1~ 죽은 꼭두각시를 적이 계속 쫓던 것
             {
                 if (EnermyController.Decoy == pupStandInTf) { EnermyController.Decoy = null; EnermyController.DecoyBossToo = true; }
                 pupStandInTf = null;

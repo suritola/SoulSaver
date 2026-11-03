@@ -88,6 +88,7 @@ public partial class LevelShop
 public partial class LevelShop
 {
     int refluxSkillBase;            // 자동 채우기 직전의 필살기 게이지 최대치 (카드 2 되돌림 기준)
+    float refluxHpBase;             // 2.0.1~ 자동 채우기 직전의 최대 체력 (카드 8 되돌림 바닥)
 
     public struct RefluxCard
     {
@@ -152,6 +153,7 @@ public partial class LevelShop
         if (lv == null) lv = FindFirstObjectByType<Level>();
         if (bul == null) return;
         refluxSkillBase = skill != null ? skill.MaxSkillPoint : 0;
+        refluxHpBase = bul.PlayerMaxHealth;
         Random.State saved = Random.state;
         Random.InitState(seed);
         RunSave.SetAutoFill(true);
@@ -284,9 +286,16 @@ public partial class LevelShop
                 case 6: bul.multiShot = Mathf.Max(1, bul.multiShot - n); break;
                 case 7: bul.knockBack /= Mathf.Pow(KnockBackGrowth, n); break;
                 case 8:
-                    bul.PlayerMaxHealth = Mathf.Max(1f, Mathf.Round(bul.PlayerMaxHealth / Mathf.Pow(1.12f, n)));
+                {
+                    // 2.0.1~ 강철 심장은 축복보다 먼저 곱해졌음 → 축복이 더한 몫(절대값)을 빼고 나눈 뒤 다시 더함
+                    //   예전엔 축복 몫까지 1.12^n 으로 나눈 뒤 축복을 절대값으로 또 빼서 맨몸 최대 체력이 기본보다 낮아졌음 · 기본(자동 채우기 전) 아래로는 안 내려감
+                    SpecialAbilities sp = SpecialAbilities.SharedInstance;
+                    float bless = sp != null ? sp.RefluxBlessHp : 0f;
+                    float card = Mathf.Max(refluxHpBase, Mathf.Round((bul.PlayerMaxHealth - bless) / Mathf.Pow(1.12f, n)));
+                    bul.PlayerMaxHealth = Mathf.Max(1f, card + bless);
                     bul.PlayerHealth = Mathf.Min(bul.PlayerHealth, bul.PlayerMaxHealth);
                     break;
+                }
                 case 9: bul.def = Mathf.Max(0f, bul.def - DefStep * n); break;
                 case 10: bul.regenPerSecond = Mathf.Max(0f, bul.regenPerSecond - RegenStep * n); break;
                 case 11: bul.healOnKill = Mathf.Max(0f, bul.healOnKill - HealOnKillStep * n); break;
@@ -328,8 +337,10 @@ public partial class LevelShop
             ability_selected[id] = true;
             ids.Add(id);
         }
+        // 2.0.1~ 진화 재료표는 갈래 규칙 그대로 둠: 예전엔 myEvos 를 비워 구판 재료로 다시 읽혀(Paths.Active=false) 예고 없이 진화가 사라졌음
+        //   (갈래 카드 25 ~ 31 은 어떤 진화의 재료도 아니라, 재료를 잃는 진화는 카드 잃기의 ◆ 표시로만 생김)
+        _ = MyEvos;
         Paths.Lose();
-        myEvos = null;
         RefluxDropBrokenEvos();
         SignatureSkills.Ensure()?.Refresh(this);
         if (abilityHUD != null) abilityHUD.RemoveAbilities(ids);

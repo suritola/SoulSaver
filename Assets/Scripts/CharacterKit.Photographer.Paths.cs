@@ -106,7 +106,7 @@ public partial class CharacterKit
             DamagePopup.NextCrit = true;
             Paths.Deal(b, Paths.Atk * PhotographerPaths.TeleCloseUp * Paths.Power(PhotographerPaths.Tele), (bp - transform.position).normalized, 0f, PhotographerPaths.CloseUpSource);
             phMarks = 0; phMarkUntil = 0f;          // 표식을 모두 씀
-            Fx.Spawn("fx_flashframe", bp, 3.5f, new Color(1f, 1f, 1f, 0.8f), 20f, 0f, 22);
+            Fx.Spawn("fx_flashframe", bp, 3.5f, PhFlashSafe(new Color(1f, 1f, 1f, 0.8f)), 20f, 0f, 22);
             Impact.Hit(ImpactTier.Skill, bp, Vector2.zero);
             return;
         }
@@ -127,7 +127,7 @@ public partial class CharacterKit
             DamagePopup.NextCrit = true;
             Paths.Deal(e.gameObject, Paths.Atk * PhotographerPaths.BurstSnapMul * Paths.Power(PhotographerPaths.Burst), dir.normalized, 0f, PhotographerPaths.SnapSource);
             Fx.Spawn("fx_paperize", e.transform.position, 1.8f, Color.white, 18f, 0f, 22);
-            if (e != null && !e.IsDead) PhPaperTake(e, PhPaperSec, false);
+            if (e != null && !e.IsDead) PhPaperTake(e, PhPaperSec, false, true);       // 2.0.1~ 필름 끊김(공명 I) 「종이 새로」 — 명시 갱신
         }
         phSnap[e] = v;
     }
@@ -152,7 +152,7 @@ public partial class CharacterKit
         if (PhotographerPaths.CrossIs(PhotographerPaths.StrobeCross) && phShutterN % PhotographerPaths.StrobeEvery == 0) rim *= PhotographerPaths.StrobeRim;
         float stop = master ? PhotographerPaths.FlashMasteryStop : PhotographerPaths.FlashStop;
         Vector2 big = size + Vector2.one * (2f * rim);
-        Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), big.y, new Color(1f, 1f, 1f, 0.4f), 12f, 0f, 20);
+        Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), big.y, PhFlashSafe(new Color(1f, 1f, 1f, 0.4f)), 12f, 0f, 20);
         float now = Time.time;
         using (var ovl = PhysHits.Box(c, big, 0f)) foreach (Collider2D col in ovl)
         {
@@ -175,7 +175,7 @@ public partial class CharacterKit
     IEnumerator PhCurtainRun(Vector3 at)
     {
         phCurtains++;
-        Fx.Spawn("fx_flashframe", at, PhotographerPaths.DarkCurtainR * 2f, new Color(0.55f, 0.35f, 0.8f, 0.5f), 8f, 0f, 19);
+        Fx.Spawn("fx_flashframe", at, PhotographerPaths.DarkCurtainR * 2f, PhFlashSafe(new Color(0.55f, 0.35f, 0.8f, 0.5f)), 8f, 0f, 19);
         for (float t = 0f; t < PhotographerPaths.DarkCurtainSec; t += 0.1f)
         {
             for (int i = HostileProjectile.Live.Count - 1; i >= 0; i--)

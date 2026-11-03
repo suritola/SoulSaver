@@ -105,7 +105,7 @@ public partial class CharacterKit
         if (wrGap < 0f) return normal * mul;
         float g = wrGap;
         wrGap = -1f;
-        return g;
+        return g / Mathf.Max(0.1f, AttackSpeedMul);      // 2.0.1~ 모래 근성 등 공격 속도가 잡기 · 던지기 간격에도 걸리게 (예전엔 normal 에만)
     }
 
     // 걷는 속도: 적을 들면 무게만큼 느려짐 (모래판 안에서는 느려짐 절반)
@@ -122,22 +122,45 @@ public partial class CharacterKit
     }
 
     // 맞는 피해 배율: 모래판 안 −20% · 되치기(맞는 순간 빈손이면 때린 적을 붙잡고 피해 절반)
+    //   2.0.1~ 값을 읽기만 해도 되치기가 발동하던 것 → 여기선 잡을 적만 골라 두고, 실제로 맞았을 때(WrCounterHurt) 붙잡음
+    EnermyController wrCounterFoe;
     float WrTakenMul()
     {
         float mul = 1f;
         if (WrInRing(transform.position)) mul *= 0.8f;
         if (WrCarrying && WrestlerPaths.On(WrestlerPaths.Shield)) mul *= WrestlerPaths.ShieldTaken;      // 갈래 인간 방패: 들고 있는 동안 받는 피해 −30%
-        if (card[2] > 0 && !WrCarrying && Time.time >= wrCounterReady && player != null && !player.IsDying)
+        wrCounterFoe = null;
+        if (card[2] > 0 && !WrCarrying && !wrSlamming && Time.time >= wrCounterReady && player != null && !player.IsDying)
         {
-            EnermyController foe = WrNearestTakeable(3f);
-            if (foe != null && WrTakeNow(foe, 0.1f, true))
-            {
-                wrCounterReady = Time.time + Mathf.Max(2f, 7f - card[2]);      // 6 / 5 / 4초 (외길 4단계 3초)
-                Fx.Spawn("fx_sparkle", foe.transform.position, 1.4f, WrSand, 24f);
-                mul *= 0.5f;
-            }
+            wrCounterFoe = WrNearestTakeable(3f);
+            if (wrCounterFoe != null) mul *= 0.5f;
         }
         return mul;
+    }
+
+    // 실제로 피해를 받은 뒤 (SignatureSkills.WrHurt): 골라 둔 적을 되치기로 붙잡음
+    public void WrCounterHurt()
+    {
+        EnermyController foe = wrCounterFoe;
+        wrCounterFoe = null;
+        if (foe == null) return;
+        // 2.0.1~ 피해를 절반으로 받은 순간 재사용 대기 시작 (붙잡기가 실패해도 — 실패가 이어지면 대기 없이 매번 절반이었음)
+        wrCounterReady = Time.time + Mathf.Max(2f, 7f - card[2]);      // 6 / 5 / 4초 (외길 4단계 3초)
+        if (foe.IsDead || WrCarrying || wrSlamming || player == null || player.IsDying || !WrTakeNow(foe, 0.1f, true)) return;
+        Fx.Spawn("fx_sparkle", foe.transform.position, 1.4f, WrSand, 24f);
+    }
+
+    // 2.0.1~ 밀리지 않음: 통뼈(패시브) · 모래판 안 · 철벽 샅바(진화)로 들고 있는 동안 — 적이 플레이어를 밀쳐 내는 곳(BossSkills.Wrestler)이 봄
+    public static bool HeroUnpushable
+    {
+        get
+        {
+            CharacterKit k = Instance;
+            if (k == null || k.Id != CharacterId.Wrestler) return false;
+            if (SpecialAbilities.SharedInstance != null && SpecialAbilities.SharedInstance.Has(SpecialAbilities.KitSturdyBone)) return true;
+            if (k.WrInRing(k.transform.position)) return true;
+            return k.WrCarrying && SignatureSkills.IsEvo("wre.wall");
+        }
     }
 
     EnermyController WrNearestTakeable(float range)
@@ -157,6 +180,8 @@ public partial class CharacterKit
     void WrestlerAttack(Vector3 start, Vector2 dir, float dmg, int shots)
     {
         Vector3 cursor = Mouse;
+        // 2.0.1~ 천하장사로 뛰어들어 메치는 동안은 평타를 막음 — 다른 적을 잡으면 황소 장사가 wrCarried 를 덮어써 먼저 잡은 적이 공중에 얼어붙었음
+        if (wrSlamming) return;
         if (WrCarrying)
         {
             // 다시 누름: 다 들어 올렸으면 던짐 (아직이면 간격이 차는 대로 다시 부름)
@@ -230,7 +255,7 @@ public partial class CharacterKit
         // 기술 연결(고유 스킬): 던진 적이 땅에 닿기 전에 다음 적을 잡으면 바로 들림 · 꽃가마: 천하장사 뒤 5초 즉시 들기
         bool chain = SignatureSkills.Lv("wr.combo") > 0 && wrBalls.Count > 0;
         wrComboCount = chain ? Mathf.Min(3, wrComboCount + 1) : 0;
-        float lift = chain || SignatureSkills.WrParade || counter || wrInstantLift ? 0.03f : wrW.lift;
+        float lift = chain || SignatureSkills.WrParade || counter || wrInstantLift ? 0.03f : wrW.lift / Mathf.Max(0.1f, AttackSpeedMul);      // 2.0.1~ 공격 속도(모래 근성)가 들기에도
         wrInstantLift = false;          // 인간 방패 공명 II: 방패가 터진 뒤 다음 들기만 즉시
         wrBossGauge = 0f;
         wrLiftDone = wrGrabAt + lift;
@@ -427,7 +452,13 @@ public partial class CharacterKit
             if (SignatureSkills.IsEvo("wre.slam")) WrThud(over, 2f, 0.5f);
         }
         // 투사체 막기: 들린 몸에 닿는 적 투사체를 지움 (막을 때마다 들린 적이 공격력 30% 피해 = 방패가 닳음)
-        if (Time.time >= wrBlockAt) WrBlock(e, over);
+        if (Time.time >= wrBlockAt)
+        {
+            WrBlock(e, over);
+            // 2.0.1~ 철벽 샅바(진화): 황소 돌진(한 방향 0.6초 넘게 달림) 동안 등 뒤에서 오는 투사체도 막음 (설명만 있고 없던 것)
+            if (WrCarrying && wrMoveDirTime >= 0.6f && SignatureSkills.IsEvo("wre.wall") && SignatureSkills.Lv("wr.bullrush") > 0)
+                WrBlock(wrCarried, transform.position - (Vector3)(wrMoveDir * 0.9f));
+        }
         // 워낭(형태): 들고 있는 동안 0.5초마다 둘레 3칸에 소리 파동 (공격력 30%)
         if (form == SpecialAbilities.KitCowbell && Time.time >= wrCowbellAt)
         {
@@ -552,6 +583,7 @@ public partial class CharacterKit
         public bool fromRing, stop, returning, stone, noSelf, shock;
         public float distMul = 1f;
         public int pinsCapExtra;
+        public float snowBase;              // 2.0.1~ 눈덩이가 커지기 전 피해 (더하기로 쌓으려고)
         public readonly List<EnermyController> pins = new List<EnermyController>();
         public int pinCount;
     }
@@ -714,7 +746,12 @@ public partial class CharacterKit
                 }
                 b.pinCount++;
                 SignatureSkills.WrPin(b.pinCount);
-                if (SignatureSkills.Lv("wr.snowball") > 0 && b.pinCount <= 8 && b.gen == 0) { b.scale = 1f + 0.06f * b.pinCount; ballR = w.ballR * b.scale; b.dmg *= 1f + SignatureSkills.WrSnowStep; }
+                // 2.0.1~ 눈덩이: 핀마다 처음 피해의 +n% 씩 (예전엔 곱으로 쌓여 8핀이면 설명보다 셌음)
+                if (SignatureSkills.Lv("wr.snowball") > 0 && b.pinCount <= 8 && b.gen == 0)
+                {
+                    if (b.snowBase <= 0f) b.snowBase = b.dmg;
+                    b.scale = 1f + 0.06f * b.pinCount; ballR = w.ballR * b.scale; b.dmg = b.snowBase * (1f + SignatureSkills.WrSnowStep * b.pinCount);
+                }
                 if (b.pinCount - legStart >= cap) { done = true; break; }
                 if (WrTier(pe) > w.tier) { bump = true; done = true; break; }       // 무거운 적에 부딪혀 멈춤 → 벽꿍
             }
@@ -737,6 +774,12 @@ public partial class CharacterKit
         }
         wrBalls.Remove(b);
         WrLand(b, p, bump, dir);
+    }
+
+    // 2.0.1~ 철벽 샅바(진화): 황소 돌진이 들이받은 적을 핀처럼 날려 보냄 (SignatureSkills.WrTick)
+    public void WrRushPin(EnermyController e, Vector2 dir, float dmg)
+    {
+        if (e != null && !e.IsDead && e.holder == null && !e.IsMidBoss) WrSpawnPin(e, e.transform.position, dir, dmg, 1);
     }
 
     // 튕긴 핀이 함께 날아감 (세대 2 상한)

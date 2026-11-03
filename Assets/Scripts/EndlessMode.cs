@@ -203,7 +203,7 @@ public class EndlessMode : MonoBehaviour
         }
         if (sec != erodeSec) { erodeSec = sec; UpdateErosion(); }      // 1.2.3~ 풍화는 1초에 한 번 (HUD 글이 안 바뀌어도)
 
-        if (s >= 600f && !reflux) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2) · 2.0.0~ 역류는 해제 조건을 세지 않음
+        if (s >= 600f && !reflux && !relay) CharacterData.Achieve(CharUnlock.Endless10);        // 새 캐릭터 해제 조건 (1.0.2) · 2.0.0~ 역류는 해제 조건을 세지 않음 · 2.0.1~ 릴레이도 (영웅 셋이 이어 달린 10분은 「무한 모드에서 10분 버티기」가 아님)
         if (!special) EndlessMilestones.CheckTime(s);                       // 1.2~ 무한 이정표 5 · 10 · 15 · 20분 (첫 달성 한 번 · 일일 도전 · 특별 모드 제외)
         if (relay) RelayRun.Tick(s);                                        // 2.0.0~ 영혼 릴레이 업적 · 계약 값
         bool free = Time.timeScale > 0f && !stages.IsMenuOpen && !PlayerController.Cinematic;
@@ -276,7 +276,7 @@ public class EndlessMode : MonoBehaviour
         foreach (bosss b in bosss.Live)
         {
             if (b == null || b.IsDead) continue;
-            float safety = reflux ? RefluxRun.SafetyErosion : 1f;     // 2.0.0~ 역류: 실제 12:00 이 지나도 보스가 남으면 개발자까지 1분마다 +50% (끝판이 영원히 안 끝나는 일 방지)
+            float safety = reflux ? RefluxRun.ErosionFor(Time.time - b.spawnedAt) : 1f;     // 2.0.0~ 역류: 실제 12:00 안전장치 · 2.0.1~ 나온 지 2분 뒤부터 1분마다 +50% (개발자 포함 · 약해지는 몸으로도 보스전이 끝나게)
             if (b.developer || !b.spawnTimed) { b.erosionMul = safety; continue; }
             float over = Time.time - b.spawnedAt - ErodeAfter;
             float mul = over <= 0f ? 1f : 1f + Mathf.Min(over / 60f * ErodePerMin, ErodeMax - 1f);
@@ -580,7 +580,7 @@ public class EndlessMode : MonoBehaviour
     {
         if (finalStage == 3) return;
         BossesDefeated++;
-        if (BossesDefeated >= 5 && !reflux) CharacterData.Achieve(CharUnlock.EndlessBosses5);
+        if (BossesDefeated >= 5 && !reflux && !relay) CharacterData.Achieve(CharUnlock.EndlessBosses5);      // 2.0.1~ 릴레이 제외 (Endless10 과 같은 이유: 셋이 나눠 잡은 수)
         if (!special && BossesDefeated >= 5) EndlessMilestones.Reach(EndlessMilestones.Bosses5);      // 1.2~ 이정표 (첫 달성 한 번)
         if (relay) RelayRun.OnBossDefeated();       // 2.0.0~ 이 주자가 보스를 쓰러뜨렸음 (계약 · 업적)
         // 1.0.4~ 개발자를 쓰러뜨려도 끝나지 않음: 개발자와 엄마를 모두 쓰러뜨려야 클리어 (보스가 쓰러진 그 순간 불리므로 그때 표시)

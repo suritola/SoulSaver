@@ -31,7 +31,7 @@ public partial class BossSkills
         if (!Alive) yield break;
         for (int i = 0; i < 3; i++)
         {
-            Fx.Spawn("fx_flashframe", spots[i], 2.8f, Color.white, 24f, 0f, 20);
+            Fx.Spawn("fx_flashframe", spots[i], 2.8f, CharacterKit.PhFlashSafe(Color.white), 24f, 0f, 20);       // 2.0.1~ 번쩍임 효과 끔이면 옅게
             PlayerController pl = Hostile.Player;
             if (pl != null && InFrame(spots[i], pl, 3.6f, 2.7f) && pl.TryHit(Capped(15f * Power))) pl.Slow(0.6f, 0.5f);
         }

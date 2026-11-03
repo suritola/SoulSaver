@@ -113,8 +113,8 @@ public partial class CharacterKit
             phSweepList.Add((col.gameObject, e, col.transform.position.x));
         }
         Vector3 mid = new Vector3(bandC.x, y, 0f);
+        if (!Impact.UltRecent) Hostile.Shake(0.3f);       // 2.0.1~ 태풍 되감기로 1초 안에 두 번째 커튼이면 큰 흔들림 없이 소리만
         Impact.Hit(ImpactTier.Ult, mid, new Vector2(dirX, 0f));
-        Hostile.Shake(0.3f);
         FxAnim cur = Fx.Play("fx_curtain", new Vector3(x0, y, 0f), thick, new Color(1f, 1f, 1f, 0.8f), 14f, dirX > 0f ? 0f : 0f, 24, true, 0.6f);
         float dmg = Damage * 2.4f * UltMul * formPower;
         List<EnermyController> flown = new List<EnermyController>();
@@ -133,9 +133,9 @@ public partial class CharacterKit
                 Vector3 p = s.go.transform.position;
                 bool boss = s.e == null;
                 Specials.Damage(s.go, dmg, new Vector3(dirX, 0f, 0f), 0f);
-                Fx.Spawn("fx_flashframe", p, 2.2f, Color.white, 24f, 0f, 20);
+                Fx.Spawn("fx_flashframe", p, 2.2f, PhFlashSafe(Color.white), 24f, 0f, 20);
                 if (boss) { PhAddMarks(PhotographerTuning.MarkMax); continue; }
-                if (s.e != null && !s.e.IsDead && PhPaperTake(s.e, 4f, true)) flown.Add(s.e);
+                if (s.e != null && !s.e.IsDead && PhPaperTake(s.e, 4f, true, true)) flown.Add(s.e);       // 2.0.1~ 필살기는 이미 종이여도 갱신
             }
             yield return null;
         }

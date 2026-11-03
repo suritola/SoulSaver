@@ -141,6 +141,9 @@ public partial class SpecialAbilities
 
     public int RefluxBlessLeft { get { int n = 0; foreach (int c in blessing) n += c; return n; } }
 
+    // 2.0.1~ 축복 체력 조각이 지금 더하고 있는 최대 체력 합 (LevelShop.UndoCard 카드 8 이 이 몫을 빼고 나눔)
+    public float RefluxBlessHp { get { float s = 0f; foreach (float a in blessHpAdds) s += a; return s; } }
+
     // 지금 가장 위 진화 단계의 이름 · 그림 · 무게 (잃기 목록): 3 각성 → 2 2차 → 1 1차
     public int RefluxTopTier => EvolutionTier;
 

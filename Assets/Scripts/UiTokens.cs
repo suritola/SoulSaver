@@ -11,7 +11,7 @@ public static class UiTokens
     public static readonly Color Raised = Hex("#1C1B24");          // 카드 · 버튼 · 목록 줄 (불투명: 사용자 「투명하면 누를 수 있는지 모름」)
     public static readonly Color Sunken = Hex("#0E0D12");          // 홈 · 게이지 바탕 · 입력칸 · 누름
     public static readonly Color Outline = Hex("#050407");         // 모든 도트 그림 바깥 1도트
-    public static Color Scrim(bool full) => new Color(Void.r, Void.g, Void.b, full ? 0.92f : 0.78f);     // 창 뒤 막 (모달 0.78 · 전면 0.92)
+    public static Color Scrim(bool full) => new Color(Void.r, Void.g, Void.b, full ? 0.92f : 0.78f);     // 창 뒤 막 (일시정지 0.78 · 전면 0.92 — 2.0.1~ 모달 창은 UiV2.Modal 에서 전면 값)
 
     // 선
     public static readonly Color LineDim = Hex("#2B2935");         // 구분선 · 비활성

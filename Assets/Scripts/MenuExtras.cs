@@ -475,13 +475,18 @@ public static class MenuExtras
         {
             UIKit.Forget(ct);           // 언어를 바꿔도 아래 줄(캐릭터 · 장 · 레벨)이 지워지지 않게
             // 1.0.4~: 난이도도 (이어하면 메뉴에서 고른 난이도가 아니라 저장한 판의 난이도로 함) · 언어를 바꾸면 다시 씀
-            System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>" + Loc.T(CharacterData.Def((CharacterId)saved.character).name)
+            System.Action label = () => ct.text = Loc.T("이어하기") + "\n<size=55%>"
+                      // 2.0.1~ 영혼 릴레이 판: 「영혼 릴레이 · 주자 n/3 · 지금 영웅」 (전엔 첫 주자 · 무한 모드로 보여 일반 판처럼 읽혔음 · 셋 모두 해금은 Peek 이 이미 확인)
+                      + (RelayRun.ParseInts(saved.relay, RelayRun.Runners) is int[] ro
+                         ? Loc.T("영혼 릴레이") + " · " + Loc.T("relay.hud.runner").Replace("{0}", (Mathf.Clamp(saved.relayIndex, 0, RelayRun.Runners - 1) + 1).ToString())
+                           + " · " + Loc.T(CharacterData.Def((CharacterId)ro[Mathf.Clamp(saved.relayIndex, 0, RelayRun.Runners - 1)]).name)
+                         : Loc.T(CharacterData.Def((CharacterId)saved.character).name)
                       + " · " + GameMode.Name((Difficulty)Mathf.Clamp(saved.difficulty, 0, 3))
                       + (saved.weight > 0 ? " " + Loc.T("weight.short").Replace("{0}", saved.weight.ToString()) : "")      // 1.2~ 영혼의 무게
                       + " · " + (saved.difficulty == (int)Difficulty.Endless      // 1.2.3~ 무한 판은 장이 없어 생존 시간으로 (2.0.1~ 보스 처치 수는 뺌: 줄이 넘쳐 「Lv」 숫자가 다음 줄로 잘렸음)
                                  ? EndlessMode.Clock(saved.endlessSeconds)
                                  : Chapters.Title(saved.stage))
-                      + " · Lv " + saved.level + "</size>";
+                      + " · Lv " + saved.level) + "</size>";
             label();
             ct.enableWordWrapping = false;              // 2.0.1~ 넘치면 접지 말고 말줄임 (\n 줄바꿈은 그대로)
             ct.overflowMode = TextOverflowModes.Ellipsis;
@@ -1570,6 +1575,7 @@ public static class UIKit
         if (!UiRules.Legacy)
         {
             RectTransform w = UiV2.Modal(root, name, size, out blocker);
+            blocker.AddComponent<ModalMark>();      // 2.0.1~ 열린 창 수 (ResumeCountdown)
             RectTransform innerV2 = Rect("Inner", w, Vector2.zero, size - new Vector2(6f, 6f));
             innerV2.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
             return innerV2;
@@ -1584,6 +1590,7 @@ public static class UIKit
         br.offsetMin = br.offsetMax = Vector2.zero;
         br.SetAsLastSibling();
         blocker.GetComponent<Image>().color = new Color(0.03f, 0.02f, 0.05f, 0.82f);
+        blocker.AddComponent<ModalMark>();      // 2.0.1~ 열린 창 수 (ResumeCountdown)
 
         // 1.4.8~ 창 뒤 부드러운 그림자 (아래로 조금 · 떠 보이게) · 막 · 창이 서서히 나타남 (WindowIntro)
         if (ShadowSprite != null)
@@ -1619,6 +1626,7 @@ public static class UIKit
         t.color = color;
         t.alignment = align;
         t.raycastTarget = false;
+        t.textPreprocessor = JaWordWrap.Instance;       // 2.0.1~ 일본어 가타카나 낱말이 가운데서 끊기지 않게 (그릴 때만)
         t.text = Loc.T(ko);
         if (!string.IsNullOrEmpty(ko)) Remember(t, ko);
         return t;
@@ -1671,6 +1679,7 @@ public static class UIKit
         txt.enableAutoSizing = false;
         txt.fontSize = fontSize;
         txt.raycastTarget = false;
+        txt.textPreprocessor = null;        // 입력 글은 그대로 (커서 위치가 원문 글자 순서를 따라야 함)
         TMP_InputField f = r.gameObject.AddComponent<TMP_InputField>();
         f.textViewport = area;
         f.textComponent = txt;

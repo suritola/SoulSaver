@@ -26,7 +26,7 @@ public static partial class LocTable
           "故事模式对局的规则卡。在开局时与第2 · 3章首领后选择。只有选过的烙印才会显示详情。");
         C("codex.tab.secret", "숨겨진 영웅 · 보스 · 행운입니다. 조건을 이루거나 만나면 열립니다.",
           "Hidden heroes, bosses and lucky surprises, revealed when you meet them or fulfill their conditions.",
-          "隠された英雄・ボス・幸運です。条件を満たすか出会うと開きます。",
+          "隠されたヒーロー・ボス・幸運です。条件を満たすか出会うと開きます。",
           "隐藏的英雄 · 首领 · 幸运。达成条件或遇见后解锁。");
         C("codex.showall.on", "모두 보기 켜짐", "Show All is on", "すべて表示 オン", "全部显示 已开启");
 
@@ -66,7 +66,7 @@ public static partial class LocTable
           "完成第一次进化后，击败下一个首领即可选择的第二次进化。");
         C("codex.hint.lockedhero", "잠긴 영웅의 진화입니다. 그 영웅을 해금해 진화하면 기록됩니다.",
           "An evolution of a locked hero. Unlock that hero and obtain this evolution to record it.",
-          "ロック中の英雄の進化です。その英雄を解放して進化すると記録されます。",
+          "ロック中のヒーローの進化です。そのヒーローを解放して進化すると記録されます。",
           "未解锁英雄的进化。解锁该英雄并完成进化后即可记录。");
         C("codex.hint.awaken", "2차까지 진화한 뒤 이야기 모드 3장 보스 · 무한 모드 세 번째 보스를 쓰러뜨리면 고르는 각성입니다.",
           "An awakening chosen after your second evolution, upon defeating the Chapter 3 boss in Story or the third boss in Endless.",
@@ -81,7 +81,7 @@ public static partial class LocTable
         C("codex.hint.brand", "이야기 모드 판에서 이 각인을 고르면 기록됩니다.", "Recorded when you pick this brand in a Story run.", "ストーリーモードのプレイでこの刻印を選ぶと記録されます。", "在故事模式中选择此烙印即可记录。");
 
         // ================================================================= 비밀 탭
-        C("codex.sec.hero", "비밀 영웅", "Secret Hero", "秘密の英雄", "秘密英雄");
+        C("codex.sec.hero", "비밀 영웅", "Secret Hero", "秘密のヒーロー", "秘密英雄");
         C("codex.sec.boss", "비밀 보스", "Secret Boss", "秘密のボス", "秘密首领");
         C("codex.sec.luck", "숨은 행운", "Hidden Luck", "隠れた幸運", "隐藏的幸运");
         C("codex.sec.hero.buy", "조건을 이루었습니다! 캐릭터 창에서 {0} P로 해금할 수 있습니다.",

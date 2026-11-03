@@ -22,7 +22,7 @@ public static partial class LocTable
         A("demo.end.heroes",
             "영웅 9명, 9개의 손. 체험판의 세 명 말고도 여섯 명이 더 있습니다.",
             "Nine heroes, nine hands. Six more are waiting beyond the three in this demo.",
-            "9人の英雄、9つの手触り。体験版の3人のほかに、あと6人います。",
+            "9人のヒーロー、9つの手触り。体験版の3人のほかに、あと6人います。",
             "9位英雄，9种手感。除了试玩版的三位，还有六位在等你。");
     }
 }

@@ -29,7 +29,7 @@ public class SkinDef
 public static class SkinData
 {
     public static readonly int[] Prices = { 5000, 15000, 40000, 100000 };
-    public static readonly string[] TierNames = { "일반", "희귀", "영웅", "전설" };
+    public static readonly string[] TierNames = { "skin.tier.common", "희귀", "영웅", "전설" };      // 2.0.1~ 「일반」 키는 설정 탭(General)과 겹쳐 등급만 따로
     public static readonly Color[] TierColors =
     {
         new Color(0.72f, 0.72f, 0.76f), new Color(0.35f, 0.65f, 1f), new Color(0.75f, 0.45f, 1f), new Color(1f, 0.8f, 0.3f),

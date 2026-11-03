@@ -66,18 +66,23 @@ public partial class CharacterKit
         {
             if (full)
             {
-                // 게이지 가득: 토글 설정이면 첫 누름 = 조준 · 아니면 0.25초 안에 떼면 자리 바꾸기, 넘기면 조준
-                if (toggle) { pupAiming = true; Play("hum", 0.3f, 1.2f); }
-                else { pupPressed = true; pupPressAt = Time.time; }
+                // 게이지 가득: 0.25초 안에 떼면 자리 바꾸기, 넘기면 조준
+                // 2.0.1~ 토글 설정도 같게 (예전엔 첫 누름 = 조준이라 게이지가 가득이면 자리를 못 바꿨음) — 떼는 순간은 실제 키로 잼
+                pupPressed = true; pupPressAt = Time.time;
             }
             else PupTrySwap(gauge);
         }
         if (pupPressed)
         {
-            if (!GameInput.UltHeld || GameInput.UltUp)
+            bool held = toggle ? KeyBindings.Held(GameAction.Ultimate) : GameInput.UltHeld && !GameInput.UltUp;
+            if (!held)
             {
                 pupPressed = false;
-                if (Time.time - pupPressAt <= 0.25f) PupTrySwap(gauge);
+                if (Time.time - pupPressAt <= 0.25f)
+                {
+                    PupTrySwap(gauge);
+                    if (toggle) GameInput.ResetUltLatch();      // 토글 걸쇠가 「누른 채」로 남지 않게
+                }
             }
             else if (Time.time - pupPressAt > 0.25f) { pupPressed = false; pupAiming = true; Play("hum", 0.3f, 1.2f); }
         }
@@ -347,6 +352,20 @@ public partial class CharacterKit
     void PupEdgeHide()
     {
         if (pupEdgeCanvas != null && pupEdgeCanvas.enabled && pupEdgeLift < 0f) pupEdgeLift = 0f;       // 위로 걷힘 시작
+    }
+
+    // 2.0.1~ 바로 끔 (사망 · 정리 경로) — 걷힘 애니메이션을 기다리지 않음
+    void PupEdgeOff()
+    {
+        if (pupEdgeCanvas != null) pupEdgeCanvas.enabled = false;
+        pupEdgeLift = -1f;
+    }
+
+    // 2.0.1~ 일시정지 동안 막 그림만 숨김 (상태는 그대로 — 풀리면 다시 보임)
+    void PupEdgePause(bool paused)
+    {
+        if (pupEdgeL != null && pupEdgeL.enabled == paused) pupEdgeL.enabled = !paused;
+        if (pupEdgeR != null && pupEdgeR.enabled == paused) pupEdgeR.enabled = !paused;
     }
 
     void PupEdgeTick()

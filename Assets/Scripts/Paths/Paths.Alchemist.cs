@@ -146,6 +146,9 @@ public sealed class AlchemistPaths : HeroPaths
     public override void End()
     {
         ClearAides();
+        // 2.0.1~ 조수 갈래가 만든 키트 호문쿨루스(AlchEnsureHomunculus)도 거둠 — 호문쿨루스 카드(2번 칸)가 없을 때만 (역류에서 갈래를 잃어도 남았음)
+        CharacterKit kit = CharacterKit.Instance;
+        if (kit != null && kit.Id == CharacterId.Alchemist && kit.card[2] <= 0) kit.CardLost(2);
         puddles.Clear();
         pud.Clear();
         frozen.Clear();

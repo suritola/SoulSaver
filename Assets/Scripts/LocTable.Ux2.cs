@@ -32,7 +32,7 @@ public static partial class LocTable
         S("평타 한 발의 피해입니다. 멀티 샷이면 발당 피해 × 발사 수로 보입니다.", "Damage of one basic attack. With Multi Shot it shows damage per shot × number of shots.", "通常攻撃1発のダメージです。マルチショットなら1発のダメージ×発射数で表示します。", "一次普攻的伤害。多重射击时显示为每发伤害 × 发射数。");
         S("받는 피해를 이 비율만큼 줄입니다. 상한이 있습니다.", "Reduces damage taken by this percentage. It has a cap.", "受けるダメージをこの割合だけ減らします。上限があります。", "按此比例减少所受伤害。有上限。");
         S("초당 평타 횟수입니다.", "Basic attacks per second.", "1秒あたりの通常攻撃回数です。", "每秒普攻次数。");
-        S("탄창을 다 쓴 뒤 다시 채우는 데 걸리는 시간입니다. 탄창이 없는 영웅은 「-」로 보입니다.", "Time to refill the magazine after it runs out. Heroes without a magazine show \"-\".", "弾倉を使い切った後、補充にかかる時間です。弾倉のない英雄は「-」と表示されます。", "弹匣用尽后重新装填所需的时间。没有弹匣的英雄显示为「-」。");
+        S("탄창을 다 쓴 뒤 다시 채우는 데 걸리는 시간입니다. 탄창이 없는 영웅은 「-」로 보입니다.", "Time to refill the magazine after it runs out. Heroes without a magazine show \"-\".", "弾倉を使い切った後、補充にかかる時間です。弾倉のないヒーローは「-」と表示されます。", "弹匣用尽后重新装填所需的时间。没有弹匣的英雄显示为「-」。");
         S("시작 속도에 비한 지금 이동 속도입니다.", "Current move speed compared with your starting speed.", "開始時の速度に対する現在の移動速度です。", "与初始速度相比的当前移动速度。");
         S("지금 체력과 최대 체력입니다. 0이 되면 쓰러집니다.", "Current and maximum HP. You fall at 0.", "現在の体力と最大体力です。0になると倒れます。", "当前生命值与最大生命值。降到0时倒下。");
         S("공격이 치명타가 될 확률입니다. 영혼 트리에서 올립니다.", "Chance for an attack to be a critical hit. Raised in the Soul Tree.", "攻撃がクリティカルになる確率です。魂のツリーで上げます。", "攻击成为暴击的概率。在灵魂树中提升。");
@@ -52,15 +52,15 @@ public static partial class LocTable
         S("이번 판의 플레이 시간입니다. 멈춘 시간은 빼고 셉니다.", "Play time this run. Paused time is not counted.", "今回のプレイ時間です。停止中の時間は数えません。", "本局的游戏时间。不计算暂停时间。");
         S("[{UPGRADE}]로 영혼 트리를 엽니다. 배울 수 있는 칸이 있으면 버튼이 빛납니다.", "Press [{UPGRADE}] to open the Soul Tree. The button glows when a node can be learned.", "[{UPGRADE}] で魂のツリーを開きます。習得できるマスがあるとボタンが光ります。", "按 [{UPGRADE}] 打开灵魂树。有可学习的节点时按钮会发光。");
         // ================================================================= 2. 메뉴 영웅 패널 · 선택하고 시작
-        S("영웅 바꾸기", "Change Hero", "英雄変更", "更换英雄");
+        S("영웅 바꾸기", "Change Hero", "ヒーロー変更", "更换英雄");
         S("선택하고 시작", "Select & Start", "選んで開始", "选择并开始");
-        S("지금 영웅", "Current Hero", "現在の英雄", "当前英雄");
+        S("지금 영웅", "Current Hero", "現在のヒーロー", "当前英雄");
 
         // ================================================================= 3. 영웅 첫 판 안내
-        S("영웅 안내", "Hero Guide", "英雄ガイド", "英雄指南");
+        S("영웅 안내", "Hero Guide", "ヒーローガイド", "英雄指南");
         S("머리 위 막대", "Bar Above Head", "頭上のバー", "头顶条");
         S("시작!", "Start!", "開始！", "开始！");
-        S("일시정지 메뉴의 「영웅 안내」에서 언제든 다시 볼 수 있습니다.", "You can read this again any time from Hero Guide in the pause menu.", "ポーズメニューの「英雄ガイド」でいつでも読み返せます。", "可随时在暂停菜单的「英雄指南」中再次查看。");
+        S("일시정지 메뉴의 「영웅 안내」에서 언제든 다시 볼 수 있습니다.", "You can read this again any time from Hero Guide in the pause menu.", "ポーズメニューの「ヒーローガイド」でいつでも読み返せます。", "可随时在暂停菜单的「英雄指南」中再次查看。");
         S("숨 — 활을 당기는 동안 줄고, 바닥나면 활이 떨려 위력이 절반이 됩니다. 「완벽!」 발사가 숨을 되돌립니다.", "Breath — drains while drawing the bow; when empty the bow shakes and deals half damage. A Perfect shot restores it.", "息 — 弓を引いている間に減り、尽きると弓が震えて威力が半分になります。「パーフェクト！」の一撃で回復します。", "气息 — 拉弓时消耗，耗尽后弓会颤抖、威力减半。「完美！」射击可将其恢复。");
         S("불안정 — 던질수록 올라 폭발이 커지고, 가득 차면 발밑에서 자폭합니다.", "Instability — rises with every throw and makes explosions bigger; when full, it blows up at your feet.", "不安定 — 投げるほど上がり爆発が大きくなり、満タンになると足元で自爆します。", "不稳定 — 每次投掷都会上升、爆炸更大；满了会在脚下自爆。");
         S("다음 획 — 세 번째 획마다 삼각형이 닫혀 안쪽 적이 크게 다칩니다.", "Next Stroke — every third stroke closes a triangle that heavily damages enemies inside.", "次の一画 — 3画目ごとに三角形が閉じ、内側の敵に大ダメージを与えます。", "下一笔 — 每第三笔会闭合三角形，重创其中的敌人。");
@@ -84,10 +84,10 @@ public static partial class LocTable
         S("시작 이야기", "Opening", "開幕の物語", "开场故事");
         S("보스 등장", "Boss Entrance", "ボス登場", "首领登场");
         S("엔딩", "Ending", "エンディング", "结局");
-        C("codex.tab.story", "본 이야기만 글로 다시 읽을 수 있습니다. 영웅마다 시작 이야기와 엔딩이 다릅니다.", "Re-read the stories you have seen. Each hero has their own opening and ending.", "見た物語だけを文字で読み返せます。英雄ごとに開幕とエンディングが異なります。", "可重读已看过的故事。每位英雄的开场与结局都不同。");
+        C("codex.tab.story", "본 이야기만 글로 다시 읽을 수 있습니다. 영웅마다 시작 이야기와 엔딩이 다릅니다.", "Re-read the stories you have seen. Each hero has their own opening and ending.", "見た物語だけを文字で読み返せます。ヒーローごとに開幕とエンディングが異なります。", "可重读已看过的故事。每位英雄的开场与结局都不同。");
         S("아직 보지 못한 이야기", "Not Seen Yet", "まだ見ていない物語", "尚未看过的故事");
-        S("이 영웅으로 판을 시작하면 볼 수 있습니다.", "Start a run as this hero to see it.", "この英雄でプレイを始めると見られます。", "以这位英雄开始一局即可看到。");
-        S("이 영웅으로 끝까지 클리어하면 볼 수 있습니다.", "Clear a run as this hero to see it.", "この英雄でクリアすると見られます。", "以这位英雄通关即可看到。");
+        S("이 영웅으로 판을 시작하면 볼 수 있습니다.", "Start a run as this hero to see it.", "このヒーローでプレイを始めると見られます。", "以这位英雄开始一局即可看到。");
+        S("이 영웅으로 끝까지 클리어하면 볼 수 있습니다.", "Clear a run as this hero to see it.", "このヒーローでクリアすると見られます。", "以这位英雄通关即可看到。");
         S("{0}에서 만나면 볼 수 있습니다.", "Meet them in {0} to see it.", "{0}で出会うと見られます。", "在{0}遇到后即可看到。");
 
         // ================================================================= 8. 모니터 (최대 프레임 문구는 LocTable.Perf — 1.1.9 핫픽스)
@@ -101,7 +101,7 @@ public static partial class LocTable
 
         // ================================================================= 10. 접근성 탭
         S("접근성", "Accessibility", "補助機能", "辅助功能");
-        S("표시", "HUD", "表示", "HUD");
+        S("표시", "HUD", "HUD", "HUD");      // 2.0.1~ 일본어 「表示」가 「画面」 탭과 구분되지 않아 HUD
         S("공격 고정", "Attack Lock", "攻撃固定", "攻击锁定");
         S("켜면 공격 키를 한 번 누르면 손을 떼도 계속 쏘고, 다시 누르면 멈춥니다. 조준은 마우스 그대로입니다. 궁수는 가득 당겨지면 자동으로 놓되 「완벽!」 보너스는 받지 못하고, 숨이 차면 숨을 고릅니다.", "Press the attack key once to keep firing after you let go, and press it again to stop. Aiming still follows the mouse. The Archer releases automatically at full draw, gets no Perfect bonus, and rests when out of breath.", "攻撃キーを1回押すと離しても撃ち続け、もう1回押すと止まります。照準はマウスのままです。弓使いは引き切ると自動で放ちますが「パーフェクト！」ボーナスは得られず、息が切れると休みます。", "按一次攻击键后松手也会持续射击，再按一次停止。瞄准仍跟随鼠标。弓箭手拉满后自动松开，但不会获得「完美！」加成，喘不过气时会停下休息。");
         S("[{ATTACK}] 다시 누르면 멈춤", "Press [{ATTACK}] again to stop", "[{ATTACK}] をもう一度押すと停止", "再按 [{ATTACK}] 停止");
@@ -118,7 +118,7 @@ public static partial class LocTable
         S("최고 {0}", "Best {0}", "最高 {0}", "最佳 {0}");
         S("최단 클리어 {0}", "Fastest clear {0}", "最速クリア {0}", "最快通关 {0}");
         S("지난 판", "Recent Runs", "最近のプレイ", "最近对局");
-        S("영웅별 통계", "Stats by Hero", "英雄別統計", "英雄统计");
+        S("영웅별 통계", "Stats by Hero", "ヒーロー別統計", "英雄统计");
         S("판 수", "Runs", "回数", "局数");
         S("클리어 수", "Clears", "クリア数", "通关数");
         S("최고 레벨", "Best Level", "最高レベル", "最高等级");

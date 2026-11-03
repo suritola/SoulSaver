@@ -742,6 +742,7 @@ public partial class CharacterKit
     }
 
     // ================================================================= 바리케이드
+    static Material FmLineMat;
     FmFence FmAddFence(Vector3 pos, Vector2 along, float width, float life, float thick = 0.3f)
     {
         while (fmFences.Count >= FmFenceCap) FmCollapse(fmFences[0], false);
@@ -770,7 +771,7 @@ public partial class CharacterKit
             lr.SetPosition(0, pos - (Vector3)(f.along * f.half));
             lr.SetPosition(1, pos + (Vector3)(f.along * f.half));
             lr.startWidth = lr.endWidth = 0.5f;
-            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.material = FmLineMat ??= new Material(Shader.Find("Sprites/Default"));      // 2.0.1~ 같은 재질 하나를 나눠 씀 (바리케이드마다 새 재질이 쌓이던 것)
             lr.startColor = lr.endColor = FmYellow;
             f.line = lr;
         }

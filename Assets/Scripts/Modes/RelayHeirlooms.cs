@@ -41,7 +41,8 @@ public class RelayHeirlooms : MonoBehaviour
         if (Instance != null) return Instance;
         PlayerController p = Hostile.Player;
         if (p == null) return null;
-        return p.GetComponent<RelayHeirlooms>() ?? p.gameObject.AddComponent<RelayHeirlooms>();
+        // 2.0.1~ ?? 는 Unity 의 가짜 null(지워진 컴포넌트)을 null 로 보지 않아 에디터에서 AddComponent 를 건너뛰었음 → TryGetComponent
+        return p.TryGetComponent(out RelayHeirlooms h) ? h : p.gameObject.AddComponent<RelayHeirlooms>();
     }
 
     public static string NameOf(CharacterId hero) => Loc.T("relay.heir." + (int)hero + ".name");
@@ -81,13 +82,20 @@ public class RelayHeirlooms : MonoBehaviour
         live.Clear();
     }
 
-    // 가진 유품과 켜진 유품을 맞춤 (같은 영웅 번호 → 같은 객체를 다시 쓰지 않고 새로 만든다 — 이어하기 · 새 판에서 쿨이 초기화)
+    // 가진 유품과 켜진 유품을 맞춤 — 2.0.1~ 이미 켜진 것은 그대로 두고 빠진 것만 끄고 새 것만 만듦
+    //   (전엔 매번 전부 지우고 새로 만들어 둘째 교대 때 첫 유품의 쿨 · 처치 카운트가 초기화되고, 샅바가 메치던 적은 놓였다가 코루틴이 계속 붙잡는 등 꼬였음)
+    //   새 판 · 이어하기는 장면이 바뀌어 live 가 비어 있으므로 여전히 새로 만들어짐
     void Sync()
     {
-        foreach (Heirloom h in live) h.Dispose();
-        live.Clear();
+        for (int i = live.Count - 1; i >= 0; i--)
+        {
+            if (owned.Contains((int)live[i].hero)) continue;
+            live[i].Dispose();
+            live.RemoveAt(i);
+        }
         foreach (int id in owned)
         {
+            if (live.Exists(x => (int)x.hero == id)) continue;
             Heirloom h = Make((CharacterId)id);
             if (h == null) continue;
             h.host = this;

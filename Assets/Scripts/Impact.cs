@@ -45,6 +45,11 @@ public static class Impact
         new Cap { slow = 0.28f, zoom = 0.16f, shake = 0.90f, cooldown = 0.0f },     // 필살기 (게이지가 이미 드물게 함)
     };
     const float SlowScale = 0.3f, Recent = 0.45f;
+    // 2.0.1~ 슬로 · 줌은 단계와 상관없이 4.5초에 한 번 (단계별 쉬는 시간이 따로라 진화 장식 · 스킬이 번갈아 약 1.4초마다 느려졌음) · 필살기는 예외
+    const float SlowRest = 4.5f, UltRepeat = 1f;
+    static float lastSlowAt = -99f;
+    // 방금(1초 안) 필살기 연출이 있었는지 — 연달아 터지는 필살기(태풍 되감기 등)의 두 번째 큰 흔들림을 호출처가 건너뛰려고
+    public static bool UltRecent => Time.unscaledTime - lastAt[(int)ImpactTier.Ult] < UltRepeat;
     static readonly float[] lastAt = { -99f, -99f, -99f, -99f };
     static int lastTier = -1;
     static float lastTierAt = -99f;
@@ -80,7 +85,11 @@ public static class Impact
         // 규칙 ③: 방금 더 센 연출이 있었으면 시간 · 줌은 건드리지 않음
         bool weaker = lastTier > ti && now - lastTierAt < Recent;
         bool timeOk = !weaker && Juice.CanSlow && Time.timeScale > 0f;
+        if (ti < (int)ImpactTier.Ult && now - lastSlowAt < SlowRest) timeOk = false;
+        // 2.0.1~ 필살기가 1초 안에 또 터지면 두 번째는 소리만 (슬로 · 줌 · 큰 흔들림 · 번쩍임 없음)
+        if (ti == (int)ImpactTier.Ult && now - prevAt < UltRepeat) { timeOk = false; shake = 0f; flash = Color.clear; }
         if (!timeOk) { slow = 0f; zoom = 0f; }
+        if (slow > 0f || zoom > 0f) lastSlowAt = now;
         if (!weaker) { lastTier = ti; lastTierAt = now; }
 
         SpecialFeedback fx = SpecialAbilities.SharedFx;

@@ -19,7 +19,7 @@ public static partial class LocTable
           "選んだ重みまでの効果がすべて重なります。重み1ごとにポイントが5%増えます。",
           "所选重量及以下的效果全部叠加。每1重量点数增加5%。");
         A("weight.points", "포인트 +{0}%", "Points +{0}%", "ポイント +{0}%", "点数 +{0}%");
-        A("weight.locked", "이 영웅으로 무게 {0}까지 클리어하면 열립니다.", "Clear Weight {0} with this hero to unlock.", "この英雄で重み{0}をクリアすると解放されます。", "用此英雄通关重量{0}后解锁。");
+        A("weight.locked", "이 영웅으로 무게 {0}까지 클리어하면 열립니다.", "Clear Weight {0} with this hero to unlock.", "このヒーローで重み{0}をクリアすると解放されます。", "用此英雄通关重量{0}后解锁。");
         A("weight.none", "무게 없음 · 평소 어려움", "No weight · Regular Hard", "重みなし・通常のハード", "无重量 · 普通困难");
         A("weight.step.zero", "평소 어려움", "Regular Hard", "通常のハード", "普通困难");
         A("weight.step.hp", "적 체력 +15%", "Enemy HP +15%", "敵の体力+15%", "敌人生命+15%");

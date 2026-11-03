@@ -773,9 +773,9 @@ public static class Hostile
 
     public static Sprite Glow => SpecialAbilities.GlowSprite;
 
-    public static void Play(string sound, float vol = 1f, float pitch = 1f)
+    public static void Play(string sound, float vol = 1f, float pitch = 1f, [System.Runtime.CompilerServices.CallerFilePath] string from = "")      // 2.0.1~ from: 부른 파일을 그대로 넘김 (SkinAudio 가 영웅 쪽 소리만 스킨으로)
     {
-        if (SpecialAbilities.SharedFx != null) { SpecialAbilities.SharedFx.Play(sound, vol, pitch); return; }
+        if (SpecialAbilities.SharedFx != null) { SpecialAbilities.SharedFx.Play(sound, vol, pitch, from); return; }
         // 1.2.6~ 메인 메뉴 · 결과 화면에는 SharedFx 가 없어 계약 · 사다리 · 기억 조각 · 결과 보상 소리가 전부 무음이었음
         //   → 장면을 넘어 남는 소리 전용 하나를 한 번만 만들어 돌려 씀 (합성 클립이 많아 다시 만들지 않음)
         if (menuFx == null)
@@ -785,7 +785,7 @@ public static class Hostile
             menuFx = go.AddComponent<SpecialFeedback>();
             menuFx.Init(UIKit.Font, UIKit.FontMaterial);
         }
-        menuFx.Play(sound, vol, pitch);
+        menuFx.Play(sound, vol, pitch, from);
     }
     static SpecialFeedback menuFx;
 

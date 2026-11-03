@@ -58,7 +58,7 @@ public partial class SpecialAbilities
                             Vector3 target = Vector3.Lerp(go.transform.position, at, 0.75f);
                             using (var ovl = PhysHits.Box(target, new Vector2(3.6f, 2.7f), 0f)) foreach (Collider2D col in ovl)
                                 if (col != null && (col.CompareTag("enermy") || col.CompareTag("boss"))) Specials.Damage(col.gameObject, D * 0.75f, Vector3.zero, 0f);
-                            Fx.Spawn("fx_flashframe", target, 2.7f, new Color(1f, 1f, 1f, 0.8f), 24f, 0f, 20);
+                            Fx.Spawn("fx_flashframe", target, 2.7f, CharacterKit.PhFlashSafe(new Color(1f, 1f, 1f, 0.8f)), 24f, 0f, 20);
                         }
                         fx.Play("pop", 0.3f, 1.6f);
                         yield return new WaitForSeconds(0.6f);
@@ -71,7 +71,7 @@ public partial class SpecialAbilities
                     // 상영회: 마우스 자리에 4초 동안 빛 기둥 화면이 서서 안의 적을 0.3초마다 벰 (공격력 50%)
                     Vector3 at = KitClamp(mouse);
                     Vector2 size = evo ? new Vector2(5f, 6f) : new Vector2(4.2f, 5f);
-                    FxAnim screen = Fx.Play("fx_flashframe", at, size.y, new Color(1f, 1f, 1f, 0.45f), 8f, 0f, 19, true, 4.2f);
+                    FxAnim screen = Fx.Play("fx_flashframe", at, size.y, CharacterKit.PhFlashSafe(new Color(1f, 1f, 1f, 0.45f)), 8f, 0f, 19, true, 4.2f);
                     for (float t = 0f; t < 4f; t += 0.3f)
                     {
                         using (var ovl = PhysHits.Box(at, size, 0f)) foreach (Collider2D col in ovl)

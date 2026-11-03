@@ -149,8 +149,11 @@ public class SteamManager : MonoBehaviour
     // 2.0.0 검토: 해금한 비밀 영웅의 업적을 장면마다 다시 맞춤 (오프라인에서 풀어 놓친 것을 나중에 받게 · 이미 받은 것은 Unlock 이 그대로 둠)
     void CheckUnlockedHeroes()
     {
+        // 2.0.1~ 시험 빌드(SOULSAVER_TESTUNLOCK)는 모든 영웅이 열린 것으로 보여 UNLOCK_* 업적이 저절로 달성됐음 → 건너뜀
+#if !SOULSAVER_TESTUNLOCK
         foreach (var d in DesertSecrets.Defs)
             if (CharacterData.IsUnlocked(d.hero)) SteamAchievements.Unlock(d.achievement);
+#endif
     }
 
     // 한 판 클리어 (3장 보스): 난이도별 업적
@@ -366,10 +369,13 @@ public static class SteamAchievements
     public static void Unlock(string id)
     {
         if (GameInput.Auto || TutorialRun.Active) return;      // 트레일러 자동 조종 · 튜토리얼 중에는 풀지 않음
-        if (!done.Add(id)) return;       // 한 번 실행 중에 같은 업적은 한 번만
+        if (done.Contains(id)) return;       // 한 번 실행 중에 같은 업적은 한 번만
+#if STEAM
+        if (!SteamManager.Initialized) return;      // 2.0.1~ 스팀이 아직 안 켜졌으면 「했음」 표시 없이 돌아감 → 다음 부름(장면마다 다시 맞춤 등)에서 재시도 (예전엔 표시부터 해서 다시 안 됐음)
+#endif
+        done.Add(id);
         Debug.Log("[Steam] 업적: " + id);
 #if STEAM
-        if (!SteamManager.Initialized) return;
         if (SteamUserStats.GetAchievement(id, out bool already) && already) return;
         SteamUserStats.SetAchievement(id);
         SteamUserStats.StoreStats();

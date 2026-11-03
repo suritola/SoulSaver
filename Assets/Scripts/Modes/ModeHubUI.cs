@@ -125,7 +125,7 @@ public static class ModeHubUI
         if (!pick.interactable) GrayOut(pick);
 
         string note = demo ? "정식판에서 만날 수 있습니다" : unlocked ? "" : daily ? "ladder.lock.daily"
-                    : reflux ? (RefluxRun.Implemented ? "relay.hub.locked.reflux" : "relay.hub.soon") : "relay.hub.locked.relay";
+                    : reflux ? (RefluxRun.Implemented ? "reflux.hub.locked" : "relay.hub.soon") : "relay.hub.locked.relay";
         if (note.Length > 0) UIKit.Text(card, note, 20f, Dim, new Vector2(0f, -290f), new Vector2(CardW - 30f, 56f));
 
         if (demo || (reflux && !RefluxRun.Implemented)) return;
@@ -213,7 +213,7 @@ public static class ModeHubUI
                 slotPortrait[k].raycastTarget = false;
                 UIKit.Text(slot, "", 20f, Dim, new Vector2(35f, 40f), new Vector2(220f, 28f), TextAlignmentOptions.Left).text = Loc.T("relay.pick.slot").Replace("{0}", (k + 1).ToString());
                 slotName[k] = UIKit.Text(slot, "", 30f, Gold, new Vector2(35f, 6f), new Vector2(220f, 40f), TextAlignmentOptions.Left);
-                slotHeir[k] = UIKit.Text(slot, "", 18f, Dim, new Vector2(0f, -50f), new Vector2(340f, 24f));
+                slotHeir[k] = UIKit.Text(slot, "", 18f, Dim, new Vector2(0f, -54f), new Vector2(350f, 44f));      // 2.0.1~ 두 줄: 유품 이름 + 설명 (RelayHeirlooms.DescOf · 넘치면 글자가 줄어듦)
                 if (k < RelayRun.Runners - 1) UIKit.Text(win, "→", 40f, Dim, new Vector2(x + 200f, 255f), new Vector2(50f, 50f));
             }
 
@@ -271,7 +271,7 @@ public static class ModeHubUI
             if (cells.Count > 0 && cells[0] != null) GamePad.WarpTo((RectTransform)cells[0].transform);
         }
 
-        void OnDestroy() { cells.Clear(); }
+        void OnDestroy() { cells.Clear(); CloseConfirm(); }      // 2.0.1~ 고르기 창이 먼저 닫혀도 확인 창이 남지 않게
 
         void Toggle(int hero)
         {
@@ -292,12 +292,33 @@ public static class ModeHubUI
             Refresh();
         }
 
+        GameObject confirm;
+
         void Depart()
         {
-            if (System.Array.IndexOf(picked, -1) >= 0) return;
+            if (System.Array.IndexOf(picked, -1) >= 0 || confirm != null) return;
             int[] order = (int[])picked.Clone();
-            Close();
-            RelayRun.Begin(order);
+            // 2.0.1~ 저장된 판이 있으면 일반 시작(MenuManager.OnPressStart)과 같은 확인 창 — 전엔 묻지 않고 새 릴레이 판이 이어하기 저장을 덮어썼음
+            if (!RunSave.Has) { Close(); RelayRun.Begin(order); return; }
+            RectTransform win = UIKit.Modal(root, "ConfirmNewRun", new Vector2(820f, 340f), out confirm);
+            UIKit.EscCancel(confirm, CloseConfirm);
+            UIKit.Text(win, "새 게임을 시작할까요?", 38f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 78f), new Vector2(760f, 60f));
+            UIKit.Text(win, "저장된 판(이어하기)은 지워집니다.", 26f, Parch, new Vector2(0f, 20f), new Vector2(760f, 40f));
+            Button ok = UIKit.MakeButton(win, "새 게임", new Vector2(-150f, -90f), new Vector2(260f, 76f), () =>
+            {
+                CloseConfirm();
+                RunSave.Delete();
+                Close();
+                RelayRun.Begin(order);
+            }, 28f);
+            Button cancel = UIKit.MakeButton(win, "취소", new Vector2(150f, -90f), new Vector2(260f, 76f), CloseConfirm, 28f);
+            UIKit.ConfirmKeys(win, ok, cancel, -143f, false);        // 저장된 판이 지워지므로 Enter 한 번에 확정되지 않게 (MenuManager 와 같게)
+        }
+
+        void CloseConfirm()
+        {
+            if (confirm != null) Destroy(confirm);
+            confirm = null;
         }
 
         void Refresh()
@@ -311,7 +332,7 @@ public static class ModeHubUI
                 slotPortrait[k].enabled = has;
                 slotName[k].text = has ? Loc.T(CharacterData.Def(id).name) : Loc.T("relay.pick.empty");
                 slotName[k].color = has ? Gold : Dim;
-                slotHeir[k].text = !has ? "" : k == RelayRun.Runners - 1 ? Loc.T("relay.pick.last") : Loc.T("relay.pick.heir").Replace("{0}", RelayHeirlooms.NameOf(id));
+                slotHeir[k].text = !has ? "" : k == RelayRun.Runners - 1 ? Loc.T("relay.pick.last") : Loc.T("relay.pick.heir").Replace("{0}", RelayHeirlooms.NameOf(id)) + "\n<size=78%>" + RelayHeirlooms.DescOf(id) + "</size>";
             }
             for (int i = 0; i < CharacterData.All.Length && i < cellPortrait.Length; i++)
             {
@@ -358,16 +379,19 @@ public static class ModeHubUI
             if (failed || entries == null) { boardText.text = "<color=#A89C86>" + Loc.T("순위를 불러오지 못했습니다. 창을 다시 열어 보세요.") + "</color>"; return; }
             if (entries.Count == 0) { boardText.text = "<color=#A89C86>" + Loc.T("아직 기록이 없습니다. 첫 번째 도전자가 되어 보세요!") + "</color>"; return; }
             System.Text.StringBuilder b = new System.Text.StringBuilder();
-            int shown = 0;
+            int shown = 0, myRank = 0;
             foreach (SteamLeaderboards.Entry e in entries)
             {
-                if (shown++ >= 6) break;
+                // 2.0.1~ 「상위 5」인데 순위 밖 내 줄까지 6줄이었음 — 다섯 줄만, 순위 밖 내 기록은 아래 참가자 줄 옆에 「내 순위」로
+                if (shown >= 5) { if (e.me) myRank = e.rank; continue; }
+                shown++;
                 string nm = SteamLeaderboards.DisplayName(e.user, 12);
                 if (string.IsNullOrEmpty(nm)) nm = "…";
                 string line = "#" + e.rank + "  " + nm + "  <color=#A89C86>" + EndlessMode.Clock(e.score) + "</color>";
                 b.Append(e.me ? "<color=#F5D478>" + line + "</color>" : line).Append('\n');
             }
             b.Append("\n<color=#A89C86>").Append(Loc.T("참가자 ")).Append(total).Append("</color>");
+            if (myRank > 0) b.Append("  <color=#F5D478>").Append(Loc.T("lb.myrank").Replace("{0}", myRank.ToString())).Append("</color>");
             boardText.text = b.ToString();
         }
 

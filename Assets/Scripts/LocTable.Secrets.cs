@@ -66,5 +66,18 @@ public static partial class LocTable
         A("사막의 표지판은 대답한다.", "Signs in the desert answer back.", "砂漠の看板は答えを返す。", "沙漠里的牌子会回答。");
         A("사막의 그림자 중에는 주인이 움직이는 것이 있다.", "Some shadows in the desert move with their owners.", "砂漠の影の中には、持ち主が動くものがある。", "沙漠的影子里，有些是主人在动。");
         A("사막에 회색은 하나뿐이다.", "There is only one gray thing in the desert.", "砂漠に灰色はひとつだけだ。", "沙漠里只有一样东西是灰色的。");
+        A("빈 삼각대는 북적이는 장면을 기다린다.", "The empty tripod is waiting for a crowded scene.", "空の三脚は、賑やかな場面を待っている。", "空三脚架在等待热闹的场面。");      // 2.0.1~ 사진사
+
+        // ================================================================= 2.0.1~ 어디서 풀리는지 · 다시 풀었을 때 · 전설 스킨 잠금 이유
+        K("secret.where", "무한 모드 사막에서만 나타납니다 (일일 도전에도 있지만 해금은 무한 모드에서만)",
+          "Appears only in the Endless Mode desert (also in Daily Challenges, but heroes unlock only in Endless Mode)",
+          "エンドレスモードの砂漠にだけ現れます（デイリーチャレンジにもありますが、解放はエンドレスモードのみ）",
+          "仅在无尽模式的沙漠中出现（每日挑战中也有，但只能在无尽模式中解锁）");
+        K("secret.toast.points", "사막의 비밀 · 포인트 +{0}", "Desert secret · Points +{0}", "砂漠の秘密・ポイント +{0}", "沙漠秘密 · 积分 +{0}");
+        K("skin.lock.secret.short", "사막 비밀로 해금", "Unlocked via desert secret", "砂漠の秘密で解放", "通过沙漠秘密解锁");
+        K("skin.lock.secret", "{0}(으)로 무한 모드 사막에서 그 영웅의 비밀을 다시 풀면 해금됩니다.",
+          "Solve this hero's desert secret again in Endless Mode while playing as {0} to unlock.",
+          "{0}でエンドレスモードの砂漠にあるこの英雄の秘密をもう一度解くと解放されます。",
+          "使用{0}在无尽模式的沙漠中再次解开该英雄的秘密即可解锁。");
     }
 }

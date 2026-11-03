@@ -247,7 +247,8 @@ public static class CharacterData
         Prefs.SetInt(UnlockKeyOf(id), 1);
         Prefs.Save();
         selectedFrame = -1;
-        if (StageManager.Instance != null) Notice.Big(Loc.T("새 영웅: {0}").Replace("{0}", Loc.T(d.name)), NoticeIcon.Unlock, 3f, NoticeLevel.Important);
+        // 2.0.1~ 큰 알림 → 토스트: 비밀은 전투 한복판(3분 이후 · 쓰러지는 순간)에 풀려 가운데 3초가 시야를 가렸음 — 말풍선 · 결과 화면 한 줄 · 업적이 따로 알림
+        if (StageManager.Instance != null) Notice.Toast(NoticeIcon.Unlock, Loc.T("새 영웅: {0}").Replace("{0}", Loc.T(d.name)), 4.5f);
         Hostile.Play("chime", 0.9f, 1.1f);
         return true;
     }
@@ -336,6 +337,13 @@ public static class CharacterData
         bool endless = c == CharUnlock.Endless10 || c == CharUnlock.EndlessBosses5 || c == CharUnlock.EndlessClear;
         if (!endless || Demo.On || GameMode.IsUnlocked(Difficulty.Endless)) return "";
         return Loc.T("route.prereq") + " → ";
+    }
+
+    // 2.0.1~ 비밀형 영웅이 어디서 풀리는지 한 줄 (잠금 화면 · 도감) — 무한 모드가 아직 잠겨 있으면 그 선행 조건을 앞에
+    public static string SecretWhereText()
+    {
+        string s = Loc.T("secret.where");
+        return Demo.On || GameMode.IsUnlocked(Difficulty.Endless) ? s : Loc.T("route.prereq") + " → " + s;
     }
 
     // 게임 중 조건을 처음 달성했을 때 (한 번만 알림)

@@ -91,13 +91,13 @@ public static partial class LocTable
 
         // ================================================================= 스킬 진화 7
         A("불도저", "Bulldozer", "ブルドーザー", "推土机");
-        A("더미 상한이 1.5배가 되고, 삽날이 1칸 더 멀리서 적을 빨아들입니다. 과적으로 굴러떨어진 적은 다시 더미 끝에 붙습니다.", "The pile limit becomes 1.5x and the blade pulls in enemies from 1 tile farther. Enemies that tumbled off from Overload stick back onto the end of the pile.", "山の上限が1.5倍になり、排土板が1マス遠くから敵を吸い込みます。過積載で転げ落ちた敵は再び山の端にくっつきます。", "堆上限变为1.5倍，推铲可从远1格处吸入敌人。因超载滚落的敌人会重新粘在堆的末端。");
+        A("더미 상한이 1.5배가 되고, 삽날이 넓어지며 1칸 더 멀리서 적을 빨아들입니다.", "The pile limit becomes 1.5x, and the blade widens and pulls in enemies from 1 tile farther.", "山の上限が1.5倍になり、排土板が広がって1マス遠くから敵を吸い込みます。", "堆上限变为1.5倍，推铲变宽，可从远1格处吸入敌人。");
         A("덤프 트럭", "Dump Truck", "ダンプカー", "自卸卡车");
         A("덤프한 흙이 착지한 뒤 한 번 더 앞으로 쏟아지고(피해 60%), 철근이 두 배로 튀어나갑니다.", "After landing, the dumped earth spills forward once more (60% damage), and twice as much rebar shoots out.", "ダンプした土が着地した後にもう一度前へ流れ出し（ダメージ60%）、鉄筋が2倍飛び出します。", "倾倒的土石落地后会再向前倾泻一次（伤害60%），钢筋数量翻倍。");
         A("콘크리트", "Concrete", "コンクリート", "混凝土");
-        A("굳은 적이 쓰러지면 콘크리트 덩이(무게 2)가 남고, 덤프하면 바위처럼 꿰뚫으며 굴러갑니다. 잔해 최대가 두 배가 됩니다.", "A hardened enemy that falls leaves a concrete chunk (weight 2) that rolls through like a boulder when dumped. Max rubble doubles.", "固まった敵が倒れるとコンクリートの塊（重さ2）が残り、ダンプすると岩のように貫きながら転がります。瓦礫の最大数が2倍になります。", "硬化的敌人倒下后会留下混凝土块（重量2），倾倒时像岩石一样贯穿滚动。残骸上限翻倍。");
+        A("굳은 적이 쓰러지면 콘크리트 덩이(무게 2)가 남아 더미를 채웁니다. 잔해 최대가 두 배가 됩니다.", "A hardened enemy that falls leaves a concrete chunk (weight 2) that fills the pile. Max rubble doubles.", "固まった敵が倒れるとコンクリートの塊（重さ2）が残り、山を満たします。瓦礫の最大数が2倍になります。", "硬化的敌人倒下后会留下混凝土块（重量2）填充堆。残骸上限翻倍。");
         A("통행 금지", "No Entry", "通行止め", "禁止通行");
-        A("바리케이드가 다섯 개로 늘고 서로 테이프로 이어져, 테이프를 넘는 적이 빠각 피해를 받고 튕겨 나갑니다.", "Barricades increase to five, linked by tape; enemies crossing the tape take crack damage and are knocked back.", "バリケードが5つに増え、テープでつながり、テープを越える敵が「バキッ」ダメージを受けて弾き飛ばされます。", "路障增加到五个并由警戒带相连，越过警戒带的敌人会受到“咔嚓”伤害并被弹开。");
+        A("바리케이드가 두 개 더 놓이고, 바리케이드에 부딪힌 적이 빠각 피해를 받고 튕겨 나갑니다.", "Two more barricades are placed, and enemies that hit a barricade take crack damage and are knocked back.", "バリケードが2つ追加され、バリケードにぶつかった敵が「バキッ」ダメージを受けて弾き飛ばされます。", "额外放置两个路障，撞上路障的敌人会受到“咔嚓”伤害并被弹开。");
         A("무재해 100일", "100 Days Accident-Free", "無災害100日", "无事故100天");
         A("더미가 막은 적 투사체를 앞으로 되튕기고(공격력 80%), 안전 제일의 피해 감소가 두 배가 됩니다.", "Projectiles blocked by the pile bounce back forward (80% attack), and the damage reduction of Safety First doubles.", "山が防いだ敵の飛び道具を前へ跳ね返し（攻撃力80%）、安全第一の被ダメージ軽減が2倍になります。", "堆挡下的敌方投射物会向前弹回（攻击力80%），“安全第一”的减伤翻倍。");
         A("항타기", "Pile Driver", "杭打ち機", "打桩机");

@@ -18,7 +18,7 @@ public static partial class LocTable
           "A white tank top and a sports-day headband, the regular champion of the village contest. Hit sounds become lighter.",
           "白いランニングシャツに運動会のはちまき、村の大会の常連優勝者。被弾音が軽くなります。",
           "白背心配运动会头带，村里比赛的常胜冠军。受击声变得轻快。");
-        S("청동 샅바", "Bronze Satba", "青銅のまわし", "青铜缠腰带");
+        S("청동 샅바", "Bronze Wrestling Belt", "青銅のまわし", "青铜缠腰带");
         S("샅바와 팔 토시가 청동이라 메칠 때마다 쇳소리가 납니다.",
           "The belt and arm guards are bronze, so every throw rings with metal.",
           "まわしと腕当てが青銅製で、投げるたびに金属音が響きます。",

@@ -214,7 +214,7 @@ public class SkinShopUI : MonoBehaviour
         TMP_Text name = UIKit.Text(t, "", 26f, s != null && tier == 3 ? (UiRules.Legacy ? Gold : UiTokens.Bronze) : Parch, new Vector2(0f, -80f), new Vector2(260f, 36f));      // 전설 이름 (새 모습: 청동 — 보상색)
         name.text = s != null ? Loc.T(s.name) : Loc.T("기본");
         TMP_Text state = UIKit.Text(t, "", 22f, equipped ? new Color(0.6f, 1f, 0.5f) : owned ? Parch : Gold, new Vector2(0f, -130f), new Vector2(260f, 32f));
-        state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.achievement ? Loc.T("업적으로 해금") : s.Price.ToString("N0") + " P";
+        state.text = equipped ? Loc.T("장착 중") : owned ? Loc.T("보유") : s.achievement ? Loc.T("skin.lock.secret.short") : s.Price.ToString("N0") + " P";
         return b.gameObject;
     }
 
@@ -275,7 +275,10 @@ public class SkinShopUI : MonoBehaviour
         else if (owned) actionLabel.text = Loc.T("장착");
         else if (s.achievement)
         {
-            actionLabel.text = Loc.T("업적으로 해금");       // 업적형 전설: 상점에서 못 삼 (해금은 SkinData.UnlockByAchievement)
+            // 업적형 전설: 상점에서 못 삼 (해금은 SkinData.UnlockByAchievement · 부르는 곳은 DesertSecrets.UnlockLegend 하나)
+            //   2.0.1~ 「업적으로 해금」만으론 무엇을 할지 몰랐음 → 단추는 짧게, 설명 아래에 구체 조건
+            actionLabel.text = Loc.T("skin.lock.secret.short");
+            descText.text += "\n<color=#FFB37A>" + Loc.T("skin.lock.secret").Replace("{0}", Loc.T(CharacterData.Def((CharacterId)s.who).name)) + "</color>";
             actionButton.interactable = false;
             actionLabel.color = new Color(1f, 0.5f, 0.45f);
             return;

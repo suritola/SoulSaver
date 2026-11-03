@@ -41,12 +41,12 @@ public static partial class LocTable
         A("weak.midboss", "중간 보스의 빈틈은 머리입니다. 스킬을 준비하는 동안 크게 열립니다.",
           "A mid-boss's weak point is its head. It opens wide while the mid-boss prepares a skill.",
           "中ボスの隙は頭です。スキルを準備している間は大きく開きます。",
-          "中头目的破绽在头部。准备技能时会大幅敞开。");
+          "精英首领的破绽在头部。准备技能时会大幅敞开。");
         A("weak.tip", "보스와 중간 보스에게는 빈틈이 있습니다. 직접 조준한 공격만 빈틈을 맞힙니다.",
           "Bosses and mid-bosses have weak points. Only aimed attacks can hit them.",
           "ボスと中ボスには隙があります。直接狙った攻撃だけが隙に当たります。",
-          "首领和中头目都有破绽。只有亲手瞄准的攻击才能击中。");
-        A("weak.codex.tag", "보스 · 중간 보스", "Bosses · Mid-bosses", "ボス・中ボス", "首领 · 中头目");
+          "首领和精英首领都有破绽。只有亲手瞄准的攻击才能击中。");
+        A("weak.codex.tag", "보스 · 중간 보스", "Bosses · Mid-bosses", "ボス・中ボス", "首领 · 精英首领");
         A("contract.e.weak30.name", "서른 번의 빈틈", "Thirty Openings", "三十の隙", "三十处破绽");
         A("contract.e.weak30.cond", "빈틈 30번 맞히기", "Hit weak points 30 times", "隙に30回当てる", "击中破绽30次");
     }

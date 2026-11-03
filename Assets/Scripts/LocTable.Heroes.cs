@@ -348,7 +348,7 @@ public static partial class LocTable
         A("튼튼한 다리", "Sturdy Legs", "丈夫な脚", "强健双腿");
         A("이동 속도가 8% 빨라집니다.\n진화: 14%", "Move speed increases by 8%.\nEvolved: 14%", "移動速度が8%速くなります。\n進化：14%", "移动速度提升8%。\n进化：14%");
         A("단골 손님", "Regular Customer", "常連さん", "老主顾");
-        A("보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%", "Deal 15% more damage to bosses and mid-bosses.\nEvolved: +25%", "ボス・中ボスへのダメージが15%増えます。\n進化：+25%", "对首领与中头目造成的伤害提升15%。\n进化：+25%");
+        A("보스 · 중간 보스에게 주는 피해가 15% 늘어납니다.\n진화: +25%", "Deal 15% more damage to bosses and mid-bosses.\nEvolved: +25%", "ボス・中ボスへのダメージが15%増えます。\n進化：+25%", "对首领与精英首领造成的伤害提升15%。\n进化：+25%");
         A("우편 요금", "Postage", "郵便料金", "邮资");
         A("배달을 마칠 때마다 5% 확률로 코인 1개를 받습니다.\n진화: 10%", "Each delivery has a 5% chance to earn 1 coin.\nEvolved: 10%", "配達を終えるたびに5%の確率でコイン1枚をもらいます。\n進化：10%", "每次投递有5%几率获得1枚金币。\n进化：10%");
         A("개 조심", "Beware of Dog", "猛犬注意", "当心恶犬");

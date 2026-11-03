@@ -101,6 +101,9 @@ public partial class CharacterKit : MonoBehaviour
         if (ring != null) Destroy(ring.gameObject);
         if (aimRing != null) Destroy(aimRing.gameObject);
         if (bowLine != null) bowLine.enabled = false;
+        // 2.0.1~ 돌진 가속 중 키트가 지워지면(릴레이 교대 DestroyImmediate) 코루틴이 끊겨 ×1.35 가 다음 주자에게 영구히 남았음 — 여기서 되돌림
+        if (hasted && player != null) player.speed /= hasteMul;
+        hasted = false;
         OnDestroyCartographer();
         OnDestroyClockmaker();
         OnDestroyPostman();
@@ -1105,13 +1108,14 @@ public partial class CharacterKit : MonoBehaviour
     }
 
     // 1.0.1: 연속 돌진 때 곱으로 겹치지 않게 (이미 빨라져 있으면 시간만 늘림)
-    float hasteUntil;
+    float hasteUntil, hasteMul = 1f;
     bool hasted;
     IEnumerator DashHaste(float seconds, float mul)
     {
         hasteUntil = Time.time + seconds;
         if (hasted) yield break;
         hasted = true;
+        hasteMul = mul;
         player.speed *= mul;
         while (Time.time < hasteUntil) yield return null;
         if (player != null) player.speed /= mul;

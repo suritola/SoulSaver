@@ -116,7 +116,7 @@ public partial class CharacterKit
     PixelMarks phPx;        // 2.0.0~ 도트 뷰파인더 · 필름 띠 · 영사기 필름 구멍 (안 그린 프레임엔 저절로 숨음)
     LineRenderer phFocusRing;
     TMPro.TextMeshPro phCountText;
-    int phCount;
+    int phCount, phCountKey = -1;
     float phCountAt;
     Vector2 phCursorCache;
     float phCursorAt;
@@ -270,7 +270,7 @@ public partial class CharacterKit
         }
         // 틀에 든 인화 사본은 찢어짐
         PhTearCopiesIn(c, size);
-        Fx.Spawn("fx_flashframe", c3, size.y * 1.05f, new Color(1f, 1f, 1f, 0.9f), 24f, 0f, 20);
+        Fx.Spawn("fx_flashframe", c3, size.y * 1.05f, PhFlashSafe(new Color(1f, 1f, 1f, 0.9f)), 24f, 0f, 20);
         if (!real) return n;
 
         RunCounters.Both("photo");
@@ -328,7 +328,7 @@ public partial class CharacterKit
         PhExpose me = new PhExpose { rect = new Rect(c - size * 0.5f, size) };
         phExposes.Add(me);
         float dmg = Damage * 0.3f * formPower;
-        Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, new Color(1f, 1f, 1f, 0.35f), 8f, 0f, 19);
+        Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, PhFlashSafe(new Color(1f, 1f, 1f, 0.35f)), 8f, 0f, 19);
         for (float t = 0f; t < sec; t += 0.1f)
         {
             yield return new WaitForSeconds(0.1f);
@@ -380,12 +380,21 @@ public partial class CharacterKit
         }
     }
 
+    // 2.0.1~ 셔터 흰 번쩍임(fx_flashframe): 설정 「번쩍임 효과」를 끄면 알파 0.25 까지만 (광과민 접근성 — 예전엔 0.9 그대로 번쩍였음)
+    public static Color PhFlashSafe(Color c) => GameSettings.Flashes ? c : new Color(c.r, c.g, c.b, Mathf.Min(c.a, 0.25f));
+
     // ================================================================= 종이 (PaperRoll)
-    public bool PhPaperTake(EnermyController e, float sec, bool ignoreImmune)
+    // 2.0.1~ renew: 이미 종이인 적의 시간을 늘림 — 명시한 경로(필름 끊김 공명 · 필살기)만 · 상한 처음 종이 된 시각 + 기본 시간 + sec · 중간 보스는 늘리지 않음
+    //   (예전엔 다시 찍을 때마다 until 만 늘려 무한히 종이로 묶였고, 중간 보스도 시전이 계속 막혔음)
+    public bool PhPaperTake(EnermyController e, float sec, bool ignoreImmune, bool renew = false)
     {
         if (e == null || e.IsDead || e.swarm != null) return false;
         float now = Time.time;
-        if (phPapers.TryGetValue(e, out PhPaper cur)) { cur.until = Mathf.Max(cur.until, now + sec); return true; }
+        if (phPapers.TryGetValue(e, out PhPaper cur))
+        {
+            if (renew && !e.IsMidBoss) cur.until = Mathf.Min(Mathf.Max(cur.until, now + sec), cur.born + PhPaperSec + sec);
+            return true;
+        }
         if (!ignoreImmune && phImmune.TryGetValue(e, out float im) && now < im) return false;
         if (phPaperList.Count >= PhotographerTuning.PaperCap) PhPaperEnd(phPaperList[0], false);
         if (e.casting)
@@ -913,7 +922,10 @@ public partial class CharacterKit
         if (phCount > 0)
         {
             bool star = phCount >= PhotographerTuning.Masterpiece;
-            phCountText.text = (star ? "★ " : "") + "×" + phCount + (player.NowBullet <= 2 && player.NowBullet > 0 && Time.time % 0.6f < 0.3f ? "\n" + new string('●', player.NowBullet) : "");
+            // 2.0.1~ 글이 바뀔 때만 새로 만듦 (매 프레임 문자열 할당하던 것)
+            int dots = player.NowBullet <= 2 && player.NowBullet > 0 && Time.time % 0.6f < 0.3f ? player.NowBullet : 0;
+            int key = phCount * 4 + dots;
+            if (key != phCountKey) { phCountKey = key; phCountText.text = (star ? "★ " : "") + "×" + phCount + (dots > 0 ? "\n" + new string('●', dots) : ""); }
             phCountText.color = star ? new Color(1f, 0.85f, 0.3f) : new Color(1f, 1f, 1f, 0.9f);
             phCountText.transform.position = new Vector3(c.x + hw - 2f, c.y + hh + 0.8f, 0f);
         }

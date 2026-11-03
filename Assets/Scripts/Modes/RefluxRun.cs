@@ -166,6 +166,17 @@ public static class RefluxRun
         }
     }
 
+    // 2.0.1~ 오래 사는 보스(개발자 포함) · 처음의 슬라임 풍화: 나온 지 2분 뒤부터 1분마다 +50% (상한 10배) — 잃기로 약해지는 몸으로도 보스전이 끝나게
+    //   자동 플레이 4판 모두 보스 둘이 13분 넘게 살아 판이 멈췄음 (보통 풍화는 개발자 제외 · 최대 2.5배라 모자람) · 실제 12:00 안전장치와 큰 쪽
+    //   2.0.1~ 재측정: 10배 상한으로도 씨름꾼 봇이 20분 동안 보스를 하나도 못 잡음 (보스 받은 피해 2.7만 · 개발자 체력 3.6만) → 나온 지 6분 뒤부터는 1분마다 두 배 (상한 200배) — 언젠가는 반드시 끝남
+    const float ErodeAfter = 120f, ErodePerMin = 0.5f, ErodeCap = 200f, DoubleAfter = 360f;
+    public static float ErosionFor(float aliveSeconds)
+    {
+        float mul = 1f + Mathf.Max(0f, aliveSeconds - ErodeAfter) / 60f * ErodePerMin;
+        if (aliveSeconds > DoubleAfter) mul *= Mathf.Pow(2f, (aliveSeconds - DoubleAfter) / 60f);
+        return Mathf.Max(SafetyErosion, Mathf.Min(ErodeCap, mul));
+    }
+
     // ================================================================= HUD · 보스 처치 알림
     public static string HudLine(float realSeconds)
     {
@@ -173,6 +184,7 @@ public static class RefluxRun
         string rec = Loc.T("reflux.hud.time") + " " + EndlessMode.Clock(realSeconds);
         string best = Best > 0f ? "   " + Loc.T("최고 ") + EndlessMode.Clock(Best) : "";
         return Loc.T("역류") + "  " + clock + "   " + Loc.T("reflux.hud.lost").Replace("{0}", LossCount.ToString()).Replace("{1}", MaxLoss.ToString())
+             + " <size=75%><color=#C9B8A0>(" + Loc.T("reflux.hud.spirit").Replace("{0}", SpiritLeft.ToString()) + ")</color></size>"      // 2.0.1~ 결과 · 계약의 「남은 영혼」이 무엇인지 판 안에서도 보이게
              + " · " + Loc.T("reflux.hud.boss").Replace("{0}", BossCount.ToString()).Replace("{1}", BossTotal.ToString())
              + "   <size=75%><color=#C9B8A0>" + rec + best + "</color></size>";
     }
@@ -250,6 +262,10 @@ public class RefluxDirector : MonoBehaviour
     static readonly float[] HpMul = { 0.6f, 1f, 1f, 0.5f, 1f };               // 개발자 0.6 · 지옥의 군주 0.5 (기본 체력이 리치 왕의 5배)
     const float AfterDownGap = 6f;              // 앞 보스 처치 + 6초
     const float LossEvery = 60f;
+    // 2.0.1~ 잃기가 결계 · 필살기 연출에 막혀 16분에 2 ~ 4번뿐이었음: 결계 · 연출만 피하되 예정보다 LossMaxWait 초 늦으면 그냥 열고,
+    //   밀린 잃기는 LossCatchUp 초 간격으로 한 번만 따라잡음 (그 이상 밀린 시간은 버림) · 창을 닫은 뒤 LossGrace 초 무적 (갑자기 약해진 몸 숨 고르기)
+    const float LossMaxWait = 25f, LossCatchUp = 20f, LossGrace = 2.5f;
+    const float NakedMaxWait = 20f;             // 2.0.1~ 맨몸 전 연출 대기 상한 (1.2.7 교훈: 대기에는 상한)
     const float LossHeal = 0.25f, BossHeal = 0.4f;
     const int SlimeHpMul = 40;
 
@@ -279,6 +295,7 @@ public class RefluxDirector : MonoBehaviour
     Image barFill;
     GameObject barRoot;
     float lastHp;
+    float slimeAt;                  // 처음의 슬라임이 나온 시각 (풍화 기준)
 
     public bool AutoDone => filled;
 
@@ -310,7 +327,17 @@ public class RefluxDirector : MonoBehaviour
             if (shop != null && sp != null && player != null && spawner != null && (CharacterData.IsGunner || CharacterKit.Instance != null)) break;
             yield return null;
         }
-        if (shop == null || player == null || spawner == null) { filled = true; yield break; }
+        // 2.0.1~ 준비 실패면 보스도 잃기도 없는 판이 끝없이 이어졌음 (sp 가 null 이면 맨몸에서 예외) → 알리고 메뉴로
+        if (shop == null || sp == null || player == null || spawner == null)
+        {
+            Debug.LogError("[역류] 감독 준비 실패: shop=" + (shop != null) + " sp=" + (sp != null) + " player=" + (player != null) + " spawner=" + (spawner != null));
+            filled = true;
+            finished = true;
+            Notice.Big(Loc.T("reflux.fail.title"), Loc.T("reflux.fail.sub"), NoticeIcon.Warn, 3f, NoticeLevel.Urgent);
+            yield return new WaitForSecondsRealtime(3f);
+            SceneFlow.Go("MainMenu");
+            yield break;
+        }
         yield return null;
         shop.AutoFill(RefluxRun.Hero, RefluxRun.Path, RefluxRun.Form, RefluxRun.SeedOf(RefluxRun.Hero, RefluxRun.Path, RefluxRun.Form));
         initialWeight = Mathf.Max(1f, TotalWeight());
@@ -331,8 +358,9 @@ public class RefluxDirector : MonoBehaviour
     {
         if (player == null) player = Hostile.Player;
         float t = GameMode.EndlessSeconds;
-        bool calm = Time.timeScale > 0f && !BossUltimate.Active && !BossUltimate.ErosionPending && !PlayerController.Cinematic && !ChoiceUI.Open
-                    && sm != null && !sm.IsMenuOpen && player != null && !player.IsDying;
+        // free: 창 · 일시정지 · 쓰러짐이 아님 (이 동안은 시간이 멈춰 대기가 쌓이지 않음) · calm: 거기에 결계 · 공간 침식 · 연출도 아님
+        bool free = Time.timeScale > 0f && !ChoiceUI.Open && sm != null && !sm.IsMenuOpen && player != null && !player.IsDying;
+        bool calm = free && !BossUltimate.Active && !BossUltimate.ErosionPending && !PlayerController.Cinematic;
 
         // 처음의 슬라임이 나온 뒤 맞았는지 (업적 · 계약)
         if (slime != null && player != null)
@@ -342,12 +370,18 @@ public class RefluxDirector : MonoBehaviour
         }
 
         if (calm && nextBoss < At.Length && bosss.Dying == 0 && bosss.LiveCount < 2) TrySpawnBoss(t);
-        if (calm && !offering && !nakedStarted && RefluxRun.LossCount < RefluxRun.MaxLoss && Time.time >= nextLossAt && bosss.Dying == 0)
+        // 2.0.1~ 잃기: 결계 · 연출 · 처치 연출이 끝난 틈에, 예정보다 LossMaxWait 초 늦었으면 그냥 (보스 둘이면 결계가 이어져 거의 안 열렸음)
+        if (free && !offering && !nakedStarted && RefluxRun.LossCount < RefluxRun.MaxLoss && Time.time >= nextLossAt
+            && ((calm && bosss.Dying == 0) || (Time.time - nextLossAt >= LossMaxWait && !PlayerController.Cinematic && !player.IsAiming)))      // 늦었어도 연출 · 필살기 조준(느린 시간) 중엔 열지 않음 — 창이 느린 시간을 기억했다 되돌림
             StartCoroutine(OfferLoss());
         // 리치 왕까지 모두 나왔고 모두 쓰러졌고 처치 연출이 끝났으면 「역류의 끝」
         if (calm && !nakedStarted && !offering && nextBoss >= At.Length && AllBossesDown() && bosss.Dying == 0)
             StartCoroutine(Naked());
-        if (slime != null) UpdateBar();
+        if (slime != null)
+        {
+            slime.takenMul = RefluxRun.ErosionFor(Time.time - slimeAt);       // 2.0.1~ 처음의 슬라임도 풍화 (맨몸으로 영영 못 잡는 판 방지)
+            UpdateBar();
+        }
         // 2.0.0~ 검토: 슬라임이 onKilled 없이 사라지면(Purge · 장외 · Destroy) 클리어 조건이 영영 안 켜짐 → 사라졌으면 클리어로 침
         if (slimeSpawned && !finished && (slime == null || slime.IsDead)) Clear();
     }
@@ -561,6 +595,7 @@ public class RefluxDirector : MonoBehaviour
     IEnumerator OfferLoss()
     {
         offering = true;
+        float due = nextLossAt;
         int k = RefluxRun.LossCount + 1;
         List<Bundle> offers = BuildOffers(k);
         if (offers == null || offers.Count == 0)
@@ -586,7 +621,9 @@ public class RefluxDirector : MonoBehaviour
         yield return ChoiceUI.Run(Loc.T("reflux.lose.title"), sub, opts, i => picked = i);
         picked = Mathf.Clamp(picked, 0, offers.Count - 1);
         Apply(offers[picked], offers);
-        nextLossAt = Time.time + LossEvery;           // 다음 잃기는 실제로 고른 때부터 60초
+        // 2.0.1~ 다음 잃기는 예정 시각 + 60초 (늦게 열렸어도 「1분마다」를 지킴) — 밀렸으면 LossCatchUp 초 뒤 한 번만, 더 밀린 시간은 버림
+        nextLossAt = Mathf.Max(due + LossEvery, Time.time + LossCatchUp);
+        if (player != null && !player.IsDying) player.GrantInvincibility(LossGrace);       // 시각으로 끝나는 무적 (남는 상태 없음)
         offering = false;
     }
 
@@ -636,13 +673,17 @@ public class RefluxDirector : MonoBehaviour
         for (int i = 0; i < left.Count && i < 2; i++) keptNames.Add(left[i].name);
         RefluxRun.Kept = string.Join(" · ", keptNames);
         // 처치 연출(결계 · 소용돌이)이 끝난 뒤
-        while (PlayerController.Cinematic || BossUltimate.Active || Time.timeScale == 0f || bosss.Dying > 0 || ChoiceUI.Open) yield return null;
+        //   2.0.1~ 연출 · 결계 · 처치 연출 대기는 NakedMaxWait 초까지 (어느 하나가 남는 고장에도 판이 멈추지 않게) · 일시정지 · 창은 시간이 멈춰 그대로 기다림
+        float waitFrom = Time.time;
+        while (Time.timeScale == 0f || ChoiceUI.Open
+               || ((PlayerController.Cinematic || BossUltimate.Active || bosss.Dying > 0) && Time.time - waitFrom < NakedMaxWait)) yield return null;
         Notice.Big(Loc.T("reflux.end.title"), Loc.T("reflux.end.sub"), NoticeIcon.Warn, 3.5f, NoticeLevel.Urgent);
         Hostile.Play("evolve", 0.7f, 0.5f);
         yield return new WaitForSeconds(1.2f);
         StripAll();
         yield return new WaitForSeconds(2.2f);
-        while (PlayerController.Cinematic || Time.timeScale == 0f) yield return null;
+        waitFrom = Time.time;
+        while (Time.timeScale == 0f || (PlayerController.Cinematic && Time.time - waitFrom < NakedMaxWait)) yield return null;
         SpawnSlime();
     }
 
@@ -686,6 +727,7 @@ public class RefluxDirector : MonoBehaviour
         slime.knockBackTaken *= 0.3f;
         slime.onKilled += OnSlimeKilled;
         slimeSpawned = true;
+        slimeAt = Time.time;
         lastHp = player != null ? player.PlayerHealth : 0f;
         RefluxRun.NakedHit = false;
         BuildBar();
@@ -730,10 +772,13 @@ public class RefluxDirector : MonoBehaviour
         if (barRoot != null) barRoot.SetActive(false);
         SteamAchievements.Unlock(SteamAchievements.RefluxClear);
         if (RefluxRun.ClearSeconds < 480f) SteamAchievements.Unlock(SteamAchievements.RefluxFast);
-        if (RefluxRun.Naked && !RefluxRun.NakedHit) SteamAchievements.Unlock(SteamAchievements.RefluxNaked);
+        // 2.0.1~ 맨몸 무피격은 처음의 슬라임이 실제로 나왔던 판만 (견본이 없어 바로 클리어한 판은 공짜로 풀렸음)
+        //   판정 = 슬라임이 나온 뒤 어떤 피해도 받지 않음 (Steam 업적 문구 「한 대도 맞지 않고」와 같음 · 계약 문구도 맞춤)
+        bool nakedClean = slimeSpawned && RefluxRun.Naked && !RefluxRun.NakedHit;
+        if (nakedClean) SteamAchievements.Unlock(SteamAchievements.RefluxNaked);
         RunCounters.Max("reflux.cleared", 1);
         RunCounters.Max("reflux.spirit", RefluxRun.SpiritLeft);
-        if (!RefluxRun.NakedHit) RunCounters.Max("reflux.nakedclean", 1);
+        if (nakedClean) RunCounters.Max("reflux.nakedclean", 1);
         // 처치 포인트는 무한 규칙 그대로 · 첫 클리어 3,000P · 그 뒤 클리어마다 800P
         if (!GameInput.Auto && !Application.isBatchMode) Point.Bonus(RefluxRun.EverClearedReflux ? 800 : 3000);
         RunStats.MarkCleared();
@@ -741,14 +786,15 @@ public class RefluxDirector : MonoBehaviour
         Hostile.Play("chime", 1f, 1f);
         if (spawner != null) { spawner.spawningEnabled = false; spawner.ClearMobs(); }
         if (player != null) player.GrantInvincibility(30f);
+        // 2.0.1~ 기록 · 순위 제출은 지금 바로 (5초 안에 「다시 시작」하면 BeforeGameScene 이 판 상태를 비워 제출이 빠졌음)
+        RunStats.CaptureForResult();
+        EndlessMode.EndRunNow();
         StartCoroutine(Leave());
     }
 
     IEnumerator Leave()
     {
         yield return new WaitForSecondsRealtime(5f);
-        RunStats.CaptureForResult();
-        EndlessMode.EndRunNow();
         SceneFlow.Go("GameOver");
     }
 

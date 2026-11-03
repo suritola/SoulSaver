@@ -92,6 +92,7 @@ public class EnermyController : MonoBehaviour
     [HideInInspector] public bool skipKillCount;
     // 받는 피해를 바꾸는 능력 (약점 간파 · 급소 노리기 · 사냥감 표식)
     public static System.Func<EnermyController, float, float> DamageHook;
+    [System.NonSerialized] public float takenMul = 1f;      // 2.0.1~ 이 적이 받는 피해 배율 (역류 처음의 슬라임 풍화 · RefluxDirector · 평소 1)
 
     private CircleCollider2D bodyCollider;
     // 그림 가운데에 맞춘 히트박스 (맞는 판정은 넉넉하게, 몸통 피해는 몸 안쪽만)
@@ -473,6 +474,7 @@ public class EnermyController : MonoBehaviour
     {
         if (isDead || !ready) return;
         damage *= GameMode.PlayerDamageMul;      // 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
+        damage *= takenMul;
 
         if (DamageHook != null) damage = DamageHook(this, damage);
         damage = SignatureSkills.Outgoing(gameObject, damage);     // 고유 스킬 피해 배율 (위협 · 역습 · 표식 …)
@@ -734,6 +736,8 @@ public class EnermyController : MonoBehaviour
     }
     public void MarkMidBoss() => midBoss = -1;
 
+    public static bool ContactHitting { get; private set; }
+
     void TouchPlayer(Collider2D collision)
     {
         if (swarm != null || holder != null) return;      // 1.1~ 부스러기는 몸통 피해 0 (닿으면 SwarmMote 가 거리로 흡수) · 2.0.0~ 붙잡힌 적도 접촉 피해 없음
@@ -743,7 +747,11 @@ public class EnermyController : MonoBehaviour
         // 넉넉한 히트박스 가장자리에 스친 것만으로는 안 맞음 · 1.4.4~ 플레이어 쪽도 몸 콜라이더 대신 몸 아래쪽 접촉 원 (위쪽은 널널하게)
         if (hitbox != null && !(target != null ? hitbox.Touching(target.ContactCenter, target.ContactR) : hitbox.Touching(collision))) return;
 
-        if (target != null && target.TryHit(contactDamage * ContactScale))
+        bool hurt;
+        ContactHitting = true;          // 2.0.1~ 몸통 접촉 피해인지 (씨름꾼 통뼈 「부딪혀 받는 피해 −10%」가 모든 피해를 줄이던 것)
+        try { hurt = target != null && target.TryHit(contactDamage * ContactScale); }
+        finally { ContactHitting = false; }
+        if (hurt)
         {
             Vector3 away = transform.position - target.transform.position;
             away.z = 0f;

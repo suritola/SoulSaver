@@ -207,10 +207,9 @@ public static class RelayRun
     public static void OnBossDefeated()
     {
         if (!Active) return;
-        bossMask |= 1 << Index;
-        bossMask = Mathf.Max(bossMask, RunCounters.Get("relay.bossBy"));      // 이어하기 뒤엔 저장된 판 수에서 이어 받음
-        bossMask |= 1 << Index;
-        RunCounters.Max("relay.bossBy", bossMask);
+        // 2.0.1~ 비트마스크라 Max 가 아니라 OR 로 합침 — Max 면 이어하기 뒤 저장값(예: 1번 주자 0b001)과 새 값(0b100) 중 하나만 남아 「세 주자 모두」가 영영 안 됐음
+        bossMask |= RunCounters.Get("relay.bossBy") | (1 << Index);
+        RunCounters.Max("relay.bossBy", bossMask);          // 저장값의 비트를 모두 품으므로 늘 저장값 이상
         if (bossMask == 7) SteamAchievements.Unlock(SteamAchievements.RelayAllBoss);
     }
 
@@ -252,7 +251,9 @@ public static class RelayRun
         Hostile.Play("bigboom", 0.6f, 1.3f);
 
         yield return new WaitForSecondsRealtime(0.35f);
-        if (p == null) yield break;
+        // 2.0.1~ 그 0.35초 사이 ESC · 창으로 멈췄으면 풀릴 때까지 기다림 (멈춘 화면에서 파동 피해 · 처치가 터졌음) — 상한은 없어도 됨: 남기는 상태가 없고 장면이 바뀌면 함께 끝남
+        while (Time.timeScale == 0f) yield return null;
+        if (p == null || p.IsDying) yield break;
         Vector3 c = p.transform.position;
         Wave(p, c);
         Impact.Hit(ImpactTier.Ult, c);
@@ -260,7 +261,9 @@ public static class RelayRun
         Fx.Spawn("fx_shock", c, WaveRadius * 2f, new Color(0.6f, 0.9f, 1f), 16f);
         if (SpecialAbilities.SharedFx != null)
             SpecialAbilities.SharedFx.FloatText(c + Vector3.up * 2.2f, Loc.T(CharacterData.Current.name), CharacterData.Current.color, 6f, 0f, 1.5f);
-        Notice.Toast(NoticeIcon.Star, Loc.T("relay.toast.handoff").Replace("{0}", Loc.T(CharacterData.Def(prev).name)).Replace("{1}", RelayHeirlooms.NameOf(prev)), 4f);
+        // 2.0.1~ 유품 설명 한 줄 (전엔 어디에도 안 보였음) · 읽을 시간 6초
+        Notice.Toast(NoticeIcon.Star, Loc.T("relay.toast.handoff").Replace("{0}", Loc.T(CharacterData.Def(prev).name)).Replace("{1}", RelayHeirlooms.NameOf(prev))
+                                      + "\n" + RelayHeirlooms.DescOf(prev), 6f);        // (알림은 size 태그를 지우고 높이를 글에 맞춤 · 110 넘으면 글자가 줄어듦)
 
         yield return new WaitForSecondsRealtime(0.25f);
         yield return Pending();
@@ -320,6 +323,17 @@ public static class RelayRun
         while (EvoOwed > 0)
         {
             PlayerController pl = Hostile.Player;
+            if (pl == null || pl.IsDying) yield break;
+            // 2.0.1~ 다른 진화(보스 처치 · 앞선 교대의 Pending)가 기다리거나 창을 연 동안 함께 열면 창이 두 번 떠 단계가 꼬였음 — 끝날 때까지 기다림
+            //   상한: 시간이 흐르는 동안만 20초 (창이 열려 멈춘 시간은 세지 않음 · 진화 루틴이 끊겨 evolving 이 남아도 판이 막히지 않게)
+            float waited = 0f;
+            while (sm != null && sm.IsEvolving && waited < 20f)
+            {
+                if (Time.timeScale > 0f) waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            if (EvoOwed <= 0) break;            // 기다리는 사이 다른 Pending 이 빚을 다 갚았음
+            pl = Hostile.Player;
             if (pl == null || pl.IsDying) yield break;
             if (sm != null) yield return sm.Evolution(true);
             EvoOwed = Mathf.Max(0, EvoOwed - 1);

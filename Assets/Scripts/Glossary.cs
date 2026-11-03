@@ -44,7 +44,7 @@ public static class Glossary
         Add("ult", "필살기", "Ultimate|Ultimates", "必殺技", "必杀技",
             "필살기 게이지가 가득 차면 [{ULT}]로 쓰는 영웅의 큰 기술입니다.",
             "Your hero's big move, used with [{ULT}] once the Ultimate gauge is full.",
-            "必殺技ゲージが満タンのとき[{ULT}]で使う英雄の大技です。",
+            "必殺技ゲージが満タンのとき[{ULT}]で使うヒーローの大技です。",
             "必杀技槽满后按[{ULT}]使用的英雄大招。");
         Add("ultgauge", "필살기 게이지", "Ultimate gauge|Ultimate Gauge", "必殺技ゲージ", "必杀技槽|必杀技能量",
             "적을 맞히거나 쓰러뜨리면 차오르고, 가득 차면 필살기를 쓸 수 있습니다.",
@@ -54,7 +54,7 @@ public static class Glossary
         Add("basic", "평타", "basic attack|basic attacks", "通常攻撃", "普通攻击|普攻",
             "[{ATTACK}]로 하는 영웅의 기본 공격입니다.",
             "Your hero's basic attack, used with [{ATTACK}].",
-            "[{ATTACK}]で行う英雄の基本攻撃です。",
+            "[{ATTACK}]で行うヒーローの基本攻撃です。",
             "按[{ATTACK}]进行的英雄基本攻击。");
         Add("cooldown", "쿨타임", "cooldown|cooldowns", "クールタイム", "冷却时间",
             "한 번 쓴 뒤 다시 쓸 수 있을 때까지 기다리는 시간입니다.",
@@ -159,12 +159,12 @@ public static class Glossary
             "보스 · 중간 보스가 주는 포인트로 배우는 무기 · 스킬 · 패시브입니다. 한 번 더 고르면 진화합니다.",
             "Weapons, skills and passives learned with points from bosses and mid-bosses. Pick one again to evolve it.",
             "ボス・中ボスがくれるポイントで習得する武器・スキル・パッシブです。もう一度選ぶと進化します。",
-            "用首领与中头目给予的点数学习的武器、技能与被动。再次选择即可进化。");
+            "用首领与精英首领给予的点数学习的武器、技能与被动。再次选择即可进化。");
         Add("shard", "영혼 조각", "Soul Shards|Soul Shard|soul shards|soul shard", "魂のかけら", "灵魂碎片",
             "보스 · 중간 보스 · 제단 등에서 얻습니다. 영혼 트리 칸을 배우는 데 씁니다.",
             "Earned from bosses, mid-bosses, altars and more. Spent to learn Soul Tree nodes.",
             "ボス・中ボス・祭壇などで手に入ります。魂のツリーのマスを習得するのに使います。",
-            "从首领、中头目、祭坛等处获得。用于学习灵魂树节点。");
+            "从首领、精英首领、祭坛等处获得。用于学习灵魂树节点。");
         Add("soultree", "영혼 트리", "Soul Tree", "魂のツリー", "灵魂树",
             "판 안에서 영혼 조각으로 칸을 배워 무기 · 필살기 · 생존 · 영혼을 키우는 나무입니다.",
             "An in-run tree where Soul Shards buy nodes for weapon, Ultimate, survival and soul.",
@@ -260,8 +260,8 @@ public static class Glossary
             "보스 · 중간 보스 몸의 빛나는 점입니다. 직접 조준한 공격으로 맞히면 피해가 늘어납니다.",
             "A glowing spot on bosses and mid-bosses. Aimed attacks that hit it deal extra damage.",
             "ボス・中ボスの体に光る点です。直接狙った攻撃で当てるとダメージが増えます。",
-            "首领与中头目身上的发光点。用直接瞄准的攻击命中可提高伤害。");
-        Add("midboss", "중간 보스", "mid-boss|mid-bosses|mini-boss|mini-bosses", "中ボス", "中头目|精英首领",
+            "首领与精英首领身上的发光点。用直接瞄准的攻击命中可提高伤害。");
+        Add("midboss", "중간 보스", "mid-boss|mid-bosses|mini-boss|mini-bosses", "中ボス", "精英首领|中头目",
             "장 중간에 나오는 크고 단단한 적입니다. 쓰러뜨리면 특수 능력 포인트나 영혼 조각과 정예 보물 상자를 줍니다.",
             "A big, tough foe that appears mid-chapter. Drops Special Ability Points or Soul Shards, plus an elite chest.",
             "章の途中に出る大きくて硬い敵です。倒すと特殊能力ポイントか魂のかけらと、精鋭の宝箱を落とします。",

@@ -44,7 +44,8 @@ public static partial class LocTable
 
         // ---------------- 판 안
         C("relay.hud.runner", "주자 {0}/3", "Runner {0}/3", "走者 {0}/3", "第{0}/3棒");
-        C("relay.toast.handoff", "주자 교대 — {0} 의 유품 「{1}」 를 이어받았다", "Runner change — inherited {0}'s heirloom \"{1}\"", "走者交代 — {0}の形見「{1}」を引き継いだ", "接力交棒 — 继承了{0}的遗物“{1}”");
+        // 2.0.1~ 「{1}」 뒤 조사 없이: 유품 이름 받침에 따라 을/를이 갈려 「를」 고정이 반쯤 틀렸음 · 「{0} 의」 띄어쓰기도 붙임 (영 · 일 · 중은 조사 문제 없음)
+        C("relay.toast.handoff", "주자 교대 — {0}의 유품 「{1}」 이어받음", "Runner change — inherited {0}'s heirloom \"{1}\"", "走者交代 — {0}の形見「{1}」を引き継いだ", "接力交棒 — 继承了{0}的遗物“{1}”");
         C("relay.heir.label", "유품", "Heirlooms", "形見", "遗物");
         C("relay.heir.none", "유품 없음 (첫 주자)", "No heirlooms (first runner)", "形見なし（最初の走者）", "无遗物（第一棒）");
         C("영혼 이어받기", "영혼 이어받기", "Soul Takeover", "魂の継承", "灵魂接棒");

@@ -95,7 +95,11 @@ public static class RelaySwap
                 if (g != null) g.AddSkillPoint(g.MaxSkillPoint);      // 필살기 게이지 가득 — 「죽음을 쓰는」 보상
                 PlayerHP hp = Object.FindFirstObjectByType<PlayerHP>();
                 if (hp != null) hp.ResetFeel();
-                RelayRun.FreeLeft += Mathf.Min(12, Mathf.CeilToInt(dropped * 0.5f));
+                // 2.0.1~ 새 영웅이 갈래 규칙이면 환급이 0 이어도 한 장은 줌 — 입문 창이 첫 무료 카드인데, 앞 주자가 카드를 하나도 못 고르고 쓰러지면(dropped 0)
+                //   무료 창이 없어 다음 일반 레벨업이 입문 창이 되어 레벨업 카드 한 장을 먹었음 (일반 판 시작의 입문은 늘 공짜)
+                int free = Mathf.Min(12, Mathf.CeilToInt(dropped * 0.5f));
+                if (Paths.Active && Paths.A < 0) free = Mathf.Max(1, free);
+                RelayRun.FreeLeft += free;
                 RelayRun.EvoOwed += owed;
             }
         }

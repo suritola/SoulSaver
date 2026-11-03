@@ -737,9 +737,9 @@ public partial class CharacterKit
     public UndertakerGrave UtSpawnGrave(Vector2 pos, bool big, bool temp, float lifeOverride = -1f, int hpOverride = -1)
     {
         if (player == null || player.IsDying) return null;
-        Fx.Spawn("fx_grave_rise", new Vector3(pos.x, pos.y, 0f), big ? 2.6f : 2f, Color.white, 10f, 0f, 14);
         if (Vector2.Distance(pos, transform.position) < UndertakerTuning.GraveMinFromPlayer) return null;
         if (!UtGraveSpotOk(pos)) return null;
+        Fx.Spawn("fx_grave_rise", new Vector3(pos.x, pos.y, 0f), big ? 2.6f : 2f, Color.white, 10f, 0f, 14);       // 2.0.1~ 검사 뒤로 (묘비가 안 생겨도 솟는 연출이 나왔음)
         bool stone = form == SpecialAbilities.KitSarcophagus && !temp;
         int hp = (big ? UndertakerTuning.BigGraveHp : UndertakerTuning.GraveHp) * (stone ? 2 : 1) + SignatureSkills.UtGraveHpExtra();
         float life = temp ? UndertakerTuning.TempGraveLife : UndertakerTuning.GraveLife + SignatureSkills.UtGraveLifeExtra();

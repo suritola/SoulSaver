@@ -454,8 +454,10 @@ public static class SkinAudio
     };
 
     // 캐릭터마다 '공격 소리'로 치는 이름
-    static bool IsAttack(string name)
+    //   2.0.1~ 같은 이름을 적 · 보스도 쓰는 공용 소리(쿵 · 휙 · 딸깍 · 똑딱)는 영웅 쪽 파일이 부른 것만 — 무기 스킨이 적 소리까지 바꾸던 문제
+    static bool IsAttack(string name, string from)
     {
+        if ((name == "thump" || name == "whoosh" || name == "click" || name == "tick") && !HeroSource(from)) return false;
         switch (CharacterData.Selected)
         {
             case CharacterId.Gunner: return name == "gunshot" || name == "crack" || name == "shotgun";
@@ -479,11 +481,15 @@ public static class SkinAudio
         return false;
     }
 
+    // 영웅 기술 파일 (키트 · 특수 능력 · 고유 스킬 · 갈래 · 플레이어) — 적 · 보스 · 화면 연출 파일은 아님
+    static bool HeroSource(string from) => !string.IsNullOrEmpty(from)
+        && (from.Contains("CharacterKit") || from.Contains("SpecialAbilities") || from.Contains("SignatureSkills") || from.Contains("Paths") || from.Contains("PlayerController"));
+
     // SpecialFeedback.Play 가 소리를 틀기 직전에: 공격 소리 · 코인 소리를 스킨에 맞게 (덧소리는 따로 틈)
-    public static void Adjust(SpecialFeedback fx, ref string name, ref float vol, ref float pitch)
+    public static void Adjust(SpecialFeedback fx, ref string name, ref float vol, ref float pitch, string from = "")
     {
         SkinDef w = SkinFx.WeaponSkin;
-        if (w != null && IsAttack(name))
+        if (w != null && IsAttack(name, from))
         {
             pitch *= w.pitch;
             if (w.attackSound != null) name = w.attackSound;

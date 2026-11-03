@@ -273,7 +273,18 @@ public static class ContractBoard
         if (c.relic != null) parts.Add(Loc.T("board.reward.relic").Replace("{0}", Loc.T("relic.new." + c.relic + ".name")));
         if (c.points > 0) parts.Add(Loc.T("board.reward.points").Replace("{0}", c.points.ToString("N0")));
         if (c.title) parts.Add(Loc.T("board.reward.title").Replace("{0}", c.Name));
-        return string.Join(" + ", parts);
+        return string.Join(" · ", parts);      // 2.0.1~ 「 + 」 → 「 · 」 (포인트가 「+1,000 P」라 「… + +1,000 P」로 + 가 두 번 보였음)
+    }
+
+    // 2.0.1~ 칸 안 짧은 보상 (포인트 · 유물 · 칭호 · 해금 낱말만 — 전체 문장은 툴팁의 RewardLine)
+    static string RewardShort(BoardCell c)
+    {
+        List<string> parts = new List<string>();
+        if (c.points > 0) parts.Add(Loc.T("board.reward.points").Replace("{0}", c.points.ToString("N0")));
+        if (c.relic != null) parts.Add(Loc.T("board.reward.relic.short"));
+        if (c.title) parts.Add(Loc.T("board.reward.title.short"));
+        if (c.route != CharUnlock.None) parts.Add(Loc.T("board.reward.hero.short"));
+        return string.Join(" · ", parts);
     }
 
     // ================================================================= 창
@@ -326,16 +337,16 @@ public static class ContractBoard
             TMP_Text n = UIKit.Text(win, "", 17f, owned ? Parch : Dim, new Vector2(x + 16f, yHead), new Vector2(CellW - 36f, 40f), TextAlignmentOptions.Left);
             n.enableWordWrapping = false;
             n.text = Loc.T(CharacterData.Def(id).name);
-            n.fontSizeMin = 9f;
+            n.fontSizeMin = 13f;        // 2.0.1~ 9 → 13 (검수: 「Cartographer」 등이 깨알)
             UIKit.Forget(n);
         }
         // 줄 이름
-        string[] rowKeys = { "board.row.1", "board.row.2", "board.row.3", "board.row.7", "board.row.7" };
+        string[] rowKeys = { "board.row.1", "board.row.2", "board.row.3", "board.row.feat", "board.row.mile" };     // 2.0.1~ 공용 두 줄이 같은 이름(「공용」)이라 도전 · 이정표로 나눔
         for (int r = 0; r < Rows; r++)
         {
             float y = y0 - r * (CellH + Gap) - (r >= HeroRows ? 14f : 0f);
             TMP_Text t = UIKit.Text(win, rowKeys[r], 19f, r >= HeroRows ? Violet : Gold, new Vector2(x0 - CellW * 0.5f - LabelW * 0.5f - 6f, y), new Vector2(LabelW, 40f));
-            t.fontSizeMin = 12f;
+            t.fontSizeMin = 14f;
         }
         foreach (BoardCell cell in Cells)
         {
@@ -383,9 +394,10 @@ public static class ContractBoard
             tip.bodyProvider = () => Loc.T(c.key == "c.last" ? "board.c.last.desc" : "board.cell.hidden.how");
             return;
         }
-        TMP_Text name = UIKit.Text(cell, "", 16f, isDone ? Gold : locked ? Dim : Parch, new Vector2(0f, 34f), new Vector2(size.x - 14f, 42f));
-        name.text = c.Name + (c.onerun ? "\n<size=75%><color=#C9A2FF>" + Loc.T("board.cell.onerun") + "</color></size>" : "");
-        name.fontSizeMin = 11f;
+        // 2.0.1~ 칸에는 이름 · 진행도 · 짧은 보상만 (긴 해금 조건은 툴팁) · 글자 최소 13 (검수: 6 ~ 8px 로 줄고 칸 밖으로 넘침)
+        TMP_Text name = UIKit.Text(cell, "", 16f, isDone ? Gold : locked ? Dim : Parch, new Vector2(0f, 32f), new Vector2(size.x - 12f, 50f));
+        name.text = c.Name;
+        name.fontSizeMin = 13f;
         UIKit.Forget(name);
         int now = Progress(c);
         // 진행 막대
@@ -400,9 +412,11 @@ public static class ContractBoard
         Image fi = fill.gameObject.AddComponent<Image>();
         fi.color = isDone ? new Color(0.49f, 1f, 0.6f) : new Color(0.62f, 0.47f, 0.92f);
         fi.raycastTarget = false;
-        TMP_Text prog = UIKit.Text(cell, "", 14f, Dim, new Vector2(0f, -22f), new Vector2(size.x - 14f, 22f));
-        prog.text = locked ? Loc.T("board.col.locked") : isDone ? Loc.T("board.cell.done") : Loc.T("board.cell.progress").Replace("{0}", now.ToString("N0")).Replace("{1}", c.target.ToString("N0"));
-        prog.fontSizeMin = 10f;
+        TMP_Text prog = UIKit.Text(cell, "", 15f, Dim, new Vector2(0f, -22f), new Vector2(size.x - 10f, 22f));
+        prog.text = locked ? Loc.T("board.col.locked.short") : isDone ? Loc.T("board.cell.done")
+                  : Loc.T("board.cell.progress").Replace("{0}", now.ToString("N0")).Replace("{1}", c.target.ToString("N0")) + (c.onerun ? " · " + Loc.T("board.cell.onerun.short") : "");
+        prog.enableWordWrapping = false;
+        prog.fontSizeMin = 13f;
         UIKit.Forget(prog);
         if (isDone && !isClaimed)
         {
@@ -418,13 +432,15 @@ public static class ContractBoard
         }
         else
         {
-            TMP_Text rw = UIKit.Text(cell, "", 13f, isDone ? new Color(0.8f, 0.72f, 0.5f) : new Color(0.55f, 0.52f, 0.6f), new Vector2(0f, -44f), new Vector2(size.x - 12f, 26f));
-            rw.text = RewardLine(c);
-            rw.fontSizeMin = 9f;
+            TMP_Text rw = UIKit.Text(cell, "", 15f, isDone ? new Color(0.8f, 0.72f, 0.5f) : new Color(0.6f, 0.57f, 0.66f), new Vector2(0f, -44f), new Vector2(size.x - 8f, 24f));
+            rw.text = RewardShort(c);
+            rw.enableWordWrapping = false;
+            rw.fontSizeMin = 13f;
             UIKit.Forget(rw);
         }
         tip.titleProvider = () => c.Name;
         tip.bodyProvider = () => c.Desc + "\n<color=#F5D478>" + c.Cond + "</color>  (" + Progress(c).ToString("N0") + " / " + c.target.ToString("N0") + ")"
+                                + (c.onerun ? "  <color=#C9A2FF>" + Loc.T("board.cell.onerun") + "</color>" : "")
                                 + "\n" + RewardLine(c) + (locked ? "\n" + Loc.T("board.col.locked") : "");
     }
 

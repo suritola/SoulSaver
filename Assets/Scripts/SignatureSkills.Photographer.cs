@@ -137,7 +137,7 @@ public partial class SignatureSkills
         for (float t = 0f; t < 2f; t += 0.5f)
         {
             if (!Alive) yield break;
-            Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, new Color(1f, 1f, 1f, 0.6f), 12f, 0f, 20);
+            Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, CharacterKit.PhFlashSafe(new Color(1f, 1f, 1f, 0.6f)), 12f, 0f, 20);
             using (var ovl = PhysHits.Box(c, size, 0f)) foreach (Collider2D col in ovl)
                 if (col != null && IsFoe(col)) Deal(col.gameObject, dmg, Vector3.zero, 0f);
             yield return new WaitForSeconds(0.5f);
@@ -170,7 +170,7 @@ public partial class SignatureSkills
         for (float t = 0f; t < 1f && Alive && Kit != null; t += 0.3f)
         {
             Vector2 c = Kit.PhCursorNow;
-            Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, new Color(0.8f, 0.85f, 1f, 0.5f), 12f, 0f, 19);
+            Fx.Spawn("fx_flashframe", new Vector3(c.x, c.y, 0f), size.y, CharacterKit.PhFlashSafe(new Color(0.8f, 0.85f, 1f, 0.5f)), 12f, 0f, 19);
             using (var ovl = PhysHits.Box(c, size, 0f)) foreach (Collider2D col in ovl)
                 if (col != null && IsFoe(col)) Deal(col.gameObject, dmg, Vector3.zero, 0f);
             yield return new WaitForSeconds(0.3f);
@@ -216,7 +216,7 @@ public partial class SignatureSkills
         FirstEvoImpact("xe.studio", new Vector3(at.x, at.y, 0f));
         for (float t = 0f; t < 3f && Alive; t += 0.5f)
         {
-            Fx.Spawn("fx_flashframe", new Vector3(at.x, at.y, 0f), 6f, new Color(1f, 0.95f, 0.8f, 0.35f), 8f, 0f, 19);
+            Fx.Spawn("fx_flashframe", new Vector3(at.x, at.y, 0f), 6f, CharacterKit.PhFlashSafe(new Color(1f, 0.95f, 0.8f, 0.35f)), 8f, 0f, 19);
             using (var ovl = PhysHits.Circle(at, 3.5f)) foreach (Collider2D col in ovl)
             {
                 if (col == null || !col.CompareTag("enermy")) continue;
