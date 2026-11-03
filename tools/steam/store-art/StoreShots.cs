@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -104,6 +105,9 @@ public class StoreShots
             {
                 object sm = Find("StageManager");
                 if (sm != null && Get(sm, "banner") is GameObject b && b.activeSelf) b.SetActive(false);
+                // 2.0~ 장 제목 등 큰 알림 띠 (Notice.Big) — 촬영 중 시간이 멈춰 화면 위에 남고 보스 이름을 가림
+                GameObject big = GameObject.Find("BigNotice");
+                if (big != null && big.activeSelf) big.SetActive(false);
             }
             // 커서: 지금 겨누는 월드 좌표를 화면 비율 앵커로 (씬이 바뀌면 카메라도 새로)
             Camera cam = Camera.main;
@@ -275,7 +279,7 @@ public class StoreShots
         object coin = Find("Coin");
         if (coin != null) Call(coin, "AddCoin", coins - (int)Get(coin, "coins"));
         object pt = Find("Point");
-        if (pt != null) { Set(pt, "points", points); Call(pt, "AddPoint", 0); }
+        if (pt != null) { Set(pt, "points", points); Call(pt, "AddPoint", 0, 1f); }   // 2.0~ AddPoint(int, float mul = 1f)
     }
 
     static void Evolve(params int[] ids)
@@ -393,6 +397,16 @@ public class StoreShots
             keep.keepLevel = false;
             Call(shop, "openLevelShop");
             yield return F(1.0f);
+            // 2.0~ 처음 두 번은 갈래 고르기(첫 갈래 · 갈림길) — 확정하고 일반 카드 창까지 넘김
+            for (int k = 0; k < 2; k++)
+            {
+                Set(shop, "selectReady", true);
+                Call(shop, "ConfirmSlot", 1);
+                yield return F(0.8f);
+                keep.keepLevel = false;
+                Call(shop, "openLevelShop");
+                yield return F(1.0f);
+            }
             Call(shop, "onSecondButton");
             yield return F(0.6f);
             Shot("02_level_up_cards");
@@ -441,15 +455,20 @@ public class StoreShots
             object who = Enum.Parse(T("CharacterId"), "Gunner");
             MethodInfo max = T("LevelShop").GetMethod("MaxLevelOf", Any);
             int Mx(int id) => (int)max.Invoke(null, new object[] { who, id });
-            lv[13] = Mx(13); sel[13] = true;
-            lv[15] = Mx(15); sel[15] = true;
-            lv[19] = Mx(19) - 1;
+            // 2.0~ 진화 재료는 갈래에 따라 달라짐 — 게임의 진화 목록(MyEvos) 첫 항목을 그대로 씀
+            object evo0 = null;
+            foreach (object e in (System.Collections.IEnumerable)shop.GetType().GetProperty("MyEvos").GetValue(shop)) { evo0 = e; break; }
+            int[] parts = (int[])evo0.GetType().GetField("parts", Any).GetValue(evo0);
+            int last = parts[parts.Length - 1];
+            foreach (int pid in parts) { lv[pid] = Mx(pid); sel[pid] = true; }
+            lv[last] = Mx(last) - 1;
             keep.keepLevel = false;
             Call(shop, "openLevelShop");
             yield return F(0.8f);
             Set(shop, "selectReady", true);
             Set(shop, "pendingSlot", -1);
-            Call(shop, "onSelect", 19);
+            Call(shop, "onSelect", last);
+            yield return Until(() => (bool)T("SkillEvolutionUI").GetProperty("Open").GetValue(null), 8f);
             yield return Real(3.6f);
             Shot("04_skill_evolution");
             object ui = Find("SkillEvolutionUI");
@@ -681,8 +700,9 @@ public class StoreShots
         T("GameMode").GetField("Override", Any).SetValue(null, null);
         SceneManager.LoadScene("MainMenu");
         yield return F(1.5f);
-        GameObject b = GameObject.Find(button);
-        b?.GetComponent<Button>()?.onClick.Invoke();
+        // 2.0.1~ 스킨 상점 버튼은 메뉴에서 숨김 (영웅 창 안) — 숨은 버튼도 찾음
+        Button bt = Resources.FindObjectsOfTypeAll<Button>().FirstOrDefault(x => x.name == button && x.gameObject.scene.IsValid());
+        bt?.onClick.Invoke();
         yield return F(1.4f);
         Shot(shot);
         yield return F(0.2f);

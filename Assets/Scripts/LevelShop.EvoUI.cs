@@ -236,9 +236,14 @@ public partial class LevelShop
         head.color = UiTokens.GaugeSoul;
         head.alignment = TextAlignmentOptions.Left;
         UIKit.Remember(head, "진화");
+        // 2.0.2~ 「Evolution」 등 긴 머리말이 60 칸을 넘어 진화 이름 · 「n단계 남음」과 겹쳤음 — 머리말 폭만큼 이름 칸을 밀고, 오른쪽 칸 앞에서 끝냄
+        float hw = Mathf.Max(60f, head.GetPreferredValues(head.text).x);
+        head.rectTransform.sizeDelta = new Vector2(hw, 30f);
+        head.rectTransform.anchoredPosition = new Vector2(-w * 0.5f + hw * 0.5f, 28f);
+        float ns = -w * 0.5f + hw + 8f, ne = w * 0.5f - w * 0.3f - 8f;
         RectTransform nr = row.name.rectTransform;
-        nr.anchoredPosition = new Vector2(-w * 0.5f + 66f + (w * 0.55f) * 0.5f, 28f);
-        nr.sizeDelta = new Vector2(w * 0.55f, 32f);
+        nr.anchoredPosition = new Vector2((ns + ne) * 0.5f, 28f);
+        nr.sizeDelta = new Vector2(Mathf.Max(40f, ne - ns), 32f);
         row.name.alignment = TextAlignmentOptions.Left;
         row.name.color = UiTokens.Text1;
         row.name.fontSizeMax = UiTokens.Body;
