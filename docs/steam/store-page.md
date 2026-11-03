@@ -12,6 +12,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 > 1.1.2 기준으로 고쳤습니다(대중성 조사 `docs/marketing/reports/서바이버류 게임 대중화 전략.md` 의 「지금 바로」): 짧은 설명을 차별점(보스 결계 1:1 → 쓰러뜨리면 그 자리에서 무기 진화) 앞세워 다시 씀, 태그 맨 앞에 Valve 공식 장르 태그 **Bullet Heaven**(2026-05 신설), 가벼운 손님을 밀어내는 Difficult 는 뺌, 본문 「그 밖에」에 방송 · 수익 창출 자유 한 줄.
 > 1.8.6 기준으로 다시 썼습니다: 무기 진화 · 영혼 트리(운명 가지) · 스킨 상점 · 도전 과제 32개. 예전 글의 "특수 능력 52종 · 상점 무기 강화"는 1.7.8에 없어진 방식이라 뺐습니다.
 > 2026-10-18: 사용자 지시로 영웅 설명 · 캐릭터 수 등 세부 내용을 빼고 짧게 다시 씀
+> 2026-11-03: 2.0.1 기준 — 본문에 「사막에 숨은 다섯 영웅」 · 「도전 모드」(영혼 릴레이 · 역류) 칸 추가, 도전 과제 38 → 52개. 짧은 설명은 그대로
 
 ## 기본 정보
 
@@ -25,7 +26,7 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 | 플랫폼 | Windows |
 | 컨트롤러 | 풀 컨트롤러 지원 — 엑스박스 배열 · 스팀 덱 · 플레이스테이션 패드(스팀 입력). 오른쪽 스틱으로 조준하고, 기울이면 평타가 자동으로 나갑니다. 스틱을 놓고 RT 만 누르면 가까운 적을 겨누는 보조 조준도 있습니다(빈틈은 직접 조준한 공격만 맞힘). (`GamePad.cs` · Steamworks 「Full controller support」) |
 | 플레이어 | 싱글플레이어 |
-| 스팀 기능 | 스팀 도전 과제(38개) · 스팀 순위표(무한 · 일일 도전) |
+| 스팀 기능 | 스팀 도전 과제(52개) · 스팀 순위표(무한 · 일일 도전) |
 
 ---
 
@@ -55,6 +56,15 @@ Steamworks → **상점 페이지 편집**에 들어가는 글입니다. 언어�
 
 [h2]네 개의 세계와 끝없는 도전[/h2]
 초원에서 영혼의 심연까지, 네 개의 세계를 내려가며 싸웁니다. 끝까지 내려간 뒤에는 무한 모드와 일일 도전이 기다립니다.
+
+[h2]사막에 숨은 다섯 영웅[/h2]
+무한 모드의 사막 어딘가에 다섯 가지 비밀이 숨어 있습니다. 찾아내면 새 영웅이 그 자리에서 합류합니다. 적을 들어 볼링공처럼 던지는 씨름꾼부터, 뷰파인더 안의 적을 종이로 만들어 버리는 사진사까지.
+
+[h2]도전 모드[/h2]
+[list]
+[*][b]영혼 릴레이[/b] — 영웅 셋이 한 판을 이어 달립니다. 쓰러지면 그 자리에서 다음 영웅이 일어나 앞 영웅의 유품을 물려받습니다.
+[*][b]역류[/b] — 완성된 몸으로 시작해 1분마다 힘을 하나씩 내려놓으며 거꾸로 내려갑니다. 마지막엔 맨몸입니다.
+[/list]
 
 [h2]그 밖에[/h2]
 [list]
@@ -90,6 +100,15 @@ Defeat a boss and your weapon shatters and evolves on the spot. The power you bu
 [h2]Four worlds and endless challenges[/h2]
 Fight your way down through four worlds, from the Meadow to the Abyss of Souls. Once you reach the bottom, Endless Mode and Daily Challenges await.
 
+[h2]Five heroes hidden in the desert[/h2]
+Five secrets lie somewhere in Endless Mode's desert. Find one and a new hero joins you on the spot — from the Wrestler who hurls enemies like bowling balls to the Photographer who snaps them into paper.
+
+[h2]Challenge modes[/h2]
+[list]
+[*][b]Soul Relay[/b] — three heroes run one game in turn. When one falls, the next rises on the spot and inherits an Heirloom.
+[*][b]Reflux[/b] — start fully built and give up one power every minute on the way down, until you are bare-handed at the end.
+[/list]
+
 [h2]And more[/h2]
 [list]
 [*]Streaming and monetized videos welcome — no permission needed, all music is original
@@ -124,6 +143,15 @@ Fight your way down through four worlds, from the Meadow to the Abyss of Souls. 
 [h2]四つの世界と終わりなき挑戦[/h2]
 草原から魂の深淵まで、四つの世界を降りながら戦います。最後までたどり着いた後には、エンドレスモードとデイリーチャレンジが待っています。
 
+[h2]砂漠に隠れた五人のヒーロー[/h2]
+エンドレスモードの砂漠のどこかに、五つの秘密が隠されています。見つければ新しいヒーローがその場で仲間になります。敵をボウリングのように投げ飛ばす相撲取りから、ファインダーの中の敵を紙にしてしまう写真家まで。
+
+[h2]チャレンジモード[/h2]
+[list]
+[*][b]魂のリレー[/b] — 3人のヒーローが1回のプレイをつなぎます。倒れるとその場で次のヒーローが起き上がり、前のヒーローの形見を受け継ぎます。
+[*][b]逆流[/b] — 完成した状態から始め、1分ごとに力をひとつずつ手放しながら下っていきます。最後は素手です。
+[/list]
+
 [h2]その他[/h2]
 [list]
 [*]配信・収益化動画は自由です（許可不要・音楽はすべてオリジナル曲）
@@ -157,6 +185,15 @@ Fight your way down through four worlds, from the Meadow to the Abyss of Souls. 
 
 [h2]四个世界与无尽挑战[/h2]
 从草原一路深入灵魂深渊，在四个世界中层层战斗。抵达终点后，无尽模式与每日挑战正等待着你。
+
+[h2]藏在沙漠中的五位英雄[/h2]
+无尽模式的沙漠某处藏着五个秘密。找到它们，新英雄就会当场加入——从把敌人像保龄球一样扔出去的摔跤手，到把取景框里的敌人拍成纸的摄影师。
+
+[h2]挑战模式[/h2]
+[list]
+[*][b]灵魂接力[/b] — 三位英雄接力完成一局。一位倒下，下一位就在原地站起，并继承前者的遗物。
+[*][b]逆流[/b] — 以完全成型的状态开局，每分钟放下一项力量一路往下，最后赤手空拳。
+[/list]
 
 [h2]更多内容[/h2]
 [list]

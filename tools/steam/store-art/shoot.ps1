@@ -11,9 +11,11 @@ param(
     [string]$Only = "",
     [string]$Work = (Join-Path $env:LOCALAPPDATA "SoulSaverStoreShots"),
     [switch]$Publish,
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\2022.3.28f1\Editor\Unity.exe"
+    [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\unity-env.ps1")
+if (-not $Unity) { $Unity = $UnityExe }
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $Lang = $Lang -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
