@@ -94,13 +94,12 @@ public partial class SkinFx
         string fx2 = nth ? look.Fx("step2") : null;
         if (fx2 != null) Emit(fx2, look, p, moveDir, true, 6, Bud.Rep);
         if (RunSave.Replaying) return;
-        float vol = Time.time - lastAttackAt < 0.5f ? 0.12f : 0.2f;
+        // 2026-11-04~ 사용자 「모든 스킨들의 발소리가 시끄럽고 거슬려」: 0.2 / 0.12 → 0.06 / 0.035 · 덧소리 0.18 → 0.06 · 전설 2겹은 없앰
+        float vol = Time.time - lastAttackAt < 0.5f ? 0.035f : 0.06f;
         if (look.opt.Contains("quiet")) vol *= 0.8f;
         // N 걸음마다 덧소리 (자전거 벨 · 랜턴 삐걱 …) — 「stepn: 16」 + 「step2~ …」
-        if (nth && SkinAudio.Play(CharSkin, "step2", 0.18f, 3f, SkinAudio.Prio.Step)) return;
+        if (nth && SkinAudio.Play(CharSkin, "step2", 0.06f, 3f, SkinAudio.Prio.Step)) return;
         SkinAudio.Play(CharSkin, "step", vol, 4f, SkinAudio.Prio.Step);
-        // 전설: 걸음 소리 2겹 (step2 가 있고 N 걸음 규칙이 아니면 늘 같이)
-        if (every == null && CharSkin.tier >= 3) SkinAudio.Play(CharSkin, "step2", vol * 0.8f, 4f, SkinAudio.Prio.Step);
     }
 
     // ================================================================= 평타 (AttackFired 구독 + 신호가 없는 곳의 직접 호출 — D9)

@@ -893,7 +893,7 @@ public partial class CharacterKit
             phFocusRing.SetPosition(k, new Vector3(c.x + Mathf.Cos(a) * fr, c.y + Mathf.Sin(a) * fr, 0f));
         }
         phFocusRing.startColor = phFocusRing.endColor = col;
-        HeroAim.Mark(phFocusRing, HeroAimKind.Photographer, HeroAimFx.None);
+        // 2026-11-04~ 사용자 「사진사 평타 범위표시가 깨져 보인다」: 영웅 문양(조리개 빗금 · 필름 구멍 · 도는 점 6)을 빼고 단정한 테만 (PixelStrokeMin.Plain)
         // 틀 안 수 (0.1초마다)
         if (Time.time >= phCountAt)
         {

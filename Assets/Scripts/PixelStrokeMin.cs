@@ -22,7 +22,7 @@ public class PixelStrokeMin : MonoBehaviour
     public const float MaxRingRadius = 30f;     // 이보다 큰 원은 도트 고리 그림으로 바꾸지 않음 (그림 크기 상한)
     // 단정한 테로 그릴 고리 (여러 개가 늘 떠 있음 · 퍼져 나감 · 바닥 영역 테두리)
     static readonly System.Collections.Generic.HashSet<string> Plain = new System.Collections.Generic.HashSet<string>
-        { "PickupRing", "Ring", "SarcoZone", "PossessMistEdge", "StallNearRing" };
+        { "PickupRing", "Ring", "SarcoZone", "PossessMistEdge", "StallNearRing", "PhFocus" };     // PhFocus: 사진사 초점 원 (반지름 0.7 = 도트 5칸이라 문양을 얹으면 톱니처럼 뭉개짐)
     // 1.5.0~ 영웅 범위표시(우클릭 필살기): 이름 목록 대신 그리는 코드가 매 프레임 HeroAim.Mark 로 직접 알려 줌
     //   지정된 선만 맨 위 · 영웅 문양 고리 · 움직이는 장식 (상시 · 평타 표시는 맨 위에서 뺌) · 지정이 끊기면 원래 정렬 · 재질로
     internal HeroAimKind markKind;

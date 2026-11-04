@@ -35,7 +35,7 @@ public static partial class SkinArt
             }
         }
         tex.SetPixels32(px);
-        tex.Apply(false, true);
+        tex.Apply(false, false);        // 읽기 가능하게 둠: 커서 스킨 필살기 조준(CursorSkin.MakeUltAim)이 글리프 화소를 읽음 (예전엔 매 프레임 예외 · 16칸 남짓이라 메모리 미미)
         s = Sprite.Create(tex, new Rect(0f, 0f, w, h), new Vector2(0.5f, 0.5f), 16f, 0, SpriteMeshType.FullRect);
         s.name = "sk_" + name;
         cache[name] = s;

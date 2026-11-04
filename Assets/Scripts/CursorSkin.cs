@@ -220,7 +220,7 @@ public class CursorSkin : MonoBehaviour
     {
         Texture2D src = Load(NameFor(true)) ?? Load(fallback[1]);
         Sprite g = SkinArt.Get(look.Fx("ultaim"));
-        if (src == null || !src.isReadable || g == null) return null;
+        if (src == null || !src.isReadable || g == null || !g.texture.isReadable) return null;
         Texture2D t = Remap(src, 1f, 0, look.accent, 0.3f);
         Texture2D gt = g.texture;
         Color[] gp = gt.GetPixels();
