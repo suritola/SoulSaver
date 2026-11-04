@@ -37,6 +37,22 @@ public class SkinPreview : MonoBehaviour
     bool shotLive, foeDead;
     Vector3 shotFrom;
     float heroScale, foeScale;
+    Transform gun;              // 손에 든 무기 (거너 권총 등 — 몸 그림에 무기가 없는 영웅)
+    SpriteRenderer gunSr;
+    string projBase, meleeBase; // 실제 평타 그림 시트 (날아가는 것 / 적 자리에 그리는 것)
+    bool spinShot, arcShot;
+
+    // 영웅 평타의 실제 그림 시트 (Fx 시트 이름 — 무기 스킨이면 SkinFx.ShotSheet 가 「이름__스킨」 시트로 바꿈)
+    static string Projectile(string held) => held switch
+    {
+        "pistol" => "atk_bullet", "shuriken" => "atk_shuriken", "bow" => "atk_arrow", "flask" => "atk_flask",
+        "gear" => "atk_gear", "letter" => "atk_letter", _ => null,
+    };
+    static string Melee(string held) => held switch
+    {
+        "sword" => "fx_swordswing", "quill" => "fx_beam", "lantern" => "fx_beam", "satba" => "fx_throwtrail",
+        "plow" => "fx_dust", "dummy" => "fx_puppet_swing", "shovel" => "fx_dirt", "camera" => "fx_flashframe", _ => "fx_spark",
+    };
 
     public static SkinPreview Open(RectTransform win, SkinDef s, SkinKind kind, int who, SpecialFeedback audio, System.Action onClose,
                                    IList<(string key, string name)> chips = null, string replay = null)
@@ -200,15 +216,34 @@ public class SkinPreview : MonoBehaviour
         foe.position = Origin + new Vector3(3.4f, 0.1f, 0f);
         foeSr.flipX = true;
 
-        // ---- 투사체 (무기 그림이 돌며 날아감 · 무기 스킨 색 꼬리)
+        // ---- 손에 든 무기 + 실제 평타 그림 (예전: 무기 그림 자체를 돌려 던져 「총을 안 쏘고 던짐」 — 사용자 지적)
+        string held = CharacterData.Def((CharacterId)heroId).held ?? "pistol";
+        gun = new GameObject("Held").transform;
+        gun.SetParent(world.transform, true);
+        gunSr = gun.gameObject.AddComponent<SpriteRenderer>();
+        gunSr.sortingLayerName = "Character";
+        gunSr.sortingOrder = 6;
+        gunSr.sprite = Resources.Load<Sprite>("Weapons/weapon_" + (SkinFx.WeaponSkin != null ? SkinFx.WeaponSkin.id : held));
+        if (gunSr.sprite != null) gun.localScale = Vector3.one * (0.75f / Mathf.Max(0.01f, gunSr.sprite.bounds.size.x));
+        // 몸 그림에 무기가 그려진 영웅은 손 무기를 따로 안 그림 (거너만 「총 없는 몸」 + 손 권총)
+        gun.gameObject.SetActive(gunSr.sprite != null && held == "pistol");
+
+        projBase = Projectile(held);
+        meleeBase = projBase == null ? Melee(held) : null;
+        spinShot = held == "shuriken" || held == "gear" || held == "flask";
+        arcShot = held == "flask";
         shot = new GameObject("Shot").transform;
         shot.SetParent(world.transform, true);
         shotSr = shot.gameObject.AddComponent<SpriteRenderer>();
         shotSr.sortingLayerName = "Effect";
         shotSr.sortingOrder = 30;
-        string held = CharacterData.Def((CharacterId)heroId).held ?? "pistol";
-        shotSr.sprite = Resources.Load<Sprite>("Weapons/weapon_" + (SkinFx.WeaponSkin != null ? SkinFx.WeaponSkin.id : held));
-        if (shotSr.sprite != null) shot.localScale = Vector3.one * (0.9f / Mathf.Max(0.01f, shotSr.sprite.bounds.size.y));
+        if (projBase != null)
+        {
+            Sprite[] pf = Fx.Frames(SkinFx.ShotSheet(projBase));
+            if (pf.Length == 0) pf = Fx.Frames(projBase);
+            shotSr.sprite = pf.Length > 0 ? pf[0] : null;
+            if (shotSr.sprite != null) shot.localScale = Vector3.one * (0.8f / Mathf.Max(0.01f, shotSr.sprite.bounds.size.x));
+        }
         shot.gameObject.SetActive(false);
 
         // ---- 커서 스킨: 허수아비 위 조준점
@@ -341,6 +376,12 @@ public class SkinPreview : MonoBehaviour
         if (paused) x = pauseX;
         hero.position = Origin + new Vector3(x, paused ? 0f : Mathf.Abs(Mathf.Sin(t * 9f)) * 0.06f, 0f);
         heroSr.flipX = vx < -0.35f && !shotLive && !paused;
+        if (gun != null && gun.gameObject.activeSelf)
+        {
+            float face = heroSr.flipX ? -1f : 1f;
+            gun.position = hero.position + new Vector3(0.42f * face, -0.12f, 0f);
+            gunSr.flipX = heroSr.flipX;
+        }
         if (heroFrames.Length > 0) heroSr.sprite = heroFrames[paused ? 0 : (int)(t * 8f) % heroFrames.Length];
         if (Time.time >= cycleAt) Beat();
         heroSr.color = Color.Lerp(Color.white, new Color(1f, 0.35f, 0.35f), Mathf.Clamp01(heroFlash -= Time.deltaTime * 4f));
@@ -383,9 +424,11 @@ public class SkinPreview : MonoBehaviour
     {
         shotLive = true;
         shotStart = Time.time;
-        shotFrom = hero.position + new Vector3(0.6f, 0.3f, 0f);
-        shot.gameObject.SetActive(shotSr.sprite != null);
+        shotFrom = hero.position + new Vector3(0.75f, 0.05f, 0f);
+        shot.gameObject.SetActive(projBase != null && shotSr.sprite != null);
+        shot.rotation = Quaternion.identity;
         heroSr.flipX = false;
+        if (gun.gameObject.activeSelf) Fx.Spawn("fx_spark", shotFrom, 1.3f, new Color(1f, 0.9f, 0.55f), 30f);      // 총구 불꽃
         SkinFx.OnAttack(shotFrom, Vector2.right);       // 평타 몸짓 · 무기 발사 그림 (게임과 같은 길)
         SkinFx.OnObject("throw", shotFrom, Vector2.right);      // 키트 물체 순간 (씨름꾼 메치기)
         // 공격 소리 = 상점 예전 미리듣기와 같은 규칙 (무기 스킨 음높이 · 덧소리)
@@ -397,14 +440,15 @@ public class SkinPreview : MonoBehaviour
 
     void FlyShot()
     {
-        const float Dur = 0.28f;
+        // 근접 · 빔 영웅: 날아가는 것 없이 적 자리에 실제 평타 그림 (무기 스킨이면 그 시트)
+        float Dur = projBase == null ? 0.12f : arcShot ? 0.4f : 0.2f;
         float k = Mathf.Clamp01((Time.time - shotStart) / Dur);
-        Vector3 to = foe.position + new Vector3(0f, 0.3f, 0f);
-        Vector3 p = Vector3.Lerp(shotFrom, to, k) + new Vector3(0f, Mathf.Sin(k * Mathf.PI) * 0.4f, 0f);
+        Vector3 to = foe.position + new Vector3(0f, 0.05f, 0f);
+        Vector3 p = Vector3.Lerp(shotFrom, to, k) + new Vector3(0f, arcShot ? Mathf.Sin(k * Mathf.PI) * 0.8f : 0f, 0f);
         shot.position = p;
-        shot.Rotate(0f, 0f, -900f * Time.deltaTime);
+        if (spinShot) shot.Rotate(0f, 0f, -900f * Time.deltaTime);
         // 꼬리: 무기 스킨 색 (없으면 흰빛) — 게임의 SkinTint 와 같은 색
-        if (SpecialAbilities.GlowSprite != null && Time.frameCount % 2 == 0)
+        if (projBase != null && SpecialAbilities.GlowSprite != null && Time.frameCount % 2 == 0)
         {
             Color tc = SkinFx.WeaponSkin != null ? SkinFx.WeaponSkin.color : new Color(1f, 0.95f, 0.8f);
             FadeSprite.Spawn("SkinPreviewTrail", SpecialAbilities.GlowSprite, p, 0.07f, new Color(tc.r, tc.g, tc.b, 0.8f), "Effect", 20, 0.25f);
@@ -413,6 +457,7 @@ public class SkinPreview : MonoBehaviour
 
         shotLive = false;
         shot.gameObject.SetActive(false);
+        if (meleeBase != null) Fx.Spawn(SkinFx.ShotSheet(meleeBase), to, 2.6f, Color.white, 18f);
         nextShot = Time.time + 0.5f;
         foeFlash = 1f;
         if (cursorSr != null && !SkinAudio.Play(skin, "click", 0.5f, 4f, SkinAudio.Prio.Cursor)) audioFx?.PlayRaw("clank", 0.45f, 1.4f + 0.1f * (skin != null ? skin.tier : 0));
