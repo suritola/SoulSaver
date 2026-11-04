@@ -410,7 +410,17 @@ public static class SteamLeaderboards
 
     public enum Scope { Global, AroundMe, Friends }
 
-    public static bool Available => SteamManager.Initialized && !Demo.On && !GameInput.Auto && !Application.isBatchMode;
+    // 2.0.4~ 스팀이 켜져 있어도 오프라인(같은 계정이 다른 곳에 로그인해 「Session Replaced」 등)이면 받기가 15초 뒤 실패로만 끝났음 → 바로 「연결되어 있지 않음」
+    public static bool Available => SteamManager.Initialized && LoggedOn() && !Demo.On && !GameInput.Auto && !Application.isBatchMode;
+
+    static bool LoggedOn()
+    {
+#if STEAM
+        try { return SteamUser.BLoggedOn(); } catch { return false; }
+#else
+        return false;
+#endif
+    }
 
     // 올리는 중인 기록 수 (결과 화면에서 순위 창을 바로 열면 다 올린 뒤에 받음)
     public static int Pending { get; private set; }
