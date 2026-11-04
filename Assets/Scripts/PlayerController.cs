@@ -654,7 +654,8 @@ public class PlayerController : MonoBehaviour
             SafeHook(() => special?.ReloadShockwave(transform.position));
             SafeHook(() => SignatureSkills.ReloadStart(true));          // 탄피 지뢰 · 빈 주머니의 비 · (갈래) 산탄 돌진 · 과열 폭발 (1.4.1~ 권총 장전 표시)
 
-            if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
+            if (SkinFx.OnReload()) { }      // 2026-11-04~ 무기 스킨 장전 그림 · 소리가 자리 교체
+            else if (!CharacterData.IsGunner && SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Play("rl_stars", 0.8f);
             else if (audioSource != null && reloadSound != null) audioSource.PlayOneShot(reloadSound, GameSettings.SfxVolume);
 
             // 2026-10-19~ 빌드 갈래 (거너): 과열 시간 · 산탄 장전 40% 빠름 · 포탑 곁 2배 — 진행 값(reload)은 그대로 0 → reloadTime (장전 표시가 맞게)
@@ -1118,6 +1119,8 @@ void Shoot()
     // 필살기를 썼을 때 (업적 등)
     public static event System.Action UltUsed;
     // 2.0.0~ 공격을 낸 순간 신호 (사막 비밀 표지판 판정 등 — 평타 한 번마다 부름. 구독자는 (낸 자리, 방향))
+    // 주의 (2026-11-04): 이 신호를 새 자리(궁수 활 · 특수 무기 · 공사 반장 덤프)로 늘리지 말 것 — 구독자 DesertSecrets 베타 표지판(업적형 전설 「베타 테스터」 해금 비밀)의 판정이 바뀜
+    //   스킨 연출이 필요한 곳은 SkinFx.OnAttack 을 직접 부름 (D9)
     public static event System.Action<Vector3, Vector2> AttackFired;
     public static void RaiseAttackFired(Vector3 origin, Vector2 dir) => AttackFired?.Invoke(origin, dir);
     // 다른 캐릭터의 우클릭 스킬도 필살기로 셈 (업적 등)
@@ -1371,11 +1374,12 @@ void Shoot()
             // 1.1~: 0.6초 안에 이어 주울수록 작게 하던 것 → 반음씩 높게 (최대 12단계 = 한 옥타브)
             float pitch = Mathf.Pow(2f, Mathf.Min(coinStreak, 12) / 12f);
             AudioSource src = CoinSource(pitch);
-            if (src != null && getCoin != null)
+            AudioClip coinClip = SkinAudio.CoinClip ?? getCoin;      // 2026-11-04~ 이펙트 스킨 코인 소리 (반음 사다리 · 간격 그대로)
+            if (src != null && coinClip != null)
             {
                 src.pitch = pitch;
                 // 1.1~ 오래 이어 주우면 조금씩 작게 (꼭대기 음높이에서 같은 크기로 초당 14번 울리던 것 · 최소 60%)
-                src.PlayOneShot(getCoin, GameSettings.SfxVolume * 0.85f * Mathf.Max(0.6f, 1f / (1f + 0.04f * coinStreak)));
+                src.PlayOneShot(coinClip, GameSettings.SfxVolume * 0.85f * Mathf.Max(0.6f, 1f / (1f + 0.04f * coinStreak)));
             }
         }
         return sound;
@@ -1506,6 +1510,7 @@ void Shoot()
         invincibleUntil = Time.time + hurtInvincibleTime + BossUltimate.DevHurtGraceBonus + BossUltimate.ErosionHurtGrace;     // 개발자 · 엄마 결계 중 +0.2초 (한 패턴에 연달아 맞지 않게)
 
         if (!SkinAudio.PlayHurt() && audioSource != null && hitSound != null) audioSource.PlayOneShot(hitSound, GameSettings.SfxVolume);      // 캐릭터 스킨 피격 소리
+        SkinFx.OnHurt();        // 2026-11-04~ 캐릭터 스킨 피격 그림
 
         // 피해 감소는 합쳐도 최대 70% (단단한 신체 + 강철 갑옷 + 거대화 물약이 겹쳐 무적이 되지 않게)
         float taken = amount * GameMode.DamageMul * Chapters.HurtMul * (1f - Mathf.Clamp(def, 0f, MaxDef));     // HurtMul: 장 자리에 맞춘 세기 (2.1.1)
@@ -1529,6 +1534,7 @@ void Shoot()
             PlayerHealth = Mathf.Max(1f, special.UndyingReviveHealth(PlayerMaxHealth));
             invincibleUntil = Time.time + 3f;
             DamageFlash.Show(1f);
+            SkinFx.OnRevive();      // 2026-11-04~ 캐릭터 스킨 버팀 연출 (희귀부터)
             return true;
         }
 
@@ -1565,9 +1571,11 @@ void Shoot()
         CancelSkill();
         move = Vector3.zero;
         DamageFlash.Show(1f);
-        Hostile.Play("bigboom", 0.7f, 0.6f);
+        // 2026-11-04~ 캐릭터 스킨이 있으면 붉은 터짐 · bigboom 자리에 스킨 사망 연출 (실제 시간) — 붉은 번쩍 · 흔들림 · 느려짐은 그대로
+        bool skinDeath = SkinFx.OnDeath();
+        if (!skinDeath) Hostile.Play("bigboom", 0.7f, 0.6f);
         if (SpecialAbilities.SharedFx != null) SpecialAbilities.SharedFx.Shake(0.5f, 0.3f);
-        Fx.Spawn("fx_deathburst", transform.position, 4f, new Color(1f, 0.35f, 0.3f), 14f);
+        if (!skinDeath) Fx.Spawn("fx_deathburst", transform.position, 4f, new Color(1f, 0.35f, 0.3f), 14f);
 
         // 일시정지 창이 열려도 실제 시간으로 흐름
         float t = 0f;

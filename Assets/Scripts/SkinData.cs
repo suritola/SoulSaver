@@ -62,72 +62,72 @@ public static class SkinData
     public static readonly SkinDef[] All =
     {
         // ---------------- 캐릭터
-        C("gunner_nogun__desert", G, 0, "사막 방랑자", "모래빛 코트와 먼지 낀 모자. 피격 소리가 낮고 둔해집니다.", new Color(0.85f, 0.72f, 0.45f), "sk_hurt_low"),
+        C("gunner_nogun__desert", G, 0, "사막 방랑자", "모래빛 코트와 먼지 낀 모자. 걸을 때 부츠 자국과 모래 사각 소리, 레벨업하면 모래 회오리가 솟고, 쓰러지면 모래로 흩날리며 모자만 굴러갑니다.", new Color(0.85f, 0.72f, 0.45f), "sk_hurt_low"),
         C("gunner_nogun__bounty", G, 1, "붉은 현상금 사냥꾼", "검은 가죽 코트에 붉은 목도리. 피격하면 짧은 휘파람 소리.", new Color(0.9f, 0.25f, 0.3f), "sk_hurt_whistle"),
         C("gunner_nogun__ghost", G, 2, "유령 총잡이", "빛바랜 푸른 코트의 유령. 움직이면 옅은 잔상이 남고, 피격하면 메아리가 울립니다.", new Color(0.7f, 0.95f, 1f), "sk_hurt_echo"),
         C("gunner_nogun__gold", G, 3, "황금 심판자", "황금빛 심판자. 금빛 오라가 감돌고, 적을 쓰러뜨리면 금빛 파편이 흩어지며 필살기에 종소리가 울립니다.", new Color(1f, 0.82f, 0.3f), "sk_hurt_bell"),
 
-        C("swordsman__bronze", S, 0, "청동 기사", "오래된 청동 갑옷. 피격 소리가 묵직해집니다.", new Color(0.85f, 0.6f, 0.35f), "sk_hurt_low"),
+        C("swordsman__bronze", S, 0, "청동 기사", "오래된 청동 갑옷. 걸을 때 철컥거리고 휘두르면 녹 가루가 흩날리며, 레벨업하면 나팔이 울리고 쓰러지면 청동 조각이 와르르 쏟아집니다.", new Color(0.85f, 0.6f, 0.35f), "sk_hurt_low"),
         C("swordsman__black", S, 1, "흑기사", "칠흑 갑옷에 붉은 깃털. 피격하면 쇳소리가 울립니다.", new Color(0.8f, 0.15f, 0.2f), "sk_hurt_metal"),
         C("swordsman__paladin", S, 2, "성기사", "흰 갑옷과 금빛 장식, 푸른 망토. 움직이면 빛 잔상이 남고, 피격하면 맑은 방울 소리.", new Color(1f, 0.92f, 0.6f), "sk_hurt_chime"),
         C("swordsman__dragon", S, 3, "용기사", "용의 뿔 투구와 붉은 비늘 갑옷. 불씨 오라가 감돌고, 처치하면 불꽃이 튀며 필살기에 용의 포효가 울립니다.", new Color(1f, 0.45f, 0.15f), "sk_hurt_roar"),
 
-        C("rogue__sand", R, 0, "모래 도적", "모래빛 두건. 피격 소리가 가벼워집니다.", new Color(0.85f, 0.7f, 0.45f), "sk_hurt_light"),
+        C("rogue__sand", R, 0, "모래 도적", "모래빛 두건의 조용한 도적. 발소리는 사박사박 작고, 던질 때 모래 한 줌이 흩어지며, 쓰러지면 단검만 남기고 모래 소용돌이로 사라집니다.", new Color(0.85f, 0.7f, 0.45f), "sk_hurt_light"),
         C("rogue__raven", R, 1, "밤까마귀", "검은 두건과 붉은 목도리, 하얗게 빛나는 눈. 피격하면 까마귀 날갯짓 소리.", new Color(0.75f, 0.1f, 0.2f), "sk_hurt_flap"),
         C("rogue__ninja", R, 2, "닌자", "남색 복면과 길게 휘날리는 붉은 목도리. 움직이면 그림자 잔상, 피격하면 연기 소리.", new Color(0.3f, 0.4f, 0.8f), "sk_hurt_smoke"),
         C("rogue__void", R, 3, "그림자 군주", "허공의 보랏빛 망토와 빛나는 분홍 눈. 어둠의 오라가 감돌고, 처치하면 그림자가 흩어지며 필살기에 속삭임이 울립니다.", new Color(0.65f, 0.3f, 1f), "sk_hurt_void"),
 
-        C("archer__autumn", A, 0, "가을 사냥꾼", "단풍빛 두건. 피격 소리가 부드러워집니다.", new Color(0.95f, 0.55f, 0.2f), "sk_hurt_light"),
+        C("archer__autumn", A, 0, "가을 사냥꾼", "단풍빛 두건. 걸음마다 단풍잎이 떨어지며 바스락거리고, 레벨업하면 단풍잎 회오리, 필살기에 사냥 뿔피리가 울리고 이기면 단풍잎이 폭죽처럼 터집니다.", new Color(0.95f, 0.55f, 0.2f), "sk_hurt_light"),
         C("archer__snow", A, 1, "설원 궁수", "흰 모피 두건과 얼음빛 옷. 피격하면 얼음 부서지는 소리.", new Color(0.7f, 0.88f, 1f), "sk_hurt_ice"),
         C("archer__elf", A, 2, "엘프 레인저", "에메랄드 두건과 금빛 머리띠. 움직이면 나뭇잎 잔상, 피격하면 바람 소리.", new Color(0.35f, 0.9f, 0.5f), "sk_hurt_wind"),
         C("archer__sun", A, 3, "태양의 궁수", "태양빛 두건과 흰 옷. 햇살 오라가 감돌고, 처치하면 빛이 터지며 필살기에 성가가 울립니다.", new Color(1f, 0.85f, 0.35f), "sk_hurt_bell"),
 
-        C("alchemist__herb", L, 0, "초록 약사", "약초빛 옷. 피격 소리가 보글거립니다.", new Color(0.45f, 0.8f, 0.45f), "sk_hurt_bubble"),
+        C("alchemist__herb", L, 0, "초록 약사", "약초빛 옷. 걸을 때 주머니 속 유리병이 짤랑이고, 던질 때 코르크가 「뽁」, 레벨업하면 초록 거품 기둥이 보글보글 솟고 이기면 거품 분수가 터집니다.", new Color(0.45f, 0.8f, 0.45f), "sk_hurt_bubble"),
         C("alchemist__plague", L, 1, "역병 의사", "검은 외투와 하얀 부리 가면. 피격하면 둔탁한 가면 소리.", new Color(0.8f, 0.2f, 0.25f), "sk_hurt_metal"),
         C("alchemist__mercury", L, 2, "수은 학자", "은빛 외투와 푸른 고글. 움직이면 수은 잔상, 피격하면 유리 울림.", new Color(0.75f, 0.85f, 0.95f), "sk_hurt_chime"),
         C("alchemist__stone", L, 3, "현자의 돌", "진홍 외투와 금빛 머리. 붉은 돌 조각이 주위를 돌고, 처치하면 붉은 결정이 흩어지며 필살기에 신비로운 공명이 울립니다.", new Color(1f, 0.3f, 0.25f), "sk_hurt_void"),
 
         // ---------------- 캐릭터: 새 영웅 넷 (2.0.0~ · 지도 제작자 · 시계공 · 우체부 · 유령)
-        C("cartographer__drafter", M, 0, "제도사", "카키 조끼와 올리브 모자, 등에 멘 도면통. 피격 소리가 가벼워집니다.", new Color(0.78f, 0.7f, 0.48f), "sk_hurt_light"),
+        C("cartographer__drafter", M, 0, "제도사", "카키 조끼와 올리브 모자, 등에 멘 도면통. 걸음마다 연필 낙서와 사각 소리, 레벨업하면 도면이 촤악 펼쳐지고 이기면 측량 깃발이 꽂힙니다.", new Color(0.78f, 0.7f, 0.48f), "sk_hurt_light"),
         C("cartographer__hydro", M, 1, "해도사", "남색 외투와 선장 모자, 손에 육분의. 피격하면 맑은 방울 소리가 납니다.", new Color(0.25f, 0.6f, 0.75f), "sk_hurt_chime"),
         C("cartographer__starmap", M, 2, "별지도꾼", "별을 꽂은 밤하늘 망토. 움직이면 별빛 잔상이 남고, 피격하면 바람 소리가 납니다.", new Color(0.95f, 0.85f, 0.4f), "sk_hurt_wind"),
         C("cartographer__blank", M, 3, "백지도의 저자", "종이로 된 몸에 빨간 교정 펜. 종이 조각 오라가 감돌고, 처치하면 종이가 흩날리며 필살기에 종이 찢는 소리가 울립니다.", new Color(0.95f, 0.3f, 0.3f), "sk_hurt_paper"),
 
-        C("clockmaker__apprentice", K, 0, "견습 시계공", "가죽 앞치마와 쇠 톱니. 피격 소리가 철컹거립니다.", new Color(0.6f, 0.65f, 0.75f), "sk_hurt_metal"),
+        C("clockmaker__apprentice", K, 0, "견습 시계공", "가죽 앞치마와 쇠 톱니. 걸음이 째깍째깍 울리고, 던질 때 나사가 튀며, 레벨업하면 톱니 셋이 맞물려 돌고 쓰러지면 째깍 소리가 느려지다 멈춥니다.", new Color(0.6f, 0.65f, 0.75f), "sk_hurt_metal"),
         C("clockmaker__hourglass", K, 1, "모래시계 수도사", "모래빛 후드와 모래시계 목걸이. 피격하면 맑은 방울 소리가 납니다.", new Color(0.9f, 0.75f, 0.4f), "sk_hurt_chime"),
         C("clockmaker__cuckoo", K, 2, "뻐꾸기 시계", "등에 멘 뻐꾸기 시계 집과 초록 모자. 움직이면 톱니 잔상이 남고, 피격하면 뻐꾹 소리가 납니다.", new Color(0.4f, 0.7f, 0.4f), "sk_hurt_cuckoo"),
         C("clockmaker__stopped", K, 3, "멈춘 시계의 주인", "11시 59분에 멈춘 깨진 시계판. 시계 오라가 감돌고, 처치하면 톱니가 분해되며 필살기에 큰 종소리가 울립니다.", new Color(0.7f, 0.9f, 0.95f), "sk_hurt_bell"),
 
-        C("postman__paperboy", P_, 0, "신문 배달부", "파란 야구 모자와 둘둘 만 신문. 피격 소리가 가벼워집니다.", new Color(0.35f, 0.55f, 0.9f), "sk_hurt_light"),
+        C("postman__paperboy", P_, 0, "신문 배달부", "파란 야구 모자와 둘둘 만 신문. 운동화 발소리 사이로 자전거 벨이 따릉, 레벨업하면 신문 1면이 빙글 돌며 나타나고 맞으면 신문지가 흩날립니다.", new Color(0.35f, 0.55f, 0.9f), "sk_hurt_light"),
         C("postman__pigeon", P_, 1, "비둘기 조련사", "모자 위에 비둘기가 앉은 잿빛 외투. 피격하면 날갯짓 소리가 납니다.", new Color(0.6f, 0.65f, 0.75f), "sk_hurt_flap"),
         C("postman__courier", P_, 2, "택배 기사", "형광 조끼에 택배 상자와 단말기. 움직이면 잔상이 남고, 피격하면 단말기 삑 소리가 납니다.", new Color(1f, 0.6f, 0.15f), "sk_hurt_beep"),
         C("postman__return", P_, 3, "반송 우체부", "검은 제복에 빨간 RETURN 도장과 밀랍 봉인. 도장 오라가 감돌고, 처치하면 소인 찍힌 봉투가 흩어지며 필살기에 쿵쿵쿵 도장 소리가 울립니다.", new Color(0.9f, 0.15f, 0.2f), "sk_hurt_metal"),
 
-        C("ghost__sheet", H, 0, "이불 유령", "체크무늬 이불에 잠옷 모자를 쓴 유령. 피격 소리가 포근해집니다.", new Color(0.7f, 0.82f, 0.95f), "sk_hurt_light"),
+        C("ghost__sheet", H, 0, "이불 유령", "체크무늬 이불에 잠옷 모자를 쓴 유령. 걸으면 이불 자락이 사락 끌리고, 쉬면 코를 골며, 레벨업하면 별 · 달 모빌이 자장가와 함께 내려옵니다.", new Color(0.7f, 0.82f, 0.95f), "sk_hurt_light"),
         C("ghost__wisp", H, 1, "도깨비불", "청록 불꽃으로 타오르는 유령. 피격하면 불씨 튀는 소리가 납니다.", new Color(0.4f, 0.95f, 0.8f), "sk_hurt_smoke"),
         C("ghost__deepsea", H, 2, "심해 유령", "발광 반점과 낚싯대 불빛. 움직이면 물빛 잔상이 남고, 피격하면 물방울 소리가 납니다.", new Color(0.25f, 0.9f, 0.75f), "sk_hurt_bubble"),
         C("ghost__deleted", H, 3, "삭제된 장면", "반은 그려지고 반은 마젠타 와이어프레임. 깨진 격자 오라가 감돌고, 처치하면 픽셀로 흩어지며 필살기에 모뎀 소리가 울립니다.", new Color(1f, 0.2f, 0.85f), "sk_hurt_pixel"),
 
         // ---------------- 캐릭터: 새 영웅 둘 (2.1.0~ · 씨름꾼 · 공사 반장) — 전설은 업적형
-        C("wrestler__local", WR, 0, "동네 장사", "흰 러닝셔츠에 운동회 머리띠, 마을 대회 단골 우승자. 피격 소리가 가벼워집니다.", new Color(0.85f, 0.25f, 0.3f), "sk_hurt_light"),
+        C("wrestler__local", WR, 0, "동네 장사", "흰 러닝셔츠에 운동회 머리띠, 마을 대회 단골 우승자. 잡을 때 손바닥이 「짝」, 레벨업하면 만국기가 펼쳐지고 이기면 황소 트로피와 함성이 터집니다.", new Color(0.85f, 0.25f, 0.3f), "sk_hurt_light"),
         C("wrestler__bronze", WR, 1, "청동 샅바", "샅바와 팔 토시가 청동이라 메칠 때마다 쇳소리가 납니다.", new Color(0.85f, 0.58f, 0.25f), "sk_hurt_metal"),
         C("wrestler__crypt", WR, 2, "묘역의 장사", "해골 샅바를 맨 묘역의 장사. 움직이면 뼛빛 잔상이 남고, 피격하면 서늘한 바람 소리가 납니다.", new Color(0.55f, 1f, 0.7f), "sk_hurt_wind"),
         CA("wrestler__referee", WR, "심판", "줄무늬 심판복에 호루라기 「삑」. 발밑 모래판 선 오라가 감돌고, 처치하면 모래로 흩어지며 필살기에 호루라기와 함성이 울립니다. (업적형)", new Color(0.91f, 0.76f, 0.48f), "sk_hurt_whistle"),
-        C("foreman__night", FM, 0, "야간 작업", "야광 조끼에 이마 전등, 밤에도 공사는 계속된다. 피격하면 삑 소리가 납니다.", new Color(0.72f, 0.94f, 0.13f), "sk_hurt_beep"),
+        C("foreman__night", FM, 0, "야간 작업", "야광 조끼에 이마 전등, 밤에도 공사는 계속된다. 발 앞을 전등 빛이 비추고, 레벨업하면 서치라이트가 엇갈리며 사이렌, 필살기에 후진 경보가 울립니다.", new Color(0.72f, 0.94f, 0.13f), "sk_hurt_beep"),
         C("foreman__snow", FM, 1, "제설차", "눈 쌓인 안전모에 빨간 목도리. 피격하면 얼음 부서지는 소리가 납니다.", new Color(0.65f, 0.85f, 1f), "sk_hurt_ice"),
         C("foreman__hell", FM, 2, "지옥 공사", "뿔 돋은 그을린 안전모에 용암빛 조끼. 움직이면 불씨 잔상이 남고, 피격하면 포효 소리가 납니다.", new Color(1f, 0.38f, 0.1f), "sk_hurt_roar"),
         CA("foreman__beta", FM, "베타 테스터", "BETA 창틀 안전모, 처치하면 초록 체크 표시. 회색 창틀 오라가 감돌고 필살기에 딸깍 소리가 울립니다. (업적형)", new Color(0.45f, 0.85f, 0.5f), "sk_hurt_pixel"),
 
         // ---------------- 캐릭터: 새 영웅 셋 (2.2.0~ · 인형사 · 장의사 · 사진사) — 전설은 업적형
-        C("puppeteer__shadow", PU, 0, "그림자극", "검은 종이 실루엣 연출가, 더미도 그림자 인형이 되어 벽에 비친 듯 납작합니다. 피격 소리가 가벼워집니다.", new Color(0.4f, 0.35f, 0.6f), "sk_hurt_light"),
+        C("puppeteer__shadow", PU, 0, "그림자극", "검은 종이 실루엣 연출가, 더미도 그림자 인형이 되어 벽에 비친 듯 납작합니다. 레벨업하면 새 실루엣이 날아오르며 징이 울리고, 쓰러지면 촛불이 꺼집니다.", new Color(0.4f, 0.35f, 0.6f), "sk_hurt_light"),
         C("puppeteer__paper", PU, 1, "종이 인형", "접은 종이 옷의 연출가, 더미는 접이식 종이 인형이고 줄은 실 대신 종이끈입니다. 피격하면 종이 구겨지는 소리가 납니다.", new Color(0.93f, 0.85f, 0.62f), "sk_hurt_paper"),
         C("puppeteer__crypt", PU, 2, "묘역 인형사", "묘역 무대의 연출가, 더미가 해골 인형이 되어 휘두를 때 뼈가 달그락거립니다. 움직이면 영혼불 잔상이 남습니다.", new Color(0.35f, 0.9f, 0.65f), "sk_hurt_wind"),
         CA("puppeteer__devhand", PU, "개발자의 손", "더미가 마우스 커서, 줄이 케이블, 커튼콜은 커서 여럿이 따닥따닥 클릭합니다. 처치하면 작은 창이 틱 닫히고 발밑에 작업 표시줄 띠가 깔립니다. (업적형)", new Color(0.25f, 0.9f, 1f), "sk_hurt_pixel"),
-        C("undertaker__keeper", UT, 0, "묘지기", "랜턴을 든 밤 묘지기. 모자 대신 두건, 구멍 가장자리에 랜턴 불빛이 비칩니다. 피격 소리가 가벼워집니다.", new Color(0.4f, 0.55f, 0.3f), "sk_hurt_light"),
+        C("undertaker__keeper", UT, 0, "묘지기", "랜턴을 든 밤 묘지기, 구멍 가장자리에 랜턴 불빛이 비칩니다. 젖은 흙 발소리, 레벨업하면 반딧불 기둥과 부엉이 소리, 쓰러지면 랜턴이 떨어져 꺼집니다.", new Color(0.4f, 0.55f, 0.3f), "sk_hurt_light"),
         C("undertaker__mason", UT, 1, "석공", "돌가루 앉은 모자에 앞치마의 석공. 묘비 대신 작은 조각상이 솟습니다. 피격하면 쇳소리가 납니다.", new Color(0.7f, 0.62f, 0.5f), "sk_hurt_metal"),
         C("undertaker__hell", UT, 2, "지옥 장의사", "지옥의 묘지기. 묘비가 불꽃 표식을 달고 솟습니다. 움직이면 불씨 잔상이 남고, 피격하면 포효 소리가 납니다.", new Color(1f, 0.45f, 0.15f), "sk_hurt_roar"),
         CA("undertaker__todo", UT, "미완성 묘비", "비문이 「TODO: 비문 쓰기」인 회색 상자 묘비. 매장 때 「저장 중…」 모래시계가 돌고 띵 저장음이 울리며, 처치하면 작은 저장 아이콘으로 줄어듭니다. (업적형)", new Color(0.78f, 0.78f, 0.82f), "sk_hurt_pixel"),
-        C("photographer__press", PH, 0, "신문 기자", "PRESS 띠를 두른 모자와 낡은 코트, 플래시가 조금 노랗습니다. 피격 소리가 가벼워집니다.", new Color(0.88f, 0.78f, 0.5f), "sk_hurt_light"),
+        C("photographer__press", PH, 0, "신문 기자", "기자 모자와 낡은 코트, 플래시가 조금 노랗습니다. 구두가 또각거리고, 레벨업하면 사진이 현상되듯 떠오르며, 필살기에 타자기 줄 바꿈 「띵」이 울립니다.", new Color(0.88f, 0.78f, 0.5f), "sk_hurt_light"),
         C("photographer__instant", PH, 1, "즉석 카메라", "무지개 줄무늬 재킷에 즉석 카메라, 인화 사본이 흰 테 사진으로 나옵니다. 피격하면 삑 소리가 납니다.", new Color(0.95f, 0.45f, 0.65f), "sk_hurt_beep"),
         C("photographer__ghost", PH, 2, "유령 사진가", "반투명한 몸에 보라 플래시, 찍힌 적 뒤로 희미한 영혼이 함께 찍힙니다. 움직이면 잔상이 남고, 피격하면 메아리가 울립니다.", new Color(0.7f, 0.55f, 1f), "sk_hurt_echo"),
         CA("photographer__f12", PH, "스크린샷 F12", "카메라가 F12 키, 셔터는 촤착, 적은 픽셀 캡처 조각이 되고 처치하면 썸네일로 줄어듭니다. 파노라마 때 모서리에 「스크린샷 저장됨」이 뜹니다. (업적형)", new Color(0.25f, 0.95f, 0.95f), "sk_hurt_pixel"),
@@ -166,13 +166,13 @@ public static class SkinData
         W("camera__film", PH, 2, "필름 카메라", "주름 상자가 달린 옛 대형 카메라, 플래시 가루가 펑 터집니다.", new Color(0.95f, 0.8f, 0.4f), 0.9f, "thump"),
 
         // ---------------- 이펙트 (모든 캐릭터)
-        E("skin_bluefire", 0, "푸른 불꽃", "명중 불꽃 · 처치 효과 · 코인 반짝임이 푸른 불꽃으로 바뀝니다.", new Color(0.45f, 0.75f, 1f), null),
+        E("skin_bluefire", 0, "푸른 불꽃", "명중하면 세 갈래 푸른 불꽃이 일고, 적이 쓰러지면 푸른 불꽃이 세로로 「확」 솟으며 가스불 소리가 납니다. 코인도 푸른 불씨로 반짝이며 울립니다.", new Color(0.45f, 0.75f, 1f), null),
         E("skin_sakura", 1, "벚꽃", "명중하면 분홍 불꽃, 적이 쓰러지면 벚꽃잎이 흩날립니다. 코인 소리가 맑아집니다.", new Color(1f, 0.6f, 0.75f), "sk_kill_petal"),
         E("skin_thunder", 2, "뇌전", "명중하면 노란 전기, 적이 쓰러지면 작은 번개가 칩니다. 코인에 전기 튀는 소리.", new Color(1f, 0.9f, 0.35f), "sk_kill_zap"),
         E("skin_starlight", 3, "별의 축복", "명중 불꽃이 무지갯빛으로 바뀌고, 적이 쓰러지면 별이 터지며 맑은 종소리가 울립니다. 코인은 별가루로 반짝입니다.", Color.white, "sk_kill_star"),
 
         // ---------------- 커서 (메뉴 화살표 + 전투 조준점, 설정에서 게임 커서를 켰을 때)
-        P("cursor_bone", 0, "뼈 커서", "빛바랜 뼛빛 화살표와 조준점.", new Color(0.84f, 0.82f, 0.75f)),
+        P("cursor_bone", 0, "뼈 커서", "빛바랜 뼛빛 화살표와 조준점. 메뉴를 누르면 뼈 조각이 튀며 「딱」, 버튼 위에선 달그락거리고, 전투에선 평타마다 조준점이 오므라듭니다.", new Color(0.84f, 0.82f, 0.75f)),
         P("cursor_ember", 1, "불씨 커서", "타오르는 주황빛 화살표와 불꽃 조준점.", new Color(0.92f, 0.43f, 0.18f)),
         P("cursor_soul", 2, "영혼 커서", "보랏빛 영혼 화살표와 푸른 빛이 도는 조준점.", new Color(0.59f, 0.37f, 0.92f)),
         P("cursor_gold", 3, "황금 커서", "황금빛 화살표와 조준점. 둘레에 별빛이 반짝이며 돕니다.", new Color(0.96f, 0.78f, 0.31f)),

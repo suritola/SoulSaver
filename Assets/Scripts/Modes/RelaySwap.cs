@@ -84,6 +84,7 @@ public static class RelaySwap
 
             // 7. 다시 캐시: 손에 든 무기 · 발 그림자 · 고유 스킬 · 갈래 · 카드 닫힘 (영웅을 Start/Awake 에서 한 번만 읽는 곳)
             Safe(() => PlayerLook.Rebind());
+            Safe(() => SkinFx.Rebind());        // 2026-11-04~ D3: 앞 주자 스킨 연출(오라 · 피격음 · 투사체 색 · 공격음)이 남던 것
             if (shop != null) Safe(() => shop.RelayAfterHeroChange());      // Paths.BeginRun · SignatureSkills.Rebind 포함
 
             // 8. 체력 · 게이지 · 유품 · 환급

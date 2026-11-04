@@ -71,6 +71,13 @@ public static class Fx
         if (VisualRules.Legacy || name == null) return name;
         if (AllyAlways.TryGetValue(name, out string a)) return a;
         if (Mine && AllyMine.TryGetValue(name, out a)) return a;
+        // 2026-11-04~ 무기 스킨 형태(W2): 내 평타 그림이고 그 스킨의 「<이름>__<스킨>」 시트가 있으면 그 시트 — 크기 · 층 · 알파 · 판정 표는 원래 이름 그대로 (L2)
+        //   인형사 보스도 fx_puppet_swing 을 쓰므로 「내 것 · 평타 출처」 조건 필수
+        if (DamageSource.Current == DamageSource.Basic)
+        {
+            string w = SkinFx.WeaponSheet(name);
+            if (w != null) return w;
+        }
         return name;
     }
 

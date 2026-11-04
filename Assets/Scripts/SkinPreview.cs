@@ -6,6 +6,8 @@ using UnityEngine.UI;
 //   따로 흉내 낸 그림이 아니라 게임과 같은 함수를 부르므로, 앞으로 SkinFx 연출을 바꾸면 미리보기도 그대로 따라옴
 //   무대: 영웅이 좌우로 걸으며(잔상) 허수아비를 공격 → 명중 → 세 번째마다 처치 · 가끔 피격 · 필살기 (판정 · 크기는 그대로)
 //   보는 동안만 SkinFx 의 장착 스킨 · SharedFx(소리) · GlowSprite 를 빌려 쓰고, 닫으면 모두 되돌림
+//   2026-11-04~ 스킨 시청각 개편: 걸음(발자국 · 걸음 소리 — SkinFx 가 움직임을 보고 냄) · 평타 몸짓 · 피격 · 레벨업 · 대기 · 승리 · 사망 ·
+//   무기 장전 · 하이라이트 · 이펙트 코인 · 연쇄 · 큰 적 · 커서 클릭 · 조준점 순간을 차례로 (12초 한 바퀴)
 public class SkinPreview : MonoBehaviour
 {
     static readonly Vector3 Origin = new Vector3(5000f, 5000f, 0f);     // 메인 메뉴 장면 물건과 겹치지 않는 먼 자리
@@ -29,6 +31,8 @@ public class SkinPreview : MonoBehaviour
     Sprite savedGlow;
 
     float t0, nextShot, shotStart, foeBackAt, hurtAt, ultAt, heroFlash, foeFlash;
+    float cycleAt, pauseUntil, pauseX;
+    int beat;
     int hits;
     bool shotLive, foeDead;
     Vector3 shotFrom;
@@ -73,8 +77,10 @@ public class SkinPreview : MonoBehaviour
         SkinFx.WeaponSkin = kind == SkinKind.Weapon ? skin : SkinData.Equipped(SkinKind.Weapon, heroId);
         SkinFx.EffectSkin = kind == SkinKind.Effect ? skin : SkinData.Equipped(SkinKind.Effect);
         SpecialAbilities.SharedFx = audioFx;
+        SkinFx.RefreshLooks();
+        SkinAudio.EnsureAll(kind == SkinKind.Cursor ? skin : null);      // 고른 카드 것만 소리를 만듦 (5-4절)
         // 메인 메뉴엔 게임 장면의 빛 그림이 없음 → 같은 크기(128px · 16 = 8칸)의 부드러운 점
-        if (SpecialAbilities.GlowSprite == null) SpecialAbilities.GlowSprite = SoftGlow();
+        if (SpecialAbilities.GlowSprite == null) SpecialAbilities.GlowSprite = SkinArt.Glow;
 
         world = new GameObject("SkinPreviewWorld");
         world.transform.position = Origin;
@@ -127,6 +133,7 @@ public class SkinPreview : MonoBehaviour
         nextShot = t0 + 0.6f;
         hurtAt = t0 + 3.1f;
         ultAt = t0 + 5.3f;
+        cycleAt = t0 + 1.5f;
     }
 
     Transform Body(string name, Sprite[] frames, float h, out SpriteRenderer sr, out float scale)
@@ -157,29 +164,54 @@ public class SkinPreview : MonoBehaviour
         cursorSr.sortingLayerName = "Effect";
         cursorSr.sortingOrder = 60;
         cursorSr.sprite = cursorFrames[0];
-        g.transform.localScale = Vector3.one * (1.3f / Mathf.Max(0.01f, cursorSr.sprite.bounds.size.y));
+        g.transform.localScale = Vector3.one * (cursorBase = 1.3f / Mathf.Max(0.01f, cursorSr.sprite.bounds.size.y));
+    }
+    float cursorBase = 1f, cursorPunch;
+
+    // 한 바퀴의 다음 순간 (게임과 같은 SkinFx 칸 레시피 — 소리 포함)
+    void Beat()
+    {
+        Vector3 foeAt = foe.position + new Vector3(0f, 0.3f, 0f);
+        switch (beat++ % 6)
+        {
+            case 0:
+                if (!fx.PreviewSlot("lvl", hero.position) && kind == SkinKind.Weapon) fx.PreviewSlot("reload", hero.position);
+                fx.PreviewSlot("coin", foeAt + Vector3.left * 1.5f);
+                cycleAt = Time.time + 2f;
+                break;
+            case 1:
+                // 대기: 1.6초 멈춰 서서
+                pauseUntil = Time.time + 1.6f;
+                pauseX = hero.position.x - Origin.x;
+                if (!fx.PreviewSlot("idle", hero.position)) fx.PreviewSlot("widle", hero.position);
+                cycleAt = Time.time + 2.2f;
+                break;
+            case 2:
+                fx.PreviewSlot("high", foeAt);
+                fx.PreviewSlot("combo", foeAt);
+                if (kind == SkinKind.Cursor) CursorSkin.MenuClick();
+                cycleAt = Time.time + 2f;
+                break;
+            case 3:
+                fx.PreviewSlot("big", foeAt);
+                fx.PreviewSlot("start", hero.position);
+                cycleAt = Time.time + 2f;
+                break;
+            case 4:
+                fx.PreviewSlot("win", hero.position);
+                fx.PreviewSlot("evo", hero.position);
+                cycleAt = Time.time + 2.4f;
+                break;
+            default:
+                pauseUntil = Time.time + 1.4f;
+                pauseX = hero.position.x - Origin.x;
+                if (!fx.PreviewSlot("death", hero.position)) fx.PreviewSlot("revive", hero.position);
+                cycleAt = Time.time + 2.2f;
+                break;
+        }
     }
 
     static Sprite ToSprite(Texture2D t) => Sprite.Create(t, new Rect(0f, 0f, t.width, t.height), Vector2.one * 0.5f, 16f);
-
-    static Sprite softGlow;
-    static Sprite SoftGlow()
-    {
-        if (softGlow != null) return softGlow;
-        const int N = 64;
-        Texture2D tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
-        Color32[] px = new Color32[N * N];
-        for (int y = 0; y < N; y++)
-            for (int x = 0; x < N; x++)
-            {
-                float dx = (x + 0.5f) / N * 2f - 1f, dy = (y + 0.5f) / N * 2f - 1f;
-                float a = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
-                px[y * N + x] = new Color32(255, 255, 255, (byte)(a * a * 255f));
-            }
-        tex.SetPixels32(px);
-        tex.Apply(false, true);
-        return softGlow = Sprite.Create(tex, new Rect(0f, 0f, N, N), Vector2.one * 0.5f, 8f);     // 64px · 8 = 8칸 (게임 빛 그림과 같은 크기)
-    }
 
     void Update()
     {
@@ -189,9 +221,12 @@ public class SkinPreview : MonoBehaviour
         // 영웅: 왼쪽에서 좌우로 걸음 (잔상은 SkinFx 가 움직임을 보고 냄) · 쏠 땐 오른쪽을 봄
         float x = -3.2f + Mathf.Sin(t * 1.3f) * 1.1f;
         float vx = Mathf.Cos(t * 1.3f);
-        hero.position = Origin + new Vector3(x, Mathf.Abs(Mathf.Sin(t * 9f)) * 0.06f, 0f);
-        heroSr.flipX = vx < -0.35f && !shotLive;
-        if (heroFrames.Length > 0) heroSr.sprite = heroFrames[(int)(t * 8f) % heroFrames.Length];
+        bool paused = Time.time < pauseUntil;       // 대기 동작을 보이려고 잠깐 멈춤
+        if (paused) x = pauseX;
+        hero.position = Origin + new Vector3(x, paused ? 0f : Mathf.Abs(Mathf.Sin(t * 9f)) * 0.06f, 0f);
+        heroSr.flipX = vx < -0.35f && !shotLive && !paused;
+        if (heroFrames.Length > 0) heroSr.sprite = heroFrames[paused ? 0 : (int)(t * 8f) % heroFrames.Length];
+        if (Time.time >= cycleAt) Beat();
         heroSr.color = Color.Lerp(Color.white, new Color(1f, 0.35f, 0.35f), Mathf.Clamp01(heroFlash -= Time.deltaTime * 4f));
 
         // 허수아비
@@ -201,7 +236,7 @@ public class SkinPreview : MonoBehaviour
         if (!foeDead) foe.localScale = Vector3.one * foeScale * (1f + 0.04f * Mathf.Sin(t * 3f));
 
         // 공격 → 명중 (0.5초마다) · 세 번째 명중마다 처치
-        if (!shotLive && !foeDead && Time.time >= nextShot) Fire();
+        if (!shotLive && !foeDead && Time.time >= nextShot && !paused) Fire();
         if (shotLive) FlyShot();
 
         // 피격 (4초마다) · 필살기 (7초마다)
@@ -210,6 +245,7 @@ public class SkinPreview : MonoBehaviour
             hurtAt = Time.time + 4f;
             heroFlash = 1f;
             SkinAudio.PlayHurt();       // 기본(스킨 없음)은 무음 — 게임의 기본 피격음은 장면에 붙은 클립이라 메뉴에 없음
+            fx.PreviewSlot("hurt", hero.position);
         }
         if (Time.time >= ultAt)
         {
@@ -221,6 +257,9 @@ public class SkinPreview : MonoBehaviour
         {
             cursorSr.transform.position = foe.position + new Vector3(Mathf.Sin(t * 2.1f) * 0.25f, 0.2f + Mathf.Cos(t * 1.7f) * 0.2f, 0f);
             cursorSr.sprite = cursorFrames[(int)(t * 8f) % cursorFrames.Length];
+            // 전투 평타 반응: 조준점이 「딱」 오므라졌다 돌아옴 (게임은 커서 그림 3프레임)
+            cursorPunch = Mathf.Max(0f, cursorPunch - Time.deltaTime * 10f);
+            cursorSr.transform.localScale = Vector3.one * cursorBase * (1f - 0.2f * cursorPunch);
         }
     }
 
@@ -231,6 +270,7 @@ public class SkinPreview : MonoBehaviour
         shotFrom = hero.position + new Vector3(0.6f, 0.3f, 0f);
         shot.gameObject.SetActive(shotSr.sprite != null);
         heroSr.flipX = false;
+        SkinFx.OnAttack(shotFrom, Vector2.right);       // 평타 몸짓 · 무기 발사 그림 (게임과 같은 길)
         // 공격 소리 = 상점 예전 미리듣기와 같은 규칙 (무기 스킨 음높이 · 덧소리)
         SkinDef w = SkinFx.WeaponSkin;
         int heroId = SkinData.IsGlobal(kind) ? (int)CharacterData.Selected : who;
@@ -258,7 +298,8 @@ public class SkinPreview : MonoBehaviour
         shot.gameObject.SetActive(false);
         nextShot = Time.time + 0.5f;
         foeFlash = 1f;
-        if (cursorSr != null) audioFx?.PlayRaw("clank", 0.45f, 1.4f + 0.1f * (skin != null ? skin.tier : 0));
+        if (cursorSr != null && !SkinAudio.Play(skin, "click", 0.5f, 4f, SkinAudio.Prio.Cursor)) audioFx?.PlayRaw("clank", 0.45f, 1.4f + 0.1f * (skin != null ? skin.tier : 0));
+        if (cursorSr != null) cursorPunch = 1f;
         // 명중: 이펙트 스킨이 있으면 게임 그대로(SkinFx.OnEnemyHit), 없으면 기본 흰 불꽃
         if (SkinFx.EffectSkin != null) SkinFx.OnEnemyHit(to);
         else Fx.Spawn("fx_spark", to, 2.4f, Color.white, 26f);
@@ -279,6 +320,7 @@ public class SkinPreview : MonoBehaviour
         if (cam != null) cam.targetTexture = null;
         if (rt != null) { rt.Release(); Destroy(rt); }
         SkinFx.CharSkin = savedChar; SkinFx.WeaponSkin = savedWeapon; SkinFx.EffectSkin = savedEffect;
+        SkinFx.RefreshLooks();
         SpecialAbilities.SharedFx = savedShared;
         SpecialAbilities.GlowSprite = savedGlow;
     }

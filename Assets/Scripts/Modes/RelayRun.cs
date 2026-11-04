@@ -249,6 +249,7 @@ public static class RelayRun
         // 시간 0.35배로 시작해 실제 시간 0.6초 동안 1 로 (조작은 막지 않음)
         host.StartCoroutine(TimeDip());
         Hostile.Play("bigboom", 0.6f, 1.3f);
+        SkinFx.OnRevive();      // 2026-11-04~ 새 주자의 캐릭터 스킨 교대 등장 연출 (희귀부터 · 기록 재생 중엔 건너뜀)
 
         yield return new WaitForSecondsRealtime(0.35f);
         // 2.0.1~ 그 0.35초 사이 ESC · 창으로 멈췄으면 풀릴 때까지 기다림 (멈춘 화면에서 파동 피해 · 처치가 터졌음) — 상한은 없어도 됨: 남기는 상태가 없고 장면이 바뀌면 함께 끝남

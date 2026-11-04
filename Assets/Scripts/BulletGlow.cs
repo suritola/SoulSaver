@@ -204,7 +204,7 @@ public class BulletGlow : MonoBehaviour
     // 예광탄: 실선은 숨기고 금빛 예광탄 + 흰 심을 자식으로 (프리팹이 납작해서 축마다 되돌림)
     void InitTracer()
     {
-        tracerFrames = Fx.Frames("atk_bullet");
+        tracerFrames = Fx.Frames(SkinFx.ShotSheet("atk_bullet"));     // 2026-11-04~ 무기 스킨 형태(W2) — 판정은 FitTracerHit 가 원래 atk_bullet 로
         tracerCore = Fx.Frames("atk_bullet_core");
         if (tracerFrames == null || tracerFrames.Length == 0) { LegacyInit(); return; }
         body.enabled = false;

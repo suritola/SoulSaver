@@ -14,7 +14,14 @@ public partial class SpecialAbilities
         bool down = GameInput.FireDown && !OverUI;
         bool held = GameInput.FireHeld && !OverUI;
         bool up = GameInput.FireUp;
+        float firedAt = nextFire, scytheAt = nextScytheAt;
+        UpdateWeaponFire(down, held, up);
+        // 2026-11-04~ D9: 특수 무기 발사(거너 진화 총 포함)에 스킨 평타 신호 — 발사하면 다음 발사 시각이 바뀜 (AttackFired 는 늘리지 않음)
+        if (nextFire != firedAt || nextScytheAt != scytheAt) SkinFx.OnAttack(player.MuzzlePosition, AimDir());
+    }
 
+    void UpdateWeaponFire(bool down, bool held, bool up)
+    {
         switch (CurrentWeapon)
         {
             case ShotgunId:

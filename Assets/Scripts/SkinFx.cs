@@ -3,23 +3,28 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 // 장착한 스킨을 게임에 입힘 (SkinData). 판정 · 크기는 그대로, 겉모습과 소리만
-//   캐릭터 스킨: 영웅부터 이동 잔상, 전설은 오라 · 처치 연출 · 필살기 소리
-//   무기 스킨:   총알 · 투사체 색 (SkinTint), 공격 소리 음높이 · 덧소리 (SkinAudio)
-//   이펙트 스킨: 명중 불꽃 색, 처치 효과 · 소리, 코인 반짝임
-// 1.3.3~ 사용자 「연출 스킨들 훨씬 더 크고 잘 보이게」: 처치 · 명중 · 오라 · 잔상 · 필살기 연출을 2배 가까이 크고 진하게 (예전엔 적 경고보다 눈에 띄지 않게 옅고 작았음)
-//   판정 · 크기 · 소리 크기는 그대로, 겉모습만 · 처치 연출은 초당 최대 약 16번 그대로
-public class SkinFx : MonoBehaviour
+// 2026-11-04~ 스킨 시청각 전면 개편 (docs/plans/2026-11-04-skin-av-overhaul.md · 사용자 「스킨 FX 는 세게 넣어도 된다」)
+//   칸(걸음 · 평타 몸짓 · 피격 · 레벨업 · 대기 · 필살기 시전 · 사망 · 승리 · …)마다 SkinLooks 표의 그림 · 소리 레시피를 냄
+//   남기는 규칙 셋: ① 적 탄 · 경고보다 아래 층(GroundFx · Character −1 · Effect 23~38 · 몸 안쪽만 Player) ② 범위 문법(고리 · 원판 · 부채꼴 …) 금지
+//                   ③ 성능 — 모두 풀 입자 SkinMote 한 통로(Emit) · 0.05초 창 예산 · 드문 사건은 1초에 1번
+//   파일: SkinFx.cs 핵심 · SkinFx.Char.cs 캐릭터 칸 · SkinFx.Effect.cs 이펙트 칸 · SkinFx.Weapon.cs 무기 칸 · SkinFx.Legacy.cs 개편 전 모습
+public partial class SkinFx : MonoBehaviour
 {
     public static SkinDef CharSkin, WeaponSkin, EffectSkin;
+    public static SkinLook CharLook, WeaponLook, EffectLook;
     public static SkinFx Instance { get; private set; }
+
+    // 새 칸을 끄는 경우: 개편 전 비교 스위치 · 자동 봇 배치 측정 (6-5 · 6-6절)
+    public static bool Off => VisualRules.Legacy || Application.isBatchMode;
 
     PlayerController player;
     SpriteRenderer body;
+    SkinBody skinBody;
     Vector3 lastPos;
     float ghostAt, killFxAt, killSoundAt;
     readonly List<Transform> orbs = new List<Transform>();
     GameObject groundGlow;
-    float auraFxAt;             // 2.0.0~ 새 전설 넷의 오라 덧연출(종이 조각 · 시계 룬 · 소인 봉투 · 깨진 픽셀) 다음 시각
+    float auraFxAt;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
@@ -40,6 +45,24 @@ public class SkinFx : MonoBehaviour
         CharSkin = SkinData.Equipped(SkinKind.Character);
         WeaponSkin = SkinData.Equipped(SkinKind.Weapon);
         EffectSkin = SkinData.Equipped(SkinKind.Effect);
+        RefreshLooks();
+    }
+
+    // 상점 미리보기처럼 정적 스킨 값을 직접 바꾼 뒤
+    public static void RefreshLooks()
+    {
+        CharLook = SkinLooks.Get(CharSkin);
+        WeaponLook = SkinLooks.Get(WeaponSkin);
+        EffectLook = SkinLooks.Get(EffectSkin);
+    }
+
+    // D3: 영혼 릴레이 교대 끝 — 새 주자의 스킨으로 정적 값 · 오라 · 몸 덧칠 · 소리 준비를 다시 (RelaySwap.Run 7단계)
+    //   replaying(기록 재생)이어도 값은 다시 읽음 · 연출 · 소리는 부르는 쪽이 건너뜀
+    public static void Rebind()
+    {
+        Refresh();
+        if (Instance != null) Instance.Rebuild();
+        if (!Off) SkinAudio.EnsureAll();
     }
 
     void Start()
@@ -48,10 +71,16 @@ public class SkinFx : MonoBehaviour
         player = GetComponent<PlayerController>();
         body = GetComponent<SpriteRenderer>();
         lastPos = transform.position;
+        RefreshLooks();
         if (SpecialAbilities.SharedFx != null) SkinAudio.Register(SpecialAbilities.SharedFx);
+        if (!Off) SkinAudio.EnsureAll();
         EnermyController.Killed += OnKill;
         PlayerController.UltUsed += OnUlt;
-        if (CharSkin != null && CharSkin.tier >= 3) BuildAura();
+        PlayerController.AttackFired += OnAttackFired;
+        LastStand.Fired += OnLastStand;
+        StageManager.Cleared += OnCleared;
+        SpecialAbilities.Evolved += OnEvolved;
+        Rebuild();
     }
 
     void OnDestroy()
@@ -59,92 +88,34 @@ public class SkinFx : MonoBehaviour
         if (Instance == this) Instance = null;
         EnermyController.Killed -= OnKill;
         PlayerController.UltUsed -= OnUlt;
-        // 오라 구슬 · 발밑 빛은 몸 밖 오브젝트라 같이 지움 (상점 미리보기 무대를 닫을 때 남던 것)
+        PlayerController.AttackFired -= OnAttackFired;
+        LastStand.Fired -= OnLastStand;
+        StageManager.Cleared -= OnCleared;
+        SpecialAbilities.Evolved -= OnEvolved;
+        ClearAura();
+    }
+
+    // 오라 · 몸 덧칠 · 칸 시계를 지금 스킨으로 (Start · 릴레이 교대)
+    void Rebuild()
+    {
+        ClearAura();
+        if (skinBody != null) skinBody.Clear();
+        if (body != null && !Off && CharLook != null) skinBody = SkinBody.For(body);
+        crisisOn = false;
+        stepAcc = stillFor = moveFor = 0f;
+        idleAt = Time.time + 3f;
+        auraFxAt = 0f;
+        slotAt.Clear();
+        if (CharSkin != null && CharSkin.tier >= 3) BuildAura();
+    }
+
+    void ClearAura()
+    {
+        // 오라 구슬 · 발밑 빛은 몸 밖 오브젝트라 같이 지움 (상점 미리보기 무대를 닫을 때 · 릴레이 교대 때 남던 것)
         foreach (Transform o in orbs) if (o != null) Destroy(o.gameObject);
+        orbs.Clear();
         if (groundGlow != null) Destroy(groundGlow);
-    }
-
-    void Update()
-    {
-        if (Time.timeScale == 0f || body == null) return;
-        Vector3 p = transform.position;
-        bool moving = (p - lastPos).sqrMagnitude > 0.0004f;
-        lastPos = p;
-        // 영웅 이상: 움직일 때 옅은 잔상 (0.09초마다)
-        if (CharSkin != null && CharSkin.tier >= 2 && moving && Time.time >= ghostAt && body.enabled && body.sprite != null)
-        {
-            ghostAt = Time.time + 0.09f;
-            // 최적화 16: 새로 만들고 지우던 잔상(MakeSprite + FadeOut)을 다시 쓰는 FadeSprite 로 — 알파 1→0 · 크기 0.8→1.2 곡선이 같음
-            //   좌우 뒤집기는 가로 크기 부호로 (FadeSprite 는 flipX 를 되돌리지 않으므로)
-            FadeSprite f = FadeSprite.Spawn("SkinGhost", body.sprite, p, 1f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.6f), "Character", -1, 0.45f);
-            Vector3 ls = transform.lossyScale;
-            if (body.flipX) ls.x = -ls.x;
-            f.Shape(Quaternion.identity, ls);
-        }
-        // 전설: 오라 (작은 빛 셋이 천천히 돎)
-        for (int i = 0; i < orbs.Count; i++)
-        {
-            if (orbs[i] == null) continue;
-            float a = Time.time * 1.6f + i * Mathf.PI * 2f / orbs.Count;
-            orbs[i].position = p + new Vector3(Mathf.Cos(a) * 1.5f, Mathf.Sin(a) * 0.75f + 0.6f, 0f);
-            float pulse = 1f + 0.25f * Mathf.Sin(Time.time * 5f + i);
-            orbs[i].localScale = Vector3.one * 0.13f * pulse;
-        }
-        if (CharSkin != null && CharSkin.tier >= 3 && Time.time >= auraFxAt) AuraAmbient(p);
-        if (groundGlow != null)
-        {
-            groundGlow.transform.position = p + new Vector3(0f, -0.9f, 0f);
-            groundGlow.transform.localScale = Vector3.one * 0.5f * (1f + 0.08f * Mathf.Sin(Time.time * 3f));
-        }
-    }
-
-    // 새 전설 넷의 오라 덧연출 (구슬 말고 몸 둘레에 가끔): 백지도 = 종이 조각 · 멈춘 시계 = 시계 룬 · 반송 = 소인 봉투 · 삭제된 장면 = 깨진 픽셀
-    void AuraAmbient(Vector3 p)
-    {
-        Vector3 at = p + (Vector3)(Random.insideUnitCircle * 1.4f);
-        switch (CharSkin.id)
-        {
-            case "cartographer__blank":
-                auraFxAt = Time.time + 0.5f;
-                Fx.Spawn("fx_card", at, 1f, new Color(0.96f, 0.95f, 0.88f, 0.85f), 8f);
-                break;
-            case "clockmaker__stopped":
-                auraFxAt = Time.time + 1.3f;
-                Fx.Spawn("fx_target_rune", p + new Vector3(0f, -0.9f, 0f), 2.6f, new Color(0.8f, 0.85f, 0.9f, 0.55f), 10f);
-                break;
-            case "postman__return":
-                auraFxAt = Time.time + 0.7f;
-                Fx.Spawn("fx_card", at, 0.9f, new Color(0.95f, 0.85f, 0.7f, 0.8f), 8f);
-                Fx.Spawn("fx_sparkle", at, 0.8f, new Color(0.9f, 0.15f, 0.2f), 14f);
-                break;
-            case "ghost__deleted":
-                auraFxAt = Time.time + 0.25f;
-                Fx.Spawn("fx_codeblock", at, 0.9f, Random.value < 0.5f ? new Color(1f, 0.2f, 0.85f, 0.9f) : new Color(0.2f, 0.95f, 0.95f, 0.9f), 12f);
-                break;
-            case "wrestler__referee":      // 발밑 모래판 선 (모래빛 고리가 번져 나감)
-                auraFxAt = Time.time + 1.1f;
-                Fx.Spawn("fx_shock", p + new Vector3(0f, -0.9f, 0f), 2.4f, new Color(0.91f, 0.76f, 0.48f, 0.5f), 10f);
-                break;
-            case "foreman__beta":          // 회색 창 테두리 사각 틀 + 작은 「응답 없음」 창 조각
-                auraFxAt = Time.time + 0.6f;
-                Fx.Spawn("fx_codeblock", at, 0.9f, new Color(0.72f, 0.75f, 0.82f, 0.85f), 10f);
-                break;
-            case "puppeteer__devhand":     // 발밑 작업 표시줄 도트 띠
-                auraFxAt = Time.time + 0.9f;
-                Fx.Spawn("fx_codeblock", p + new Vector3(Random.Range(-1.2f, 1.2f), -0.9f, 0f), 1.1f, new Color(0.6f, 0.7f, 0.9f, 0.7f), 8f);
-                break;
-            case "undertaker__todo":       // 발밑 반투명 「저장 중」 모래시계 점
-                auraFxAt = Time.time + 0.8f;
-                Fx.Spawn("fx_sparkle", p + new Vector3(0f, -0.9f, 0f) + (Vector3)(Random.insideUnitCircle * 0.5f), 1.1f, new Color(0.95f, 0.85f, 0.4f, 0.7f), 10f);
-                break;
-            case "photographer__f12":      // 발밑 픽셀 격자 깜빡
-                auraFxAt = Time.time + 0.5f;
-                Fx.Spawn("fx_codeblock", p + new Vector3(Random.Range(-1.3f, 1.3f), Random.Range(-1.1f, -0.5f), 0f), 0.8f, new Color(0.3f, 0.95f, 0.95f, 0.8f), 8f);
-                break;
-            default:
-                auraFxAt = Time.time + 99f;
-                break;
-        }
+        groundGlow = null;
     }
 
     void BuildAura()
@@ -152,9 +123,7 @@ public class SkinFx : MonoBehaviour
         Sprite glow = SpecialAbilities.GlowSprite;
         if (glow == null) return;
         Color c = CharSkin.color;
-        // 1.6.0~ 가독성 개편 1-D: 전설 오라 구슬 알파 1 → 0.7 (적 위 Effect 층이라 붙은 적을 가렸음) · 스킨 색은 그대로 (구매한 꾸미기)
         float orbAlpha = VisualRules.Legacy ? 1f : 0.7f;
-        // 2.0.0~: 새 전설 넷은 구슬 수 · 색이 갈림 (백지도 = 빨간 교정 펜 둘 · 멈춘 시계 = 시각 표시 넷 · 삭제된 장면 = 마젠타와 청록 번갈아)
         int count = 3;
         switch (CharSkin.id)
         {
@@ -181,134 +150,309 @@ public class SkinFx : MonoBehaviour
             orbs.Add(o.transform);
         }
         Color gc = c;
-        if (CharSkin.id == "cartographer__blank") gc = new Color(0.8f, 0.88f, 0.95f);       // 발밑 모눈 용지빛
-        if (CharSkin.id == "clockmaker__stopped") gc = new Color(0.75f, 0.78f, 0.82f);      // 발밑 시계 바늘 · 흑백
-        if (CharSkin.id == "wrestler__referee") gc = new Color(0.91f, 0.76f, 0.48f);        // 발밑 모래판
+        if (CharSkin.id == "cartographer__blank") gc = new Color(0.8f, 0.88f, 0.95f);
+        if (CharSkin.id == "clockmaker__stopped") gc = new Color(0.75f, 0.78f, 0.82f);
+        if (CharSkin.id == "wrestler__referee") gc = new Color(0.91f, 0.76f, 0.48f);
         if (CharSkin.id == "foreman__beta") gc = new Color(0.7f, 0.72f, 0.78f);
-        if (CharSkin.id == "puppeteer__devhand") gc = new Color(0.55f, 0.6f, 0.72f);        // 발밑 작업 표시줄
-        if (CharSkin.id == "undertaker__todo") gc = new Color(0.8f, 0.8f, 0.85f);           // 발밑 회색 상자
-        if (CharSkin.id == "photographer__f12") gc = new Color(0.25f, 0.9f, 0.9f);          // 발밑 픽셀 격자            // 발밑 회색 창틀
+        if (CharSkin.id == "puppeteer__devhand") gc = new Color(0.55f, 0.6f, 0.72f);
+        if (CharSkin.id == "undertaker__todo") gc = new Color(0.8f, 0.8f, 0.85f);
+        if (CharSkin.id == "photographer__f12") gc = new Color(0.25f, 0.9f, 0.9f);
         groundGlow = SpecialAbilities.MakeSprite("SkinGround", glow, transform.position, 0.5f, new Color(gc.r, gc.g, gc.b, 0.42f), "Background", 50);
     }
 
-    // 처치: 이펙트 스킨 · 전설 캐릭터 스킨의 연출 (초당 최대 약 16번)
-    // 1.9.1: 기본 처치 효과(영혼 폭발)에 묻혀 거의 보이지 않던 것을 키움. 기본 효과 색도 스킨 색으로 (Juice · KillColor)
-    public void OnKill(Vector3 pos)      // 상점 미리보기(SkinPreview)도 부름
+    void Update()
     {
-        bool effect = EffectSkin != null;
+        if (Time.timeScale == 0f || body == null) return;
+        Vector3 p = transform.position;
+        Vector3 delta = p - lastPos;
+        bool moving = delta.sqrMagnitude > 0.0004f;
+        lastPos = p;
+        // 영웅 이상: 움직일 때 몸 잔상 (영웅 0.09초 · 전설 0.07초 — 2-4절)
         bool legend = CharSkin != null && CharSkin.tier >= 3;
-        if ((!effect && !legend) || Time.time < killFxAt) return;
-        killFxAt = Time.time + 0.06f;
-        if (effect)
+        if (CharSkin != null && CharSkin.tier >= 2 && moving && Time.time >= ghostAt && body.enabled && body.sprite != null)
         {
-            switch (EffectSkin.id)
+            ghostAt = Time.time + (legend && !Off ? 0.07f : 0.09f);
+            if (!(GraphicsQuality.Low && (++ghostTurn & 1) == 0))
             {
-                case "skin_bluefire":
-                    // 푸른 불꽃이 확 피어오름 (폭발 + 충격파 + 불꽃 넷)
-                    Fx.Spawn("fx_explosion", pos, 4.6f, EffectSkin.color, 20f);
-                    Fx.Spawn("fx_shock", pos, 5.6f, new Color(EffectSkin.color.r, EffectSkin.color.g, EffectSkin.color.b, 0.9f), 22f);
-                    for (int i = 0; i < 4; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 1.8f), 2.4f, EffectSkin.color, 16f);
-                    break;
-                case "skin_sakura":
-                    // 꽃잎이 넓게 흩날림 + 분홍 충격파
-                    Fx.Spawn("fx_shock", pos, 5.2f, new Color(1f, 0.65f, 0.8f, 0.85f), 20f);
-                    for (int i = 0; i < 10; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 2.6f), 2.4f, new Color(1f, 0.65f, 0.8f), 12f);
-                    break;
-                case "skin_thunder":
-                    // 하늘에서 굵은 번개가 내리꽂히고 큰 노란 충격파
-                    Vector3 sky = pos + new Vector3(Random.Range(-1.5f, 1.5f), Random.Range(5f, 6.5f), 0f);
-                    Fx.Bolt(sky, pos, 1.7f, new Color(1f, 0.95f, 0.45f), 0.2f);
-                    Fx.Spawn("fx_shock", pos, 6.6f, new Color(1f, 0.9f, 0.35f, 0.95f), 22f);
-                    Fx.Spawn("fx_sparkle", pos, 3.4f, new Color(1f, 0.97f, 0.7f), 18f);
-                    break;
-                default:
-                    // 별의 축복: 무지갯빛 별 여덟 + 가운데 큰 별 + 흰 충격파
-                    Fx.Spawn("fx_sparkle", pos, 4f, Color.white, 16f);
-                    for (int i = 0; i < 8; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 2.4f), 2.4f, Color.HSVToRGB(Random.value, 0.5f, 1f), 16f);
-                    Fx.Spawn("fx_shock", pos, 6.2f, new Color(1f, 1f, 1f, 0.85f), 20f);
-                    break;
-            }
-            if (EffectSkin.killSound != null && Time.time >= killSoundAt)
-            {
-                killSoundAt = Time.time + 0.12f;
-                SpecialAbilities.SharedFx?.Play(EffectSkin.killSound, 0.55f, Random.Range(0.95f, 1.08f));
+                Color gcol = !Off && CharLook != null ? CharLook.main : CharSkin.color;
+                FadeSprite f = FadeSprite.Spawn("SkinGhost", body.sprite, p, 1f, new Color(gcol.r, gcol.g, gcol.b, Off ? 0.6f : 0.55f), "Character", -1, legend && !Off ? 0.5f : 0.45f);
+                Vector3 ls = transform.lossyScale;
+                if (body.flipX) ls.x = -ls.x;
+                f.Shape(Quaternion.identity, ls);
             }
         }
-        if (legend)
+        // 전설: 오라 (작은 빛 셋이 천천히 돎)
+        for (int i = 0; i < orbs.Count; i++)
         {
-            LegendKill(pos);
-            Fx.Spawn("fx_sparkle", pos, 2.6f, CharSkin.color, 18f);
-            Fx.Spawn("fx_shock", pos, 3f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.7f), 22f);
+            if (orbs[i] == null) continue;
+            float a = Time.time * 1.6f + i * Mathf.PI * 2f / orbs.Count;
+            orbs[i].position = p + new Vector3(Mathf.Cos(a) * 1.5f, Mathf.Sin(a) * 0.75f + 0.6f, 0f);
+            float pulse = 1f + 0.25f * Mathf.Sin(Time.time * 5f + i);
+            orbs[i].localScale = Vector3.one * 0.13f * pulse;
+        }
+        if (groundGlow != null)
+        {
+            groundGlow.transform.position = p + new Vector3(0f, -0.9f, 0f);
+            groundGlow.transform.localScale = Vector3.one * 0.5f * (1f + 0.08f * Mathf.Sin(Time.time * 3f));
+        }
+        if (Off)
+        {
+            if (legend && Time.time >= auraFxAt) LegacyAuraAmbient(p);
+            return;
+        }
+        CharUpdate(p, delta, moving);
+    }
+    int ghostTurn;
+
+    // 진행 경로(사망 · 레벨업 · 처치 · 명중 · 장전 …)에서 불리는 진입점은 예외를 여기서 삼킴 — 스킨 연출이 게임 진행을 막지 않게 (1.2.7 · 1.5.9 사고 교훈)
+    static int guardLogs;
+    static void GuardFail(System.Exception e)
+    {
+        if (guardLogs++ < 5) Debug.LogException(e);
+    }
+
+    // ================================================================= 그림 한 통로 (Emit)
+    // 예산 칸 (2-4절): 반복 사건은 0.05초 창의 앞 몫만, 드문 사건은 사건마다 ≤32 (같은 칸은 1초에 1번 — 부르는 쪽 SlotReady)
+    public enum Bud { Rep = 5, Kill = 8, Big = 10, Rare = 32 }
+    static float budWindow = -1f;
+    static int budCount;
+
+    static int Allow(Bud b, int want)
+    {
+        if (b == Bud.Rare) return Mathf.Min(want, GraphicsQuality.Low ? 16 : 32);
+        float now = Time.unscaledTime;
+        if (now - budWindow >= 0.05f || now < budWindow) { budWindow = now; budCount = 0; }
+        int cap = (int)b;
+        if (GraphicsQuality.Low) cap = Mathf.Max(1, cap / 2);
+        int got = Mathf.Clamp(cap - budCount, 0, want);
+        budCount += got;
+        return got;
+    }
+
+    // 같은 칸은 간격 안에 한 번만 (드문 사건 1초 · 평타 몸짓 0.12초 …)
+    readonly Dictionary<string, float> slotAt = new Dictionary<string, float>();
+    bool SlotReady(string slot, float gap)
+    {
+        if (slotAt.TryGetValue(slot, out float t) && Time.unscaledTime < t) return false;
+        slotAt[slot] = Time.unscaledTime + gap;
+        return true;
+    }
+
+    // 몸 기준점: 발 · 머리 · 가운데 (몸 그림 경계로 — 상점 무대에서도 같음)
+    Vector3 BodyAnchor(char at, Vector3 hand)
+    {
+        if (body == null || body.sprite == null) return transform.position + (at == 'f' ? Vector3.down * 0.9f : at == 'h' ? Vector3.up * 1f : Vector3.zero);
+        Bounds b = body.bounds;
+        switch (at)
+        {
+            case 'f': return new Vector3(b.center.x, b.min.y + 0.12f, 0f);
+            case 'h': return new Vector3(b.center.x, b.max.y, 0f);
+            case 'n': return hand;
+            default: return new Vector3(b.center.x, b.center.y, 0f);
         }
     }
 
-    // 새 전설 넷의 처치 연출 (2.0.0~): 종이 조각 · 톱니 분해 · 소인 봉투 · 픽셀 흩어짐
-    void LegendKill(Vector3 pos)
+    static Color CueColor(Cue c, SkinLook look)
     {
-        switch (CharSkin.id)
+        Color main = look != null ? look.main : Color.white, acc = look != null ? look.accent : Color.white;
+        Color col = c.cc switch
         {
-            case "cartographer__blank":
-                for (int i = 0; i < 6; i++) Fx.Spawn("fx_card", pos + (Vector3)(Random.insideUnitCircle * 1.8f), 1.3f, new Color(0.97f, 0.96f, 0.9f), 10f);
-                break;
-            case "clockmaker__stopped":
-                for (int i = 0; i < 4; i++) Fx.Spawn("atk_gear", pos + (Vector3)(Random.insideUnitCircle * 1.6f), 1.1f, new Color(0.75f, 0.8f, 0.85f), 12f);
-                break;
-            case "postman__return":
-                for (int i = 0; i < 3; i++) Fx.Spawn("atk_letter", pos + (Vector3)(Random.insideUnitCircle * 1.6f), 1.2f, new Color(0.98f, 0.92f, 0.8f), 12f);
-                Fx.Spawn("fx_sparkle", pos, 2.2f, new Color(0.9f, 0.15f, 0.2f), 18f);
-                break;
-            case "ghost__deleted":
-                for (int i = 0; i < 8; i++) Fx.Spawn("fx_codeblock", pos + (Vector3)(Random.insideUnitCircle * 2f), 0.8f, i % 2 == 0 ? new Color(1f, 0.2f, 0.85f) : new Color(0.2f, 0.95f, 0.95f), 14f);
-                break;
-            case "wrestler__referee":      // 모래로 흩어짐
-                for (int i = 0; i < 7; i++) Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 1.8f), 1.4f, new Color(0.91f, 0.76f, 0.48f), 12f);
-                break;
-            case "puppeteer__devhand":     // 작은 창이 틱 닫힘
-                Fx.Spawn("fx_codeblock", pos, 1.1f, new Color(0.7f, 0.78f, 0.95f), 14f);
-                Fx.Spawn("fx_sparkle", pos, 1.2f, new Color(0.9f, 0.3f, 0.3f), 12f);
-                break;
-            case "undertaker__todo":       // 작은 저장 아이콘으로 줄어듦
-                Fx.Spawn("fx_codeblock", pos, 0.8f, new Color(0.35f, 0.5f, 0.85f), 14f);
-                Fx.Spawn("fx_codeblock", pos + new Vector3(0f, 0.25f, 0f), 0.5f, new Color(0.9f, 0.9f, 0.95f), 14f);
-                break;
-            case "photographer__f12":      // 4x3 칸 썸네일로 줄어듦 (청록 네모 조각)
-                for (int i = 0; i < 6; i++) Fx.Spawn("fx_codeblock", pos + new Vector3((i % 3 - 1) * 0.35f, (i / 3 - 0.5f) * 0.35f, 0f), 0.6f, i % 2 == 0 ? new Color(0.3f, 0.95f, 0.95f) : new Color(0.9f, 0.97f, 1f), 14f);
-                break;
-            case "foreman__beta":          // 초록 체크 표시가 튀어오름 (초록 불꽃 줄기)
-                for (int i = 0; i < 4; i++) Fx.Spawn("fx_sparkle", pos + new Vector3(-0.5f + i * 0.35f, 0.3f + (i == 1 ? -0.3f : i == 2 ? 0.2f : i == 3 ? 0.7f : 0f), 0f), 1.6f, new Color(0.35f, 0.95f, 0.45f), 14f);
-                break;
+            'a' => acc,
+            'w' => Color.white,
+            'k' => new Color(0.12f, 0.1f, 0.14f),
+            'r' => Color.HSVToRGB(Random.value, 0.5f, 1f),
+            'c' => c.custom,
+            _ => main,
+        };
+        col.a = Mathf.Clamp01(c.al) * GameSettings.MyFxAlpha;
+        return col;
+    }
+
+    // 바닥 흔적에 적대색(#FF4033 계열) 금지 (L8) — 붉은 스킨의 발자국은 어두운 중립색
+    static Color Neutral(Color c)
+    {
+        Color.RGBToHSV(c, out float h, out float s, out float v);
+        if ((h < 0.05f || h > 0.93f) && s > 0.45f && v > 0.5f) return new Color(0.2f, 0.18f, 0.2f, c.a);
+        return c;
+    }
+
+    Vector2 moveDir = Vector2.up;
+    bool stepSide;
+
+    // 레시피 하나를 그림 (onBody: 몸 기준점 · 아니면 at 그 자리) — 반환: 그린 입자 수
+    public int Emit(string recipe, SkinLook look, Vector3 at, Vector2 dir, bool onBody, int order, Bud bud, bool unscaled = false)
+    {
+        Cue[] cues = SkinLooks.Parse(recipe);
+        if (cues == null) return 0;
+        int drawn = 0;
+        foreach (Cue c in cues) drawn += EmitOne(c, look, at, dir, onBody, order, bud, unscaled);
+        return drawn;
+    }
+
+    int EmitOne(Cue c, SkinLook look, Vector3 at, Vector2 dir, bool onBody, int order, Bud bud, bool unscaled)
+    {
+        if (c.m == CueMotion.Tint)
+        {
+            if (skinBody != null) skinBody.Tint(CueColor(c, look), c.al, c.life);
+            return 0;
         }
+        int n = Allow(bud, c.n);
+        if (n <= 0) return 0;
+        Vector3 basePos = onBody ? BodyAnchor(c.at, at) : at + (c.at == 'h' ? Vector3.up * 1f : c.at == 'f' ? Vector3.down * 0.4f : Vector3.zero);
+        basePos += new Vector3(c.x, c.y, 0f);
+        float R = c.r >= 0f ? c.r : 1.2f, H = c.h >= 0f ? c.h : 3f;
+        string layer = "Effect";
+        bool bodyClone = c.m == CueMotion.Freeze || c.m == CueMotion.Shrink || c.m == CueMotion.Ghost;
+        Sprite[] anim = null;
+        Sprite sp = bodyClone ? (body != null ? body.sprite : null) : SpriteOf(c.glyph, out anim);
+        if (sp == null) return 0;
+        Vector2 d = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector2.right;
+        int made = 0;
+        for (int i = 0; i < n; i++)
+        {
+            Color col = CueColor(c, look);
+            float sz = c.size * Random.Range(0.85f, 1.15f);
+            SkinMote m = null;
+            switch (c.m)
+            {
+                case CueMotion.Mark:
+                    {
+                        Vector2 md = moveDir;
+                        Vector3 side = new Vector3(-md.y, md.x, 0f) * 0.18f * (stepSide ? 1f : -1f);
+                        float ang = Mathf.Atan2(md.y, md.x) * Mathf.Rad2Deg - 90f;
+                        m = SkinMote.Make(sp, basePos + side + (Vector3)(Random.insideUnitCircle * 0.05f * i), c.size, Neutral(col), VisualRules.GroundFx, 6, c.life, unscaled);
+                        m?.Spin(0f, ang + c.rot).Hold(0.6f);
+                        break;
+                    }
+                case CueMotion.Burst:
+                    {
+                        Vector2 v = Random.insideUnitCircle.normalized * R / c.life * Random.Range(0.6f, 1.2f) * c.v;
+                        m = SkinMote.Make(sp, basePos, sz, col, layer, order, c.life * Random.Range(0.85f, 1.1f), unscaled);
+                        m?.Move(v + Vector2.up * (c.g > 0f ? c.g * c.life * 0.35f : 0f), c.g, 1.2f).Spin(c.sp != 0f ? c.sp * Random.Range(0.6f, 1.2f) * (Random.value < 0.5f ? -1f : 1f) : Random.Range(-220f, 220f), Random.Range(0f, 360f)).Grow(1f, 0.6f);
+                        break;
+                    }
+                case CueMotion.Puff:
+                    m = SkinMote.Make(sp, basePos + (Vector3)(Random.insideUnitCircle * R * 0.3f), sz, col, layer, order, c.life, unscaled);
+                    m?.Move(Random.insideUnitCircle * R / c.life * 0.6f + Vector2.up * 0.4f * c.v, 0f, 2f).Grow(0.6f, 1.5f).Hold(0.3f).Spin(Random.Range(-60f, 60f), Random.Range(0f, 360f));
+                    break;
+                case CueMotion.Rise:
+                    m = SkinMote.Make(sp, basePos + (Vector3)(Random.insideUnitCircle * R), sz, col, layer, order, c.life * Random.Range(0.8f, 1.1f), unscaled);
+                    m?.Move(Vector3.up * H / c.life * c.v * Random.Range(0.7f, 1.1f)).Sway(0.15f, 6f).Grow(1f, 0.7f).Spin(c.sp, 0f);
+                    break;
+                case CueMotion.Column:
+                    m = SkinMote.Make(sp, basePos + Vector3.up * (i / (float)n) * H * 0.25f, sz, col, layer, order, c.life, unscaled);
+                    m?.Helix(R, 7f * c.v * (i % 2 == 0 ? 1f : -1f), H / c.life, i * 6.283f / n + Random.value * 0.6f).Grow(1f, 0.6f).Spin(c.sp, Random.Range(0f, 360f));
+                    break;
+                case CueMotion.Fall:
+                    m = SkinMote.Make(sp, basePos + new Vector3(Random.Range(-R, R), H * Random.Range(0.8f, 1.1f), 0f), sz, col, layer, order, c.life * Random.Range(0.8f, 1.1f), unscaled);
+                    m?.Move(Vector3.down * H / c.life * 0.9f * c.v).Sway(0.25f, 4f).Spin(c.sp != 0f ? c.sp : Random.Range(-120f, 120f), Random.Range(0f, 360f)).Hold(0.7f);
+                    break;
+                case CueMotion.Fountain:
+                    {
+                        float up = 2.2f * H / c.life * c.v;
+                        m = SkinMote.Make(sp, basePos, sz, col, layer, order, c.life * Random.Range(0.85f, 1.1f), unscaled);
+                        m?.Move(new Vector3(Random.Range(-R, R) / c.life, up * Random.Range(0.75f, 1.05f), 0f), (c.g > 0f ? c.g : 2f * up / (c.life * 0.9f))).Spin(Random.Range(-200f, 200f), Random.Range(0f, 360f)).Hold(0.7f);
+                        break;
+                    }
+                case CueMotion.Roll:
+                    {
+                        float s = Random.value < 0.5f ? -1f : 1f;
+                        m = SkinMote.Make(sp, basePos + new Vector3(-R * s, 0f, 0f), sz, col, layer, order, c.life, unscaled);
+                        m?.Move(new Vector3(2f * R / c.life * s, 0f, 0f)).Spin(-(c.sp != 0f ? c.sp : 400f) * s, 0f).Hold(0.75f);
+                        break;
+                    }
+                case CueMotion.Pop:
+                    {
+                        float g = c.g > 0f ? c.g : 20f, up = Mathf.Sqrt(2f * g * H);
+                        m = SkinMote.Make(sp, basePos, sz, col, layer, order, c.life, unscaled);
+                        m?.Move(new Vector3(Random.Range(-0.6f, 0.6f) * R, up, 0f), g).Spin(c.sp != 0f ? c.sp : Random.Range(-90f, 90f), 0f).Hold(0.8f);
+                        break;
+                    }
+                case CueMotion.Spin:
+                    m = SkinMote.Make(sp, basePos + new Vector3((i - (n - 1) * 0.5f) * R, 0f, 0f), c.size, col, layer, order, c.life, unscaled);
+                    m?.Spin(c.sp != 0f ? c.sp : 180f, c.rot).Grow(0.5f, 1f).Hold(0.7f);
+                    break;
+                case CueMotion.Float:
+                    m = SkinMote.Make(sp, basePos + new Vector3((i - (n - 1) * 0.5f) * R, 0f, 0f), c.size, col, layer, order, c.life, unscaled);
+                    m?.Move(Vector3.up * 0.35f * c.v).Sway(0.08f, 3f).Grow(0.8f, 1.05f).Hold(0.7f).Spin(c.sp, c.rot);
+                    break;
+                case CueMotion.Flash:
+                    {
+                        if (!GameSettings.Flashes) col.a *= 0.3f;
+                        m = SkinMote.Make(sp, basePos + (Vector3)(Random.insideUnitCircle * R * (i > 0 ? 1f : 0f)), c.size, col, layer, order, c.life, unscaled);
+                        m?.Grow(0.6f, 1.3f).Hold(0.2f);
+                        break;
+                    }
+                case CueMotion.Beam:
+                    {
+                        float sign = i % 2 == 0 ? 1f : -1f;
+                        float rot = c.rot * sign;
+                        Vector3 foot = basePos + new Vector3((i - (n - 1) * 0.5f) * R, 0f, 0f);
+                        Vector3 mid = foot + Quaternion.Euler(0f, 0f, rot) * Vector3.up * H * 0.5f;
+                        m = SkinMote.Make(sp, mid, c.size, col, layer, order, c.life, unscaled);
+                        m?.Stretch(H / Mathf.Max(0.05f, c.size)).Spin(c.sp * sign, rot).Hold(0.6f);
+                        break;
+                    }
+                case CueMotion.Spray:
+                    {
+                        Vector2 dd = Quaternion.Euler(0f, 0f, Random.Range(-25f, 25f)) * (d * c.dir);
+                        m = SkinMote.Make(sp, basePos, sz, col, layer, order, c.life * Random.Range(0.8f, 1.1f), unscaled);
+                        m?.Move(dd * R / c.life * Random.Range(0.6f, 1.1f) * c.v, c.g, 2f).Spin(Random.Range(-200f, 200f), Random.Range(0f, 360f)).Grow(1f, 0.7f);
+                        break;
+                    }
+                case CueMotion.Absorb:
+                    m = SkinMote.Make(sp, basePos + (Vector3)(Random.insideUnitCircle * R * 0.4f), sz, col, layer, order, c.life * Random.Range(0.9f, 1.15f), unscaled);
+                    if (m != null) { m.Absorb(transform, Vector3.up * 0.3f, Random.Range(0.6f, 1.4f)).Spin(Random.Range(-200f, 200f), 0f).Grow(1f, 0.5f).Hold(0.85f); }
+                    break;
+                case CueMotion.Freeze:
+                case CueMotion.Shrink:
+                case CueMotion.Ghost:
+                    {
+                        if (body == null) break;
+                        Vector3 ls = transform.lossyScale;
+                        float h = sp.bounds.size.y * Mathf.Abs(ls.y);
+                        bool flip = body.flipX ^ (ls.x < 0f);
+                        bool ghost = c.m == CueMotion.Ghost;
+                        if (ghost) col.a = Mathf.Min(col.a, 0.55f);       // L6: 몸 복제는 알파 ≤0.55
+                        m = SkinMote.Make(sp, transform.position + new Vector3(c.x, c.y, 0f) * (ghost ? 1f : 0f), h, col,
+                                          ghost ? "Character" : SortingLayer.IDToName(body.sortingLayerID), ghost ? -1 : body.sortingOrder + 2, c.life, unscaled, !ghost);
+                        if (m == null) break;
+                        m.Flip(flip).Hold(c.m == CueMotion.Freeze ? 0.7f : 0.3f);
+                        if (c.m == CueMotion.Shrink) m.Grow(1f, 0.05f);      // 회전 없음 — Player 층 몸 복제가 실루엣 밖으로 나가지 않게
+                        if (ghost) m.Move(new Vector3(c.x, c.y, 0f) / c.life);
+                        break;
+                    }
+            }
+            if (m == null) continue;
+            if (anim != null && !bodyClone) m.Anim(anim, anim.Length / Mathf.Max(0.05f, c.life * 0.8f));
+            made++;
+        }
+        return made;
     }
 
-    // 적이 맞았을 때 (모든 캐릭터 · 모든 공격): 이펙트 스킨 색 명중 불꽃 (초당 최대 20번)
-    // 예전에는 거너 총알에만 명중 색이 입혀져 다른 캐릭터는 이펙트 스킨이 거의 보이지 않았음
-    static float hitFxAt;
-    static int hitCount;
-
-    public static void OnEnemyHit(Vector3 pos)
+    // 그림 이름 → 스프라이트 (기존 Fx 시트면 프레임 묶음도)
+    static Sprite SpriteOf(string glyph, out Sprite[] frames)
     {
-        if (EffectSkin == null || Time.time < hitFxAt) return;
-        hitFxAt = Time.time + 0.05f;
-        Vector3 at = pos + (Vector3)(Random.insideUnitCircle * 0.3f);
-        Fx.Spawn("fx_spark", at, 2.4f, HitColor(Color.white), 26f);
-        // 뇌전: 세 번에 한 번 전기가 튐
-        if (EffectSkin.id == "skin_thunder" && ++hitCount % 3 == 0)
-            Fx.Bolt(at + (Vector3)(Random.insideUnitCircle.normalized * 1.8f), at, 0.8f, new Color(1f, 0.95f, 0.5f), 0.12f);
+        frames = null;
+        if (glyph != null && glyph.StartsWith("fx_"))
+        {
+            Sprite[] f = Fx.Frames(glyph);
+            if (f == null || f.Length == 0) return SkinArt.Get("dot");
+            if (f.Length > 1) frames = f;
+            return f[0];
+        }
+        return SkinArt.Get(glyph);
     }
 
-    // 기본 처치 효과(영혼 폭발) 색: 이펙트 스킨이 있으면 스킨 색 (Juice)
-    public static Color KillColor(Color stageColor)
+    // 칸 그림 + 소리를 한 번에 (스킨 · 표가 없으면 아무것도 안 함) — 그림을 그렸거나 소리를 냈으면 true
+    bool Slot(SkinDef s, SkinLook look, string slot, Vector3 at, Vector2 dir, bool onBody, int order, Bud bud, float vol, float pitchPct, SkinAudio.Prio prio, bool unscaled = false)
     {
-        if (EffectSkin == null) return stageColor;
-        return EffectSkin.id == "skin_starlight" ? Color.HSVToRGB(Random.value, 0.4f, 1f) : EffectSkin.color;
-    }
-
-    public void OnUlt()
-    {
-        if (CharSkin == null || CharSkin.tier < 3) return;
-        SpecialAbilities.SharedFx?.Play(SkinAudio.UltSound(CharSkin.id), 0.6f);
-        Fx.Spawn("fx_shock", transform.position, 11f, new Color(CharSkin.color.r, CharSkin.color.g, CharSkin.color.b, 0.85f), 18f);
-        Fx.Spawn("fx_sparkle", transform.position + Vector3.up * 0.6f, 4f, CharSkin.color, 16f);
+        if (look == null) return false;
+        bool any = false;
+        string fx = look.Fx(slot);
+        if (fx != null) any |= Emit(fx, look, at, dir, onBody, order, bud, unscaled) > 0;
+        if (look.Sfx(slot) != null && !RunSave.Replaying) any |= SkinAudio.Play(s, slot, vol, pitchPct, prio);
+        return any;
     }
 
     // ================================================================= 게임 코드가 부르는 도우미
@@ -323,8 +467,32 @@ public class SkinFx : MonoBehaviour
     public static Color CoinColor(Color baseColor) => EffectSkin == null ? baseColor
         : EffectSkin.id == "skin_starlight" ? Color.HSVToRGB(Random.value, 0.4f, 1f) : EffectSkin.color;
 
+    // 기본 처치 효과(영혼 폭발) 색: 이펙트 스킨이 있으면 스킨 색 (Juice)
+    public static Color KillColor(Color stageColor)
+    {
+        if (EffectSkin == null) return stageColor;
+        return EffectSkin.id == "skin_starlight" ? Color.HSVToRGB(Random.value, 0.4f, 1f) : EffectSkin.color;
+    }
+
     // 평타 이펙트 색 (검 베기 · 플라스크 폭발): 무기 스킨 색으로 물들임
     public static Color Tint(Color c) => WeaponSkin == null ? c : Color.Lerp(c, new Color(WeaponSkin.color.r, WeaponSkin.color.g, WeaponSkin.color.b, c.a), 0.6f);
+
+    // 사진사 셔터 번쩍임 색 (설명 약속 — 신문 기자 「조금 노랗게」 · 유령 사진가 「보라」): 무기 스킨이 없을 때 캐릭터 스킨 표의 flash 색
+    public static Color FlashTint(Color c)
+    {
+        if (Off) return c;
+        string hex = ObjectLook("flash");
+        if (hex == null || !ColorUtility.TryParseHtmlString(hex, out Color t)) return c;
+        return new Color(Mathf.Lerp(c.r, t.r, 0.7f), Mathf.Lerp(c.g, t.g, 0.7f), Mathf.Lerp(c.b, t.b, 0.7f), c.a);
+    }
+
+    // 키트 물체(더미 · 묘비 · 사본 · 구멍) 겉모습 (6-1절: 무기 스킨 > 캐릭터 스킨 > 기본) — 그 칸 이름의 값 (없으면 null)
+    public static string ObjectLook(string slot)
+    {
+        if (Off) return null;
+        if (WeaponSkin != null) return WeaponLook?.Fx(slot);       // 무기 스킨을 끼면 캐릭터 스킨 물체 칸은 꺼짐
+        return CharLook?.Fx(slot);
+    }
 }
 
 // 총알 · 투사체 색: 만들어진 뒤(색이 다 정해진 다음) 무기 스킨 색으로 물들임
@@ -342,190 +510,5 @@ public class SkinTint : MonoBehaviour
         if (SkinFx.WeaponSkin == null) { Destroy(this); return; }
         if (TryGetComponent(out SpriteRenderer sr) && sr.enabled) sr.color = SkinFx.Tint(sr.color);
         Destroy(this);
-    }
-}
-
-// 스킨 소리: 합성으로 만든 소리를 등록하고, 공격 · 코인 소리를 스킨에 맞게 바꿈 (SpecialFeedback.Play 가 부름)
-public static class SkinAudio
-{
-    static SpecialFeedback registered;
-    static float layerAt;
-
-    public static void Register(SpecialFeedback fx)
-    {
-        if (fx == null || registered == fx) return;
-        registered = fx;
-        float Sin(float f, float t) => Mathf.Sin(2f * Mathf.PI * f * t);
-        float Dec(float t, float d, float p) => Mathf.Pow(Mathf.Clamp01(1f - t / d), p);
-        float N(System.Random r) => (float)(r.NextDouble() * 2.0 - 1.0);
-        // ---- 피격
-        fx.MakeClip("sk_hurt_low", 0.22f, (t, d, r) => (Sin(Mathf.Lerp(140f, 70f, t / d), t) * 0.7f + N(r) * 0.2f) * Dec(t, d, 2f));
-        fx.MakeClip("sk_hurt_light", 0.14f, (t, d, r) => (Sin(Mathf.Lerp(700f, 400f, t / d), t) * 0.5f + N(r) * 0.15f) * Dec(t, d, 2f));
-        fx.MakeClip("sk_hurt_whistle", 0.25f, (t, d, r) => Sin(Mathf.Lerp(1800f, 1200f, t / d), t) * 0.4f * Dec(t, d, 1.5f));
-        fx.MakeClip("sk_hurt_echo", 0.5f, (t, d, r) => (Sin(520f, t) + Sin(523f, t) * 0.8f) * 0.3f * (Dec(t, 0.15f, 2f) + 0.5f * Dec(Mathf.Max(0f, t - 0.18f), 0.3f, 2f)));
-        fx.MakeClip("sk_hurt_bell", 0.6f, (t, d, r) => (Sin(880f, t) + Sin(1320f, t) * 0.5f + Sin(2640f, t) * 0.2f) * 0.35f * Dec(t, d, 2.5f));
-        fx.MakeClip("sk_hurt_metal", 0.3f, (t, d, r) => (Sin(1900f, t) + Sin(2750f, t) * 0.7f + N(r) * 0.3f * Dec(t, 0.05f, 2f)) * 0.3f * Dec(t, d, 3f));
-        fx.MakeClip("sk_hurt_chime", 0.4f, (t, d, r) => (Sin(1568f, t) + Sin(2093f, t) * 0.6f) * 0.3f * Dec(t, d, 2f));
-        fx.MakeClip("sk_hurt_roar", 0.45f, (t, d, r) => (Sin(90f + 20f * Sin(9f, t), t) * 0.6f + N(r) * 0.35f) * Mathf.Sin(Mathf.PI * t / d) * 0.6f);
-        fx.MakeClip("sk_hurt_flap", 0.25f, (t, d, r) => N(r) * 0.45f * Mathf.Abs(Sin(18f, t)) * Dec(t, d, 1.5f));
-        fx.MakeClip("sk_hurt_smoke", 0.35f, (t, d, r) => N(r) * 0.35f * Mathf.Sin(Mathf.PI * t / d) * Dec(t, d, 1f));
-        fx.MakeClip("sk_hurt_void", 0.5f, (t, d, r) => (Sin(Mathf.Lerp(220f, 110f, t / d), t) * 0.5f + Sin(Mathf.Lerp(330f, 165f, t / d), t) * 0.35f) * Mathf.Sin(Mathf.PI * t / d) * 0.5f);
-        fx.MakeClip("sk_hurt_ice", 0.3f, (t, d, r) => (N(r) * 0.3f * Dec(t, 0.08f, 2f) + Sin(3136f, t) * 0.25f + Sin(4186f, t) * 0.15f) * Dec(t, d, 2.5f));
-        fx.MakeClip("sk_hurt_wind", 0.4f, (t, d, r) => N(r) * 0.3f * Mathf.Sin(Mathf.PI * t / d) * (0.6f + 0.4f * Sin(7f, t)));
-        fx.MakeClip("sk_hurt_bubble", 0.3f, (t, d, r) => Sin(300f + 400f * ((t * 12f) % 1f), t) * 0.35f * Dec(t, d, 1.5f));
-        fx.MakeClip("sk_hurt_paper", 0.22f, (t, d, r) => (N(r) * 0.4f * Dec(t, 0.05f, 2f) + N(r) * 0.18f * Mathf.Abs(Sin(60f, t))) * Dec(t, d, 1.5f));
-        fx.MakeClip("sk_hurt_cuckoo", 0.34f, (t, d, r) => (t < 0.14f ? Sin(1175f, t) : t > 0.17f ? Sin(880f, t) : 0f) * 0.35f * Dec(t % 0.17f, 0.15f, 1f));
-        fx.MakeClip("sk_hurt_beep", 0.22f, (t, d, r) => (t < 0.08f || (t > 0.12f && t < 0.2f) ? Mathf.Sign(Sin(2400f, t)) * 0.22f : 0f));
-        fx.MakeClip("sk_hurt_pixel", 0.25f, (t, d, r) => Mathf.Sign(Sin(Mathf.Floor(Mathf.Lerp(900f, 200f, t / d) / 100f) * 100f, t)) * 0.2f * Dec(t, d, 1.2f));
-        // ---- 처치 (이펙트 스킨)
-        fx.MakeClip("sk_kill_petal", 0.3f, (t, d, r) => (Sin(1760f, t) * 0.4f + Sin(2349f, t) * 0.25f) * Dec(t, d, 2.5f));
-        fx.MakeClip("sk_kill_zap", 0.18f, (t, d, r) => (N(r) * 0.3f + Mathf.Sign(Sin(1800f + 900f * Sin(55f, t), t)) * 0.2f) * Dec(t, d, 2f));
-        fx.MakeClip("sk_kill_star", 0.5f, (t, d, r) => (Sin(2093f, t) + Sin(2637f, t) * 0.6f + Sin(3136f, t) * 0.4f) * 0.25f * Dec(t, d, 2.5f));
-        // ---- 필살기 (전설 캐릭터 스킨)
-        fx.MakeClip("sk_ult_bell", 1.2f, (t, d, r) => (Sin(523f, t) + Sin(784f, t) * 0.6f + Sin(1046f, t) * 0.4f + Sin(1568f, t) * 0.2f) * 0.35f * Dec(t, d, 2f));
-        fx.MakeClip("sk_ult_roar", 1f, (t, d, r) => (Sin(70f + 25f * Sin(6f, t), t) * 0.6f + N(r) * 0.4f) * Mathf.Sin(Mathf.PI * Mathf.Min(1f, t / d * 1.2f)) * 0.7f);
-        fx.MakeClip("sk_ult_whisper", 1f, (t, d, r) => N(r) * 0.3f * (0.5f + 0.5f * Sin(4f, t)) * Mathf.Sin(Mathf.PI * t / d) + Sin(Mathf.Lerp(200f, 120f, t / d), t) * 0.2f * Dec(t, d, 1f));
-        fx.MakeClip("sk_ult_choir", 1.3f, (t, d, r) => (Sin(440f, t) + Sin(554f, t) * 0.8f + Sin(659f, t) * 0.7f + Sin(880f, t) * 0.3f) * 0.2f * (0.7f + 0.3f * Sin(5f, t)) * Mathf.Sin(Mathf.PI * t / d));
-        fx.MakeClip("sk_ult_resonance", 1.1f, (t, d, r) => (Sin(330f, t) * Sin(3f, t) + Sin(495f, t) * 0.5f + Sin(990f, t) * 0.25f * Sin(11f, t)) * 0.35f * Dec(t, d, 1.5f));
-        // 새 전설 둘 (2.1.0~): 「삐익— 쿠웅, 와아아」 심판 호루라기 · 「딸깍—쿵」 베타 테스터
-        fx.MakeClip("sk_ult_whistle", 1.4f, (t, d, r) => t < 0.35f
-            ? Sin(2600f + 300f * Sin(28f, t), t) * 0.3f * Mathf.Min(1f, t / 0.02f)
-            : t < 0.85f ? (Sin(Mathf.Lerp(110f, 45f, (t - 0.35f) / 0.5f), t) * 0.8f + N(r) * 0.15f * Dec(t - 0.35f, 0.05f, 2f)) * Dec(t - 0.35f, 0.5f, 1.6f)
-            : N(r) * 0.4f * Mathf.Sin(Mathf.PI * (t - 0.85f) / 0.55f));
-        fx.MakeClip("sk_ult_click", 1.0f, (t, d, r) => t < 0.12f
-            ? (N(r) * 0.5f + Sin(1800f, t) * 0.3f) * Dec(t, 0.12f, 3f)
-            : t > 0.3f ? (Sin(Mathf.Lerp(150f, 55f, (t - 0.3f) / 0.5f), t) * 0.8f + N(r) * 0.2f * Dec(t - 0.3f, 0.04f, 2f)) * Dec(t - 0.3f, 0.7f, 1.8f) : 0f);
-        // 새 전설 셋 (2.2.0~): 「따닥따닥—틱」 마우스 클릭 연타 · 「댕—띵」 저장 완료 · 「촤착—」 스크린샷
-        fx.MakeClip("sk_ult_clicks", 1.1f, (t, d, r) =>
-        {
-            float v = 0f;
-            for (int k = 0; k < 12; k++)
-            {
-                float tt = t - k * 0.05f;
-                if (tt >= 0f && tt < 0.03f) v += (N(r) * 0.4f + Sin(2200f, tt)) * 0.3f * Dec(tt, 0.03f, 2f);
-            }
-            float te = t - 0.75f;
-            if (te >= 0f) v += Sin(Mathf.Lerp(900f, 400f, te / 0.3f), t) * 0.5f * Dec(te, 0.3f, 2f);
-            return v;
-        });
-        fx.MakeClip("sk_ult_dingding", 1.3f, (t, d, r) => t < 0.7f
-            ? (Sin(196f, t) + Sin(294f, t) * 0.5f + Sin(98f, t) * 0.6f) * 0.35f * Dec(t, 0.7f, 2f)
-            : (Sin(1319f, t) + Sin(1976f, t) * 0.5f) * 0.3f * Dec(t - 0.7f, 0.6f, 2.5f));
-        fx.MakeClip("sk_ult_snap", 1.0f, (t, d, r) => t < 0.08f
-            ? (N(r) * 0.6f + Sin(2800f, t) * 0.3f) * Dec(t, 0.08f, 2f)
-            : t < 0.18f ? 0f
-            : t < 0.3f ? (N(r) * 0.5f + Sin(1800f, t) * 0.25f) * Dec(t - 0.18f, 0.12f, 2f)
-            : Sin(Mathf.Lerp(1500f, 700f, (t - 0.3f) / 0.7f), t) * 0.2f * Dec(t - 0.3f, 0.7f, 2f) + N(r) * 0.05f * Dec(t - 0.3f, 0.5f, 2f));
-        // 새 전설 넷 (2.0.0~): 「끼이익—쫘아악」 종이 · 「뎅——」 멈춘 시계 · 「쿵쿵쿵—딩」 반송 도장 · 「삐——걱」 모뎀
-        fx.MakeClip("sk_ult_paper", 1.1f, (t, d, r) => t < 0.5f
-            ? (Sin(Mathf.Lerp(380f, 900f, t / 0.5f) + 18f * Sin(30f, t), t) * 0.25f + N(r) * 0.12f) * Mathf.Sin(Mathf.PI * t / 0.5f)
-            : N(r) * 0.55f * Dec(t - 0.5f, 0.6f, 2.2f) * (0.6f + 0.4f * Mathf.Abs(Sin(37f, t))));
-        fx.MakeClip("sk_ult_gong", 1.9f, (t, d, r) => (Sin(196f, t) + Sin(392f, t) * 0.6f + Sin(541f, t) * 0.45f + Sin(1058f, t) * 0.25f + Sin(98f, t) * 0.5f) * 0.3f * Dec(t, d, 2.2f));
-        fx.MakeClip("sk_ult_stamp", 1.1f, (t, d, r) =>
-        {
-            float v = 0f;
-            for (int k = 0; k < 3; k++)
-            {
-                float tt = t - k * 0.22f;
-                if (tt >= 0f && tt < 0.2f) v += (Sin(Mathf.Lerp(120f, 50f, tt / 0.2f), tt) * 0.8f + N(r) * 0.3f * Dec(tt, 0.03f, 2f)) * Dec(tt, 0.2f, 2f);
-            }
-            float td = t - 0.7f;
-            if (td >= 0f) v += (Sin(1760f, t) + Sin(2637f, t) * 0.5f) * 0.3f * Dec(td, 0.4f, 2.5f);
-            return v;
-        });
-        fx.MakeClip("sk_ult_modem", 1.3f, (t, d, r) => t < 0.9f
-            ? Sin(((int)(t * 14f) % 2 == 0) ? 1300f : 2100f, t) * 0.28f * Mathf.Min(1f, t / 0.04f) + N(r) * 0.06f
-            : (t > 0.95f ? Sin(Mathf.Lerp(140f, 70f, (t - 0.95f) / 0.35f), t) * 0.6f * Dec(t - 0.95f, 0.35f, 2f) : 0f));
-    }
-
-    public static string UltSound(string skinId) => skinId switch
-    {
-        "gunner_nogun__gold" => "sk_ult_bell",
-        "swordsman__dragon" => "sk_ult_roar",
-        "rogue__void" => "sk_ult_whisper",
-        "archer__sun" => "sk_ult_choir",
-        "cartographer__blank" => "sk_ult_paper",
-        "clockmaker__stopped" => "sk_ult_gong",
-        "postman__return" => "sk_ult_stamp",
-        "ghost__deleted" => "sk_ult_modem",
-        "wrestler__referee" => "sk_ult_whistle",
-        "foreman__beta" => "sk_ult_click",
-        "puppeteer__devhand" => "sk_ult_clicks",
-        "undertaker__todo" => "sk_ult_dingding",
-        "photographer__f12" => "sk_ult_snap",
-        _ => "sk_ult_resonance",
-    };
-
-    // 캐릭터마다 '공격 소리'로 치는 이름
-    //   2.0.1~ 같은 이름을 적 · 보스도 쓰는 공용 소리(쿵 · 휙 · 딸깍 · 똑딱)는 영웅 쪽 파일이 부른 것만 — 무기 스킨이 적 소리까지 바꾸던 문제
-    static bool IsAttack(string name, string from)
-    {
-        if ((name == "thump" || name == "whoosh" || name == "click" || name == "tick") && !HeroSource(from)) return false;
-        switch (CharacterData.Selected)
-        {
-            case CharacterId.Gunner: return name == "gunshot" || name == "crack" || name == "shotgun";
-            case CharacterId.Swordsman: return name == "slash";
-            case CharacterId.Rogue: return name == "whoosh";
-            case CharacterId.Archer: return name == "bowtwang" || name == "arrowfly";
-            case CharacterId.Alchemist: return name == "glassclink" || name == "shatter";
-            // 2.0.0~ 새 영웅 넷의 평타 소리 (무기 스킨의 음높이 · 덧소리가 먹음)
-            case CharacterId.Cartographer: return name == "ink";
-            case CharacterId.Clockmaker: return name == "ratchet";
-            case CharacterId.Postman: return name == "flick";
-            case CharacterId.Ghost: return name == "freeze";
-            // 2.1.0~ 씨름꾼 · 공사 반장 (잡기 · 덤프 소리 = 쿵)
-            case CharacterId.Wrestler: return name == "thump";
-            case CharacterId.Foreman: return name == "thump";
-            // 2.2.0~ 인형사 · 장의사 · 사진사 (휘두름 · 삽질 · 셔터 소리)
-            case CharacterId.Puppeteer: return name == "whoosh";
-            case CharacterId.Undertaker: return name == "dig" || name == "bury" || name == "thump";
-            case CharacterId.Photographer: return name == "shutter" || name == "click" || name == "tick";
-        }
-        return false;
-    }
-
-    // 영웅 기술 파일 (키트 · 특수 능력 · 고유 스킬 · 갈래 · 플레이어) — 적 · 보스 · 화면 연출 파일은 아님
-    static bool HeroSource(string from) => !string.IsNullOrEmpty(from)
-        && (from.Contains("CharacterKit") || from.Contains("SpecialAbilities") || from.Contains("SignatureSkills") || from.Contains("Paths") || from.Contains("PlayerController"));
-
-    // SpecialFeedback.Play 가 소리를 틀기 직전에: 공격 소리 · 코인 소리를 스킨에 맞게 (덧소리는 따로 틈)
-    public static void Adjust(SpecialFeedback fx, ref string name, ref float vol, ref float pitch, string from = "")
-    {
-        SkinDef w = SkinFx.WeaponSkin;
-        if (w != null && IsAttack(name, from))
-        {
-            pitch *= w.pitch;
-            if (w.attackSound != null) name = w.attackSound;
-            if (w.layer != null && Time.unscaledTime >= layerAt)
-            {
-                layerAt = Time.unscaledTime + 0.08f;
-                fx.PlayRaw(w.layer, vol * 0.35f, 1f);
-            }
-            return;
-        }
-        SkinDef e = SkinFx.EffectSkin;
-        if (e != null && name == "sparkle")
-        {
-            if (e.id == "skin_sakura") pitch *= 1.3f;
-            else if (e.id == "skin_thunder" && Time.unscaledTime >= layerAt) { layerAt = Time.unscaledTime + 0.1f; fx.PlayRaw("sk_kill_zap", vol * 0.4f, 1.4f); }
-            else if (e.id == "skin_starlight") pitch *= 1.5f;
-        }
-    }
-
-    // 피격 소리 (PlayerController): 캐릭터 스킨이 있으면 스킨 소리, 없으면 false (원래 소리)
-    public static bool PlayHurt()
-    {
-        SkinDef c = SkinFx.CharSkin;
-        if (c == null || c.hurtSound == null || SpecialAbilities.SharedFx == null) return false;
-        SpecialAbilities.SharedFx.PlayRaw(c.hurtSound, 0.8f, Random.Range(0.95f, 1.05f));
-        return true;
-    }
-
-    // 거너 권총 소리 (PlayerController · SpecialAbilities): 무기 스킨이 있으면 합성 총소리를 스킨 음색으로
-    public static bool PlayPistol()
-    {
-        if (SkinFx.WeaponSkin == null || SpecialAbilities.SharedFx == null) return false;
-        SpecialAbilities.SharedFx.Play("gunshot", 0.6f, Random.Range(0.97f, 1.03f));
-        return true;
     }
 }

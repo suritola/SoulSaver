@@ -69,17 +69,21 @@ public class UISound : MonoBehaviour
         }
     }
 
+    // 2026-11-04~ 커서 스킨 호버 · 클릭 소리 (모든 메뉴 버튼의 공통 지점) — 없으면 공통 똑 · 또각
     public static void Hover()
     {
         if (instance == null || Time.unscaledTime - instance.lastHover < 0.04f) return;
         instance.lastHover = Time.unscaledTime;
-        instance.source.PlayOneShot(instance.hover, Volume * GameSettings.SfxVolume);
+        AudioClip skin = CursorSkin.SkinSound("hover");
+        instance.source.PlayOneShot(skin ?? instance.hover, Volume * GameSettings.SfxVolume * (skin != null ? 0.5f : 1f));
     }
 
     public static void Click()
     {
         if (instance == null) return;
-        instance.source.PlayOneShot(instance.click, Volume * GameSettings.SfxVolume);
+        AudioClip skin = CursorSkin.SkinSound("click");
+        instance.source.PlayOneShot(skin ?? instance.click, Volume * GameSettings.SfxVolume * (skin != null ? 0.6f : 1f));
+        CursorSkin.MenuClick();
     }
 }
 

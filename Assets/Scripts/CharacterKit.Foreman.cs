@@ -367,6 +367,7 @@ public partial class CharacterKit
         if (fmItems.Count == 0) { fmMass = 0; return; }
         Vector2 dir = fmBlade;
         Vector3 origin = fmCenter;
+        SkinFx.OnAttack(origin, dir, 2);        // 2026-11-04~ D9: 덤프 = 스킨 평타 몸짓 그림 (밀기 틱은 AttackFired 로 소리만)
         // 패드: 삽날 방향 15° 안에 적이 3마리 이상 모인 쪽이 있으면 그 가운데로 덤프 방향을 끌어당김 (사람이 그쪽을 향했을 때만 돕는 빈틈 끌림)
         if (GamePad.Active) dir = FmAssistDir(origin, dir);
         FmItem[] items = fmItems.ToArray();

@@ -12,10 +12,10 @@ public static partial class LocTable
 
         // ---------------- 인형사
         S("그림자극", "Shadow Play", "影絵芝居", "皮影戏");
-        S("검은 종이 실루엣 연출가, 더미도 그림자 인형이 되어 벽에 비친 듯 납작합니다. 피격 소리가 가벼워집니다.",
-          "A director cut from black paper; the dummy becomes a shadow puppet, flat as if cast on a wall. Hit sounds become lighter.",
-          "黒い紙の影絵の演出家。ダミーも影絵人形になり、壁に映ったように平たくなります。被弾音が軽くなります。",
-          "黑纸剪影般的演出者，假人也变成皮影，像映在墙上一样扁平。受击声变得轻快。");
+        S("검은 종이 실루엣 연출가, 더미도 그림자 인형이 되어 벽에 비친 듯 납작합니다. 레벨업하면 새 실루엣이 날아오르며 징이 울리고, 쓰러지면 촛불이 꺼집니다.",
+          "A director cut from black paper; the dummy becomes a shadow puppet, flat as if cast on a wall. A bird silhouette takes flight with a gong on level-up, and when you fall, the candle goes out.",
+          "黒い紙の影絵の演出家。ダミーも影絵人形になり、壁に映ったように平たくなります。レベルアップで鳥の影が舞い上がって銅鑼が鳴り、倒れるとろうそくが消えます。",
+          "黑纸剪影般的演出者，假人也变成皮影，像映在墙上一样扁平。升级时飞鸟剪影腾空而起、锣声响起，倒下时烛火熄灭。");
         S("종이 인형", "Paper Doll", "紙人形", "纸娃娃");
         S("접은 종이 옷의 연출가, 더미는 접이식 종이 인형이고 줄은 실 대신 종이끈입니다. 피격하면 종이 구겨지는 소리가 납니다.",
           "A director in folded-paper clothes; the dummy is a folding paper doll and the strings are paper cords. Getting hit crinkles like paper.",
@@ -34,10 +34,10 @@ public static partial class LocTable
 
         // ---------------- 장의사
         S("묘지기", "Gravekeeper", "墓守", "守墓人");
-        S("랜턴을 든 밤 묘지기. 모자 대신 두건, 구멍 가장자리에 랜턴 불빛이 비칩니다. 피격 소리가 가벼워집니다.",
-          "A night gravekeeper with a lantern. A hood instead of a hat, and lantern light glints at the hole's edge. Hit sounds become lighter.",
-          "ランタンを持つ夜の墓守。帽子の代わりにフード、穴のふちにランタンの灯りが差します。被弾音が軽くなります。",
-          "提着提灯的夜间守墓人。以兜帽代替帽子，坑边映着提灯的光。受击声变得轻快。");
+        S("랜턴을 든 밤 묘지기, 구멍 가장자리에 랜턴 불빛이 비칩니다. 젖은 흙 발소리, 레벨업하면 반딧불 기둥과 부엉이 소리, 쓰러지면 랜턴이 떨어져 꺼집니다.",
+          "A night gravekeeper with a lantern, its light glowing at the edge of each grave. Footsteps in wet soil, a pillar of fireflies and an owl's hoot on level-up, and when you fall, the lantern drops and goes out.",
+          "ランタンを持った夜の墓守。穴の縁にランタンの灯りが映ります。湿った土の足音、レベルアップで蛍の柱とフクロウの声、倒れるとランタンが落ちて消えます。",
+          "提着灯笼的守夜墓人，坑洞边缘映着灯笼的光。脚踩湿土的声响，升级时萤火虫光柱与猫头鹰鸣叫，倒下时灯笼坠地熄灭。");
         S("석공", "Stonemason", "石工", "石匠");
         S("돌가루 앉은 모자에 앞치마의 석공. 묘비 대신 작은 조각상이 솟습니다. 피격하면 쇳소리가 납니다.",
           "A stonemason in an apron and a stone-dusted hat. Small statues rise instead of gravestones. Getting hit rings like metal.",
@@ -56,10 +56,10 @@ public static partial class LocTable
 
         // ---------------- 사진사
         S("신문 기자", "Press Reporter", "新聞記者", "报社记者");
-        S("PRESS 띠를 두른 모자와 낡은 코트, 플래시가 조금 노랗습니다. 피격 소리가 가벼워집니다.",
-          "A hat with a PRESS card and a worn coat; the flash is a little yellow. Hit sounds become lighter.",
-          "PRESSの札をつけた帽子と古びたコート。フラッシュがやや黄色いです。被弾音が軽くなります。",
-          "帽子上插着PRESS卡片，穿着旧外套，闪光灯略带黄色。受击声变得轻快。");
+        S("기자 모자와 낡은 코트, 플래시가 조금 노랗습니다. 구두가 또각거리고, 레벨업하면 사진이 현상되듯 떠오르며, 필살기에 타자기 줄 바꿈 「띵」이 울립니다.",
+          "A reporter's hat and a worn coat, with a slightly yellow flash. Your shoes click as you walk, a photo develops into view on level-up, and your ultimate rings with a typewriter's carriage-return ding.",
+          "記者の帽子と古びたコート、フラッシュは少し黄色め。靴音がコツコツ響き、レベルアップで写真が現像されるように浮かび上がり、必殺技でタイプライターの改行「チン」が鳴ります。",
+          "记者帽与旧外套，闪光灯略微发黄。皮鞋嗒嗒作响，升级时照片如显影般浮现，必杀技响起打字机换行的「叮」。");
         S("즉석 카메라", "Instant Camera", "インスタントカメラ", "拍立得");
         S("무지개 줄무늬 재킷에 즉석 카메라, 인화 사본이 흰 테 사진으로 나옵니다. 피격하면 삑 소리가 납니다.",
           "A rainbow-striped jacket and an instant camera; print copies come out as white-bordered photos. Getting hit beeps.",
@@ -110,9 +110,9 @@ public static partial class LocTable
 
         // ---------------- 상점 미리보기 무대 (SkinPreview)
         S("미리보기", "Preview", "プレビュー", "预览");
-        C("skin.preview.note", "공격 · 명중 · 처치 · 피격 · 필살기를 게임과 같은 연출 · 소리로 되풀이합니다 (판정 · 크기는 그대로, 다른 칸은 지금 낀 스킨)",
-          "Loops attack, hit, kill, damage and ultimate with the same effects and sounds as in-game (hitboxes and size unchanged; other slots show what you have equipped)",
-          "攻撃・命中・撃破・被弾・必殺技をゲームと同じ演出・音で繰り返します（判定・大きさはそのまま、他の枠は今の装備）",
-          "以与游戏相同的特效和音效循环展示攻击、命中、击杀、受击和必杀技（判定与大小不变，其他栏位为当前装备）");
+        C("skin.preview.note", "걸음 · 공격 · 명중 · 처치 · 피격 · 레벨업 · 대기 · 필살기 · 승리 · 사망을 게임과 같은 연출 · 소리로 되풀이합니다 (판정 · 크기는 그대로, 다른 칸은 지금 낀 스킨)",
+          "Loops steps, attack, hit, kill, damage, level-up, idle, ultimate, victory and death with the same effects and sounds as in-game (hitboxes and size unchanged; other slots show what you have equipped)",
+          "足音・攻撃・命中・撃破・被弾・レベルアップ・待機・必殺技・勝利・死亡をゲームと同じ演出・音で繰り返します（判定・大きさはそのまま、他の枠は今の装備）",
+          "以与游戏相同的特效和音效循环展示脚步、攻击、命中、击杀、受击、升级、待机、必杀技、胜利和阵亡（判定与大小不变，其他栏位为当前装备）");
     }
 }

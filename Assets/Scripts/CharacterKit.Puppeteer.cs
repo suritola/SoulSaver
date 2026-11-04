@@ -117,6 +117,16 @@ public partial class CharacterKit
         PupLoadFrames();
     }
 
+    // 2026-11-04~ 스킨 설명 약속 (그림자극 「더미도 그림자 인형」 등): 더미 그림 색만 — 그림 · 크기 · 판정은 그대로
+    static string pupHex;
+    static Color pupHexColor = Color.white;
+    static Color PupSkinColor()
+    {
+        string hex = SkinFx.ObjectLook("dummy");
+        if (!ReferenceEquals(hex, pupHex)) { pupHex = hex; pupHexColor = hex != null && ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.white; }
+        return pupHexColor;
+    }
+
     // 더미 그림 4프레임 (형태가 바뀌면 전용 시트로 · 없으면 기본 더미 · 그것도 없으면 빛 무리로 — 예외 없이)
     void PupLoadFrames()
     {
@@ -230,7 +240,7 @@ public partial class CharacterKit
         if (pupBodyTf != null) pupBodyTf.localPosition = new Vector3(0f, bob + 0.5f, 0f);
         float sw = Time.time - pupSwingAt;
         PupShowFrame(sw < 0.25f ? 1 + Mathf.Min(2, (int)(sw / 0.25f * 3f)) : 0);
-        if (pupBody != null) pupBody.color = Time.time < pupFlashAt ? new Color(1f, 0.6f, 0.6f) : Color.white;
+        if (pupBody != null) pupBody.color = Time.time < pupFlashAt ? new Color(1f, 0.6f, 0.6f) : PupSkinColor();
 
         PupPathLate(me, target, dt, paused);
         PupDrawString(me);

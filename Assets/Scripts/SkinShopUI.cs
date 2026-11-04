@@ -286,7 +286,7 @@ public class SkinShopUI : MonoBehaviour
         bool equipped = s == null ? EquippedNow == null : EquippedNow != null && EquippedNow.id == s.id;
         titleText.text = s != null ? Loc.T(s.name) + "  <size=70%><color=#" + ColorUtility.ToHtmlStringRGB(SkinData.TierColors[s.tier]) + ">" + Loc.T(SkinData.TierNames[s.tier]) + "</color></size>"
                                    : Loc.T("기본");
-        descText.text = s != null ? Loc.T(s.desc) : Loc.T("원래 모습 · 원래 소리");
+        descText.text = s != null ? SlotChips(s) + Loc.T(s.desc) : Loc.T("원래 모습 · 원래 소리");
         if (equipped) actionLabel.text = Loc.T("장착 중");
         else if (owned) actionLabel.text = Loc.T("장착");
         else if (s.achievement)
@@ -386,6 +386,47 @@ public class SkinShopUI : MonoBehaviour
         }
     }
 
+    // 2026-11-04~ 「바뀌는 칸」 칩 (기획 7절 2): 이 스킨이 실제로 바꾸는 칸 · 이 등급에서 새로 더해진 칸은 등급색 · 칸 수
+    //   SkinLooks 표에 있는 칸만 세므로 표와 판이 어긋나지 않음 (업적형 전설도 잠금 안내 전에 같이 보임)
+    static readonly (string key, string name, int tier)[] CharSlots =
+    {
+        ("", "몸", 0), ("step", "걸음", 0), ("acc", "평타 몸짓", 0), ("hurt", "피격", 0), ("lvl", "레벨업", 0), ("idle", "대기", 0),
+        ("ultc", "필살기 시전", 0), ("death", "사망", 0), ("win", "승리", 0), ("start", "출발", 1), ("trail", "잔상", 1), ("revive", "버팀", 1),
+        ("edge", "필살기 가장자리", 2), ("absorb", "처치 흡수", 2), ("aura", "오라", 3), ("crisis", "위기", 3),
+    };
+    static readonly (string key, string name, int tier)[] WeaponSlots =
+    {
+        ("", "손 무기", 1), ("", "투사체", 1), ("fire", "발사", 1), ("whit", "명중음", 1), ("wtrail", "꼬리", 2), ("reload", "장전", 2), ("widle", "무기 대기", 2), ("high", "하이라이트", 2), ("evo", "진화", 2),
+    };
+    static readonly (string key, string name, int tier)[] EffectSlots =
+    {
+        ("hit", "명중", 0), ("kill", "처치", 0), ("coin", "코인", 0), ("combo", "연쇄", 1), ("chest", "상자 · 이정표", 1), ("big", "큰 적", 2), ("edge", "가장자리 연쇄", 2), ("kill.basic", "출처별 처치", 3),
+    };
+    static readonly (string key, string name, int tier)[] CursorSlots =
+    {
+        ("", "화살표 · 조준점", 0), ("click", "클릭", 0), ("hover", "호버음", 0), ("tail", "꼬리", 1), ("ultaim", "필살기 조준점", 2), ("dust", "메뉴 금가루", 3),
+    };
+
+    static string SlotChips(SkinDef s)
+    {
+        SkinLook look = SkinLooks.Get(s);
+        if (look == null || VisualRules.Legacy) return "";
+        var table = s.kind == SkinKind.Character ? CharSlots : s.kind == SkinKind.Weapon ? WeaponSlots : s.kind == SkinKind.Effect ? EffectSlots : CursorSlots;
+        string tierHex = ColorUtility.ToHtmlStringRGB(SkinData.TierColors[s.tier]);
+        System.Text.StringBuilder b = new System.Text.StringBuilder("<size=78%>");
+        int n = 1;      // 상점 무대
+        foreach (var (key, name, tier) in table)
+        {
+            bool on = key == "" || look.Has(key) || (key == "trail" && s.tier >= 2) || (key == "kill" && s.killSound != null) || (key == "edge" && s.kind == SkinKind.Character && look.Fx("edge") != null);
+            if (!on || tier > s.tier) continue;
+            n++;
+            bool fresh = tier == s.tier && s.tier > 0;
+            b.Append(fresh ? "<color=#" + tierHex + ">" : "<color=#B9B2A6>").Append('[').Append(Loc.T(name)).Append("]</color> ");
+        }
+        b.Append("<color=#" + tierHex + ">").Append(Loc.T("skin.slots").Replace("{0}", n.ToString())).Append("</color></size>\n");
+        return b.ToString();
+    }
+
     public static string BaseAttack(int who) => (CharacterId)who switch
     {
         CharacterId.Swordsman => "slash",
@@ -400,7 +441,7 @@ public class SkinShopUI : MonoBehaviour
         CharacterId.Postman => "flick",
         CharacterId.Ghost => "freeze",
         CharacterId.Puppeteer => "whoosh",
-        CharacterId.Undertaker => "dig",
+        CharacterId.Undertaker => "thump",      // 2026-11-04~ D10: dig 는 없는 소리 → 장의사 실제 평타 소리
         CharacterId.Photographer => "shutter",
         _ => "gunshot",
     };

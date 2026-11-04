@@ -14,10 +14,10 @@ public static partial class LocTable
 
         // ---------------- 씨름꾼
         S("동네 장사", "Neighborhood Strongman", "町内の怪力", "街坊大力士");
-        S("흰 러닝셔츠에 운동회 머리띠, 마을 대회 단골 우승자. 피격 소리가 가벼워집니다.",
-          "A white tank top and a sports-day headband, the regular champion of the village contest. Hit sounds become lighter.",
-          "白いランニングシャツに運動会のはちまき、村の大会の常連優勝者。被弾音が軽くなります。",
-          "白背心配运动会头带，村里比赛的常胜冠军。受击声变得轻快。");
+        S("흰 러닝셔츠에 운동회 머리띠, 마을 대회 단골 우승자. 잡을 때 손바닥이 「짝」, 레벨업하면 만국기가 펼쳐지고 이기면 황소 트로피와 함성이 터집니다.",
+          "A white tank top and a sports-day headband, the regular champion of the village tournament. Palms slap as you grab, flags of all nations unfurl on level-up, and victory brings a bull trophy and cheers.",
+          "白いランニングシャツに運動会のハチマキ、村の大会の常連優勝者。つかむと手のひらが「パン」、レベルアップで万国旗が広がり、勝利すると牛のトロフィーと歓声が上がります。",
+          "白背心配运动会头带，村里比赛的常胜冠军。抓取时手掌「啪」地一响，升级时万国旗展开，胜利时黄牛奖杯与欢呼齐发。");
         S("청동 샅바", "Bronze Wrestling Belt", "青銅のまわし", "青铜缠腰带");
         S("샅바와 팔 토시가 청동이라 메칠 때마다 쇳소리가 납니다.",
           "The belt and arm guards are bronze, so every throw rings with metal.",
@@ -46,10 +46,10 @@ public static partial class LocTable
 
         // ---------------- 공사 반장
         S("야간 작업", "Night Shift", "夜間作業", "夜间施工");
-        S("야광 조끼에 이마 전등, 밤에도 공사는 계속된다. 피격하면 삑 소리가 납니다.",
-          "A glow vest and a forehead lamp: construction goes on through the night. Getting hit beeps.",
-          "蛍光ベストにヘッドランプ、夜も工事は続く。被弾するとピッと鳴ります。",
-          "荧光背心配额头灯，夜里工程照旧。受击时会发出哔声。");
+        S("야광 조끼에 이마 전등, 밤에도 공사는 계속된다. 발 앞을 전등 빛이 비추고, 레벨업하면 서치라이트가 엇갈리며 사이렌, 필살기에 후진 경보가 울립니다.",
+          "A reflective vest and a headlamp: the work goes on through the night. Your lamp lights the ground ahead, searchlights cross with a siren on level-up, and your ultimate sounds a reversing alarm.",
+          "蛍光ベストに額のライト、夜でも工事は続く。足元をライトが照らし、レベルアップでサーチライトが交差してサイレンが鳴り、必殺技でバック警報が響きます。",
+          "反光背心配头灯，夜里工程照常进行。头灯照亮脚前的地面，升级时探照灯交错、警笛鸣响，必杀技响起倒车警报。");
         S("제설차", "Snow Plow", "除雪車", "扫雪车");
         S("눈 쌓인 안전모에 빨간 목도리. 피격하면 얼음 부서지는 소리가 납니다.",
           "A snow-capped hard hat and a red scarf. Getting hit sounds like shattering ice.",

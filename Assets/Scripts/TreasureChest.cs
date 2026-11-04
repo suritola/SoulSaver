@@ -108,6 +108,7 @@ public class TreasureChest : MonoBehaviour
             yield break;
         }
         Hostile.Play("shimmer", 0.8f, 1.2f);
+        SkinFx.OnChest(transform.position);      // 2026-11-04~ 이펙트 스킨 상자 연출
         // 1.1~ 보상 풀 3택 · 전설 룰렛 (ChestRewards, 예전엔 코인 · 영혼 조각 · 생명 고정)
         yield return ChestRewards.Open(p, home, elite);
         UnlockRoutes.OnChestOpened();       // 1.2~ 지도 제작자 대체 루트: 이야기 모드 보물 상자 누적 15개 (무한 모드 · 일일 도전 · 튜토리얼은 세지 않음)

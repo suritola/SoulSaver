@@ -645,6 +645,7 @@ public class EnermyController : MonoBehaviour
         }
         finally { KillCounts = true; Dying = null; }
         if (a == 1 && IsMidBoss) Juice.HitStop();      // 1.1~ 엘리트 · 중간 보스 처치: 0.06초 멈춤
+        if (a == 1 && IsMidBoss) SkinFx.OnBigKill(transform.position);      // 2026-11-04~ 이펙트 스킨 큰 적 처치
         if (a == 1 && IsMidBoss)
         {
             // 1.2~ 영혼 계약 · 보드: 중간 보스 (20초 안 · 평타로)

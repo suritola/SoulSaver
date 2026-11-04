@@ -56,7 +56,7 @@ public static class Juice
         Fx.Spawn("fx_levelup", pos + Vector3.up * 1f, 3.2f, Color.white, 14f, 0f, 30);
         Fx.Spawn("fx_sparkle", pos + new Vector3(-0.8f, 1.8f, 0f), 0.9f, new Color(1f, 0.9f, 0.5f), 12f, 0f, 31);
         Fx.Spawn("fx_sparkle", pos + new Vector3(0.9f, 2.4f, 0f), 0.7f, new Color(1f, 0.9f, 0.5f), 10f, 0f, 31);
-        Hostile.Play("levelup", 0.8f);
+        if (!SkinFx.OnLevelUp(pos)) Hostile.Play("levelup", 0.8f);      // 2026-11-04~ 캐릭터 스킨 레벨업 기둥 · 음 (소리는 자리 교체)
     }
 
     // sound: 코인을 한꺼번에 여러 개 주우면 소리는 가끔만 (PlayerController 가 정함)
@@ -64,6 +64,7 @@ public static class Juice
     {
         Fx.Spawn("fx_sparkle", pos + (Vector3)(Random.insideUnitCircle * 0.3f), SkinFx.EffectSkin != null ? 1.1f : 0.8f, SkinFx.CoinColor(new Color(1f, 0.88f, 0.4f)), 16f, 0f, 20);
         if (sound) Hostile.Play("sparkle", 0.2f, Random.Range(0.95f, 1.15f));
+        SkinFx.OnCoin(pos);         // 2026-11-04~ 이펙트 스킨 코인 반짝
         TranscendRules.Coin(pos);       // 1.2~ 초월 카드 「연금 손」
     }
 
@@ -110,6 +111,7 @@ public static class Juice
     public static void BossDown()
     {
         if (Application.isBatchMode) return;
+        SkinFx.OnVictory();         // 2026-11-04~ 캐릭터 스킨 승리 (슬로 0.35초 뒤)
         if (GameSettings.Flashes) Runner.Flash(0.55f);
         if (!CanStop()) return;
         lastStopAt = Time.unscaledTime;
@@ -230,6 +232,7 @@ public static class Juice
             if (StageManager.Instance != null)
                 Notice.Toast(NoticeIcon.Coin, Loc.T("juice.milestone").Replace("{0}", kills.ToString()).Replace("{1}", MilestoneCoins[i].ToString()), 4f);
             Hostile.Play("chime", 0.7f);
+            SkinFx.OnMilestone();       // 2026-11-04~ 이펙트 스킨 이정표 연출
             return;
         }
     }

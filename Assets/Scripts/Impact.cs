@@ -94,12 +94,13 @@ public static class Impact
 
         SpecialFeedback fx = SpecialAbilities.SharedFx;
         if (fx != null) Sounds.Register(fx);
-        Juice.Shared.StartCoroutine(Run(fx, s, slow, zoom, shake, flash, dir, lv, ti, prevAt));
+        Juice.Shared.StartCoroutine(Run(fx, s, slow, zoom, shake, flash, at, dir, lv, ti, prevAt));      // 2026-11-04~ 위치 at 도 (스킨 하이라이트 · 가장자리)
     }
 
-    static IEnumerator Run(SpecialFeedback fx, ImpactStyle s, float slow, float zoom, float shake, Color flash, Vector2 dir, int lv, int ti, float prevAt)
+    static IEnumerator Run(SpecialFeedback fx, ImpactStyle s, float slow, float zoom, float shake, Color flash, Vector3 at, Vector2 dir, int lv, int ti, float prevAt)
     {
         float vol = s.vol * (lv == 1 ? 0.8f : 1f);
+        float now0 = Time.unscaledTime;
         PlayerController p = Hostile.Player;
         if (slow > 0f)
         {
@@ -115,6 +116,7 @@ public static class Impact
 
         // 2) 터짐: 그 사이 창이 열려 시간이 멈췄으면(레벨업 · 일시정지) 조용히 건너뜀 — 창 위에서 화면이 흔들리거나 소리가 나지 않게
         if (Time.timeScale == 0f) { if (lastAt[ti] > prevAt) lastAt[ti] = prevAt; yield break; }      // 건너뛴 연출은 쉬는 시간을 쓰지 않음
+        SkinFx.OnImpact((ImpactTier)ti, at, dir, ti == (int)ImpactTier.Ult && now0 - prevAt < UltRepeat);      // 2026-11-04~ 스킨: 필살기 가장자리(C10) · 무기 하이라이트(W7) — 특수효과 꺼짐 · 쉬는 시간 · 창 규칙을 그대로 따름
         if (shake > 0f && fx != null) fx.Shake(shake, Mathf.Max(0.08f, s.shakeFor), s.directional ? dir : Vector2.zero);
         if (flash.a > 0.01f) Juice.Shared.Flash(flash.a, flash);
         if (fx != null && s.sound != null) fx.PlayRaw(s.sound, vol, s.pitch);

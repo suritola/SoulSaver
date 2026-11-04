@@ -12,10 +12,10 @@ public static partial class LocTable
 
         // ---------------- 지도 제작자
         S("제도사", "Draftsman", "製図士", "制图员");
-        S("카키 조끼와 올리브 모자, 등에 멘 도면통. 피격 소리가 가벼워집니다.",
-          "A khaki vest, an olive cap and a blueprint tube on the back. Hit sounds become lighter.",
-          "カーキのベストとオリーブ色の帽子、背中には図面筒。被弾音が軽くなります。",
-          "卡其背心配橄榄色帽子，背着图纸筒。受击声变得轻快。");
+        S("카키 조끼와 올리브 모자, 등에 멘 도면통. 걸음마다 연필 낙서와 사각 소리, 레벨업하면 도면이 촤악 펼쳐지고 이기면 측량 깃발이 꽂힙니다.",
+          "A khaki vest, an olive cap and a blueprint tube on the back. Pencil doodles and scratching with every step, a blueprint unrolls on level-up, and a survey flag is planted on victory.",
+          "カーキのベストとオリーブ色の帽子、背中には図面筒。一歩ごとに鉛筆の落書きとサラサラ音、レベルアップで図面がバサッと広がり、勝利すると測量旗が立ちます。",
+          "卡其背心配橄榄色帽子，背着图纸筒。每走一步都留下铅笔涂鸦与沙沙声，升级时图纸哗地展开，胜利时插上测量旗。");
         S("해도사", "Chart Navigator", "海図士", "海图师");
         S("남색 외투와 선장 모자, 손에 육분의. 피격하면 맑은 방울 소리가 납니다.",
           "A navy coat, a captain's hat and a sextant in hand. Getting hit rings a clear chime.",
@@ -34,10 +34,10 @@ public static partial class LocTable
 
         // ---------------- 시계공
         S("견습 시계공", "Apprentice Clockmaker", "見習い時計職人", "学徒钟表匠");
-        S("가죽 앞치마와 쇠 톱니. 피격 소리가 철컹거립니다.",
-          "A leather apron and an iron cog. Hit sounds clank.",
-          "革のエプロンと鉄の歯車。被弾音ががちゃがちゃと鳴ります。",
-          "皮围裙与铁齿轮。受击声变得叮当作响。");
+        S("가죽 앞치마와 쇠 톱니. 걸음이 째깍째깍 울리고, 던질 때 나사가 튀며, 레벨업하면 톱니 셋이 맞물려 돌고 쓰러지면 째깍 소리가 느려지다 멈춥니다.",
+          "A leather apron and iron gears. Your footsteps tick and tock, screws fly with every throw, three gears mesh and spin on level-up, and when you fall the ticking slows to a stop.",
+          "革のエプロンと鉄の歯車。足音がチクタクと刻まれ、投げるとネジが飛び、レベルアップで三つの歯車がかみ合って回り、倒れるとチクタク音がゆっくり止まります。",
+          "皮围裙与铁齿轮。脚步声滴答作响，投掷时螺丝飞溅，升级时三个齿轮咬合转动，倒下时滴答声渐渐变慢直至停止。");
         S("모래시계 수도사", "Hourglass Monk", "砂時計の修道士", "沙漏修士");
         S("모래빛 후드와 모래시계 목걸이. 피격하면 맑은 방울 소리가 납니다.",
           "A sand-colored hood and an hourglass pendant. Getting hit rings a clear chime.",
@@ -56,10 +56,10 @@ public static partial class LocTable
 
         // ---------------- 우체부
         S("신문 배달부", "Paperboy", "新聞配達員", "送报员");
-        S("파란 야구 모자와 둘둘 만 신문. 피격 소리가 가벼워집니다.",
-          "A blue baseball cap and a rolled-up newspaper. Hit sounds become lighter.",
-          "青い野球帽と丸めた新聞。被弾音が軽くなります。",
-          "蓝色棒球帽与卷起的报纸。受击声变得轻快。");
+        S("파란 야구 모자와 둘둘 만 신문. 운동화 발소리 사이로 자전거 벨이 따릉, 레벨업하면 신문 1면이 빙글 돌며 나타나고 맞으면 신문지가 흩날립니다.",
+          "A blue baseball cap and a rolled-up newspaper. A bicycle bell rings between your sneaker steps, a front page spins into view on level-up, and newspapers scatter when you're hit.",
+          "青い野球帽と丸めた新聞。スニーカーの足音の合間に自転車のベルがチリン、レベルアップで新聞の一面がくるくる回って現れ、被弾すると新聞紙が舞い散ります。",
+          "蓝色棒球帽与卷起的报纸。运动鞋脚步声间响起自行车铃「叮铃」，升级时报纸头版旋转登场，受击时报纸四散飞舞。");
         S("비둘기 조련사", "Pigeon Trainer", "ハト使い", "鸽子训练师");
         S("모자 위에 비둘기가 앉은 잿빛 외투. 피격하면 날갯짓 소리가 납니다.",
           "A grey coat with a pigeon perched on the hat. Getting hit sounds like flapping wings.",
@@ -78,10 +78,10 @@ public static partial class LocTable
 
         // ---------------- 유령
         S("이불 유령", "Blanket Ghost", "布団ゴースト", "被单幽灵");
-        S("체크무늬 이불에 잠옷 모자를 쓴 유령. 피격 소리가 포근해집니다.",
-          "A ghost in a checkered blanket and a nightcap. Hit sounds become soft and cozy.",
-          "チェック柄の布団にナイトキャップをかぶったゴースト。被弾音がふんわりします。",
-          "盖着格子被单、戴睡帽的幽灵。受击声变得柔和。");
+        S("체크무늬 이불에 잠옷 모자를 쓴 유령. 걸으면 이불 자락이 사락 끌리고, 쉬면 코를 골며, 레벨업하면 별 · 달 모빌이 자장가와 함께 내려옵니다.",
+          "A ghost in a checkered blanket and a nightcap. The blanket hem swishes along as you move, you snore when idle, and a star-and-moon mobile descends with a lullaby on level-up.",
+          "チェック柄の毛布にナイトキャップの幽霊。動くと毛布の裾がさらさらと引きずられ、休むといびきをかき、レベルアップで星と月のモビールが子守唄とともに降りてきます。",
+          "裹着格子被子、戴着睡帽的幽灵。移动时被角沙沙拖地，静止时打起呼噜，升级时星星月亮挂饰伴着摇篮曲缓缓降下。");
         S("도깨비불", "Will-o'-the-Wisp", "鬼火", "鬼火");
         S("청록 불꽃으로 타오르는 유령. 피격하면 불씨 튀는 소리가 납니다.",
           "A ghost burning with teal flames. Getting hit crackles like sparks.",

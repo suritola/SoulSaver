@@ -270,12 +270,12 @@ public partial class CharacterKit
         }
         // 틀에 든 인화 사본은 찢어짐
         PhTearCopiesIn(c, size);
-        Fx.Spawn("fx_flashframe", c3, size.y * 1.05f, PhFlashSafe(new Color(1f, 1f, 1f, 0.9f)), 24f, 0f, 20);
+        Fx.Spawn("fx_flashframe", c3, size.y * 1.05f, PhFlashSafe(SkinFx.FlashTint(new Color(1f, 1f, 1f, 0.9f))), 24f, 0f, 20);      // 신문 기자 스킨: 조금 노랗게 (설명 약속)
         if (!real) return n;
 
         RunCounters.Both("photo");
         if (phBosses.Count > 0 && n > 0) RunCounters.Both("photo.withboss");
-        Hostile.Play("clank", 0.3f, 1.7f * phStreakPitch);
+        Hostile.Play("shutter", 0.3f, 1.7f * phStreakPitch);      // 2026-11-04~ D2: 무기 스킨(일회용 · 필름 카메라)이 셔터 소리를 알아보게 (파형은 clank 그대로)
         PhRecord(cuts, cutN, n);
         SignatureSkills.PhOnShutter(c, size, n, master);
         if (master)

@@ -53,6 +53,13 @@ public class SpecialFeedback : MonoBehaviour
         PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
     }
 
+    // 2026-11-04~ 스킨 칸 소리 (SkinAudio 가 레시피로 합성한 클립 — 이 합성기 이름표 밖)
+    public void PlayClip(AudioClip c, float vol = 1f, float pitch = 1f)
+    {
+        if (oneShot == null || c == null) return;
+        PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+    }
+
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
     // 기본 음높이는 한 소스에서, 음높이를 바꾼 소리는 돌려 쓰는 소스 묶음에서 냄
     // 1.1~: 8 → 16개, 다 바쁘면 순번이 아니라 '가장 먼저 끝나는' 소스를 끊음 (방금 시작한 긴 소리가 잘리지 않게)
@@ -220,6 +227,8 @@ public class SpecialFeedback : MonoBehaviour
         Make("shimmer", 0.6f, (t, d, r) => (Sin(660f, t) + Sin(880f * (1f + t * 0.5f), t) * 0.6f + Sin(1320f, t) * 0.3f) * Decay(t, d, 1.5f) * 0.35f);
         // 쇠사슬 철컥
         Make("clank", 0.2f, (t, d, r) => (Sin(1870f, t) + Sin(2630f, t) * 0.7f + Sin(3410f, t) * 0.5f + Noise(r) * 0.3f) * Decay(t, d, 4f) * 0.35f);
+        // 2026-11-04~ 사진사 셔터 전용 (D2): clank 와 같은 파형 · 소리는 그대로 — clank 는 적 · 보스도 쓰는 공용이라 무기 스킨 판정에 못 넣음
+        Make("shutter", 0.2f, (t, d, r) => (Sin(1870f, t) + Sin(2630f, t) * 0.7f + Sin(3410f, t) * 0.5f + Noise(r) * 0.3f) * Decay(t, d, 4f) * 0.35f);
         // 유탄 발사 퉁
         Make("thump", 0.18f, (t, d, r) => Sin(Mathf.Lerp(160f, 60f, t / d), t) * Decay(t, d, 2f) * 0.8f);
         // 낮은 울림 (희생)

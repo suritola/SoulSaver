@@ -291,7 +291,7 @@ public partial class CharacterKit : MonoBehaviour
             int tier = AttackLook.Tier;
             bool wave = fx == "fx_swordwave";
             string look = AttackLook.LookFor(fx, Id == CharacterId.Clockmaker);
-            Sprite[] lf = look != null ? Fx.Frames(look) : null;
+            Sprite[] lf = look != null ? Fx.Frames(SkinFx.ShotSheet(look)) : null;      // 2026-11-04~ 무기 스킨 형태(W2) — 판정은 아래 Shape 가 원래 이름으로
             if (lf == null || lf.Length == 0) { lf = f; look = null; }
             float vis = size * (wave ? AttackLook.WaveMul(tier) : size >= 1.8f ? AttackLook.BigMul(tier) : AttackLook.SmallMul(tier));
             sr.sprite = lf[0];
@@ -591,6 +591,7 @@ public partial class CharacterKit : MonoBehaviour
         if (card[1] > 0) StartCoroutine(EchoArrow(dir, dmg * 0.5f, speed, 0.4f + 0.25f * draw, draw));
         // 활시위 "퉁" + 화살 "슉" (많이 당길수록 크고 묵직하게)
         Play("bowtwang", 0.55f + 0.35f * draw, 1.15f - 0.25f * draw);
+        SkinFx.OnAttack(start, dir);        // 2026-11-04~ D9: 활 놓기에 스킨 평타 신호 (AttackFired 는 늘리지 않음 — 사막 베타 표지판)
         Play("arrowfly", 0.3f + 0.4f * draw, 1f + 0.4f * draw);
         BowFired = true;
     }
@@ -791,6 +792,7 @@ public partial class CharacterKit : MonoBehaviour
 
     // 우클릭 조준 (전용 무기 궁극기 · 도적 출혈 돌진): 누르고 있는 동안 범위 · 경로를 보여 주고 떼면 발동
     bool ultAiming;
+    public bool UltAiming => ultAiming;     // 2026-11-04~ 커서 스킨 필살기 조준점 (HeroAim 없이 읽음)
     LineRenderer ultAimLine, ultAimRing;
 
     // 1.1.9~ 필살기 조준 · 발동 중인지 (「필살기 누르면 토글」이 헛누름을 풀 때 씀)
@@ -1677,7 +1679,7 @@ public class FlaskLob : MonoBehaviour
     public static void Throw(Vector3 from, Vector3 to, float time, float size, Color tint, System.Action<Vector3> onLand)
     {
         // 1.1.2: 새 플라스크 그림(시약색 병 · 흰 반짝임 · 어두운 외곽선) + 빛 무리 · 잔상, 보이는 크기 2.4 → 2.7 → 3배 (터지는 자리 판정은 그대로)
-        Sprite[] f = Fx.Frames("atk_flask");
+        Sprite[] f = Fx.Frames(SkinFx.ShotSheet("atk_flask"));      // 2026-11-04~ 무기 스킨 형태(W2) — 알파 모양이 같은 시트
         bool look = f.Length > 0;
         if (!look) f = Fx.Frames("fx_flask");
         size *= 1.5f;           // 날아가는 플라스크가 너무 작아 잘 안 보였음 (모든 플라스크 공통)

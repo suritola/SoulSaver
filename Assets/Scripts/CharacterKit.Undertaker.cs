@@ -137,7 +137,7 @@ public partial class CharacterKit
         public Vector2 trenchEnd;               // 도랑 끝 (고유 스킬 도랑 파기 · 없으면 pos)
         public float trenchLen;
         public GameObject go;
-        public SpriteRenderer floor, rim, trench;
+        public SpriteRenderer floor, rim, trench, skinLight;      // skinLight: 2026-11-04~ 스킨 구멍 빛 (설명 약속)
         public readonly List<UtTrap> traps = new List<UtTrap>(8);
         public readonly Dictionary<int, float> block = new Dictionary<int, float>();
     }
@@ -341,6 +341,21 @@ public partial class CharacterKit
         h.rim = rg.AddComponent<SpriteRenderer>();
         h.rim.sprite = UndertakerGrave.SpriteOf("fx_hole_rim");
         h.rim.enabled = false;
+        // 2026-11-04~ 캐릭터 · 무기 스킨 설명 약속 (묘지기 「구멍 가장자리에 랜턴 불빛」): 구멍 테 안쪽에 빛 — 테 · 크기 · 판정은 그대로
+        string holeLight = SkinFx.ObjectLook("hole");
+        if (holeLight != null && !pitfall && Hostile.Glow != null && ColorUtility.TryParseHtmlString(holeLight, out Color lc))
+        {
+            GameObject lg = new GameObject("SkinLight");
+            lg.transform.SetParent(h.go.transform, false);
+            SpriteRenderer lsr = lg.AddComponent<SpriteRenderer>();
+            lsr.sprite = Hostile.Glow;
+            lsr.color = new Color(lc.r, lc.g, lc.b, 0.55f * GameSettings.MyFxAlpha);
+            lsr.sortingLayerID = h.floor.sortingLayerID;
+            lsr.sortingOrder = h.floor.sortingOrder + 1;
+            float fw = h.floor.sprite != null ? h.floor.sprite.bounds.size.x : 1f;
+            lg.transform.localScale = Vector3.one * (fw * 0.7f / Mathf.Max(0.01f, Hostile.Glow.bounds.size.x));
+            h.skinLight = lsr;
+        }
         utHoles.Add(h);
         UtDrawHole(h);
         return h;
@@ -405,6 +420,7 @@ public partial class CharacterKit
         Color c = h.floor.color;
         c.a = a;
         h.floor.color = c;
+        if (h.skinLight != null) { Color l = h.skinLight.color; l.a = 0.55f * GameSettings.MyFxAlpha * a; h.skinLight.color = l; }      // 바닥과 같이 흐려짐
     }
 
     // ================================================================= 매 프레임 (LateUpdate)
