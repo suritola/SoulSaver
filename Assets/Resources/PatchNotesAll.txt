@@ -1,3 +1,102 @@
+@@@ v2.0.2
+# V2.0.2 — 스킨 92종 연출 전면 개편 · 상점 미리보기
+모든 스킨이 공격 · 명중 · 처치 · 걸음 · 필살기마다 고유한 그림과 소리를 냅니다. 상점 「미리보기」로 사기 전에 확인하세요.
+
+## 스킨 연출 전면 개편
+- 캐릭터 · 무기 · 이펙트 · 커서 스킨 92종 모두 공격 · 명중 · 처치 · 걸음 · 피격 · 필살기 순간마다 테마에 맞는 그림과 소리를 냅니다.
+- 등급이 높을수록 더 화려합니다. 희귀는 잔상과 필살기 시전 그림, 영웅은 움직이는 흔적과 필살기 화면 가장자리 액자, 전설은 늘 두르는 오라 · 위기 때 몸의 맥동 · 처치한 영혼 흡수 · 전용 필살기 시전 연출까지 더해집니다.
+- 무기 스킨 28종은 평타 모양 · 발사음 · 명중음이 스킨마다 바뀝니다. 공격 판정은 그대로입니다.
+- 커서 스킨은 메뉴 커서와 전투 조준점 모양이 바뀝니다.
+- 메뉴의 영웅 초상이 끼운 스킨에 맞게 움직입니다.
+- 스킨 설명을 실제 연출에 맞게 다시 썼습니다.
+
+## 스킨 상점 미리보기
+- 「미리보기」를 누르면 고른 스킨으로 실제 공격 · 명중 · 처치 · 피격 · 필살기를 소리와 함께 보여 줍니다.
+- 스킨이 바꾸는 순간을 칩으로 보여 주고, 칩을 누르면 그 순간만 다시 볼 수 있습니다.
+- 무기 스킨은 손에 든 무기와 실제 평타 그림으로 보여 줍니다.
+
+## 버그 수정 · 편의성
+- 스킨 발소리를 약 1/3 크기로 줄였습니다.
+- 사진사 평타 범위표시(초점 원) 무늬가 뭉개져 보이던 문제
+- 커서 스킨을 끼우면 필살기 조준 중 오류가 계속 쌓이던 문제
+- 레벨업 카드의 진화 줄 글자가 겹치던 문제
+
+플레이해 주셔서 감사합니다!
+
+=== en
+# V2.0.2 — All 92 Skins Revamped · Skin Shop Preview
+Every skin has its own visuals and sounds for attacks, hits, kills, steps and ultimates. Try them in the shop first.
+
+## Skin Effects Revamp
+- All 92 character, weapon, effect and cursor skins now show themed visuals and sounds on attacks, hits, kills, footsteps, taking damage and ultimates.
+- Higher tiers look better. Rare adds afterimages and an ultimate cast image, Epic adds moving trails and a screen-edge frame on ultimates, and Legendary adds a constant aura, a pulse when you are in danger, absorbed souls on kills and its own ultimate cast effect.
+- Each of the 28 weapon skins changes the basic attack's look, firing sound and hit sound. Hitboxes are unchanged.
+- Cursor skins change both the menu cursor and the combat crosshair.
+- Hero portraits in the menu now animate to match the equipped skin.
+- Skin descriptions were rewritten to match what they actually do.
+
+## Skin Shop Preview
+- Press "Preview" to watch the selected skin attack, hit, kill, take damage and cast its ultimate, with sound.
+- Chips list every moment the skin changes; click one to replay just that moment.
+- Weapon skins are shown with the weapon in hand and the real basic attack.
+
+## Fixes & Quality of Life
+- Skin footsteps are now about 1/3 as loud.
+- The Photographer's basic attack range marker (focus ring) looked smeared
+- With a cursor skin equipped, errors kept piling up while aiming an ultimate
+- Overlapping text on the evolution line of level-up cards
+
+Thanks for playing!
+
+=== ja
+# V2.0.2 — スキン92種の演出を一新・ショッププレビュー
+すべてのスキンが攻撃・命中・撃破・足音・必殺技ごとに専用の見た目とサウンドに。ショップの「プレビュー」で購入前に確認できます。
+
+## スキン演出の一新
+- キャラクター・武器・エフェクト・カーソルのスキン92種すべてが、攻撃・命中・撃破・足音・被弾・必殺技の瞬間にテーマに合った見た目とサウンドを出します。
+- 等級が高いほど華やかになります。レアは残像と必殺技の発動画像、エピックは動く軌跡と必殺技の画面ふちの額縁、レジェンドは常にまとうオーラ・ピンチ時の体の脈動・撃破した魂の吸収・専用の必殺技発動演出が加わります。
+- 武器スキン28種は、通常攻撃の形・発射音・命中音がスキンごとに変わります。攻撃判定は変わりません。
+- カーソルスキンはメニューのカーソルと戦闘の照準の形が変わります。
+- メニューのヒーローの肖像が装備したスキンに合わせて動きます。
+- スキンの説明を実際の演出に合わせて書き直しました。
+
+## スキンショップのプレビュー
+- 「プレビュー」を押すと、選んだスキンで実際の攻撃・命中・撃破・被弾・必殺技をサウンド付きで見せます。
+- スキンが変える瞬間をチップで表示し、チップを押すとその瞬間だけをもう一度見られます。
+- 武器スキンは手に持った武器と実際の通常攻撃で見せます。
+
+## 不具合の修正・使いやすさ
+- スキンの足音を約1/3の大きさにしました。
+- 写真家の通常攻撃の範囲表示（フォーカスの円）の模様がつぶれて見えた問題
+- カーソルスキンを装備すると、必殺技の照準中にエラーがたまり続けた問題
+- レベルアップカードの進化の行の文字が重なった問題
+
+プレイしていただきありがとうございます！
+
+=== zh
+# V2.0.2 — 92款皮肤特效全面改版 · 商店预览
+所有皮肤在攻击、命中、击杀、脚步与必杀技时都有专属画面与音效。可在商店「预览」中先试看再购买。
+
+## 皮肤特效全面改版
+- 角色、武器、特效、光标共92款皮肤，在攻击、命中、击杀、脚步、受击与必杀技的瞬间都会呈现符合主题的画面与音效。
+- 品质越高越华丽。稀有增加残影与必杀技施放图，史诗增加移动轨迹与必杀技画面边框，传说再加上常驻光环、危急时的身体脉动、吸收击杀的灵魂与专属必杀技施放演出。
+- 28款武器皮肤会改变普通攻击的外形、发射音与命中音。攻击判定不变。
+- 光标皮肤会改变菜单光标与战斗准星的样子。
+- 菜单中的英雄头像会随装备的皮肤动起来。
+- 按实际效果重写了皮肤说明。
+
+## 皮肤商店预览
+- 点击「预览」，即可带音效观看所选皮肤的实际攻击、命中、击杀、受击与必杀技。
+- 以标签列出皮肤改变的每个瞬间，点击标签可单独重看该瞬间。
+- 武器皮肤会以手持武器与实际普通攻击展示。
+
+## 问题修复 · 便利性
+- 皮肤脚步声减小到约1/3。
+- 摄影师普通攻击范围标示（对焦圈）花纹看起来模糊
+- 装备光标皮肤后，瞄准必杀技时错误不断累积
+- 升级卡片进化行文字重叠
+
+感谢游玩！
 @@@ v2.0.1
 # V2.0.1 — 메인 메뉴 개편 · 역류 · 릴레이 버그 수정
 메인 메뉴를 깔끔하게 정리하고, 창을 닫으면 3초 뒤에 다시 시작합니다. 역류가 끝나지 않던 문제 등 많은 버그를 고쳤습니다.
@@ -28,7 +127,7 @@
 
 === en
 # V2.0.1 — Main Menu Revamp · Reflux & Relay Fixes
-A cleaner main menu, a 3-second countdown when you close a window, and many bug fixes including Reflux runs that never ended.
+A cleaner main menu, a 3-second resume countdown, and many fixes, including Reflux runs that never ended.
 
 ## Main Menu
 - The menu is now just Start, Challenges, Heroes · Skins, Codex and Settings. "More" is gone.
