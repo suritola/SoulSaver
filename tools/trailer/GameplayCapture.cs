@@ -2680,26 +2680,62 @@ public class GameplayCapture
         rec.sub.text = "";
         rec.black.color = new Color(0f, 0f, 0f, 0f);
         yield return Load(Environment.GetEnvironmentVariable("CAPTURE_HERO") ?? "Gunner", 0);
+        // 창 모드에선 장 시작 이야기 장면이 나옴 (배치 모드는 저절로 건너뜀) — 건너뛰고 끝날 때까지 기다림 (연출 중엔 카운트다운을 세지 않는 게 정상)
+        float calmSince = -1f;          // 창이 늦게 뜨기도 함 (각인 고르기) — 아무 창 없이 2초 흐르면 시작
+        for (float t0w = Time.realtimeSinceStartup; Time.realtimeSinceStartup - t0w < 40f;)
+        {
+            bool story = (bool)T("StoryDirector").GetProperty("Playing").GetValue(null), herald = (bool)T("Herald").GetProperty("Playing").GetValue(null);
+            bool choice = (bool)T("ChoiceUI").GetProperty("Open").GetValue(null), guide = (bool)T("HeroGuide").GetProperty("IsOpen").GetValue(null);
+            object ls = Find("LevelShop");
+            bool lvl = ls != null && (bool)ls.GetType().GetProperty("IsOpen").GetValue(ls);
+            if (!story && !herald && !choice && !guide && !lvl && Time.timeScale > 0f)
+            {
+                if (calmSince < 0f) calmSince = Time.realtimeSinceStartup;
+                if (Time.realtimeSinceStartup - calmSince > 2f) break;
+                yield return null;
+                continue;
+            }
+            calmSince = -1f;
+            if (story && Find("StoryDirector") is object sd) Set(sd, "skip", true);
+            if (choice && Find("ChoiceUI") is object cu && (bool)Get(cu, "ready")) Set(cu, "confirmed", 0);       // 영혼 각인 등 첫 카드
+            if (guide) foreach (UnityEngine.UI.Button b in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None))
+                    if (b.GetComponentInChildren<TMP_Text>()?.text.Contains("시작") == true) { b.onClick.Invoke(); break; }      // 영웅 안내 「시작!」
+            if (lvl) ConfirmCard(ls, 0);
+            yield return null;
+        }
         yield return new WaitForSecondsRealtime(2f);
-        Shot("pause_0_play");
+        yield return PShot("pause_0_play");
         object esc = Find("ESCmenu");
         Call(esc, "ToggleEsc");
         yield return new WaitForSecondsRealtime(0.8f);
-        Shot("pause_1_menu");
+        yield return PShot("pause_1_menu");
         Call(esc, "onPressResume");
         float t0 = Time.realtimeSinceStartup;
         int n = 0;
         foreach (float at in new[] { 0.3f, 1.3f, 2.3f })
         {
             while (Time.realtimeSinceStartup - t0 < at) yield return null;
-            Shot("pause_2_count" + (++n));
+            yield return PShot("pause_2_count" + (++n));
             Debug.Log("[CAP] count" + n + " active=" + rc.GetProperty("Active").GetValue(null) + " timeScale=" + Time.timeScale);
         }
         yield return new WaitForSecondsRealtime(1.2f);
-        Shot("pause_3_after");
+        yield return PShot("pause_3_after");
         Debug.Log("[CAP] done active=" + rc.GetProperty("Active").GetValue(null) + " timeScale=" + Time.timeScale);
         rc.GetField("InCapture").SetValue(null, false);
         T("SkinFx").GetField("InCapture").SetValue(null, false);
+    }
+
+    // 배치 모드면 카메라로 (캔버스를 카메라 모드로 바꿔 찍음) · 창 모드(record.ps1 -Real)면 실제 화면 그대로 (Overlay 캔버스 순서까지 게임과 같게)
+    static IEnumerator PShot(string name)
+    {
+        if (Application.isBatchMode) { Shot(name); yield break; }
+        yield return new WaitForEndOfFrame();
+        Texture2D t = ScreenCapture.CaptureScreenshotAsTexture();
+        string path = Path.Combine(Out, "screenshots", name + ".png");
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        File.WriteAllBytes(path, t.EncodeToPNG());
+        UnityEngine.Object.Destroy(t);
+        Debug.Log("[CAP] " + name + " (화면 " + Screen.width + "x" + Screen.height + ")");
     }
 
     static IEnumerator Delayed(float s, Action a) { yield return F(s); a(); }

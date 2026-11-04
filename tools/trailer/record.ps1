@@ -14,6 +14,7 @@ param(
     [string[]]$Lang = @("en"),              # en · ko · ja · zh (쉼표로 여러 개)
     [int]$Fps = 30,
     [ValidateSet("Low", "Medium", "High")][string]$Quality = "Medium",
+    [switch]$Real,                          # -Mode pause: 배치 모드 없이 에디터 창에서 실제 화면 그대로 찍음
     [switch]$Captions,                      # 2026-10-18~ 기본은 자막 없음 · 자막이 필요할 때만 -Captions
     [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
@@ -62,7 +63,7 @@ foreach ($l in $Lang) {
     $log = Join-Path $Work "capture.log"
     Write-Host "촬영 중: $l ($Fps fps · $Quality, 로그: $log)"
     $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
-        "-batchmode", "-projectPath", "`"$CopyDir`"",
+        $(if ($Real) { "-silent-crashes" } else { "-batchmode" }), "-projectPath", "`"$CopyDir`"",
         "-runTests", "-testPlatform", "PlayMode", "-testFilter", $(if ($Mode -eq "pause") { "GameplayCapture.PauseShot" } elseif ($Mode -eq "skin") { "GameplayCapture.SkinClip" } elseif ($Mode -eq "highlight") { "GameplayCapture.HighlightReel" } elseif ($Mode -eq "reddit") { "GameplayCapture.RedditClip" } else { "GameplayCapture.Capture" }),
         "-testResults", "`"$(Join-Path $Work 'capture-results.xml')`"",
         "-logFile", "`"$log`"")
