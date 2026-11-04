@@ -170,12 +170,14 @@ public class ResumeCountdown : MonoBehaviour
         dim.color = new Color(0.03f, 0.02f, 0.05f, 0.5f);
         dim.raycastTarget = false;
         ui = root.gameObject;
-        num = UIKit.Text(root, "", 210f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(400f, 260f));
-        RectTransform band = UIKit.Rect("HintBand", root, new Vector2(0f, 110f), new Vector2(560f, 66f));      // 안내 뒤 어두운 띠 (적 · 탄 위에서도 읽히게)
-        UnityEngine.UI.Image bi = band.gameObject.AddComponent<UnityEngine.UI.Image>();
-        bi.color = new Color(0.03f, 0.02f, 0.05f, 0.78f);
-        bi.raycastTarget = false;
-        hint = UIKit.Text(root, "", 38f, Color.white, new Vector2(0f, 110f), new Vector2(900f, 60f));
+        // 2.0.3~ 숫자 · 안내를 한 판 위에 (사용자 「둘 다 배경 넣어서 더 잘 보이게」) — 창 틀 그림(금 테 · 어두운 돌), 없으면 어두운 판 · 영웅 머리 위
+        RectTransform panel = UIKit.Rect("Panel", root, new Vector2(0f, 235f), new Vector2(600f, 340f));
+        UnityEngine.UI.Image pi = panel.gameObject.AddComponent<UnityEngine.UI.Image>();
+        if (UIKit.PanelSprite != null) { pi.sprite = UIKit.PanelSprite; pi.type = UnityEngine.UI.Image.Type.Sliced; pi.color = Color.white; }
+        else pi.color = new Color(0.05f, 0.03f, 0.08f, 0.92f);
+        pi.raycastTarget = false;
+        num = UIKit.Text(panel, "", 200f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 40f), new Vector2(400f, 230f));
+        hint = UIKit.Text(panel, "", 38f, Color.white, new Vector2(0f, -115f), new Vector2(560f, 60f));
         foreach (TMP_Text t in new[] { num, hint })
         {
             t.outlineWidth = 0.25f;
