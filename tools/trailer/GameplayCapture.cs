@@ -1301,7 +1301,7 @@ public class GameplayCapture
         return b;
     }
 
-    // 전설 스킨 장착 (복사본 에디터 PlayerPrefs 에만 저장됨 · 끝나면 지움)
+    // 전설 스킨 장착 (복사본의 게임 저장소 Prefs 에만 저장됨 · 끝나면 지움)
     static readonly List<string> skinKeys = new List<string>();
     static void WearLegend(int who)
     {
@@ -1310,11 +1310,19 @@ public class GameplayCapture
         {
             if (Convert.ToInt32(Get(s, "tier")) != 3 || Convert.ToInt32(Get(s, "who")) != who || Get(s, "kind").ToString() == "Effect") continue;
             string id = (string)Get(s, "id");
-            PlayerPrefs.SetInt("skin.own." + id, 1);
+            T("Prefs").GetMethod("SetInt").Invoke(null, new object[] { "skin.own." + id, 1 });     // 게임 저장소(Prefs) — PlayerPrefs 에 쓰면 Owns 가 거짓이라 Equip 이 무시됨
             skinKeys.Add("skin.own." + id);
             skinKeys.Add("skin.eq." + Convert.ToInt32(Get(s, "kind")) + "." + who);
             sd.GetMethod("Equip").Invoke(null, new[] { s });
         }
+    }
+
+    static void ClearSkins()
+    {
+        Type pf = T("Prefs");
+        foreach (string k in skinKeys) pf.GetMethod("DeleteKey").Invoke(null, new object[] { k });
+        skinKeys.Clear();
+        pf.GetMethod("Save").Invoke(null, null);
     }
 
     static void BuildOverlay()
@@ -2297,8 +2305,7 @@ public class GameplayCapture
 
         rec.End();
         Time.timeScale = 1f;
-        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
-        PlayerPrefs.Save();
+        ClearSkins();
         Time.captureFramerate = 0;
         In("Auto", false);
         Debug.Log("[CAP] done frames=" + rec.frames + " (" + (rec.frames / (float)Fps).ToString("0.0") + "s)");
@@ -2458,8 +2465,7 @@ public class GameplayCapture
         for (int i = 0; i < tail; i++) { rec.musicVolume = 1f - i / (float)tail; yield return null; }
 
         rec.End();
-        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
-        PlayerPrefs.Save();
+        ClearSkins();
         Time.captureFramerate = 0;
         Time.timeScale = 1f;
         In("Auto", false);
@@ -2597,8 +2603,7 @@ public class GameplayCapture
         for (int i = 0; i < n; i++) { rec.musicVolume = 1f - i / (float)n; yield return null; }
 
         rec.End();
-        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
-        PlayerPrefs.Save();
+        ClearSkins();
         Time.captureFramerate = 0;
         Time.timeScale = 1f;
         In("Auto", false);
@@ -2643,8 +2648,7 @@ public class GameplayCapture
         yield return F(4.5f);
         rec.End();
         tap.SetValue(null, null);
-        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
-        PlayerPrefs.Save();
+        ClearSkins();
         Time.captureFramerate = 0;
         In("Auto", false);
         Debug.Log("[CAP] done frames=" + rec.frames);
