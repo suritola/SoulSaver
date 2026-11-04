@@ -2606,5 +2606,50 @@ public class GameplayCapture
         yield return null;
     }
 
+    // 스킨 장면: 영웅 하나에 전설 스킨을 입혀 평타 → 우클릭 스킬 두 번 (record.ps1 -Mode skin -Hero Ghost)
+    [UnityTest]
+    public IEnumerator SkinClip()
+    {
+        LogAssert.ignoreFailingMessages = true;
+        Directory.CreateDirectory(Out);
+        Time.captureFramerate = Fps;
+        In("Auto", true);
+        AudioListener.volume = 0f;
+        SetGameLanguage(Lang);
+        string hero = Environment.GetEnvironmentVariable("CAPTURE_HERO") ?? "Ghost";
+        int who = (int)Enum.Parse(T("CharacterId"), hero);
+        GameObject host = new GameObject("CaptureRec");
+        UnityEngine.Object.DontDestroyOnLoad(host);
+        rec = host.AddComponent<Rec>();
+        rec.musicPath = "Music/bgm_boss";
+        rec.musicVolume = 0.3f;
+        // 게임이 실제로 낸 소리(스킨 소리 포함)를 그대로 엿들어 얹음 — rich 의 추정 소리와 겹치지 않게 rich 는 끔
+        FieldInfo tap = T("SpecialFeedback").GetField("Tapped", Any);
+        tap.SetValue(null, (Action<AudioClip, float, float>)((c, v, p) => { if (c != null && rec.recording) rec.Sfx(c, v, p); }));
+        BuildOverlay();
+        rec.sub.text = "";
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+        WearLegend(who);
+        yield return Load(hero, 2);
+        rec.autopilot = true;
+        yield return F(1.0f);
+        rec.Begin(Path.Combine(Out, "SoulSaver_Skin_" + hero + ".mp4"));
+        rec.recording = true;
+        yield return F(6f);                         // 평타
+        yield return Ult(0.8f);                     // 우클릭 스킬
+        yield return F(4.5f);
+        yield return F(2f);
+        yield return Ult(0.8f);
+        yield return F(4.5f);
+        rec.End();
+        tap.SetValue(null, null);
+        foreach (string k in skinKeys) PlayerPrefs.DeleteKey(k);
+        PlayerPrefs.Save();
+        Time.captureFramerate = 0;
+        In("Auto", false);
+        Debug.Log("[CAP] done frames=" + rec.frames);
+        yield return null;
+    }
+
     static IEnumerator Delayed(float s, Action a) { yield return F(s); a(); }
 }
