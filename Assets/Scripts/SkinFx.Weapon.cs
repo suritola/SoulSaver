@@ -6,8 +6,9 @@ public partial class SkinFx
 {
     void WeaponFire(Vector3 origin, Vector2 dir, int kind)
     {
-        if (WeaponLook == null || kind == 1 || !SlotReady("fire.fx", 0.12f)) return;
-        string fx = WeaponLook.Fx("fire");
+        if (WeaponLook == null || !SlotReady(kind == 1 ? "tick.fx" : "fire.fx", kind == 1 ? 0.2f : 0.12f)) return;
+        // 틱(공사 반장 밀기 · 누르는 동안)은 표에 tick 칸이 있을 때만 그림 (빗자루 「쓸 때 흙알」 · 쇠스랑 「휘두르면 불티」)
+        string fx = WeaponLook.Fx(kind == 1 ? "tick" : "fire");
         if (fx != null) Emit(fx, WeaponLook, origin, dir, true, 60, Bud.Rep);
     }
 

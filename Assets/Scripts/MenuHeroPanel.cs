@@ -83,6 +83,7 @@ public static class MenuHeroPanel
         img.sprite = face;
         img.preserveAspect = true;
         img.raycastTarget = false;
+        SkinPortraitFx.Attach(pr, img, SkinData.Equipped(SkinKind.Character, (int)id));       // C17: 영웅 · 전설 스킨의 초상 둘레 움직임
         if (d.body == null && !hires)       // 메뉴 초상은 권총을 그림 안에 그림 (덧그림 권총은 10.3 화소/칸 — 세 번째 밀도였음)
         {
             // 거너는 권총을 따로 그려 줌 (캐릭터 그림에는 총이 없음 · 캐릭터 창과 같게) — 1.4.8~ 초상 크기(320 → 190)에 비례

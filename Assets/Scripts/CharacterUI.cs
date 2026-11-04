@@ -296,7 +296,7 @@ public static class CharacterUI
         Image img = pr.gameObject.AddComponent<Image>();
         img.sprite = MenuPortrait(id);
         img.preserveAspect = true;
-        if (unlocked) img.color = Color.white;
+        if (unlocked) { img.color = Color.white; SkinPortraitFx.Attach(pr, img, SkinData.Equipped(SkinKind.Character, (int)id)); }      // C17 스킨 초상 움직임
         else Silhouette(img, 3f);
         if (d.body == null && unlocked && !IsMenuPortrait(img.sprite))
         {

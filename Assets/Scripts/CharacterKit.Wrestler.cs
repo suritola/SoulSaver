@@ -602,6 +602,7 @@ public partial class CharacterKit
         }
         if (dir.sqrMagnitude < 0.01f) dir = body != null && body.flipX ? Vector2.left : Vector2.right;
         Vector3 from = e.transform.position;
+        SkinFx.OnObject("throw", transform.position + (Vector3)(dir.normalized * 0.8f) + Vector3.up * 0.4f, dir);      // 스킨 메치는 순간 (청동 쇳소리 · 밧줄 누런빛 · 비단 띠 — 설명 약속)
         bool inRing = WrInRing(transform.position);
         WrWeight w = WrWeightOf(e, true);
         float mul = SignatureSkills.WrThrowMul(wrComboCount);

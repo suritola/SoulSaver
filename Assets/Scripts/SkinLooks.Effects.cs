@@ -66,14 +66,15 @@ public static partial class SkinLooks
           "tail: ember",
           "aimhit: flicker");
 
-        // ---- 영혼 커서 (영웅 6칸): 클릭 영혼 연기 · 「휘잉」 · 호버 속삭임 · 연기 꼬리 · 조준점 둘레 푸른 빛 · 필살기 조준 중 영혼 눈(근사: 해골 글리프)
+        // ---- 영혼 커서 (영웅 6칸): 클릭 영혼 연기 · 「휘잉」 · 호버 속삭임 · 연기 꼬리 · 조준점 둘레 푸른 빛 · 필살기 조준 중 영혼 눈 + 「우웅」
         L("cursor_soul", "#975EEB", "#8CD8FF",
           "click: smoke 2",
           "click~ wind 0.15 f2500",
           "hover~ breath 0.08",
           "tail: smoke",
           "aimhit: glow",
-          "ultaim: skull");
+          "ultaim: souleye",
+          "ultaim~ sine 220 0.45 x0.8; sine 223 0.45; sine 110 0.3 x0.4");      // 조준 시작 낮은 「우웅」 (맥놀이)
 
         // ---- 황금 커서 (전설 7칸): 클릭 금화 반짝 · 「팅」 · 호버 「짤랑」 · 금가루 꼬리 · 조준점 금빛 「팅」 · 왕관 조준점 · 메뉴 금가루가 커서로 모임
         L("cursor_gold", "#F5C74F", "#FFF2B0",
@@ -83,6 +84,7 @@ public static partial class SkinLooks
           "tail: spark",
           "aimhit: ting",
           "ultaim: crown",
+          "ultaim~ bell 2600 0.35; chime 3200 0.2 @0.05 x0.4",      // 조준 시작 금 「띵」
           "dust: spark");
     }
 }

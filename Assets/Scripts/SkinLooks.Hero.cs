@@ -6,6 +6,7 @@ public static partial class SkinLooks
     {
         // ---- 거너: 유령 총잡이 「메아리치는 서부」
         L("gunner_nogun__ghost", "#B3F2FF", "#DDEFFF",
+          "menu: ghost body 1 x=0.06 c=m al=0.8",       // 메뉴 초상 (C17)
           "step: rise fx_smoke 1 0.6 1.0 h=0.3 r=0.1 at=feet al=0.7",
           "step~ wood 700 0.02; wood 700 0.02 @0.12 x0.4",
           "start: ghost body 1 1 0.35 al=0.5; puff fx_smoke 2 0.5 0.35 r=0.4 at=feet",
@@ -37,6 +38,7 @@ public static partial class SkinLooks
 
         // ---- 검사: 성기사 「빛의 서약」
         L("swordsman__paladin", "#FFEB99", "#5A8CE6",
+          "menu: pulse glow 1 1.1 c=a",       // 메뉴 초상 (C17)
           "step: mark boot 1 0.6 1.0; mark boot 1 0.5 1.0 c=w; rise spark 1 0.15 0.6 h=0.8 r=0.1 at=feet",
           "step~ metal 1600 0.04; chime 2600 0.05 x0.3",
           "start: spray ribbon 2 0.35 0.35 r=1 c=a; burst spark 3 0.12 0.35 r=0.8",
@@ -69,6 +71,7 @@ public static partial class SkinLooks
 
         // ---- 도적: 닌자 「흔적 없는 자」 (무음 걸음 — 아주 작은 바람 · opt quiet)
         L("rogue__ninja", "#4D66CC", "#D93A3A",
+          "menu: drift smoke 4 0.18 c=m al=0.7",       // 메뉴 초상 (C17)
           "opt: quiet",
           "step: rise fx_smoke 1 0.35 0.6 h=0.3 r=0.05 at=feet al=0.35",
           "step~ wind 0.04 f3000",
@@ -105,6 +108,7 @@ public static partial class SkinLooks
 
         // ---- 궁수: 엘프 레인저 「새싹 길」
         L("archer__elf", "#59E680", "#E6D36A",
+          "menu: fall leaf 5 0.05 c=m",       // 메뉴 초상 (C17)
           "step: mark herb 1 0.5 1.0; pop leaf 1 0.25 0.6 h=0.3 g=6 at=feet",
           "step~ wind 0.06 f5000; chime 3000 0.05 x0.2",
           "start: column leaf 6 0.3 0.4 r=0.6 h=2",
@@ -139,6 +143,7 @@ public static partial class SkinLooks
 
         // ---- 연금술사: 수은 학자 「흐르는 금속」
         L("alchemist__mercury", "#BFD9F2", "#4AA8E6",
+          "menu: blink star4 1 0.07 x=0.04 y=0.27 c=w",       // 메뉴 초상 (C17)
           "step: mark shoe 1 0.5 1.0 c=#9AA8B8; absorb drop 2 0.3 0.5 r=2 at=feet",
           "step~ glass 0.04 n2; drop 1800>2600 0.03 @0.02 x0.6",
           "start: burst drop 6 0.3 0.4 r=1.2 g=6",
@@ -171,6 +176,7 @@ public static partial class SkinLooks
 
         // ---- 지도 제작자: 별지도꾼 「걸으면 별자리가 노래」 (걸음마다 5음 음계 한 음 · 별끼리 잇는 선 없음 L12)
         L("cartographer__starmap", "#F2D966", "#2A3A80",
+          "menu: twinkle star4 6 0.045 c=m",       // 메뉴 초상 (C17)
           "step: flash star4 1 0.35 0.6 at=feet",
           "step~ chime 2093 0.04 | chime 2349 0.04 | chime 2637 0.04 | chime 3136 0.04 | chime 3520 0.04",
           "start: column star4 6 0.2 0.4 r=0.5 h=2",
@@ -202,6 +208,7 @@ public static partial class SkinLooks
 
         // ---- 시계공: 뻐꾸기 시계 「정시를 알리는 새」 (추 똑 · 딱 번갈아 · 4걸음마다 추가 크게 흔들림)
         L("clockmaker__cuckoo", "#66B366", "#8A5A30",
+          "menu: pop cuckoo 1 0.14 x=0.36 y=0.2 c=#C89060",       // 메뉴 초상 (C17)
           "step: mark shoe 1 0.5 1.0; burst shard 1 0.12 0.4 r=0.3 g=6 at=feet c=a",
           "step~ wood 800 0.03 | wood 600 0.03",
           "stepn: 4",
@@ -236,6 +243,7 @@ public static partial class SkinLooks
 
         // ---- 우체부: 택배 기사 「배송 완료」 (12걸음마다 바코드 삑)
         L("postman__courier", "#FF9926", "#E6FF4D",
+          "menu: blink mobile 1 0.1 x=0.33 c=#70FF90",       // 메뉴 초상 (C17)
           // 근사: 갈색 포장 테이프 조각 → 갈색 종잇조각 (fx_tape 는 L5)
           "step: mark shoe 1 0.5 1.0; float paper 1 0.25 1.0 at=feet x=0.25 c=#A07040; flash glow 1 0.25 0.2 at=feet c=a al=0.6",
           "step~ wood 1200 0.02; wood 1200 0.02 @0.05 x0.6",
@@ -269,6 +277,7 @@ public static partial class SkinLooks
 
         // ---- 유령: 심해 유령 「깊은 물」
         L("ghost__deepsea", "#40E6BF", "#FFE680",
+          "menu: pulse glow 1 0.3 x=0.22 y=0.1 c=a",       // 메뉴 초상 (C17)
           "step: rise bubble 2 0.25 1.0 h=0.8 r=0.2 at=feet",
           "step~ bubble 0.06 f25",
           "start: spray glow 3 0.2 0.35 r=1.2 al=0.6; burst bubble 3 0.2 0.35 r=0.8",
@@ -299,6 +308,7 @@ public static partial class SkinLooks
 
         // ---- 씨름꾼: 묘역의 장사 「묘역 씨름판」 (뼈는 보조색 뼛빛 · 혼은 녹색)
         L("wrestler__crypt", "#8CFFB3", "#E8E0C8",
+          "menu: pop skull 1 0.1 y=-0.05 c=w",       // 메뉴 초상 (C17)
           "step: mark clawfoot 1 0.55 1.0 c=a; rise dot 1 0.12 0.6 h=0.6 r=0.1 at=feet",
           "step~ bone 1500 0.03",
           "start: burst dust 4 0.15 0.35 r=0.8 c=a; puff fx_smoke 1 0.6 0.35 al=0.5",
@@ -329,6 +339,7 @@ public static partial class SkinLooks
 
         // ---- 공사 반장: 지옥 공사 「지옥의 대장간」 (fx_dust · fx_rubble 금지 · 평타 그림은 덤프 때만)
         L("foreman__hell", "#FF611A", "#FFC040",
+          "menu: rise ember 6 0.04 c=m",       // 메뉴 초상 (C17)
           "step: mark workboot 1 0.55 1.0 c=#2A2020; rise ember 1 0.15 0.7 h=0.8 r=0.1 at=feet",
           "step~ fire 0.05",
           "start: burst ember 5 0.15 0.4 r=1.2 g=-2; puff fx_smoke 1 0.7 0.4 c=k al=0.6",
@@ -357,9 +368,10 @@ public static partial class SkinLooks
           "win: fountain ember 24 0.2 1.8 r=1.2 h=5 c=a; rise anvil 1 1.2 2 h=0.5 r=0 c=#504040",
           "win~ metal 1800 0.05; metal 1800 0.05 @0.2; metal 2000 0.05 @0.4; roar 110 0.6 @0.6");
 
-        // ---- 인형사: 묘역 인형사 「해골 인형극」 (설명 약속: 더미 = 해골 인형 — dummy 뼛빛 · 휘두를 때 뼈 달그락 — acc 소리 · 줄 그림 없음 L12)
+        // ---- 인형사: 묘역 인형사 「해골 인형극」 (설명 약속: 더미 = 해골 인형 = weapon_dummy__puppeteer__crypt 그림 · 휘두를 때 뼈 달그락 — acc(더미 자리) · 줄 = 녹색 영혼불 실 결)
         L("puppeteer__crypt", "#59E6A6", "#E8E0C8",
-          "dummy: #E8E0C8",
+          "menu: sway ribbon 1 0.25 y=0.45 c=m",       // 메뉴 초상 (C17)
+          "string: soul #59E6A6",
           // 근사: 녹색 실 매듭 → 녹색 점이 위로 당겨짐
           "step: rise dot 1 0.25 0.6 h=0.3 r=0 at=feet",
           "step~ pluck 1600 0.03; bone 1600 0.02 @0.02 x0.5",
@@ -392,7 +404,9 @@ public static partial class SkinLooks
           "win~ bone 1046,1318,1568,1318,2093 0.12");
 
         // ---- 장의사: 지옥 장의사 「지옥의 장례」 (설명 약속: 묘비 불꽃 표식은 물체 교체 미지원 → 구멍 안 불빛 주황 · 화환 · 유황 · 검은 백합)
+        // 설명 약속 「묘비가 불꽃 표식」 = prop_grave*__undertaker__hell 그림 · 「구덩이 안 주황빛」 = hole
         L("undertaker__hell", "#FF7326", "#E6C840",
+          "menu: rise smoke 4 0.12 y=-0.05 c=#C8B040 al=0.6",       // 메뉴 초상 (C17)
           "hole: #FF8A30",
           "step: mark mudfoot 1 0.55 1.0 c=#2A2020; rise fx_smoke 1 0.35 0.8 h=0.6 r=0.05 at=feet c=a al=0.6",
           "step~ thud 90>60 0.06; sand 3000 0.05 @0.03 x0.4",
@@ -421,9 +435,11 @@ public static partial class SkinLooks
           "win: rise wreath 1 1.6 2 h=1 r=0 y=0.6 at=head; fall petal 20 0.25 2 h=4 r=1.5 c=k",
           "win~ bell 220 0.5; bell 220 0.5 @0.4; bell 220 0.6 @0.8; fire 0.8 @0.1 x0.5");
 
-        // ---- 사진사: 유령 사진가 「심령 사진」 (설명 약속: 보라 플래시 — flash 색)
+        // ---- 사진사: 유령 사진가 「심령 사진」 (설명 약속: 보라 플래시 — flash 색 · 찍힌 적 뒤 희미한 영혼 — snap soul)
         L("photographer__ghost", "#B38CFF", "#C8A878",
+          "menu: ghost body 1 x=0.18 c=m al=0.6",       // 메뉴 초상 (C17)
           "flash: #B48CFF",
+          "snap: soul",
           "step: rise fx_smoke 1 0.3 0.8 h=0.5 r=0.05 at=feet al=0.5",
           "step~ sine 600 0.03; sine 600 0.03 @0.14 x0.35",
           "start: ghost body 1 1 0.35 x=0.3 al=0.4; ghost body 1 1 0.35 x=-0.3 al=0.4",

@@ -155,6 +155,7 @@ public class CursorSkin : MonoBehaviour
     static Texture2D[] hitTex;
     static Texture2D ultTex;
     static float hitAt = -9f;
+    static bool ultWas;
     static readonly string[] hitNames = { "skin_aim_hit_0", "skin_aim_hit_1", "skin_aim_hit_2" };
 
     static bool SkinOn => GameSettings.GameCursor && look != null && !VisualRules.Legacy && !Application.isBatchMode;
@@ -171,7 +172,11 @@ public class CursorSkin : MonoBehaviour
         tex = null;
         if (!SkinOn) return null;
         // P5 필살기 조준 중 (거너 = 필살기 사격 중 · 영웅 키트 = 필살기 키를 누르는 동안)
-        if (look.Fx("ultaim") != null && UltAiming())
+        bool ult = look.Fx("ultaim") != null && UltAiming();
+        // 조준 시작 순간 소리 (영혼 커서 낮은 「우웅」 · 황금 커서 「띵」 — 기획 4-16) · 조준이 끝나면 다시 준비
+        if (ult && !ultWas && SpecialAbilities.SharedFx != null) SkinAudio.Play(skin, "ultaim", 0.4f, 0f, SkinAudio.Prio.Lvl);
+        ultWas = ult;
+        if (ult)
         {
             if (ultTex == null) ultTex = MakeUltAim();
             if (ultTex != null) { tex = ultTex; return "skin_aim_ult"; }

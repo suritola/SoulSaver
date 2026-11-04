@@ -71,10 +71,10 @@ public static partial class LocTable
           "半透明の体に紫のフラッシュ。写った敵の後ろにかすかな霊が一緒に写ります。シャッターが二度こだまし、レベルアップで心霊写真が落ち、倒れるとセピア色に褪せます。",
           "半透明的身体配紫色闪光，被拍到的敌人身后会一同拍进模糊的灵魂。快门声两度回响，升级时落下灵异照片，倒下时褪成棕褐色。");
         S("스크린샷 F12", "Screenshot F12", "スクリーンショットF12", "截图 F12");
-        S("카메라가 F12 키, 셔터는 촤착, 적은 픽셀 캡처 조각이 되고 처치하면 썸네일로 줄어듭니다. 파노라마 때 모서리에 「스크린샷 저장됨」이 뜨고, 이기면 플래시가 연달아 터집니다. (업적형)",
-          "The camera is the F12 key and the shutter goes click-clack; foes become pixel-capture fragments and shrink into thumbnails when defeated. During the panorama, 'Screenshot saved' pops up in the corner, and victory sets off a string of flashes. (Achievement)",
-          "カメラがF12キー、シャッターはシャキッ。敵はピクセルのキャプチャ片になり、倒すとサムネイルに縮みます。パノラマ時は隅に「スクリーンショットを保存しました」が出て、勝つとフラッシュが連続で光ります。(実績型)",
-          "相机变成F12键，快门声咔嚓。敌人化作像素截图碎片，击杀后缩成缩略图。全景时角落会弹出「截图已保存」，胜利时闪光接连亮起。(成就型)");
+        S("카메라가 F12 키, 셔터는 촤착, 적은 픽셀 캡처 조각이 되고 처치하면 썸네일로 줄어듭니다. 파노라마 때 모서리에 저장 완료 썸네일이 뜨고, 이기면 플래시가 연달아 터집니다. (업적형)",
+          "The camera is the F12 key and the shutter goes click-clack; foes become pixel-capture fragments and shrink into thumbnails when defeated. During the panorama, a 'saved' thumbnail pops up in the corner, and victory sets off a string of flashes. (Achievement)",
+          "カメラがF12キー、シャッターはシャキッ。敵はピクセルのキャプチャ片になり、倒すとサムネイルに縮みます。パノラマ時は隅に保存完了のサムネイルが出て、勝つとフラッシュが連続で光ります。(実績型)",
+          "相机变成F12键，快门声咔嚓。敌人化作像素截图碎片，击杀后缩成缩略图。全景时角落会弹出保存完成的缩略图，胜利时闪光接连亮起。(成就型)");
 
         // ---------------- 무기 스킨
         S("곰 인형", "Teddy Bear", "くまのぬいぐるみ", "小熊玩偶");

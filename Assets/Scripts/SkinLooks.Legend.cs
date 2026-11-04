@@ -10,6 +10,7 @@ public static partial class SkinLooks
     {
         // ---- 거너: 황금 심판자 「저울과 판결」
         L("gunner_nogun__gold", "#FFD14C", "#FFF4C8",
+          "menu: rise spark 6 0.035 c=a",       // 메뉴 초상 (C17)
           "step: mark boot 1 0.55 1.2; flash glow 1 0.3 0.25 at=feet c=w al=0.7; rise spark 1 0.12 0.6 h=0.6 r=0.2 at=feet",
           "step~ metal 2400 0.05",
           "step2~ bell 1300 0.06 x0.3",
@@ -44,6 +45,7 @@ public static partial class SkinLooks
 
         // ---- 검사: 용기사 「용의 비늘 갑주」 (바닥엔 꺼진 재만 — 살아 있는 불 없음 L8)
         L("swordsman__dragon", "#FF7326", "#FFC040",
+          "menu: rise ember 6 0.04 c=m",       // 메뉴 초상 (C17)
           "step: mark clawfoot 1 0.55 1.2 c=#2A2420; burst ember 1 0.12 0.4 r=0.3 g=4 at=feet c=#806050",
           "step~ metal 900 0.04; thud 90>60 0.05 @0.01 x0.6",
           "step2~ fire 0.05",
@@ -79,6 +81,7 @@ public static partial class SkinLooks
 
         // ---- 도적: 그림자 군주 「허공의 왕」 (바닥은 검정 · 보라는 공중만 L8 · 그림자 손 없음 L5 · L12)
         L("rogue__void", "#A64CFF", "#FF7AD0",
+          "menu: shadow glow 1 0.5 y=-0.42 c=k",       // 메뉴 초상 (C17)
           "step: mark smallfoot 1 0.5 1.2 c=k al=0.8; rise fx_smoke 1 0.35 0.7 r=0.1 h=0.8 at=feet al=0.6",
           "step~ breath 0.08",
           "step2~ sine 60 0.08 x0.8",
@@ -114,6 +117,7 @@ public static partial class SkinLooks
 
         // ---- 궁수: 태양의 궁수 「한낮의 성가」 (햇살 문양은 머리 위에만 — 2-7)
         L("archer__sun", "#FFD959", "#FFF6D8",
+          "menu: spin sun 1 0.95 c=a al=1.4",       // 메뉴 초상 (C17)
           "step: mark shoe 1 0.55 1.2 c=a; flash glow 1 0.3 0.2 at=feet c=w al=0.6",
           "step~ chime 2200 0.05",
           "step2~ bell 2200 0.05 x0.3",
@@ -147,6 +151,7 @@ public static partial class SkinLooks
 
         // ---- 연금술사: 현자의 돌 「등가교환」 (바닥엔 금색만 — 진홍은 공중 L8)
         L("alchemist__stone", "#FF4C40", "#FFD45A",
+          "menu: orbit crystal 3 0.045 y=-0.05 c=#E0384A",       // 메뉴 초상 (C17)
           // 근사: 연금 문자 글리프 없음 → 금빛 별 문양
           "step: mark shoe 1 0.55 1.2 c=a; flash star5 1 0.3 0.4 at=feet c=a al=0.8",
           "step~ chime 1900 0.06",
@@ -181,6 +186,7 @@ public static partial class SkinLooks
 
         // ---- 지도 제작자: 백지도의 저자 「다시 쓰는 세계」 (선 긋기 없음 L12 · 바닥엔 흰 자국만 L8)
         L("cartographer__blank", "#F24C4C", "#F6F1E4",
+          "menu: drift paper 4 0.06 c=w al=0.9",       // 메뉴 초상 (C17)
           "step: mark paperfoot 1 0.5 1.2 c=a; flash dot 1 0.12 0.3 y=0.3 at=feet",
           "step~ paper 0.06",
           "step2~ scratch 0.03 f80",
@@ -215,6 +221,7 @@ public static partial class SkinLooks
 
         // ---- 시계공: 멈춘 시계의 주인 「멈춘 시간」 (시계판은 머리 위에만 · 톱니 불꽃은 견습 몫 R7)
         L("clockmaker__stopped", "#B2E6F2", "#E8E8E8",
+          "menu: tremble pocketwatch 1 0.6 y=0.05 c=w al=0.8",       // 메뉴 초상 (C17)
           // 근사: 바늘 글리프 없음 → 굽 자국 + 공중 나사 하나
           "step: mark heel 1 0.5 1.2 c=a; pop screw 1 0.15 0.4 h=0.3 at=feet c=a",
           "step~ wood 2600 0.03; metal 1800 0.04 x0.4",
@@ -249,6 +256,7 @@ public static partial class SkinLooks
 
         // ---- 우체부: 반송 우체부 「되돌려 보냄」 (도장은 머리 위에만 — 몸 둘레 표식은 속달 L12 · 봉투는 새 글리프 D5)
         L("postman__return", "#E62633", "#2A2630",
+          "menu: pop stamp 1 0.18 x=0.28 y=0.32 c=#E03040",       // 메뉴 초상 (C17)
           // 근사: 네모 소인 글리프 없음 → 검은 봉투 자국
           "step: mark envelope 1 0.45 1.2 c=k al=0.8",
           "step~ thud 220>150 0.05",
@@ -284,6 +292,7 @@ public static partial class SkinLooks
 
         // ---- 유령: 삭제된 장면 「렌더링 실패」 (와이어프레임 · 픽셀 계열 R7 · 바닥엔 청록만 L8)
         L("ghost__deleted", "#FF33D9", "#40F0F0",
+          "menu: glitch body 1 c=#FF40FF",       // 메뉴 초상 (C17)
           "step: mark pixel 3 0.2 1.2 c=a",
           "step~ beep 1200 0.02",
           "step2~ noise 0.01 x0.6",
@@ -319,6 +328,7 @@ public static partial class SkinLooks
 
         // ---- 씨름꾼: 심판 「경기 진행」 (바닥 고리 · 경계선 없음 — 모래판이 실제 판정 L12)
         L("wrestler__referee", "#E8C27A", "#222228",
+          "menu: blink whistle 1 0.1 x=0.3 y=0.2 c=w",       // 메뉴 초상 (C17)
           "step: mark shoe 1 0.55 1.2 c=w",
           "step~ whistle 3800>3400 0.03 x0.5",
           // 매 걸음 2겹이라 호루라기 대신 모래 사각임 (8걸음 호루라기는 stepn 금지로 뺌)
@@ -355,6 +365,7 @@ public static partial class SkinLooks
 
         // ---- 공사 반장: 베타 테스터 「버그 리포트」 (창 · 체크 · 진행 막대 R7 · fx_dust · fx_rubble 안 씀 · 평타 몸짓 그림은 덤프 때만)
         L("foreman__beta", "#73D980", "#B8BCC8",
+          "menu: blink window 1 0.14 x=0.33 y=0.22 c=w",       // 메뉴 초상 (C17)
           "step: mark window 1 0.5 1.2 c=a al=0.8",
           "step~ noise 0.006; sine 2000 0.01 x0.5",
           "step2~ pulse 0.08 n2 f1500",
@@ -386,9 +397,10 @@ public static partial class SkinLooks
           "win: rise check_mark 1 2 2 h=2 r=0 y=0.8 at=head; fountain window 12 0.3 2 r=1.2 h=4; fountain confetti 12 0.14 2 r=1.2 h=4",
           "win~ sine 1318 0.08; sine 1760 0.2 @0.08; chip 523,659,784,1046,784,1046 0.07 @0.3");
 
-        // ---- 인형사: 개발자의 손 「마우스로 연출」 (설명 약속: 더미 = 마우스 커서 — dummy 청록 · 커서 · 케이블 · 코드 줄 R7)
+        // ---- 인형사: 개발자의 손 「마우스로 연출」 (설명 약속: 더미 = 손가락 커서 = weapon_dummy__puppeteer__devhand 그림(휘두를 때 누름 + 클릭 빛살 — 커튼콜 더미도 같은 그림) · 줄 = 케이블 결 · 코드 줄 R7)
         L("puppeteer__devhand", "#40E6FF", "#F0F8FF",
-          "dummy: #40E6FF",
+          "menu: pop cursor 1 0.12 x=0.3 y=0.05 c=a",       // 메뉴 초상 (C17)
+          "string: cable #303846",
           // 근사: 작업 표시줄 아이콘 글리프 없음 → 신발 자국 + 깜빡이는 청록 빛
           "step: mark shoe 1 0.5 1.2 c=a; flash glow 1 0.3 0.25 at=feet al=0.7",
           "step~ pulse 0.05 n2 f1800",
@@ -423,9 +435,12 @@ public static partial class SkinLooks
           "win: float cursor 5 0.6 2 r=0.6 y=1.8 at=head c=a; fountain spark 20 0.18 2 r=1.2 h=5 c=#70FF90",
           "win~ clap 0.6 n10; pulse 0.4 n10 f2000 @0.05; brass 523,659,784,1046 0.1 @0.6");
 
-        // ---- 장의사: 미완성 묘비 「아직 안 만든 무덤」 (회색 상자 · 디스켓 · 모래시계 R7 · 묘비 그림 아님 L5)
-        //   설명 약속 「매장 때 저장 중 모래시계 · 띵」 은 매장 칸이 엔진에 없어 여기서 못 넣음 (hole 은 색만)
+        // ---- 장의사: 미완성 묘비 「아직 안 만든 무덤」 (회색 상자 · 디스켓 · 모래시계 R7 · 연출에 묘비 그림 아님 L5)
+        //   설명 약속: 묘비 = 「TODO」 회색 상자 (prop_grave*__undertaker__todo 그림) · 매장 때 「저장 중」 모래시계 + 띵 (bury — 매장 순간 SkinFx.OnObject)
         L("undertaker__todo", "#C7C7D1", "#E8C060",
+          "menu: spin hourglass 1 0.13 x=0.33 y=0.1 c=a al=2",       // 메뉴 초상 (C17)
+          "bury: spin hourglass 1 0.9 0.7 sp=360 y=0.9 c=a; float dot 3 0.12 0.7 r=0.22 y=0.35 c=w",
+          "bury~ bell 1568 0.3; bell 2093 0.2 @0.1 x0.5",
           // 근사: 회색 「?」 상자 글리프 없음 → 회색 자리표 체크무늬
           "step: mark check 1 0.45 1.2 c=#9A9AA4",
           "step~ beep 1600 0.02",
@@ -458,7 +473,11 @@ public static partial class SkinLooks
           "win~ bell 1568 0.3; pipe 523,659,784,1046 0.12 @0.3");
 
         // ---- 사진사: 스크린샷 F12 「캡처 완료」 (썸네일 · 키캡 · 플래시 R7 · 몸 둘레 사각 틀 없음 L12 · 설명 약속 「적이 픽셀 조각」 = 흡수 픽셀)
+        //   설명 약속: 카메라 = F12 키캡 (weapon_camera__photographer__f12 손 그림) · 찍힌 적에 청록 픽셀 테(snap) · 파노라마 때 모서리 「저장됨」 썸네일(corner — 글자 없이 체크)
         L("photographer__f12", "#40F2F2", "#FFFFFF",
+          "menu: blink photo 1 0.16 x=0.34 y=-0.3 c=w; blink check_mark 1 0.08 x=0.38 y=-0.33 c=m",       // 메뉴 초상 (C17)
+          "snap: burst pixel 4 0.14 0.35 r=0.7",
+          "corner: photo check_mark",
           "step: mark pixel 2 0.25 1.2",
           "step~ pulse 0.03 n1 f1500",
           "step2~ wood 3000 0.015 x0.5",

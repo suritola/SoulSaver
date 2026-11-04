@@ -265,12 +265,15 @@ public class SkinShopUI : MonoBehaviour
         return l.Count > 0 ? new[] { l[0] } : new Sprite[0];
     }
 
-    void OpenStage()
+    void OpenStage() => OpenStage(null);
+
+    // replay: 칩(칸 이름)을 눌러 열었으면 그 순간부터 (2026-11-04~)
+    void OpenStage(string replay)
     {
-        if (stage != null) return;
+        if (stage != null) { if (replay != null) stage.Replay(replay); return; }
         StopPreview();
         confirm = false;        // 무대를 보고 돌아오면 구매 확인은 처음부터
-        stage = SkinPreview.Open(win, selected, kind, who, audioFx, () => { stage = null; ShowDetail(); });
+        stage = SkinPreview.Open(win, selected, kind, who, audioFx, () => { stage = null; ShowDetail(); }, selected != null ? SlotList(selected) : null, replay);
     }
 
     static int Num(string n)
@@ -392,11 +395,11 @@ public class SkinShopUI : MonoBehaviour
     {
         ("", "몸", 0), ("step", "걸음", 0), ("acc", "평타 몸짓", 0), ("hurt", "피격", 0), ("lvl", "레벨업", 0), ("idle", "대기", 0),
         ("ultc", "필살기 시전", 0), ("death", "사망", 0), ("win", "승리", 0), ("start", "출발", 1), ("trail", "잔상", 1), ("revive", "버팀", 1),
-        ("edge", "필살기 가장자리", 2), ("absorb", "처치 흡수", 2), ("aura", "오라", 3), ("crisis", "위기", 3),
+        ("edge", "필살기 가장자리", 2), ("absorb", "처치 흡수", 2), ("menu", "메뉴 초상", 2), ("aura", "오라", 3), ("crisis", "위기", 3), ("obj", "물체", 0),
     };
     static readonly (string key, string name, int tier)[] WeaponSlots =
     {
-        ("", "손 무기", 1), ("", "투사체", 1), ("fire", "발사", 1), ("whit", "명중음", 1), ("wtrail", "꼬리", 2), ("reload", "장전", 2), ("widle", "무기 대기", 2), ("high", "하이라이트", 2), ("evo", "진화", 2),
+        ("", "손 무기", 1), ("", "투사체", 1), ("fire", "발사", 1), ("whit", "명중음", 1), ("wtrail", "꼬리", 2), ("reload", "장전", 2), ("widle", "무기 대기", 2), ("high", "하이라이트", 2), ("evo", "진화", 2), ("obj", "물체", 1),
     };
     static readonly (string key, string name, int tier)[] EffectSlots =
     {
@@ -417,14 +420,59 @@ public class SkinShopUI : MonoBehaviour
         int n = 1;      // 상점 무대
         foreach (var (key, name, tier) in table)
         {
-            bool on = key == "" || look.Has(key) || (key == "trail" && s.tier >= 2) || (key == "kill" && s.killSound != null) || (key == "edge" && s.kind == SkinKind.Character && look.Fx("edge") != null);
-            if (!on || tier > s.tier) continue;
+            if (!SlotOn(s, look, key, tier)) continue;
             n++;
             bool fresh = tier == s.tier && s.tier > 0;
-            b.Append(fresh ? "<color=#" + tierHex + ">" : "<color=#B9B2A6>").Append('[').Append(Loc.T(name)).Append("]</color> ");
+            // 칩을 누르면 미리보기 무대에서 그 순간 (링크 — Update 가 누름을 봄)
+            bool link = Replayable(key);
+            if (link) b.Append("<link=\"").Append(key).Append("\">");
+            b.Append(fresh ? "<color=#" + tierHex + ">" : "<color=#B9B2A6>").Append('[').Append(Loc.T(name)).Append("]</color>");
+            if (link) b.Append("</link>");
+            b.Append(' ');
         }
         b.Append("<color=#" + tierHex + ">").Append(Loc.T("skin.slots").Replace("{0}", n.ToString())).Append("</color></size>\n");
         return b.ToString();
+    }
+
+    static bool SlotOn(SkinDef s, SkinLook look, string key, int tier)
+    {
+        bool on = key == "" || (key == "obj" ? HasObject(s, look) : look.Has(key)) || (key == "trail" && s.tier >= 2) || (key == "kill" && s.killSound != null) || (key == "edge" && s.kind == SkinKind.Character && look.Fx("edge") != null);
+        return on && tier <= s.tier;
+    }
+
+    // 무대 칩 줄: 다시 볼 수 있는 칸 (「몸」처럼 늘 보이는 칸 · 메뉴 초상은 무대에 없어 뺌)
+    static List<(string key, string name)> SlotList(SkinDef s)
+    {
+        List<(string, string)> l = new List<(string, string)>();
+        SkinLook look = SkinLooks.Get(s);
+        if (look == null || VisualRules.Legacy) return l;
+        var table = s.kind == SkinKind.Character ? CharSlots : s.kind == SkinKind.Weapon ? WeaponSlots : s.kind == SkinKind.Effect ? EffectSlots : CursorSlots;
+        foreach (var (key, name, tier) in table)
+            if (Replayable(key) && SlotOn(s, look, key, tier)) l.Add((key, name));
+        return l;
+    }
+
+    static bool Replayable(string key) => key != "" && key != "menu" && key != "aura" && key != "crisis" && key != "tail" && key != "dust";
+
+    // 설명 칸의 칩 링크를 누름 → 무대를 열어 그 순간 (마우스만 · 패드는 「미리보기」 무대의 칩 버튼)
+    void ChipClick()
+    {
+        if (stage != null || descText == null || !Input.GetMouseButtonDown(0)) return;
+        Canvas cv = descText.canvas;
+        Camera cam = cv != null && cv.renderMode != RenderMode.ScreenSpaceOverlay ? cv.worldCamera : null;
+        int li = TMP_TextUtilities.FindIntersectingLink(descText, Input.mousePosition, cam);
+        if (li < 0 || li >= descText.textInfo.linkCount) return;
+        OpenStage(descText.textInfo.linkInfo[li].GetLinkID());
+    }
+
+    // 물체 칸 (더미 · 묘비 · 줄 · 사본 · 손 그림 · 키트 순간) — 표의 물체 칸이나 「<원래 그림>__<스킨>」 그림이 있으면
+    static readonly string[] ObjectKeys = { "dummy", "string", "hole", "flash", "copy", "snap", "corner", "bury", "dig", "throw", "tick" };
+    static bool HasObject(SkinDef s, SkinLook look)
+    {
+        foreach (string k in ObjectKeys) if (look.Fx(k) != null) return true;
+        if (s.kind != SkinKind.Character) return false;
+        string held = CharacterData.Def((CharacterId)s.who).held ?? "pistol";
+        return Resources.LoadAll<Sprite>("Weapons/weapon_" + held + "__" + s.id).Length > 0 || Fx.Frames("prop_grave__" + s.id).Length > 0;
     }
 
     public static string BaseAttack(int who) => (CharacterId)who switch
@@ -455,6 +503,7 @@ public class SkinShopUI : MonoBehaviour
             Close();
             return;
         }
+        ChipClick();
         int f = (int)(Time.unscaledTime * 8f);
         foreach (var a in anims) if (a.img != null) a.img.sprite = a.frames[f % a.frames.Length];
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);

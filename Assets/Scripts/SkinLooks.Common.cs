@@ -205,9 +205,10 @@ public static partial class SkinLooks
           "win: pop flag 1 1.4 2 h=2.5 g=10 at=head; fountain spark 20 0.2 1.6 r=1.2 h=5 c=rb",
           "win~ siren 600>1100 0.6; clap 0.6 n10 @0.4");
 
-        // ---- 인형사: 그림자극 「벽에 비친 무대」 (설명 약속: 더미도 그림자 인형 — dummy 색)
+        // ---- 인형사: 그림자극 「벽에 비친 무대」 (설명 약속: 더미도 그림자 인형 — dummy 색 · 줄 = 검은 막대 실 — string 색만)
         L("puppeteer__shadow", "#665999", "#FFC870",
           "dummy: #1E1A28",
+          "string: plain #1E1A28",
           "step: mark paperfoot 1 0.5 1.0 c=k al=0.8",
           "step~ wood 3500 0.02; paper 0.03 x0.4",
           "acc: ghost body 1 1 0.3 c=k al=0.5 y=-0.3",

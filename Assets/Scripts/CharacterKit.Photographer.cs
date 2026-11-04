@@ -240,6 +240,7 @@ public partial class CharacterKit
             bool blur = tele && Vector2.Distance(ep, me3) < PhotographerPaths.TeleNear;
             if (blur) d *= PhotographerPaths.TeleNearCost;
             if (real) d *= SignatureSkills.PhChance(e);
+            if (real) SkinFx.OnSnap(e);     // 스킨: 찍힌 적 뒤 희미한 영혼 (유령 사진가) · 픽셀 테 (F12) — 적 판정 · 그림은 그대로
             if (real && cutN < 6)
             {
                 SpriteRenderer sr = e.GetComponent<SpriteRenderer>();
@@ -633,6 +634,7 @@ public partial class CharacterKit
             sr.sortingOrder = -Mathf.RoundToInt(p.y * 10f);
             go.transform.localScale = new Vector3(0.75f, 0.6f, 1f);
             if (cut.sprite == null) { sr.sprite = Hostile.Glow; sr.color = new Color(1f, 1f, 1f, 0.8f); go.transform.localScale = Vector3.one * 0.6f; }
+            else SkinFx.DecorateCopy(sr);       // 즉석 카메라: 흰 테 사진 (사본 자리 · 크기 그대로 — 설명 약속)
             PhCopy c = new PhCopy { tf = go.transform, sr = sr, until = Time.time + life + 0.2f, born = Time.time, pos = p };
             phCopies.Add(c);
             made.Add(c);

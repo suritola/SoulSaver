@@ -117,7 +117,17 @@ public partial class CharacterKit
         PupLoadFrames();
     }
 
-    // 2026-11-04~ 스킨 설명 약속 (그림자극 「더미도 그림자 인형」 등): 더미 그림 색만 — 그림 · 크기 · 판정은 그대로
+    // 2026-11-04~ 스킨 연출(SkinFx)이 쓰는 더미 자리 — 휘두를 때 솜 · 나무 조각 · 뼈 달그락이 영웅 손이 아니라 더미에서 (더미가 없으면 false)
+    public bool PupDummyAt(out Vector3 p)
+    {
+        p = default;
+        if (Id != CharacterId.Puppeteer || pupRoot == null || !pupRoot.activeSelf || pupBodyTf == null) return false;
+        p = pupBodyTf.position;
+        return true;
+    }
+
+    // 2026-11-04~ 스킨 설명 약속 (그림자극 「더미도 그림자 인형」): 더미 그림 색만 — 그림 · 크기 · 판정은 그대로
+    //   종이 인형 · 해골 인형 · 손가락 커서는 그림 자체가 바뀜 (SkinData.HeldSprite 가 weapon_dummy__<캐릭터 스킨> 을 찾음 — 무기 스킨이 먼저)
     static string pupHex;
     static Color pupHexColor = Color.white;
     static Color PupSkinColor()
@@ -300,10 +310,10 @@ public partial class CharacterKit
 
     void PupDrawLine(ref LineRenderer lr, string name, Vector2 a, Vector2 b)
     {
-        if (lr == null) { lr = Hostile.NewLine(name, PupSky, 0.1f, 24); lr.loop = false; }
+        if (lr == null) { lr = Hostile.NewLine(name, PupSky, 0.1f, 24); lr.loop = false; SkinFx.StringLook(lr); }      // 스킨 줄 결 (종이끈 · 케이블 · 영혼불 실 — 같은 굵기)
         lr.enabled = true;
         float L = Vector2.Distance(a, b);
-        Color c = HeroAim.ColorOf(HeroAimKind.Puppeteer);
+        Color c = SkinFx.StringColor(HeroAim.ColorOf(HeroAimKind.Puppeteer));
         if (L < PupSlack)
         {
             // 늘어진 줄: 아래로 처진 곡선 (판정 없음)

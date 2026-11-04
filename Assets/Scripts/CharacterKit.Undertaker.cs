@@ -48,7 +48,9 @@ public class UndertakerGrave : MonoBehaviour
         GameObject sg = new GameObject("Sprite");
         sg.transform.SetParent(go.transform, false);
         g.sr = sg.AddComponent<SpriteRenderer>();
-        Sprite s = SpriteOf(temp ? "prop_grave_temp" : big ? "prop_grave_big" : "prop_grave");
+        string sheet = temp ? "prop_grave_temp" : big ? "prop_grave_big" : "prop_grave";
+        if (!hostile) sheet = SkinFx.ObjectSheet(sheet);      // 2026-11-04~ 스킨 설명 약속 (석공 조각상 · 지옥 불꽃 표식 · TODO 상자): 내 묘비만 · 같은 칸 크기 · 상자 그대로
+        Sprite s = SpriteOf(sheet);
         if (s != null)
         {
             g.sr.sprite = s;
@@ -257,6 +259,7 @@ public partial class CharacterKit
         // 흙 튀김: 그 자리 적(보스 포함)에게 공격력 40% (밀침 없음)
         UtDamageCircle(c, UndertakerTuning.HoleMin + 0.2f, Damage * UndertakerTuning.DigSplash * formPower, 0f, DamageSource.Basic, false);
         Fx.Spawn("fx_dirt", new Vector3(c.x, c.y, 0f), 1.8f, Color.white, 16f, 0f, 14);
+        SkinFx.OnObject("dig", new Vector3(c.x, c.y, 0f));      // 스킨 파기 순간 (곡괭이 돌 조각 · 은수저 반짝 — 설명 약속)
         Play("thump", 0.35f, Random.Range(1.0f, 1.2f));
         Play("whoosh", 0.2f, 0.6f);
         SignatureSkills.UtDugStart(c, h.rMax);
@@ -420,7 +423,7 @@ public partial class CharacterKit
         Color c = h.floor.color;
         c.a = a;
         h.floor.color = c;
-        if (h.skinLight != null) { Color l = h.skinLight.color; l.a = 0.55f * GameSettings.MyFxAlpha * a; h.skinLight.color = l; }      // 바닥과 같이 흐려짐
+        if (h.skinLight != null) { Color l = h.skinLight.color; l.a = 0.55f * GameSettings.MyFxAlpha * a * (0.75f + 0.25f * Mathf.Sin(Time.time * 7f + h.bornAt * 3f)); h.skinLight.color = l; }      // 바닥과 같이 흐려짐 · 불빛 · 반짝임이 일렁 (설명 약속 「반짝」)
     }
 
     // ================================================================= 매 프레임 (LateUpdate)
@@ -601,6 +604,7 @@ public partial class CharacterKit
             if (h.floor != null) h.floor.enabled = true;
         }
         SignatureSkills.UtBuryStart(list.Count, aim);
+        if (list.Count > 0) SkinFx.OnObject("bury", new Vector3(list[0].pos.x, list[0].pos.y, 0f));      // 스킨 매장 순간 (미완성 묘비 「저장 중」 모래시계 · 띵 — 설명 약속)
         yield return new WaitForSeconds(UndertakerTuning.BuryDelay);
         float trappedMul = fromUlt ? UndertakerTuning.FuneralBury * UltMul : UndertakerTuning.BuryTrapped;
         float looseMul = fromUlt ? UndertakerTuning.FuneralBury * 0.5f * UltMul : UndertakerTuning.BuryLoose;

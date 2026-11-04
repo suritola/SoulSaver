@@ -221,7 +221,7 @@ public static class SkinAudio
     static readonly Dictionary<string, int> turn = new Dictionary<string, int>();
 
     // 변주 3개를 돌려 쓰는 칸 (2-6절)
-    static bool ThreeWay(string slot) => slot == "step" || slot == "acc" || slot == "kill" || slot == "whit" || slot == "fire" || slot == "click";
+    public static bool ThreeWay(string slot) => slot == "step" || slot == "acc" || slot == "kill" || slot == "whit" || slot == "fire" || slot == "click";
 
     static string Key(SkinDef s, string slot) => s.id + ":" + slot;
     public static bool Has(SkinDef s, string slot) => s != null && variants.ContainsKey(Key(s, slot));
@@ -381,6 +381,18 @@ public static class SkinAudio
 
     static AudioClip Synth(string name, string recipe, int variant)
     {
+        float[] buf = RenderRecipe(name, recipe, variant);
+        AudioClip clip = AudioClip.Create(name, buf.Length, 1, Rate, false);
+        clip.SetData(buf, 0);
+        return clip;
+    }
+
+    public const int SampleRate = Rate;
+
+    // 레시피 → 소리 표본 (44.1kHz 모노) — 게임 클립과 에디터 WAV 뽑기(Assets/Editor/SkinWavExport)가 같이 씀
+    //   name: 씨앗(같은 이름 = 같은 잡음) · variant: 변주 번호 (1 = 원래 음높이)
+    public static float[] RenderRecipe(string name, string recipe, int variant)
+    {
         List<Seg> segs = ParseSound(recipe);
         float shift = 1f + (variant - 1) * 0.035f;       // 변주: 씨앗 + 음높이 ±3.5%
         float total = 0.02f;
@@ -415,9 +427,7 @@ public static class SkinAudio
         // 끝 4ms 페이드 (딸깍 방지)
         int fade = Mathf.Min(buf.Length, Rate / 250);
         for (int i = 0; i < fade; i++) buf[buf.Length - 1 - i] *= i / (float)fade;
-        AudioClip clip = AudioClip.Create(name, buf.Length, 1, Rate, false);
-        clip.SetData(buf, 0);
-        return clip;
+        return buf;
     }
 
     static float Dec(float k, float p) => Mathf.Pow(Mathf.Clamp01(1f - k), p);

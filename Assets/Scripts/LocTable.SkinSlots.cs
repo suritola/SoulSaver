@@ -27,6 +27,8 @@ public static partial class LocTable
         S("처치 흡수", "Kill absorb", "撃破吸収", "击杀吸收");
         S("오라", "Aura", "オーラ", "光环");
         S("위기", "Crisis", "ピンチ", "危机");
+        S("물체", "Props", "小道具", "道具");
+        S("메뉴 초상", "Menu portrait", "メニュー肖像", "菜单头像");
         S("손 무기", "Held weapon", "手の武器", "手持武器");
         S("투사체", "Projectile", "投射物", "投射物");
         S("발사", "Fire", "発射", "发射");

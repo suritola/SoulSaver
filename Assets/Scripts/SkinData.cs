@@ -130,7 +130,7 @@ public static class SkinData
         C("photographer__press", PH, 0, "신문 기자", "기자 모자와 낡은 코트, 플래시가 조금 노랗습니다. 구두가 또각거리고, 레벨업하면 사진이 현상되듯 떠오르며, 필살기에 타자기 줄 바꿈 「띵」이 울립니다.", new Color(0.88f, 0.78f, 0.5f), "sk_hurt_light"),
         C("photographer__instant", PH, 1, "즉석 카메라", "무지개 줄무늬 재킷에 즉석 카메라, 인화 사본이 흰 테 사진으로 나옵니다. 셔터가 하얗게 번쩍이고, 평타마다 사진이 「지잉」 나오며, 이기면 사진이 분수처럼 쏟아집니다.", new Color(0.95f, 0.45f, 0.65f), "sk_hurt_beep"),
         C("photographer__ghost", PH, 2, "유령 사진가", "반투명한 몸에 보라 플래시, 찍힌 적 뒤로 희미한 영혼이 함께 찍힙니다. 셔터가 두 번 메아리치고, 레벨업하면 심령사진이 떨어지며, 쓰러지면 세피아빛으로 바랩니다.", new Color(0.7f, 0.55f, 1f), "sk_hurt_echo"),
-        CA("photographer__f12", PH, "스크린샷 F12", "카메라가 F12 키, 셔터는 촤착, 적은 픽셀 캡처 조각이 되고 처치하면 썸네일로 줄어듭니다. 파노라마 때 모서리에 「스크린샷 저장됨」이 뜨고, 이기면 플래시가 연달아 터집니다. (업적형)", new Color(0.25f, 0.95f, 0.95f), "sk_hurt_pixel"),
+        CA("photographer__f12", PH, "스크린샷 F12", "카메라가 F12 키, 셔터는 촤착, 적은 픽셀 캡처 조각이 되고 처치하면 썸네일로 줄어듭니다. 파노라마 때 모서리에 저장 완료 썸네일이 뜨고, 이기면 플래시가 연달아 터집니다. (업적형)", new Color(0.25f, 0.95f, 0.95f), "sk_hurt_pixel"),
 
         // ---------------- 무기 (공격 소리 · 투사체 색)
         W("pistol__silver", G, 1, "은장 리볼버", "은으로 새긴 권총. 총구가 은빛으로 번쩍이며 「탕—팅」 맑게 울리고, 맞히면 「팅」 금속음이 납니다. 진화 전 기본 평타의 그림이 바뀝니다.", new Color(0.8f, 0.9f, 1f), 1.12f, "clank"),
@@ -243,6 +243,14 @@ public static class SkinData
     public static string HeldSprite(string held)
     {
         SkinDef s = Equipped(SkinKind.Weapon);
-        return "Weapons/weapon_" + (s != null ? s.id : held);
+        if (s != null) return "Weapons/weapon_" + s.id;
+        // 2026-11-04~ 캐릭터 스킨 물체 (설명 약속 — 종이 인형 · 해골 인형 · 손가락 커서 더미 · F12 키캡): 무기 스킨이 없을 때 그 그림이 있으면
+        SkinDef c = SkinFx.Off ? null : Equipped(SkinKind.Character);
+        if (c != null)
+        {
+            string path = "Weapons/weapon_" + held + "__" + c.id;
+            if (Resources.LoadAll<Sprite>(path).Length > 0) return path;
+        }
+        return "Weapons/weapon_" + held;
     }
 }

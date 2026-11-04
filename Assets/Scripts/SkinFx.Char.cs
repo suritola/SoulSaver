@@ -22,6 +22,7 @@ public partial class SkinFx
         if (moveDir.sqrMagnitude < 0.01f) moveDir = Vector2.up;
 
         SkinLook look = CharLook;
+        StringTick();
         if (walk)
         {
             if (stillFor >= 0.35f && look != null && SlotReady("start", 0.6f)) Slot(CharSkin, look, "start", p, -moveDir, true, 30, Bud.Rep, 0.25f, 4f, SkinAudio.Prio.Step);
@@ -86,12 +87,17 @@ public partial class SkinFx
         stepCount++;
         string fx = look.Fx("step");
         if (fx != null) Emit(fx, look, p, moveDir, true, 6, Bud.Rep);
+        // N 걸음마다 덧그림 (「stepn: 8」 + 「step2: 그림」 — 4걸음 깃털 · 8걸음 사진 한 장 …)
+        string every = look.Fx("stepn");
+        int n = 0;
+        bool nth = every != null && int.TryParse(every, out n) && n > 0 && stepCount % n == 0;
+        string fx2 = nth ? look.Fx("step2") : null;
+        if (fx2 != null) Emit(fx2, look, p, moveDir, true, 6, Bud.Rep);
         if (RunSave.Replaying) return;
         float vol = Time.time - lastAttackAt < 0.5f ? 0.12f : 0.2f;
         if (look.opt.Contains("quiet")) vol *= 0.8f;
         // N 걸음마다 덧소리 (자전거 벨 · 랜턴 삐걱 …) — 「stepn: 16」 + 「step2~ …」
-        string every = look.Fx("stepn");
-        if (every != null && int.TryParse(every, out int n) && n > 0 && stepCount % n == 0 && SkinAudio.Play(CharSkin, "step2", 0.18f, 3f, SkinAudio.Prio.Step)) return;
+        if (nth && SkinAudio.Play(CharSkin, "step2", 0.18f, 3f, SkinAudio.Prio.Step)) return;
         SkinAudio.Play(CharSkin, "step", vol, 4f, SkinAudio.Prio.Step);
         // 전설: 걸음 소리 2겹 (step2 가 있고 N 걸음 규칙이 아니면 늘 같이)
         if (every == null && CharSkin.tier >= 3) SkinAudio.Play(CharSkin, "step2", vol * 0.8f, 4f, SkinAudio.Prio.Step);
@@ -101,6 +107,8 @@ public partial class SkinFx
     void OnAttackFired(Vector3 origin, Vector2 dir)
     {
         // 공사 반장의 신호는 밀기 틱마다 옴 → 소리만 (그림은 덤프 때 FmDump 가 직접 부름)
+        // 인형사는 영웅 손이 아니라 더미가 휘두름 → 몸짓 · 무기 발사 그림(솜 · 나무 조각 · 뼈)을 더미 자리에서 (2026-11-04 마무리)
+        if (CharacterData.Selected == CharacterId.Puppeteer && CharacterKit.Instance != null && CharacterKit.Instance.PupDummyAt(out Vector3 dummy)) origin = dummy;
         OnAttack(origin, dir, CharacterData.Selected == CharacterId.Foreman ? 1 : 0);
     }
 
@@ -183,6 +191,7 @@ public partial class SkinFx
         // 전설 전용 필살기 소리는 그대로 (기존 구매자) · 고리(fx_shock) 대신 세로 시전 연출 (D4)
         if (CharSkin.tier >= 3) SpecialAbilities.SharedFx?.Play(SkinAudio.UltSound(CharSkin.id), 0.6f);
         if (CharLook == null || !SlotReady("ultc", 1f)) return;
+        CornerOnUlt();      // F12: 파노라마 「저장됨」 썸네일 (설명 약속)
         Slot(CharSkin, CharLook, "ultc", transform.position, Vector2.up, true, 31, Bud.Rare, 0.55f, 0f, SkinAudio.Prio.Ult);
     }
 

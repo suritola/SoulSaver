@@ -38,7 +38,8 @@ public class SkinPreview : MonoBehaviour
     Vector3 shotFrom;
     float heroScale, foeScale;
 
-    public static SkinPreview Open(RectTransform win, SkinDef s, SkinKind kind, int who, SpecialFeedback audio, System.Action onClose)
+    public static SkinPreview Open(RectTransform win, SkinDef s, SkinKind kind, int who, SpecialFeedback audio, System.Action onClose,
+                                   IList<(string key, string name)> chips = null, string replay = null)
     {
         // 창 전체를 덮는 막(뒤 카드 클릭 막음) + 무대
         RectTransform cover = UIKit.Rect("SkinPreviewCover", win, Vector2.zero, new Vector2(1640f, 960f));
@@ -53,10 +54,94 @@ public class SkinPreview : MonoBehaviour
         RawImage stage = UIKit.Rect("Stage", cover, new Vector2(0f, 30f), new Vector2(1280f, 640f)).gameObject.AddComponent<RawImage>();
         stage.texture = p.rt;
         stage.raycastTarget = false;
-        TMP_Line(cover, Loc.T("skin.preview.note"), 22f, new Vector2(0f, -320f));
-        UIKit.MakeButton(cover, "닫기", new Vector2(0f, -400f), new Vector2(220f, 60f), () => { onClose?.Invoke(); Destroy(cover.gameObject); }, 22f);
+        // 2026-11-04~ 「바뀌는 칸」 칩: 누르면 그 순간을 무대에서 다시 (기획 7절 — 한 바퀴 12초를 기다리지 않게)
+        bool hasChips = chips != null && chips.Count > 0;
+        if (hasChips) p.ChipRow(cover, chips);
+        TMP_Line(cover, Loc.T("skin.preview.note"), hasChips ? 18f : 22f, new Vector2(0f, hasChips ? -398f : -320f));
+        UIKit.MakeButton(cover, "닫기", new Vector2(0f, hasChips ? -440f : -400f), new Vector2(220f, hasChips ? 48f : 60f), () => { onClose?.Invoke(); Destroy(cover.gameObject); }, 22f);
         p.Build();
+        p.pendingReplay = replay;       // 무대 SkinFx 의 Start 가 돈 다음 프레임에 (Instance 가 잡힌 뒤)
         return p;
+    }
+
+    // 칩 버튼 줄 (무대 아래 · 넘치면 두 줄)
+    void ChipRow(RectTransform cover, IList<(string key, string name)> chips)
+    {
+        const float RowW = 1280f, H = 36f, Gap = 8f;
+        List<(string key, string label, float w)> items = new List<(string, string, float)>();
+        foreach (var c in chips)
+        {
+            string label = Loc.T(c.name);
+            items.Add((c.key, label, 28f + 15f * label.Length));
+        }
+        float x = 0f, y = -312f;
+        List<(string key, string label, float w, float x, float y)> placed = new List<(string, string, float, float, float)>();
+        int rowStart = 0;
+        void Flush()
+        {
+            float total = 0f;
+            for (int i = rowStart; i < placed.Count; i++) total += placed[i].w + Gap;
+            float off = -(total - Gap) * 0.5f;
+            for (int i = rowStart; i < placed.Count; i++) { var q = placed[i]; placed[i] = (q.key, q.label, q.w, off + q.x + q.w * 0.5f, q.y); }
+            rowStart = placed.Count;
+        }
+        foreach (var it in items)
+        {
+            if (x + it.w > RowW && x > 0f) { Flush(); x = 0f; y -= H + 6f; }
+            placed.Add((it.key, it.label, it.w, x, y));
+            x += it.w + Gap;
+        }
+        Flush();
+        foreach (var q in placed)
+        {
+            string key = q.key;
+            UIKit.MakeButton(cover, q.label, new Vector2(q.x, q.y), new Vector2(q.w, H), () => Replay(key), 16f);
+        }
+    }
+
+    // 칩 하나의 순간을 지금 다시 (게임과 같은 SkinFx 길) — 한 바퀴 순서는 잠깐 미룸
+    public void Replay(string key)
+    {
+        if (world == null || fx == null) return;
+        Vector3 foeAt = foe.position + new Vector3(0f, 0.3f, 0f);
+        cycleAt = Time.time + 2.5f;
+        switch (key)
+        {
+            case "step": case "start": case "trail":
+                pauseUntil = 0f;
+                fx.PreviewSlot("start", hero.position);
+                break;
+            case "obj":
+                ShowProp();
+                if (!shotLive && !foeDead) { nextShot = Time.time; Fire(); }
+                break;
+            case "acc": case "fire": case "whit": case "wtrail": case "hit": case "click":
+                if (!shotLive && !foeDead) { nextShot = Time.time; Fire(); }
+                break;
+            case "kill": case "absorb": case "kill.basic":
+                if (!shotLive && !foeDead) { hits = hits - hits % 3 + 2; nextShot = Time.time; Fire(); }
+                break;
+            case "hurt":
+                hurtAt = Time.time;
+                break;
+            case "ultc": case "edge": case "ultaim":
+                ultAt = Time.time;
+                break;
+            case "idle": case "widle": case "death": case "revive":
+                pauseUntil = Time.time + 1.6f;
+                pauseX = hero.position.x - Origin.x;
+                if (!fx.PreviewSlot(key, hero.position) && key == "idle") fx.PreviewSlot("widle", hero.position);
+                break;
+            case "high": case "combo": case "big": case "coin": case "chest":
+                fx.PreviewSlot(key, foeAt);
+                break;
+            case "hover":
+                SkinAudio.Play(skin, "hover", 0.5f, 0f, SkinAudio.Prio.Cursor, audioFx);
+                break;
+            default:
+                fx.PreviewSlot(key, hero.position);
+                break;
+        }
     }
 
     static void TMP_Line(Transform parent, string text, float size, Vector2 pos)
@@ -195,6 +280,7 @@ public class SkinPreview : MonoBehaviour
             case 3:
                 fx.PreviewSlot("big", foeAt);
                 fx.PreviewSlot("start", hero.position);
+                ShowProp();
                 cycleAt = Time.time + 2f;
                 break;
             case 4:
@@ -211,11 +297,41 @@ public class SkinPreview : MonoBehaviour
         }
     }
 
+    // 스킨 물체 그림 (더미 · 묘비 · F12 키캡 — 게임과 같은 고르는 길)을 허수아비 옆에 잠깐 세움
+    void ShowProp()
+    {
+        Sprite sp = PropSprite();
+        if (sp == null) return;
+        Vector3 at = foe.position + new Vector3(-1.7f, -0.1f, 0f);
+        FadeSprite.Spawn("SkinPreviewProp", sp, at, 1.7f / Mathf.Max(0.01f, sp.bounds.size.y), Color.white, "Character", 4, 1.8f);
+    }
+
+    Sprite PropSprite()
+    {
+        int heroId = SkinData.IsGlobal(kind) ? (int)CharacterData.Selected : who;
+        string held = CharacterData.Def((CharacterId)heroId).held ?? "pistol";
+        string path = SkinFx.WeaponSkin != null ? (held == "dummy" ? "Weapons/weapon_" + SkinFx.WeaponSkin.id : null)
+                    : SkinFx.CharSkin != null ? "Weapons/weapon_" + held + "__" + SkinFx.CharSkin.id : null;
+        if (path != null)
+        {
+            Sprite best = null;
+            foreach (Sprite s in Resources.LoadAll<Sprite>(path)) if (best == null || string.CompareOrdinal(s.name, best.name) < 0) best = s;
+            if (best != null) return best;
+        }
+        string g = SkinFx.ObjectSheet("prop_grave");
+        if (g == "prop_grave") return null;
+        Sprite[] f = Fx.Frames(g);
+        return f.Length > 0 ? f[0] : null;
+    }
+
     static Sprite ToSprite(Texture2D t) => Sprite.Create(t, new Rect(0f, 0f, t.width, t.height), Vector2.one * 0.5f, 16f);
+
+    string pendingReplay;
 
     void Update()
     {
         if (world == null) return;
+        if (pendingReplay != null && Time.time > t0) { string k = pendingReplay; pendingReplay = null; Replay(k); }
         float t = Time.time - t0;
 
         // 영웅: 왼쪽에서 좌우로 걸음 (잔상은 SkinFx 가 움직임을 보고 냄) · 쏠 땐 오른쪽을 봄
@@ -271,6 +387,7 @@ public class SkinPreview : MonoBehaviour
         shot.gameObject.SetActive(shotSr.sprite != null);
         heroSr.flipX = false;
         SkinFx.OnAttack(shotFrom, Vector2.right);       // 평타 몸짓 · 무기 발사 그림 (게임과 같은 길)
+        SkinFx.OnObject("throw", shotFrom, Vector2.right);      // 키트 물체 순간 (씨름꾼 메치기)
         // 공격 소리 = 상점 예전 미리듣기와 같은 규칙 (무기 스킨 음높이 · 덧소리)
         SkinDef w = SkinFx.WeaponSkin;
         int heroId = SkinData.IsGlobal(kind) ? (int)CharacterData.Selected : who;
@@ -303,10 +420,13 @@ public class SkinPreview : MonoBehaviour
         // 명중: 이펙트 스킨이 있으면 게임 그대로(SkinFx.OnEnemyHit), 없으면 기본 흰 불꽃
         if (SkinFx.EffectSkin != null) SkinFx.OnEnemyHit(to);
         else Fx.Spawn("fx_spark", to, 2.4f, Color.white, 26f);
+        SkinFx.OnObject("dig", to);         // 키트 물체 순간 (장의사 파기)
+        SkinFx.OnSnap(foe);                 // 사진사 찍힘 (영혼 · 픽셀 테)
         if (++hits % 3 != 0) return;
 
         // 처치: 기본 영혼 폭발 색(KillColor) + 게임과 같은 스킨 처치 연출 · 소리
         Fx.Spawn("fx_sparkle", to, 2.8f, SkinFx.KillColor(new Color(0.6f, 0.85f, 1f)), 16f);
+        SkinFx.OnObject("bury", to);        // 장의사 매장 (미완성 묘비 「저장 중」)
         fx.OnKill(to);
         foeDead = true;
         foe.gameObject.SetActive(false);

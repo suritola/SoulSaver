@@ -187,15 +187,15 @@ public static partial class SkinLooks
           "evo~ metal 600 0.8");
 
         // ======================================================== 씨름꾼 (샅바)
-        // ---- 희귀: 밧줄 「누런빛 · 툭—쉭」
+        // ---- 희귀: 밧줄 「누런빛 · 툭—쉭」 — 그림은 던지는 순간(throw · WrThrow), 소리는 원래 공격 소리 자리(fire~)
         L("satba__rope", "#D9B366", "#8A6A30",
-          "fire: flash glow 1 0.7 0.15 at=hand c=m al=0.7; spray grain 4 0.12 0.25 r=0.7 at=hand",
+          "throw: flash glow 1 0.9 0.2 c=m al=0.75; spray grain 5 0.12 0.3 r=0.9",
           "fire~ thud 140>70 0.05; cloth 40 0.15 @0.04 x0.6",
           "whit~ thud 100>50 0.08");
 
         // ---- 영웅: 비단 띠 「띠가 길게 나부낌」
         L("satba__silk", "#F273A6", "#FFD45A",
-          "fire: spray ribbon 2 0.5 0.35 r=1.2 at=hand; spray star4 2 0.12 0.25 r=0.8 at=hand c=a",
+          "throw: spray ribbon 3 0.6 0.5 r=1.6 v=0.8; spray star4 3 0.12 0.3 r=1 c=a",       // 던질 때 띠가 길게 나부낌
           "fire~ cloth 25 0.15; chime 2400 0.1 @0.05 x0.4",
           "whit~ thud 120>60 0.06; chime 2400 0.06 @0.03 x0.4",
           "widle: float ribbon 1 0.6 1.0 at=hand sp=20",
@@ -210,12 +210,14 @@ public static partial class SkinLooks
         // ---- 희귀: 빗자루 「쓱싹」 (빗자루 그림 · fx_broom 은 엄마 보스 공격이라 안 씀)
         L("plow__broom", "#E6BF66", "#A0803A",
           "fire: spray grain 3 0.16 0.3 r=0.9 at=hand",
+          "tick: spray grain 2 0.14 0.3 r=0.8 at=hand",        // 쓸 때(밀기 틱) 흙알 · 흙먼지 형태는 fx_dust__plow__broom
           "fire~ noise f6000 0.08 x0.7; noise f6000 0.08 @0.1 x0.7",
           "whit~ noise f2500 0.05; thud 140>80 0.04 x0.5");
 
         // ---- 영웅: 쇠스랑 「끼긱」 (바닥 평행선 · 이빨 세 줄 선은 L12 로 안 씀)
         L("plow__pitchfork", "#CCD9F2", "#FF9A40",
           "fire: spray spark 3 0.12 0.2 r=0.7 at=hand c=a",
+          "tick: spray spark 2 0.1 0.2 r=0.6 at=hand c=a",          // 휘두르면(밀기 틱) 불티 · 흙먼지 형태는 fx_dust__plow__pitchfork
           "fire~ scratch 0.15 f60",
           "whit~ metal 1800 0.05",
           "widle: burst spark 3 0.1 0.35 r=0.4 g=4 at=feet c=a",
@@ -249,13 +251,15 @@ public static partial class SkinLooks
         // ======================================================== 장의사 (삽)
         // ---- 희귀: 곡괭이 「흙 튐이 돌 조각으로」
         L("shovel__pickaxe", "#B3BFD9", "#8A8478",
-          "fire: spray shard 4 0.18 0.3 r=0.8 g=4 at=hand c=a; burst spark 2 0.1 0.15 r=0.4 at=hand",
+          "fire: burst spark 2 0.1 0.15 r=0.4 at=hand",
+          "dig: burst shard 6 0.2 0.4 r=1.1 g=6 c=a; burst spark 2 0.1 0.15 r=0.4",       // 파는 구멍 자리에서 돌 조각 (흙 튐 형태는 fx_dirt__shovel__pickaxe)
           "fire~ metal 1400 0.12; noise f2000 0.06 x0.5",
           "whit~ wood 400 0.03; wood 350 0.03 @0.04; noise f1200 0.08 @0.06 x0.6");
 
         // ---- 영웅: 은수저 「구멍이 반짝」
         L("shovel__spoon", "#E6F2FF", "#FFFFFF",
           "hole: #E8F4FF",
+          "dig: flash star4 2 0.5 0.4 r=0.4 c=w; burst star4 3 0.12 0.4 r=0.6",       // 구멍이 반짝 (구멍 빛은 일렁)
           "fire: flash star4 1 0.5 0.15 at=hand c=w; spray star4 3 0.12 0.25 r=0.6 at=hand",
           "fire~ sand 6000 0.05; metal 4000 0.08 @0.03 x0.5",
           "whit~ chime 3600 0.05",

@@ -36,8 +36,9 @@ public static partial class SkinLooks
 
         // ---- 검사: 흑기사 「검은 갑주」 (붉은 깃털은 공중에서만 — 바닥 흔적 빨강 금지 L8)
         L("swordsman__black", "#CC2633", "#1E1A22",
-          // 근사: 4걸음마다 깃털 → 걸음마다 작은 깃털 (N걸음 그림 칸 없음)
-          "step: mark squareboot 1 0.55 1.0 c=k; fall feather 1 0.2 0.8 h=0.8 r=0.3 c=m al=0.7",
+          "step: mark squareboot 1 0.55 1.0 c=k",
+          "stepn: 4",
+          "step2: fall feather 1 0.25 0.9 h=0.9 r=0.3 c=m al=0.8",       // 4걸음마다 붉은 깃털 하나 (공중)
           "step~ thud 140>60 0.06; metal 1400 0.04 @0.01 x0.5",
           "start: spray feather 3 0.25 0.35 r=1.2 c=m",
           "start~ cloth 16 0.12; metal 2600 0.04 @0.05 x0.5",
@@ -66,8 +67,9 @@ public static partial class SkinLooks
 
         // ---- 도적: 밤까마귀 「까마귀 떼」 (crow 글리프 — 장의사 기술 fx_crow 아님 L5)
         L("rogue__raven", "#BF1A33", "#18161C",
-          // 근사: 4걸음마다 깃털 → 걸음마다 옅은 깃털
-          "step: mark clawfoot 1 0.45 0.9 c=k; burst feather 1 0.15 0.5 r=0.3 at=feet c=a al=0.6",
+          "step: mark clawfoot 1 0.45 0.9 c=k",
+          "stepn: 4",
+          "step2: burst feather 2 0.18 0.6 r=0.4 at=feet c=a al=0.8",     // 4걸음마다 깃털
           "step~ sand 3000 0.05; cloth 30 0.04 @0.02 x0.5",
           "start: rise crow 2 0.5 0.35 r=0.4 h=1.5 at=feet c=a",
           "start~ beep 900>700 0.12; noise 0.15 x0.4",
@@ -205,8 +207,8 @@ public static partial class SkinLooks
 
         // ---- 우체부: 비둘기 조련사 「구구」 (pigeon 글리프 — 우체부 기술 fx_pigeon 아님 L5 · 8걸음마다 구구)
         L("postman__pigeon", "#99A6BF", "#F2F2F2",
-          // 근사: 가끔 깃털 → 걸음마다 옅은 깃털
-          "step: mark clawfoot 1 0.45 1.0 c=#6A6A70; burst feather 1 0.12 0.4 r=0.3 at=feet c=a al=0.5",
+          "step: mark clawfoot 1 0.45 1.0 c=#6A6A70",
+          "step2: burst feather 3 0.16 0.6 r=0.5 at=feet c=a al=0.8",     // 8걸음마다 구구 + 깃털 몇 장
           "step~ wood 1400 0.02",
           "stepn: 8",
           "step2~ wood 1400 0.02; sine 400>360 0.07 @0.03; sine 400>360 0.07 @0.11",
@@ -271,6 +273,8 @@ public static partial class SkinLooks
           "trail: float star4 1 0.18 0.3 c=a",
           "acc: burst spark 3 0.14 0.25 r=0.8 at=hand c=a",
           "acc~ metal 1500 0.08",
+          "throw: burst spark 5 0.14 0.3 r=0.9 c=a; flash star4 1 0.45 0.2 c=w",       // 메칠 때마다 쇳소리 (설명 약속)
+          "throw~ metal 1200 0.12; metal 2400 0.2 @0.02 x0.5",
           "hurt: burst shard 6 0.22 0.45 r=1.8 g=5 c=m; burst grain 4 0.12 0.4 r=1.5 g=5 c=#C8A878",
           "hurt~ metal 800 0.12; metal 1600 0.06 @0.03 x0.5",
           "lvl: float bell 1 1.4 1.0 y=1.3 at=head c=m; column spark 14 0.15 0.9 r=0.8 h=5 c=a",
@@ -314,9 +318,9 @@ public static partial class SkinLooks
           "win: fountain flake 24 0.18 2 r=1.5 h=4 c=w; fall confetti 10 0.12 2 h=4 r=1.5 c=a",
           "win~ chime 1319,1568,1319,1047,1568,2093 0.15; pulse 1 n16 f5000 x0.4");
 
-        // ---- 인형사: 종이 인형 「종이접기 무대」 (설명 약속: 더미는 접이식 종이 인형 — dummy 종이색 · 종이끈 결은 엔진 미지원)
+        // ---- 인형사: 종이 인형 「종이접기 무대」 (설명 약속: 더미는 접이식 종이 인형 = weapon_dummy__puppeteer__paper 그림 · 줄 = 꼰 종이끈 결)
         L("puppeteer__paper", "#EDD99E", "#E8735A",
-          "dummy: #EDE4CC",
+          "string: paper #EDE4CC",
           "step: mark paperfoot 1 0.5 1.0 c=#C8B890; burst paper 1 0.15 0.4 r=0.3 at=feet c=w",
           "step~ paper 0.05",
           "start: rise crane 2 0.5 0.35 r=0.5 h=1.5 c=w",
@@ -346,6 +350,7 @@ public static partial class SkinLooks
           "win~ musicbox 523,659,784,1047,784,1047 0.14");
 
         // ---- 장의사: 석공 「돌을 깎는 손」 (설명 약속 「묘비 대신 작은 조각상」은 물체 교체라 엔진 미지원 — hole 색도 안 바꿈 · 8걸음마다 망치)
+        // 설명 약속 「묘비 대신 작은 조각상」 = prop_grave*__undertaker__mason 그림 (SkinFx.ObjectSheet)
         L("undertaker__mason", "#B29E80", "#8C8C8C",
           "step: mark boot 1 0.55 1.0 c=#9A9488; burst dust 2 0.1 0.4 r=0.4 at=feet c=a",
           "step~ wood 250 0.03; sand 1500 0.04 @0.01 x0.5",
@@ -373,11 +378,12 @@ public static partial class SkinLooks
           "win: rise statue 1 1.8 2 h=1.5 r=0 y=0.8 at=head c=w; fountain dust 18 0.15 1.8 r=1 h=4 c=a",
           "win~ metal 2400 0.03; metal 2400 0.03 @0.15; thud 180>90 0.12 @0.3; bell 523,659,784 0.2 @0.5");
 
-        // ---- 사진사: 즉석 카메라 「바로 나오는 사진」 (설명 약속 「흰 테 사진」은 물체 교체 미지원 — 셔터 번쩍만 흰색 · 8걸음마다 출력 모터)
+        // ---- 사진사: 즉석 카메라 「바로 나오는 사진」 (설명 약속 「흰 테 사진」 = 인화 사본 뒤 흰 테 판 copy · 셔터 번쩍 흰색 · 8걸음마다 출력 모터 + 사진 한 장)
         L("photographer__instant", "#F273A6", "#FFFFFF",
           "flash: #FFFFFF",
-          // 근사: 8걸음마다 사진 한 장 떨어짐 → 그림 생략 (N걸음 그림 칸 없음 · 소리만 step2)
+          "copy: polaroid",
           "step: mark shoe 1 0.5 1.0 c=w",
+          "step2: fall polaroid 1 0.4 0.9 h=0.5 r=0.3 c=w",
           "step~ whistle 2600>2200 0.04 x0.5",
           "stepn: 8",
           "step2~ saw 120 0.2; noise f800 0.2 x0.4",

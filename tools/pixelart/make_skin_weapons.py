@@ -33,6 +33,9 @@ SKINS = {
     'lantern__chain':      (['fx_beam'], (255, 153, 50), (90, 80, 80), 'links'),
     'satba__rope':         (['fx_throwtrail'], (216, 178, 102), (130, 95, 45), 'wood'),
     'satba__silk':         (['fx_throwtrail'], (242, 115, 166), (255, 220, 120), 'sparkle'),
+    # 공사 반장: 평타 그림 시트가 따로 없어 삽날 밀기 틱마다 보이는 흙먼지(fx_dust)를 같은 원칙으로 (2026-11-04 마무리)
+    'plow__broom':         (['fx_dust'], (230, 191, 102), (160, 128, 58), 'wood'),
+    'plow__pitchfork':     (['fx_dust'], (204, 217, 242), (255, 154, 64), 'flecks'),
     'dummy__bear':         (['fx_puppet_swing'], (178, 128, 76), (240, 225, 200), 'chalk'),
     'dummy__wood':         (['fx_puppet_swing'], (216, 166, 102), (120, 80, 40), 'wood'),
     'shovel__pickaxe':     (['fx_dirt'], (178, 190, 216), (90, 95, 110), 'cracks'),
