@@ -128,7 +128,8 @@ public static class SkinAudio
     //   2.0.1~ 같은 이름을 적 · 보스도 쓰는 공용 소리(쿵 · 휙 · 딸깍 · 똑딱)는 영웅 쪽 파일이 부른 것만 — 무기 스킨이 적 소리까지 바꾸던 문제
     static bool IsAttack(string name, string from)
     {
-        if ((name == "thump" || name == "whoosh" || name == "click" || name == "tick") && !HeroSource(from)) return false;
+        //   2026-11-04~ 모든 이름으로 넓힘: 발사음 통째 교체(fire~)가 생겨 적 · 보스의 crack · slash · freeze · shatter · ratchet 까지 무기 스킨 소리로 바뀌고 원래 소리가 꺼졌음
+        if (!HeroSource(from)) return false;
         switch (CharacterData.Selected)
         {
             case CharacterId.Gunner: return name == "gunshot" || name == "crack" || name == "shotgun";
@@ -163,7 +164,7 @@ public static class SkinAudio
     }
 
     static bool HeroSource(string from) => !string.IsNullOrEmpty(from)
-        && (from.Contains("CharacterKit") || from.Contains("SpecialAbilities") || from.Contains("SignatureSkills") || from.Contains("Paths") || from.Contains("PlayerController"));
+        && (from.Contains("CharacterKit") || from.Contains("SpecialAbilities") || from.Contains("SignatureSkills") || from.Contains("Paths") || from.Contains("PlayerController") || from.Contains("SkinAudio"));      // SkinAudio: PlayPistol (거너 권총)
 
     // SpecialFeedback.Play 가 소리를 틀기 직전에: 공격 소리를 무기 스킨에 맞게 (덧소리는 따로 틈)
     //   무기 스킨에 발사음 레시피(fire~)가 있으면 그 소리로 통째 교체 (원래 이름은 빈 이름 → 무음)
@@ -271,9 +272,15 @@ public static class SkinAudio
     public static AudioClip Clip(SkinDef s, string slot)
     {
         if (s == null) return null;
-        if (!variants.ContainsKey(Key(s, slot))) Ensure(s);      // 메뉴(커서 소리) · 상점처럼 EnsureAll 전이면 그 스킨만 만듦
-        if (!variants.TryGetValue(Key(s, slot), out int n) || n <= 0) return null;
         string key = Key(s, slot);
+        if (!variants.TryGetValue(key, out int n))
+        {
+            // 그 칸 소리가 없는 스킨이면 바로 끝 (예전엔 명중 · 걸음 · 코인마다 Ensure 를 다시 돌려 문자열을 쪼갬)
+            if (SkinLooks.Get(s)?.Sfx(slot) == null) return null;
+            Ensure(s);      // 메뉴(커서 소리) · 상점처럼 EnsureAll 전이면 그 스킨만 만듦
+            if (!variants.TryGetValue(key, out n)) return null;
+        }
+        if (n <= 0) return null;
         turn.TryGetValue(key, out int i);
         // 같은 것 연속 금지: 차례로 돌림
         turn[key] = (i + 1) % n;
@@ -379,12 +386,17 @@ public static class SkinAudio
 
     static float F(string w) => float.TryParse(w, NumberStyles.Float, CultureInfo.InvariantCulture, out float v) ? v : 0f;
 
+    // 예외를 삼킴 (null = 무음): 피격 · 공격음 교체(Adjust) · 처치 경로에서 불려 레시피 하나가 게임 진행을 막지 않게
     static AudioClip Synth(string name, string recipe, int variant)
     {
-        float[] buf = RenderRecipe(name, recipe, variant);
-        AudioClip clip = AudioClip.Create(name, buf.Length, 1, Rate, false);
-        clip.SetData(buf, 0);
-        return clip;
+        try
+        {
+            float[] buf = RenderRecipe(name, recipe, variant);
+            AudioClip clip = AudioClip.Create(name, buf.Length, 1, Rate, false);
+            clip.SetData(buf, 0);
+            return clip;
+        }
+        catch (System.Exception e) { Debug.LogException(e); return null; }
     }
 
     public const int SampleRate = Rate;

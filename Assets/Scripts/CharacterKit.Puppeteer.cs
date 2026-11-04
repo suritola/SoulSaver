@@ -310,7 +310,8 @@ public partial class CharacterKit
 
     void PupDrawLine(ref LineRenderer lr, string name, Vector2 a, Vector2 b)
     {
-        if (lr == null) { lr = Hostile.NewLine(name, PupSky, 0.1f, 24); lr.loop = false; SkinFx.StringLook(lr); }      // 스킨 줄 결 (종이끈 · 케이블 · 영혼불 실 — 같은 굵기)
+        if (lr == null) { lr = Hostile.NewLine(name, PupSky, 0.1f, 24); lr.loop = false; }
+        SkinFx.StringLook(lr);      // 스킨 줄 결 (종이끈 · 케이블 · 영혼불 실 — 같은 굵기) · 매 프레임 지금 스킨과 맞춤 (릴레이 교대 · 스킨 교체 뒤 앞 결이 남던 것)
         lr.enabled = true;
         float L = Vector2.Distance(a, b);
         Color c = SkinFx.StringColor(HeroAim.ColorOf(HeroAimKind.Puppeteer));

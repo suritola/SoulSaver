@@ -44,10 +44,15 @@ public partial class SkinFx
     }
 
     // 무기 진화 순간 (SpecialAbilities.Evolved)
+    //   예외를 삼킴: SpecialAbilities.Evolve 가 evolved.Add 뒤 이 이벤트를 부르므로 여기서 던지면 KitOnEquip 이 빠진 반쯤 진화로 남음
     void OnEvolved(int tier)
     {
-        if (Off || WeaponLook == null || !SlotReady("evo", 1f)) return;
-        Slot(WeaponSkin, WeaponLook, "evo", transform.position, Vector2.up, true, 31, Bud.Rare, 0.6f, 0f, SkinAudio.Prio.Big);
+        try
+        {
+            if (Off || WeaponLook == null || !SlotReady("evo", 1f)) return;
+            Slot(WeaponSkin, WeaponLook, "evo", transform.position, Vector2.up, true, 31, Bud.Rare, 0.6f, 0f, SkinAudio.Prio.Big);
+        }
+        catch (System.Exception e) { GuardFail(e); }
     }
 
     // W2: 무기 스킨 형태 시트 — 「<원래 이름>__<스킨>」 시트가 Resources/FX 에 있으면 그 이름 (Fx.SheetFor 가 내 것 · 평타일 때만 부름)

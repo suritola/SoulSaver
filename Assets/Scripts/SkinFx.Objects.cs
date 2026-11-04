@@ -77,18 +77,27 @@ public partial class SkinFx
 
     // ================================================================= 인형사 줄 (판정 줄 — 같은 굵기 · 결 · 색만)
     //   표의 string 칸 「결 #색」: paper 종이끈 · cable 케이블 · soul 영혼불 실 · plain 색만
+    //   매 프레임 불러도 됨 (같은 칸 문자열이면 재질을 다시 찾지 않음) — 릴레이 교대 · 상점에서 스킨이 바뀌면 줄 결도 따라 바뀜 (예전엔 만들 때 한 번만 입혀 앞 주자 결이 남았음)
+    static string stringMatHex;
+    static Material stringMatWant;
     public static void StringLook(LineRenderer lr)
     {
-        if (lr == null || Off || CharLook == null) return;
-        string s = CharLook.Fx("string");
-        if (s == null) return;
+        if (lr == null) return;
         try
         {
-            int sp = s.IndexOf(' ');
-            Material m = StringMat(sp > 0 ? s.Substring(0, sp) : s);
-            if (m == null) return;
-            lr.sharedMaterial = m;
-            lr.textureMode = LineTextureMode.Tile;
+            string s = Off || CharLook == null ? null : CharLook.Fx("string");
+            if (!ReferenceEquals(s, stringMatHex))
+            {
+                stringMatHex = s;
+                int sp = s != null ? s.IndexOf(' ') : -1;
+                stringMatWant = s == null ? null : StringMat(sp > 0 ? s.Substring(0, sp) : s);
+            }
+            Material m = stringMatWant;
+            if (m != null)
+            {
+                if (lr.sharedMaterial != m) { lr.sharedMaterial = m; lr.textureMode = LineTextureMode.Tile; }
+            }
+            else if (lr.sharedMaterial != null && stringMats.ContainsValue(lr.sharedMaterial)) PixelLine.Apply(lr);       // 스킨 결이 남은 줄 → 기본 도트 획으로
         }
         catch (System.Exception e) { GuardFail(e); }
     }
