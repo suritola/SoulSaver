@@ -61,6 +61,7 @@ public class SkinCapture
         float secs = float.Parse(Environment.GetEnvironmentVariable("SKINCAP_SECS") ?? "13.5");
         Directory.CreateDirectory(outDir);
         Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);     // 배치 모드에서도 새 스킨 연출 · 소리
         SceneManager.LoadScene("MainMenu");
         for (int i = 0; i < 30; i++) yield return null;
 
@@ -160,6 +161,7 @@ public class SkinCapture
             }
         }
         tap.SetValue(null, null);
+        T("SkinFx").GetField("InCapture").SetValue(null, false);
         File.WriteAllLines(Path.Combine(outDir, "skins_" + hero + ".txt"), marks);
         Time.captureFramerate = 0;
         Debug.Log("[SKINCAP] done " + path + " frames=" + frames);

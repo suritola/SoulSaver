@@ -2232,6 +2232,7 @@ public class GameplayCapture
         LogAssert.ignoreFailingMessages = true;
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);     // 배치 모드에서도 새 스킨 연출 · 소리
         In("Auto", true);                          // 업적 · 누적 기록이 풀리지 않게
         AudioListener.volume = 0f;                 // 촬영하는 동안 스피커로 소리를 내지 않음 (영상 음악 · 효과음은 아래에서 파일로 직접 넣음)
         SetGameLanguage(Lang);
@@ -2422,6 +2423,7 @@ public class GameplayCapture
         LogAssert.ignoreFailingMessages = true;
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);     // 배치 모드에서도 새 스킨 연출 · 소리
         In("Auto", true);
         AudioListener.volume = 0f;
         SetGameLanguage(Lang);
@@ -2564,6 +2566,7 @@ public class GameplayCapture
         LogAssert.ignoreFailingMessages = true;
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);     // 배치 모드에서도 새 스킨 연출 · 소리
         In("Auto", true);
         AudioListener.volume = 0f;
         SetGameLanguage(Lang);
@@ -2618,6 +2621,7 @@ public class GameplayCapture
         LogAssert.ignoreFailingMessages = true;
         Directory.CreateDirectory(Out);
         Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);     // 배치 모드에서도 새 스킨 연출 · 소리
         In("Auto", true);
         AudioListener.volume = 0f;
         SetGameLanguage(Lang);

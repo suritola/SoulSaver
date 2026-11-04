@@ -15,7 +15,9 @@ public partial class SkinFx : MonoBehaviour
     public static SkinFx Instance { get; private set; }
 
     // 새 칸을 끄는 경우: 개편 전 비교 스위치 · 자동 봇 배치 측정 (6-5 · 6-6절)
-    public static bool Off => VisualRules.Legacy || Application.isBatchMode;
+    //   InCapture: 배치 모드 녹화 도구(tools/trailer)가 켬 — 영상엔 새 연출 · 소리가 나와야 함
+    public static bool InCapture;
+    public static bool Off => VisualRules.Legacy || (Application.isBatchMode && !InCapture);
 
     PlayerController player;
     SpriteRenderer body;

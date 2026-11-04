@@ -230,7 +230,7 @@ public static class SkinAudio
     // 끼운 스킨(캐릭터 · 무기 · 이펙트 · 커서) 것만 만들고 나머지는 버림 — 판 시작 · 상점에서 고를 때 · 릴레이 교대 · 스킨을 바꾼 뒤
     public static void EnsureAll(params SkinDef[] also)
     {
-        if (Application.isBatchMode) return;
+        if (Application.isBatchMode && !SkinFx.InCapture) return;
         keep.Clear();
         Ensure(SkinFx.CharSkin); Ensure(SkinFx.WeaponSkin); Ensure(SkinFx.EffectSkin); Ensure(SkinData.Equipped(SkinKind.Cursor));
         if (also != null) foreach (SkinDef d in also) Ensure(d);
