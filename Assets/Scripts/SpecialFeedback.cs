@@ -51,13 +51,18 @@ public class SpecialFeedback : MonoBehaviour
     {
         if (oneShot == null || !clips.TryGetValue(name, out AudioClip c)) return;
         PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        Tapped?.Invoke(c, vol * volume * GameSettings.SfxVolume, pitch);
     }
+
+    // 녹화 도구(tools/trailer/SkinCapture.cs)가 배치 모드에서 소리를 영상에 섞으려고 엿들음 — 게임은 쓰지 않음
+    public static System.Action<AudioClip, float, float> Tapped;
 
     // 2026-11-04~ 스킨 칸 소리 (SkinAudio 가 레시피로 합성한 클립 — 이 합성기 이름표 밖)
     public void PlayClip(AudioClip c, float vol = 1f, float pitch = 1f)
     {
         if (oneShot == null || c == null) return;
         PitchSource(pitch, c.length).PlayOneShot(c, vol * volume * GameSettings.SfxVolume);
+        Tapped?.Invoke(c, vol * volume * GameSettings.SfxVolume, pitch);
     }
 
     // 소스의 pitch 는 이미 울리고 있는 소리에도 걸리므로 (처치 '퐁'마다 레벨업 · 보스 소리 음이 흔들리던 문제)
