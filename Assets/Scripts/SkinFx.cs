@@ -59,6 +59,9 @@ public class SkinFx : MonoBehaviour
         if (Instance == this) Instance = null;
         EnermyController.Killed -= OnKill;
         PlayerController.UltUsed -= OnUlt;
+        // 오라 구슬 · 발밑 빛은 몸 밖 오브젝트라 같이 지움 (상점 미리보기 무대를 닫을 때 남던 것)
+        foreach (Transform o in orbs) if (o != null) Destroy(o.gameObject);
+        if (groundGlow != null) Destroy(groundGlow);
     }
 
     void Update()
@@ -190,7 +193,7 @@ public class SkinFx : MonoBehaviour
 
     // 처치: 이펙트 스킨 · 전설 캐릭터 스킨의 연출 (초당 최대 약 16번)
     // 1.9.1: 기본 처치 효과(영혼 폭발)에 묻혀 거의 보이지 않던 것을 키움. 기본 효과 색도 스킨 색으로 (Juice · KillColor)
-    void OnKill(Vector3 pos)
+    public void OnKill(Vector3 pos)      // 상점 미리보기(SkinPreview)도 부름
     {
         bool effect = EffectSkin != null;
         bool legend = CharSkin != null && CharSkin.tier >= 3;
@@ -300,7 +303,7 @@ public class SkinFx : MonoBehaviour
         return EffectSkin.id == "skin_starlight" ? Color.HSVToRGB(Random.value, 0.4f, 1f) : EffectSkin.color;
     }
 
-    void OnUlt()
+    public void OnUlt()
     {
         if (CharSkin == null || CharSkin.tier < 3) return;
         SpecialAbilities.SharedFx?.Play(SkinAudio.UltSound(CharSkin.id), 0.6f);

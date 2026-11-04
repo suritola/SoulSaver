@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 번역표 (2.2.0~): 새 영웅 셋(인형사 · 장의사 · 사진사)의 캐릭터 스킨 이름 12 · 설명 12 · 무기 스킨 이름 6 · 설명 6 (SkinData)
+// 번역표 (2.2.0~): 새 영웅 셋(인형사 · 장의사 · 사진사)의 캐릭터 스킨 이름 12 · 설명 12 · 무기 스킨 이름 6 · 설명 6 (SkinData), 상점 미리보기 무대 문구
 // 이미 있는 키는 건드리지 않음 (키 중복 크래시 방지)
 public static partial class LocTable
 {
@@ -107,5 +107,12 @@ public static partial class LocTable
           "An old large camera with a bellows; the flash powder bursts with a bang.",
           "蛇腹のついた古い大型カメラ。フラッシュ粉がボンと弾けます。",
           "带有风箱的老式大相机，闪光粉砰地炸开。");
+
+        // ---------------- 상점 미리보기 무대 (SkinPreview)
+        S("미리보기", "Preview", "プレビュー", "预览");
+        C("skin.preview.note", "공격 · 명중 · 처치 · 피격 · 필살기를 게임과 같은 연출 · 소리로 되풀이합니다 (판정 · 크기는 그대로, 다른 칸은 지금 낀 스킨)",
+          "Loops attack, hit, kill, damage and ultimate with the same effects and sounds as in-game (hitboxes and size unchanged; other slots show what you have equipped)",
+          "攻撃・命中・撃破・被弾・必殺技をゲームと同じ演出・音で繰り返します（判定・大きさはそのまま、他の枠は今の装備）",
+          "以与游戏相同的特效和音效循环展示攻击、命中、击杀、受击和必杀技（判定与大小不变，其他栏位为当前装备）");
     }
 }

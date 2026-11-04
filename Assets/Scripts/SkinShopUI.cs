@@ -29,6 +29,8 @@ public class SkinShopUI : MonoBehaviour
     float confirmUntil;
     SpecialFeedback audioFx;
     Coroutine preview;          // 1.1~ 소리 듣기를 연타하면 미리듣기가 겹쳐 쌓였음 → 하나만
+    Button previewButton;
+    SkinPreview stage;          // 2.2.x~ 미리보기 무대 (열려 있으면 Esc 는 무대만 닫음)
 
     public static void Open(Transform root)
     {
@@ -133,7 +135,9 @@ public class SkinShopUI : MonoBehaviour
             titleText.rectTransform.anchoredPosition = new Vector2(-170f, -314f);
             descText.rectTransform.anchoredPosition = new Vector2(-170f, -378f);
         }
-        actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -360f), new Vector2(260f, 64f), OnAction, 22f);
+        // 2.2.x~ 「미리보기」: 고른 스킨을 실제 게임 연출로 돌려 보는 무대 (SkinPreview) — 구매 단추 위
+        previewButton = UIKit.MakeButton(win, "미리보기", new Vector2(640f, -318f), new Vector2(260f, 52f), OpenStage, 22f);
+        actionButton = UIKit.MakeButton(win, "", new Vector2(640f, -384f), new Vector2(260f, 60f), OnAction, 22f);
         actionLabel = actionButton.GetComponentInChildren<TMP_Text>();
 
         // 소리 미리 듣기용 합성기 (메인 메뉴에는 게임의 합성기가 없음)
@@ -223,20 +227,7 @@ public class SkinShopUI : MonoBehaviour
         switch (kind)
         {
             case SkinKind.Character:
-                {
-                    CharacterDef d = CharacterData.Def((CharacterId)who);
-                    string sheet = s != null ? s.id : d.body ?? "gunner_nogun";
-                    List<Sprite> l = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + sheet));
-                    l.Sort((a, b) => Num(a.name).CompareTo(Num(b.name)));
-                    // 달리기 프레임 (다른 캐릭터 2~5)
-                    if (d.body != null && l.Count >= 6) return new[] { l[2], l[3], l[4], l[5] };
-                    // 거너 (1.0.1): 시트가 줄마다 동작이고 줄 끝에 「idle」 · 「Run」 같은 빨간 글씨가 그려져 있어,
-                    // 이름 순서로 앞 네 장을 쓰면 서 있기 · 글씨 · 말하기가 섞여 이상한 프레임이 끼었음 → 위에서 네 번째 줄(달리기)의 네 장만
-                    List<Sprite> run = l.FindAll(sp => sp.texture != null && Mathf.RoundToInt(sp.rect.y) == sp.texture.height - 32 * 4 && sp.rect.x < 32 * 4);
-                    run.Sort((a2, b2) => a2.rect.x.CompareTo(b2.rect.x));
-                    if (run.Count > 0) return run.ToArray();
-                    return l.Count > 0 ? new[] { l[0] } : new Sprite[0];
-                }
+                return RunFrames(who, s);
             case SkinKind.Weapon:
                 {
                     string held = CharacterData.Def((CharacterId)who).held ?? "pistol";
@@ -255,6 +246,31 @@ public class SkinShopUI : MonoBehaviour
                     return new[] { sp };
                 }
         }
+    }
+
+    // 캐릭터 스킨의 달리기 프레임 (상점 카드 · 미리보기 무대 SkinPreview)
+    public static Sprite[] RunFrames(int who, SkinDef s)
+    {
+        CharacterDef d = CharacterData.Def((CharacterId)who);
+        string sheet = s != null ? s.id : d.body ?? "gunner_nogun";
+        List<Sprite> l = new List<Sprite>(Resources.LoadAll<Sprite>("Characters/" + sheet));
+        l.Sort((a, b) => Num(a.name).CompareTo(Num(b.name)));
+        // 달리기 프레임 (다른 캐릭터 2~5)
+        if (d.body != null && l.Count >= 6) return new[] { l[2], l[3], l[4], l[5] };
+        // 거너 (1.0.1): 시트가 줄마다 동작이고 줄 끝에 「idle」 · 「Run」 같은 빨간 글씨가 그려져 있어,
+        // 이름 순서로 앞 네 장을 쓰면 서 있기 · 글씨 · 말하기가 섞여 이상한 프레임이 끼었음 → 위에서 네 번째 줄(달리기)의 네 장만
+        List<Sprite> run = l.FindAll(sp => sp.texture != null && Mathf.RoundToInt(sp.rect.y) == sp.texture.height - 32 * 4 && sp.rect.x < 32 * 4);
+        run.Sort((a2, b2) => a2.rect.x.CompareTo(b2.rect.x));
+        if (run.Count > 0) return run.ToArray();
+        return l.Count > 0 ? new[] { l[0] } : new Sprite[0];
+    }
+
+    void OpenStage()
+    {
+        if (stage != null) return;
+        StopPreview();
+        confirm = false;        // 무대를 보고 돌아오면 구매 확인은 처음부터
+        stage = SkinPreview.Open(win, selected, kind, who, audioFx, () => { stage = null; ShowDetail(); });
     }
 
     static int Num(string n)
@@ -370,7 +386,7 @@ public class SkinShopUI : MonoBehaviour
         }
     }
 
-    static string BaseAttack(int who) => (CharacterId)who switch
+    public static string BaseAttack(int who) => (CharacterId)who switch
     {
         CharacterId.Swordsman => "slash",
         CharacterId.Rogue => "whoosh",
@@ -391,7 +407,13 @@ public class SkinShopUI : MonoBehaviour
 
     void Update()
     {
-        if (GameInput.EscDown) { SettingsUI.EscHandledFrame = Time.frameCount; Close(); return; }
+        if (GameInput.EscDown)
+        {
+            SettingsUI.EscHandledFrame = Time.frameCount;
+            if (stage != null) { Destroy(stage.gameObject); stage = null; ShowDetail(); return; }
+            Close();
+            return;
+        }
         int f = (int)(Time.unscaledTime * 8f);
         foreach (var a in anims) if (a.img != null) a.img.sprite = a.frames[f % a.frames.Length];
         float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f);
