@@ -187,7 +187,11 @@ public static class SkinData
     }
 
     // ================================================================= 저장 (PlayerPrefs)
+#if SOULSAVER_TESTUNLOCK
+    public static bool Owns(string id) => true;     // 개발자 시험 빌드(BuildScript -testUnlock): 모든 스킨 보유 · 저장은 그대로
+#else
     public static bool Owns(string id) => Prefs.GetInt("skin.own." + id, 0) == 1;
+#endif
 
     static string EquipKey(SkinKind kind, int who) => "skin.eq." + (int)kind + "." + (IsGlobal(kind) ? -1 : who);
 
