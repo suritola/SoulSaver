@@ -48,7 +48,8 @@ public class ResumeCountdown : MonoBehaviour
 
     void OnDestroy() { if (inst == this) inst = null; }
 
-    static bool Skip => GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode;
+    public static bool InCapture;       // 녹화 도구(tools/trailer · 배치 모드)가 카운트다운 화면을 찍을 때만 켬
+    static bool Skip => GameInput.Auto || GameInput.TrailerRunning || (Application.isBatchMode && !InCapture);
 
     static bool Cinematic => BossUltimate.CutscenePlaying || StoryDirector.Playing || Herald.Playing || PlayerController.Cinematic
                              || SceneFlow.Loading || TitleIntro.Showing || SkillEvolutionUI.Open;
@@ -151,6 +152,8 @@ public class ResumeCountdown : MonoBehaviour
         if (ui == null) return;
         if (!ui.activeSelf) { ui.SetActive(true); ui.transform.SetAsLastSibling(); }      // 나중에 붙은 알림 · 배너에 가리지 않게
         num.text = Mathf.CeilToInt(left).ToString();
+        float f = left - Mathf.Floor(left);         // 초가 바뀔 때 1 → 0: 숫자가 커졌다 줄어듦 (바뀐 걸 눈이 따라가게)
+        num.transform.localScale = Vector3.one * (1f + 0.3f * f * f);
         hint.text = Loc.T("resume.skip").Replace("{0}", GamePad.Active ? "A" : "Space");
     }
 
@@ -158,10 +161,21 @@ public class ResumeCountdown : MonoBehaviour
     {
         Canvas cv = UIKit.HudCanvas();
         if (cv == null) return;
-        RectTransform root = UIKit.Rect("ResumeCountdownUI", cv.transform, new Vector2(0f, 60f), new Vector2(900f, 260f));
+        // 2.0.3~ 사용자 「숫자랑 안내가 한 개도 안 보여」: 화면 가운데(영웅 · 피해 숫자 · 적 위)에 작게 겹쳐 묻혔음
+        //   → 화면 전체를 옅게 어둡게 · 숫자를 크게 영웅 머리 위로 · 안내는 그 아래 (영웅을 가리지 않게)
+        RectTransform root = UIKit.Rect("ResumeCountdownUI", cv.transform, Vector2.zero, Vector2.zero);
+        root.anchorMin = Vector2.zero; root.anchorMax = Vector2.one;
+        root.offsetMin = root.offsetMax = Vector2.zero;
+        UnityEngine.UI.Image dim = root.gameObject.AddComponent<UnityEngine.UI.Image>();
+        dim.color = new Color(0.03f, 0.02f, 0.05f, 0.5f);
+        dim.raycastTarget = false;
         ui = root.gameObject;
-        num = UIKit.Text(root, "", 120f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 40f), new Vector2(300f, 150f));
-        hint = UIKit.Text(root, "", 30f, Color.white, new Vector2(0f, -70f), new Vector2(880f, 50f));
+        num = UIKit.Text(root, "", 210f, new Color(0.96f, 0.83f, 0.47f), new Vector2(0f, 250f), new Vector2(400f, 260f));
+        RectTransform band = UIKit.Rect("HintBand", root, new Vector2(0f, 110f), new Vector2(560f, 66f));      // 안내 뒤 어두운 띠 (적 · 탄 위에서도 읽히게)
+        UnityEngine.UI.Image bi = band.gameObject.AddComponent<UnityEngine.UI.Image>();
+        bi.color = new Color(0.03f, 0.02f, 0.05f, 0.78f);
+        bi.raycastTarget = false;
+        hint = UIKit.Text(root, "", 38f, Color.white, new Vector2(0f, 110f), new Vector2(900f, 60f));
         foreach (TMP_Text t in new[] { num, hint })
         {
             t.outlineWidth = 0.25f;

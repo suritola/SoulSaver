@@ -301,6 +301,7 @@ public class GameplayCapture
         NativeArray<float> audio;
         RenderTexture rt;
         Texture2D frame;
+        public void Buffers() { rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32); frame = new Texture2D(W, H, TextureFormat.RGBA32, false); }     // 영상 없이 Shot 만 (PauseShot)
         float[] music;
         int musicCh, musicRate, musicFrames, cursor, perFrame;
         const int Rate = 48000;
@@ -2657,6 +2658,48 @@ public class GameplayCapture
         In("Auto", false);
         Debug.Log("[CAP] done frames=" + rec.frames);
         yield return null;
+    }
+
+    // 재개 카운트다운 화면 (record.ps1 -Mode pause): 일시정지 창 → 「계속하기」 → 3 · 2 · 1 → 다시 흐름, 실제 시간으로 PNG 5장
+    [UnityTest]
+    public IEnumerator PauseShot()
+    {
+        LogAssert.ignoreFailingMessages = true;
+        Directory.CreateDirectory(Out);
+        Type rc = T("ResumeCountdown");
+        rc.GetField("InCapture").SetValue(null, true);
+        T("SkinFx").GetField("InCapture").SetValue(null, true);
+        AudioListener.volume = 0f;
+        SetGameLanguage(Lang);
+        GameObject host = new GameObject("CaptureRec");
+        UnityEngine.Object.DontDestroyOnLoad(host);
+        rec = host.AddComponent<Rec>();
+        BuildOverlay();
+        rec.Buffers();
+        rec.cleanUi = false;            // 조작 안내도 그대로 (「[Space] 즉시 시작」)
+        rec.sub.text = "";
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+        yield return Load(Environment.GetEnvironmentVariable("CAPTURE_HERO") ?? "Gunner", 0);
+        yield return new WaitForSecondsRealtime(2f);
+        Shot("pause_0_play");
+        object esc = Find("ESCmenu");
+        Call(esc, "ToggleEsc");
+        yield return new WaitForSecondsRealtime(0.8f);
+        Shot("pause_1_menu");
+        Call(esc, "onPressResume");
+        float t0 = Time.realtimeSinceStartup;
+        int n = 0;
+        foreach (float at in new[] { 0.3f, 1.3f, 2.3f })
+        {
+            while (Time.realtimeSinceStartup - t0 < at) yield return null;
+            Shot("pause_2_count" + (++n));
+            Debug.Log("[CAP] count" + n + " active=" + rc.GetProperty("Active").GetValue(null) + " timeScale=" + Time.timeScale);
+        }
+        yield return new WaitForSecondsRealtime(1.2f);
+        Shot("pause_3_after");
+        Debug.Log("[CAP] done active=" + rc.GetProperty("Active").GetValue(null) + " timeScale=" + Time.timeScale);
+        rc.GetField("InCapture").SetValue(null, false);
+        T("SkinFx").GetField("InCapture").SetValue(null, false);
     }
 
     static IEnumerator Delayed(float s, Action a) { yield return F(s); a(); }
