@@ -12,6 +12,11 @@ for d in ("1_제작보고서", "2_시연영상", "3_실행파일", "4_소스"):
 shutil.copy(os.path.join(work, "SoulSaver_제작보고서.pdf"), os.path.join(stage, "1_제작보고서"))
 shutil.copy(os.path.join(work, "SoulSaver_시연영상.mp4"), os.path.join(stage, "2_시연영상"))
 shutil.copytree(build, os.path.join(stage, "3_실행파일", "SoulSaver"), ignore=shutil.ignore_patterns("*DoNotShip*"))
+# 심사용 빌드는 제품 이름이 「Soul Saver Festival」(저장 분리)이라 실행 파일도 그 이름 → 제출본은 「Soul Saver.exe」로 (exe 와 _Data 폴더 이름만 맞으면 Unity 가 실행됨)
+gdir = os.path.join(stage, "3_실행파일", "SoulSaver")
+for f in os.listdir(gdir):
+    if f.startswith("Soul Saver Festival"):
+        os.rename(os.path.join(gdir, f), os.path.join(gdir, f.replace("Soul Saver Festival", "Soul Saver")))
 srczip = os.path.join(work, "src.zip")   # 이름이 깨진 에셋이 있어 풀지 않고 zip 끼리 합친다
 subprocess.run(["git", "-C", ROOT, "archive", "--format=zip", "-o", srczip, "HEAD", "Assets", "Packages", "ProjectSettings", "tools", "AGENT.md"], check=True)
 open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""2026 한동 AI·SW페스티벌 · 스마트 SW 공모전 게임 부문 출품작
@@ -20,7 +25,7 @@ open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""20
 구성
  1_제작보고서/SoulSaver_제작보고서.pdf
  2_시연영상/SoulSaver_시연영상.mp4 (1080p · 한국어 자막 · 약 2분 30초)
- 3_실행파일/SoulSaver/Soul Saver Festival.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
+ 3_실행파일/SoulSaver/Soul Saver.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
  4_소스/ (Unity 6 프로젝트 소스: Assets · Packages · ProjectSettings · tools)
 
 심사용 빌드: 스팀 없이 실행 · 모든 영웅 · 스킨 · 모드 해금 · 포인트 99,999,999
