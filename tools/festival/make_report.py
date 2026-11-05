@@ -1,11 +1,12 @@
 # 한동 AI·SW페스티벌 게임 부문 제작보고서(PDF) 만들기
 # 사용법: py -X utf8 tools/festival/make_report.py <출력.pdf>
 # 스크린샷은 docs/steam/art/screenshots (_koreana) 를 줄여서 쓴다.
-import sys, os, tempfile
+import sys, os, re, tempfile
 import fitz
 from PIL import Image
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+VER = re.search(r"bundleVersion: (\S+)", open(os.path.join(ROOT, "ProjectSettings", "ProjectSettings.asset"), encoding="utf8").read())[1]
 SHOTS = os.path.join(ROOT, "docs", "steam", "art", "screenshots")
 out = sys.argv[1]
 tmp = tempfile.mkdtemp()
@@ -21,7 +22,7 @@ shots = [
     ("08_cartographer_king_slime", "지도 제작자와 첫 번째 왕 '킹 슬라임'. 슬라임은 깎일수록 작아지고 빨라진다."),
     ("09_ghost_mirror_sovereign", "유령과 '거울의 군주'. 거울의 군주는 플레이어의 스킬을 그대로 따라 한다."),
     ("10_endless_developer", "무한 모드의 최종 보스 '개발자'. 한계 돌파 이후 끝없이 강해지는 적과의 싸움."),
-    ("11_nine_heroes", "손맛이 모두 다른 아홉 영웅."),
+    ("11_nine_heroes", "영웅 고르기 창. 처음 9명에, 무한 모드 사막의 비밀을 풀면 5명이 더 합류한다(??? 칸)."),
     ("12_skin_shop", "캐릭터 · 무기 · 이펙트 · 커서 스킨 상점."),
 ]
 for name, _ in shots:
@@ -40,14 +41,14 @@ html = f"""
 <h1>Soul Saver</h1>
 <p class="sub">자동 조준이 없는 도트 그래픽 서바이버 로그라이트</p>
 <p class="meta">제작보고서</p>
-<p class="meta">출품자: 박민근 (1인 개발)<br/>학번: 22400258<br/>버전: 2.0.1 (Windows)<br/>스팀 상점: store.steampowered.com/app/5328770</p>
+<p class="meta">출품자: 박민근 (1인 개발)<br/>학번: 22400258<br/>버전: {VER} (Windows)<br/>스팀 상점: store.steampowered.com/app/5328770</p>
 </div>
 
 <h2 class="pb">1. 게임 소개</h2>
 <p><b>Soul Saver</b>는 수백 마리의 적이 사방에서 몰려오는 서바이버류(탄막 서바이벌) 액션에
 <b>직접 조준하고 직접 장전하는 손맛</b>을 더한 게임이다. 일반적인 서바이버 게임은 자동으로 공격하지만,
 Soul Saver는 마우스(또는 패드의 오른쪽 스틱)로 모든 공격을 직접 겨눠야 한다.
-영웅 9명이 각자 다른 방식으로 싸우고, 초원에서 영혼의 심연까지 네 개의 세계를 내려가며 왕 넷을 쓰러뜨리면
+영웅 14명(사막의 비밀로 합류하는 5명 포함)이 각자 다른 방식으로 싸우고, 초원에서 영혼의 심연까지 네 개의 세계를 내려가며 왕 넷을 쓰러뜨리면
 끝없이 이어지는 무한 모드가 열린다.</p>
 <table>
 <tr><th>장르</th><td>액션 · 로그라이트 · 서바이버 (탑다운 슈터)</td></tr>
@@ -72,7 +73,7 @@ Soul Saver는 마우스(또는 패드의 오른쪽 스틱)로 모든 공격을 �
 <ul>
 <li><b>숙련이 보상받는 구조</b> — 조준 실력이 곧 화력이다. 보스의 약점(빈틈)은 자동 공격으로는 닿지 않는다. 패드의 보조 조준도 빈틈에는 적용되지 않는다.</li>
 <li><b>보스가 플레이어를 기억한다</b> — 보스는 이번 싸움에서 가장 많이 맞은 공격을 기억해 막는다. 같은 공격만 반복하면 막히고, 다른 공격으로 바꾸면 기억이 깨진다. 한 가지 전략으로 끝까지 밀어붙이는 플레이를 막기 위한 설계다.</li>
-<li><b>영웅마다 다른 동사</b> — 거너(쏘고 장전) · 검사(베기) · 도적 · 궁수(시위를 당겨 '완벽!' 타이밍) · 연금술사 · 지도 제작자 · 시계공(시간을 되감음) · 우체부 · 유령(적에게 빙의). 같은 게임이 영웅마다 다른 게임처럼 느껴지게 했다.</li>
+<li><b>영웅마다 다른 동사</b> — 거너(쏘고 장전) · 검사(베기) · 도적 · 궁수(시위를 당겨 '완벽!' 타이밍) · 연금술사 · 지도 제작자 · 시계공(시간을 되감음) · 우체부 · 유령(적에게 빙의). 같은 게임이 영웅마다 다른 게임처럼 느껴지게 했다. 2.0에서는 적을 들어 던지는 씨름꾼, 적을 종이로 만드는 사진사 등 숨은 영웅 5명이 더해졌다.</li>
 <li><b>보조 모드를 두지 않음</b> — 난이도를 낮추는 편의 기능 대신, 영혼 트리와 카드 빌드의 폭으로 도전 수준을 조절한다.</li>
 </ul>
 <h3>2.3 세계와 보스</h3>
@@ -82,7 +83,8 @@ Soul Saver는 마우스(또는 패드의 오른쪽 스틱)로 모든 공격을 �
 <tr><td>카타콤</td><td>리치 왕</td><td>결계를 펼쳐 맵을 어둠에 잠금</td></tr>
 <tr><td>불타는 지옥</td><td>마왕</td><td>결계를 펼쳐 맵을 어둠에 잠금</td></tr>
 <tr><td>영혼의 심연</td><td>거울의 군주</td><td>플레이어의 스킬을 그대로 복사</td></tr>
-<tr><td>불타는 사막(무한 모드)</td><td>개발자</td><td>한계 돌파 이후 끝없이 강해지는 적</td></tr>
+<tr><td>불타는 사막(무한 모드)</td><td>개발자</td><td>한계 돌파 이후 끝없이 강해지는 적 · 숨은 영웅 5명의 비밀</td></tr>
+<tr><td>도전 모드</td><td>—</td><td>영혼 릴레이(영웅 셋이 한 판을 이어 달림) · 역류(완성된 몸에서 1분마다 힘을 잃음)</td></tr>
 </table>
 
 <h2 class="pb">3. 주요 기능 스크린샷과 설명</h2>
@@ -90,13 +92,14 @@ Soul Saver는 마우스(또는 패드의 오른쪽 스틱)로 모든 공격을 �
 
 <h2 class="pb">4. 개발 과정과 기술</h2>
 <h3>4.1 개발 과정</h3>
-<p>2026년 9월 24일에 시작해 1인으로 개발해 스팀 상점 페이지에 등록했고(무료 체험판 포함), 버전 2.0.1까지 업데이트를 이어 왔다. 주요 개발 단계는 다음과 같다.</p>
+<p>2026년 9월 24일에 시작해 1인으로 개발해 스팀 상점 페이지에 등록했고(무료 체험판 포함), 버전 {VER}까지 업데이트를 이어 왔다. 주요 개발 단계는 다음과 같다.</p>
 <ul>
 <li>핵심 전투(조준 · 장전 · 대군 처리)와 영웅 9명의 고유 동작 구현</li>
+<li>2.0 대규모 업데이트: 숨은 영웅 5명(씨름꾼 · 공사 반장 · 인형사 · 장의사 · 사진사), 도전 모드 2종(영혼 릴레이 · 역류), 결정적 순간의 특수효과(설정에서 세기 조절)</li>
 <li>보스 시스템: 결계 · 빈틈 · 보스의 기억(가장 많이 맞은 공격 차단) · 무기 진화</li>
 <li>영혼 트리 · 카드 · 스킨 · 도전 과제 38개 · 순위표(무한 · 일일 도전)</li>
 <li>4개 언어 현지화, 게임패드 지원, 스팀 연동</li>
-<li>그래픽 가독성 전면 개편과 메인 메뉴 개편, 2.0 대규모 업데이트</li>
+<li>그래픽 가독성 전면 개편(보스 6종 고해상도 재작업)과 메인 메뉴 개편</li>
 </ul>
 <h3>4.2 기술적 특징</h3>
 <ul>
@@ -165,7 +168,7 @@ h3 { font-size: 11.5pt; color: #333; margin-bottom: 2pt; }
 .cover .meta { font-size: 11pt; margin-top: 30pt; line-height: 1.8; }
 table { border-collapse: collapse; width: 100%; margin: 4pt 0; }
 th, td { border: 0.6pt solid #aaa; padding: 3pt 5pt; text-align: left; vertical-align: top; font-size: 9.5pt; }
-th { background-color: #eee6f5; }
+th { color: #5b2a86; }
 .fig { text-align: center; margin: 6pt 0; page-break-inside: avoid; }
 .cap { font-size: 8.5pt; color: #444; margin: 0; }
 code { font-size: 9pt; color: #444; }

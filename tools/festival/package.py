@@ -1,9 +1,10 @@
 # 출품 zip 만들기: 보고서 PDF · 시연 영상 · 실행 빌드 · 소스(git HEAD) → 1개 zip
 # 사용법: py -X utf8 tools/festival/package.py <작업폴더(보고서 · 영상이 있는 곳)> <빌드폴더> <출력.zip>
-import os, sys, shutil, subprocess, zipfile
+import os, re, sys, shutil, subprocess, zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 work, build, out = sys.argv[1:4]
+VER = re.search(r"bundleVersion: (\S+)", open(os.path.join(ROOT, "ProjectSettings", "ProjectSettings.asset"), encoding="utf8").read())[1]
 stage = os.path.join(work, "stage")
 shutil.rmtree(stage, ignore_errors=True)   # 이 스크립트가 만든 임시 폴더
 for d in ("1_제작보고서", "2_시연영상", "3_실행파일", "4_소스"):
@@ -13,8 +14,8 @@ shutil.copy(os.path.join(work, "SoulSaver_시연영상.mp4"), os.path.join(stage
 shutil.copytree(build, os.path.join(stage, "3_실행파일", "SoulSaver"), ignore=shutil.ignore_patterns("*DoNotShip*"))
 srczip = os.path.join(work, "src.zip")   # 이름이 깨진 에셋이 있어 풀지 않고 zip 끼리 합친다
 subprocess.run(["git", "-C", ROOT, "archive", "--format=zip", "-o", srczip, "HEAD", "Assets", "Packages", "ProjectSettings", "tools", "AGENT.md"], check=True)
-open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write("""2026 한동 AI·SW페스티벌 · 스마트 SW 공모전 게임 부문 출품작
-작품: Soul Saver (소울 세이버) v2.0.1 / 출품자: 박민근
+open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""2026 한동 AI·SW페스티벌 · 스마트 SW 공모전 게임 부문 출품작
+작품: Soul Saver (소울 세이버) v{VER} / 출품자: 박민근
 
 구성
  1_제작보고서/SoulSaver_제작보고서.pdf
