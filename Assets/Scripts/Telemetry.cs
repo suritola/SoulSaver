@@ -32,7 +32,11 @@ public static class Telemetry
 
     public static bool Configured => !string.IsNullOrEmpty(Endpoint);
     // 보내지 않는 환경 (WriteBalanceLog 의 금지 조건 + 에디터)
+#if SOULSAVER_FESTIVAL
+    static bool Blocked => Application.isEditor || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode || TesterRun.Active;     // 테스터 메뉴 판은 밸런스 자료에 섞지 않음
+#else
     static bool Blocked => Application.isEditor || GameInput.Auto || GameInput.TrailerRunning || Application.isBatchMode;
+#endif
     static string QueuePath => System.IO.Path.Combine(Application.persistentDataPath, "telemetry_queue.jsonl");
     static string Base => Endpoint.TrimEnd('/');
 

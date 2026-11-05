@@ -517,6 +517,11 @@ public class EndlessMode : MonoBehaviour
     }
 
     // 역류 1번째 보스 「개발자」 (SummonDeveloper 와 같은 몸 · 잡몹을 비우지 않고 · 엄마 없음 · 체력 배율 0.6)
+#if SOULSAVER_FESTIVAL
+    // 페스티벌 테스터 메뉴 (TesterDirector): 개발자 · 엄마를 원래 강림 길 그대로 (잡몹 정리 · 배너 · 음악 · 엄마는 개발자와 함께)
+    internal void TesterSummon(bool mom) => StartCoroutine(mom ? SummonMom() : SummonDeveloper());
+#endif
+
     internal bosss SpawnDeveloperReflux(float hpMul)
     {
         if (spawner == null) return null;

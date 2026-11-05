@@ -284,6 +284,9 @@ public static class MenuExtras
         }
         LayoutRightColumn(sr.parent);
         if (!UiRules.Legacy) LayoutMainV2(sr.parent);
+#if SOULSAVER_FESTIVAL
+        TesterMenuUI.InstallButton(sr.parent, sr.root);     // 심사용 테스터 메뉴 (오른쪽 위 포인트 아래)
+#endif
         // 1.4.8~ 오른쪽 위는 포인트만: 패치노트 · 영혼 각인 · 순위표 · 기록 버튼은 만들어 두고 끈 채 「더 보기」에서 누름 (각자 여는 방식 · NEW 표시를 그대로 씀)
         foreach (string n in new[] { "PatchNotesButton", "SoulBrandButton", "LeaderboardButton", "RunHistoryButton" })
         {

@@ -262,7 +262,11 @@ public class StageManager : MonoBehaviour
         if (endless) PrepareEndless();
         else if (Chapters.First != 0) PrepareFirstChapter();
         else ArenaLayout.EnsureLaid(EndlessTerrain.Cave);          // 1장 묘역 (ShowStageMap 을 거치지 않음)
+#if SOULSAVER_FESTIVAL
+        if (!ModeRun.Reflux && !TesterRun.Active)      // 페스티벌 테스터 메뉴 판도 이야기 · 영웅 안내 없이 바로
+#else
         if (!ModeRun.Reflux)        // 2.0.0~ 역류는 이야기 · 영웅 안내 없이 바로 (RefluxDirector 의 자동 채우기 · 배너)
+#endif
         {
             yield return StoryDirector.Intro(endless);
             yield return HeroGuide.Show(this);                  // 1.1.9~ 이 영웅으로 처음이면 평타 · 필살기 · 머리 위 막대 안내 (한 번)
