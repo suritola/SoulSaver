@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 난이도: 쉬움 → 보통 → 어려움 → 무한
 public enum Difficulty { Easy = 0, Normal = 1, Hard = 2, Endless = 3 }
@@ -104,10 +104,17 @@ public static class GameMode
     {
         Load();
         if (Demo.On) return d == Difficulty.Easy;        // 체험판은 쉬움만
+#if SOULSAVER_FESTIVAL
+        return true;                                    // 페스티벌 출품 빌드: 모든 난이도 · 무한 모드
+#endif
         return d == Difficulty.Easy || (d <= Difficulty.Hard && unlocked >= 1) || (d == Difficulty.Endless && unlocked >= 2);
     }
 
+#if SOULSAVER_FESTIVAL
+    public static bool HasCleared(Difficulty d) => true;     // 페스티벌 출품 빌드: 클리어로 여는 일일 도전 · 영혼의 무게 · 각인 등도 열림
+#else
     public static bool HasCleared(Difficulty d) => Prefs.GetInt(ClearedKey + (int)d, 0) == 1;
+#endif
 
     // 3장 보스를 쓰러뜨렸을 때. 새로 열린 난이도가 있으면 그 이름 (없으면 null)
     public static string OnCleared(Difficulty d)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -167,7 +167,7 @@ public class GameplayCapture
         public float nearMob = 3.5f, farMob = 7f, nearBoss = 6.5f, farBoss = 9f;
         // 2026-10-18~ 상점 트레일러: 사람이 하는 플레이처럼 (원거리 영웅은 거리를 두고 카이팅 · 부드러운 방향 전환 · 멈춰 조준 · 짧은 옆걸음)
         public bool humanMove;
-        public float rangedMobNear = 6f, rangedMobFar = 9f, rangedBossNear = 8f, rangedBossFar = 11f;
+        public float rangedMobNear = 9f, rangedMobFar = 13f, rangedBossNear = 13f, rangedBossFar = 17f;     // 2026-11-05: 실제 플레이처럼 멀리서 (화면은 세로 30 · 가로 53칸) — 예전 6~9 · 8~11칸은 붙어 보였음
         public Image flash;
         public Canvas captionCanvas;
         public TextMeshProUGUI caption, logo, sub;
@@ -799,7 +799,8 @@ public class GameplayCapture
         //   근접(검사): 예전 거리(nearMob · farMob …)로 붙어서 베기 — 방향 전환 보간 · 맵 가장자리 · 벽 · 탄 피하기만 같이
         //   이동 입력은 몇 프레임에 걸쳐 보간(MoveRate) · 무작위는 장면마다 고정 씨앗(System.Random) → 다시 찍어도 같은 영상
         const float MoveRate = 7f, DodgeRate = 20f;       // 입력 보간 빠르기 (1/초 · 7 ≈ 0.3초에 90%, 옆걸음은 더 날쌔게)
-        static readonly HashSet<string> MeleeHeroes = new HashSet<string> { "Swordsman", "Ghost" };   // 유령 평타도 4.5칸 손 → 붙어서 싸움
+        static readonly HashSet<string> MeleeHeroes = new HashSet<string> { "Swordsman", "Ghost" };
+        public static bool IsMelee(string hero) => MeleeHeroes.Contains(hero);   // 유령 평타도 4.5칸 손 → 붙어서 싸움
         System.Random moveRnd = new System.Random(4210);
         Component movePlayer;
         int sceneNo, moveFrame, pauseAt, pauseLeft, dodgeLeft, dodgeCool, sidestepAt, flipCool, flipAt, aimPickAt;
@@ -833,7 +834,7 @@ public class GameplayCapture
             float far = boss ? (melee ? farBoss : rangedBossFar) : (melee ? farMob : rangedMobFar);
             // 유령: 평타(손)가 4.5칸이라 검사보다 바짝 · 연금술사: 플라스크가 10칸에서 잘려 보스 앞에 떨어지지 않게
             if (hero == "Ghost") { near = boss ? 5f : 3f; far = boss ? 7f : 4.3f; }
-            else if (hero == "Alchemist" && boss) far = Mathf.Min(far, 9.5f);
+            else if (hero == "Alchemist" && boss) { far = Mathf.Min(far, 9.5f); near = Mathf.Min(near, 7f); }
 
             // 살아 있는 잡몹 (가까운 것 · 무리 가운데)
             mobs.Clear();
@@ -1155,8 +1156,10 @@ public class GameplayCapture
 
     static void Say(string text, float time) => rec.StartCoroutine(Caption(text, time));
 
+    static string loadedHero = "Gunner";      // 지금 장면의 영웅 (Swarm 이 원거리면 한쪽에 깔도록)
     static IEnumerator Load(string hero, int stage)
     {
+        loadedHero = hero;
         Type cd = T("CharacterData"), cid = T("CharacterId");
         cd.GetField("Override", Any).SetValue(null, Activator.CreateInstance(typeof(Nullable<>).MakeGenericType(cid), Enum.Parse(cid, hero)));
         SceneManager.LoadScene("GameScene");
@@ -1211,10 +1214,15 @@ public class GameplayCapture
         for (int i = 0; i < enemies.Length; i++) if (stages[i] == stage) pool.Add(enemies[i]);
         if (pool.Count == 0 && StageConfig(stage) is object cfg) pool.AddRange((GameObject[])Get(cfg, "enemies"));     // 4장 심연: 도감 대신 스폰러의 견본
         Vector3 me = ((Component)Find("PlayerController")).transform.position;
+        // 2026-11-05: 원거리 영웅을 사방 5.5~8.5칸 고리로 둘러싸면 물러날 곳이 없어 무리 한가운데서 싸움 (사용자 지적)
+        //   → 원거리는 오른쪽 반원 15~21칸에 깔아 몰려오는 무리를 물러나며 쏘게 · 근접(검사 · 유령)은 예전 고리
+        bool ranged = rec != null && rec.humanMove && !Rec.IsMelee(loadedHero);
         for (int i = 0; i < count && pool.Count > 0; i++)
         {
-            float a = i / (float)count * Mathf.PI * 2f + UnityEngine.Random.Range(-0.2f, 0.2f);
-            UnityEngine.Object.Instantiate(pool[i % pool.Count], me + new Vector3(Mathf.Cos(a) * 1.4f, Mathf.Sin(a)) * UnityEngine.Random.Range(5.5f, 8.5f), Quaternion.identity);
+            float a = ranged ? Mathf.Lerp(-1.2f, 1.2f, (i + 0.5f) / count) + UnityEngine.Random.Range(-0.12f, 0.12f)
+                             : i / (float)count * Mathf.PI * 2f + UnityEngine.Random.Range(-0.2f, 0.2f);
+            float r = ranged ? UnityEngine.Random.Range(15f, 21f) : UnityEngine.Random.Range(5.5f, 8.5f);
+            UnityEngine.Object.Instantiate(pool[i % pool.Count], me + new Vector3(Mathf.Cos(a) * 1.4f, Mathf.Sin(a)) * r, Quaternion.identity);
         }
     }
 
@@ -1290,7 +1298,7 @@ public class GameplayCapture
         GameObject[] bosses = (GameObject[])Get(data, "bosses");
         GameObject prefab = stage < bosses.Length ? bosses[stage] : (GameObject)Get(StageConfig(stage), "bossPrefab");     // 4장 거울의 군주는 스폰러에만 있음
         Vector3 me = ((Component)Find("PlayerController")).transform.position;
-        GameObject go = UnityEngine.Object.Instantiate(prefab, me + new Vector3(8.5f, 3.5f, 0f), Quaternion.identity);
+        GameObject go = UnityEngine.Object.Instantiate(prefab, me + new Vector3(15f, 4f, 0f), Quaternion.identity);     // 원거리가 멀리서 싸우도록 (예전 8.5, 3.5)
         object bar = Find("bossbar");
         bar.GetType().GetField("bossSpawn").SetValue(bar, true);
         object sp = Get(Find("StageManager"), "spawner");
@@ -1922,10 +1930,10 @@ public class GameplayCapture
         object em = null;
         for (int i = 0; i < 10 && em == null; i++) { em = StaticGet("EndlessMode", "Instance"); if (em == null) yield return null; }
         object dev = null;
-        try { dev = em != null ? Call(em, "SpawnFinalBoss", false) : null; } catch (Exception e) { Debug.Log("[CAP] 개발자 소환 실패 " + e.Message); }
+        try { dev = em != null ? Call(em, "SpawnFinalBoss", false, 1f) : null; } catch (Exception e) { Debug.Log("[CAP] 개발자 소환 실패 " + e.Message); }
         if (dev == null) { ov.SetValue(null, null); yield break; }
         Vector3 me = ((Component)Find("PlayerController")).transform.position;
-        ((Component)dev).transform.position = me + new Vector3(7f, 3f, 0f);
+        ((Component)dev).transform.position = me + new Vector3(15f, 4f, 0f);
         object bar = Find("bossbar");
         if (bar != null) bar.GetType().GetField("bossSpawn").SetValue(bar, true);
         rec.autopilot = true;
@@ -2227,7 +2235,7 @@ public class GameplayCapture
         UnityEngine.Object.Destroy(card);
     }
 
-    [UnityTest]
+    [UnityTest, Timeout(900000)]     // 기본 3분 제한에 걸려 끊기면 mp4 가 마무리되지 않음 (moov 없음)
     public IEnumerator Capture()
     {
         LogAssert.ignoreFailingMessages = true;
@@ -2417,7 +2425,7 @@ public class GameplayCapture
         yield return F(2.2f);
     }
 
-    [UnityTest]
+    [UnityTest, Timeout(900000)]     // 기본 3분 제한에 걸려 끊기면 mp4 가 마무리되지 않음 (moov 없음)
     public IEnumerator HighlightReel()
     {
         Debug.Log("[CAP] highlight start");
@@ -2560,7 +2568,7 @@ public class GameplayCapture
         yield return F(0.6f);
     }
 
-    [UnityTest]
+    [UnityTest, Timeout(900000)]     // 기본 3분 제한에 걸려 끊기면 mp4 가 마무리되지 않음 (moov 없음)
     public IEnumerator RedditClip()
     {
         Debug.Log("[CAP] reddit start");
@@ -2616,7 +2624,7 @@ public class GameplayCapture
     }
 
     // 스킨 장면: 영웅 하나에 전설 스킨을 입혀 평타 → 우클릭 스킬 두 번 (record.ps1 -Mode skin -Hero Ghost)
-    [UnityTest]
+    [UnityTest, Timeout(900000)]     // 기본 3분 제한에 걸려 끊기면 mp4 가 마무리되지 않음 (moov 없음)
     public IEnumerator SkinClip()
     {
         LogAssert.ignoreFailingMessages = true;
@@ -2661,7 +2669,7 @@ public class GameplayCapture
     }
 
     // 재개 카운트다운 화면 (record.ps1 -Mode pause): 일시정지 창 → 「계속하기」 → 3 · 2 · 1 → 다시 흐름, 실제 시간으로 PNG 5장
-    [UnityTest]
+    [UnityTest, Timeout(900000)]     // 기본 3분 제한에 걸려 끊기면 mp4 가 마무리되지 않음 (moov 없음)
     public IEnumerator PauseShot()
     {
         LogAssert.ignoreFailingMessages = true;

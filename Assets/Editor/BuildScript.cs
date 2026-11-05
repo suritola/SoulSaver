@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -13,6 +13,7 @@ public static class BuildScript
     const string NoSteam = "DISABLESTEAMWORKS";
     const string DemoDefine = "SOULSAVER_DEMO";
     const string TestUnlockDefine = "SOULSAVER_TESTUNLOCK";
+    const string FestivalDefine = "SOULSAVER_FESTIVAL";
 
     public static void BuildWindows()
     {
@@ -25,11 +26,20 @@ public static class BuildScript
         bool demo = Environment.GetCommandLineArgs().Contains("-demo");
         // -testUnlock: 개발자 시험 빌드 — 모든 영웅을 열린 것으로 봄 (저장은 건드리지 않음 · 정식 빌드 스크립트는 이 인자를 넘기지 않음)
         bool testUnlock = Environment.GetCommandLineArgs().Contains("-testUnlock");
+        // -festival: 교내 SW페스티벌 출품(심사)용 — 모든 영웅 · 스킨 · 모드 해금 + 포인트 99,999,999 · 저장이 정식판과 섞이지 않게 제품 이름도 바꿈
+        bool festival = Environment.GetCommandLineArgs().Contains("-festival");
+        if (festival) testUnlock = true;
         var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Standalone)
-            .Split(';').Where(d => d.Length > 0 && d != NoSteam && d != DemoDefine && d != TestUnlockDefine).ToList();
+            .Split(';').Where(d => d.Length > 0 && d != NoSteam && d != DemoDefine && d != TestUnlockDefine && d != FestivalDefine).ToList();
         if (!steam) defines.Add(NoSteam);
         if (testUnlock) defines.Add(TestUnlockDefine);
         Debug.Log("시험용 전체 해금: " + (testUnlock ? "켬" : "끔"));
+        if (festival)
+        {
+            defines.Add(FestivalDefine);
+            PlayerSettings.productName = "Soul Saver Festival";
+        }
+        Debug.Log("페스티벌 출품 빌드: " + (festival ? "켬" : "끔"));
         if (demo)
         {
             defines.Add(DemoDefine);

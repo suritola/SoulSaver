@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 캐릭터: 거너(기본) · 검사 · 도적은 처음부터, 궁수 · 연금술사는 포인트로 구매
 // 1.0.2~ 지도 제작자 · 시계공 · 우체부 · 유령: 해제 조건을 달성한 뒤 포인트로 구매 (CharacterKit.<캐릭터>.cs)
@@ -262,6 +262,10 @@ public static class CharacterData
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
+#if SOULSAVER_FESTIVAL
+        // 페스티벌 출품(심사) 빌드: 켤 때마다 포인트를 99,999,999로 채움 (BuildScript -festival · 제품 이름이 달라 정식판 저장과 섞이지 않음)
+        if (Points < 99999999) { Prefs.SetInt(PointsKey, 99999999); Prefs.Save(); }
+#endif
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) =>
         {
             if (s.name == "GameScene") RunPoints = 0;

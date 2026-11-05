@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,7 +18,11 @@ public static class RefluxRun
 
     // 열리는 조건 (D10): 개발자를 한 번이라도 쓰러뜨림 (무한 · 일일 도전 · 릴레이 어디서든) — 옛 저장은 이정표 · 클리어 기록으로 소급
     public const string DevKey = "dev.defeated";
+#if SOULSAVER_FESTIVAL
+    public static bool Unlocked => !Demo.On;     // 페스티벌 출품 빌드: 역류도 처음부터
+#else
     public static bool Unlocked => !Demo.On && (Prefs.GetInt(DevKey, 0) == 1 || Prefs.GetInt("endless.milestone.dev", 0) != 0 || EndlessMode.EverCleared);
+#endif
     public static bool Implemented => true;
 
     // 개발자를 처음 쓰러뜨린 순간 (EndlessMode.OnBossDefeated)
