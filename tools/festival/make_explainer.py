@@ -107,6 +107,8 @@ def clip(i, start, end, head, lines):
 
 segs = json.load(open(segp, encoding="utf8"))
 segs = segs if isinstance(segs, list) else segs.get("segments", [])
+if any(s["key"].startswith("hero_") for s in segs):
+    segs = [s for s in segs if s["key"] != "heroes"]     # 영웅별 구간이 있으면 겹치는 「영웅 전체」 구간은 빼 (두 번 나옴)
 parts = [card("title", ["Soul Saver", "자동 조준이 없는 도트 서바이버 로그라이트", "2026 한동 AI·SW페스티벌 · 게임 부문 · 22400258 박민근"], [130, 50, 38], 5)]
 started2 = False
 for i, s in enumerate(segs):

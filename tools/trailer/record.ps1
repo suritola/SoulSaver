@@ -7,15 +7,17 @@
 #         pwsh tools/trailer/record.ps1 -Lang en,ko,ja,zh -Quality High   (언어마다 한 번씩, 게임 언어 · 자막이 바뀜)
 #         pwsh tools/trailer/record.ps1 -Mode highlight -Quality High     (2.2.1~ 자막 없는 하이라이트: 화려한 장면만 · 긴박한 음악 · 펀치 줌)
 #         pwsh tools/trailer/record.ps1 -Mode reddit -Quality High        (레딧 홍보 15초: 거리를 두고 싸우며 필살기 · 보스 궁극기만)
+#         pwsh tools/trailer/record.ps1 -Mode festival -Lang ko -Quality High   (SW페스티벌 시연 약 4분 30초: 기본 플레이 → 기능별 구간 → 영웅 14명 → 스킨 · 도전 모드, segments.json 같이 · 20분 넘게 걸림)
 # 결과:   %LOCALAPPDATA%\SoulSaverBuild\Capture\<언어>\SoulSaver_Trailer_<언어>.mp4 (하이라이트는 SoulSaver_Highlight.mp4), screenshots\*.png
 param(
-    [ValidateSet("trailer", "highlight", "reddit", "skin", "pause")][string]$Mode = "trailer",
+    [ValidateSet("trailer", "highlight", "reddit", "skin", "pause", "festival")][string]$Mode = "trailer",
     [string]$Hero = "Ghost",                # -Mode skin: 전설 스킨을 입힐 영웅
     [string[]]$Lang = @("en"),              # en · ko · ja · zh (쉼표로 여러 개)
     [int]$Fps = 30,
     [ValidateSet("Low", "Medium", "High")][string]$Quality = "Medium",
     [switch]$Real,                          # -Mode pause: 배치 모드 없이 에디터 창에서 실제 화면 그대로 찍음
     [switch]$Captions,                      # 2026-10-18~ 기본은 자막 없음 · 자막이 필요할 때만 -Captions
+    [string]$Segs = "",                     # -Mode festival: 이 구간만 (쉼표, 예: basic,aim · 비우면 전부)
     [string]$Unity = ""          # 비우면 ProjectVersion.txt 의 버전 (tools/unity-env.ps1)
 )
 $ErrorActionPreference = "Stop"
@@ -52,6 +54,7 @@ $settings = Join-Path $CopyDir "ProjectSettings\ProjectSettings.asset"
 $env:CAPTURE_FPS = "$Fps"
 $env:CAPTURE_HERO = $Hero
 $env:CAPTURE_QUALITY = $Quality
+$env:CAPTURE_SEGS = $Segs
 $env:CAPTURE_CAPTIONS = $(if ($Captions) { "1" } else { "0" })
 $env:CAPTURE_LOGO = Join-Path $Project "steam_assets\library_logo.png"   # 끝 카드의 도트 로고
 foreach ($l in $Lang) {
@@ -64,12 +67,12 @@ foreach ($l in $Lang) {
     Write-Host "촬영 중: $l ($Fps fps · $Quality, 로그: $log)"
     $p = Start-Process $Unity -Wait -PassThru -NoNewWindow -ArgumentList @(
         $(if ($Real) { "-silent-crashes" } else { "-batchmode" }), "-projectPath", "`"$CopyDir`"",
-        "-runTests", "-testPlatform", "PlayMode", "-testFilter", $(if ($Mode -eq "pause") { "GameplayCapture.PauseShot" } elseif ($Mode -eq "skin") { "GameplayCapture.SkinClip" } elseif ($Mode -eq "highlight") { "GameplayCapture.HighlightReel" } elseif ($Mode -eq "reddit") { "GameplayCapture.RedditClip" } else { "GameplayCapture.Capture" }),
+        "-runTests", "-testPlatform", "PlayMode", "-testFilter", $(if ($Mode -eq "pause") { "GameplayCapture.PauseShot" } elseif ($Mode -eq "skin") { "GameplayCapture.SkinClip" } elseif ($Mode -eq "highlight") { "GameplayCapture.HighlightReel" } elseif ($Mode -eq "reddit") { "GameplayCapture.RedditClip" } elseif ($Mode -eq "festival") { "GameplayCapture.FestivalReel" } else { "GameplayCapture.Capture" }),
         "-testResults", "`"$(Join-Path $Work 'capture-results.xml')`"",
         "-logFile", "`"$log`"")
     Select-String -Path $log -Pattern "\[CAP\] done" | ForEach-Object { $_.Line }
     if ($Mode -eq "pause") { Select-String -Path $log -Pattern "\[CAP\]" | ForEach-Object { $_.Line }; Write-Host "완료: $(Join-Path $Out 'screenshots')"; continue }
-    $mp4 = Join-Path $Out $(if ($Mode -eq "skin") { "SoulSaver_Skin_$Hero.mp4" } elseif ($Mode -eq "highlight") { "SoulSaver_Highlight.mp4" } elseif ($Mode -eq "reddit") { "SoulSaver_Reddit15.mp4" } else { "SoulSaver_Trailer_$l.mp4" })
+    $mp4 = Join-Path $Out $(if ($Mode -eq "skin") { "SoulSaver_Skin_$Hero.mp4" } elseif ($Mode -eq "highlight") { "SoulSaver_Highlight.mp4" } elseif ($Mode -eq "reddit") { "SoulSaver_Reddit15.mp4" } elseif ($Mode -eq "festival") { "SoulSaver_Festival.mp4" } else { "SoulSaver_Trailer_$l.mp4" })
     if (-not (Test-Path $mp4)) { Get-Content $log -Tail 40; throw "$l 영상이 만들어지지 않았습니다 (Unity 종료 코드 $($p.ExitCode))" }
     Write-Host ("완료: {0} ({1:N1} MB), 스크린샷 {2}장" -f $mp4, ((Get-Item $mp4).Length / 1MB), (Get-ChildItem (Join-Path $Out "screenshots") -ErrorAction SilentlyContinue).Count)
 }

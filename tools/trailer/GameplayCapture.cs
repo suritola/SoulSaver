@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -167,6 +168,7 @@ public class GameplayCapture
         public float nearMob = 3.5f, farMob = 7f, nearBoss = 6.5f, farBoss = 9f;
         // 2026-10-18~ 상점 트레일러: 사람이 하는 플레이처럼 (원거리 영웅은 거리를 두고 카이팅 · 부드러운 방향 전환 · 멈춰 조준 · 짧은 옆걸음)
         public bool humanMove;
+        public bool festival;                   // 시연 영상(-Mode festival): 사거리 9~12칸 영웅은 그 사거리 안에서 싸움 (트레일러 · 레딧은 그대로)
         public float rangedMobNear = 9f, rangedMobFar = 13f, rangedBossNear = 13f, rangedBossFar = 17f;     // 2026-11-05: 실제 플레이처럼 멀리서 (화면은 세로 30 · 가로 53칸) — 예전 6~9 · 8~11칸은 붙어 보였음
         public Image flash;
         public Canvas captionCanvas;
@@ -799,7 +801,7 @@ public class GameplayCapture
         //   근접(검사): 예전 거리(nearMob · farMob …)로 붙어서 베기 — 방향 전환 보간 · 맵 가장자리 · 벽 · 탄 피하기만 같이
         //   이동 입력은 몇 프레임에 걸쳐 보간(MoveRate) · 무작위는 장면마다 고정 씨앗(System.Random) → 다시 찍어도 같은 영상
         const float MoveRate = 7f, DodgeRate = 20f;       // 입력 보간 빠르기 (1/초 · 7 ≈ 0.3초에 90%, 옆걸음은 더 날쌔게)
-        static readonly HashSet<string> MeleeHeroes = new HashSet<string> { "Swordsman", "Ghost" };
+        static readonly HashSet<string> MeleeHeroes = new HashSet<string> { "Swordsman", "Ghost", "Wrestler", "Foreman" };     // 씨름꾼 잡기 2.4칸 · 공사 반장 삽날 2.5칸
         public static bool IsMelee(string hero) => MeleeHeroes.Contains(hero);   // 유령 평타도 4.5칸 손 → 붙어서 싸움
         System.Random moveRnd = new System.Random(4210);
         Component movePlayer;
@@ -835,6 +837,14 @@ public class GameplayCapture
             // 유령: 평타(손)가 4.5칸이라 검사보다 바짝 · 연금술사: 플라스크가 10칸에서 잘려 보스 앞에 떨어지지 않게
             if (hero == "Ghost") { near = boss ? 5f : 3f; far = boss ? 7f : 4.3f; }
             else if (hero == "Alchemist" && boss) { far = Mathf.Min(far, 9.5f); near = Mathf.Min(near, 7f); }
+            else if (hero == "Wrestler") { near = boss ? 3f : 1.5f; far = boss ? 5f : 3f; }      // 잡기 2.4칸 + 뛰어듦 1.6칸
+            else if (hero == "Foreman") { near = boss ? 2.5f : 1.2f; far = boss ? 4f : 2.6f; }   // 삽날 2.5칸 — 밀어 쌓으려면 붙어야 함
+            if (festival && !melee)
+            {
+                // 평타가 9~12칸에서 잘리는 영웅은 그 안에서 (멀리서 싸우되 헛손질하지 않게)
+                float reach = hero == "Alchemist" || hero == "Cartographer" || hero == "Puppeteer" || hero == "Undertaker" ? 9f : hero == "Photographer" || hero == "Postman" ? 11f : 99f;
+                if (reach < 99f) { far = Mathf.Min(far, reach - 0.5f); near = Mathf.Min(near, reach - 3f); }
+            }
 
             // 살아 있는 잡몹 (가까운 것 · 무리 가운데)
             mobs.Clear();
@@ -1069,7 +1079,7 @@ public class GameplayCapture
         }
 
         static MethodInfo isWallM;
-        static bool Wall(Vector3 p)
+        public static bool Wall(Vector3 p)
         {
             if (isWallM == null) isWallM = T("Hostile")?.GetMethod("IsWall", Any, null, new[] { typeof(Vector3) }, null);
             return isWallM != null && isWallM.Invoke(null, new object[] { p }) is bool w && w;
@@ -1217,9 +1227,12 @@ public class GameplayCapture
         // 2026-11-05: 원거리 영웅을 사방 5.5~8.5칸 고리로 둘러싸면 물러날 곳이 없어 무리 한가운데서 싸움 (사용자 지적)
         //   → 원거리는 오른쪽 반원 15~21칸에 깔아 몰려오는 무리를 물러나며 쏘게 · 근접(검사 · 유령)은 예전 고리
         bool ranged = rec != null && rec.humanMove && !Rec.IsMelee(loadedHero);
+        // 시연 영상: 맵이 넓은 쪽에 깖 (오른쪽 끝에 선 영웅에게 오른쪽으로 깔면 벽 너머에서 돌아와 붙어 싸움)
+        float baseA = 0f;
+        if (ranged && rec.festival && Find("EnemySpawner") is object sp && Get(sp, "spawnAreaMin") is Vector2 lo && Get(sp, "spawnAreaMax") is Vector2 hi && me.x > (lo.x + hi.x) * 0.5f) baseA = Mathf.PI;
         for (int i = 0; i < count && pool.Count > 0; i++)
         {
-            float a = ranged ? Mathf.Lerp(-1.2f, 1.2f, (i + 0.5f) / count) + UnityEngine.Random.Range(-0.12f, 0.12f)
+            float a = ranged ? baseA + Mathf.Lerp(-1.2f, 1.2f, (i + 0.5f) / count) + UnityEngine.Random.Range(-0.12f, 0.12f)
                              : i / (float)count * Mathf.PI * 2f + UnityEngine.Random.Range(-0.2f, 0.2f);
             float r = ranged ? UnityEngine.Random.Range(15f, 21f) : UnityEngine.Random.Range(5.5f, 8.5f);
             UnityEngine.Object.Instantiate(pool[i % pool.Count], me + new Vector3(Mathf.Cos(a) * 1.4f, Mathf.Sin(a)) * r, Quaternion.identity);
@@ -1312,8 +1325,10 @@ public class GameplayCapture
 
     // 전설 스킨 장착 (복사본의 게임 저장소 Prefs 에만 저장됨 · 끝나면 지움)
     static readonly List<string> skinKeys = new List<string>();
+    static bool noSkins;          // 시연 영상: 기본 모습 그대로 (영웅 소개가 실제 첫 화면과 같게)
     static void WearLegend(int who)
     {
+        if (noSkins) return;
         Type sd = T("SkinData");
         foreach (object s in (Array)sd.GetField("All").GetValue(null))
         {
@@ -1527,7 +1542,7 @@ public class GameplayCapture
 
     // ---------------- 4장 영혼의 심연 (2.1.1~): 거울의 군주가 지금 영웅의 필살기를 흉내 냄 (2.1.4~)
     // brief: 새 콘티(16~21초)용 짧은 판 — 앞 대기 · 뒤 싸움을 줄임 (약 4.5초)
-    static IEnumerator Mirror(string hero, int who, int caption = C_Mirror, bool brief = false)
+    static IEnumerator Mirror(string hero, int who, int caption = C_Mirror, bool brief = false, float tail = 0f)
     {
         rec.recording = false;
         rec.autopilot = false;
@@ -1557,6 +1572,11 @@ public class GameplayCapture
         yield return F(brief ? 0.6f : 2.2f);
         yield return Ult(brief ? 0.4f : 0.6f);
         yield return F(brief ? 0.5f : 0.9f);
+        if (tail > 0f)
+        {
+            if (skills != null) Set(skills, "next", Time.time + 0.5f);     // 흉내 뒤에는 원래 기술도 씀 (시연 영상)
+            yield return F(tail);
+        }
         yield return Fade(0f, 1f, 0.2f);
     }
 
@@ -1848,7 +1868,7 @@ public class GameplayCapture
     }
 
     // ---------------- 13~16초: 지옥의 군주가 탄환을 기억해 방패 → 필살기로 깸 (BossMemory 가 없으면 건너뜀)
-    static IEnumerator MemoryCut(int caption)
+    static IEnumerator MemoryCut(int caption, float block = 0f)     // block: 기억 방패에 막히는 모습을 더 보여 줄 초 (시연 영상)
     {
         if (T("BossMemory") == null) { Debug.Log("[CAP] BossMemory 없음 — 기억 컷 건너뜀"); yield break; }
         rec.recording = false;
@@ -1884,9 +1904,9 @@ public class GameplayCapture
         Call(b, "TakeDamage", max * 0.012f, 0f, Vector3.zero);     // 50% 를 넘음 → 기억 발동
         yield return UntilRecorded(start, 1.5f);
         Shot("04_boss_memory");
-        yield return F(0.3f);
+        yield return F(0.3f + block);
         yield return Ult(0.5f);                     // 기억하지 않은 공격으로 깸
-        yield return UntilRecorded(start, 3.0f);
+        yield return UntilRecorded(start, 3.0f + block);
         rec.gunSfx = false;
     }
 
@@ -1917,7 +1937,7 @@ public class GameplayCapture
     }
 
     // ---------------- 27~31초: 개발자 등장 (무한 모드 판에서만 · EndlessMode.SpawnFinalBoss 는 private → 리플렉션)
-    static IEnumerator DeveloperCut(int caption)
+    static IEnumerator DeveloperCut(int caption, float seconds = 4f)
     {
         Type dt = T("Difficulty");
         FieldInfo ov = T("GameMode")?.GetField("Override", Any);
@@ -1947,7 +1967,8 @@ public class GameplayCapture
         SayRec(caption, 3.6f);
         yield return F(1.4f);
         yield return Ult(0.8f);
-        yield return UntilRecorded(start, 4.0f);
+        if (seconds > 7f) { yield return UntilRecorded(start, seconds - 3.5f); yield return Ult(0.6f); }
+        yield return UntilRecorded(start, seconds);
         rec.gunSfx = false;
         ov.SetValue(null, null);                    // 다음 장면부터 원래 판
     }
@@ -1969,7 +1990,7 @@ public class GameplayCapture
     }
 
     // ---------------- 36~40초: 영혼 트리 2초 → 결계 깨짐 슬로모
-    static IEnumerator TreeCut(int caption)
+    static IEnumerator TreeCut(int caption, int buys = 6, float gap = 0.26f, float lead = 0.4f, float tail = 0.1f)
     {
         object sm = Find("StageManager");
         if (sm == null) yield break;
@@ -1981,10 +2002,10 @@ public class GameplayCapture
         Cue("tree", true);
         Sx("shimmer", 0.45f, 1.2f);                 // SoulTreeUI 열림
         SayRec(caption, 2.2f);
-        yield return F(0.4f);
+        yield return F(lead);
         object specials = Get(sm, "specials");
         object tree = T("SoulTreeUI").GetProperty("Instance").GetValue(null);
-        for (int i = 0; i < 6 && tree != null; i++)
+        for (int i = 0; i < buys && tree != null; i++)
         {
             object pick = null;
             foreach (object v in (IList)Get(tree, "views"))
@@ -1995,8 +2016,9 @@ public class GameplayCapture
                 if (Convert.ToInt32(Get(n, "branch")) == i % 6) { pick = v; break; }
             }
             if (pick != null) { Call(tree, "Buy", pick); Sx("chime", 0.35f, 1f + 0.08f * i); Sx("sparkle", 0.3f, 1f + 0.05f * i); }
-            yield return F(0.26f);
+            yield return F(gap);
         }
+        if (tail > 0.1f) yield return F(tail - 0.1f);
         T("SoulTreeUI").GetMethod("Close").Invoke(null, null);
         yield return F(0.1f);
     }
@@ -2747,4 +2769,427 @@ public class GameplayCapture
     }
 
     static IEnumerator Delayed(float s, Action a) { yield return F(s); a(); }
+
+    // ================================================================= SW페스티벌 시연 영상 (record.ps1 -Mode festival · 약 4분 30초)
+    // 기본 플레이 한 판(거너 · 초원 → 레벨업 → 킹 슬라임 결계 · 빈틈 → 무기 진화) → 기능별 구간 → 영웅 14명 → 스킨 상점 · 도전 모드
+    // 자막 · 타이틀은 나중에 ffmpeg 로 입힘 — 구간마다 로그 [SEG] <키> <녹화 프레임> · 끝나면 segments.json (키 · 시작 초 · 끝 초)
+    // 원거리 영웅은 humanMove 거리(잡몹 9~13 · 보스 13~17칸, 사거리 9~12칸 영웅은 그 안) · Swarm 원거리 반원으로 멀리서 싸움
+    // CAPTURE_SEGS=basic,aim … 이면 그 구간만 (다시 찍기 · 점검용)
+    static readonly List<(string key, int a, int b)> segs = new List<(string, int, int)>();
+    static readonly string[] segFilter = (Environment.GetEnvironmentVariable("CAPTURE_SEGS") ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
+    static bool Want(string key) => segFilter.Length == 0 || segFilter.Contains(key) || key.StartsWith("hero_");
+
+    static IEnumerator Seg(string key, IEnumerator body)
+    {
+        if (!Want(key)) yield break;
+        int i = segs.Count;
+        segs.Add((key, rec.frames, rec.frames));
+        Debug.Log("[SEG] " + key + " " + rec.frames);
+        yield return body;
+        segs[i] = (key, segs[i].a, rec.frames);
+        Debug.Log("[SEG] " + key + " end " + rec.frames);
+    }
+
+    static void SaveSegs()
+    {
+        var sb = new System.Text.StringBuilder("[\n");
+        for (int i = 0; i < segs.Count; i++)
+            sb.Append("  {\"key\": \"" + segs[i].key + "\", \"start\": " + (segs[i].a / (float)Fps).ToString("0.000", CultureInfo.InvariantCulture)
+                      + ", \"end\": " + (segs[i].b / (float)Fps).ToString("0.000", CultureInfo.InvariantCulture) + "}" + (i < segs.Count - 1 ? "," : "") + "\n");
+        sb.Append("]\n");
+        File.WriteAllText(Path.Combine(Out, "segments.json"), sb.ToString());
+    }
+
+    static bool BossAlive(object b) => b is Component c && c != null && !(b.GetType().GetProperty("IsDead")?.GetValue(b) is bool d && d);
+
+    // 불러오고(녹화 안 함) 적이 다가올 때까지 기다린 뒤 녹화 시작
+    static IEnumerator FestLoad(string hero, int stage, float wait = 1.2f)
+    {
+        rec.recording = false;
+        rec.autopilot = false;
+        rec.manualFire = false;
+        rec.aimOverride = null;
+        rec.aimFixed = false;
+        rec.gunSfx = hero == "Gunner";
+        rec.keyHint = false;
+        Time.timeScale = 1f;
+        yield return Load(hero, stage);
+        FestPlace();
+        rec.autopilot = true;
+        yield return F(wait);
+        rec.recording = true;
+    }
+
+    // 영웅을 맵 가로 35% · 세로 가운데로 (가장자리에서 시작하면 물러날 곳이 없어 붙어 싸움) — 벽이면 조금씩 옮겨 봄
+    static void FestPlace()
+    {
+        Component p = (Component)Find("PlayerController");
+        if (p == null || !(Find("EnemySpawner") is object sp) || !(Get(sp, "spawnAreaMin") is Vector2 lo) || !(Get(sp, "spawnAreaMax") is Vector2 hi)) return;
+        Vector3 at = new Vector3(Mathf.Lerp(lo.x, hi.x, 0.35f), (lo.y + hi.y) * 0.5f, p.transform.position.z);
+        for (int i = 1; i < 10 && Rec.Wall(at); i++) at += new Vector3(1.5f, (i % 2 == 0 ? 1.5f : -1.5f) * i, 0f);
+        if (Rec.Wall(at)) return;
+        p.transform.position = at;
+        Swarm(CurStage(), 10);
+    }
+
+    static int CurStage() => Find("StageManager") is object sm && sm.GetType().GetProperty("CurrentStage", Any)?.GetValue(sm) is int st ? st : 0;
+
+    // 레벨업 카드 창: seed 면 갈래 상태를 처음으로 돌려 「갈래 고르기」(입문) 창 → slot 카드를 누르고 확정
+    static IEnumerator FestCards(bool seed, int slot)
+    {
+        object shop = Find("LevelShop");
+        if (shop == null) yield break;
+        if (seed) { try { Call(shop, "PathsBegin"); } catch (Exception e) { Debug.Log("[CAP] 갈래 초기화 실패 " + e.Message); } }
+        rec.autopilot = false;
+        StopInput();
+        rec.levelUpAllowed = true;
+        try { Call(shop, "openLevelShop"); } catch (Exception e) { Debug.Log("[CAP] 레벨업 창 실패 " + e.Message); }
+        Sx("levelup", 0.45f);
+        yield return F(seed ? 1.9f : 1.4f);            // 입문 창은 카드 등장 애니메이션이 끝나야 고를 수 있음
+        Call(shop, slot == 0 ? "onFirstButton" : slot == 1 ? "onSecondButton" : "onThirdButton");
+        Sx("pop", 0.4f, 1.3f);
+        yield return F(1.2f);
+        ConfirmCard(shop, slot);
+        Sx("chime", 0.4f, 1.2f);
+        rec.levelUpAllowed = false;
+        rec.autopilot = true;
+        yield return null;
+    }
+
+    // 커서를 빈틈 중심에 두고 0.2초마다 한 발 (빈틈이 없으면 그냥 싸움)
+    static IEnumerator AimWeak(object b, float seconds)
+    {
+        int start = rec.frames, n = Mathf.RoundToInt(seconds * Fps);
+        Type ws = T("WeakSpot");
+        Component spot = null;
+        for (int i = 0; i < Fps && ws != null && BossAlive(b) && spot == null; i++) { spot = ((Component)b).GetComponent(ws); if (spot == null) yield return null; }
+        if (spot == null || !WeakCenter(spot, out Vector3 at)) { Debug.Log("[CAP] 빈틈 없음 — 그냥 싸움"); yield return UntilRecorded(start, seconds); yield break; }
+        rec.manualFire = true;
+        rec.aimFixed = true;
+        rec.aimPoint = at;
+        rec.weakSfx = true;
+        Cue("weak");
+        for (int f = 0; rec.frames - start < n && f < n * 8; f++)
+        {
+            if (spot == null || !BossAlive(b)) break;
+            if (WeakCenter(spot, out Vector3 now)) rec.aimPoint = now;
+            if (f >= Mathf.RoundToInt(rec.aimSpeed * Fps) && f % 6 == 0) rec.StartCoroutine(Tap());
+            yield return null;
+        }
+        rec.aimFixed = false;
+        rec.manualFire = false;
+        rec.weakSfx = false;
+        yield return UntilRecorded(start, seconds);
+    }
+
+    // 보스 처치 → 무기 진화 3택 창(2.4초 보임) → 고르기 → 확정 연출
+    static IEnumerator FestEvo(object b)
+    {
+        if (BossAlive(b))
+        {
+            yield return Ult(0.4f);
+            KillBoss(b);
+            SxRes("Sounds/domain_break", 0.7f);
+            rec.quietBossDownUntil = rec.frames + 3;
+            Hit(0.6f, 0.8f, 0.4f);
+            rec.StartCoroutine(SlowMo(0.3f, 0.6f));
+        }
+        yield return F(1.4f);
+        object evo = null;
+        for (int i = 0; i < Fps * 2 && evo == null; i++) { evo = Find("WeaponEvolutionUI"); if (evo == null) yield return null; }
+        rec.autopilot = false;
+        StopInput();
+        if (evo == null)
+        {
+            Debug.Log("[CAP] 무기 진화 창이 저절로 안 떠서 직접 엶");
+            object sm = Find("StageManager");
+            if (sm != null) ((MonoBehaviour)sm).StartCoroutine((IEnumerator)Call(sm, "Evolution", false));
+            yield return F(0.5f);
+            evo = Find("WeaponEvolutionUI");
+        }
+        yield return F(2.4f);
+        if (evo != null) { Call(evo, "Select", 0); Sx("ding", 0.4f); }
+        yield return F(0.9f);
+        if (evo != null)
+        {
+            Set(evo, "confirmed", true);
+            Cue("weapon_evolve_confirm");
+            Sx("railgun", 0.45f, 0.8f);
+            Sx("shimmer", 0.45f);
+        }
+        yield return F(2.2f);
+        Time.timeScale = 1f;
+        rec.autopilot = true;
+    }
+
+    // 1) 기본 플레이 한 판 (약 80초)
+    static IEnumerator FestBasic()
+    {
+        yield return FestLoad("Gunner", 2, 1.5f);
+        rec.keyHint = true;
+        int start = rec.frames;
+        yield return UntilRecorded(start, 7f); Swarm(2, 10);
+        yield return UntilRecorded(start, 14f);
+        yield return FestCards(true, 1);                 // 첫 레벨업 = 갈래 고르기
+        Swarm(2, 12);
+        yield return UntilRecorded(start, 25f); Swarm(2, 12);
+        yield return UntilRecorded(start, 33f);
+        yield return FestCards(false, 0);
+        yield return UntilRecorded(start, 39f); Swarm(2, 12);
+        yield return UntilRecorded(start, 45f);
+        object b = SpawnBoss(2, 1f);
+        Cue("king_slime");
+        Sx("roar", 0.4f, 0.8f);
+        yield return UntilRecorded(start, 52f);
+        if (BossAlive(b))
+        {
+            yield return RaiseBarrier(b);               // 외침 화면부터 결계가 펼쳐질 때까지 그대로 녹화
+            SxRes("Sounds/domain_open", 0.5f);
+            yield return F(3f);
+            yield return AimWeak(b, 4.5f);
+        }
+        yield return FestEvo(b);
+        Swarm(2, 14);
+        yield return F(5f);                              // 진화한 무기로 계속
+        rec.keyHint = false;
+    }
+
+    // 화면 안 가장 먼 잡몹 (가까이 · 멀리 조준을 번갈아)
+    static Transform AimFar(Vector3 me)
+    {
+        Transform best = null;
+        float bd = -1f;
+        foreach (UnityEngine.Object o in UnityEngine.Object.FindObjectsByType(T("EnermyController"), FindObjectsSortMode.None))
+        {
+            if (o.GetType().GetProperty("IsDead")?.GetValue(o) is bool dead && dead) continue;
+            Vector2 off = (Vector2)(((Component)o).transform.position - me);
+            if (Mathf.Abs(off.x) > 20f || Mathf.Abs(off.y) > 11f) continue;
+            if (off.sqrMagnitude > bd) { bd = off.sqrMagnitude; best = ((Component)o).transform; }
+        }
+        return best;
+    }
+
+    // ① 직접 조준과 장전
+    static IEnumerator FestAim(float seconds)
+    {
+        yield return FestLoad("Gunner", 0, 1.8f);
+        Swarm(0, 10);
+        rec.manualFire = true;
+        rec.keyHint = true;
+        int start = rec.frames;
+        for (int n = 0; rec.frames - start < seconds * Fps && n < 400; n++)
+        {
+            Component p = (Component)Find("PlayerController");
+            if (p == null) break;
+            rec.aimOverride = n % 2 == 0 ? AimPick(p.transform.position, 0) : (AimFar(p.transform.position) ?? AimPick(p.transform.position, 1));
+            yield return F(rec.aimSpeed + 0.08f);
+            yield return Tap();
+            yield return F(0.12f);
+            if (n % 12 == 11) Swarm(0, 6);
+        }
+        rec.aimOverride = null;
+        rec.manualFire = false;
+        rec.keyHint = false;
+    }
+
+    // ② 레벨업 카드와 갈래 선택
+    static IEnumerator FestCardsSeg()
+    {
+        yield return FestLoad("Archer", 2, 1.8f);
+        int start = rec.frames;
+        yield return UntilRecorded(start, 2.5f);
+        yield return FestCards(true, 0);
+        yield return F(2.5f);
+        yield return FestCards(false, 2);
+        yield return F(2f);
+    }
+
+    // ③ 무기 진화
+    static IEnumerator FestWeaponEvo()
+    {
+        yield return FestLoad("Gunner", 0, 1.2f);
+        object b = SpawnBoss(0, 0.8f);
+        yield return F(3f);
+        yield return FestEvo(b);
+        Swarm(0, 14);
+        yield return F(2.5f);
+    }
+
+    // ④ 스킬 진화 (재료가 다 모이는 순간 연출)
+    static IEnumerator FestSkillEvo()
+    {
+        yield return FestLoad("Gunner", 2, 0.8f);
+        yield return F(2.5f);
+        rec.autopilot = false;
+        StopInput();
+        yield return SkillEvolution();
+        rec.autopilot = true;
+        yield return F(2f);
+    }
+
+    // ⑤ 영혼 트리
+    static IEnumerator FestTree()
+    {
+        yield return FestLoad("Gunner", 2, 0.8f);
+        yield return F(1.5f);
+        yield return TreeCut(C_SoulTree100, 12, 0.55f, 1.2f, 1.4f);
+        rec.autopilot = true;
+        yield return F(0.8f);
+    }
+
+    // ⑥ 보스 결계 (필살기): 외침 → 결계 안 공격을 멀리서 피하며 버팀 → 필살기 · 처치로 깨짐
+    static IEnumerator FestBarrier()
+    {
+        yield return FestLoad("Archer", 1, 1.2f);
+        object b = SpawnBoss(1, 0.8f);
+        yield return F(2.5f);
+        if (!BossAlive(b)) yield break;
+        yield return RaiseBarrier(b);
+        SxRes("Sounds/domain_open", 0.5f);
+        yield return F(4.5f);
+        yield return Ult(0.6f);
+        yield return F(0.6f);
+        KillBoss(b);
+        SxRes("Sounds/domain_break", 0.7f);
+        rec.quietBossDownUntil = rec.frames + 3;
+        rec.StartCoroutine(SlowMo(0.3f, 1.2f));
+        yield return F(2f);
+    }
+
+    // ⑦ 빈틈 조준 (리치 왕)
+    static IEnumerator FestWeak()
+    {
+        yield return FestLoad("Gunner", 0, 1.2f);
+        object b = SpawnBoss(0, 0.8f);
+        FieldInfo casting = b?.GetType().GetField("casting", Any);
+        int start = rec.frames;
+        for (int i = 0; i < Fps * 4 && casting != null && !(bool)casting.GetValue(b); i++) yield return null;
+        yield return UntilRecorded(start, 2f);
+        yield return AimWeak(b, 7f);
+    }
+
+    // ⑪ 영웅 한 명: 평타 → 필살기 (기본 모습)
+    static IEnumerator FestHero(string hero, int stage, float seconds)
+    {
+        yield return FestLoad(hero, stage, Rec.IsMelee(hero) ? 1.2f : 2.2f);
+        int start = rec.frames;
+        Cue("hero_" + hero);
+        yield return F(seconds * 0.45f);
+        yield return Ult(0.6f);
+        yield return UntilRecorded(start, seconds);
+    }
+
+    static IEnumerator FestHeroes(float seconds)
+    {
+        string[] heroes = Enum.GetNames(T("CharacterId"));     // 14명 (CharacterId 순서)
+        for (int i = 0; i < heroes.Length; i++)
+            yield return Seg("hero_" + heroes[i], FestHero(heroes[i], i % 4, seconds));
+    }
+
+    // 메인 메뉴 (타이틀 연출은 건너뜀 · 녹화 안 함)
+    static IEnumerator LoadMenu()
+    {
+        rec.recording = false;
+        rec.autopilot = false;
+        StopInput();
+        Time.timeScale = 1f;
+        SetStatic("TitleIntro", "played", true);
+        SceneManager.LoadScene("MainMenu");
+        yield return F(1.5f);
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+    }
+
+    static Button MenuButton(string name) => Resources.FindObjectsOfTypeAll<Button>().FirstOrDefault(b => b != null && b.name == name && b.gameObject.scene.IsValid());
+
+    // ⑫ 스킨 상점: 영웅 칸 · 탭(캐릭터 · 무기 · 이펙트 · 커서)을 넘기며
+    static IEnumerator FestSkins(float seconds)
+    {
+        yield return LoadMenu();
+        Button sb = MenuButton("SkinButton");
+        if (sb != null) sb.onClick.Invoke();
+        else { GameObject st = GameObject.Find("GameStartButton"); if (st != null) T("SkinShopUI").GetMethod("Open").Invoke(null, new object[] { st.transform.root }); }
+        yield return F(0.3f);
+        rec.recording = true;
+        int start = rec.frames;
+        object ui = Find("SkinShopUI");
+        if (ui == null) Debug.Log("[CAP] 스킨 상점 창 열기 실패");
+        int[] whoSteps = { 0, 1, 3, 8 };
+        for (int k = 0; ui != null && k < 6; k++)
+        {
+            yield return F(seconds / 7f);
+            IList list = Get(ui, k < 4 ? "whoButtons" : "tabButtons") as IList;
+            int idx = k < 4 ? whoSteps[k] : k - 3;
+            if (list != null && idx < list.Count && list[idx] is Button btn && btn != null) { btn.onClick.Invoke(); Sx("pop", 0.3f, 1.2f); }
+        }
+        yield return UntilRecorded(start, seconds);
+        T("SkinShopUI").GetMethod("Close").Invoke(null, null);
+    }
+
+    // ⑬ 도전 모드 창 (일일 도전 · 영혼 릴레이 · 역류)
+    static IEnumerator FestModes(float seconds)
+    {
+        yield return LoadMenu();
+        Button mb = MenuButton("ModesButton");
+        if (mb != null) mb.onClick.Invoke();
+        else { GameObject st = GameObject.Find("GameStartButton"); if (st != null) T("ModeHubUI").GetMethod("Open").Invoke(null, new object[] { st.transform.root }); }
+        yield return F(0.3f);
+        rec.recording = true;
+        int start = rec.frames;
+        yield return UntilRecorded(start, seconds);
+    }
+
+    [UnityTest, Timeout(3600000)]     // 약 4분 30초 영상 · 배치에서 20분 넘게 걸림 (제한에 걸리면 mp4 가 마무리되지 않음)
+    public IEnumerator FestivalReel()
+    {
+        Debug.Log("[CAP] festival start");
+        LogAssert.ignoreFailingMessages = true;
+        Directory.CreateDirectory(Out);
+        Time.captureFramerate = Fps;
+        T("SkinFx").GetField("InCapture").SetValue(null, true);
+        In("Auto", true);
+        AudioListener.volume = 0f;
+        SetGameLanguage(Lang);
+        GameObject host = new GameObject("CaptureRec");
+        UnityEngine.Object.DontDestroyOnLoad(host);
+        rec = host.AddComponent<Rec>();
+        rec.musicPath = "Music/bgm_boss";
+        rec.rich = true;
+        rec.humanMove = true;
+        rec.festival = true;
+        rec.showCursor = true;
+        noSkins = true;
+        BuildOverlay();
+        rec.sub.text = "";
+        rec.black.color = new Color(0f, 0f, 0f, 0f);
+        segs.Clear();
+        yield return Load("Gunner", 2);
+        rec.Begin(Path.Combine(Out, "SoulSaver_Festival.mp4"));
+        rec.musicVolume = 0.45f;
+
+        yield return Seg("basic", FestBasic());
+        yield return Seg("aim", FestAim(12f));
+        yield return Seg("cards", FestCardsSeg());
+        yield return Seg("weapon_evo", FestWeaponEvo());
+        yield return Seg("skill_evo", FestSkillEvo());
+        yield return Seg("soul_tree", FestTree());
+        yield return Seg("barrier", FestBarrier());
+        yield return Seg("weak_point", FestWeak());
+        yield return Seg("memory", MemoryCut(C_Remembers, 6f));
+        yield return Seg("mirror", Mirror("Archer", 3, C_Mirror, false, 3f));
+        yield return Seg("developer", DeveloperCut(C_Developer, 11f));
+        yield return Seg("heroes", FestHeroes(4.3f));
+        yield return Seg("skins", FestSkins(10f));
+        yield return Seg("modes", FestModes(10f));
+
+        rec.End();
+        SaveSegs();
+        noSkins = false;
+        ClearSkins();
+        Time.captureFramerate = 0;
+        Time.timeScale = 1f;
+        In("Auto", false);
+        T("CharacterData").GetField("Override", Any).SetValue(null, null);
+        Debug.Log("[CAP] done frames=" + rec.frames + " (" + (rec.frames / (float)Fps).ToString("0.0") + "s)");
+        yield return null;
+    }
 }
