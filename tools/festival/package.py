@@ -10,7 +10,12 @@ shutil.rmtree(stage, ignore_errors=True)   # 이 스크립트가 만든 임시 �
 for d in ("1_제작보고서", "2_시연영상", "3_실행파일", "4_소스"):
     os.makedirs(os.path.join(stage, d), exist_ok=True)
 shutil.copy(os.path.join(work, "SoulSaver_제작보고서.pdf"), os.path.join(stage, "1_제작보고서"))
-shutil.copy(os.path.join(work, "SoulSaver_시연영상.mp4"), os.path.join(stage, "2_시연영상"))
+# 시연 영상은 유튜브 링크로 제출 (양식) — 작업 폴더에 영상이 있을 때만 넣음
+vid = os.path.join(work, "SoulSaver_시연영상.mp4")
+if os.path.exists(vid):
+    shutil.copy(vid, os.path.join(stage, "2_시연영상"))
+else:
+    os.rmdir(os.path.join(stage, "2_시연영상"))
 shutil.copytree(build, os.path.join(stage, "3_실행파일", "SoulSaver"), ignore=shutil.ignore_patterns("*DoNotShip*"))
 # 심사용 빌드는 제품 이름이 「Soul Saver Festival」(저장 분리)이라 실행 파일도 그 이름 → 제출본은 「Soul Saver.exe」로 (exe 와 _Data 폴더 이름만 맞으면 Unity 가 실행됨)
 gdir = os.path.join(stage, "3_실행파일", "SoulSaver")
@@ -24,7 +29,7 @@ open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""20
 
 구성
  1_제작보고서/SoulSaver_제작보고서.pdf
- 2_시연영상/SoulSaver_시연영상.mp4 (1080p · 한국어 자막 · 약 2분 30초)
+ 시연 영상: 유튜브 링크로 따로 제출 (1080p · 한국어 설명 자막 · 약 4분 50초)
  3_실행파일/SoulSaver/Soul Saver.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
  4_소스/ (Unity 6 프로젝트 소스: Assets · Packages · ProjectSettings · tools)
 
