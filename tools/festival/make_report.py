@@ -265,7 +265,7 @@ html = f"""
 
 <h2>10. 실행 방법</h2>
 <ol>
-<li>제출한 zip을 풀고 <code>3_실행파일/SoulSaver/Soul Saver.exe</code>를 실행함 (Windows 10 64비트 · DirectX 11 · 메모리 4GB).</li>
+<li>제출한 zip을 풀고 <code>3_실행파일/SoulSaver/Soul Saver Festival.exe</code>를 실행함 (Windows 10 64비트 · DirectX 11 · 메모리 4GB).</li>
 <li>메인 메뉴의 「시작」으로 일반 판을, 「도전 모드」로 일일 도전 · 영혼 릴레이 · 역류를, 「영웅 · 스킨」으로 영웅과 스킨을 고름.</li>
 </ol>
 """

@@ -20,8 +20,12 @@ open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""20
 구성
  1_제작보고서/SoulSaver_제작보고서.pdf
  2_시연영상/SoulSaver_시연영상.mp4 (1080p · 한국어 자막 · 약 2분 30초)
- 3_실행파일/SoulSaver/Soul Saver.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
+ 3_실행파일/SoulSaver/Soul Saver Festival.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
  4_소스/ (Unity 6 프로젝트 소스: Assets · Packages · ProjectSettings · tools)
+
+심사용 빌드: 스팀 없이 실행 · 모든 영웅 · 스킨 · 모드 해금 · 포인트 99,999,999
+            메인 메뉴 「테스터 메뉴」에서 영웅 · 난이도 · 갈래 · 스킬 · 영혼 트리 · 보스를 골라 바로 체험할 수 있음
+            (저장 데이터는 정식판과 따로: 제품 이름 Soul Saver Festival)
 
 조작: 이동 WASD · 조준 마우스 · 공격 좌클릭 · 필살기 우클릭 · 장전 R / 게임패드 지원
 소스는 표절 검토용으로 제출하며, 지식재산권은 개발자에게 있습니다.
