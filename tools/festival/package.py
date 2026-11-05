@@ -1,37 +1,34 @@
-# 출품 zip 만들기: 보고서 PDF · 시연 영상 · 실행 빌드 · 소스(git HEAD) → 1개 zip
-# 사용법: py -X utf8 tools/festival/package.py <작업폴더(보고서 · 영상이 있는 곳)> <빌드폴더> <출력.zip>
+# 출품 폴더 만들기: 실행 빌드 + 소스(git HEAD) → <출력폴더>/3_실행파일 · 4_소스, 작업 폴더에 읽어보기.txt
+# 보고서 PDF · 시연 영상(유튜브 링크)은 따로 제출
+# 사용법: py -X utf8 tools/festival/package.py <작업폴더> <빌드폴더> <출력폴더>
 import os, re, sys, shutil, subprocess, zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 work, build, out = sys.argv[1:4]
 VER = re.search(r"bundleVersion: (\S+)", open(os.path.join(ROOT, "ProjectSettings", "ProjectSettings.asset"), encoding="utf8").read())[1]
-stage = os.path.join(work, "stage")
-shutil.rmtree(stage, ignore_errors=True)   # 이 스크립트가 만든 임시 폴더
-for d in ("1_제작보고서", "2_시연영상", "3_실행파일", "4_소스"):
-    os.makedirs(os.path.join(stage, d), exist_ok=True)
-shutil.copy(os.path.join(work, "SoulSaver_제작보고서.pdf"), os.path.join(stage, "1_제작보고서"))
-# 시연 영상은 유튜브 링크로 제출 (양식) — 작업 폴더에 영상이 있을 때만 넣음
-vid = os.path.join(work, "SoulSaver_시연영상.mp4")
-if os.path.exists(vid):
-    shutil.copy(vid, os.path.join(stage, "2_시연영상"))
-else:
-    os.rmdir(os.path.join(stage, "2_시연영상"))
-shutil.copytree(build, os.path.join(stage, "3_실행파일", "SoulSaver"), ignore=shutil.ignore_patterns("*DoNotShip*"))
+for d in ("3_실행파일", "4_소스"):
+    shutil.rmtree(os.path.join(out, d), ignore_errors=True)   # 이 스크립트가 만드는 하위 폴더만 지움
+gdir = os.path.join(out, "3_실행파일", "SoulSaver")
+shutil.copytree(build, gdir, ignore=shutil.ignore_patterns("*DoNotShip*"))
 # 심사용 빌드는 제품 이름이 「Soul Saver Festival」(저장 분리)이라 실행 파일도 그 이름 → 제출본은 「Soul Saver.exe」로 (exe 와 _Data 폴더 이름만 맞으면 Unity 가 실행됨)
-gdir = os.path.join(stage, "3_실행파일", "SoulSaver")
 for f in os.listdir(gdir):
     if f.startswith("Soul Saver Festival"):
         os.rename(os.path.join(gdir, f), os.path.join(gdir, f.replace("Soul Saver Festival", "Soul Saver")))
-srczip = os.path.join(work, "src.zip")   # 이름이 깨진 에셋이 있어 풀지 않고 zip 끼리 합친다
-subprocess.run(["git", "-C", ROOT, "archive", "--format=zip", "-o", srczip, "HEAD", "Assets", "Packages", "ProjectSettings", "tools", "AGENT.md"], check=True)
-open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""2026 한동 AI·SW페스티벌 · 스마트 SW 공모전 게임 부문 출품작
+srczip = os.path.join(work, "src.zip")   # 이름이 깨진 에셋이 있어 tar 대신 zip 으로 받아 파이썬으로 풂
+subprocess.run(["git", "-C", ROOT, "archive", "--format=zip", "-o", srczip, "HEAD", "Assets", "Packages", "ProjectSettings", "tools",
+                # 에이전트 규칙 · AI 작업 메모 · 출품 조립 스크립트는 소스에서 뺌
+                ":!tools/festival", ":!tools/gemini/README.md", ":!tools/release.ps1"], check=True)
+with zipfile.ZipFile(srczip) as zs:
+    zs.extractall(os.path.join(out, "4_소스"))
+os.remove(srczip)
+open(os.path.join(work, "읽어보기.txt"), "w", encoding="utf8").write(f"""2026 한동 AI·SW페스티벌 · 스마트 SW 공모전 게임 부문 출품작
 작품: Soul Saver (소울 세이버) v{VER} / 출품자: 박민근
 
 구성
- 1_제작보고서/SoulSaver_제작보고서.pdf
+ 제작보고서: [4]박민근_SoulSaver_출품보고서.pdf
  시연 영상: 유튜브 링크로 따로 제출 (1080p · 한국어 설명 자막 · 약 4분 50초)
- 3_실행파일/SoulSaver/Soul Saver.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
- 4_소스/ (Unity 6 프로젝트 소스: Assets · Packages · ProjectSettings · tools)
+ {os.path.basename(out)}/3_실행파일/SoulSaver/Soul Saver.exe  <- 더블클릭으로 실행 (Windows 10 64비트, 스팀 불필요)
+ {os.path.basename(out)}/4_소스/ (Unity 6 프로젝트 소스: Assets · Packages · ProjectSettings · tools)
 
 심사용 빌드: 스팀 없이 실행 · 모든 영웅 · 스킨 · 모드 해금 · 포인트 99,999,999
             메인 메뉴 「테스터 메뉴」에서 영웅 · 난이도 · 갈래 · 스킬 · 영혼 트리 · 보스를 골라 바로 체험할 수 있음
@@ -40,14 +37,5 @@ open(os.path.join(stage, "읽어보기.txt"), "w", encoding="utf8").write(f"""20
 조작: 이동 WASD · 조준 마우스 · 공격 좌클릭 · 필살기 우클릭 · 장전 R / 게임패드 지원
 소스는 표절 검토용으로 제출하며, 지식재산권은 개발자에게 있습니다.
 """)
-with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zo:
-    for dp, _, fs in os.walk(stage):
-        for fn in fs:
-            fp = os.path.join(dp, fn)
-            zo.write(fp, os.path.relpath(fp, stage))
-    with zipfile.ZipFile(srczip) as zs:
-        for info in zs.infolist():
-            if not info.is_dir():
-                zo.writestr("4_소스/" + info.filename, zs.read(info))
-z = zipfile.ZipFile(out)
-print("OK", out, round(os.path.getsize(out) / 1e6), "MB", len(z.namelist()), "files", "손상:", z.testzip())
+n = sum(len(fs) for _, _, fs in os.walk(out))
+print("OK", out, n, "files")
