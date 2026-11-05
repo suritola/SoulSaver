@@ -204,8 +204,12 @@ public static class GameMode
     // 1.4.2~ 무한 모드(일일 도전 포함) 판 안에서는 시간 배율 대신 0분 값 0.816 고정 — 판이 길어질수록 보스전이 저절로 빨라져 성장 곡선(A1 · A2)을 깎던 몫을 뺌
     //   숨은 체력 상향과 같은 체감이 되지 않게 0분 값까지만 (초반은 그대로 · 후반 화력은 레벨 · 트리 · 초월 · 정련으로만 · 무한 30분 기획 C)
     const float EndlessDamageFlat = 0.96f * CurveLow;
-    public static float PlayerDamageMul => IsEndless && endlessClockOn && EndlessMode.Instance != null ? EndlessDamageFlat
-        : 0.96f * Mathf.Lerp(CurveLow, CurveHigh, CurveT);     // 0.96 = 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
+    public static float PlayerDamageMul => (IsEndless && endlessClockOn && EndlessMode.Instance != null ? EndlessDamageFlat
+        : 0.96f * Mathf.Lerp(CurveLow, CurveHigh, CurveT))
+#if SOULSAVER_FESTIVAL
+        * (TesterRun.Active ? 10f : 1f)     // 페스티벌 심사 빌드: 테스터 판은 피해 10배 (사용자 「테스터모드 딜 10배로」)
+#endif
+        ;     // 0.96 = 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
     public static float DamageMul => Damage[I] * Mathf.Lerp(1f, MobRamp, 0.5f) * Harder * D(DailyStat.EnemyDamage) * Early(EarlyHurt) * BeyondDamageMul;
     // 1.3.4~ 사용자 「개발자 엄마까지 처치한 후에는 몹들의 공격력이 점점 무한히 강해지게」: 한계 돌파 뒤 1분마다 ×1.12 (약 6분마다 2배 · 상한 없음)
     //   보스 기술은 DamageMul 로 한 대 상한을 맞추므로 상한 안 · 몹 접촉 · 탄은 끝없이 · 지수는 600분에서 멈춤 (float 넘침 방지 · 그때 이미 ×10^29)

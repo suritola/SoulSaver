@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 손맛 연출: 적 처치 · 레벨업 · 코인 획득 때 도트 이펙트와 소리 (tools/pixelart/make_fx.py 로 만든 시트)
 public static class Juice
@@ -242,7 +242,11 @@ public static class Juice
     static bool playedThisRun;
 
     public static int RunsPlayed => Prefs.GetInt(RunsKey, 0);
+#if SOULSAVER_FESTIVAL
+    public static bool NewPlayer => false;      // 페스티벌 심사 빌드: 저장이 새것이라 처음 하는 사람으로 보여 레벨업 창이 저절로 열렸음 → 원래처럼 쌓아 두고 [Space]
+#else
     public static bool NewPlayer => RunsPlayed < 3;
+#endif
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void BootRuns()
