@@ -22,7 +22,7 @@ using UnityEngine.UI;
 // 빈틈(WeakSpot) · 기억(BossMemory) · 궁수 수동 시위(CharacterKit.ManualBowInAuto)는 리플렉션으로만 봄 — 없으면 그 컷을 건너뜀 (게임 코드와 컴파일 의존 없음)
 // 화면에는 게임 커서(Resources/Cursors)를 겹쳐 그리고, 총소리 · 장전 소리는 음악과 함께 영상 소리에 섞음
 // 2026-10-18~ 트레일러는 합성 곡 TrailerMusic + 게임 효과음(처치 · 보스 타격 · 영웅 평타 · 필살기 · 결계 · 진화 · 장면 전환 휘익)을 같은 순간에 얹음 (Rec.rich) · 컷마다 [CUE] 로그
-public class GameplayCapture
+public partial class GameplayCapture
 {
     static readonly string Out = Environment.GetEnvironmentVariable("CAPTURE_OUT") ?? "C:/Temp/SoulSaverCapture";
     static readonly int Fps = int.TryParse(Environment.GetEnvironmentVariable("CAPTURE_FPS"), out int f) ? f : 30;
@@ -64,7 +64,7 @@ public class GameplayCapture
         Type l = T("Loc+Lang");
         T("GameSettings").GetProperty("Language").SetValue(null, Enum.ToObject(l, i));
     }
-    const int W = 1920, H = 1080;
+    static int W = 1920, H = 1080;      // 릴스 컷(GameplayCapture.Reels.cs)은 컷마다 바꿈
     const BindingFlags Any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
     static readonly Color Gold = new Color(0.96f, 0.83f, 0.47f);
 
@@ -155,7 +155,7 @@ public class GameplayCapture
     }
 
     // ================================================================= 녹화기 (씬이 바뀌어도 남음)
-    class Rec : MonoBehaviour
+    partial class Rec : MonoBehaviour
     {
         public bool recording, autopilot, levelUpAllowed;
         public float musicVolume = 0.9f;
@@ -212,6 +212,7 @@ public class GameplayCapture
 
         public void Sfx(AudioClip clip, float vol, float pitch = 1f)
         {
+            if (cuts) { CueLog(clip, vol, pitch); return; }      // 릴스 컷: 섞지 않고 소리 기록만
             float[] d = Mono(clip);
             if (d == null || d.Length == 0) return;
             int pick = 0;
@@ -325,7 +326,7 @@ public class GameplayCapture
             musicCh = clip.channels; musicRate = clip.frequency; musicFrames = clip.samples;
             perFrame = Rate / Fps;
             var mode = (UnityEditor.VideoBitrateMode)Enum.Parse(typeof(UnityEditor.VideoBitrateMode), Quality);
-            var v = new VideoTrackAttributes { frameRate = new MediaRational(Fps), width = W, height = H, includeAlpha = false, bitRateMode = mode };
+            var v = new VideoTrackAttributes { frameRate = new MediaRational(Fps), width = (uint)W, height = (uint)H, includeAlpha = false, bitRateMode = mode };
             var a = new AudioTrackAttributes { sampleRate = new MediaRational(Rate), channelCount = (ushort)musicCh, language = "en" };
             encoder = new MediaEncoder(path, v, a);
             audio = new NativeArray<float>(perFrame * musicCh, Allocator.Persistent);
@@ -344,6 +345,7 @@ public class GameplayCapture
         void Capture()
         {
             {
+                if (cuts) { PipeFrame(); return; }      // 릴스 컷: 프레임을 ffmpeg 로
                 if (!recording || encoder == null) return;
                 Texture2D t = Grab(true);
                 encoder.AddFrame(t);
@@ -392,13 +394,14 @@ public class GameplayCapture
             CleanUi();
             cam.cullingMask |= 1 << 5;
             CanvasesToCamera(cam);
+            if (cuts && !hud) HideHud();
             captionCanvas.worldCamera = cam;
             captionCanvas.enabled = withCaption;
             RenderTexture old = cam.targetTexture;
             float size = cam.orthographicSize;
             Vector3 pos = cam.transform.position;
-            cam.orthographicSize = size * baseZoom * (1f - 0.2f * Mathf.Clamp01(punch));
-            cam.transform.position = pos + (Vector3)(UnityEngine.Random.insideUnitCircle * shake * 0.6f);
+            cam.orthographicSize = (cuts && ortho > 0f ? ortho : size) * baseZoom * (1f - 0.2f * Mathf.Clamp01(punch));
+            cam.transform.position = cuts ? new Vector3(viewCenter.x, viewCenter.y, pos.z) : pos + (Vector3)(UnityEngine.Random.insideUnitCircle * shake * 0.6f);
             cam.targetTexture = rt;
             Canvas.ForceUpdateCanvases();
             cam.Render();
@@ -533,6 +536,7 @@ public class GameplayCapture
         void Update()
         {
             if (!autopilot) return;
+            if (humanOn) { HumanUpdate(); return; }      // 릴스 컷: 사람 손 모델 (GameplayCapture.Reels.cs)
             Component player = (Component)Find("PlayerController");
             if (player == null) return;
             Vector3 me = player.transform.position;
@@ -585,6 +589,7 @@ public class GameplayCapture
             object p = Find("PlayerController");
             if (p != null)
             {
+                if (cuts) HitCheck(p);
                 Set(p, "PlayerHealth", Get(p, "PlayerMaxHealth"));
                 if (!levelUpAllowed) Set(p, "nowEXP", 0f);
             }
@@ -594,6 +599,7 @@ public class GameplayCapture
             GunSounds(p);
             GameSounds(p);
             RunLater();
+            if (cuts) ViewTick();
             DrawCursor();
             Capture();
         }
@@ -784,10 +790,10 @@ public class GameplayCapture
         // 커서: 지금 겨누는 월드 좌표를 화면 비율로 옮겨 위치만 바꿈 (자동 조종 · 녹화 중일 때만 보임)
         void DrawCursor()
         {
-            if (cursorImage == null) return;
+            if (cursorImage == null || manualCursor) return;
             Camera cam = Camera.main;
             bool on = showCursor && autopilot && recording && cam != null;
-            Vector3 v = on ? cam.WorldToViewportPoint(aimNow) : Vector3.zero;
+            Vector3 v = !on ? Vector3.zero : cuts ? ViewPoint(aimNow) : cam.WorldToViewportPoint(aimNow);
             on &= v.x > 0f && v.x < 1f && v.y > 0f && v.y < 1f;
             cursorImage.enabled = on;
             if (!on) return;
@@ -979,7 +985,7 @@ public class GameplayCapture
             float k = 1f - Mathf.Exp(-(dodgeLeft > 0 ? DodgeRate : MoveRate) / Fps);
             // 멈춰 조준할 땐 바로 섬 (게임이 입력을 늘 최대 속도로 바꾸므로 서서히 줄이면 0.2초 넘게 그대로 달림)
             moveCur = pausing ? Vector2.zero : Vector2.Lerp(moveCur, desired, k);
-            In("AutoMove", moveCur.sqrMagnitude < 0.04f ? Vector2.zero : moveCur);
+            PutMove(moveCur.sqrMagnitude < 0.04f ? Vector2.zero : moveCur);
             return aim;
         }
 
@@ -1058,7 +1064,7 @@ public class GameplayCapture
         static Vector2 Inward(Vector3 me)
         {
             Vector2 v = Vector2.zero;
-            const float m = 3.5f;
+            float m = rec != null && rec.cuts ? 10f : 3.5f;      // 릴스 컷: 맵 가장자리 벽이 화면에 들어오지 않게 일찍 돌아섬
             object sp = Find("EnemySpawner");
             if (sp != null && Get(sp, "spawnAreaMin") is Vector2 lo && Get(sp, "spawnAreaMax") is Vector2 hi)
             {

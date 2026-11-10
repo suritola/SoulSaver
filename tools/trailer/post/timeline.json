@@ -1,0 +1,495 @@
+{
+ "_doc": "tools/trailer/post/make_timeline.py 가 쓴다(손으로 고치지 않는다). 시간은 프레임(60fps).",
+ "out": "docs/marketing/trailer",
+ "shots": "C:\\Users\\User\\AppData\\Local\\SoulSaverBuild\\Reels\\takes",
+ "ink": "0B0A10",
+ "sounds": [
+  "C:\\Users\\User\\AppData\\Local\\SoulSaverBuild\\Reels\\takes\\sounds",
+  "C:\\Users\\User\\Desktop\\Deepfold\\Marketing\\trailer\\work\\shots\\sounds"
+ ],
+ "mix": {
+  "music": -7,
+  "amb": -18,
+  "sfx": -9,
+  "vo": 0,
+  "duckDb": 0,
+  "duckThreshold": 0.03,
+  "attackMs": 20,
+  "releaseMs": 600
+ },
+ "cuts": {
+  "reels": {
+   "w": 1080,
+   "h": 1920,
+   "crf": 17,
+   "grade": ""
+  }
+ },
+ "clips": [
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "endless_s1",
+   "in": 306,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "aim2_s1",
+   "in": 84,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "aim1_s1",
+   "in": 130,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "reload2_s1",
+   "in": 153,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "aim0_s2",
+   "in": 290,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "cards_s1.{lang}",
+   "in": 70,
+   "frames": 192,
+   "crop": [
+    1080,
+    1920,
+    1167,
+    0
+   ]
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "ult_gunner_s1",
+   "in": 265,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "horde_meadow_s1",
+   "in": 200,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "horde_catacomb_s1",
+   "in": 150,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "horde_hell_s2",
+   "in": 190,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "horde_abyss_s2",
+   "in": 160,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Swordsman_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Archer_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Rogue_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Alchemist_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Cartographer_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Clockmaker_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Postman_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Ghost_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Wrestler_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Foreman_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Puppeteer_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Undertaker_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "hero_Photographer_s1",
+   "in": 110,
+   "frames": 48
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier1_s1",
+   "in": 150,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier0_s1",
+   "in": 130,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier2_s1",
+   "in": 90,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier1_s2",
+   "in": 100,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "break2_s1",
+   "in": 236,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "evo_s1.{lang}",
+   "in": 150,
+   "frames": 192,
+   "crop": [
+    1080,
+    1920,
+    1167,
+    0
+   ]
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "endless_s2",
+   "in": 40,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "dev_s2",
+   "in": 20,
+   "frames": 96
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier0_s2",
+   "in": 100,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "barrier1_s1",
+   "in": 390,
+   "frames": 144
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "color": "0B0A10",
+   "frames": 120
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "src": "C:\\Users\\User\\Desktop\\Deepfold\\Marketing\\trailer\\work\\shots\\ident_1080x1920",
+   "frames": 209,
+   "in": 0,
+   "fadeOut": 18
+  }
+ ],
+ "text": [
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 6,
+   "frames": 210,
+   "ko": "자동 조준은 없다.",
+   "en": "No auto-aim.",
+   "y": 0.2,
+   "size": 0.1,
+   "fadeIn": 3,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 252,
+   "frames": 348,
+   "ko": "조준도, 장전도 직접.",
+   "en": "You aim. You reload.",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 822,
+   "frames": 90,
+   "ko": "판마다 다른 빌드",
+   "en": "A new build every run",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 924,
+   "frames": 348,
+   "ko": "네 개의 세계",
+   "en": "Four worlds",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 1308,
+   "frames": 588,
+   "ko": "영웅 14명",
+   "en": "14 heroes",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 1932,
+   "frames": 444,
+   "ko": "보스의 결계",
+   "en": "Inside the boss's barrier",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 2406,
+   "frames": 90,
+   "ko": "쓰러뜨리면, 그 자리에서 진화",
+   "en": "Beat a boss. Evolve on the spot.",
+   "y": 0.2,
+   "size": 0.07,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 2700,
+   "frames": 180,
+   "ko": "그리고, 무한 모드",
+   "en": "And then, Endless Mode",
+   "y": 0.2,
+   "size": 0.085,
+   "fadeIn": 5,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 3168,
+   "frames": 120,
+   "image": "steam_assets/library_logo.png",
+   "pixel": true,
+   "h": 0.3,
+   "y": 0.4,
+   "fadeIn": 0,
+   "fadeOut": 0
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 3182,
+   "frames": 106,
+   "ko": "Steam에서 지금 플레이",
+   "en": "Out now on Steam",
+   "y": 0.62,
+   "size": 0.05,
+   "fadeIn": 10,
+   "fadeOut": 0
+  }
+ ],
+ "music": [
+  {
+   "tags": [
+    "reels"
+   ],
+   "file": "bgm_developer",
+   "at": 0,
+   "in": 672,
+   "frames": 1642,
+   "fadeOut": 10
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "file": "bgm_developer",
+   "at": 1622,
+   "in": 3830,
+   "frames": 1666,
+   "fadeIn": 10,
+   "fadeOut": 96
+  }
+ ],
+ "vo": [
+  {
+   "tags": [
+    "reels"
+   ],
+   "key": "ident",
+   "at": 3288,
+   "gainDb": 2
+  }
+ ]
+}

@@ -74,3 +74,7 @@ tools/pixelart/out/
 
 # 출시 전 QA 캡처 (용량이 커서 저장소 밖에 둠)
 docs/plans/*/qa-shots/
+
+# 릴스 조립 결과물 (tools/trailer/post/build.py)
+/docs/marketing/trailer/final/
+/docs/marketing/trailer/work/
