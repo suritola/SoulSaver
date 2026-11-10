@@ -20,7 +20,7 @@ public class TitleIntro : MonoBehaviour
     //   떠 있는 동안 Showing → ModalEsc · 패치노트 EscCloser 가 ESC 를 넘김, EventSystem 의 Submit · 방향키도 꺼 둠
     //   (MaxLife 6초로 반드시 지워지고 OnDestroy 에서 되돌리므로 남는 상태 없음)
     static TitleIntro live;
-    public static bool Showing => live != null;
+    public static bool Showing => live != null || StudioIdent.Showing;      // 2.0.4~ 개발사 로고가 떠 있는 동안도
     UnityEngine.EventSystems.EventSystem navEs;
     bool navWas = true;
 
