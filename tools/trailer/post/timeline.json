@@ -71,14 +71,8 @@
     "reels"
    ],
    "src": "cards_s1.{lang}",
-   "in": 70,
-   "frames": 192,
-   "crop": [
-    1080,
-    1920,
-    1167,
-    0
-   ]
+   "in": 24,
+   "frames": 192
   },
   {
    "tags": [
@@ -269,14 +263,8 @@
     "reels"
    ],
    "src": "evo_s1.{lang}",
-   "in": 150,
-   "frames": 192,
-   "crop": [
-    1080,
-    1920,
-    1167,
-    0
-   ]
+   "in": 200,
+   "frames": 192
   },
   {
    "tags": [

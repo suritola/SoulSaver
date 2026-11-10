@@ -116,8 +116,44 @@ public partial class GameplayCapture
         // 세로 컷은 HUD 없이 (가로용 배치라 세로에서 겹침) — 화면에 붙는 캔버스만 끄고 월드 캔버스(체력 줄 · 피해 숫자)는 둠
         void HideHud()
         {
+            if (uiOnly) { HideHudKeepWindows(); return; }
             foreach (Canvas c in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
                 if (c.isRootCanvas && c != captionCanvas && c.renderMode != RenderMode.WorldSpace) Off(c);
+        }
+
+        // UI 컷(카드 고르기 · 무기 진화)을 세로로 직접 찍음: 창은 가로 1920 기준이라 캔버스를 「너비 맞춤」으로 바꿔 창 전체가 세로 화면 안에 들어오게 하고,
+        //   HUD(체력 · 탄 · 타이머 · 알림)는 그림 · 글자만 꺼서 창(레벨업 카드 창 · 무기 진화 창)만 남김 — 찍는 순간에만, 게임 코드는 그대로
+        public bool uiOnly;
+        readonly Dictionary<CanvasScaler, (float match, Vector2 size)> scalerWas = new Dictionary<CanvasScaler, (float, Vector2)>();
+        const float UiFitWidth = 1440f;      // 창(카드 세 장 1344)이 양옆 여백 조금만 두고 꽉 차게 — 1920 그대로면 세로 화면에서 너무 작음
+        void HideHudKeepWindows()
+        {
+            var keep = new List<Transform>();
+            if (Find("LevelShop") is object shop && Get(shop, "LvshopPanel") is GameObject panel && panel != null) keep.Add(panel.transform);
+            if (Find("WeaponEvolutionUI") is Component evo && evo != null) keep.Add(evo.transform);
+            foreach (CanvasScaler cs in UnityEngine.Object.FindObjectsByType<CanvasScaler>(FindObjectsSortMode.None))
+            {
+                Canvas c = cs.GetComponent<Canvas>();
+                if (c == null || c == captionCanvas || !c.isRootCanvas || c.renderMode == RenderMode.WorldSpace || cs.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize) continue;
+                if (!scalerWas.ContainsKey(cs)) scalerWas[cs] = (cs.matchWidthOrHeight, cs.referenceResolution);
+                cs.matchWidthOrHeight = 0f;
+                cs.referenceResolution = new Vector2(UiFitWidth, scalerWas[cs].size.y);
+            }
+            foreach (Graphic g in UnityEngine.Object.FindObjectsByType<Graphic>(FindObjectsSortMode.None))
+            {
+                if (!g.enabled || g.canvas == null) continue;
+                Canvas root = g.canvas.rootCanvas;
+                if (root == captionCanvas || root.renderMode == RenderMode.WorldSpace) continue;
+                bool kept = false;
+                foreach (Transform k in keep) if (g.transform.IsChildOf(k)) { kept = true; break; }
+                if (!kept) Off(g);
+            }
+        }
+        public void UiOnlyEnd()
+        {
+            uiOnly = false;
+            foreach (var kv in scalerWas) if (kv.Key != null) { kv.Key.matchWidthOrHeight = kv.Value.match; kv.Key.referenceResolution = kv.Value.size; }
+            scalerWas.Clear();
         }
 
         float HalfH => (ortho > 0f ? ortho : 15f) * baseZoom;
@@ -456,6 +492,7 @@ public partial class GameplayCapture
         trickleGen++;
         rec.recording = false;
         rec.autopilot = false;
+        rec.UiOnlyEnd();
         rec.manualFire = false; rec.aimFixed = false; rec.aimOverride = null; rec.gunSfx = false; rec.aimStyle = 0;
         rec.baseZoom = 1f; rec.viewBias = Vector2.zero; rec.hud = !portrait; rec.showCursor = true; rec.lookAmount = 0.28f;
         float scale = float.TryParse(Environment.GetEnvironmentVariable("CAPTURE_SCALE"), NumberStyles.Float, CultureInfo.InvariantCulture, out float sc) ? sc : 1f;
@@ -700,8 +737,9 @@ public partial class GameplayCapture
     // ---- cards (가로로 찍어 세로로 자름): 레벨업 카드 세 장 — 화살표 커서가 카드로 가서 읽고, 옆 카드를 봤다가 돌아와 누르고 확정
     static IEnumerator CutCards(float fight)
     {
-        yield return Prep("Gunner", 0, 2, false);
-        Wave(2, 8, 1.6f, 1.2f, 7f, 12f);
+        yield return Prep("Gunner", 0, 2);
+        rec.uiOnly = true;
+        Wave(2, 8, 1.6f, 0.8f, 9f, 14f);
         rec.autopilot = true;
         yield return F(1.0f);
         Roll("cards");
@@ -716,7 +754,8 @@ public partial class GameplayCapture
         if (arrow != null) rec.cursorImage.texture = arrow;
         // 카드 자리는 화면 비율 (가로 화면 기준: 카드 세 장이 0.31 · 0.5 · 0.69 에 놓임)
         rec.manualCursor = true;
-        Vector2 a = new Vector2(0.56f, 0.3f), b1 = new Vector2(0.60f, 0.40f), b2 = new Vector2(0.51f, 0.43f);
+        rec.cursorImage.rectTransform.sizeDelta = new Vector2(72f, 72f);      // 창이 0.75배로 줄어든 만큼 커서도
+        Vector2 a = new Vector2(0.58f, 0.36f), b1 = new Vector2(0.73f, 0.47f), b2 = new Vector2(0.51f, 0.47f);
         yield return F(0.35f);
         yield return rec.Glide(a, b1, 0.5f);         // 오른쪽 카드를 먼저 봄
         yield return F(0.45f);
@@ -729,18 +768,23 @@ public partial class GameplayCapture
         rec.manualCursor = false;
         rec.cursorImage.texture = aim;
         rec.autopilot = true;
+        rec.cursorImage.rectTransform.sizeDelta = new Vector2(96f, 96f);
         Wave(2, 6, 1.6f, 1.2f, 8f, 12f);
         yield return F(1.6f);
         Cut("cards");
+        rec.UiOnlyEnd();
     }
 
     // ---- evo (가로로 찍어 세로로 자름): 결계 안에서 보스를 쓰러뜨리면 무기가 부서지고 진화 카드 3장 → 고름
     static IEnumerator CutEvo()
     {
-        yield return Prep("Gunner", 0, 2, false);
+        yield return Prep("Gunner", 0, 2, true, 22f, 2f);
+        rec.uiOnly = true;
         object b = SpawnBoss(2, 0.8f);
+        ((Component)b).transform.position = ((Component)Find("PlayerController")).transform.position + new Vector3(1.5f, 11f, 0f);
         rec.aimStyle = 1;
         rec.autopilot = true;
+        rec.rangedBossNear = 9f; rec.rangedBossFar = 13f; rec.lookAmount = 0.4f;
         yield return F(0.8f);
         yield return RaiseBarrier(b);
         Roll("evo");
@@ -766,6 +810,7 @@ public partial class GameplayCapture
         if (evo != null) Set(evo, "confirmed", true);
         yield return F(2.2f);
         Cut("evo");
+        rec.UiOnlyEnd();
     }
 
     partial class Rec
