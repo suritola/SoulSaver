@@ -445,6 +445,19 @@
    "size": 0.05,
    "fadeIn": 10,
    "fadeOut": 0
+  },
+  {
+   "tags": [
+    "reels"
+   ],
+   "at": 3192,
+   "frames": 96,
+   "ko": "₩1,700",
+   "en": "$1.50",
+   "y": 0.69,
+   "size": 0.042,
+   "fadeIn": 10,
+   "fadeOut": 0
   }
  ],
  "music": [

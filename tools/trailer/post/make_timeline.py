@@ -103,6 +103,7 @@ def build():
     text += [
         {"tags": ["reels"], "at": game, "frames": card, "image": "steam_assets/library_logo.png", "pixel": True, "h": 0.3, "y": 0.4, "fadeIn": 0, "fadeOut": 0},
         {"tags": ["reels"], "at": game + 14, "frames": card - 14, "ko": "Steam에서 지금 플레이", "en": "Out now on Steam", "y": 0.62, "size": 0.05, "fadeIn": 10, "fadeOut": 0},
+        {"tags": ["reels"], "at": game + 24, "frames": card - 24, "ko": "₩1,700", "en": "$1.50", "y": 0.69, "size": 0.042, "fadeIn": 10, "fadeOut": 0},   # 스팀 정가(11-11 확인)
     ]
     tl = {
         "_doc": "tools/trailer/post/make_timeline.py 가 쓴다(손으로 고치지 않는다). 시간은 프레임(60fps).",
