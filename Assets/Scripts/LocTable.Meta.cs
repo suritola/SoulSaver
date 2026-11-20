@@ -27,8 +27,9 @@ public static partial class LocTable
         K("legacy.hunter", "왕 사냥꾼", "Kingslayer", "王狩り", "弑王者");
         K("legacy.hunter.d", "보스에게 주는 피해 +15%", "+15% damage to bosses", "ボスへのダメージ +15%", "对首领伤害 +15%");
         K("legacy.hunter.c", "영웅 5명으로 이야기 모드 클리어", "Clear Story with 5 heroes", "5人の英雄でストーリーをクリア", "用5名英雄通关故事模式");
-        K("legacy.harvest", "영혼 수확", "Soul Harvest", "魂の収穫", "灵魂收割");
-        K("legacy.harvest.d", "보스를 쓰러뜨리면 필살기 게이지가 가득 참", "Defeating a boss fills your Ultimate gauge", "ボスを倒すと必殺技ゲージが満タンに", "击败首领时必杀技充满");
+        K("legacy.harvest", "왕의 전리품", "Spoils of Kings", "王の戦利品", "王者战利品");
+        K("legacy.harvest.d", "보스를 쓰러뜨리면 레벨업 카드 2장", "Defeating a boss grants 2 level-up cards", "ボスを倒すとレベルアップカード2枚", "击败首领时获得2张升级卡");
+        K("legacy.harvest.proc", "왕의 전리품: 레벨업 카드 +2", "Spoils of Kings: +2 level-up cards", "王の戦利品：レベルアップカード +2", "王者战利品：升级卡 +2");
         K("legacy.harvest.c", "무한 모드 클리어", "Clear Endless", "エンドレスをクリア", "通关无尽模式");
         K("legacy.breath", "숨 고르기", "Second Wind", "息を整える", "调息");
         K("legacy.breath.d", "레벨업할 때마다 최대 체력 3% 회복", "Heal 3% max HP on every level-up", "レベルアップごとに最大体力の3%回復", "每次升级恢复3%最大生命");

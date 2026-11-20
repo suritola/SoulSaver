@@ -87,6 +87,7 @@ public static class SoulLegacy
 
     // ================================================================= 효과
     const float BloodChance = 0.03f, BloodHeal = 0.02f, EndureHp = 0.3f, HunterMul = 1.15f, BreathHeal = 0.03f, EchoBelow = 0.3f, EchoCut = 0.25f, RushHeal = 0.2f;
+    const int HarvestCards = 2;
     static readonly System.Random rng = new System.Random();     // 게임 난수(일일 도전 시드)는 건드리지 않게 따로
     static bool endureUsed;
 
@@ -135,10 +136,11 @@ public static class SoulLegacy
     public static void OnBossDown()
     {
         PlayerController p = Hostile.Player;
-        if (Live(Id.Harvest))
+        // 왕의 전리품: 레벨업 카드 2장 (상자처럼 대기 카드만 · 경험치 요구량은 그대로 — GrantLevels 는 요구량도 올려서 안 씀)
+        if (Live(Id.Harvest) && Object.FindFirstObjectByType<LevelShop>() is LevelShop shop)
         {
-            SkillGauge g = Object.FindFirstObjectByType<SkillGauge>();
-            if (g != null) g.AddSkillPoint(g.MaxSkillPoint);
+            shop.AddPending(HarvestCards);
+            Notice.Toast(NoticeIcon.Up, Loc.T("legacy.harvest.proc"), 2.5f);
         }
         if (Live(Id.Rush)) Heal(p, RushHeal);
     }
