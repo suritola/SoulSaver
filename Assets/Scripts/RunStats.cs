@@ -538,7 +538,7 @@ public class RunStats : MonoBehaviour
             string path = BalanceLogPath;
             // 1.2~ 끝에 판 사이 기록 여섯 칸 (RunLog.Columns) · 1.2~ 무게 · 각인 · 유물 세 칸 · 1.1.2~ 스킬 진화 한 칸
             // 1.5.9~ 맨 끝에 이어한 판의 되살린 시간 · 처치 두 칸 (UpgradeHeader 는 끝에 더한 칸만 이어 쓰므로 새 칸은 늘 이 뒤에)
-            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos," + RunLog.Columns + ",resumed_secs,resumed_kills";
+            const string Header = "date,version,character,difficulty,endless,result,seconds,level,kills,shards_total,shards_spent,evo1,evo1_sec,evo2,evo2_sec,weapon,ultimate,skill,survival,soul,wealth,cards,stage,dealt_total,dealt_by,taken_total,taken_by,last_hit,chapter_secs,weight,brands,relics,skill_evos," + RunLog.Columns + ",resumed_secs,resumed_kills,save_events";      // 2.0.5~ 저장을 되살린 기록 (Prefs.NoteEvent)
             // 2.1.1 에서 칸이 늘어남: 예전 머리줄의 기록은 따로 남겨 두고 새로 시작
             // 1.2~ 끝에 칸만 더해진 머리줄이면 따로 떼지 않고 머리줄만 바꿔 한 파일로 이어 씀 (옛 줄은 뒤 칸이 비어 있음 · 합쳐 읽기는 tools/balance/merge_logs.py)
             if (System.IO.File.Exists(path))
@@ -583,7 +583,8 @@ public class RunStats : MonoBehaviour
              .Append(',').Append(LogWeight).Append(',').Append(LogBrands).Append(',').Append(LogRelics)     // 1.2~ 무게 · 각인 · 유물
              .Append(',').Append(LogSkillEvos)        // 1.1.2~ 스킬 진화 "키@초|…"
              .Append(',').Append(RunLog.Row())       // 1.2~ 판 사이 기록 (retry_kind … points_run)
-             .Append(',').Append(ResumedSecs).Append(',').Append(ResumedKills).AppendLine();      // 1.5.9~
+             .Append(',').Append(ResumedSecs).Append(',').Append(ResumedKills)      // 1.5.9~
+             .Append(',').Append(Prefs.GetString(Prefs.EventsKey, "").Replace(",", " ")).AppendLine();
             Telemetry.RecordRun(Header, b.ToString(rowStart, b.Length - rowStart).TrimEnd('\r', '\n'));     // 1.4.4~ 동의한 이용자만 (안에서 확인)
             System.IO.File.AppendAllText(path, b.ToString(), new System.Text.UTF8Encoding(true));
             RunLog.OnRunLogged(result, Seconds);      // 1.2~ 세션 기록(sessions.csv)의 판 수

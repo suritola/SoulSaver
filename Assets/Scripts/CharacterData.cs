@@ -253,6 +253,31 @@ public static class CharacterData
         return true;
     }
 
+    // 2.0.5~ 스팀 통계 백업 (SteamManager): 해금한 영웅 비트 (i번 비트 = CharacterId i)
+    public static int UnlockBits()
+    {
+        int b = 0;
+        for (int i = 0; i < All.Length && i < 31; i++)
+            if (Prefs.GetInt(UnlockKeyOf((CharacterId)i), 0) == 1) b |= 1 << i;
+        return b;
+    }
+
+    // 2.0.5~ 저장이 날아간 유저 복구 (SteamManager.RestoreFromAchievements): 포인트는 큰 쪽 · 영웅은 비트대로 해금. 되살린 수
+    public static int RestoreBackup(int points, int heroBits)
+    {
+        int n = 0;
+        if (points > Points) { Prefs.SetInt(PointsKey, points); n++; }
+        for (int i = 0; i < All.Length && i < 31; i++)
+        {
+            string key = UnlockKeyOf((CharacterId)i);
+            if ((heroBits & (1 << i)) == 0 || Prefs.GetInt(key, 0) == 1) continue;
+            Prefs.SetInt(key, 1);
+            n++;
+        }
+        selectedFrame = -1;
+        return n;
+    }
+
     // ================================================================= 포인트 (적 처치 등으로 쌓이고 캐릭터 구매에 씀)
     public static int Points => Prefs.GetInt(PointsKey, 0);
 

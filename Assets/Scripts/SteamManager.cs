@@ -157,26 +157,49 @@ public class SteamManager : MonoBehaviour
     }
 
     // 2.0.5~ 저장이 날아간 유저 복구: 스팀 서버에 남은 업적으로 난이도 클리어 · 비밀 영웅 해금을 되살림 (저장마다 한 번 · 올리기만 하므로 멀쩡한 저장은 그대로)
-    //   포인트 · 포인트로 산 영웅 · 스킨은 업적에 없어 되살릴 수 없음
+    //   포인트 · 포인트로 산 영웅은 스팀 통계 SAVE_POINTS · SAVE_HEROES (SyncSaveStats 가 장면마다 올림 · 파트너 사이트에 정의) 로 · 스킨은 되살릴 수 없음
     const string RestoreKey = "restore.steamAch";
+    const string StatPoints = "SAVE_POINTS", StatHeroes = "SAVE_HEROES";
     void RestoreFromAchievements()
     {
-#if STEAM && !SOULSAVER_TESTUNLOCK
+#if STEAM && !SOULSAVER_TESTUNLOCK && !SOULSAVER_FESTIVAL
         if (!Initialized || Demo.On || GameInput.Auto || Application.isBatchMode || Prefs.GetInt(RestoreKey, 0) == 1) return;
         if (!SteamUserStats.GetAchievement(SteamAchievements.FirstUlt, out _)) return;      // 업적 자료가 아직 안 옴 → 다음 장면에서 다시
         bool Has(string id) => SteamUserStats.GetAchievement(id, out bool got) && got;
         int restored = 0;
+        // 통계가 정의돼 있지 않으면 GetStat 이 false → 0 으로 (아무것도 안 바꿈)
+        if (!SteamUserStats.GetStat(StatPoints, out int sp)) sp = 0;
+        if (!SteamUserStats.GetStat(StatHeroes, out int sh)) sh = 0;
+        restored += CharacterData.RestoreBackup(sp, sh);
         if (Has(SteamAchievements.UnlockDifficulty) && GameMode.RestoreCleared(Difficulty.Easy)) restored++;
         if (Has(SteamAchievements.ClearNormal) && GameMode.RestoreCleared(Difficulty.Normal)) restored++;
         if (Has(SteamAchievements.ClearHard) && GameMode.RestoreCleared(Difficulty.Hard)) restored++;
         foreach (var d in DesertSecrets.Defs)
             if (Has(d.achievement) && CharacterData.UnlockSecret(d.hero)) restored++;
         Prefs.SetInt(RestoreKey, 1);
+        if (restored > 0) Prefs.NoteEvent("steam" + restored);
         Prefs.Save();
         if (restored > 0)
         {
             Debug.Log("[Steam] 업적으로 되살린 진행: " + restored);
             Notice.Toast(NoticeIcon.Unlock, Loc.T("restore.steamAch"), 5f);
+        }
+#endif
+    }
+
+    // 2.0.5~ 포인트 · 해금 영웅을 스팀 통계에 맞춰 둠 (장면마다 · 바뀌었을 때만). 복구(RestoreFromAchievements)가 끝난 저장에서만 — 날아간 빈 저장이 서버 값을 0 으로 덮지 않게
+    int syncedPoints = -1, syncedHeroes = -1;
+    void SyncSaveStats()
+    {
+#if STEAM && !SOULSAVER_TESTUNLOCK && !SOULSAVER_FESTIVAL
+        if (!Initialized || Demo.On || GameInput.Auto || Application.isBatchMode || Prefs.GetInt(RestoreKey, 0) != 1) return;
+        int p = CharacterData.Points, h = CharacterData.UnlockBits();
+        if (p == syncedPoints && h == syncedHeroes) return;
+        if (SteamUserStats.SetStat(StatPoints, p) & SteamUserStats.SetStat(StatHeroes, h))
+        {
+            SteamUserStats.StoreStats();
+            syncedPoints = p;
+            syncedHeroes = h;
         }
 #endif
     }
@@ -208,6 +231,7 @@ public class SteamManager : MonoBehaviour
     {
         if (scene.name == "GameOver" && !RunStats.Cleared && !RunStats.GaveUp)SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
         RestoreFromAchievements();
+        SyncSaveStats();
         CheckOwnedSkins();
         CheckUnlockedHeroes();
         if (scene.name != "GameScene") return;
