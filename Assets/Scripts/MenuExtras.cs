@@ -170,7 +170,7 @@ public static class MenuExtras
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
         GameObject modes = UIKit.CloneButton(start, "ModesButton", "도전 모드", () => ModeHubUI.Open(sr.root));      // 2.0.1~ 일일 도전 · 영혼 릴레이 · 역류 · 계약 보드 · 기록을 한 창에
         if (ModeHubUI.HasNew) modes.AddComponent<NewGlow>();
-        GameObject altar = Demo.On ? null : UIKit.CloneButton(start, "AltarButton", "meta.title", () => MetaUpgrades.Open(sr.root));     // 2.0.6~ 영혼 제단 (영구 강화)
+        GameObject altar = Demo.On ? null : UIKit.CloneButton(start, "AltarButton", "meta.title", () => SoulLegacy.Open(sr.root));     // 2.0.6~ 영혼 제단 (조건으로 여는 유산)
         // 1.0.4~: 잠긴 일일 도전은 흐리게 · 「잠김」 표시 · 여는 방법 툴팁 (창 안의 오늘 규칙 · 순위표는 그대로 볼 수 있음)
         bool dailyLocked = !DailyChallenge.Unlocked;
 

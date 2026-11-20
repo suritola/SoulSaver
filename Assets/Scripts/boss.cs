@@ -257,6 +257,7 @@ public class bosss : MonoBehaviour
     {
         if (isDead || !ready) return;
         damage *= GameMode.PlayerDamageMul;      // 1.1.6~ 플레이어가 주는 모든 피해 공통 하향
+        damage *= SoulLegacy.BossDamageMul;      // 2.0.6~ 영혼 제단 유산 「왕 사냥꾼」
         if (invulnerable)
         {
             // 의식 중 무적: 맞은 자리에 막히는 불꽃만
@@ -387,6 +388,7 @@ public class bosss : MonoBehaviour
 
             // 영혼 조각: 보스전이 끝나는 마지막 한 마리는 크게, 슬라임 분열체는 조금
             if (lastOne) SoulShards.Add(SoulShards.ForBoss(expReward), transform.position, true);
+            if (lastOne) SoulLegacy.OnBossDown();        // 2.0.6~ 영혼 제단 유산 (영혼 수확 · 연전의 기억)
             else SoulShards.Add(Mathf.Max(1, Mathf.RoundToInt(expReward / 30f)), transform.position, false);
         }
 

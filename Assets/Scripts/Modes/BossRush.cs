@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// 2.0.6~ 보스 러시 (docs/plans/2026-11-20-big-update/plan.md C): 지금 고른 영웅으로 보스 다섯을 차례로 — 리치 왕 → 지옥의 군주 → 킹 슬라임 → 거울의 군주 → 개발자
+// 2.0.6~ 보스 러시 (docs/plans/2026-11-20-big-update/plan.md C): 지금 고른 영웅으로 보스 다섯을 차례로 — 킹 슬라임 → 리치 왕 → 지옥의 군주 → 거울의 군주 → 개발자
 //   일일 도전 패턴 (GameMode.Override = Endless) · 일정만 BossRushDirector 가 대신 (EndlessMode 는 자기 보스 · 15:00 일정을 끔)
 //   보스를 잡을 때마다 무한 모드처럼 무기 진화 · 전리품 + 체력 30% 회복 · 다음 보스는 처치 연출 · 진화 창이 끝나고 12초 뒤
 //   기록 = 다섯을 모두 쓰러뜨린 시간 (짧을수록 좋음 · 순위표 BOSSRUSH_BEST 오름차순) · 이어하기 없음 · 해금 = 보통 클리어
@@ -119,8 +119,9 @@ public static class BossRushRun
 public class BossRushDirector : MonoBehaviour
 {
     // 종류 -1 = 개발자 · 0 리치 왕 · 1 지옥의 군주 · 2 킹 슬라임 · 3 거울의 군주 (EndlessMode.SpawnBossKind)
-    static readonly int[] Kinds = { 0, 1, 2, 3, -1 };
-    static readonly float[] HpMul = { 1f, 0.5f, 1f, 1f, 1f };          // 지옥의 군주 0.5 (기본 체력이 리치 왕의 5배 · 역류와 같은 이유)
+    // 사용자: 슬라임이 제일 먼저 → 킹 슬라임 → 리치 왕 → 지옥의 군주 → 거울의 군주 → 개발자
+    static readonly int[] Kinds = { 2, 0, 1, 3, -1 };
+    static readonly float[] HpMul = { 1f, 1f, 0.5f, 1f, 1f };          // 지옥의 군주 0.5 (기본 체력이 리치 왕의 5배 · 역류와 같은 이유)
     const float FirstAt = 8f, Rest = 12f, BossHeal = 0.3f;
 
     EndlessMode em;

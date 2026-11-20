@@ -329,9 +329,7 @@ public static class CharacterUI
             // 2.0.6~ 영웅 각성 (판 밖 영구 진화) — 숙련 줄과 선택 버튼(위끝 -295) 사이
             if (!Demo.On)
             {
-                Button aw = null;
-                aw = UIKit.MakeButton(dr, "", new Vector2(-470f, -258f), new Vector2(300f, 46f), () =>
-                    HeroAwaken.Open(dr.root, id, () => { if (aw != null && aw.GetComponentInChildren<TMP_Text>(true) is TMP_Text t) t.text = HeroAwaken.Label(id); }), 22f);
+                Button aw = UIKit.MakeButton(dr, "", new Vector2(-470f, -258f), new Vector2(300f, 46f), () => HeroAwaken.Open(dr.root, id), 22f);
                 if (aw.GetComponentInChildren<TMP_Text>(true) is TMP_Text at) at.text = HeroAwaken.Label(id);
             }
         }

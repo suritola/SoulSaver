@@ -246,7 +246,6 @@ public class SkillGauge : MonoBehaviour
 
     public void AddSkillPoint(float amount)
     {
-        if (amount > 0f) amount *= HeroAwaken.UltMul(CharacterData.Selected);      // 2.0.6~ 영웅 각성 4단계
         SkillPoint += amount;
 
         SkillPoint = Mathf.Clamp(SkillPoint, 0, MaxSkillPoint);

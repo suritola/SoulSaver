@@ -728,7 +728,6 @@ public partial class LevelShop : MonoBehaviour
         // 최대 레벨 50 (무한 모드도 50): 모든 스킬을 다 올리지 못하게 해서 어떤 스킬 · 진화를 노릴지 고르게
         // 2.1~: 경험치가 차면 레벨업 포인트만 쌓이고, 레벨은 카드를 골라야 오름 (건너뛰면 레벨이 그대로라 상한 안에서 더 고를 수 있음)
         // 1.0.4~: 카드를 다 배웠거나 최대 레벨이어도 경험치가 멈추지 않음 → 그 뒤 레벨업은 끝없이 쌓이는 「성장」 카드 (LevelShop.Growth)
-        amount *= MetaUpgrades.Mul(MetaUpgrades.Stat.Exp);      // 2.0.6~ 영혼 제단
         p.nowEXP += amount;
         // 1.0.6~: 최대 레벨(50 · 무한 모드도 50)에 닿으면 더 쌓지 않음 — 지금 레벨 + 쌓인 레벨업이 상한을 넘지 않게, 넘친 경험치는 막대를 가득 채운 채 멈춤
         // 1.5.9~ 연출 중인 레벨업(levelUpQueued)도 셈 — 빼고 세면 1초 안에 여러 번 받을 때 상한을 넘게 쌓였다가 말없이 버려지고 요구량만 올랐음 (ExpLevel 주석과 같은 기준)
@@ -1069,7 +1068,7 @@ public partial class LevelShop : MonoBehaviour
         Paths.NoteCard(what);                                   // 판 기록 cards_seq (2026-10-19~)
         // 레벨은 카드를 고를 때 오름 (건너뛰면 그대로 · 시작할 때 주는 카드는 제외) · 최대 레벨에서 멈춤 (그 뒤는 성장 카드, 1.0.4~)
         if (freePick) { freePick = false; RelayFreePicked(); }      // 2.0.0~ 영혼 릴레이 환급 카드는 한 장씩 이어서
-        else if (bul != null && bul.level < LevelCap) bul.level++;
+        else if (bul != null && bul.level < LevelCap) { bul.level++; SoulLegacy.OnLevelUp(bul); }      // 2.0.6~ 유산 「숨 고르기」
         // 성장 카드 (1.0.4~): 능력 배열 밖이라 HUD · 진화 확인 없이 효과만
         if (IsGrowth(what))
         {

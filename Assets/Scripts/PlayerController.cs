@@ -265,7 +265,6 @@ public class PlayerController : MonoBehaviour
         CharacterKit.Attach(this);
         // 거너: 공격력 배율 · 장전 1.8 → 1.3초(2.1.0, 1대 상대 피해가 가장 낮았음) → 1.5초(2.1.1)
         if (CharacterData.IsGunner) ApplyGunnerDef();
-        MetaUpgrades.ApplyStart(this);      // 2.0.6~ 영혼 제단 영구 강화 (공격 · 체력 · 이동)
 
         mainCamera = Camera.main;
 
@@ -1518,6 +1517,7 @@ void Shoot()
         if (CharacterKit.Instance != null) taken *= CharacterKit.Instance.TakenMul;
         if (special != null) taken = special.AdjustTaken(taken);      // 영혼 트리: 강인함 · 완충
         taken = SignatureSkills.Taken(taken);                         // 혈갑 보호막 · 환영 연막
+        taken = SoulLegacy.AdjustTaken(this, taken);                  // 2.0.6~ 영혼 제단 유산 · 영웅 각성 (체력이 낮을 때 피해 감소)
         // 1.0.4~ 보스전 한 방 즉사 보호: 보스가 살아 있는 동안 한 대는 최대 체력의 BossHitShare 까지
         // (3장 지옥의 군주 화염 돌진이 보통에서 약 103 으로 기본 체력 100 을 한 번에 넘었음 · 4장은 원래 20% 상한)
         // 1.2.6~ 공간 침식 중에는 결계 공격이 아닌 피해(돌진 · 몸통 · 잡몹 등)도 기획대로 한 대 25% 상한 (예전엔 40% 로 맞았음)
@@ -1536,6 +1536,14 @@ void Shoot()
             invincibleUntil = Time.time + 3f;
             DamageFlash.Show(1f);
             SkinFx.OnRevive();      // 2026-11-04~ 캐릭터 스킨 버팀 연출 (희귀부터)
+            return true;
+        }
+        // 2.0.6~ 영혼 제단 유산 「불굴」: 판마다 한 번 체력 30% 로 버팀 (불사의 맹세 다음)
+        if (PlayerHealth - taken <= 0 && SoulLegacy.TryEndure())
+        {
+            PlayerHealth = SoulLegacy.EndureHealth(PlayerMaxHealth);
+            invincibleUntil = Time.time + 2f;
+            DamageFlash.Show(1f);
             return true;
         }
 

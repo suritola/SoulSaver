@@ -30,8 +30,7 @@ public static class RelaySwap
             // 2.0.0~ 검토: 배율 나누기 · 키트 갈아 끼우기도 Safe 로 — 예외가 밖으로 나가면 Index 만 오르고 Record · 저장이 빠진 반쯤 바뀐 상태로 남았음
             Safe(() =>
             {
-                p.damage /= Mathf.Max(0.01f, old.damage) * HeroAwaken.AtkMul(oldId);      // 2.0.6~ 영웅 각성 몫도 (아래에서 새 영웅 몫을 곱함)
-                p.PlayerMaxHealth /= HeroAwaken.HpMul(oldId);
+                p.damage /= Mathf.Max(0.01f, old.damage);
                 if (oldIsKit)
                 {
                     p.PlayerMaxHealth /= Mathf.Max(0.01f, old.hp);
@@ -79,8 +78,6 @@ public static class RelaySwap
                     if (anim != null) anim.enabled = true;       // 키트가 껐던 거너 애니메이터 (그림은 애니메이터가 다시 고름)
                 }
                 p.BaseMoveSpeed *= Mathf.Max(0.01f, nd.move);
-                p.damage *= HeroAwaken.AtkMul(next);
-                p.PlayerMaxHealth *= HeroAwaken.HpMul(next);
                 p.NowBullet = p.MaxBullet;
                 if (sp != null) sp.RescaleBase(Mathf.Max(0.01f, nd.damage));
             });
