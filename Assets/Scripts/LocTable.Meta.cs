@@ -63,9 +63,9 @@ public static partial class LocTable
         // ---------------- 보스 러시
         K("rush.name", "보스 러시", "Boss Rush", "ボスラッシュ", "首领连战");
         K("rush.card", "보스 다섯을 차례로 쓰러뜨리세요.\n킹 슬라임 → 리치 왕 → 지옥의 군주 → 거울의 군주 → 개발자\n보스를 잡을 때마다 무기 진화 · 체력 30% 회복\n기록: 모두 쓰러뜨린 시간 (짧을수록 좋음)",
-          "Defeat five bosses in a row.\nKing Slime → Lich King → Hell Lord → Mirror Lord → Developer\nEach kill: weapon evolution · heal 30%\nRecord: total clear time (faster is better)",
-          "5体のボスを順番に倒しましょう。\nキングスライム → リッチキング → 地獄の君主 → 鏡の君主 → 開発者\nボスを倒すたびに武器進化・体力30%回復\n記録：全員を倒した時間（短いほど良い）",
-          "依次击败五名首领。\n史莱姆王 → 巫妖王 → 地狱君主 → 镜之君主 → 开发者\n每击败一名首领：武器进化 · 恢复30%生命\n记录：全部击败的时间（越短越好）");
+          "Defeat five bosses in a row.\nKing Slime → Lich King → Demon Lord → Mirror Sovereign → Developer\nEach kill: weapon evolution · heal 30%\nRecord: total clear time (faster is better)",
+          "5体のボスを順番に倒しましょう。\nキングスライム → リッチ王 → 地獄の君主 → 鏡の君主 → 開発者\nボスを倒すたびに武器進化・体力30%回復\n記録：全員を倒した時間（短いほど良い）",
+          "依次击败五名首领。\n史莱姆王 → 巫妖王 → 地狱领主 → 镜之君主 → 开发者\n每击败一名首领：武器进化 · 恢复30%生命\n记录：全部击败的时间（越短越好）");
         K("rush.hub.hero", "메인 메뉴에서 고른 영웅으로 도전합니다", "You challenge with the hero selected in the main menu", "メインメニューで選んだ英雄で挑戦します", "使用主菜单中选择的英雄挑战");
         K("rush.hub.locked", "보통 난이도를 클리어하면 열립니다", "Unlocks after clearing Normal", "ノーマルをクリアすると解放", "通关普通难度后解锁");
         K("rush.hud.boss", "보스 {0}/{1}", "Boss {0}/{1}", "ボス {0}/{1}", "首领 {0}/{1}");
