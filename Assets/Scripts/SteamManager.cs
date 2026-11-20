@@ -156,6 +156,31 @@ public class SteamManager : MonoBehaviour
 #endif
     }
 
+    // 2.0.5~ 저장이 날아간 유저 복구: 스팀 서버에 남은 업적으로 난이도 클리어 · 비밀 영웅 해금을 되살림 (저장마다 한 번 · 올리기만 하므로 멀쩡한 저장은 그대로)
+    //   포인트 · 포인트로 산 영웅 · 스킨은 업적에 없어 되살릴 수 없음
+    const string RestoreKey = "restore.steamAch";
+    void RestoreFromAchievements()
+    {
+#if STEAM && !SOULSAVER_TESTUNLOCK
+        if (!Initialized || Demo.On || GameInput.Auto || Application.isBatchMode || Prefs.GetInt(RestoreKey, 0) == 1) return;
+        if (!SteamUserStats.GetAchievement(SteamAchievements.FirstUlt, out _)) return;      // 업적 자료가 아직 안 옴 → 다음 장면에서 다시
+        bool Has(string id) => SteamUserStats.GetAchievement(id, out bool got) && got;
+        int restored = 0;
+        if (Has(SteamAchievements.UnlockDifficulty) && GameMode.RestoreCleared(Difficulty.Easy)) restored++;
+        if (Has(SteamAchievements.ClearNormal) && GameMode.RestoreCleared(Difficulty.Normal)) restored++;
+        if (Has(SteamAchievements.ClearHard) && GameMode.RestoreCleared(Difficulty.Hard)) restored++;
+        foreach (var d in DesertSecrets.Defs)
+            if (Has(d.achievement) && CharacterData.UnlockSecret(d.hero)) restored++;
+        Prefs.SetInt(RestoreKey, 1);
+        Prefs.Save();
+        if (restored > 0)
+        {
+            Debug.Log("[Steam] 업적으로 되살린 진행: " + restored);
+            Notice.Toast(NoticeIcon.Unlock, Loc.T("restore.steamAch"), 5f);
+        }
+#endif
+    }
+
     // 한 판 클리어 (3장 보스): 난이도별 업적
     void OnCleared(Difficulty d)
     {
@@ -182,6 +207,7 @@ public class SteamManager : MonoBehaviour
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "GameOver" && !RunStats.Cleared && !RunStats.GaveUp)SteamAchievements.Unlock(SteamAchievements.FirstDeath);     // 1.0.4~: 클리어 뒤 결과 화면은 죽음이 아님
+        RestoreFromAchievements();
         CheckOwnedSkins();
         CheckUnlockedHeroes();
         if (scene.name != "GameScene") return;

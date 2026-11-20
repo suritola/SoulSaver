@@ -132,6 +132,17 @@ public static class GameMode
         return opened;
     }
 
+    // 2.0.5~ 저장이 날아간 유저 복구 (SteamManager.RestoreFromAchievements): 스팀 업적으로 클리어 표시 · 무한까지 열림. 바뀌었으면 true
+    public static bool RestoreCleared(Difficulty d)
+    {
+        Load();
+        if (Prefs.GetInt(ClearedKey + (int)d, 0) == 1) return false;
+        Prefs.SetInt(ClearedKey + (int)d, 1);
+        unlocked = 2;
+        Prefs.SetInt(UnlockKey, unlocked);
+        return true;
+    }
+
     // ================================================================= 무한 모드 경과
     static float endlessStart;
     static bool endlessClockOn;

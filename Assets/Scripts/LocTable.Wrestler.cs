@@ -33,6 +33,7 @@ public static partial class LocTable
         A("들기", "Lift", "持ち上げ", "举起");
         A("모래판", "Sand Ring", "土俵", "沙圈");
         A("새 영웅: {0}", "New hero: {0}", "新しい英雄：{0}", "新英雄：{0}");
+        A("restore.steamAch", "스팀 업적으로 클리어 기록 · 영웅 해금을 되살렸습니다", "Restored clears and hero unlocks from your Steam achievements", "Steamの実績からクリア記録と英雄の解放を復元しました", "已根据Steam成就恢复通关记录与英雄解锁");
         K("sec.hint.9", "붉은 사막 어딘가, 소 발자국이 이어진다.", "Somewhere in the red desert, a trail of hoofprints leads on.", "赤い砂漠のどこかに、牛の足跡が続いている。", "红色沙漠的某处，牛的蹄印一路延伸。");
         A("메치기 공격력", "Throw Damage", "投げ攻撃力", "摔投攻击力");
         A("메치기 공격력 · 이동 속도", "Throw Damage · Move Speed", "投げ攻撃力・移動速度", "摔投攻击力 · 移动速度");
