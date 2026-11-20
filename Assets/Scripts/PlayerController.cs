@@ -265,6 +265,7 @@ public class PlayerController : MonoBehaviour
         CharacterKit.Attach(this);
         // 거너: 공격력 배율 · 장전 1.8 → 1.3초(2.1.0, 1대 상대 피해가 가장 낮았음) → 1.5초(2.1.1)
         if (CharacterData.IsGunner) ApplyGunnerDef();
+        MetaUpgrades.ApplyStart(this);      // 2.0.6~ 영혼 제단 영구 강화 (공격 · 체력 · 이동)
 
         mainCamera = Camera.main;
 

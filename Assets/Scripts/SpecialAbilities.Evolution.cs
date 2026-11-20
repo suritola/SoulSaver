@@ -962,7 +962,7 @@ public static class SoulShards
     {
         if (n <= 0 || ModeRun.Reflux) return;        // 2.0.0~ 역류는 영혼 조각이 없음 (트리 없음)
         SpecialAbilities sp = SpecialAbilities.SharedInstance;
-        if (sp != null) n = Mathf.Max(1, Mathf.RoundToInt(n * sp.TreeShardMul * (announce ? sp.TreeBigShardMul : 1f)));
+        if (sp != null) n = Mathf.Max(1, Mathf.RoundToInt(n * sp.TreeShardMul * (announce ? sp.TreeBigShardMul : 1f) * MetaUpgrades.Mul(MetaUpgrades.Stat.Shards)));     // 2.0.6~ 영혼 제단
         Amount += n;
         Total += n;
         Changed?.Invoke();

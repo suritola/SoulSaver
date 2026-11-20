@@ -169,6 +169,7 @@ public static class MenuExtras
         GameObject daily = UIKit.CloneButton(start, "DailyButton", "일일 도전", () => DailyChallenge.Open(sr.root));
         GameObject modes = UIKit.CloneButton(start, "ModesButton", "도전 모드", () => ModeHubUI.Open(sr.root));      // 2.0.1~ 일일 도전 · 영혼 릴레이 · 역류 · 계약 보드 · 기록을 한 창에
         if (ModeHubUI.HasNew) modes.AddComponent<NewGlow>();
+        GameObject altar = Demo.On ? null : UIKit.CloneButton(start, "AltarButton", "meta.title", () => MetaUpgrades.Open(sr.root));     // 2.0.6~ 영혼 제단 (영구 강화)
         // 1.0.4~: 잠긴 일일 도전은 흐리게 · 「잠김」 표시 · 여는 방법 툴팁 (창 안의 오늘 규칙 · 순위표는 그대로 볼 수 있음)
         bool dailyLocked = !DailyChallenge.Unlocked;
 
@@ -197,17 +198,20 @@ public static class MenuExtras
             if (hide != null) hide.SetActive(false);
         // 1.4.8~ 사용자 「게임이 덜 완성된 것 같다」: 칸 격자 대신 게임 시작 아래 같은 폭 버튼을 세로로 (도감 · 일일 도전 · 설정 · 더 보기 · 게임 종료)
         //   글자만 · 같은 폭 · 같은 간격 — 흔한 게임 메인 메뉴 모양 (게임 시작 바로 아래 한 줄은 영혼의 무게 버튼 자리로 비워 둠)
-        GameObject[] list = { modes, character, codex, TutorialRun.Done ? null : tutorial, settings, exit };
+        // 2.0.6~ 영혼 제단이 더해져 빈칸을 빼고 차례로 · 여섯 줄이 넘으면(튜토리얼을 아직 안 마침) 전체 높이는 여섯 줄 그대로 두고 간격을 좁힘 (화면 아래로 넘치지 않게)
+        List<GameObject> list = new List<GameObject>();
+        foreach (GameObject g in new[] { modes, character, altar, codex, TutorialRun.Done ? null : tutorial, settings, exit }) if (g != null) list.Add(g);
+        float step = Mathf.Min(ListH + ListGap, 5f * (ListH + ListGap) / Mathf.Max(1, list.Count - 1));
+        float rowH = Mathf.Min(ListH, step - 4f);
         // (1.4.8~ 메뉴 뒤 반투명 판은 사용자 「별로」로 뺌 → 글자 자체에 굵기 · 어두운 외곽선 · 그림자 (MenuItemFx))
         float listY = StartY - StartH * 0.5f - (LockRowH + Gap) - ListH * 0.5f;
-        for (int i = 0; i < list.Length; i++)
+        for (int i = 0; i < list.Count; i++)
         {
             GameObject go = list[i];
-            if (go == null) continue;
             RectTransform r = (RectTransform)go.transform;
             r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
-            r.sizeDelta = new Vector2(ListW, ListH);
-            r.anchoredPosition = new Vector2(0f, listY - (ListH + ListGap) * i);
+            r.sizeDelta = new Vector2(ListW, rowH);
+            r.anchoredPosition = new Vector2(0f, listY - step * i);
             Image img = go.GetComponent<Image>();
             bool locked = dailyLocked && go == daily;
             if (img != null) img.color = go == exit ? new Color(0.72f, 0.58f, 0.62f) : locked ? new Color(0.42f, 0.4f, 0.47f) : new Color(0.8f, 0.78f, 0.86f);

@@ -275,6 +275,8 @@ public class StageManager : MonoBehaviour
         if (endless && !Evo) yield return PickEndlessSpecials();
         Contracts.BeginRun();                                   // 1.2~ 영혼 계약 세 장 (화면 아래 · 멈추지 않음)
         if (!endless) yield return SoulBrand.RunStart();        // 1.2~ 영혼 각인 3택 1 (쉬움을 클리어한 이야기 판만)
+        if (HeroAwaken.StartEvo(CharacterData.Selected) && specials != null && specials.EvolutionTier == 0)
+            yield return Evolution(false);                      // 2.0.6~ 영웅 각성 5단계: 판 시작부터 1차 무기 진화 (이어하기는 위에서 빠져나가 기록 재생이 맡음)
         if (spawner != null) spawner.spawningEnabled = true;
         started = true;
         FindFirstObjectByType<LevelShop>()?.OpenFreeIfWaiting();      // 1.4.1~ 판 시작 입문 창은 시작 순서가 끝난 지금 (겹쳐 보이지 않게)
@@ -294,7 +296,7 @@ public class StageManager : MonoBehaviour
             openBanner = Chapters.Title(CurrentStage);
             openTime = 2.5f;
             // 영웅 숙련도: 단계마다 레벨업 카드 한 장 더 (1.0.1)
-            int mastery = Mastery.Level(CharacterData.Selected);
+            int mastery = Mastery.Level(CharacterData.Selected) + HeroAwaken.FreePicks(CharacterData.Selected);      // 2.0.6~ 영웅 각성 2단계 +1
             LevelShop shop = FindFirstObjectByType<LevelShop>();
             if (mastery > 0 && shop != null && !Demo.On && !DailyChallenge.Active)
             {
