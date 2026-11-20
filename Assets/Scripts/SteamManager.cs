@@ -445,7 +445,8 @@ public static class SteamLeaderboards
     public const string RelayAll = "RELAY_ALL";
     public static string Relay(string combo) => "RELAY_" + combo;
     public const string Reflux = "REFLUX_BEST";
-    static bool Ascending(string board) => board == Reflux;
+    public const string BossRush = "BOSSRUSH_BEST";          // 2.0.6~ 보스 러시 (짧을수록 좋음)
+    static bool Ascending(string board) => board == Reflux || board == BossRush;
 
     // 점수 = 버틴 시간(초, 내림) — 스팀 화면(커뮤니티 허브)에 시간으로 보이게 표시 방식이 「시간(초)」이라 다른 값을 섞지 않음
     // 자세한 값(details) 순서: 0 영웅 번호 · 1 보스 처치 · 2 레벨 · 3 처치 수 · 4 판 버전(1.1.5 → 10105) — 모르면 -1

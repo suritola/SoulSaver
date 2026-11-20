@@ -31,7 +31,7 @@ public static class MenuExtras
             TMP_Text title = msg != null ? msg.GetComponentInChildren<TMP_Text>(true) : null;
             if (title != null)
             {
-                if (RunStats.Cleared) title.text = (ModeRun.Reflux ? Loc.T("역류") : GameMode.Name(GameMode.Current)) + " " + Loc.T("클리어!");
+                if (RunStats.Cleared) title.text = (ModeRun.Reflux ? Loc.T("역류") : BossRushRun.Active ? Loc.T("rush.name") : GameMode.Name(GameMode.Current)) + " " + Loc.T("클리어!");
                 else { title.text = Loc.T("여기까지!"); UIKit.Remember(title, "여기까지!"); }
                 title.color = new Color(0.96f, 0.83f, 0.47f);
             }
@@ -111,11 +111,12 @@ public static class MenuExtras
             bool daily = DailyChallenge.Active;
             bool relay = RelayRun.Active;        // 2.0.0~ 영혼 릴레이: 조합 · 구간 시간 · 조합 기록 세 줄 (RelayRun.ResultText)
             bool reflux = RefluxRun.Active;      // 2.0.0~ 역류: 영웅 · 갈래 · 클리어 시간 · 남은 영혼 · 끝까지 쥔 것 (RefluxRun.ResultText)
-            string text = reflux ? RefluxRun.ResultText(EndlessMode.LastSeconds) : relay ? RelayRun.ResultText(EndlessMode.LastSeconds, EndlessMode.LastBosses) : (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
+            bool rush = BossRushRun.Active;      // 2.0.6~ 보스 러시: 영웅 · 클리어 시간(또는 쓰러뜨린 보스 수) · 최고 기록
+            string text = rush ? BossRushRun.ResultText(EndlessMode.LastSeconds) : reflux ? RefluxRun.ResultText(EndlessMode.LastSeconds) : relay ? RelayRun.ResultText(EndlessMode.LastSeconds, EndlessMode.LastBosses) : (daily ? Loc.T("일일 도전") + " · " + Loc.T(DailyChallenge.RunRuleName) + "\n" : "")
                         + Loc.T("생존 시간 ") + EndlessMode.Clock(EndlessMode.LastSeconds) + "   " + Loc.T("보스 처치 ") + EndlessMode.LastBosses
                         + "\n" + (daily ? Loc.T("오늘 내 최고 기록") + " " + EndlessMode.Clock(DailyChallenge.RunBest) : Loc.T("최고 기록 ") + EndlessMode.Clock(EndlessMode.BestSeconds));
             // 1.4.8~ 34 → 30 (획득 포인트 줄과 같은 크기 · 줄 높이 38) · 자리는 StackCenter (버튼 열 → 순위 보기 · 결과 복사 줄 아래)
-            TMP_Text t = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, daily || relay || reflux ? 114f : 76f));
+            TMP_Text t = UIKit.Text(canvas.transform, "", UiRules.Legacy ? 30f : UiTokens.Body, UiRules.Legacy ? new Color(1f, 0.8f, 0.45f) : UiTokens.Text1, Vector2.zero, new Vector2(1200f, daily || relay || reflux || rush ? 114f : 76f));
             t.fontSizeMin = 20f;
             t.name = "EndlessRecord";
             t.text = text;
@@ -124,14 +125,14 @@ public static class MenuExtras
             line.text = t;
             line.baseText = text;
             line.daily = daily;
-            line.rankName = reflux ? "reflux.lb.rank" : relay ? "relay.lb.rank" : null;
+            line.rankName = rush ? "rush.lb.rank" : reflux ? "reflux.lb.rank" : relay ? "relay.lb.rank" : null;
             // 1.1.5~ 「순위 보기」 → 순위 창 (내 주변 탭, 이번 판 기록을 다 올린 뒤에 받음) · 체험판은 무한 모드가 없음
             // 1.4.8~ 기록 글 오른쪽(x 600)에 떠 있던 것을 「결과 복사」와 한 줄로 (StackCenter)
             if (!Demo.On)
             {
                 Transform root = canvas.transform;
                 Button view = UIKit.MakeButton(root, "lb.view", Vector2.zero, new Vector2(ResultScreen.RowBtnW, ResultScreen.RowBtnH),
-                    () => LeaderboardUI.Open(root, reflux ? LeaderboardUI.Board.Reflux : relay ? LeaderboardUI.Board.Relay : daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe, null, relay ? RelayRun.LastCombo : null), 24f);
+                    () => LeaderboardUI.Open(root, rush ? LeaderboardUI.Board.BossRush : reflux ? LeaderboardUI.Board.Reflux : relay ? LeaderboardUI.Board.Relay : daily ? LeaderboardUI.Board.Daily : LeaderboardUI.Board.Endless, SteamLeaderboards.Scope.AroundMe, null, relay ? RelayRun.LastCombo : null), 24f);
                 view.name = "LeaderboardViewButton";
                 if (!UiRules.Legacy) { UiV2.Restyle(view, UiV2.Kind.Secondary, UiTokens.Body); UiV2.Label(view, "ui.btn.ranks"); }
             }

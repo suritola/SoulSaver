@@ -46,14 +46,15 @@ public static class ModeHubUI
     {
         if (open != null) return;
         // 2.0.1~ 메뉴 개편: 「도전 모드」 — 일일 도전 · 영혼 릴레이 · 역류 세 카드 + 아래 계약 보드 (메인 화면 버튼 둘을 하나로)
-        RectTransform win = UIKit.Modal(root, "ModeHub", new Vector2(1320f, 900f), out open);
+        RectTransform win = UIKit.Modal(root, "ModeHub", new Vector2(1440f, 900f), out open);      // 2.0.6~ 보스 러시 카드로 넷 (1320 → 1440 · 카드 410 → 340)
         UIKit.EscCancel(open, Close);
         TMP_Text title = UIKit.Text(win, "도전 모드", 46f, Gold, new Vector2(0f, 395f), new Vector2(700f, 64f));
         title.fontSizeMin = 24f;
-        UIKit.MakeButton(win, "닫기", new Vector2(550f, 395f), new Vector2(150f, 58f), Close, 22f);
-        Card(win, root, -430f, Kind.Daily);
-        Card(win, root, 0f, Kind.Relay);
-        Card(win, root, 430f, Kind.Reflux);
+        UIKit.MakeButton(win, "닫기", new Vector2(610f, 395f), new Vector2(150f, 58f), Close, 22f);
+        Card(win, root, -540f, Kind.Daily);
+        Card(win, root, -180f, Kind.Relay);
+        Card(win, root, 180f, Kind.Reflux);
+        Card(win, root, 540f, Kind.Rush);
         if (!Demo.On)
         {
             string board = Loc.T("board.open") + (ContractBoard.Claimable > 0 ? "  <color=#7FE08A>+" + ContractBoard.Claimable + "</color>" : "");
@@ -71,22 +72,22 @@ public static class ModeHubUI
         open = null;
     }
 
-    enum Kind { Daily, Relay, Reflux }
-    const float CardW = 410f;
+    enum Kind { Daily, Relay, Reflux, Rush }
+    const float CardW = 340f;
 
     // 카드 하나
     static void Card(RectTransform win, Transform root, float x, Kind kind)
     {
         bool demo = Demo.On;
-        bool reflux = kind == Kind.Reflux, daily = kind == Kind.Daily;
-        bool unlocked = daily ? DailyChallenge.Unlocked : reflux ? RefluxRun.Unlocked && RefluxRun.Implemented : RelayRun.Unlocked;
-        RectTransform card = UIKit.Rect(daily ? "DailyCard" : reflux ? "RefluxCard" : "RelayCard", win, new Vector2(x, 0f), new Vector2(CardW, 680f));
+        bool reflux = kind == Kind.Reflux, daily = kind == Kind.Daily, rush = kind == Kind.Rush;
+        bool unlocked = rush ? BossRushRun.Unlocked : daily ? DailyChallenge.Unlocked : reflux ? RefluxRun.Unlocked && RefluxRun.Implemented : RelayRun.Unlocked;
+        RectTransform card = UIKit.Rect(rush ? "RushCard" : daily ? "DailyCard" : reflux ? "RefluxCard" : "RelayCard", win, new Vector2(x, 0f), new Vector2(CardW, 680f));
         Image bg = card.gameObject.AddComponent<Image>();
         bg.color = new Color(0f, 0f, 0f, 0.18f);
         bg.raycastTarget = false;
 
         // 그림 128칸 (아직 안 만들었으면 비움)
-        Sprite art = Resources.Load<Sprite>(daily ? "Icons/menu_daily" : reflux ? "Icons/mode_reflux" : "Icons/mode_relay");
+        Sprite art = Resources.Load<Sprite>(rush ? "Icons/mode_reflux" : daily ? "Icons/menu_daily" : reflux ? "Icons/mode_reflux" : "Icons/mode_relay");
         RectTransform ar = UIKit.Rect("Art", card, new Vector2(0f, 240f), new Vector2(160f, 160f));
         Image ai = ar.gameObject.AddComponent<Image>();
         ai.sprite = art;
@@ -95,9 +96,9 @@ public static class ModeHubUI
         ai.enabled = art != null;
         if (!unlocked) ai.color = new Color(0.55f, 0.55f, 0.6f, 1f);
 
-        TMP_Text name = UIKit.Text(card, daily ? "일일 도전" : reflux ? "역류" : "영혼 릴레이", 40f, Gold, new Vector2(0f, 128f), new Vector2(CardW - 40f, 54f));
+        TMP_Text name = UIKit.Text(card, rush ? "rush.name" : daily ? "일일 도전" : reflux ? "역류" : "영혼 릴레이", 40f, Gold, new Vector2(0f, 128f), new Vector2(CardW - 40f, 54f));
         name.fontSizeMin = 24f;
-        TMP_Text rules = UIKit.Text(card, daily ? "mode.card.daily" : reflux ? "relay.card.reflux" : "relay.card.relay", 22f, Parch, new Vector2(0f, -15f), new Vector2(CardW - 50f, 220f), TextAlignmentOptions.Top);
+        TMP_Text rules = UIKit.Text(card, rush ? "rush.card" : daily ? "mode.card.daily" : reflux ? "relay.card.reflux" : "relay.card.relay", 22f, Parch, new Vector2(0f, -15f), new Vector2(CardW - 50f, 220f), TextAlignmentOptions.Top);
         rules.fontSizeMin = 16f;
         rules.lineSpacing = 6f;
         if (daily && unlocked)
@@ -109,27 +110,28 @@ public static class ModeHubUI
             UIKit.Forget(rules);
         }
 
-        float best = daily ? DailyChallenge.Best(DailyChallenge.Today) : reflux ? RefluxRun.Best : RelayRun.BestAll;
+        float best = rush ? BossRushRun.Best : daily ? DailyChallenge.Best(DailyChallenge.Today) : reflux ? RefluxRun.Best : RelayRun.BestAll;
         TMP_Text rec = UIKit.Text(card, "", 24f, Parch, new Vector2(0f, -150f), new Vector2(CardW - 40f, 34f));
         rec.text = Loc.T(daily ? "오늘 내 최고 기록" : "relay.hub.best") + "  <color=#F5D478>" + (best > 0f ? EndlessMode.Clock(best) : "-") + "</color>";
         rec.fontSizeMin = 16f;
 
-        Button pick = UIKit.MakeButton(card, daily ? "ui.btn.start" : "relay.hub.pick", new Vector2(0f, -225f), new Vector2(300f, 76f), () =>
+        Button pick = UIKit.MakeButton(card, daily || rush ? "ui.btn.start" : "relay.hub.pick", new Vector2(0f, -225f), new Vector2(300f, 76f), () =>
         {
             Close();
-            if (daily) DailyChallenge.Open(root);
+            if (rush) BossRushRun.Begin();
+            else if (daily) DailyChallenge.Open(root);
             else if (reflux) RefluxOpener?.Invoke(root);
             else OpenRelay(root);
         }, 30f);
         pick.interactable = unlocked && (!reflux || RefluxOpener != null);
         if (!pick.interactable) GrayOut(pick);
 
-        string note = demo ? "정식판에서 만날 수 있습니다" : unlocked ? "" : daily ? "ladder.lock.daily"
+        string note = demo ? "정식판에서 만날 수 있습니다" : unlocked ? (rush ? "rush.hub.hero" : "") : rush ? "rush.hub.locked" : daily ? "ladder.lock.daily"
                     : reflux ? (RefluxRun.Implemented ? "reflux.hub.locked" : "relay.hub.soon") : "relay.hub.locked.relay";
         if (note.Length > 0) UIKit.Text(card, note, 20f, Dim, new Vector2(0f, -290f), new Vector2(CardW - 30f, 56f));
 
         if (demo || (reflux && !RefluxRun.Implemented)) return;
-        LeaderboardUI.Board board = daily ? LeaderboardUI.Board.Daily : reflux ? LeaderboardUI.Board.Reflux : LeaderboardUI.Board.Relay;
+        LeaderboardUI.Board board = rush ? LeaderboardUI.Board.BossRush : daily ? LeaderboardUI.Board.Daily : reflux ? LeaderboardUI.Board.Reflux : LeaderboardUI.Board.Relay;
         UIKit.MakeButton(card, "relay.hub.ranks", new Vector2(0f, -340f), new Vector2(260f, 50f), () =>
         {
             Close();
