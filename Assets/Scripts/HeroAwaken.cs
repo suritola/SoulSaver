@@ -39,7 +39,7 @@ public static class HeroAwaken
     public static void OnUlt() { if (Live(1)) { PlayerController p = Hostile.Player; if (p != null && !p.IsDying) p.PlayerHealth = Mathf.Min(p.PlayerMaxHealth, p.PlayerHealth + p.PlayerMaxHealth * UltHeal); } }
     public static float StartGaugeFrac => Live(2) ? StartGauge : 0f;
     public static float AdjustTaken(float hpFrac, float taken) => Live(3) && hpFrac <= LowBelow ? taken * (1f - LowCut) : taken;
-    public static bool StartEvo(CharacterId id) => SoulLegacy.On && Has(id, 4) && !ModeRun.Reflux;      // 역류는 진화가 없음
+    public static bool StartEvo(CharacterId id) => SoulLegacy.On && Has(id, 4) && !ModeRun.Reflux && !ModeRun.Relay;      // 역류는 진화가 없음 · 2.0.7~ 릴레이는 빼기 (첫 주자 몫 시작 진화가 교대 때 다음 주자에게 넘어가던 것)
 
     // ================================================================= 창 (영웅 상세 「각성」 버튼)
     static GameObject open;

@@ -156,6 +156,8 @@ public class BossRushDirector : MonoBehaviour
         bool calm = Calm();
         // 앞 보스가 쓰러지고 처치 연출 · 진화 창이 끝난 순간부터 쉼 시작
         if (waitingRest && calm) { waitingRest = false; readyAt = t + Rest; }
+        // 2.0.7~ 보스가 쓰러지지 않고 사라지면(장외 · 정리) 수가 안 올라 마지막에 클리어가 영영 안 되던 것 — 쓰러진 것으로 셈 (갈라진 킹 슬라임은 조각이 남아 있으면 LiveCount > 0)
+        if (next > 0 && tracked[next - 1] == null && !waitingRest && bosss.LiveCount == 0 && BossRushRun.BossCount < next) { BossRushRun.BossCount = next; waitingRest = true; }
         if (next < Kinds.Length && !waitingRest && calm && bosss.LiveCount == 0 && t >= readyAt) Spawn();
         if (next >= Kinds.Length && BossRushRun.BossCount >= BossRushRun.BossTotal && calm) Clear();
     }

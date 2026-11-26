@@ -40,6 +40,7 @@ public static class CharacterData
             description = "리볼버와 여러 특수 총기를 다루는 총잡이. 다루기 쉬운 기본 캐릭터.",
             weapon = "리볼버", attack = "마우스 방향으로 총알 발사",
             skill = "일제 사격", skillDesc = "누르고 있으면 시간이 느려지며 적을 조준, 떼면 조준한 적 모두에게 사격",
+            hp = 1.15f,     // 2.0.7~ 체력 1 → 1.15 (플레이 데이터: 정식판 25판 승률 16% · 평균 생존 6:28로 영웅 중 최하, 사망 63% 가 적과 부딪힘 · 기본 영웅이라 첫 판 이탈이 큼)
             damage = 3.5f, attackSpeed = 1.25f, gauge = 0.8f, sig = 2.6f, special = 2.6f, range = 0f, mag = 8, price = 0, pool = Range(0, 20), color = new Color(0.4f, 0.85f, 0.9f), ally = new Color(1f, 0.79f, 0.3f) },     // 1.6.0~ 금 #FFC94D     // 1.4.2~ ×1.3: 공격력 2.7 → 3.5 · 고유 2 → 2.6 · 특수 2 → 2.6 (무한 30분 1단계 · 봇 측정 · docs/review/2026-10-19-무한-30분-성장속도-기획.md 7절 · 이야기 모드에도 걸림)     // 1.3.6: 공격력 1.15 → 1.7 (사용자 「유령에 맞춰 버프 · 다른 애들 딜이 너무 약함」)
         new CharacterDef {
             name = "검사", title = "떠돌이 기사", body = "swordsman", held = "sword",

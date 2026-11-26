@@ -66,7 +66,7 @@ public class SkinPreview : MonoBehaviour
 
         string name = s != null ? Loc.T(s.name) : Loc.T("기본");
         TMP_Line(cover, name + "  ·  " + Loc.T("미리보기"), 40f, new Vector2(0f, 420f));
-        p.rt = new RenderTexture(1280, 640, 16) { name = "SkinPreviewRT" };
+        p.rt = new RenderTexture(1280, 640, 16) { name = "SkinPreviewRT", filterMode = FilterMode.Point };     // 2.0.7~ 1080p 아닌 화면에서 도트가 번지던 것
         RawImage stage = UIKit.Rect("Stage", cover, new Vector2(0f, 30f), new Vector2(1280f, 640f)).gameObject.AddComponent<RawImage>();
         stage.texture = p.rt;
         stage.raycastTarget = false;

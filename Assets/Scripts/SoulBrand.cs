@@ -345,6 +345,7 @@ public static class SoulBrand
     }
 
     static GameObject open;
+    public static bool IsOpen => open != null;     // 2.0.7~ 일시정지 위에서 열었을 때 ESC 가 일시정지까지 풀지 않게 (ESCmenu)
     static Color Gold => UiRules.Legacy ? LegacyGold : UiTokens.Text1;      // UI 개편 (Legacy 끔): 금색 글자 대신 뼈색 (기획서 C6 「금색 25벌」)
     static readonly Color LegacyGold = new Color(0.96f, 0.83f, 0.47f);
     static readonly Color Parch = new Color(0.92f, 0.88f, 0.80f);

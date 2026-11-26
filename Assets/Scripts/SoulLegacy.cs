@@ -89,15 +89,12 @@ public static class SoulLegacy
     const float BloodChance = 0.03f, BloodHeal = 0.02f, EndureHp = 0.3f, HunterMul = 1.15f, BreathHeal = 0.03f, EchoBelow = 0.3f, EchoCut = 0.25f, RushHeal = 0.2f;
     const int HarvestCards = 2;
     static readonly System.Random rng = new System.Random();     // 게임 난수(일일 도전 시드)는 건드리지 않게 따로
-    static bool endureUsed;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Boot()
     {
         EnermyController.Killed += OnKill;
-        PlayerController.UltUsed += HeroAwaken.OnUlt;
-        SceneManager.sceneLoaded += (s, m) => { if (s.name == "GameScene") endureUsed = false; };
-    }
+        PlayerController.UltUsed += HeroAwaken.OnUlt;    }
 
     static void Heal(PlayerController p, float frac)
     {
@@ -123,8 +120,9 @@ public static class SoulLegacy
     // 쓰러질 피해 (불사의 맹세 뒤): 불굴 — 판마다 한 번 체력 30% 로 · 2초 무적은 부르는 쪽
     public static bool TryEndure()
     {
-        if (endureUsed || !Live(Id.Endure)) return false;
-        endureUsed = true;
+        // 2.0.7~ 판 안 수(RunCounters)에 적어 이어하기 저장에 남김 — 나갔다 이어하면 다시 채워지던 것
+        if (RunCounters.Get("legacy.endure") > 0 || !Live(Id.Endure)) return false;
+        RunCounters.Add("legacy.endure");
         Notice.Toast(NoticeIcon.Up, Loc.T("legacy.endure.proc"), 2.5f);
         return true;
     }
@@ -137,7 +135,7 @@ public static class SoulLegacy
     {
         PlayerController p = Hostile.Player;
         // 왕의 전리품: 레벨업 카드 2장 (상자처럼 대기 카드만 · 경험치 요구량은 그대로 — GrantLevels 는 요구량도 올려서 안 씀)
-        if (Live(Id.Harvest) && Object.FindFirstObjectByType<LevelShop>() is LevelShop shop)
+        if (Live(Id.Harvest) && !ModeRun.Reflux && Object.FindFirstObjectByType<LevelShop>() is LevelShop shop)
         {
             shop.AddPending(HarvestCards);
             Notice.Toast(NoticeIcon.Up, Loc.T("legacy.harvest.proc"), 2.5f);

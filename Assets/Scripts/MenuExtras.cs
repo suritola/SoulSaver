@@ -539,7 +539,7 @@ public static class MenuExtras
         foreach (TMP_Text t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
             if (t.text == "Soul Saver") { title = t; break; }
         List<RectTransform> items = new List<RectTransform>();
-        foreach (string n in new[] { "GameStartButton", "ContinueButton", "ModesButton", "CharacterButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })
+        foreach (string n in new[] { "GameStartButton", "ContinueButton", "ModesButton", "CharacterButton", "AltarButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })     // 2.0.7~ 영혼 제단 버튼도
         {
             Transform t = parent.Find(n);
             if (t != null && t.gameObject.activeSelf) items.Add((RectTransform)t);
@@ -777,7 +777,7 @@ public static class MenuExtras
         }
         if (weightOn) y -= MainRowGap + WeightH;
         y -= MainRowGap + MainRowH * 0.5f;
-        foreach (string n in new[] { "ModesButton", "CharacterButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })
+        foreach (string n in new[] { "ModesButton", "CharacterButton", "AltarButton", "CodexButton", "TutorialButton", "SettingsButton", "ExitButton" })     // 2.0.7~ 영혼 제단이 빠져 화면 가운데(영웅 패널 위)에 남던 것
         {
             bool quit = n == "ExitButton";      // 2.0.1~ 종료는 맨 아래 반 폭 · 작은 글자 (자주 누르지 않음)
             RectTransform placed = LeftPlace(parent, n, quit ? y - MainRowGap : y, quit ? MainRowH * 0.8f : MainRowH, quit ? MainW * 0.5f : MainW, quit ? UiTokens.Small : UiTokens.Body);

@@ -496,7 +496,8 @@ public class RunStats : MonoBehaviour
     {
         if (Stage <= 0 || Stage == chapterSeen) return;
         chapterSeen = Stage;
-        ChapterLog += (ChapterLog.Length > 0 ? "|" : "") + Stage + "@" + Seconds.ToString("0");
+        if (Seconds < 2f) ChapterLog = "";     // 2.0.7~ 판 시작 첫 순간 StageManager 가 첫 장을 정하기 전 값이 「2장 1초」로 한 번 찍히던 것 (장별 시간 통계가 틀어짐)
+        ChapterLog +=(ChapterLog.Length > 0 ? "|" : "") + Stage + "@" + Seconds.ToString("0");
     }
 
     // 이어하기 (RunSave): 저장해 둔 장 기록으로 바꾸고, 마지막으로 적은 장부터 이어서

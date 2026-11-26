@@ -34,7 +34,9 @@ public sealed class SkinEdge : MonoBehaviour
         float total = In + Stay + Out;
         if (!fromUlt && e.ult && e.t < total) return;       // 필살기 액자가 우선
         bool fresh = e.t >= total * 0.6f;
-        e.t = 0f;
+        // 2.0.7~ 이미 떠 있으면 0부터 다시 나타나지 않고 지금 밝기에서 이어 올라감 (연쇄 처치마다 0 ↔ 0.6 으로 초당 10번 넘게 깜빡이던 것 · 광과민)
+        float a = e.t < In ? e.t / In : e.t < In + Stay ? 1f : e.t < total ? 1f - (e.t - In - Stay) / Out : 0f;
+        e.t = a * In;     // 다 밝으면 In(머무름 처음)으로 → 연쇄가 이어지는 동안 계속 떠 있음
         e.ult = fromUlt;
         e.color = c;
         e.gameObject.SetActive(true);
@@ -106,7 +108,7 @@ public sealed class SkinEdge : MonoBehaviour
         float a = t < In ? t / In : t < In + Stay ? 1f : 1f - (t - In - Stay) / Out;
         float h = cam.orthographicSize, w = h * cam.aspect;
         float thick = h * 2f * Thick;
-        Color col = new Color(color.r, color.g, color.b, a * 0.85f * GameSettings.MyFxAlpha);
+        Color col = new Color(color.r, color.g, color.b, a * 0.85f * GameSettings.MyFxAlpha * (GameSettings.Flashes ? 1f : 0.3f));     // 2.0.7~ 「번쩍임」 끄면 옅게 (Flash 연출과 같은 규칙)
         // 0 위 · 1 아래 · 2 왼쪽 · 3 오른쪽 — 띠의 진한 쪽(피벗)이 화면 끝
         Place(sides[0], new Vector3(0f, h, 1f), 180f, w * 2f, thick, col);
         Place(sides[1], new Vector3(0f, -h, 1f), 0f, w * 2f, thick, col);

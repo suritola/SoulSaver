@@ -70,7 +70,7 @@ public class ESCmenu : MonoBehaviour
         // 설정 창이 열려 있으면 설정 창이 ESC를 처리함 (키 입력 취소 · 창 닫기), 연출 중에는 ESC가 건너뛰기
         if (SettingsUI.IsOpen || SettingsUI.EscHandledFrame == Time.frameCount || StoryDirector.Playing || Herald.Playing) return;
         // 1.1.9~ 일시정지 위에 연 도감 · 스킬 진화 · 빌드 자세히 보기 · 영웅 안내: 그 창이 ESC 로 닫힘 (같은 프레임에 일시정지까지 풀리지 않게)
-        if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || MemoryShards.ReaderOpen || BuildView.IsOpen || HeroGuide.IsOpen) return;
+        if (CodexUI.IsOpen || SkillEvoCodexUI.IsOpen || MemoryShards.ReaderOpen || BuildView.IsOpen || HeroGuide.IsOpen || SoulBrand.IsOpen) return;
         // 영혼 트리는 ESC로 닫히고, 무기 진화는 고를 때까지 멈춤
         if (SoulTreeUI.IsOpen || WeaponEvolutionUI.Open || ChoiceUI.Open || SkillEvolutionUI.Open || Demo.EndOpen) return;     // 1.5.9~ 체험판 끝 창도 (닫으면 끝 창 뒤에서 게임이 흘렀음) · 고르기 창(보물 상자 · 보스 보상 · 저주 제단)도 고를 때까지 멈춤 · 1.1~ 스킬 진화 연출 중에도 (메뉴가 연출 뒤에 깔렸음)
         // 1.5.9~ 장 전환 중(페이드 · 로딩 · 첫 문 특수 능력 창)엔 받지 않음 — 전환이 끝나며 timeScale 1 이 되어 메뉴 뒤에서 적이 때렸음 (전환은 실제 시간으로 끝남 · 특수 능력은 고르면 끝)

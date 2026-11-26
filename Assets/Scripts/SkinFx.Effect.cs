@@ -166,7 +166,7 @@ public partial class SkinFx
         float len = d.magnitude;
         if (len < 0.05f) return;
         float angle = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg - 90f;
-        color.a *= GameSettings.MyFxAlpha;
+        color.a *= GameSettings.MyFxAlpha * (GameSettings.Flashes ? 1f : 0.3f);     // 2.0.7~ 「번쩍임」 끄면 번개도 옅게
         SkinMote m = SkinMote.Make(f[0], (from + to) * 0.5f, len, color, "Effect", 25, life, unscaled);
         if (m == null) return;
         float w = f[0].bounds.size.x, h = f[0].bounds.size.y;

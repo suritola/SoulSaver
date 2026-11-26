@@ -38,7 +38,8 @@ public partial class BossUltimate : MonoBehaviour
     const float Radius = 35f;             // 13 은 너무 좁아 피할 틈이 없었음 (화면보다 넓게)
     const float Duration = 15f;
     const float SlimeDuration = 9f;     // 2.2.1: 1장 킹 슬라임 결계는 짧고 단순하게 (튕기는 덩어리 최대 3 · 산성 비만)
-    static float Power => 1.25f * Chapters.BossPowerMul;      // BossSkills 와 같은 피해 배율 (3장부터 더 셈)
+    // 2.0.7~ 쉬움은 ×0.8 (플레이 데이터: 결계가 사망 원인 26% · 쉬움 2장 보스 결계에 첫 판이 끝나는 일이 잦음)
+    static float Power => 1.25f * Chapters.BossPowerMul * (GameMode.Current == Difficulty.Easy ? 0.8f : 1f);      // BossSkills 와 같은 피해 배율 (3장부터 더 셈)
 
     static readonly (string title, string line, Color color)[] Info =
     {

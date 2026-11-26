@@ -290,7 +290,8 @@ public class RunCountersHost : MonoBehaviour
         tick = 0.5f;
         Contracts.Tick();
         // 무한 모드: 이 영웅으로 버틴 가장 긴 시간 (기억 조각 ⑤ · 10초 단위로 적음)
-        if (GameMode.IsEndless) RunCounters.LifeMax(RunCounters.Hero("endless.best"), Mathf.FloorToInt(GameMode.EndlessSeconds / 10f) * 10);
+        // 2.0.7~ 릴레이(교대한 주자도 판 전체 시간) · 역류 · 보스 러시는 빼기 — 영웅 각성 4단계 「무한 모드 15분」이 다른 모드로 열리던 것
+        if (GameMode.IsEndless && !ModeRun.Relay && !ModeRun.Reflux && !BossRushRun.Active) RunCounters.LifeMax(RunCounters.Hero("endless.best"), Mathf.FloorToInt(GameMode.EndlessSeconds / 10f) * 10);
         if (++boardTick % 4 == 0) ContractBoard.Refresh(true);       // 2초마다 보드 칸 (판 안에서 채우면 토스트)
     }
 

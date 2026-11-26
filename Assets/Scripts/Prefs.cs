@@ -108,7 +108,8 @@ public static class Prefs
         bool mainExists = File.Exists(main);
         if (mainExists && TryRead(main)) return;
         // 2.0.5~ 본 파일이 없어도 .bak 을 시도 (게임 안에 저장 초기화가 없어, 본 파일만 없는 건 사고로 봄)
-        foreach (string backup in new[] { main + ".tmp", main + ".bak" })
+        // 2.0.7~ .keep(마지막으로 성공한 저장 사본)을 .bak(그 직전 저장)보다 먼저 — .bak 으로 되살리며 최신 .keep 까지 덮어 마지막 저장(포인트 · 스킨)이 사라지던 것
+        foreach (string backup in new[] { main + ".tmp", KeepPath, main + ".bak" })
         {
             if (!File.Exists(backup) || !TryRead(backup)) continue;
             if (mainExists)
@@ -117,7 +118,7 @@ public static class Prefs
                 Recovered = true;
                 LoadProblem = "저장 파일이 손상되어 백업에서 되살렸습니다. 최근 진행 일부가 빠졌을 수 있습니다.";
             }
-            else if (backup.EndsWith(".bak"))
+            else if (!backup.EndsWith(".tmp"))
             {
                 Recovered = true;
                 LoadProblem = "저장 파일이 없어 백업에서 되살렸습니다. 최근 진행 일부가 빠졌을 수 있습니다.";

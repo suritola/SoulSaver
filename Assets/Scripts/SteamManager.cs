@@ -163,7 +163,8 @@ public class SteamManager : MonoBehaviour
     void RestoreFromAchievements()
     {
 #if STEAM && !SOULSAVER_TESTUNLOCK && !SOULSAVER_FESTIVAL
-        if (!Initialized || Demo.On || GameInput.Auto || Application.isBatchMode || Prefs.GetInt(RestoreKey, 0) == 1) return;
+        // 2.0.7~ 튜토리얼 중이면 미룸 (UnlockSecret 이 튜토리얼에서 아무것도 안 하는데 복구 끝 표시만 남아 비밀 영웅이 영영 안 돌아오던 것)
+        if (!Initialized || Demo.On || GameInput.Auto || Application.isBatchMode || TutorialRun.Active || Prefs.GetInt(RestoreKey, 0) == 1) return;
         if (!SteamUserStats.GetAchievement(SteamAchievements.FirstUlt, out _)) return;      // 업적 자료가 아직 안 옴 → 다음 장면에서 다시
         bool Has(string id) => SteamUserStats.GetAchievement(id, out bool got) && got;
         int restored = 0;
@@ -330,6 +331,7 @@ public class SteamManager : MonoBehaviour
         }
         if (GameMode.IsEndless)
         {
+            if (BossRushRun.Active) return;     // 2.0.7~ 보스 러시 클리어(항상 보스 5)가 무한 모드 업적을 풀던 것 (게임 안 해제 조건은 이미 뺌)
             float s = GameMode.EndlessSeconds;
             if (s >= 600f) SteamAchievements.Unlock(SteamAchievements.Endless10);
             if (s >= EndlessGoal) SteamAchievements.Unlock(SteamAchievements.Endless20);
